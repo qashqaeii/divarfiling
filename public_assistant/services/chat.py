@@ -20,9 +20,11 @@ from public_assistant.services.retrieval import RetrievedChunk, retrieve
 from public_assistant.services.public_copy import (
     asks_internal_implementation,
     deflect_internal_question,
+    finalize_public_answer,
     format_public_fallback,
     polish_public_answer,
 )
+from public_assistant.services.public_links import LINK_STYLE_PROMPT
 from public_assistant.services.plan_advisor import (
     PLAN_ADVISOR_SYSTEM_ADDENDUM,
     build_plan_advisor_context,
@@ -43,7 +45,7 @@ from public_assistant.services.security import (
 
 SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ دیوار» هستی — مانند کارشناس محصول و پشتیبان آموزشی برای مشاوران املاک.
 
-فقط بر اساس «منابع دانشنامه» پاسخ بده. اگر منبع کافی نیست، کوتاه بگو اطلاعات تأییدشده کافی نداری و به `/contact/` یا صفحات رسمی ارجاع بده.
+فقط بر اساس «منابع دانشنامه» پاسخ بده. اگر منبع کافی نیست، کوتاه بگو اطلاعات تأییدشده کافی نداری و با لینک فارسی به تماس یا صفحات رسمی ارجاع بده.
 هرگز قیمت، URL، قابلیت یا شرایطی را از خودت نساز.
 به داده‌های خصوصی حساب کاربران (مخاطبین، فایل‌ها، لایسنس شخصی) دسترسی نداری.
 
@@ -59,7 +61,9 @@ SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ د�
 2. بدنه ساختارمند: تیتر **bold** کوتاه، سپس bullet یا شماره‌گذاری 1. 2. 3. (هر مرحله در خط جدا).
 3. اگر سؤال «چطور / چگونه» است، **مراحل عملی** از منبع را کامل و به‌ترتیب بیاور (پلتفرم، مسیر میزکار، لینک رسمی).
 4. اگر منبع «امکانات» یا «تفاوت» دارد، دسته‌بندی منطقی (فایلینگ، CRM، استخراج، …) را حفظ کن.
-5. در پایان در صورت وجود در منبع، یک خط **قدم بعدی** با مسیر یا لینک رسمی (بدون ساخت URL جدید).
+5. در پایان در صورت وجود در منبع، **قدم بعدی** با لینک مارک‌داون فارسی در جمله (بدون ساخت URL جدید).
+
+""" + LINK_STYLE_PROMPT + """
 
 کیفیت:
 - وقتی منبع جزئیات دارد، از پاسخ یک‌خطی یا فهرست ناقص خودداری کن.
@@ -150,7 +154,7 @@ def _format_context_links(links: list) -> str:
         label = (item.get('label') or '').strip()
         url = (item.get('url') or '').strip()
         if label and url:
-            lines.append(f'- {label}: {url}')
+            lines.append(f'- [{label}]({url})')
     if not lines:
         return ''
     return 'لینک‌های رسمی این مقاله:\n' + '\n'.join(lines)
@@ -240,7 +244,7 @@ def answer_question(
     if asks_internal_implementation(user_text):
         return {
             'ok': True,
-            'answer': deflect_internal_question(),
+            'answer': finalize_public_answer(deflect_internal_question()),
             'sources': _collect_sources(chunks) if chunks else [],
             'session_id': str(session.id),
         }
@@ -261,13 +265,13 @@ def answer_question(
         if sub_ctx.is_subscription and not plan_catalog:
             return {
                 'ok': True,
-                'answer': compose_no_catalog_answer(),
+                'answer': finalize_public_answer(compose_no_catalog_answer()),
                 'sources': _collect_sources(chunks) if chunks else [],
                 'session_id': str(session.id),
             }
         return {
             'ok': True,
-            'answer': _low_confidence_answer(),
+            'answer': finalize_public_answer(_low_confidence_answer()),
             'sources': [],
             'session_id': str(session.id),
             'low_confidence': True,
@@ -327,6 +331,8 @@ def answer_question(
         role=PublicChatMessage.ROLE_USER,
         content=user_text,
     )
+    text = finalize_public_answer(text or '')
+
     PublicChatMessage.objects.create(
         session=session,
         role=PublicChatMessage.ROLE_ASSISTANT,

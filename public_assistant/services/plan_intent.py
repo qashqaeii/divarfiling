@@ -11,6 +11,21 @@ if TYPE_CHECKING:
     from public_assistant.models import PublicChatSession
 
 _PERSIAN_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
+_ARABIC_DIGITS = str.maketrans('٠١٢٣٤٥٦٧٨٩', '0123456789')
+_WORD_NUMBERS = {
+    'یک': 1,
+    'دو': 2,
+    'سه': 3,
+    'چهار': 4,
+    'چار': 4,
+    'پنج': 5,
+    'شش': 6,
+    'شیش': 6,
+    'هفت': 7,
+    'هشت': 8,
+    'نه': 9,
+    'ده': 10,
+}
 
 _SUBSCRIPTION_STRONG = (
     'لایسنس',
@@ -88,10 +103,20 @@ _PROPERTY_STRONG = (
 )
 
 _TEAM_PATTERNS = (
-    re.compile(r'(\d+)\s*(?:نفر|مشاور|نفره|نفرای|نفری)'),
+    re.compile(r'(\d+)\s*تا\s*(?:نفر|مشاور|عضو|لایسنس)'),
+    re.compile(r'(\d+)\s*(?:نفر|مشاور|نفره|نفرای|نفری|لایسنس)'),
+    re.compile(r'(?:آژانس|تیم|دفتر)\s*(?:ما\s*)?(\d+)\s*(?:نفر|مشاور)'),
     re.compile(r'ما\s*(\d+)\s*نفر'),
     re.compile(r'تیم\s*(\d+)'),
     re.compile(r'(\d+)\s*نفر\s*شدیم'),
+    re.compile(r'تعداد(?:مون|مان)\s*(?:شده\s*)?(\d+)'),
+    re.compile(r'شدیم\s*(\d+)\s*نفر'),
+    re.compile(r'از\s*\d+\s*نفر\s*شدیم\s*(\d+)'),
+)
+_TEAM_WORD_PATTERNS = (
+    re.compile(r'(?:ما|آژانس)\s*(' + '|'.join(_WORD_NUMBERS) + r')\s*(?:نفر|مشاور|نفریم)'),
+    re.compile(r'(' + '|'.join(_WORD_NUMBERS) + r')\s*تا\s*(?:نفر|مشاور)'),
+    re.compile(r'(' + '|'.join(_WORD_NUMBERS) + r')\s*(?:نفر|مشاور)'),
 )
 
 _AGENCY_HINTS = ('آژانس', 'تیم', 'دفتر', 'چند مشاور', 'گروهی', 'مدیر آژانس')
@@ -135,18 +160,26 @@ class SubscriptionQueryContext:
 
 
 def _to_ascii_digits(text: str) -> str:
-    return text.translate(_PERSIAN_DIGITS)
+    return text.translate(_PERSIAN_DIGITS).translate(_ARABIC_DIGITS)
 
 
 def extract_team_size(text: str) -> int | None:
     norm = _to_ascii_digits(normalize_persian(text))
+    found: list[int] = []
     for pat in _TEAM_PATTERNS:
-        m = pat.search(norm)
-        if m:
+        for m in pat.finditer(norm):
             n = int(m.group(1))
             if 1 <= n <= 100:
-                return n
-    return None
+                found.append(n)
+    for pat in _TEAM_WORD_PATTERNS:
+        for m in pat.finditer(normalize_persian(text)):
+            word = m.group(1)
+            n = _WORD_NUMBERS.get(word)
+            if n and 1 <= n <= 100:
+                found.append(n)
+    if not found:
+        return None
+    return found[-1]
 
 
 def extract_duration(text: str) -> str | None:
@@ -235,29 +268,24 @@ def _resolve_slots_from_history(
 
     current_norm = normalize_persian(current_message)
     msgs = list(
-        session.messages.filter(role=PublicChatMessage.ROLE_USER).order_by('created_at', 'id')[:12]
+        session.messages.filter(role=PublicChatMessage.ROLE_USER).order_by('-created_at', '-id')[:12]
     )
-
-    last_break_index = -1
-    for i, m in enumerate(msgs):
-        if normalize_persian(m.content) == current_norm:
-            continue
-        if _is_topic_break(normalize_persian(m.content)):
-            last_break_index = i
 
     history_team: int | None = None
     history_duration: str | None = None
-    for m in msgs[last_break_index + 1 :]:
+    for m in msgs:
         if normalize_persian(m.content) == current_norm:
             continue
         norm = normalize_persian(m.content)
+        if _is_topic_break(norm):
+            break
         if not (_is_subscription_topic(norm) or _is_subscription_followup(norm)):
             continue
         t = extract_team_size(m.content)
         d = extract_duration(m.content)
-        if t is not None:
+        if t is not None and history_team is None:
             history_team = t
-        if d is not None:
+        if d is not None and history_duration is None:
             history_duration = d
 
     team = current_team if current_team is not None else history_team
@@ -266,15 +294,10 @@ def _resolve_slots_from_history(
 
 
 def _session_context_text(session: PublicChatSession | None) -> str:
+    """فقط برای سازگاری — ویژگی‌های کاربر از پیام فعلی استخراج می‌شوند."""
     if not session:
         return ''
-    from public_assistant.models import PublicChatMessage
-
-    parts: list[str] = []
-    for m in session.messages.order_by('-created_at')[:6]:
-        if m.role == PublicChatMessage.ROLE_USER:
-            parts.append(m.content)
-    return ' '.join(parts)
+    return ''
 
 
 def newbie_hint(text: str) -> bool:
@@ -287,8 +310,6 @@ def analyze_subscription_query(
     session: PublicChatSession | None = None,
 ) -> SubscriptionQueryContext:
     norm = normalize_persian(message)
-    history = _session_context_text(session)
-    combined = normalize_persian(f'{history} {message}')
 
     if _is_share_file_context(norm):
         return SubscriptionQueryContext(
@@ -318,14 +339,18 @@ def analyze_subscription_query(
 
     team_size, duration = _resolve_slots_from_history(session, message)
 
-    agency_context = any(h in combined for h in _AGENCY_HINTS)
+    agency_context = any(h in norm for h in _AGENCY_HINTS)
     if team_size and team_size >= 2:
         agency_context = True
         subscription_score += 2
 
-    solo = any(h in combined for h in _SOLO_HINTS) or (
-        'تنها' in combined and 'کار' in combined
-    )
+    wants_price = any(w in norm for w in ('قیمت', 'چنده', 'هزینه', 'چقدر', 'مبلغ', 'تومان'))
+
+    solo = any(h in norm for h in _SOLO_HINTS) or ('تنها' in norm and 'کار' in norm)
+    if team_size and team_size >= 2:
+        solo = False
+    if agency_context and wants_price:
+        solo = False
     if solo:
         subscription_score += 1
 
@@ -342,8 +367,6 @@ def analyze_subscription_query(
     is_subscription = subscription_score >= 1 and not is_property
     if team_size and team_size >= 2 and not is_property:
         is_subscription = True
-
-    wants_price = any(w in norm for w in ('قیمت', 'چنده', 'هزینه', 'چقدر', 'مبلغ', 'تومان'))
     wants_comparison = any(
         w in norm
         for w in ('بهتر', 'بهتره', 'به صرفه', 'به‌صرفه', 'مقایسه', 'فرق', 'تفاوت')
@@ -356,6 +379,9 @@ def analyze_subscription_query(
     )
     wants_welcome_gift = any(
         w in norm for w in ('هدیه', 'خوش آمد', 'خوش‌آمد', 'رایگان ثبت', 'هفت روز رایگان', 'هفته رایگان')
+    ) or (
+        'رایگان' in norm
+        and any(w in norm for w in ('هفت', '۷ روز', '7 روز', 'هفته', 'خوش', 'هدیه', 'ثبت'))
     )
     wants_features = any(
         w in norm for w in ('crm', 'هوش', 'ai', 'امکانات', 'قابلیت', 'شامل', 'دارد')
@@ -372,19 +398,26 @@ def analyze_subscription_query(
         and not solo
     )
 
+    if wants_welcome_gift and extract_team_size(message) is None and not any(
+        h in norm for h in _AGENCY_HINTS
+    ):
+        team_size = None
+        agency_context = False
+        needs_team_count = False
+
     return SubscriptionQueryContext(
         is_subscription=is_subscription,
         is_property_listing=is_property,
         wants_price=wants_price,
         wants_comparison=wants_comparison,
-        wants_recommendation=wants_recommendation or newbie_hint(combined),
+        wants_recommendation=wants_recommendation or newbie_hint(norm),
         wants_trial_info=wants_trial_info,
         wants_welcome_gift=wants_welcome_gift,
         wants_features=wants_features,
         team_size=team_size,
         solo_advisor=solo,
         agency_context=agency_context,
-        newbie=newbie_hint(combined),
+        newbie=newbie_hint(norm),
         duration=duration,
         needs_team_count=needs_team_count,
         raw_message=message,

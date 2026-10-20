@@ -15,6 +15,13 @@ from public_assistant.services.public_plans import (
     load_public_plan_catalog,
     public_plan_quote,
 )
+from public_assistant.services.public_links import (
+    LINK_STYLE_PROMPT,
+    contact_link,
+    license_guide_link,
+    plan_purchase_markdown,
+    workspace_link,
+)
 from shop.services.plan_pricing import get_agency_bulk_discount_percent
 
 AGENCY_TEAM_COUNT_QUESTION = 'چند مشاور قرار است از اشتراک استفاده کنند؟'
@@ -26,7 +33,7 @@ PLAN_ADVISOR_SYSTEM_ADDENDUM = """
 لحن: مشاور املاک حرفه‌ای، فارسی روان، بدون اغراق تبلیغاتی.
 ساختار: جواب مستقیم → توضیح قیمت/مقایسه → پیشنهاد کوتاه با دلیل → لینک خرید رسمی در صورت نیاز.
 برای سؤال ساده قیمت، کوتاه بمان.
-"""
+""" + LINK_STYLE_PROMPT
 
 
 def build_plan_advisor_context(
@@ -48,24 +55,37 @@ def compose_subscription_answer(
     if ctx.is_property_listing:
         return ''
 
+    norm = normalize_persian(ctx.raw_message)
+
     if ctx.team_size == 1 and ctx.agency_context:
         return _agency_single_advisor_note(catalog)
 
     if ctx.needs_team_count:
         return _ask_agency_team_count(catalog, ctx)
 
+    if ctx.wants_welcome_gift or (
+        ctx.wants_trial_info and any(w in norm for w in ('هدیه', 'رایگان', 'خوش'))
+    ):
+        return _welcome_gift_and_trial_answer(catalog, ctx)
+
     if ctx.agency_context or (ctx.team_size and ctx.team_size >= 2):
         agency_ans = _answer_agency(catalog, ctx)
         if agency_ans:
             return agency_ans
 
-    if ctx.wants_welcome_gift and not ctx.wants_price:
-        return _welcome_gift_pointer(catalog)
-
     if ctx.wants_features and not ctx.wants_comparison:
         return _features_same_across_plans(catalog)
 
-    norm = normalize_persian(ctx.raw_message)
+    multi_duration_compare = ctx.wants_comparison and (
+        ('سال' in norm or 'yearly' in norm)
+        and ('سه' in norm or 'quarterly' in norm)
+        and ('ماه' in norm or 'monthly' in norm or 'یک‌ماه' in norm or 'یک ماه' in norm)
+    )
+    if multi_duration_compare:
+        cmp_ans = _compare_personal_all_durations(catalog)
+        if cmp_ans:
+            return cmp_ans
+
     duration_compare = ctx.wants_comparison and (
         ctx.duration in ('monthly', 'quarterly')
         or ('ماهانه' in norm and 'سه' in norm and 'ماه' in norm)
@@ -75,7 +95,9 @@ def compose_subscription_answer(
         if cmp_ans:
             return cmp_ans
 
-    if ctx.wants_recommendation or ctx.newbie or ctx.solo_advisor:
+    if (ctx.wants_recommendation or ctx.newbie or ctx.solo_advisor) and not (
+        ctx.agency_context or (ctx.team_size and ctx.team_size >= 2)
+    ):
         return _recommend_personal(catalog, ctx)
 
     if ctx.wants_comparison:
@@ -96,16 +118,17 @@ def compose_subscription_answer(
 
 
 def compose_no_catalog_answer() -> str:
-    return (
+    from public_assistant.services.public_copy import finalize_public_answer
+
+    return finalize_public_answer(
         'الان نتوانستم قیمت به‌روز پلن‌ها را از فروشگاه بخوانم. '
-        'لطفاً مستقیم از صفحه خرید رسمی بررسی کنید: `/products/divar-extraction-bot/buy/` '
-        'یا از `/contact/` راهنمایی بگیرید.'
+        f'{plan_purchase_markdown(None, None, inline=True)} '
+        f'یا از {contact_link()} راهنمایی بگیرید.'
     )
 
 
 def _buy_line(plan: PublicPlanInfo | None, catalog: PublicPlanCatalog) -> str:
-    url = plan.buy_url if plan else catalog.product_buy_url
-    return f'خرید رسمی: {url}'
+    return plan_purchase_markdown(plan, catalog, inline=True)
 
 
 def _agency_single_advisor_note(catalog: PublicPlanCatalog) -> str:
@@ -132,7 +155,7 @@ def _ask_agency_team_count(catalog: PublicPlanCatalog, ctx: SubscriptionQueryCon
         hint = f' (خرید آنلاین این پلن معمولاً **{min_q} تا {max_q}** لایسنس است)'
     return (
         f'برای محاسبه **قیمت کل آژانس**، {AGENCY_TEAM_COUNT_QUESTION}{hint}\n\n'
-        f'صفحه خرید: {catalog.product_buy_url}'
+        f'{plan_purchase_markdown(plan, catalog, inline=True)}'
     )
 
 
@@ -140,8 +163,8 @@ def _agency_over_capacity(catalog: PublicPlanCatalog, team_size: int, plan: Publ
     _, max_q = agency_plan_limits(plan)
     return (
         f'برای **{team_size} مشاور**، خرید آنلاین این پلن حداکثر **{max_q} لایسنس** در یک سفارش دارد. '
-        'برای تعداد بیشتر با پشتیبانی هماهنگ کنید: `/contact/`.\n\n'
-        f'صفحه خرید آژانس: {catalog.product_buy_url}'
+        f'برای تعداد بیشتر {contact_link(inline=True)}.\n\n'
+        f'{plan_purchase_markdown(plan, catalog, inline=True)}'
     )
 
 
@@ -233,28 +256,26 @@ def _recommend_personal(catalog: PublicPlanCatalog, ctx: SubscriptionQueryContex
     quarterly = catalog.personal_by_type('quarterly')
     lines: list[str] = []
 
-    if ctx.newbie:
+    if ctx.newbie or ctx.solo_advisor:
         lines.append(
-            'اگر تازه مشاوره املاک را شروع کرده‌اید، منطقی است اول با **پلن یک‌ماهه شخصی** کار کنید '
-            'تا استخراج، ثبت فایل و CRM را در عمل ببینید.'
+            'برای **مشاور مستقل** (به‌ویژه تازه‌کار)، پلن‌های **شخصی** مناسب‌تر از آژانس چندلایسنس است؛ '
+            'می‌توانید با یک ماه کار عملی شروع کنید یا قبلش امکانات را با پلن آزمایشی خریدنی بسنجید.'
         )
-    elif ctx.solo_advisor:
-        lines.append('برای **مشاور مستقل**، پلن‌های **شخصی** (نه آژانس چندلایسنس) مناسب‌ترند.')
     else:
         lines.append('برای کار **تک‌نفره**، پلن شخصی پیشنهاد می‌شود.')
 
     if monthly:
-        lines.append(f'هزینه فعلی پلن یک‌ماهه: **{format_price(monthly.price)}**.')
+        lines.append(f'- پلن **یک‌ماهه شخصی**: **{format_price(monthly.price)}**')
+    if quarterly:
+        lines.append(f'- پلن **سه‌ماهه شخصی**: **{format_price(quarterly.price)}** (برای ادامه بعد از ماه اول)')
     if catalog.trial:
         lines.append(
-            f'اگر قبل از تعهد بلندمدت می‌خواهید امکانات را بسنجید، **پلن آزمایشی خریدنی** '
-            f'({format_price(catalog.trial.price)} — {catalog.trial.duration_label}) هم دارید؛ '
-            'این با **هدیه ۷روزه ثبت‌نام** (در صورت واجد شرایط بودن) متفاوت است.'
+            f'- **پلن آزمایشی خریدنی**: {format_price(catalog.trial.price)} — {catalog.trial.duration_label} '
+            '(متفاوت از **هدیه ۷روزه ثبت‌نام** در صورت واجد شرایط بودن)'
         )
-    elif quarterly and ctx.wants_comparison:
-        cmp_txt = _compare_personal_durations(catalog, ctx.duration)
-        if cmp_txt:
-            lines.append(cmp_txt)
+    lines.append(
+        'امکانات اصلی (CRM، استخراج، فایلینگ) بین مدت‌های شخصی یکسان است؛ تفاوت در مدت و هزینه کل است.'
+    )
     lines.append(_buy_line(monthly, catalog))
     return '\n\n'.join(lines)
 
@@ -312,7 +333,7 @@ def _overview_short(catalog: PublicPlanCatalog) -> str:
     savings = compare_personal_duration_savings(catalog)
     lines = [
         'پلن‌های فعال فایلینگ دیوار شامل **شخصی** (یک مشاور)، **آزمایشی خریدنی** و **آژانس** (۲ تا ۲۵ لایسنس) است.',
-        f'صفحه خرید: {catalog.product_buy_url}',
+        plan_purchase_markdown(None, catalog, inline=True),
     ]
     if savings:
         best = max((s for s in savings if s['savings_positive']), key=lambda x: x['savings'], default=None)
@@ -323,14 +344,49 @@ def _overview_short(catalog: PublicPlanCatalog) -> str:
     return '\n\n'.join(lines)
 
 
-def _welcome_gift_pointer(catalog: PublicPlanCatalog) -> str:
+def _compare_personal_all_durations(catalog: PublicPlanCatalog) -> str | None:
+    monthly = catalog.personal_by_type('monthly')
+    quarterly = catalog.personal_by_type('quarterly')
+    yearly = catalog.personal_by_type('yearly')
+    if not monthly or not quarterly or not yearly:
+        return None
+    baseline_3 = monthly.price * 3
+    baseline_12 = monthly.price * 12
+    savings_3 = baseline_3 - quarterly.price
+    lines = [
+        '**امکانات اصلی یکسان است**؛ تفاوت فقط در **مدت** و **هزینه کل** است.',
+        '',
+        f'- **یک‌ماهه شخصی**: {format_price(monthly.price)}',
+        f'- **سه‌ماهه شخصی**: {format_price(quarterly.price)}',
+        f'- **یک‌ساله شخصی**: {format_price(yearly.price)}',
+        '',
+        'اگر حداقل **۳ ماه** استفاده می‌کنید:',
+        f'- خرید ۳× ماهانه: **{format_price(baseline_3)}**',
+        f'- پلن سه‌ماهه: **{format_price(quarterly.price)}**',
+    ]
+    if savings_3 > 0:
+        lines.append(f'- پلن سه‌ماهه **{format_price(savings_3)}** ارزان‌تر از ۳× ماهانه است.')
+    lines.append(_buy_line(quarterly, catalog))
+    return '\n'.join(lines)
+
+
+def _welcome_gift_and_trial_answer(
+    catalog: PublicPlanCatalog,
+    ctx: SubscriptionQueryContext,
+) -> str:
     trial_line = ''
     if catalog.trial:
         trial_line = (
-            f'\n\nپلن آزمایشی **خریدنی** جداگانه: {format_price(catalog.trial.price)} — {catalog.trial.buy_url}'
+            f'\n\n**پلن آزمایشی خریدنی** ({catalog.trial.duration_label}): '
+            f'**{format_price(catalog.trial.price)}** — پس از پرداخت فعال می‌شود.\n'
+            f'{_buy_line(catalog.trial, catalog)}'
         )
     return (
-        '**هدیه ۷روزه** طرح خوش‌آمدگویی بعد از ثبت‌نام و تأیید موبایل است (برای همه تضمین نیست). '
-        'بعد از ورود به میزکار وضعیت لایسنس خود را ببینید؛ راهنما: `/license-guide/`.'
+        '**هدیه ۷روزه خوش‌آمدگویی** (پس از ثبت‌نام و تأیید موبایل، برای حساب‌های واجد شرایط) '
+        'طرح جداگانه‌ای است و برای همه تضمین نمی‌شود. '
+        f'{workspace_link(inline=True)} وضعیت لایسنس را در حساب خود ببینید؛ '
+        f'راهنما: {license_guide_link()}.\n\n'
+        '**پلن آزمایشی خریدنی** با هدیه یکی نیست: هر کسی می‌تواند آن را بخرد، مدت و قیمت مشخص دارد '
+        'و مستقل از شرایط هدیه ثبت‌نام است.'
         + trial_line
     )

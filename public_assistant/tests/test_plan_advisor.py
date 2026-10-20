@@ -14,9 +14,11 @@ from public_assistant.services.plan_advisor import (
 )
 from public_assistant.services.plan_answer_guard import reconcile_subscription_answer
 from public_assistant.services.plan_intent import analyze_subscription_query
+from public_assistant.services.plan_intent import extract_team_size
 from public_assistant.services.public_plans import catalog_context_for_llm
 from public_assistant.services.public_plans import (
     compare_personal_duration_savings,
+    format_price,
     load_public_plan_catalog,
     public_plan_quote,
 )
@@ -24,6 +26,10 @@ from shop.models import LicensePlan, Product
 from shop.services.plan_pricing import calculate_plan_pricing
 
 User = get_user_model()
+
+
+def _plain_amount_digits(text: str) -> str:
+    return text.translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')).replace('٬', '').replace(',', '')
 
 
 def create_bot_catalog_product(slug: str = 'divar-extraction-bot-advisor-test') -> tuple[Product, dict]:
@@ -92,13 +98,13 @@ class PlanAdvisorCatalogTests(TestCase):
         cat = self.catalog()
         ctx = analyze_subscription_query('لایسنس ماهانه چند است؟')
         ans = compose_subscription_answer(ctx, cat)
-        self.assertIn('990', ans.replace(',', '').replace('٬', ''))
+        self.assertIn('990000', _plain_amount_digits(ans))
 
     def test_trial_paid_price(self):
         cat = self.catalog()
         ctx = analyze_subscription_query('پلن آزمایشی خریدنی چقدر است؟')
         ans = compose_subscription_answer(ctx, cat)
-        self.assertIn('250', ans.replace(',', ''))
+        self.assertIn('250000', _plain_amount_digits(ans))
 
     def test_agency_four_quarterly_total_8_5m(self):
         cat = self.catalog()
@@ -107,7 +113,7 @@ class PlanAdvisorCatalogTests(TestCase):
         plan = cat.agency_by_type('quarterly')
         quote = public_plan_quote(cat, plan, quantity=4)
         self.assertEqual(quote['final_price'], Decimal('8500000'))
-        self.assertIn('8', ans)
+        self.assertIn('8500000', _plain_amount_digits(ans))
         self.assertIn('15', ans)
 
     def test_agency_four_monthly_total_3_366m_not_8_5m(self):
@@ -121,9 +127,10 @@ class PlanAdvisorCatalogTests(TestCase):
         self.assertEqual(quote['effective_unit_price'], Decimal('841500'))
         self.assertEqual(quote['final_price'], Decimal('3366000'))
         ans = compose_subscription_answer(ctx, cat)
-        self.assertNotIn('8500000', ans.replace(',', '').replace('٬', ''))
-        self.assertNotIn('8,500,000', ans)
-        self.assertIn('336', ans.replace(',', '').replace('٬', ''))
+        self.assertNotIn('8500000', _plain_amount_digits(ans))
+        self.assertIn('3366000', _plain_amount_digits(ans))
+        self.assertIn('841500', _plain_amount_digits(ans))
+        self.assertIn('15', ans)
 
     @patch('public_assistant.services.chat.llm.complete')
     def test_llm_four_monthly_wrong_8_5m_replaced(self, mock_complete):
@@ -138,8 +145,9 @@ class PlanAdvisorCatalogTests(TestCase):
         )
         session = PublicChatSession.objects.create(ip_hash='m4-month')
         out = answer_question(session=session, message='برای ۴ مشاور، پلن ماهانه چقدر است؟')
-        self.assertNotIn('8500000', out['answer'].replace(',', '').replace('٬', ''))
-        self.assertIn('336', out['answer'].replace(',', ''))
+        self.assertNotIn('8500000', _plain_amount_digits(out['answer']))
+        self.assertIn('3366000', _plain_amount_digits(out['answer']))
+        self.assertIn('15', out['answer'])
 
     def test_agency_discount_tiers(self):
         plan = self.plans['agency_monthly']
@@ -188,7 +196,7 @@ class PlanAdvisorCatalogTests(TestCase):
         cat = self.catalog()
         ctx = analyze_subscription_query('سه‌ماهه بهتره یا ماهانه؟')
         ans = compose_subscription_answer(ctx, cat)
-        self.assertIn('2', ans)
+        self.assertIn('2500000', _plain_amount_digits(ans))
         self.assertTrue('ارزان‌تر' in ans or 'صرفه‌جویی' in ans)
 
     def test_property_price_not_subscription(self):
@@ -238,7 +246,34 @@ class PlanAdvisorCatalogTests(TestCase):
         cat = self.catalog()
         ctx = analyze_subscription_query('قیمت ماهانه')
         ans = compose_subscription_answer(ctx, cat)
-        self.assertIn('1 میلیون', ans)
+        self.assertIn('۱٬۱۰۰٬۰۰۰', ans)
+
+    def test_format_price_exact_toman(self):
+        cases = (
+            (250_000, '۲۵۰٬۰۰۰ تومان'),
+            (990_000, '۹۹۰٬۰۰۰ تومان'),
+            (2_500_000, '۲٬۵۰۰٬۰۰۰ تومان'),
+            (2_970_000, '۲٬۹۷۰٬۰۰۰ تومان'),
+            (3_366_000, '۳٬۳۶۶٬۰۰۰ تومان'),
+            (841_500, '۸۴۱٬۵۰۰ تومان'),
+            (4_752_000, '۴٬۷۵۲٬۰۰۰ تومان'),
+            (8_500_000, '۸٬۵۰۰٬۰۰۰ تومان'),
+        )
+        for amount, expected in cases:
+            self.assertEqual(format_price(amount), expected)
+            self.assertEqual(format_price(Decimal(amount)), expected)
+
+    def test_extract_team_size_persian_patterns(self):
+        samples = (
+            ('ما یه آژانس با ۴ تا مشاور داریم', 4),
+            ('۴ نفر مشاور', 4),
+            ('آژانس ما ۴ تا مشاور داره', 4),
+            ('ما چهار نفریم', 4),
+            ('تعدادمون شده ۶ نفر', 6),
+            ('از ۴ نفر شدیم ۶ نفر', 6),
+        )
+        for text, expected in samples:
+            self.assertEqual(extract_team_size(text), expected, msg=text)
 
     @patch('public_assistant.services.chat.llm.complete')
     def test_llm_fail_uses_live_fallback(self, mock_complete):
@@ -248,7 +283,7 @@ class PlanAdvisorCatalogTests(TestCase):
         out = answer_question(session=session, message='قیمت اشتراک ماهانه چقدر است؟')
         self.assertTrue(out['ok'])
         self.assertTrue(out.get('from_fallback'))
-        self.assertIn('990', out['answer'].replace(',', ''))
+        self.assertIn('990000', _plain_amount_digits(out['answer']))
 
     def test_answer_no_internal_leaks(self):
         cat = self.catalog()
@@ -266,7 +301,7 @@ class PlanAdvisorCatalogTests(TestCase):
         cat = self.catalog()
         ctx = analyze_subscription_query('یک‌ساله شخصی چقدر است؟')
         ans = compose_subscription_answer(ctx, cat)
-        self.assertIn('8', ans.replace(',', ''))
+        self.assertIn('8000000', _plain_amount_digits(ans))
 
     def test_agency_two_monthly(self):
         cat = self.catalog()
@@ -363,7 +398,7 @@ class PlanAdvisorCatalogTests(TestCase):
         )
         session = PublicChatSession.objects.create(ip_hash='llm-wrong')
         out = answer_question(session=session, message='قیمت اشتراک ماهانه چقدر است؟')
-        self.assertIn('990', out['answer'].replace(',', ''))
+        self.assertIn('990000', _plain_amount_digits(out['answer']))
         self.assertNotIn('۵ میلیون', out['answer'])
 
     @patch('public_assistant.services.chat.llm.complete')
@@ -383,16 +418,16 @@ class PlanAdvisorCatalogTests(TestCase):
             message='ما ۴ مشاور داریم سه ماهه چقدر می‌شود؟',
         )
         self.assertIn('15', out['answer'])
-        self.assertIn('8', out['answer'])
+        self.assertIn('8500000', _plain_amount_digits(out['answer']))
 
     @patch('public_assistant.services.chat.llm.complete')
     def test_llm_ok_answer_kept_when_no_conflict(self, mock_complete):
         call_command('sync_public_knowledge')
-        good = 'برای شروع، از مسیر `/products/` و راهنمای لایسنس کمک بگیرید.'
+        good = 'برای شروع، [محصولات و اشتراک](/products/) و راهنمای لایسنس کمک بگیرید.'
         mock_complete.return_value = (good, 'mock', 'mock', 1, 1, 1)
         session = PublicChatSession.objects.create(ip_hash='llm-ok')
         out = answer_question(session=session, message='چطور اشتراک بخرم؟')
-        self.assertIn('/products/', out['answer'])
+        self.assertIn('[محصولات و اشتراک](/products/)', out['answer'])
 
     @patch('public_assistant.services.chat.llm.complete')
     def test_no_catalog_strips_kb_prices(self, mock_complete):
@@ -416,7 +451,7 @@ class PlanAdvisorCatalogTests(TestCase):
         ctx = analyze_subscription_query('قیمت ماهانه اشتراک')
         bad = 'هزینه: ۵ میلیون تومان'
         fixed = reconcile_subscription_answer(bad, ctx, cat)
-        self.assertIn('990', fixed.replace(',', ''))
+        self.assertIn('990000', _plain_amount_digits(fixed))
 
     def test_multi_turn_agency_pricing_chain(self):
         session = PublicChatSession.objects.create(ip_hash='mt-chain')
@@ -472,7 +507,9 @@ class PlanAdvisorCatalogTests(TestCase):
         ctx = analyze_subscription_query('قیمت ماهانه اشتراک')
         llm = 'پلن ۷ روزه و ۲ دستگاه فعال؛ قیمت ماهانه ۹۹۰ هزار تومان.'
         self.assertFalse(should_replace_llm_financials(llm, ctx, cat))
-        self.assertIn('990', reconcile_subscription_answer(llm, ctx, cat))
+        kept = reconcile_subscription_answer(llm, ctx, cat)
+        self.assertIn('990', kept.replace('٬', '').replace(',', ''))
+        self.assertIn('هزار', kept)
         self.assertNotIn(extract_money_amounts('۷ روز و ۲ دستگاه'), {7, 2})
 
     def test_guard_persian_digits_price_conflict(self):
@@ -482,7 +519,127 @@ class PlanAdvisorCatalogTests(TestCase):
         ctx = analyze_subscription_query('۴ مشاور ماهانه قیمت')
         bad = 'جمع: ۸٬۵۰۰٬۰۰۰ تومان'
         fixed = reconcile_subscription_answer(bad, ctx, cat)
-        self.assertIn('336', fixed.replace(',', ''))
+        self.assertIn('۳٬۳۶۶٬۰۰۰', fixed)
+
+    def _five_production_questions(self):
+        return (
+            (
+                'سلام، من تازه کار مشاور املاک رو شروع کردم و فعلاً '
+                'تنها کار می‌کنم. به نظرت کدوم اشتراک فایلینگ دیوار '
+                'بیشتر به دردم می‌خوره و چرا؟'
+            ),
+            (
+                'فرق اشتراک یک‌ماهه، سه‌ماهه و یک‌ساله چیه؟ '
+                'امکاناتشون فرق داره؟ اگه بخوام حداقل سه ماه '
+                'استفاده کنم، کدوم به‌صرفه‌تره؟'
+            ),
+            (
+                'ما یه آژانس با ۴ تا مشاور داریم. اگه اشتراک '
+                'ماهانه بخریم، با تخفیف آژانس برای هر نفر چقدر '
+                'درمیاد و جمع کل چقدر میشه؟'
+            ),
+            (
+                'حالا فرض کن تعداد مشاورهای ما ۶ نفر شده '
+                'و اشتراک سه‌ماهه می‌خوایم. قیمت هر لایسنس، '
+                'درصد تخفیف و مبلغ کل رو حساب کن.'
+            ),
+            (
+                'شنیدم فایلینگ دیوار ۷ روز اشتراک رایگان میده، '
+                'ولی یه پلن آزمایشی ۲۵۰ هزار تومنی هم داره. '
+                'فرق این دو تا چیه؟ من چطور می‌تونم ازشون '
+                'استفاده کنم؟'
+            ),
+        )
+
+    def _assert_q1(self, ans: str):
+        self.assertIn('شخصی', ans)
+        self.assertIn('۹۹۰٬۰۰۰', ans)
+        self.assertIn('۲٬۵۰۰٬۰۰۰', ans)
+
+    def _assert_q2(self, ans: str):
+        for token in ('۹۹۰٬۰۰۰', '۲٬۵۰۰٬۰۰۰', '۸٬۰۰۰٬۰۰۰', '۲٬۹۷۰٬۰۰۰', '۴۷۰٬۰۰۰'):
+            self.assertIn(token, ans)
+        self.assertNotIn('۳٬۰۰۰٬۰۰۰', ans)
+        self.assertNotIn('3 میلیون', ans)
+
+    def _assert_q3(self, ans: str):
+        self.assertIn('۴', ans)
+        self.assertIn('۸۴۱٬۵۰۰', ans)
+        self.assertIn('۳٬۳۶۶٬۰۰۰', ans)
+        self.assertIn('15', ans)
+        self.assertNotIn('تازه مشاوره', ans)
+
+    def _assert_q4(self, ans: str):
+        self.assertTrue('۶' in ans or '6' in ans)
+        self.assertIn('۲٬۵۰۰٬۰۰۰', ans)
+        self.assertIn('۲٬۰۰۰٬۰۰۰', ans)
+        self.assertIn('۱۲٬۰۰۰٬۰۰۰', ans)
+        self.assertIn('20', ans)
+
+    def _assert_q5(self, ans: str):
+        self.assertIn('هدیه', ans)
+        self.assertIn('۲۵۰٬۰۰۰', ans)
+        self.assertIn('آزمایشی', ans)
+        self.assertNotIn('جمع مبلغ پایه سفارش', ans)
+        self.assertNotIn('۸۴۱٬۵۰۰', ans)
+
+    def test_production_five_question_python_path(self):
+        session = PublicChatSession.objects.create(ip_hash='prod-5-py')
+        questions = self._five_production_questions()
+        checks = (self._assert_q1, self._assert_q2, self._assert_q3, self._assert_q4, self._assert_q5)
+        for msg, check in zip(questions, checks):
+            PublicChatMessage.objects.create(
+                session=session,
+                role=PublicChatMessage.ROLE_USER,
+                content=msg,
+            )
+            ctx = analyze_subscription_query(msg, session)
+            ans = compose_subscription_answer(ctx, self.catalog())
+            check(ans)
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_production_five_question_llm_fallback(self, mock_complete):
+        call_command('sync_public_knowledge')
+        mock_complete.return_value = (None, 'mock', 'mock', 1, None, None)
+        session = PublicChatSession.objects.create(ip_hash='prod-5-fb')
+        for msg, check in zip(
+            self._five_production_questions(),
+            (self._assert_q1, self._assert_q2, self._assert_q3, self._assert_q4, self._assert_q5),
+        ):
+            out = answer_question(session=session, message=msg)
+            check(out['answer'])
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_production_five_question_llm_wrong_prices(self, mock_complete):
+        call_command('sync_public_knowledge')
+        session = PublicChatSession.objects.create(ip_hash='prod-5-bad')
+        wrong = (
+            'پلن ماهانه ۱ میلیون تومان و سه‌ماهه ۳ میلیون.',
+            '۳× ماهانه ۳ میلیون؛ سه‌ماهه ۲ میلیون.',
+            '۴ مشاور: هر نفر ۹۹۰ هزار؛ جمع ۴ میلیون.',
+            '۶ مشاور سه‌ماهه: جمع ۱۲ میلیون؛ هر نفر ۲٫۵ میلیون.',
+            'برای ۶ مشاور ماهانه جمع ۵ میلیون تومان است.',
+        )
+        checks = (self._assert_q1, self._assert_q2, self._assert_q3, self._assert_q4, self._assert_q5)
+        for msg, bad, check in zip(self._five_production_questions(), wrong, checks):
+            mock_complete.return_value = (bad, 'mock', 'mock', 1, 1, 1)
+            out = answer_question(session=session, message=msg)
+            check(out['answer'])
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_production_five_question_llm_ok_kept_when_matching(self, mock_complete):
+        call_command('sync_public_knowledge')
+        session = PublicChatSession.objects.create(ip_hash='prod-5-ok')
+        cat = self.catalog()
+        from public_assistant.services.public_copy import finalize_public_answer
+
+        for msg in self._five_production_questions():
+            good = finalize_public_answer(
+                compose_subscription_answer(analyze_subscription_query(msg, session), cat)
+            )
+            mock_complete.return_value = (good, 'mock', 'mock', 1, 1, 1)
+            out = answer_question(session=session, message=msg)
+            self.assertEqual(out['answer'], good)
 
 
 class PlanAdvisorIntentMatrixTests(TestCase):

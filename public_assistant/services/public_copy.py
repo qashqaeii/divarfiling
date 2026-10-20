@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 
+from public_assistant.services.public_links import contact_link, license_guide_link
 from public_assistant.services.retrieval import RetrievedChunk
 
 # الگوهایی که در پاسخ کاربر عمومی نباید دیده شوند (مسیرهای عمومی مثل `/workspace/` مجازند)
@@ -36,11 +37,15 @@ _EXTRACTOR_AUTO_DISCLAIMER_RE = re.compile(
     re.IGNORECASE,
 )
 
-_INSUFFICIENT_INFO = (
-    'برای این مورد اطلاعات تأییدشدهٔ کافی در راهنمای فعلی ندارم. '
-    'می‌توانید سؤال را دقیق‌تر بپرسید یا از صفحه تماس (`/contact/`) با پشتیبانی فایلینگ دیوار '
-    'در ارتباط باشید.'
-)
+def _insufficient_info() -> str:
+    return (
+        'برای این مورد اطلاعات تأییدشدهٔ کافی در راهنمای فعلی ندارم. '
+        f'می‌توانید سؤال را دقیق‌تر بپرسید یا از {contact_link()} با پشتیبانی فایلینگ دیوار '
+        'در ارتباط باشید.'
+    )
+
+
+_INSUFFICIENT_INFO = _insufficient_info()
 
 _INTERNAL_QUESTION_RE = re.compile(
     r'(?i)(feature\s*flag|متغیر\s*محیط|env\b|django|'
@@ -59,7 +64,7 @@ def deflect_internal_question() -> str:
         'من برای توضیح **نحوه استفاده**، **شرایط طرح‌ها** و **محدودیت‌های واقعی** محصول اینجا هستم؛ '
         'جزئیات فنی سرور یا پیاده‌سازی داخلی را در اختیار کاربران عمومی قرار نمی‌دهم.\n\n'
         'اگر درباره **هدیه ۷ روزه**، **لایسنس** یا **شروع کار** سؤال دارید، همان را بپرسید — '
-        'یا از `/license-guide/` و `/contact/` کمک بگیرید.'
+        f'یا از {license_guide_link()} و {contact_link()} کمک بگیرید.'
     )
 
 
@@ -105,4 +110,10 @@ def polish_public_answer(text: str, *, chunks: list[RetrievedChunk] | None = Non
         if chunks:
             return format_public_fallback(chunks)
         return _INSUFFICIENT_INFO
-    return cleaned
+    return finalize_public_answer(cleaned)
+
+
+def finalize_public_answer(text: str) -> str:
+    from public_assistant.services.public_links import normalize_public_answer_links
+
+    return normalize_public_answer_links((text or '').strip())

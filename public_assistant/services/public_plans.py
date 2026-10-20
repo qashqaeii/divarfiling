@@ -13,9 +13,9 @@ from shop.services.plan_pricing import (
     calculate_plan_pricing,
     get_agency_bulk_discount_percent,
 )
-from workspace.services.formatting import format_toman
-
 PlanSegment = Literal['trial', 'personal', 'agency']
+
+_PERSIAN_DIGIT_MAP = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
 
 _PLAN_TYPE_LABELS = {
     'daily': 'آزمایشی ۷روزه (خریدنی)',
@@ -223,8 +223,18 @@ def compare_personal_duration_savings(catalog: PublicPlanCatalog) -> list[dict]:
     return out
 
 
+def _subscription_amount_int(amount: int | Decimal) -> int:
+    if isinstance(amount, Decimal):
+        return int(amount.to_integral_value())
+    return int(amount)
+
+
 def format_price(amount: int | Decimal) -> str:
-    return format_toman(int(amount))
+    """مبلغ اشتراک — رقم‌به‌رقم، بدون گرد کردن به میلیون."""
+    value = _subscription_amount_int(amount)
+    grouped = f'{value:,}'.replace(',', '٬')
+    persian_digits = grouped.translate(_PERSIAN_DIGIT_MAP)
+    return f'{persian_digits} تومان'
 
 
 def catalog_context_for_llm(
@@ -237,7 +247,7 @@ def catalog_context_for_llm(
     lines = [
         '=== داده فروشگاه زنده (معتبر برای قیمت و مدت — اولویت بر دانشنامه) ===',
         f'محصول: {catalog.product_title}',
-        f'صفحه خرید: {catalog.product_buy_url}',
+        f'لینک خرید رسمی: [خرید اشتراک]({catalog.product_buy_url})',
         '',
         '--- پلن شخصی (یک مشاور) ---',
     ]
@@ -300,7 +310,7 @@ def catalog_context_for_llm(
                 lines.append('')
                 lines.append(
                     f'--- تعداد {team_size} مشاور ---\n'
-                    f'خرید آنلاین حداکثر **{max_q} لایسنس** در یک سفارش است؛ برای بیشتر با `/contact/` هماهنگ کنید.'
+                    f'خرید آنلاین حداکثر **{max_q} لایسنس** در یک سفارش است؛ برای بیشتر [تماس با پشتیبانی](/contact/) بگیرید.'
                 )
             else:
                 quote = public_plan_quote(catalog, agency_plan, quantity=team_size, strict=True)

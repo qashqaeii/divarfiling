@@ -26,8 +26,8 @@ class RetrievedChunk:
 def _intent_boost(query_norm: str, article_id: str) -> float:
     boost = 0.0
     if article_id == 'intro-crm-filing-extractor':
-        if 'crm' in query_norm and any(w in query_norm for w in ('فایلینگ', 'استخراج', 'تفاوت', 'dataset')):
-            boost += 4.0
+        if 'crm' in query_norm and any(w in query_norm for w in ('فایلینگ', 'استخراج', 'تفاوت', 'dataset', 'فرق')):
+            boost += 5.5
     if article_id == 'extractor-windows' and 'ویندوز' in query_norm and any(
         w in query_norm for w in ('دانلود', 'استخراج', 'ربات')
     ):
@@ -35,7 +35,9 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
     if article_id == 'account-mobile-verify' and any(w in query_norm for w in ('پیامک', 'کد', 'موبایل', 'تأیید')):
         boost += 3.5
     if article_id == 'agency-vs-personal' and 'آژانس' in query_norm and any(
-        w in query_norm for w in ('چند', 'شخصی', 'خرید', 'لایسنس')
+        w in query_norm for w in ('چند', 'خرید', 'لایسنس', 'حساب')
+    ) and 'فایل شخصی' not in query_norm and not (
+        'شخصی' in query_norm and 'فایل' in query_norm
     ):
         boost += 3.5
     if article_id == 'extractor-single-batch' and 'گروهی' in query_norm:
@@ -44,27 +46,45 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         w in query_norm for w in ('نیست', 'نمی', 'همگام', 'نمیاد')
     ):
         boost += 4.0
-    if article_id == 'crm-activities-reminders' and any(w in query_norm for w in ('پیگیری', 'یادآوری', 'تماس')):
-        boost += 2.5
+    if article_id == 'crm-activities-reminders' and any(w in query_norm for w in ('پیگیری', 'یادآوری')):
+        boost += 4.0
+    if article_id == 'crm-activities-reminders' and 'یادآوری' in query_norm and 'تماس' in query_norm:
+        boost += 2.0
     if article_id == 'crm-matching' and any(w in query_norm for w in ('تطبیق', 'مناسب', 'پیشنهاد فایل')):
         boost += 3.5
     if article_id == 'public-assistant-scope' and any(
         w in query_norm for w in (
             'api',
             'key',
-            'مشتریان',
             'مشتریان من',
-            'اطلاعات',
-            'مخاطب',
-            'حساب',
-            'خصوصی',
+            'اطلاعات مشتریان',
+            'دسترسی',
             'ببینی',
+            'می‌بینی',
+            'میبینی',
+            'حساب من',
+            'خصوصی',
             'سیاست',
             'پزشک',
-            'دستیار',
+            'دستیار عمومی',
         )
     ):
         boost += 5.0
+    if article_id == 'crm-contacts' and any(
+        w in query_norm for w in ('مخاطب', 'مشتری', 'خریدار', 'تماس')
+    ) and any(w in query_norm for w in ('ثبت', 'اضافه', 'چطور', 'چگونه', 'چجوری', 'جدید', 'ساخت')):
+        boost += 7.0
+    if article_id == 'crm-personal-properties' and (
+        'فایل شخصی' in query_norm
+        or 'املاک شخصی' in query_norm
+        or ('شخصی' in query_norm and any(w in query_norm for w in ('فایل', 'ملک', 'داشته')))
+        or ('شماره' in query_norm and 'فایل' in query_norm)
+    ):
+        boost += 7.5
+    if article_id == 'share-public-file' and 'لینک' in query_norm and any(
+        w in query_norm for w in ('مشتری', 'بفرست', 'ارسال', 'بساز', 'ساخت', 'عمومی', 'share', 'اشتراک')
+    ):
+        boost += 8.0
     if article_id == 'agency-create-roles' and 'آژانس' in query_norm and any(
         w in query_norm for w in ('ساخت', 'نقش', 'مالک', 'منشی')
     ):
@@ -81,10 +101,6 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         boost += 4.0
     if article_id == 'plans-trial-7d' and any(w in query_norm for w in ('هدیه', 'هفت', 'آزمایشی', 'رایگان', 'trial')):
         boost += 4.5
-    if article_id == 'intro-what-is-divar-filing' and any(
-        w in query_norm for w in ('چیست', 'چیه', 'معرفی', 'مناسب', 'مشاور')
-    ):
-        boost += 3.0
     if article_id == 'extractor-overview' and any(
         w in query_norm for w in ('استخراج', 'چطور', 'چگونه', 'ربات', 'اسکرپ', 'کشیدن')
     ):
@@ -100,11 +116,15 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
     if article_id == 'workspace-product-map' and any(
         w in query_norm for w in ('امکانات', 'قابلیت', 'چه دارد', 'چی دارد', 'امکان', 'مسیر', 'منو', 'میزکار')
     ):
-        boost += 5.5
+        boost += 7.0
     if article_id == 'filing-divar-contact' and any(
-        w in query_norm for w in ('شماره', 'تماس', 'تلفن', 'otp', 'دیوار')
+        w in query_norm for w in ('شماره', 'تلفن', 'otp')
+    ) and any(w in query_norm for w in ('دیوار', 'آگهی', 'مالک', 'استخراج', 'کشید')):
+        boost += 4.5
+    if article_id == 'intro-what-is-divar-filing' and 'فایلینگ' in query_norm and any(
+        w in query_norm for w in ('چیست', 'چیه', 'معرفی')
     ):
-        boost += 4.0
+        boost += 5.0
     if article_id == 'intro-crm-filing-extractor' and 'crm' in query_norm and any(
         w in query_norm for w in ('کمک', 'فایده', 'چرا', 'مشاور', 'چه میکند', 'چه می')
     ):
@@ -121,8 +141,19 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         w in query_norm for w in ('شروع', 'اولین', 'تازه', 'ثبت نام', 'onboarding')
     ):
         boost += 3.5
-    if article_id == 'extractor-overview' and any(w in query_norm for w in ('شماره', 'تماس', 'تلفن')):
+    if article_id == 'support-getting-started' and 'ثبت' in query_norm and any(
+        w in query_norm for w in ('بعد', 'شروع', 'کار')
+    ):
+        boost += 4.0
+    if article_id == 'support-common-errors' and 'پشتیبانی' in query_norm:
         boost += 4.5
+    if article_id == 'academy-public' and 'آموزش' in query_norm:
+        boost += 4.0
+    if article_id == 'share-public-file' and 'share' in query_norm and 'فایل' in query_norm:
+        boost += 3.0
+    if article_id == 'extractor-overview' and any(w in query_norm for w in ('شماره', 'تماس', 'تلفن')):
+        if not ('فایل شخصی' in query_norm or ('فایل' in query_norm and 'شخصی' in query_norm)):
+            boost += 4.5
     if article_id == 'filing-detail-map' and 'نقشه' in query_norm:
         boost += 4.0
     if article_id == 'ai-nl-command' and any(w in query_norm for w in ('فرمان', 'دستور', 'nl')):
@@ -142,8 +173,30 @@ def _intent_penalty(query_norm: str, article_id: str) -> float:
         penalty += 3.0
     if article_id == 'intro-crm-filing-extractor' and 'تطبیق' in query_norm:
         penalty += 2.5
-    if article_id == 'crm-contacts' and 'پیگیری' in query_norm and 'مشتری' not in query_norm:
-        penalty += 2.0
+    if article_id == 'crm-contacts' and 'پیگیری' in query_norm:
+        penalty += 3.0
+    if article_id == 'filing-collections' and any(
+        w in query_norm for w in ('امکانات', 'چیست', 'چیه', 'تفاوت', 'فرق')
+    ):
+        penalty += 3.0
+    if article_id == 'filing-divar-contact' and 'پشتیبانی' in query_norm:
+        penalty += 6.0
+    if article_id == 'public-assistant-scope' and any(
+        w in query_norm for w in ('ثبت', 'چطور', 'چگونه', 'چجوری', 'اضافه', 'ساخت', 'بساز', 'جدید')
+    ):
+        penalty += 6.0
+    if article_id == 'intro-crm-filing-extractor' and (
+        'فایل شخصی' in query_norm or ('شخصی' in query_norm and 'فایل' in query_norm)
+    ):
+        penalty += 4.0
+    if article_id == 'extractor-overview' and (
+        'فایل شخصی' in query_norm or ('فایل' in query_norm and 'شخصی' in query_norm)
+    ):
+        penalty += 5.0
+    if article_id == 'agency-vs-personal' and (
+        'فایل شخصی' in query_norm or ('شخصی' in query_norm and 'فایل' in query_norm)
+    ):
+        penalty += 5.0
     return penalty
 
 

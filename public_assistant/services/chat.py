@@ -15,7 +15,7 @@ from public_assistant.models import (
     PublicChatSession,
 )
 from public_assistant.services import llm
-from public_assistant.services.persian_text import normalize_persian
+from public_assistant.services.persian_text import normalize_persian, tokenize_query
 from public_assistant.services.retrieval import RetrievedChunk, retrieve
 from public_assistant.services.public_copy import (
     asks_internal_implementation,
@@ -56,6 +56,28 @@ SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ د�
 - در پاسخ «چطور استخراج کنم»، مراحل و پلتفرم‌ها را بگو؛ بدون نکتهٔ پایانی تجمیعی درباره مرورگر، نرخ دیوار یا قطع اینترنت مگر در منبع باشد.
 - لحن مشاور محصول: حرفه‌ای، دقیق، قابل‌اعتماد — نه رباتیک و نه تبلیغاتی.
 - برای سؤالات آموزشی («چطور»، «چه امکاناتی»، «چه کمکی») معمولاً حداقل **۱۲۰–۲۲۰ کلمه** مفید بنویس اگر منبع محتوا دارد؛ خالی‌گویی نکن."""
+
+
+def _compose_retrieval_query(session: PublicChatSession, message: str) -> str:
+    """سؤال‌های کوتاه/ادامه‌دار را با موضوع نوبت قبل غنی می‌کند."""
+    norm = normalize_persian(message)
+    tokens = tokenize_query(message)
+    followup_hint = len(tokens) <= 5 or any(
+        w in norm for w in ('کجا', 'چطور', 'چگونه', 'چجوری', 'همون', 'همین', 'اون', 'لینک', 'شماره')
+    )
+    if not followup_hint:
+        return message
+    prev = (
+        session.messages.filter(role=PublicChatMessage.ROLE_USER)
+        .order_by('-created_at')
+        .first()
+    )
+    if not prev:
+        return message
+    prev_norm = normalize_persian(prev.content)
+    if prev_norm in norm or norm in prev_norm:
+        return message
+    return f'{prev.content} — {message}'
 
 
 def _is_probably_off_topic(query: str, chunks: list[RetrievedChunk]) -> bool:
@@ -193,7 +215,8 @@ def answer_question(
             'session_id': str(session.id),
         }
 
-    chunks = retrieve(user_text)
+    retrieval_query = _compose_retrieval_query(session, user_text)
+    chunks = retrieve(retrieval_query)
 
     if asks_internal_implementation(user_text):
         return {

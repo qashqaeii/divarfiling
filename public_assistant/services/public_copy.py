@@ -5,7 +5,7 @@ import re
 
 from public_assistant.services.retrieval import RetrievedChunk
 
-# الگوهایی که در پاسخ کاربر عمومی نباید دیده شوند
+# الگوهایی که در پاسخ کاربر عمومی نباید دیده شوند (مسیرهای عمومی مثل `/workspace/` مجازند)
 _INTERNAL_LEAK_RE = re.compile(
     r'(?i)'
     r'(SIGNUP_[A-Z0-9_]+|'
@@ -13,13 +13,17 @@ _INTERNAL_LEAK_RE = re.compile(
     r'has_active_bot_license|agency_rbac_v2|'
     r'LicensePlan|PaymentSettings|'
     r'feature\s*flag|'
-    r'`[a-z0-9_./-]+`|'
     r'\b[a-z_]+/[a-z_]+\.py\b|'
     r'\bmodels\.py\b|'
     r'\bsettings\.py\b|'
     r'\bnl_command\b|\blisting_summary\b|\bcrm_message\b|'
     r'\bupload_brief\b|\bmanagement_analysis\b|'
     r'\bmax_activations\b|\ballow_bulk_purchase\b)'
+)
+
+# کد داخلی داخل بک‌تیک — نه URL/مسیر محصول
+_INTERNAL_BACKTICK_CODE_RE = re.compile(
+    r'`(?:[a-z][a-z0-9_]{2,}(?:\.py)?|SIGNUP_[A-Z0-9_]+)`'
 )
 
 _CITATION_RE = re.compile(r'\s*\[\d+\]')
@@ -60,7 +64,11 @@ def deflect_internal_question() -> str:
 
 
 def contains_internal_leak(text: str) -> bool:
-    return bool(text and _INTERNAL_LEAK_RE.search(text))
+    if not text:
+        return False
+    if _INTERNAL_LEAK_RE.search(text):
+        return True
+    return bool(_INTERNAL_BACKTICK_CODE_RE.search(text))
 
 
 def _strip_citations(text: str) -> str:

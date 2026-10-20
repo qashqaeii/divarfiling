@@ -6,9 +6,18 @@ from django.test import TestCase, override_settings
 from public_assistant.models import PublicChatSession
 from public_assistant.services.chat import answer_question
 from public_assistant.services.public_copy import (
+    _INSUFFICIENT_INFO,
     contains_internal_leak,
     polish_public_answer,
 )
+
+GOLDEN_HOWTO_QUESTIONS = [
+    'چطوری مخاطب ثبت کنم؟',
+    'چطوری فایل شخصی داشته باشم؟',
+    'لینک برای مشتری چطوری بفرستم؟',
+    'شماره تماس کجا وارد کنم در فایل شخصی؟',
+    'چطوری لینک برای مشتری بسازیم؟',
+]
 
 
 @override_settings(PUBLIC_ASSISTANT_ENABLED=True)
@@ -106,6 +115,55 @@ class PublicResponsePolicyTest(TestCase):
         blob = ' '.join(c.search_blob for c in art.chunks.all())
         self.assertNotIn('استخراج مستقیم از مرورگر', blob)
         self.assertNotIn('محدودیت نرخ و قوانین دیوار', blob)
+
+    def test_public_product_paths_in_backticks_not_leaks(self):
+        self.assertFalse(contains_internal_leak('از `/workspace/` وارد شوید'))
+        self.assertFalse(contains_internal_leak('از `/contact/` کمک بگیرید'))
+        self.assertFalse(contains_internal_leak('مسیر `/p/` را باز کنید'))
+        self.assertFalse(contains_internal_leak('مخاطبین: `/workspace/crm/contacts/`'))
+
+    def test_internal_snake_case_in_backticks_still_blocked(self):
+        self.assertTrue(contains_internal_leak('نیاز به `has_active_bot_license` دارد'))
+
+    def test_polish_keeps_answer_with_workspace_paths(self):
+        raw = (
+            '**ثبت مخاطب**\n\n'
+            '1. به `/workspace/crm/contacts/` بروید\n'
+            '2. مخاطب جدید را بزنید'
+        )
+        cleaned = polish_public_answer(raw)
+        self.assertIn('/workspace/crm/contacts/', cleaned)
+        self.assertNotEqual(cleaned, _INSUFFICIENT_INFO)
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_howto_contact_not_replaced_by_insufficient(self, mock_complete):
+        mock_complete.return_value = (
+            '**ثبت مخاطب**\n\n'
+            'از `/workspace/crm/contacts/` وارد شوید و مخاطب جدید بسازید.',
+            'mock',
+            'mock',
+            1,
+            1,
+            1,
+        )
+        out = answer_question(session=self.session, message='چطوری مخاطب ثبت کنم؟')
+        self.assertTrue(out['ok'])
+        self.assertNotIn('اطلاعات تأییدشدهٔ کافی', out['answer'])
+        self.assertIn('مخاطب', out['answer'])
+
+    def test_golden_howto_retrieval_and_fallback(self):
+        from public_assistant.services.retrieval import retrieve
+
+        for q in GOLDEN_HOWTO_QUESTIONS:
+            chunks = retrieve(q)
+            self.assertTrue(chunks, msg=q)
+            fallback = polish_public_answer('', chunks=chunks)
+            self.assertNotEqual(
+                fallback,
+                _INSUFFICIENT_INFO,
+                msg=f'fallback empty for: {q}',
+            )
+            self.assertNotIn('اطلاعات تأییدشدهٔ کافی', fallback, msg=q)
 
     def test_polish_strips_extractor_auto_disclaimer(self):
         raw = (

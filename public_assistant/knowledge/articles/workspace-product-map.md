@@ -67,7 +67,7 @@ is_active: true
 ## CRM — املاک شخصی
 - **فایل‌های شخصی مشاور:** `/workspace/crm/properties/`
 - **نقشه املاک شخصی:** `/workspace/crm/properties/map/`
-- تفاوت با dataset: ملک تحت مدیریت مستقیم مشاور (فایل اکس و …)
+- تفاوت با dataset: ملک تحت مدیریت مستقیم مشاور (**فایل شخصی**)
 
 ## تیم و آژانس
 - **هاب آژانس:** `/workspace/crm/agency/`

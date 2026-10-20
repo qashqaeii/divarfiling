@@ -1,78 +1,80 @@
 {% load static %}
 {% if public_assistant_widget %}
-<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=13">
 <div id="pa-root" class="pa-root" dir="rtl" data-config-url="{% url 'public_assistant:config' %}" data-chat-url="{% url 'public_assistant:chat' %}" data-feedback-url="{% url 'public_assistant:feedback' %}" data-reset-url="{% url 'public_assistant:reset' %}" hidden>
   <button type="button" class="pa-backdrop" id="paBackdrop" aria-label="بستن گفتگو" tabindex="-1"></button>
-  <button type="button" class="pa-fab" id="paFab" aria-label="گفتگو با دستیار فایلینگ دیوار" aria-expanded="false" aria-controls="paPanel">
-    <span class="pa-fab__pulse" aria-hidden="true"></span>
-    <span class="pa-fab__content">
-      <span class="pa-fab__icon" aria-hidden="true">
-        <img class="pa-bot-icon" src="{% static 'icons/CHATBOTICON.webp' %}" width="34" height="34" alt="" decoding="async" fetchpriority="low">
-      </span>
-      <span class="pa-fab__copy">
-        <span class="pa-fab__title">دستیار فایلینگ دیوار</span>
-        <span class="pa-fab__subtitle">پاسخ سریع به سوالات شما</span>
-      </span>
-    </span>
-    <span class="pa-fab__badge" title="آماده پاسخ‌گویی" aria-hidden="true"><span class="pa-fab__badge-dot"></span></span>
-  </button>
-  <div class="pa-panel" id="paPanel" role="dialog" aria-label="دستیار فایلینگ دیوار" aria-modal="true" hidden inert>
-    <header class="pa-head">
-      <div class="pa-head__brand">
-        <span class="pa-head__avatar" aria-hidden="true">
-          <img class="pa-bot-icon" src="{% static 'icons/CHATBOTICON.webp' %}" width="30" height="30" alt="" decoding="async">
-        </span>
-        <div class="pa-head__text">
-          <span class="pa-head__title">دستیار فایلینگ دیوار</span>
-          <span class="pa-head__status" id="paHeadStatus" aria-live="polite">
-            <span class="pa-head__status-dot" aria-hidden="true"></span>
-            <span class="pa-head__status-text">آماده پاسخ‌گویی</span>
+  <div class="pa-dock" id="paDock">
+    <div class="pa-panel" id="paPanel" role="dialog" aria-label="دستیار فایلینگ دیوار" aria-modal="true" hidden inert>
+      <header class="pa-head" id="paHead">
+        <div class="pa-head__brand">
+          <span class="pa-head__avatar" aria-hidden="true">
+            <img class="pa-bot-icon" src="{% static 'icons/CHATBOTICON.webp' %}" width="30" height="30" alt="" decoding="async">
           </span>
-        </div>
-      </div>
-      <div class="pa-head__tools">
-        <button type="button" class="pa-icon-btn" id="paNewChat" title="گفتگوی جدید" aria-label="گفتگوی جدید">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
-        </button>
-        <button type="button" class="pa-icon-btn" id="paMinimize" title="جمع‌کردن" aria-label="جمع‌کردن پنجره">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 14h12" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
-        </button>
-        <button type="button" class="pa-icon-btn" id="paClose" title="بستن" aria-label="بستن">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-    </header>
-    <div class="pa-thread">
-      <div class="pa-messages" id="paMessages" tabindex="0">
-        <div class="pa-welcome" id="paWelcome">
-          <div class="pa-welcome__mark" aria-hidden="true">
-            <img class="pa-bot-icon pa-bot-icon--welcome" src="{% static 'icons/CHATBOTICON.webp' %}" width="52" height="52" alt="" decoding="async">
-          </div>
-          <h2 class="pa-welcome__title">سلام <span class="pa-welcome__wave" aria-hidden="true">👋</span></h2>
-          <p class="pa-welcome__lead">من دستیار فایلینگ دیوار هستم. می‌توانم درباره خرید اشتراک، پلن‌ها، شروع کار، فعال‌سازی لایسنس و بخش‌های مختلف فایلینگ راهنمایی‌تان کنم.</p>
-          <p class="pa-welcome__privacy">پاسخ از دانشنامه عمومی — بدون دسترسی به حساب شما</p>
-          <div class="pa-welcome__suggestions" id="paSuggestions" role="list"></div>
-        </div>
-      </div>
-      <button type="button" class="pa-jump" id="paJumpEnd" hidden aria-label="رفتن به آخر گفتگو">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-    <footer class="pa-footer">
-      <form class="pa-compose" id="paForm">
-        <label class="pa-compose__label" for="paInput">پیام شما</label>
-        <div class="pa-compose__shell">
-          <textarea id="paInput" class="pa-compose__input" rows="1" maxlength="1200" placeholder="سؤال خود را درباره فایلینگ دیوار بنویسید…" autocomplete="off" enterkeyhint="send"></textarea>
-          <button type="submit" class="pa-send" id="paSend" aria-label="ارسال پیام" disabled>
-            <span class="pa-send__icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="pa-head__text">
+            <span class="pa-head__title">دستیار فایلینگ دیوار</span>
+            <span class="pa-head__status" id="paHeadStatus" aria-live="polite">
+              <span class="pa-head__status-dot" aria-hidden="true"></span>
+              <span class="pa-head__status-text">آماده پاسخ‌گویی</span>
             </span>
-            <span class="pa-send__spinner" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="pa-head__tools">
+          <button type="button" class="pa-icon-btn" id="paNewChat" title="گفتگوی جدید" aria-label="گفتگوی جدید">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="pa-icon-btn" id="paMinimize" title="جمع‌کردن" aria-label="جمع‌کردن پنجره">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 14h12" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="pa-icon-btn" id="paClose" title="بستن" aria-label="بستن">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>
           </button>
         </div>
-      </form>
-    </footer>
+      </header>
+      <div class="pa-thread">
+        <div class="pa-messages" id="paMessages" tabindex="0">
+          <div class="pa-welcome" id="paWelcome">
+            <div class="pa-welcome__mark" aria-hidden="true">
+              <img class="pa-bot-icon pa-bot-icon--welcome" src="{% static 'icons/CHATBOTICON.webp' %}" width="52" height="52" alt="" decoding="async">
+            </div>
+            <h2 class="pa-welcome__title">سلام <span class="pa-welcome__wave" aria-hidden="true">👋</span></h2>
+            <p class="pa-welcome__lead">من دستیار فایلینگ دیوار هستم. می‌توانم درباره خرید اشتراک، پلن‌ها، شروع کار، فعال‌سازی لایسنس و بخش‌های مختلف فایلینگ راهنمایی‌تان کنم.</p>
+            <p class="pa-welcome__privacy">پاسخ از دانشنامه عمومی — بدون دسترسی به حساب شما</p>
+            <div class="pa-welcome__suggestions" id="paSuggestions" role="list"></div>
+          </div>
+        </div>
+        <button type="button" class="pa-jump" id="paJumpEnd" hidden aria-label="رفتن به آخر گفتگو">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <footer class="pa-footer">
+        <form class="pa-compose" id="paForm">
+          <label class="pa-compose__label" for="paInput">پیام شما</label>
+          <div class="pa-compose__shell">
+            <textarea id="paInput" class="pa-compose__input" rows="1" maxlength="1200" placeholder="سؤال خود را درباره فایلینگ دیوار بنویسید…" autocomplete="off" enterkeyhint="send"></textarea>
+            <button type="submit" class="pa-send" id="paSend" aria-label="ارسال پیام" disabled>
+              <span class="pa-send__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="pa-send__spinner" aria-hidden="true"></span>
+            </button>
+          </div>
+        </form>
+      </footer>
+    </div>
+    <button type="button" class="pa-fab" id="paFab" aria-label="گفتگو با دستیار فایلینگ دیوار" aria-expanded="false" aria-controls="paPanel">
+      <span class="pa-fab__pulse" aria-hidden="true"></span>
+      <span class="pa-fab__content">
+        <span class="pa-fab__icon" aria-hidden="true">
+          <img class="pa-bot-icon" src="{% static 'icons/CHATBOTICON.webp' %}" width="34" height="34" alt="" decoding="async" fetchpriority="low">
+        </span>
+        <span class="pa-fab__copy">
+          <span class="pa-fab__title">دستیار فایلینگ دیوار</span>
+          <span class="pa-fab__subtitle">پاسخ سریع به سوالات شما</span>
+        </span>
+      </span>
+      <span class="pa-fab__badge" title="آماده پاسخ‌گویی" aria-hidden="true"><span class="pa-fab__badge-dot"></span></span>
+    </button>
   </div>
 </div>
-<script src="{% static 'public_assistant/js/widget.js' %}?v=12" defer></script>
+<script src="{% static 'public_assistant/js/widget.js' %}?v=13" defer></script>
 {% endif %}

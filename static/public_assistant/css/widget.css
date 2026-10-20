@@ -68,6 +68,51 @@
   pointer-events: auto;
 }
 
+/* Dock — mobile: children stay fixed; desktop: shared draggable anchor */
+.pa-dock {
+  display: contents;
+}
+
+@media (min-width: 641px) {
+  .pa-dock {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    position: fixed;
+    inset-inline-end: var(--pa-edge);
+    inset-block-end: var(--pa-bottom);
+    z-index: 10051;
+    pointer-events: none;
+  }
+
+  .pa-dock > * {
+    pointer-events: auto;
+  }
+
+  .pa-dock.is-custom-position {
+    inset: auto;
+    right: auto;
+    bottom: auto;
+  }
+
+  .pa-root.is-open .pa-dock {
+    gap: 0;
+  }
+
+  .pa-root.is-dragging,
+  .pa-root.is-dragging * {
+    user-select: none;
+  }
+
+  .pa-root.is-dragging .pa-dock,
+  .pa-root.is-dragging .pa-fab,
+  .pa-root.is-dragging .pa-panel {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 /* Launcher pill */
 .pa-fab {
   position: fixed;
@@ -240,6 +285,33 @@
   animation: none;
 }
 
+@media (min-width: 641px) {
+  .pa-fab {
+    position: relative;
+    inset: auto;
+    cursor: grab;
+  }
+
+  .pa-root.is-open .pa-fab {
+    position: absolute;
+    width: 0;
+    height: 0;
+    min-height: 0;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: none;
+  }
+
+  .pa-root.is-dragging .pa-fab,
+  .pa-root.is-dragging .pa-head {
+    cursor: grabbing;
+  }
+}
+
 /* Panel */
 .pa-panel {
   position: fixed;
@@ -276,6 +348,15 @@
   display: none !important;
 }
 
+@media (min-width: 641px) {
+  .pa-panel {
+    position: relative;
+    inset: auto;
+    width: min(432px, calc(100vw - 48px));
+    height: min(620px, calc(100dvh - 48px));
+  }
+}
+
 /* Header */
 .pa-head {
   flex-shrink: 0;
@@ -286,6 +367,17 @@
   padding: 12px 14px;
   border-bottom: 1px solid var(--pa-line);
   background: var(--pa-surface);
+}
+
+@media (min-width: 641px) {
+  .pa-head {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .pa-head__tools {
+    cursor: default;
+  }
 }
 
 .pa-head__brand {

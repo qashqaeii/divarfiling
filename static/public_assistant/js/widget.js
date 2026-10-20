@@ -2,6 +2,9 @@
   'use strict';
 
   var PANEL_CLOSE_MS = 260;
+  var DOCK_POS_KEY = 'pa_dock_pos';
+  var DRAG_THRESHOLD = 6;
+  var DOCK_MARGIN = 12;
   var ICON_COPY =
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>';
   var ICON_THUMB_UP =
@@ -197,6 +200,8 @@
   var headStatus = document.getElementById('paHeadStatus');
   var headStatusText = headStatus ? headStatus.querySelector('.pa-head__status-text') : null;
   var jumpBtn = document.getElementById('paJumpEnd');
+  var dock = document.getElementById('paDock');
+  var headEl = document.getElementById('paHead');
 
   var configUrl = root.dataset.configUrl;
   var chatUrl = root.dataset.chatUrl;
@@ -209,9 +214,142 @@
   var composing = false;
   var panelCloseTimer = null;
   var lastFailedMessage = '';
+  var dockDrag = null;
 
   function isMobile() {
     return window.matchMedia('(max-width: 640px)').matches;
+  }
+
+  function canDockDrag() {
+    return !isMobile() && !!dock;
+  }
+
+  function resetDockPosition() {
+    if (!dock) return;
+    dock.classList.remove('is-custom-position');
+    dock.style.left = '';
+    dock.style.top = '';
+    dock.style.right = '';
+    dock.style.bottom = '';
+  }
+
+  function clampDockXY(x, y) {
+    var rect = dock.getBoundingClientRect();
+    var w = rect.width || 0;
+    var h = rect.height || 0;
+    var maxX = Math.max(DOCK_MARGIN, window.innerWidth - w - DOCK_MARGIN);
+    var maxY = Math.max(DOCK_MARGIN, window.innerHeight - h - DOCK_MARGIN);
+    return {
+      x: Math.min(Math.max(DOCK_MARGIN, x), maxX),
+      y: Math.min(Math.max(DOCK_MARGIN, y), maxY),
+    };
+  }
+
+  function setDockXY(x, y, persist) {
+    var c = clampDockXY(x, y);
+    dock.classList.add('is-custom-position');
+    dock.style.left = c.x + 'px';
+    dock.style.top = c.y + 'px';
+    if (persist) {
+      try {
+        sessionStorage.setItem(DOCK_POS_KEY, JSON.stringify({ x: c.x, y: c.y }));
+      } catch (e) {}
+    }
+    return c;
+  }
+
+  function ensureDockCustomFromAnchor() {
+    if (!dock || dock.classList.contains('is-custom-position')) return;
+    var rect = dock.getBoundingClientRect();
+    dock.classList.add('is-custom-position');
+    dock.style.left = rect.left + 'px';
+    dock.style.top = rect.top + 'px';
+  }
+
+  function loadDockPosition() {
+    if (!canDockDrag()) return;
+    try {
+      var raw = sessionStorage.getItem(DOCK_POS_KEY);
+      if (!raw) return;
+      var pos = JSON.parse(raw);
+      if (typeof pos.x !== 'number' || typeof pos.y !== 'number') return;
+      setDockXY(pos.x, pos.y, false);
+    } catch (e) {}
+  }
+
+  function onDockPointerMove(e) {
+    if (!dockDrag || e.pointerId !== dockDrag.pointerId) return;
+    var dx = e.clientX - dockDrag.startClientX;
+    var dy = e.clientY - dockDrag.startClientY;
+    if (!dockDrag.moved) {
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+      dockDrag.moved = true;
+      ensureDockCustomFromAnchor();
+      var rect = dock.getBoundingClientRect();
+      dockDrag.offsetX = dockDrag.startClientX - rect.left;
+      dockDrag.offsetY = dockDrag.startClientY - rect.top;
+    }
+    e.preventDefault();
+    setDockXY(e.clientX - dockDrag.offsetX, e.clientY - dockDrag.offsetY, false);
+  }
+
+  function endDockDrag(e) {
+    if (!dockDrag) return;
+    if (e && e.pointerId !== undefined && e.pointerId !== dockDrag.pointerId) return;
+    var source = dockDrag.source;
+    var moved = dockDrag.moved;
+    var lastX = parseFloat(dock.style.left);
+    var lastY = parseFloat(dock.style.top);
+    dockDrag = null;
+    root.classList.remove('is-dragging');
+    document.removeEventListener('pointermove', onDockPointerMove);
+    document.removeEventListener('pointerup', endDockDrag);
+    document.removeEventListener('pointercancel', endDockDrag);
+    if (moved && !isNaN(lastX) && !isNaN(lastY)) {
+      setDockXY(lastX, lastY, true);
+    } else if (source === 'fab') {
+      setOpen(true);
+    }
+  }
+
+  function startDockDrag(e, source) {
+    if (!canDockDrag()) return;
+    if (e.button !== 0) return;
+    if (source === 'head') {
+      if (e.target.closest('.pa-head__tools, button, a, input, textarea, select, label')) return;
+      if (!root.classList.contains('is-open')) return;
+    }
+    dockDrag = {
+      pointerId: e.pointerId,
+      source: source,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      moved: false,
+      offsetX: 0,
+      offsetY: 0,
+    };
+    root.classList.add('is-dragging');
+    if (e.currentTarget.setPointerCapture) {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+    document.addEventListener('pointermove', onDockPointerMove);
+    document.addEventListener('pointerup', endDockDrag);
+    document.addEventListener('pointercancel', endDockDrag);
+  }
+
+  function onDockViewportChange() {
+    if (!dock) return;
+    if (isMobile()) {
+      resetDockPosition();
+      return;
+    }
+    if (dock.classList.contains('is-custom-position')) {
+      var x = parseFloat(dock.style.left);
+      var y = parseFloat(dock.style.top);
+      if (!isNaN(x) && !isNaN(y)) setDockXY(x, y, false);
+    }
   }
 
   function setHeadStatus(text) {
@@ -268,6 +406,13 @@
         root.classList.add('is-open');
       });
       lockBodyScrollIfNeeded();
+      if (canDockDrag() && dock.classList.contains('is-custom-position')) {
+        requestAnimationFrame(function () {
+          var x = parseFloat(dock.style.left);
+          var y = parseFloat(dock.style.top);
+          if (!isNaN(x) && !isNaN(y)) setDockXY(x, y, false);
+        });
+      }
       window.setTimeout(function () {
         input.focus();
       }, 280);
@@ -293,9 +438,27 @@
     }
   } catch (e) {}
 
-  fab.addEventListener('click', function () {
-    setOpen(true);
-  });
+  if (fab) {
+    fab.addEventListener('pointerdown', function (e) {
+      startDockDrag(e, 'fab');
+    });
+    fab.addEventListener('click', function (e) {
+      if (canDockDrag()) e.preventDefault();
+    });
+  }
+  if (headEl) {
+    headEl.addEventListener('pointerdown', function (e) {
+      startDockDrag(e, 'head');
+    });
+  }
+  loadDockPosition();
+  var dockMq = window.matchMedia('(max-width: 640px)');
+  if (dockMq.addEventListener) {
+    dockMq.addEventListener('change', onDockViewportChange);
+  } else if (dockMq.addListener) {
+    dockMq.addListener(onDockViewportChange);
+  }
+  window.addEventListener('resize', onDockViewportChange);
   closeBtn.addEventListener('click', function () {
     setOpen(false);
   });

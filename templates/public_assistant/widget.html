@@ -1,16 +1,13 @@
 {% load static %}
 {% if public_assistant_widget %}
-<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=12">
 <div id="pa-root" class="pa-root" dir="rtl" data-config-url="{% url 'public_assistant:config' %}" data-chat-url="{% url 'public_assistant:chat' %}" data-feedback-url="{% url 'public_assistant:feedback' %}" data-reset-url="{% url 'public_assistant:reset' %}" hidden>
   <button type="button" class="pa-backdrop" id="paBackdrop" aria-label="بستن گفتگو" tabindex="-1"></button>
   <button type="button" class="pa-fab" id="paFab" aria-label="گفتگو با دستیار فایلینگ دیوار" aria-expanded="false" aria-controls="paPanel">
     <span class="pa-fab__pulse" aria-hidden="true"></span>
     <span class="pa-fab__content">
       <span class="pa-fab__icon" aria-hidden="true">
-        <svg class="pa-fab__svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M11.2 2.4a.85.85 0 0 1 .84.73l1.05 3.72 3.72 1.05a.85.85 0 0 1 0 1.61l-3.72 1.05-1.05 3.72a.85.85 0 0 1-1.61 0l-1.05-3.72-3.72-1.05a.85.85 0 0 1 0-1.61l3.72-1.05 1.05-3.72a.85.85 0 0 1 .77-.53z" fill="currentColor"/>
-          <path d="M18.8 14.2l.55 1.65 1.65.55-1.65.55-.55 1.65-.55-1.65-1.65-.55 1.65-.55.55-1.65z" fill="currentColor" opacity=".72"/>
-        </svg>
+        <img class="pa-bot-icon" src="{% static 'icons/CHATBOTICON.webp' %}" width="34" height="34" alt="" decoding="async" fetchpriority="low">
       </span>
       <span class="pa-fab__copy">
         <span class="pa-fab__title">دستیار فایلینگ دیوار</span>
@@ -23,9 +20,7 @@
     <header class="pa-head">
       <div class="pa-head__brand">
         <span class="pa-head__avatar" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.2 2.4a.85.85 0 0 1 .84.73l1.05 3.72 3.72 1.05a.85.85 0 0 1 0 1.61l-3.72 1.05-1.05 3.72a.85.85 0 0 1-1.61 0l-1.05-3.72-3.72-1.05a.85.85 0 0 1 0-1.61l3.72-1.05 1.05-3.72a.85.85 0 0 1 .77-.53z" fill="currentColor"/>
-          </svg>
+          <img class="pa-bot-icon" src="{% static 'icons/CHATBOTICON.webp' %}" width="30" height="30" alt="" decoding="async">
         </span>
         <div class="pa-head__text">
           <span class="pa-head__title">دستیار فایلینگ دیوار</span>
@@ -51,9 +46,7 @@
       <div class="pa-messages" id="paMessages" tabindex="0">
         <div class="pa-welcome" id="paWelcome">
           <div class="pa-welcome__mark" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M11.2 2.4a.85.85 0 0 1 .84.73l1.05 3.72 3.72 1.05a.85.85 0 0 1 0 1.61l-3.72 1.05-1.05 3.72a.85.85 0 0 1-1.61 0l-1.05-3.72-3.72-1.05a.85.85 0 0 1 0-1.61l3.72-1.05 1.05-3.72a.85.85 0 0 1 .77-.53z" fill="currentColor"/>
-            </svg>
+            <img class="pa-bot-icon pa-bot-icon--welcome" src="{% static 'icons/CHATBOTICON.webp' %}" width="52" height="52" alt="" decoding="async">
           </div>
           <h2 class="pa-welcome__title">سلام <span class="pa-welcome__wave" aria-hidden="true">👋</span></h2>
           <p class="pa-welcome__lead">من دستیار فایلینگ دیوار هستم. می‌توانم درباره خرید اشتراک، پلن‌ها، شروع کار، فعال‌سازی لایسنس و بخش‌های مختلف فایلینگ راهنمایی‌تان کنم.</p>
@@ -81,5 +74,5 @@
     </footer>
   </div>
 </div>
-<script src="{% static 'public_assistant/js/widget.js' %}?v=11" defer></script>
+<script src="{% static 'public_assistant/js/widget.js' %}?v=12" defer></script>
 {% endif %}

@@ -28,7 +28,12 @@ from django.db import IntegrityError
 from workspace.services.agency_space_copy import AgencySpaceCopyError, copy_space_item_to_personal_crm
 from workspace.services.agency_space_moderation import hide_space_item_public
 from workspace.services.agency_space_provenance import provenance_for_customer, provenance_for_property
-from workspace.services.agency_space_publish import publish_customer, publish_property, update_space_item
+from workspace.services.agency_space_publish import (
+    publish_customer,
+    publish_property,
+    unpublish_space_item,
+    update_space_item,
+)
 from workspace.services.agency_space_query import get_space_item_for_user
 from workspace.services.crm_agency import create_agency
 from workspace.tests.test_agency_space_phase1 import AgencySpaceTestBase
@@ -40,6 +45,21 @@ class AgencySpaceCopyIntegrityTests(AgencySpaceTestBase):
     def _seat_advisor2(self):
         lic = License.objects.filter(agency_subscription=self.sub).order_by('pk').last()
         assign_seat_to_member(self.owner, lic.pk, self.advisor2.pk)
+
+    def test_delete_customer_after_unpublished_space_item(self):
+        c = self._customer(phone='09127778899')
+        item = publish_customer(
+            self.advisor, c.pk,
+            visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC,
+            contact_share_level=AgencySpaceItem.CONTACT_FULL,
+        )
+        unpublish_space_item(self.advisor, item.pk)
+        item_id = item.pk
+        c.delete()
+        item.refresh_from_db()
+        self.assertIsNone(item.customer_id)
+        self.assertEqual(item.status, AgencySpaceItem.STATUS_ARCHIVED)
+        self.assertEqual(item.archived_reason, AgencySpaceItem.ARCHIVE_SOURCE_DELETED)
 
     def test_delete_copied_customer_target_keeps_provenance_row(self):
         c = self._customer(phone='09121112233')

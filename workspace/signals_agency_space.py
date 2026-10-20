@@ -4,8 +4,9 @@ from django.dispatch import receiver
 
 from workspace.models import CRMProperty, Customer
 from workspace.services.agency_space_lifecycle import (
-    archive_publications_for_customer,
     archive_publications_for_property,
+    detach_customer_from_space_items,
+    detach_property_from_space_items,
 )
 
 
@@ -17,9 +18,9 @@ def archive_space_on_property_soft_delete(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=CRMProperty)
 def archive_space_on_property_delete(sender, instance, **kwargs):
-    archive_publications_for_property(instance)
+    detach_property_from_space_items(instance)
 
 
 @receiver(pre_delete, sender=Customer)
 def archive_space_on_customer_delete(sender, instance, **kwargs):
-    archive_publications_for_customer(instance)
+    detach_customer_from_space_items(instance)

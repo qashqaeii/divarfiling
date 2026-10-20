@@ -2234,6 +2234,11 @@ class AgencySpaceItem(models.Model):
                 check=(
                     models.Q(property__isnull=False, customer__isnull=True)
                     | models.Q(property__isnull=True, customer__isnull=False)
+                    | models.Q(
+                        status='archived',
+                        property__isnull=True,
+                        customer__isnull=True,
+                    )
                 ),
                 name='agency_space_item_one_source',
             ),

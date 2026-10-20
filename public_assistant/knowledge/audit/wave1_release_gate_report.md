@@ -50,8 +50,30 @@
 - UI / migration / production deploy نه
 - فقط اصلاح متن سه مقاله + `retrieval.py` + تست‌های gate
 
-## ۶. قبل از Merge
+## ۶. چت واقعی (Release Gate — ۲۰۲۶-۱۰-۲۰)
 
-1. `sync_public_knowledge` در staging/production پس از deploy محتوا
-2. QA دستی UI اشتراک (تأیید نهایی متن شماره مالک)
-3. Merge پس از تأیید شما
+### Staging (`https://staging.divarfiling.ir`)
+از محیط CI/Agent **در دسترس نبود** (خطای SSL/TLS و `chrome-error` در مرورگر). تست چت روی Staging انجام نشد.
+
+### Production (`https://divarfiling.ir`) — قبل از deploy شاخه موج ۱
+پنج سؤال via API + LLM واقعی (`scripts/chat_probe_production.json`):
+
+| سؤال | مرتبط | صحت محتوا |
+|------|--------|-----------|
+| فایل شخصی | بله | بله |
+| شماره مالک کجا | بله | بله (فرم CRM) |
+| لینک برای مشتری | بله | **نکتهٔ نادرست:** «شماره مالک با تنظیمات share کنترل می‌شود» (KB قدیمی + LLM) |
+| ثبت مخاطب | بله | بله |
+| لینک باز نمی‌شود | خیر | پاسخ «اطلاعات تأییدشده کافی نیست» — مقاله `support-wave1` روی prod نیست |
+
+### Local DB (کد شاخه + `sync_public_knowledge`, fallback LLM خالی)
+`test_screenshot_gate_chat_fallback_content` — پنج سؤال با session جدا؛ بدون پاسخ خالی؛ ادعای سوئیچ شماره مالک در سؤال لینک حذف شده.
+
+**نتیجه:** شرط «موفقیت در Staging» برآورده نشد؛ **ادغام با main در این مرحله انجام نشد** تا Staging deploy + `sync_public_knowledge` + تکرار probe.
+
+## ۷. قبل از Merge
+
+1. Deploy شاخه روی Staging + `python manage.py sync_public_knowledge`
+2. `python scripts/staging_chat_probe.py https://staging.divarfiling.ir scripts/chat_probe_staging.json`
+3. QA دستی UI اشتراک (شماره مالک)
+4. سپس merge → CI

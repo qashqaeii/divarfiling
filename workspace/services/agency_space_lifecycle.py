@@ -56,3 +56,27 @@ def archive_publications_for_customer(customer: Customer) -> int:
         ),
     )
     return _archive_items(qs, AgencySpaceItem.ARCHIVE_SOURCE_DELETED)
+
+
+@transaction.atomic
+def detach_customer_from_space_items(customer: Customer) -> int:
+    """قبل از hard-delete مخاطب — جلوگیری از SET_NULL ناسازگار با check constraint."""
+    now = timezone.now()
+    return AgencySpaceItem.objects.filter(customer_id=customer.pk).update(
+        customer_id=None,
+        status=AgencySpaceItem.STATUS_ARCHIVED,
+        archived_at=now,
+        archived_reason=AgencySpaceItem.ARCHIVE_SOURCE_DELETED,
+    )
+
+
+@transaction.atomic
+def detach_property_from_space_items(prop: CRMProperty) -> int:
+    """قبل از hard-delete ملک — همان منطق مخاطب."""
+    now = timezone.now()
+    return AgencySpaceItem.objects.filter(property_id=prop.pk).update(
+        property_id=None,
+        status=AgencySpaceItem.STATUS_ARCHIVED,
+        archived_at=now,
+        archived_reason=AgencySpaceItem.ARCHIVE_SOURCE_DELETED,
+    )

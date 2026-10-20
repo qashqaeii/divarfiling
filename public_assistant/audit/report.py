@@ -1,4 +1,4 @@
-"""تولید audit_report.md"""
+"""تولید audit_report.md — Phase 1.1"""
 from __future__ import annotations
 
 from typing import Any
@@ -10,86 +10,112 @@ def build_audit_report(
     retrieval: dict[str, Any],
     gaps: list[dict[str, Any]],
     source_index: dict[str, Any],
+    stats: dict[str, Any] | None = None,
 ) -> str:
-    depth_counts = {'none': 0, 'overview': 0, 'howto': 0, 'full': 0}
+    stats = stats or {}
+    heuristic_counts: dict[str, int] = {}
+    verified_counts: dict[str, int] = {}
     for r in coverage_rows:
-        d = r.get('overall_depth', 'none')
-        depth_counts[d] = depth_counts.get(d, 0) + 1
+        h = r.get('heuristic_coverage', 'none')
+        v = r.get('verified_coverage', 'none')
+        heuristic_counts[h] = heuristic_counts.get(h, 0) + 1
+        verified_counts[v] = verified_counts.get(v, 0) + 1
 
-    verified = sum(
-        1 for f in catalog.get('features', []) if f.get('verification_status') == 'code_reviewed'
+    verified_features = sum(
+        1
+        for f in catalog.get('features', [])
+        if f.get('entity_type') == 'feature' and f.get('verification_status') == 'code_reviewed'
     )
-    unverified = len(catalog.get('features', [])) - verified
+    logical = stats.get('logical_feature_count') or catalog.get('logical_feature_count', 0)
 
     eval_block = retrieval.get('eval_dataset', {})
-    p0 = sum(1 for g in gaps if g['priority'] == 'P0')
-
+    ood = retrieval.get('out_of_scope_eval', {})
     plat = catalog.get('platforms_audit', {})
     android = plat.get('android', {})
     windows = plat.get('windows', {})
 
     lines = [
-        '# گزارش ممیزی دانش محصول — دستیار عمومی فایلینگ دیوار',
+        '# گزارش ممیزی دانش محصول — Phase 1.1 (Audit Hardening)',
         '',
         f"**تاریخ:** {catalog.get('generated_at')}",
         '',
-        '## ۱. قابلیت‌های کاربرمحور',
+        '## ۱. کاتالوگ',
         '',
-        f"- تعداد ورودی کاتالوگ: **{catalog.get('feature_count')}** (قابلیت منطقی، نه تعداد URL)",
-        f"- وضعیت انتشار (از seed): {catalog.get('release_status_counts')}",
-        f"- تأیید `code_reviewed`: **{verified}** | سایر/نیازمند تأیید: **{unverified}**",
+        f"- ورودی‌های کاتالوگ (همه entityها): **{catalog.get('entry_count', catalog.get('feature_count'))}**",
+        f"- قابلیت‌های منطقی (`entity_type=feature`): **{logical}**",
+        f"- توزیع entity: {catalog.get('entity_type_counts')}",
+        f"- وضعیت انتشار: {catalog.get('release_status_counts')}",
+        f"- تأیید `code_reviewed` (feature): **{verified_features}**",
         '',
         '### پلتفرم‌ها',
         '',
-        f"- **وب (Django):** {plat.get('django_workspace_routes')} مسیر در `workspace/urls.py`",
-        f"- **راهنمای میزکار:** {plat.get('help_sections')} بخش در `help_content.py`",
-        f"- **اندروید:** {'در دسترس در monorepo' if android.get('available') else 'غیرقابل دسترس'} "
-        f"— {android.get('route_count', 0)} route در `Routes` ({android.get('note')})",
-        f"- **ویندوز:** {'src موجود' if windows.get('available') else 'غیرقابل دسترس'} — "
-        f"{windows.get('note', '')}",
-        '',
-        '> برای قابلیت‌های اندروید/ویندوز بدون مقاله یا help وب، پوشش دانشنامه **نباید** از روی API وب استنتاج شود.',
+        f"- URL inventory (parsed): {plat.get('url_inventory_summary')}",
+        f"- **اندروید:** {android.get('route_count', 0)} route — {android.get('note')}",
+        f"- **ویندوز:** {windows.get('note', '')}",
         '',
         '## ۲. پوشش دانشنامه',
         '',
-        f"| عمق | تعداد |",
-        f"|-----|------:|",
+        '### heuristic_coverage (تخمین ساختار متن)',
+        '',
+        '| عمق | تعداد |',
+        '|-----|------:|',
     ]
-    for k in ('full', 'howto', 'overview', 'none'):
-        lines.append(f"| `{k}` | {depth_counts.get(k, 0)} |")
+    for k in ('howto', 'overview', 'none'):
+        lines.append(f"| `{k}` | {heuristic_counts.get(k, 0)} |")
 
     lines.extend(
         [
             '',
-            '## ۳. بازیابی RAG (baseline — بدون تغییر retrieval)',
+            '### verified_coverage (تأییدشده / نیازمند بازبینی)',
             '',
-            f"- سؤالات `eval_dataset`: **{eval_block.get('query_count', 0)}**",
-            f"- hit@1: **{eval_block.get('hit_at_1', 0):.1%}**",
-            f"- hit@3: **{eval_block.get('hit_at_3', 0):.1%}** (همان cutoff تست `test_hardening` با `hits[:3]`)",
-            f"- hit@5: **{eval_block.get('hit_at_5', 0):.1%}**",
-            f"- تعداد miss در hit@5: **{len(eval_block.get('misses', []))}**",
+            '| وضعیت | تعداد |',
+            '|--------|------:|',
+        ]
+    )
+    for k in ('full', 'howto', 'overview', 'needs_review', 'none', 'unverified'):
+        if verified_counts.get(k):
+            lines.append(f"| `{k}` | {verified_counts.get(k, 0)} |")
+
+    lines.extend(
+        [
             '',
-            '### موانع کیفیت پاسخ (مشاهده‌شده)',
+            f"- **full تأییدشده:** {stats.get('verified_full_count', verified_counts.get('full', 0))}",
+            f"- **needs_review:** {stats.get('needs_review_count', verified_counts.get('needs_review', 0))}",
             '',
-            '- سقف ۱۰۰ نامزد قبل از امتیازدهی در `retrieval.py`',
-            '- وابستگی شدید به `_intent_boost` / `_intent_penalty`',
-            '- مقالات overview برای سؤالات how-to تخصصی',
-            '- `technical_refs` خالی در اکثر مقالات — نگهداری ضعیف',
+            '> وضعیت `full` فقط با `code_reviewed` + `last_verified_at` + `technical_refs` + مراحل واقعی مجاز است.',
             '',
-            '## ۴. شکاف‌ها و فاز ۲',
+            '## ۳. بازیابی (offline markdown — بدون تغییر DB)',
             '',
-            f"- آیتم P0 در backlog: **{p0}**",
-            '- جزئیات: `knowledge_gap_backlog.md`',
+            f"- mode: **{retrieval.get('mode', retrieval.get('skipped', 'n/a'))}**",
+            f"- سؤالات eval: **{eval_block.get('query_count', 0)}**",
             '',
-            '## ۵. Source Index',
+            '| معیار | Article (dedup) | Chunk |',
+            '|-------|----------------:|------:|',
+            f"| hit@1 | {eval_block.get('article_hit_at_1', 0):.1%} | {eval_block.get('chunk_hit_at_1', 0):.1%} |",
+            f"| hit@3 | {eval_block.get('article_hit_at_3', 0):.1%} | {eval_block.get('chunk_hit_at_3', 0):.1%} |",
+            f"| hit@5 | {eval_block.get('article_hit_at_5', 0):.1%} | {eval_block.get('chunk_hit_at_5', 0):.1%} |",
             '',
-            f"- مراجع فایل گم‌شده (exists=false): **{source_index.get('missing_source_files', 0)}**",
+            f"- out-of-scope accuracy: **{ood.get('accuracy', 0):.1%}** ({ood.get('query_count', 0)} سؤال)",
+            f"- scenario how-to hit@5: **{retrieval.get('scenario_eval', {}).get('howto_hit_at_5', 0)}**",
             '',
-            '## ۶. زیرساخت نگهداری',
+            '## ۴. Gap backlog (فقط feature)',
             '',
-            'طراحی در `knowledge/audit/staleness_registry.yaml` و قالب مقاله در '
-            '`knowledge/templates/article_specialist_template.md`. '
-            'بدون migration در این فاز.',
+            f"- P0: **{stats.get('p0_count', 0)}** | P1: **{stats.get('p1_count', 0)}** | P2: **{stats.get('p2_count', 0)}**",
+            '',
+            '## ۵. Source index',
+            '',
+            f"- missing files: **{source_index.get('missing_source_files', 0)}**",
+            f"- feature بدون article/path: **{source_index.get('features_without_article_or_path', 0)}**",
+            '',
+            '## ۶. Staleness',
+            '',
+            'فایل `staleness_registry.yaml` + `staleness_diff.json` — diff نسبت به snapshot قبلی.',
+            '',
+            '## ۷. محدودیت‌ها / QA دستی',
+            '',
+            '- رفتار UI اندروید/ویندوز و feature flagهای production',
+            '- تطبیق `documented_in_help` با نسخه اجرایی',
+            '- تأیید `needs_review` → `full` در فاز ۲',
             '',
         ]
     )

@@ -27,6 +27,11 @@ def knowledge_articles_dir() -> Path:
 
 
 def audit_output_dir() -> Path:
+    import os
+
+    override = os.environ.get('PUBLIC_ASSISTANT_AUDIT_OUTPUT_DIR')
+    if override:
+        return Path(override).resolve()
     return django_root() / 'public_assistant' / 'knowledge' / 'audit'
 
 

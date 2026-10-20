@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 
 from public_assistant.audit.collectors.android_routes import collect_android_routes
-from public_assistant.audit.collectors.django_urls import collect_workspace_routes
+from public_assistant.audit.collectors.django_urls import collect_url_inventory, collect_workspace_routes
 from public_assistant.audit.collectors.help_content import collect_help_sections, collect_help_toc
 from public_assistant.audit.collectors.windows_features import collect_windows_surface
 from public_assistant.audit.paths import (
@@ -83,6 +83,8 @@ def _merge_help_topic_features(features: list[dict[str, Any]], sections: list[di
             features.append(
                 {
                     'id': fid,
+                    'entity_type': 'help_topic',
+                    'catalog_role': 'child_only',
                     'title': title,
                     'domain': _HELP_DOMAIN.get(sid, 'workspace'),
                     'parent_id': parent_id,
@@ -92,14 +94,15 @@ def _merge_help_topic_features(features: list[dict[str, Any]], sections: list[di
                     'operations': [],
                     'roles': [],
                     'license_notes': '',
-                    'release_status': 'shipped',
+                    'release_status': 'documented_in_help',
                     'verification_status': 'help_content_only',
                     'knowledge_articles': [],
                     'help_section_ids': [sid],
                     'help_topic_title': title,
                     'source_refs': [sec['source_ref']],
+                    'source_linkage': 'help_content_topic',
                     'last_verified_at': None,
-                    'notes': 'topic از help_content؛ لینک url_name=%s' % topic.get('url_name'),
+                    'notes': 'topic از help_content؛ url_name=%s' % topic.get('url_name'),
                 }
             )
             existing.add(fid)
@@ -117,6 +120,8 @@ def _merge_help_features(features: list[dict[str, Any]], sections: list[dict]) -
         features.append(
             {
                 'id': fid,
+                'entity_type': 'help_section',
+                'catalog_role': 'child_only',
                 'title': sec['title'],
                 'domain': _HELP_DOMAIN.get(sid, 'workspace'),
                 'parent_id': None,
@@ -126,15 +131,48 @@ def _merge_help_features(features: list[dict[str, Any]], sections: list[dict]) -
                 'operations': [],
                 'roles': [],
                 'license_notes': sec.get('badge') or '',
-                'release_status': 'shipped',
+                'release_status': 'documented_in_help',
                 'verification_status': 'help_content_only',
                 'knowledge_articles': [],
                 'help_section_ids': [sid],
                 'source_refs': [sec['source_ref']],
+                'source_linkage': 'help_content_section',
                 'last_verified_at': None,
                 'notes': 'استخراج خودکار از help_content؛ مسیر UI جداگانه تأیید نشده',
             }
         )
+
+
+_HIGH_IMPACT_FEATURE_IDS = {
+    'crm-contacts-hub',
+    'crm-personal-properties-hub',
+    'crm-property-owner-contact',
+    'filing-collections',
+    'extractor-overview',
+    'share-public-file',
+    'crm-deals-hub',
+    'crm-deals-finance',
+    'contracts-hub',
+    'agency-hub',
+    'agency-space-sharing',
+    'ai-workspace-features',
+    'android-post-call-assistant',
+    'extractor-windows-scheduler',
+    'support-tickets',
+}
+
+
+def _normalize_seed_features(features: list[dict[str, Any]]) -> None:
+    for f in features:
+        f.setdefault('entity_type', 'feature')
+        f.setdefault('catalog_role', 'primary')
+        if f.get('entity_type') == 'feature':
+            f.setdefault('release_status', 'unverified')
+            f.setdefault('verification_status', 'unverified')
+        if f.get('id') in _HIGH_IMPACT_FEATURE_IDS:
+            f['user_impact'] = 'high'
+        else:
+            f.setdefault('user_impact', 'medium')
 
 
 def _attach_audit_meta(features: list[dict[str, Any]], routes: list) -> dict[str, Any]:
@@ -162,10 +200,12 @@ def _attach_audit_meta(features: list[dict[str, Any]], routes: list) -> dict[str
 
 def build_feature_catalog() -> dict[str, Any]:
     features = _load_seed()
+    _normalize_seed_features(features)
     sections = collect_help_sections()
     _merge_help_features(features, sections)
     _merge_help_topic_features(features, sections)
 
+    url_inventory = collect_url_inventory(workspace_urls_path())
     routes = collect_workspace_routes(workspace_urls_path())
     android_routes, android_note = collect_android_routes(android_nav_host_path())
     windows = collect_windows_surface(windows_src_dir())
@@ -180,17 +220,27 @@ def build_feature_catalog() -> dict[str, Any]:
     path_audit = _attach_audit_meta(features, routes)
 
     status_counts: dict[str, int] = {}
+    entity_counts: dict[str, int] = {}
     for f in features:
         st = f.get('release_status', 'unverified')
         status_counts[st] = status_counts.get(st, 0) + 1
+        et = f.get('entity_type', 'feature')
+        entity_counts[et] = entity_counts.get(et, 0) + 1
+
+    logical_features = [f for f in features if f.get('entity_type') == 'feature']
 
     return {
-        'catalog_version': 1,
+        'catalog_version': 2,
         'generated_at': date.today().isoformat(),
-        'feature_count': len(features),
+        'entry_count': len(features),
+        'logical_feature_count': len(logical_features),
+        'feature_count': len(logical_features),
+        'entity_type_counts': entity_counts,
         'release_status_counts': status_counts,
         'platforms_audit': {
-            'django_workspace_routes': len(routes),
+            'django_workspace_routes': url_inventory['summary'].get('total_parsed', len(routes)),
+            'url_inventory_summary': url_inventory.get('summary'),
+            'url_includes': url_inventory.get('includes'),
             'help_sections': len(sections),
             'help_toc_entries': len(toc),
             'knowledge_articles_markdown': None,  # filled in command

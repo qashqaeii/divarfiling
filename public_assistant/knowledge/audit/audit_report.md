@@ -1,55 +1,73 @@
-# گزارش ممیزی دانش محصول — دستیار عمومی فایلینگ دیوار
+# گزارش ممیزی دانش محصول — Phase 1.1 (Audit Hardening)
 
 **تاریخ:** 2026-10-20
 
-## ۱. قابلیت‌های کاربرمحور
+## ۱. کاتالوگ
 
-- تعداد ورودی کاتالوگ: **80** (قابلیت منطقی، نه تعداد URL)
-- وضعیت انتشار (از seed): {'shipped': 79, 'gated': 1}
-- تأیید `code_reviewed`: **24** | سایر/نیازمند تأیید: **56**
+- ورودی‌های کاتالوگ (همه entityها): **80**
+- قابلیت‌های منطقی (`entity_type=feature`): **33**
+- توزیع entity: {'feature': 33, 'help_section': 2, 'help_topic': 45}
+- وضعیت انتشار: {'shipped': 32, 'gated': 1, 'documented_in_help': 47}
+- تأیید `code_reviewed` (feature): **24**
 
 ### پلتفرم‌ها
 
-- **وب (Django):** 213 مسیر در `workspace/urls.py`
-- **راهنمای میزکار:** 15 بخش در `help_content.py`
-- **اندروید:** در دسترس در monorepo — 62 route در `Routes` (ok)
-- **ویندوز:** src موجود — inferred_from_src_layout
-
-> برای قابلیت‌های اندروید/ویندوز بدون مقاله یا help وب، پوشش دانشنامه **نباید** از روی API وب استنتاج شود.
+- URL inventory (parsed): {'total_parsed': 220, 'user_page': 165, 'api': 53, 'internal': 2, 'with_params': 96}
+- **اندروید:** 62 route — ok
+- **ویندوز:** inferred_from_src_layout
 
 ## ۲. پوشش دانشنامه
 
+### heuristic_coverage (تخمین ساختار متن)
+
 | عمق | تعداد |
 |-----|------:|
-| `full` | 18 |
-| `howto` | 0 |
-| `overview` | 61 |
+| `howto` | 18 |
+| `overview` | 16 |
 | `none` | 1 |
 
-## ۳. بازیابی RAG (baseline — بدون تغییر retrieval)
+### verified_coverage (تأییدشده / نیازمند بازبینی)
 
-- سؤالات `eval_dataset`: **97**
-- hit@1: **70.1%**
-- hit@3: **81.4%** (همان cutoff تست `test_hardening` با `hits[:3]`)
-- hit@5: **85.6%**
-- تعداد miss در hit@5: **14**
+| وضعیت | تعداد |
+|--------|------:|
+| `overview` | 1 |
+| `needs_review` | 33 |
+| `none` | 1 |
 
-### موانع کیفیت پاسخ (مشاهده‌شده)
+- **full تأییدشده:** 0
+- **needs_review:** 33
 
-- سقف ۱۰۰ نامزد قبل از امتیازدهی در `retrieval.py`
-- وابستگی شدید به `_intent_boost` / `_intent_penalty`
-- مقالات overview برای سؤالات how-to تخصصی
-- `technical_refs` خالی در اکثر مقالات — نگهداری ضعیف
+> وضعیت `full` فقط با `code_reviewed` + `last_verified_at` + `technical_refs` + مراحل واقعی مجاز است.
 
-## ۴. شکاف‌ها و فاز ۲
+## ۳. بازیابی (offline markdown — بدون تغییر DB)
 
-- آیتم P0 در backlog: **38**
-- جزئیات: `knowledge_gap_backlog.md`
+- mode: **offline_markdown**
+- سؤالات eval: **97**
 
-## ۵. Source Index
+| معیار | Article (dedup) | Chunk |
+|-------|----------------:|------:|
+| hit@1 | 70.1% | 70.1% |
+| hit@3 | 85.6% | 81.4% |
+| hit@5 | 85.6% | 85.6% |
 
-- مراجع فایل گم‌شده (exists=false): **0**
+- out-of-scope accuracy: **0.0%** (4 سؤال)
+- scenario how-to hit@5: **1.0**
 
-## ۶. زیرساخت نگهداری
+## ۴. Gap backlog (فقط feature)
 
-طراحی در `knowledge/audit/staleness_registry.yaml` و قالب مقاله در `knowledge/templates/article_specialist_template.md`. بدون migration در این فاز.
+- P0: **15** | P1: **7** | P2: **11**
+
+## ۵. Source index
+
+- missing files: **0**
+- feature بدون article/path: **1**
+
+## ۶. Staleness
+
+فایل `staleness_registry.yaml` + `staleness_diff.json` — diff نسبت به snapshot قبلی.
+
+## ۷. محدودیت‌ها / QA دستی
+
+- رفتار UI اندروید/ویندوز و feature flagهای production
+- تطبیق `documented_in_help` با نسخه اجرایی
+- تأیید `needs_review` → `full` در فاز ۲

@@ -1,16 +1,37 @@
 {
+  "mode": "offline_markdown",
   "eval_dataset": {
     "query_count": 97,
     "hit_at_1": 0.7010309278350515,
-    "hit_at_3": 0.8144329896907216,
-    "hit_at_3_note": "test_hardening uses hits[:3] — same cutoff as hit@3 here",
+    "hit_at_3": 0.8556701030927835,
+    "hit_at_3_note": "legacy alias of article_hit_at_3 (deduped by article_id)",
     "hit_at_5": 0.8556701030927835,
+    "article_hit_at_1": 0.7010309278350515,
+    "article_hit_at_3": 0.8556701030927835,
+    "article_hit_at_5": 0.8556701030927835,
+    "chunk_hit_at_1": 0.7010309278350515,
+    "chunk_hit_at_3": 0.8144329896907216,
+    "chunk_hit_at_5": 0.8556701030927835,
     "misses": [
       {
         "query": "فایلینگ دیوار چیست",
         "expected": "intro-what-is-divar-filing",
-        "rank": null,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "filing-detail-map",
+          "extractor-to-filing",
+          "extractor-overview"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "filing-detail-map",
@@ -21,8 +42,22 @@
       {
         "query": "فایلینگ دیوار چه امکاناتی دارد",
         "expected": "workspace-product-map",
-        "rank": null,
-        "top_5": [
+        "domain": "product_intro",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "filing-detail-map",
+          "extractor-to-filing",
+          "extractor-overview"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "filing-detail-map",
@@ -33,8 +68,23 @@
       {
         "query": "تفاوت crm و فایلینگ",
         "expected": "intro-crm-filing-extractor",
-        "rank": null,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "crm-advisor-guide",
+          "extractor-to-filing",
+          "crm-personal-properties",
+          "crm-matching"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "crm-advisor-guide",
@@ -45,8 +95,23 @@
       {
         "query": "استخراج با crm چه فرقی داره",
         "expected": "intro-crm-filing-extractor",
-        "rank": null,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "extractor-overview",
+          "crm-advisor-guide",
+          "extractor-to-filing",
+          "extractor-windows",
+          "extractor-single-batch"
+        ],
+        "top_chunks": [
           "extractor-overview",
           "extractor-overview",
           "crm-advisor-guide",
@@ -57,8 +122,23 @@
       {
         "query": "شروع کار بعد ثبت نام",
         "expected": "support-getting-started",
-        "rank": null,
-        "top_5": [
+        "domain": "support",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "account-register-login",
+          "crm-advisor-guide",
+          "crm-contacts",
+          "crm-activities-reminders",
+          "ai-features-overview"
+        ],
+        "top_chunks": [
           "account-register-login",
           "account-register-login",
           "crm-advisor-guide",
@@ -69,8 +149,23 @@
       {
         "query": "لینک share فایل",
         "expected": "share-public-file",
-        "rank": null,
-        "top_5": [
+        "domain": "other",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-detail-map",
+          "intro-crm-filing-extractor",
+          "filing-collections",
+          "intro-what-is-divar-filing",
+          "extractor-to-filing"
+        ],
+        "top_chunks": [
           "filing-detail-map",
           "intro-crm-filing-extractor",
           "intro-crm-filing-extractor",
@@ -81,14 +176,38 @@
       {
         "query": "سیاست مدنی ایران",
         "expected": "public-assistant-scope",
-        "rank": null,
-        "top_5": []
+        "domain": "other",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [],
+        "top_chunks": []
       },
       {
         "query": "api key فایلینگ",
         "expected": "public-assistant-scope",
-        "rank": null,
-        "top_5": [
+        "domain": "other",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "extractor-to-filing",
+          "ai-features-overview",
+          "crm-matching",
+          "filing-detail-map"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "extractor-to-filing",
@@ -99,8 +218,20 @@
       {
         "query": "لایسنسم تموم شده چیکار کنم",
         "expected": "license-activation",
-        "rank": null,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "extractor-to-filing",
+          "ai-voice-note"
+        ],
+        "top_chunks": [
           "extractor-to-filing",
           "extractor-to-filing",
           "ai-voice-note",
@@ -110,8 +241,22 @@
       {
         "query": "چندتا آگهی یکجا بگیرم",
         "expected": "extractor-single-batch",
-        "rank": null,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-divar-contact",
+          "extractor-overview",
+          "filing-detail-map",
+          "ai-listing-summary"
+        ],
+        "top_chunks": [
           "filing-divar-contact",
           "filing-divar-contact",
           "extractor-overview",
@@ -122,8 +267,19 @@
       {
         "query": "تو دیتاست نمیبینمش",
         "expected": "extractor-to-filing",
-        "rank": null,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections"
         ]
@@ -131,8 +287,23 @@
       {
         "query": "فیلتر قیمت تو فایلینگ",
         "expected": "filing-collections",
-        "rank": null,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "extractor-to-filing",
+          "crm-advisor-guide",
+          "extractor-overview",
+          "ai-features-overview",
+          "crm-personal-properties"
+        ],
+        "top_chunks": [
           "extractor-to-filing",
           "extractor-to-filing",
           "crm-advisor-guide",
@@ -143,25 +314,196 @@
       {
         "query": "با صدا یادداشت بزنم",
         "expected": "ai-voice-note",
-        "rank": null,
-        "top_5": []
+        "domain": "ai",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [],
+        "top_chunks": []
       },
       {
         "query": "تیمم سه نفره seat",
         "expected": "agency-seats-licenses",
-        "rank": null,
-        "top_5": []
+        "domain": "agency",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [],
+        "top_chunks": []
       }
     ],
+    "misses_by_domain": {
+      "filing_extractor": [
+        {
+          "query": "فایلینگ دیوار چیست",
+          "expected": "intro-what-is-divar-filing",
+          "top_articles": [
+            "filing-collections",
+            "filing-detail-map",
+            "extractor-to-filing",
+            "extractor-overview"
+          ]
+        },
+        {
+          "query": "تفاوت crm و فایلینگ",
+          "expected": "intro-crm-filing-extractor",
+          "top_articles": [
+            "filing-collections",
+            "crm-advisor-guide",
+            "extractor-to-filing",
+            "crm-personal-properties",
+            "crm-matching"
+          ]
+        },
+        {
+          "query": "استخراج با crm چه فرقی داره",
+          "expected": "intro-crm-filing-extractor",
+          "top_articles": [
+            "extractor-overview",
+            "crm-advisor-guide",
+            "extractor-to-filing",
+            "extractor-windows",
+            "extractor-single-batch"
+          ]
+        },
+        {
+          "query": "چندتا آگهی یکجا بگیرم",
+          "expected": "extractor-single-batch",
+          "top_articles": [
+            "filing-divar-contact",
+            "extractor-overview",
+            "filing-detail-map",
+            "ai-listing-summary"
+          ]
+        },
+        {
+          "query": "تو دیتاست نمیبینمش",
+          "expected": "extractor-to-filing",
+          "top_articles": [
+            "filing-collections"
+          ]
+        },
+        {
+          "query": "فیلتر قیمت تو فایلینگ",
+          "expected": "filing-collections",
+          "top_articles": [
+            "extractor-to-filing",
+            "crm-advisor-guide",
+            "extractor-overview",
+            "ai-features-overview",
+            "crm-personal-properties"
+          ]
+        }
+      ],
+      "product_intro": [
+        {
+          "query": "فایلینگ دیوار چه امکاناتی دارد",
+          "expected": "workspace-product-map",
+          "top_articles": [
+            "filing-collections",
+            "filing-detail-map",
+            "extractor-to-filing",
+            "extractor-overview"
+          ]
+        }
+      ],
+      "support": [
+        {
+          "query": "شروع کار بعد ثبت نام",
+          "expected": "support-getting-started",
+          "top_articles": [
+            "account-register-login",
+            "crm-advisor-guide",
+            "crm-contacts",
+            "crm-activities-reminders",
+            "ai-features-overview"
+          ]
+        }
+      ],
+      "other": [
+        {
+          "query": "لینک share فایل",
+          "expected": "share-public-file",
+          "top_articles": [
+            "filing-detail-map",
+            "intro-crm-filing-extractor",
+            "filing-collections",
+            "intro-what-is-divar-filing",
+            "extractor-to-filing"
+          ]
+        },
+        {
+          "query": "سیاست مدنی ایران",
+          "expected": "public-assistant-scope",
+          "top_articles": []
+        },
+        {
+          "query": "api key فایلینگ",
+          "expected": "public-assistant-scope",
+          "top_articles": [
+            "filing-collections",
+            "extractor-to-filing",
+            "ai-features-overview",
+            "crm-matching",
+            "filing-detail-map"
+          ]
+        }
+      ],
+      "account_licensing": [
+        {
+          "query": "لایسنسم تموم شده چیکار کنم",
+          "expected": "license-activation",
+          "top_articles": [
+            "extractor-to-filing",
+            "ai-voice-note"
+          ]
+        }
+      ],
+      "ai": [
+        {
+          "query": "با صدا یادداشت بزنم",
+          "expected": "ai-voice-note",
+          "top_articles": []
+        }
+      ],
+      "agency": [
+        {
+          "query": "تیمم سه نفره seat",
+          "expected": "agency-seats-licenses",
+          "top_articles": []
+        }
+      ]
+    },
     "results": [
       {
         "query": "فایلینگ دیوار چیست",
         "expected": "intro-what-is-divar-filing",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "filing-detail-map",
+          "extractor-to-filing",
+          "extractor-overview"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "filing-detail-map",
@@ -172,11 +514,22 @@
       {
         "query": "فایلینگ دیوار چه امکاناتی دارد",
         "expected": "workspace-product-map",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "product_intro",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "filing-detail-map",
+          "extractor-to-filing",
+          "extractor-overview"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "filing-detail-map",
@@ -187,11 +540,23 @@
       {
         "query": "crm چه کمکی به مشاور دارد",
         "expected": "crm-advisor-guide",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "ai-crm-message",
+          "intro-what-is-divar-filing",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "crm-advisor-guide",
           "crm-advisor-guide",
           "intro-crm-filing-extractor",
@@ -202,11 +567,22 @@
       {
         "query": "برای مشاور املاک چه کمکی میکنه",
         "expected": "crm-advisor-guide",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "intro-what-is-divar-filing",
+          "crm-personal-properties"
+        ],
+        "top_chunks": [
           "crm-advisor-guide",
           "crm-advisor-guide",
           "intro-crm-filing-extractor",
@@ -217,11 +593,23 @@
       {
         "query": "تفاوت crm و فایلینگ",
         "expected": "intro-crm-filing-extractor",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "crm-advisor-guide",
+          "extractor-to-filing",
+          "crm-personal-properties",
+          "crm-matching"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "crm-advisor-guide",
@@ -232,11 +620,23 @@
       {
         "query": "استخراج با crm چه فرقی داره",
         "expected": "intro-crm-filing-extractor",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "extractor-overview",
+          "crm-advisor-guide",
+          "extractor-to-filing",
+          "extractor-windows",
+          "extractor-single-batch"
+        ],
+        "top_chunks": [
           "extractor-overview",
           "extractor-overview",
           "crm-advisor-guide",
@@ -247,11 +647,23 @@
       {
         "query": "نسخه وب و اندروید",
         "expected": "platforms-web-android-windows",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "platforms-web-android-windows",
+          "mobile-api-note",
+          "account-mobile-verify",
+          "extractor-overview",
+          "extractor-windows"
+        ],
+        "top_chunks": [
           "platforms-web-android-windows",
           "platforms-web-android-windows",
           "mobile-api-note",
@@ -262,11 +674,23 @@
       {
         "query": "دانلود اپ اندروید",
         "expected": "platforms-web-android-windows",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "platforms-web-android-windows",
+          "mobile-api-note",
+          "extractor-windows",
+          "extractor-overview",
+          "extractor-single-batch"
+        ],
+        "top_chunks": [
           "platforms-web-android-windows",
           "platforms-web-android-windows",
           "mobile-api-note",
@@ -277,11 +701,23 @@
       {
         "query": "دانلود ویندوز استخراج",
         "expected": "extractor-windows",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-windows",
+          "extractor-overview",
+          "platforms-web-android-windows",
+          "intro-crm-filing-extractor",
+          "extractor-to-filing"
+        ],
+        "top_chunks": [
           "extractor-windows",
           "extractor-windows",
           "extractor-overview",
@@ -292,11 +728,23 @@
       {
         "query": "ثبت نام چطوره",
         "expected": "account-register-login",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "support-getting-started",
+          "account-register-login",
+          "plans-trial-7d",
+          "extractor-overview",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "support-getting-started",
           "support-getting-started",
           "account-register-login",
@@ -307,11 +755,23 @@
       {
         "query": "ورود به میزکار",
         "expected": "account-register-login",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "account-register-login",
+          "extractor-to-filing",
+          "ai-features-overview",
+          "intro-crm-filing-extractor",
+          "filing-collections"
+        ],
+        "top_chunks": [
           "account-register-login",
           "account-register-login",
           "extractor-to-filing",
@@ -322,11 +782,19 @@
       {
         "query": "کد پیامک نمیاد",
         "expected": "account-mobile-verify",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "account-mobile-verify"
+        ],
+        "top_chunks": [
           "account-mobile-verify",
           "account-mobile-verify"
         ]
@@ -334,11 +802,19 @@
       {
         "query": "پروفایل کاربری",
         "expected": "account-profile",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "account-profile"
+        ],
+        "top_chunks": [
           "account-profile",
           "account-profile"
         ]
@@ -346,11 +822,23 @@
       {
         "query": "قیمت پلن چنده",
         "expected": "plans-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "plans-overview",
+          "agency-vs-personal",
+          "agency-seats-licenses",
+          "agency-space-sharing",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "plans-overview",
           "plans-overview",
           "agency-vs-personal",
@@ -361,11 +849,23 @@
       {
         "query": "خرید اشتراک",
         "expected": "plans-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "plans-overview",
+          "agency-vs-personal",
+          "agency-seats-licenses",
+          "agency-space-sharing",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "plans-overview",
           "plans-overview",
           "agency-vs-personal",
@@ -376,11 +876,20 @@
       {
         "query": "هدیه هفت روزه",
         "expected": "plans-trial-7d",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "plans-trial-7d",
+          "support-getting-started"
+        ],
+        "top_chunks": [
           "plans-trial-7d",
           "plans-trial-7d",
           "support-getting-started"
@@ -389,11 +898,22 @@
       {
         "query": "آزمایشی رایگان ثبت نام",
         "expected": "plans-trial-7d",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "plans-trial-7d",
+          "support-getting-started",
+          "account-register-login",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "plans-trial-7d",
           "plans-trial-7d",
           "support-getting-started",
@@ -404,11 +924,23 @@
       {
         "query": "فعال سازی لایسنس",
         "expected": "license-activation",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "license-activation",
+          "plans-overview",
+          "agency-seats-licenses",
+          "agency-space-sharing",
+          "agency-vs-personal"
+        ],
+        "top_chunks": [
           "license-activation",
           "license-activation",
           "plans-overview",
@@ -419,11 +951,23 @@
       {
         "query": "کلید لایسنس کجاست",
         "expected": "license-activation",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "license-activation",
+          "plans-overview",
+          "agency-seats-licenses",
+          "agency-space-sharing",
+          "agency-vs-personal"
+        ],
+        "top_chunks": [
           "license-activation",
           "license-activation",
           "plans-overview",
@@ -434,11 +978,22 @@
       {
         "query": "آژانس چند نفره",
         "expected": "agency-vs-personal",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-vs-personal",
+          "agency-space-sharing",
+          "agency-seats-licenses",
+          "agency-create-roles"
+        ],
+        "top_chunks": [
           "agency-vs-personal",
           "agency-vs-personal",
           "agency-space-sharing",
@@ -449,11 +1004,23 @@
       {
         "query": "خرید چند لایسنس آژانس",
         "expected": "agency-vs-personal",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-vs-personal",
+          "agency-space-sharing",
+          "agency-seats-licenses",
+          "license-activation",
+          "plans-overview"
+        ],
+        "top_chunks": [
           "agency-vs-personal",
           "agency-vs-personal",
           "agency-space-sharing",
@@ -464,11 +1031,23 @@
       {
         "query": "استخراج آگهی",
         "expected": "extractor-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-overview",
+          "extractor-windows",
+          "extractor-to-filing",
+          "intro-crm-filing-extractor",
+          "extractor-single-batch"
+        ],
+        "top_chunks": [
           "extractor-overview",
           "extractor-overview",
           "extractor-windows",
@@ -479,11 +1058,23 @@
       {
         "query": "ربات دیوار",
         "expected": "extractor-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-overview",
+          "intro-what-is-divar-filing",
+          "filing-divar-contact",
+          "intro-crm-filing-extractor",
+          "extractor-windows"
+        ],
+        "top_chunks": [
           "extractor-overview",
           "extractor-overview",
           "intro-what-is-divar-filing",
@@ -494,11 +1085,22 @@
       {
         "query": "استخراج گروهی",
         "expected": "extractor-single-batch",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-single-batch",
+          "extractor-overview",
+          "extractor-to-filing",
+          "extractor-windows"
+        ],
+        "top_chunks": [
           "extractor-single-batch",
           "extractor-single-batch",
           "extractor-overview",
@@ -509,11 +1111,22 @@
       {
         "query": "آگهی تو میزکار نیست",
         "expected": "extractor-to-filing",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-to-filing",
+          "ai-listing-summary",
+          "extractor-overview",
+          "ai-features-overview"
+        ],
+        "top_chunks": [
           "extractor-to-filing",
           "extractor-to-filing",
           "ai-listing-summary",
@@ -524,11 +1137,23 @@
       {
         "query": "مجموعه فایل",
         "expected": "filing-collections",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-collections",
+          "intro-crm-filing-extractor",
+          "intro-what-is-divar-filing",
+          "filing-detail-map",
+          "extractor-to-filing"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "intro-crm-filing-extractor",
@@ -539,11 +1164,19 @@
       {
         "query": "dataset کجاست",
         "expected": "filing-collections",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-collections"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections"
         ]
@@ -551,11 +1184,22 @@
       {
         "query": "نقشه آگهی",
         "expected": "filing-detail-map",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-detail-map",
+          "workspace-product-map",
+          "filing-divar-contact",
+          "extractor-overview"
+        ],
+        "top_chunks": [
           "filing-detail-map",
           "filing-detail-map",
           "workspace-product-map",
@@ -566,11 +1210,23 @@
       {
         "query": "چطور مشتری اضافه کنم",
         "expected": "crm-contacts",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-matching",
+          "intro-crm-filing-extractor",
+          "ai-crm-message"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "crm-advisor-guide",
@@ -581,11 +1237,23 @@
       {
         "query": "مخاطب جدید crm",
         "expected": "crm-contacts",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-matching",
+          "intro-crm-filing-extractor",
+          "ai-crm-message"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "crm-advisor-guide",
@@ -596,11 +1264,23 @@
       {
         "query": "ثبت خریدار",
         "expected": "crm-contacts",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "crm-matching",
+          "support-getting-started",
+          "share-public-file",
+          "crm-advisor-guide"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "crm-matching",
@@ -611,11 +1291,23 @@
       {
         "query": "یادآوری تماس",
         "expected": "crm-activities-reminders",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-activities-reminders",
+          "filing-divar-contact",
+          "account-mobile-verify",
+          "intro-crm-filing-extractor",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "crm-activities-reminders",
           "crm-activities-reminders",
           "filing-divar-contact",
@@ -626,11 +1318,23 @@
       {
         "query": "پیگیری مشتری",
         "expected": "crm-activities-reminders",
-        "rank": 5,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 3,
+        "chunk_rank": 5,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-activities-reminders",
+          "ai-crm-message",
+          "intro-crm-filing-extractor"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "crm-advisor-guide",
@@ -641,11 +1345,23 @@
       {
         "query": "معامله deal",
         "expected": "crm-deals",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-deals",
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "crm-contacts",
+          "workspace-today-queue"
+        ],
+        "top_chunks": [
           "crm-deals",
           "crm-deals",
           "crm-advisor-guide",
@@ -656,11 +1372,22 @@
       {
         "query": "فایل شخصی مشاور",
         "expected": "crm-personal-properties",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-personal-properties",
+          "filing-detail-map",
+          "filing-collections",
+          "extractor-to-filing"
+        ],
+        "top_chunks": [
           "crm-personal-properties",
           "crm-personal-properties",
           "filing-detail-map",
@@ -671,11 +1398,23 @@
       {
         "query": "ملک شخصی",
         "expected": "crm-personal-properties",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-personal-properties",
+          "agency-vs-personal",
+          "share-public-file",
+          "ai-features-overview",
+          "intro-what-is-divar-filing"
+        ],
+        "top_chunks": [
           "crm-personal-properties",
           "crm-personal-properties",
           "agency-vs-personal",
@@ -686,11 +1425,23 @@
       {
         "query": "تطبیق فایل مشتری",
         "expected": "crm-matching",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-matching",
+          "crm-contacts",
+          "crm-advisor-guide",
+          "ai-crm-message",
+          "filing-collections"
+        ],
+        "top_chunks": [
           "crm-matching",
           "crm-matching",
           "crm-contacts",
@@ -701,11 +1452,23 @@
       {
         "query": "هوش مصنوعی میزکار",
         "expected": "ai-features-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "ai",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "ai-features-overview",
+          "ai-nl-command",
+          "ai-listing-summary",
+          "extractor-to-filing",
+          "ai-crm-message"
+        ],
+        "top_chunks": [
           "ai-features-overview",
           "ai-features-overview",
           "ai-nl-command",
@@ -716,11 +1479,22 @@
       {
         "query": "خلاصه آگهی ai",
         "expected": "ai-listing-summary",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "ai",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "ai-listing-summary",
+          "ai-features-overview",
+          "filing-detail-map",
+          "ai-crm-message"
+        ],
+        "top_chunks": [
           "ai-listing-summary",
           "ai-listing-summary",
           "ai-features-overview",
@@ -731,11 +1505,23 @@
       {
         "query": "پیام crm هوشمند",
         "expected": "ai-crm-message",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "ai",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "ai-crm-message",
+          "crm-advisor-guide",
+          "crm-contacts",
+          "ai-nl-command",
+          "intro-crm-filing-extractor"
+        ],
+        "top_chunks": [
           "ai-crm-message",
           "ai-crm-message",
           "crm-advisor-guide",
@@ -746,11 +1532,23 @@
       {
         "query": "فرمان هوشمند",
         "expected": "ai-nl-command",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "ai",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "ai-nl-command",
+          "ai-features-overview",
+          "workspace-product-map",
+          "ai-listing-summary",
+          "intro-what-is-divar-filing"
+        ],
+        "top_chunks": [
           "ai-nl-command",
           "ai-nl-command",
           "ai-features-overview",
@@ -761,11 +1559,19 @@
       {
         "query": "ورودی صوتی",
         "expected": "ai-voice-note",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "ai",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "ai-voice-note"
+        ],
+        "top_chunks": [
           "ai-voice-note",
           "ai-voice-note"
         ]
@@ -773,11 +1579,23 @@
       {
         "query": "دستیار عمومی سایت",
         "expected": "public-assistant-scope",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "public-assistant-scope",
+          "contracts-overview",
+          "filing-divar-contact",
+          "ai-features-overview",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "public-assistant-scope",
           "public-assistant-scope",
           "contracts-overview",
@@ -788,11 +1606,22 @@
       {
         "query": "ساخت آژانس",
         "expected": "agency-create-roles",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-create-roles",
+          "agency-space-sharing",
+          "agency-vs-personal",
+          "agency-seats-licenses"
+        ],
+        "top_chunks": [
           "agency-create-roles",
           "agency-create-roles",
           "agency-space-sharing",
@@ -803,11 +1632,23 @@
       {
         "query": "نقش منشی آژانس",
         "expected": "agency-create-roles",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-create-roles",
+          "agency-space-sharing",
+          "workspace-product-map",
+          "agency-vs-personal",
+          "agency-seats-licenses"
+        ],
+        "top_chunks": [
           "agency-create-roles",
           "agency-create-roles",
           "agency-space-sharing",
@@ -818,11 +1659,23 @@
       {
         "query": "صندلی لایسنس تیم",
         "expected": "agency-seats-licenses",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-seats-licenses",
+          "license-activation",
+          "agency-vs-personal",
+          "agency-space-sharing",
+          "workspace-product-map"
+        ],
+        "top_chunks": [
           "agency-seats-licenses",
           "agency-seats-licenses",
           "license-activation",
@@ -833,11 +1686,22 @@
       {
         "query": "فضای آژانس اشتراک",
         "expected": "agency-space-sharing",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-space-sharing",
+          "agency-vs-personal",
+          "plans-overview",
+          "agency-seats-licenses"
+        ],
+        "top_chunks": [
           "agency-space-sharing",
           "agency-space-sharing",
           "agency-vs-personal",
@@ -848,11 +1712,23 @@
       {
         "query": "شروع کار بعد ثبت نام",
         "expected": "support-getting-started",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "support",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "account-register-login",
+          "crm-advisor-guide",
+          "crm-contacts",
+          "crm-activities-reminders",
+          "ai-features-overview"
+        ],
+        "top_chunks": [
           "account-register-login",
           "account-register-login",
           "crm-advisor-guide",
@@ -863,11 +1739,23 @@
       {
         "query": "مشکل ورود",
         "expected": "support-common-errors",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "support",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "account-register-login",
+          "support-common-errors",
+          "ai-voice-note",
+          "extractor-windows",
+          "extractor-overview"
+        ],
+        "top_chunks": [
           "account-register-login",
           "account-register-login",
           "support-common-errors",
@@ -878,11 +1766,23 @@
       {
         "query": "صف امروز",
         "expected": "workspace-today-queue",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "product_intro",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "workspace-today-queue",
+          "crm-activities-reminders",
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "support-getting-started"
+        ],
+        "top_chunks": [
           "workspace-today-queue",
           "workspace-today-queue",
           "crm-activities-reminders",
@@ -893,11 +1793,22 @@
       {
         "query": "قراردادها",
         "expected": "contracts-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "contracts-overview",
+          "platforms-web-android-windows",
+          "intro-what-is-divar-filing",
+          "workspace-product-map"
+        ],
+        "top_chunks": [
           "contracts-overview",
           "contracts-overview",
           "platforms-web-android-windows",
@@ -908,11 +1819,20 @@
       {
         "query": "آکادمی ویدیو",
         "expected": "academy-public",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "academy-public",
+          "workspace-product-map"
+        ],
+        "top_chunks": [
           "academy-public",
           "academy-public",
           "workspace-product-map"
@@ -921,11 +1841,21 @@
       {
         "query": "روش پرداخت",
         "expected": "payment-methods",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "payment-methods",
+          "plans-overview",
+          "crm-deals"
+        ],
+        "top_chunks": [
           "payment-methods",
           "payment-methods",
           "plans-overview",
@@ -936,11 +1866,22 @@
       {
         "query": "حریم خصوصی",
         "expected": "privacy-data",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "public-assistant-scope",
+          "privacy-data",
+          "share-public-file",
+          "agency-space-sharing"
+        ],
+        "top_chunks": [
           "public-assistant-scope",
           "public-assistant-scope",
           "privacy-data",
@@ -951,11 +1892,19 @@
       {
         "query": "افیلیت",
         "expected": "affiliate-program",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "affiliate-program"
+        ],
+        "top_chunks": [
           "affiliate-program",
           "affiliate-program"
         ]
@@ -963,11 +1912,21 @@
       {
         "query": "api موبایل",
         "expected": "mobile-api-note",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "mobile-api-note",
+          "account-mobile-verify",
+          "platforms-web-android-windows"
+        ],
+        "top_chunks": [
           "mobile-api-note",
           "mobile-api-note",
           "account-mobile-verify",
@@ -978,11 +1937,23 @@
       {
         "query": "لینک share فایل",
         "expected": "share-public-file",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "other",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-detail-map",
+          "intro-crm-filing-extractor",
+          "filing-collections",
+          "intro-what-is-divar-filing",
+          "extractor-to-filing"
+        ],
+        "top_chunks": [
           "filing-detail-map",
           "intro-crm-filing-extractor",
           "intro-crm-filing-extractor",
@@ -993,11 +1964,22 @@
       {
         "query": "گزارش crm",
         "expected": "crm-reports",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-reports",
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "ai-crm-message"
+        ],
+        "top_chunks": [
           "crm-reports",
           "crm-reports",
           "crm-advisor-guide",
@@ -1008,11 +1990,23 @@
       {
         "query": "آموزش اندروید",
         "expected": "academy-public",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "academy-public",
+          "platforms-web-android-windows",
+          "mobile-api-note",
+          "extractor-overview",
+          "extractor-single-batch"
+        ],
+        "top_chunks": [
           "academy-public",
           "academy-public",
           "platforms-web-android-windows",
@@ -1023,11 +2017,23 @@
       {
         "query": "تماس پشتیبانی",
         "expected": "support-common-errors",
-        "rank": 2,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "support",
+        "article_rank": 2,
+        "chunk_rank": 2,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "account-mobile-verify",
+          "support-common-errors",
+          "crm-activities-reminders",
+          "ai-voice-note",
+          "crm-advisor-guide"
+        ],
+        "top_chunks": [
           "account-mobile-verify",
           "support-common-errors",
           "crm-activities-reminders",
@@ -1038,20 +2044,38 @@
       {
         "query": "سیاست مدنی ایران",
         "expected": "public-assistant-scope",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": []
+        "domain": "other",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [],
+        "top_chunks": []
       },
       {
         "query": "api key فایلینگ",
         "expected": "public-assistant-scope",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "other",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections",
+          "extractor-to-filing",
+          "ai-features-overview",
+          "crm-matching",
+          "filing-detail-map"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "extractor-to-filing",
@@ -1062,11 +2086,20 @@
       {
         "query": "اطلاعات مشتریان من",
         "expected": "public-assistant-scope",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "public-assistant-scope",
+          "agency-space-sharing"
+        ],
+        "top_chunks": [
           "public-assistant-scope",
           "public-assistant-scope",
           "agency-space-sharing",
@@ -1076,11 +2109,20 @@
       {
         "query": "سلام میخوام شروع کنم کارم چیه",
         "expected": "support-getting-started",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "support",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "support-getting-started",
+          "intro-what-is-divar-filing"
+        ],
+        "top_chunks": [
           "support-getting-started",
           "support-getting-started",
           "intro-what-is-divar-filing",
@@ -1090,11 +2132,20 @@
       {
         "query": "یه مشاورم تازه کارم از کجا شروع کنم",
         "expected": "intro-what-is-divar-filing",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "support-getting-started",
+          "intro-what-is-divar-filing"
+        ],
+        "top_chunks": [
           "support-getting-started",
           "support-getting-started",
           "intro-what-is-divar-filing",
@@ -1104,11 +2155,22 @@
       {
         "query": "دیوار معمولی کافی نیست؟",
         "expected": "intro-what-is-divar-filing",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-divar-contact",
+          "intro-what-is-divar-filing",
+          "extractor-overview",
+          "filing-detail-map"
+        ],
+        "top_chunks": [
           "filing-divar-contact",
           "filing-divar-contact",
           "intro-what-is-divar-filing",
@@ -1119,11 +2181,19 @@
       {
         "query": "پلن ارزونتر کدومه",
         "expected": "plans-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "plans-overview"
+        ],
+        "top_chunks": [
           "plans-overview",
           "plans-overview"
         ]
@@ -1131,11 +2201,23 @@
       {
         "query": "هزینه اشتراک ماهانه",
         "expected": "plans-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "plans-overview",
+          "agency-vs-personal",
+          "agency-seats-licenses",
+          "agency-space-sharing",
+          "crm-contacts"
+        ],
+        "top_chunks": [
           "plans-overview",
           "plans-overview",
           "agency-vs-personal",
@@ -1146,11 +2228,20 @@
       {
         "query": "لایسنسم تموم شده چیکار کنم",
         "expected": "license-activation",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "extractor-to-filing",
+          "ai-voice-note"
+        ],
+        "top_chunks": [
           "extractor-to-filing",
           "extractor-to-filing",
           "ai-voice-note",
@@ -1160,11 +2251,23 @@
       {
         "query": "شماره مالک میاد تو استخراج",
         "expected": "extractor-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-overview",
+          "extractor-windows",
+          "account-mobile-verify",
+          "extractor-to-filing",
+          "extractor-single-batch"
+        ],
+        "top_chunks": [
           "extractor-overview",
           "extractor-overview",
           "extractor-windows",
@@ -1175,11 +2278,22 @@
       {
         "query": "تلفن آگهی کشیده میشه",
         "expected": "extractor-overview",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-divar-contact",
+          "extractor-overview",
+          "filing-detail-map",
+          "ai-listing-summary"
+        ],
+        "top_chunks": [
           "filing-divar-contact",
           "filing-divar-contact",
           "extractor-overview",
@@ -1190,11 +2304,22 @@
       {
         "query": "استخراج دسته جمعی چطور",
         "expected": "extractor-single-batch",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-overview",
+          "extractor-single-batch",
+          "extractor-to-filing",
+          "extractor-windows"
+        ],
+        "top_chunks": [
           "extractor-overview",
           "extractor-overview",
           "extractor-single-batch",
@@ -1205,11 +2330,22 @@
       {
         "query": "چندتا آگهی یکجا بگیرم",
         "expected": "extractor-single-batch",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-divar-contact",
+          "extractor-overview",
+          "filing-detail-map",
+          "ai-listing-summary"
+        ],
+        "top_chunks": [
           "filing-divar-contact",
           "filing-divar-contact",
           "extractor-overview",
@@ -1220,11 +2356,22 @@
       {
         "query": "همگام نمیشه با میزکار",
         "expected": "extractor-to-filing",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "extractor-to-filing",
+          "intro-what-is-divar-filing",
+          "ai-features-overview",
+          "intro-crm-filing-extractor"
+        ],
+        "top_chunks": [
           "extractor-to-filing",
           "extractor-to-filing",
           "intro-what-is-divar-filing",
@@ -1235,11 +2382,19 @@
       {
         "query": "تو دیتاست نمیبینمش",
         "expected": "extractor-to-filing",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "filing-collections"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections"
         ]
@@ -1247,11 +2402,23 @@
       {
         "query": "فیلتر قیمت تو فایلینگ",
         "expected": "filing-collections",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [
+          "extractor-to-filing",
+          "crm-advisor-guide",
+          "extractor-overview",
+          "ai-features-overview",
+          "crm-personal-properties"
+        ],
+        "top_chunks": [
           "extractor-to-filing",
           "extractor-to-filing",
           "crm-advisor-guide",
@@ -1262,11 +2429,22 @@
       {
         "query": "پوشه بندی آگهی ها",
         "expected": "filing-collections",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-collections",
+          "filing-detail-map",
+          "extractor-overview",
+          "ai-listing-summary"
+        ],
+        "top_chunks": [
           "filing-collections",
           "filing-collections",
           "filing-detail-map",
@@ -1277,11 +2455,22 @@
       {
         "query": "رو نقشه ملک ببینم",
         "expected": "filing-detail-map",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-detail-map",
+          "workspace-product-map",
+          "crm-personal-properties",
+          "intro-what-is-divar-filing"
+        ],
+        "top_chunks": [
           "filing-detail-map",
           "filing-detail-map",
           "workspace-product-map",
@@ -1292,11 +2481,22 @@
       {
         "query": "برای این خریدار چی داری",
         "expected": "crm-matching",
-        "rank": 4,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 3,
+        "chunk_rank": 4,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "share-public-file",
+          "crm-matching",
+          "intro-crm-filing-extractor"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "share-public-file",
@@ -1307,11 +2507,23 @@
       {
         "query": "مچ فایل با مشتری",
         "expected": "crm-matching",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "crm-matching",
+          "crm-advisor-guide",
+          "filing-collections",
+          "filing-detail-map"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "crm-matching",
@@ -1322,11 +2534,19 @@
       {
         "query": "یادآوری فردا زنگ بزنم",
         "expected": "crm-activities-reminders",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-activities-reminders"
+        ],
+        "top_chunks": [
           "crm-activities-reminders",
           "crm-activities-reminders"
         ]
@@ -1334,11 +2554,22 @@
       {
         "query": "deal ثبت کنم کجا",
         "expected": "crm-deals",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-deals",
+          "crm-contacts",
+          "account-register-login",
+          "support-getting-started"
+        ],
+        "top_chunks": [
           "crm-deals",
           "crm-deals",
           "crm-contacts",
@@ -1349,11 +2580,23 @@
       {
         "query": "هوش مصنوعی چه کارایی داره",
         "expected": "ai-features-overview",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "ai",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "ai-features-overview",
+          "ai-nl-command",
+          "ai-listing-summary",
+          "ai-crm-message",
+          "ai-voice-note"
+        ],
+        "top_chunks": [
           "ai-features-overview",
           "ai-features-overview",
           "ai-nl-command",
@@ -1364,11 +2607,22 @@
       {
         "query": "محدودیت ai چیه",
         "expected": "ai-features-overview",
-        "rank": 5,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "ai",
+        "article_rank": 3,
+        "chunk_rank": 5,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "ai-crm-message",
+          "intro-what-is-divar-filing",
+          "ai-features-overview",
+          "ai-listing-summary"
+        ],
+        "top_chunks": [
           "ai-crm-message",
           "intro-what-is-divar-filing",
           "intro-what-is-divar-filing",
@@ -1379,20 +2633,37 @@
       {
         "query": "با صدا یادداشت بزنم",
         "expected": "ai-voice-note",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": []
+        "domain": "ai",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [],
+        "top_chunks": []
       },
       {
         "query": "آژانس بسازم چجوری",
         "expected": "agency-create-roles",
-        "rank": 5,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 3,
+        "chunk_rank": 5,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-space-sharing",
+          "agency-vs-personal",
+          "agency-create-roles",
+          "agency-seats-licenses"
+        ],
+        "top_chunks": [
           "agency-space-sharing",
           "agency-space-sharing",
           "agency-vs-personal",
@@ -1403,20 +2674,38 @@
       {
         "query": "تیمم سه نفره seat",
         "expected": "agency-seats-licenses",
-        "rank": null,
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "hit_at_5": false,
-        "top_5": []
+        "domain": "agency",
+        "article_rank": null,
+        "chunk_rank": null,
+        "article_hit_at_1": false,
+        "article_hit_at_3": false,
+        "article_hit_at_5": false,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": false,
+        "chunk_hit_at_5": false,
+        "top_articles_deduped": [],
+        "top_chunks": []
       },
       {
         "query": "فضای مشترک آژانس",
         "expected": "agency-space-sharing",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-space-sharing",
+          "agency-vs-personal",
+          "agency-create-roles",
+          "agency-seats-licenses",
+          "workspace-product-map"
+        ],
+        "top_chunks": [
           "agency-space-sharing",
           "agency-space-sharing",
           "agency-vs-personal",
@@ -1427,11 +2716,23 @@
       {
         "query": "حساب شخصی با آژانس فرق",
         "expected": "agency-vs-personal",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "agency",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "agency-vs-personal",
+          "agency-space-sharing",
+          "agency-create-roles",
+          "crm-personal-properties",
+          "agency-seats-licenses"
+        ],
+        "top_chunks": [
           "agency-vs-personal",
           "agency-vs-personal",
           "agency-space-sharing",
@@ -1442,11 +2743,19 @@
       {
         "query": "هفته رایگان دارید",
         "expected": "plans-trial-7d",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "account_licensing",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "plans-trial-7d"
+        ],
+        "top_chunks": [
           "plans-trial-7d",
           "plans-trial-7d"
         ]
@@ -1454,11 +2763,22 @@
       {
         "query": "شماره تماس آگهی دیوار",
         "expected": "filing-divar-contact",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-divar-contact",
+          "extractor-overview",
+          "intro-what-is-divar-filing",
+          "account-mobile-verify"
+        ],
+        "top_chunks": [
           "filing-divar-contact",
           "filing-divar-contact",
           "extractor-overview",
@@ -1469,11 +2789,22 @@
       {
         "query": "otp دیوار برای تلفن",
         "expected": "filing-divar-contact",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "filing_extractor",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "filing-divar-contact",
+          "extractor-overview",
+          "intro-what-is-divar-filing",
+          "filing-detail-map"
+        ],
+        "top_chunks": [
           "filing-divar-contact",
           "filing-divar-contact",
           "extractor-overview",
@@ -1484,11 +2815,22 @@
       {
         "query": "چطوری مخاطب ثبت کنم",
         "expected": "crm-contacts",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-matching",
+          "intro-crm-filing-extractor"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "crm-advisor-guide",
@@ -1499,11 +2841,22 @@
       {
         "query": "چطوری فایل شخصی داشته باشم",
         "expected": "crm-personal-properties",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-personal-properties",
+          "extractor-to-filing",
+          "filing-detail-map",
+          "filing-collections"
+        ],
+        "top_chunks": [
           "crm-personal-properties",
           "crm-personal-properties",
           "extractor-to-filing",
@@ -1514,11 +2867,23 @@
       {
         "query": "لینک برای مشتری چطوری بفرستم",
         "expected": "share-public-file",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "share-public-file",
+          "crm-advisor-guide",
+          "crm-matching",
+          "intro-crm-filing-extractor"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "share-public-file",
@@ -1529,11 +2894,23 @@
       {
         "query": "شماره تماس کجا وارد کنم در فایل شخصی",
         "expected": "crm-personal-properties",
-        "rank": 1,
-        "hit_at_1": true,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "crm",
+        "article_rank": 1,
+        "chunk_rank": 1,
+        "article_hit_at_1": true,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": true,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-personal-properties",
+          "filing-detail-map",
+          "filing-collections",
+          "extractor-to-filing",
+          "account-mobile-verify"
+        ],
+        "top_chunks": [
           "crm-personal-properties",
           "crm-personal-properties",
           "filing-detail-map",
@@ -1544,11 +2921,23 @@
       {
         "query": "چطوری لینک برای مشتری بسازیم",
         "expected": "share-public-file",
-        "rank": 3,
-        "hit_at_1": false,
-        "hit_at_3": true,
-        "hit_at_5": true,
-        "top_5": [
+        "domain": "other",
+        "article_rank": 2,
+        "chunk_rank": 3,
+        "article_hit_at_1": false,
+        "article_hit_at_3": true,
+        "article_hit_at_5": true,
+        "chunk_hit_at_1": false,
+        "chunk_hit_at_3": true,
+        "chunk_hit_at_5": true,
+        "top_articles_deduped": [
+          "crm-contacts",
+          "share-public-file",
+          "crm-advisor-guide",
+          "crm-matching",
+          "intro-crm-filing-extractor"
+        ],
+        "top_chunks": [
           "crm-contacts",
           "crm-contacts",
           "share-public-file",
@@ -1564,147 +2953,180 @@
         "query": "شماره مالک رو کجا بزنم توی فایل شخصی",
         "expected": "crm-personal-properties",
         "type": "howto",
-        "rank": 1,
-        "top_5": [
-          "crm-personal-properties",
+        "article_rank": 1,
+        "top_articles": [
           "crm-personal-properties",
           "filing-detail-map",
-          "filing-detail-map",
-          "filing-collections"
+          "filing-collections",
+          "extractor-to-filing",
+          "account-mobile-verify"
         ],
-        "hit_at_5": true
+        "article_hit_at_5": true
       },
       {
         "query": "پوشه بندی ملک شخصی",
         "expected": null,
         "type": "howto",
-        "note": "نیاز به مقاله مستقل — در کاتالوگ پوشش none",
-        "rank": null,
-        "top_5": [
-          "crm-personal-properties",
+        "article_rank": null,
+        "top_articles": [
           "crm-personal-properties",
           "filing-collections",
           "intro-what-is-divar-filing",
-          "filing-collections"
+          "agency-vs-personal",
+          "share-public-file"
         ],
-        "hit_at_5": false
+        "article_hit_at_5": null
       },
       {
         "query": "کمیسیون معامله رو کجا ثبت کنم",
         "expected": "crm-deals",
         "type": "howto",
-        "rank": 1,
-        "top_5": [
-          "crm-deals",
+        "article_rank": 1,
+        "top_articles": [
           "crm-deals",
           "crm-contacts",
-          "crm-contacts",
-          "account-register-login"
+          "account-register-login",
+          "support-getting-started"
         ],
-        "hit_at_5": true
+        "article_hit_at_5": true
       },
       {
         "query": "قرارداد PDF بگیرم",
         "expected": "contracts-overview",
         "type": "howto",
-        "rank": 3,
-        "top_5": [
+        "article_rank": 2,
+        "top_articles": [
           "crm-deals",
-          "crm-deals",
-          "contracts-overview",
           "contracts-overview"
         ],
-        "hit_at_5": true
+        "article_hit_at_5": true
       },
       {
         "query": "بعد از تماس مشتری چیکار کنم اندروید",
         "expected": null,
         "type": "android_post_call",
-        "rank": null,
-        "top_5": [
-          "crm-contacts",
+        "article_rank": null,
+        "top_articles": [
           "crm-contacts",
           "crm-advisor-guide",
           "extractor-overview",
-          "crm-advisor-guide"
+          "crm-activities-reminders",
+          "ai-crm-message"
         ],
-        "hit_at_5": false
+        "article_hit_at_5": null
       },
       {
         "query": "زمان بندی استخراج ویندوز",
         "expected": "extractor-windows",
         "type": "windows_scheduler",
-        "rank": 3,
-        "top_5": [
-          "extractor-overview",
+        "article_rank": 2,
+        "top_articles": [
           "extractor-overview",
           "extractor-windows",
-          "extractor-windows",
-          "intro-crm-filing-extractor"
+          "intro-crm-filing-extractor",
+          "platforms-web-android-windows",
+          "filing-collections"
         ],
-        "hit_at_5": true
+        "article_hit_at_5": true
       },
       {
         "query": "ادغام دو مخاطب تکراری",
         "expected": null,
-        "type": "crm_contacts",
-        "rank": null,
-        "top_5": [
-          "crm-contacts",
+        "type": "howto",
+        "article_rank": null,
+        "top_articles": [
           "crm-contacts",
           "crm-advisor-guide",
-          "crm-advisor-guide",
-          "crm-matching"
+          "crm-matching",
+          "ai-crm-message"
         ],
-        "hit_at_5": false
+        "article_hit_at_5": null
       },
       {
         "query": "فضای آژانس فایل رو چطور منتشر کنم",
         "expected": "agency-space-sharing",
         "type": "howto",
-        "rank": 1,
-        "top_5": [
-          "agency-space-sharing",
+        "article_rank": 1,
+        "top_articles": [
           "agency-space-sharing",
           "extractor-overview",
           "extractor-to-filing",
-          "extractor-to-filing"
+          "intro-crm-filing-extractor"
         ],
-        "hit_at_5": true
+        "article_hit_at_5": true
       },
       {
         "query": "اول ثبت نام بعد استخراج",
         "expected": "support-getting-started",
         "type": "multi_topic",
-        "note": "retrieval تک‌مرحله‌ای؛ ارزیابی مکالمه در فاز ۳",
-        "rank": null,
-        "top_5": [
-          "extractor-overview",
+        "article_rank": null,
+        "top_articles": [
           "extractor-overview",
           "account-register-login",
-          "account-register-login",
-          "extractor-to-filing"
+          "extractor-to-filing",
+          "extractor-windows",
+          "extractor-single-batch"
         ],
-        "hit_at_5": false
+        "article_hit_at_5": false
       },
       {
         "query": "قیمت پلن رو گفتید حالا لایسنس ویندوز",
         "expected": "license-activation",
         "type": "topic_shift",
-        "note": "retrieval تک‌مرحله‌ای",
-        "rank": 5,
-        "top_5": [
-          "plans-overview",
+        "article_rank": 3,
+        "top_articles": [
           "plans-overview",
           "extractor-windows",
-          "extractor-windows",
-          "license-activation"
+          "license-activation",
+          "platforms-web-android-windows"
         ],
-        "hit_at_5": true
+        "article_hit_at_5": true
       }
     ],
     "hit_at_5_with_expected": 0.8571428571428571,
+    "howto_hit_at_5": 1.0,
+    "multi_topic_hit_at_5": 0.5,
     "count": 10
+  },
+  "out_of_scope_eval": {
+    "query_count": 4,
+    "accuracy": 0.0,
+    "results": [
+      {
+        "query": "آب و هوای تهران امروز",
+        "expected": "public-assistant-scope",
+        "top_articles": [
+          "workspace-today-queue"
+        ],
+        "ok": false
+      },
+      {
+        "query": "کد پایتون برای وب‌اسکرپینگ",
+        "expected": "public-assistant-scope",
+        "top_articles": [
+          "account-mobile-verify",
+          "extractor-overview",
+          "platforms-web-android-windows"
+        ],
+        "ok": false
+      },
+      {
+        "query": "داروی سرماخوردگی",
+        "expected": "public-assistant-scope",
+        "top_articles": [],
+        "ok": false
+      },
+      {
+        "query": "قیمت بیت کوین",
+        "expected": "public-assistant-scope",
+        "top_articles": [
+          "plans-overview",
+          "agency-vs-personal",
+          "agency-seats-licenses"
+        ],
+        "ok": false
+      }
+    ]
   },
   "generated_by": "public_assistant.audit.retrieval_baseline"
 }

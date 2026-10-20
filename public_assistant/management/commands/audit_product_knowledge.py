@@ -1,4 +1,4 @@
-"""ممیزی جامع دانش محصول — read-only، خروجی در knowledge/audit/."""
+"""ممیزی جامع دانش محصول — read-only (Phase 1.1)."""
 from __future__ import annotations
 
 import csv
@@ -7,7 +7,6 @@ from pathlib import Path
 
 import yaml
 from django.core.management.base import BaseCommand
-from django.core.management import call_command
 
 from public_assistant.audit.catalog import build_feature_catalog
 from public_assistant.audit.collectors.knowledge import collect_knowledge_articles
@@ -16,18 +15,19 @@ from public_assistant.audit.gap_backlog import build_gap_backlog, gap_backlog_ma
 from public_assistant.audit.paths import audit_output_dir
 from public_assistant.audit.report import build_audit_report
 from public_assistant.audit.retrieval_baseline import run_full_baseline
+from public_assistant.audit.retrieval_offline import make_offline_retrieve_fn
 from public_assistant.audit.source_index import build_source_index
-from public_assistant.audit.staleness import build_staleness_plan
+from public_assistant.audit.staleness import build_staleness_plan, write_staleness_registry
 
 
 class Command(BaseCommand):
-    help = 'Comprehensive product knowledge audit (Phase 1) — generates catalog, coverage, RAG baseline.'
+    help = 'Read-only product knowledge audit — writes only to knowledge/audit/.'
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--skip-retrieval',
             action='store_true',
-            help='Skip DB sync and retrieval eval (faster, no RAG metrics)',
+            help='Skip retrieval baseline (still read-only)',
         )
 
     def handle(self, *args, **options):
@@ -39,22 +39,26 @@ class Command(BaseCommand):
         catalog['platforms_audit']['knowledge_articles_markdown'] = len(articles)
 
         features = catalog['features']
+        logical = [f for f in features if f.get('entity_type') == 'feature']
         cov_rows = coverage_rows(features, articles)
         source_index = build_source_index(catalog, articles)
         gaps = build_gap_backlog(features, cov_rows)
 
         retrieval: dict = {}
         if not options['skip_retrieval']:
-            call_command('sync_public_knowledge', verbosity=0)
-            from public_assistant.services.retrieval import retrieve
-
-            retrieval = run_full_baseline(retrieve)
+            retrieval = run_full_baseline(make_offline_retrieve_fn())
         else:
-            retrieval = {'skipped': True, 'reason': '--skip-retrieval'}
+            retrieval = {'skipped': True, 'reason': '--skip-retrieval', 'mode': 'offline_markdown'}
+
+        verified_full = sum(1 for r in cov_rows if r.get('verified_coverage') == 'full')
+        needs_review = sum(1 for r in cov_rows if r.get('verified_coverage') == 'needs_review')
 
         stats = {
             'generated_at': catalog.get('generated_at'),
             'feature_count': len(features),
+            'logical_feature_count': len(logical),
+            'verified_full_count': verified_full,
+            'needs_review_count': needs_review,
             'p0_count': sum(1 for g in gaps if g['priority'] == 'P0'),
             'p1_count': sum(1 for g in gaps if g['priority'] == 'P1'),
             'p2_count': sum(1 for g in gaps if g['priority'] == 'P2'),
@@ -68,16 +72,13 @@ class Command(BaseCommand):
             gap_backlog_markdown(gaps, stats), encoding='utf-8'
         )
         (out / 'audit_report.md').write_text(
-            build_audit_report(catalog, cov_rows, retrieval, gaps, source_index),
+            build_audit_report(catalog, cov_rows, retrieval, gaps, source_index, stats),
             encoding='utf-8',
         )
-        staleness = build_staleness_plan(source_index)
-        (out.parent / 'audit' / 'staleness_registry.yaml').write_text(
-            yaml.safe_dump(staleness, allow_unicode=True, sort_keys=False),
-            encoding='utf-8',
-        )
+        staleness = build_staleness_plan(source_index, catalog_features=features)
+        write_staleness_registry(staleness)
 
-        self.stdout.write(self.style.SUCCESS(f'Audit written to {out}'))
+        self.stdout.write(self.style.SUCCESS(f'Audit written to {out} (read-only, no DB sync)'))
 
     def _write_yaml(self, path: Path, data: dict) -> None:
         path.write_text(

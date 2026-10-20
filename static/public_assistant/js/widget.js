@@ -443,7 +443,11 @@
       startDockDrag(e, 'fab');
     });
     fab.addEventListener('click', function (e) {
-      if (canDockDrag()) e.preventDefault();
+      if (canDockDrag()) {
+        e.preventDefault();
+        return;
+      }
+      setOpen(true);
     });
   }
   if (headEl) {

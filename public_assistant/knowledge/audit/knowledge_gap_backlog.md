@@ -1,0 +1,190 @@
+# Knowledge Gap Backlog
+
+تولید خودکار — 2026-10-20
+
+## خلاصه
+
+- قابلیت‌های کاتالوگ: **80**
+- P0: **38** | P1: **17** | P2: **7**
+
+## فهرست (اولویت نزولی)
+
+- **P0** `agency-hub` — مدیریت آژانس (عمق: `overview`، دامنه: `agency`)
+  - کمبود: howto_steps, prerequisites_limits, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `agency-space-sharing` — فضای اشتراکی آژانس (عمق: `overview`، دامنه: `agency`)
+  - کمبود: howto_steps, compare_similar
+- **P0** `android-post-call-assistant` — دستیار پس از تماس (اندروید) (عمق: `none`، دامنه: `android`)
+  - کمبود: intro_purpose, ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+- **P0** `contracts-hub` — قراردادهای دیجیتال (عمق: `overview`، دامنه: `contracts`)
+  - کمبود: howto_steps, prerequisites_limits, specialist_scenarios, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `crm-contacts-merge` — ادغام مخاطبین تکراری (عمق: `overview`، دامنه: `crm_contacts`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `crm-matching` — تطبیق فایل با مشتری (عمق: `overview`، دامنه: `crm_contacts`)
+  - کمبود: ui_location, troubleshooting, compare_similar
+- **P0** `crm-property-folders-cabinets` — پوشه‌ها و کابینت املاک شخصی (عمق: `overview`، دامنه: `crm_personal_properties`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `extractor-windows-scheduler` — زمان‌بندی استخراج ویندوز (عمق: `overview`، دامنه: `windows`)
+  - کمبود: ui_location, compare_similar
+- **P0** `help-topic-agency-hub-Agency-TV-و-اطلاع‌رسانی` — Agency TV و اطلاع‌رسانی (عمق: `overview`، دامنه: `agency`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-agency-hub-تنظیمات،-API-و-webhook` — تنظیمات، API و webhook (عمق: `overview`، دامنه: `agency`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-agency-hub-مشاوران-و-گزارش-عملکرد` — مشاوران و گزارش عملکرد (عمق: `overview`، دامنه: `agency`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-agency-hub-ورود-به-مرکز-آژانس` — ورود به مرکز آژانس (عمق: `overview`، دامنه: `agency`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-bot-extraction-تنظیم-و-شروع-استخراج` — تنظیم و شروع استخراج (عمق: `overview`، دامنه: `extractor`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-bot-extraction-خروجی-و-ساختار-پوشه‌ها` — خروجی و ساختار پوشه‌ها (عمق: `overview`، دامنه: `extractor`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-bot-extraction-فعال‌سازی-لایسنس` — فعال‌سازی لایسنس (عمق: `overview`، دامنه: `extractor`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-bot-extraction-نصب-و-اولین-اجرا` — نصب و اولین اجرا (عمق: `overview`، دامنه: `extractor`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-contacts-Import،-Export-و-ادغام` — Import، Export و ادغام (عمق: `overview`، دامنه: `crm_contacts`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-contacts-ثبت-مخاطب-جدید` — ثبت مخاطب جدید (عمق: `overview`، دامنه: `crm_contacts`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-contacts-پروفایل-و-پیگیری` — پروفایل و پیگیری (عمق: `overview`، دامنه: `crm_contacts`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-deals-ایجاد-معامله` — ایجاد معامله (عمق: `overview`، دامنه: `crm_deals`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-deals-مراحل-و-چک‌لیست` — مراحل و چک‌لیست (عمق: `overview`، دامنه: `crm_deals`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-deals-کمیسیون` — کمیسیون (عمق: `overview`، دامنه: `crm_deals`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-finance-contracts-داشبورد-مالی-معاملات` — داشبورد مالی معاملات (عمق: `overview`، دامنه: `contracts`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-finance-contracts-قرارداد-و-صورت‌جلسه-تحویل` — قرارداد و صورت‌جلسه تحویل (عمق: `overview`، دامنه: `contracts`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-finance-contracts-کمیسیون-در-معامله` — کمیسیون در معامله (عمق: `overview`، دامنه: `contracts`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-properties-تطبیق-ملک–مشتری` — تطبیق ملک–مشتری (عمق: `overview`، دامنه: `crm_personal_properties`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-properties-ثبت-و-مدیریت-ملک` — ثبت و مدیریت ملک (عمق: `overview`، دامنه: `crm_personal_properties`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-properties-فیلترهای-ذخیره‌شده` — فیلترهای ذخیره‌شده (عمق: `overview`، دامنه: `crm_personal_properties`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-team-تخصیص-و-انتقال` — تخصیص و انتقال (عمق: `overview`، دامنه: `agency`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-team-مدیریت-اعضا` — مدیریت اعضا (عمق: `overview`، دامنه: `agency`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-crm-team-همگام‌سازی-CRM` — همگام‌سازی CRM (عمق: `overview`، دامنه: `agency`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-smart-assistant-فرمان-صوتی-در-دستیار` — فرمان صوتی در دستیار (عمق: `overview`، دامنه: `ai`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-smart-assistant-فرمان-متنی-(دستیار-هوشمند)` — فرمان متنی (دستیار هوشمند) (عمق: `overview`، دامنه: `ai`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-smart-assistant-ورود-صوتی-در-فرم‌ها` — ورود صوتی در فرم‌ها (عمق: `overview`، دامنه: `ai`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-workspace-filing-آپلود-تکی` — آپلود تکی (عمق: `overview`، دامنه: `filing`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-workspace-filing-آپلود-پوشه-(Bulk)` — آپلود پوشه (Bulk) (عمق: `overview`، دامنه: `filing`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-workspace-filing-مدیریت-مجموعه‌ها-و-جدول-آگهی` — مدیریت مجموعه‌ها و جدول آگهی (عمق: `overview`، دامنه: `filing`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P0** `help-topic-workspace-filing-نمای-کلی-و-آپلود-سریع` — نمای کلی و آپلود سریع (عمق: `overview`، دامنه: `filing`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `account-mobile-verify` — تأیید موبایل و OTP (عمق: `overview`، دامنه: `account`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `account-register-login` — ثبت‌نام و ورود (عمق: `overview`، دامنه: `account`)
+  - کمبود: howto_steps, prerequisites_limits, compare_similar
+- **P1** `crm-automation-templates` — قالب پیام و اتوماسیون (عمق: `overview`، دامنه: `crm_automation`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-crm-communication-اتوماسیون` — اتوماسیون (عمق: `overview`، دامنه: `crm_automation`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-crm-communication-قالب-پیام` — قالب پیام (عمق: `overview`، دامنه: `crm_automation`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-crm-scheduling-تقویم-CRM` — تقویم CRM (عمق: `overview`، دامنه: `crm_scheduling`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-crm-scheduling-یادآورها` — یادآورها (عمق: `overview`، دامنه: `crm_scheduling`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-market-analysis-جزئیات-آگهی-و-تبدیل-به-فایل-شخصی` — جزئیات آگهی و تبدیل به فایل شخصی (عمق: `overview`، دامنه: `analysis`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-market-analysis-داشبورد-تحلیل-بازار` — داشبورد تحلیل بازار (عمق: `overview`، دامنه: `analysis`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-market-analysis-نقشه-آگهی‌ها` — نقشه آگهی‌ها (عمق: `overview`، دامنه: `analysis`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-smart-tools-تبدیل-رهن-و-اجاره` — تبدیل رهن و اجاره (عمق: `overview`، دامنه: `analysis`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-smart-tools-محاسبه-قیمت-هر-متر` — محاسبه قیمت هر متر (عمق: `overview`، دامنه: `analysis`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-smart-tools-محاسبه-کمیسیون` — محاسبه کمیسیون (عمق: `overview`، دامنه: `analysis`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-workspace-settings-ظاهر-و-خوانایی` — ظاهر و خوانایی (عمق: `overview`، دامنه: `account`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-topic-workspace-settings-نقشه-و-PDF` — نقشه و PDF (عمق: `overview`، دامنه: `account`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `help-workspace-workspace-settings` — تنظیمات میزکار (عمق: `overview`، دامنه: `account`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P1** `license-activation` — فعال‌سازی لایسنس ربات (عمق: `overview`، دامنه: `licensing`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P2** `academy-videos` — آکادمی ویدیویی (عمق: `overview`، دامنه: `academy`)
+  - کمبود: howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P2** `help-topic-crm-overview-جستجوی-سراسری` — جستجوی سراسری (عمق: `overview`، دامنه: `crm`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P2** `help-topic-crm-overview-داشبورد-CRM` — داشبورد CRM (عمق: `overview`، دامنه: `crm`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P2** `help-topic-crm-overview-صف-کار-امروز` — صف کار امروز (عمق: `overview`، دامنه: `crm`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P2** `help-workspace-crm-overview` — داشبورد و صف کار CRM (عمق: `overview`، دامنه: `crm`)
+  - کمبود: ui_location, howto_steps, prerequisites_limits, specialist_scenarios, troubleshooting, compare_similar, faq_synonyms
+  - فاز ۲: مقاله(های) مستقل پیشنهاد می‌شود
+- **P2** `public-assistant-widget` — دستیار عمومی سایت (عمق: `overview`، دامنه: `public_assistant`)
+  - کمبود: howto_steps, prerequisites_limits, compare_similar
+- **P2** `workspace-product-map` — نقشه امکانات میزکار (عمق: `overview`، دامنه: `workspace`)
+  - کمبود: howto_steps, troubleshooting

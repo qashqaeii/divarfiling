@@ -1,0 +1,1710 @@
+{
+  "eval_dataset": {
+    "query_count": 97,
+    "hit_at_1": 0.7010309278350515,
+    "hit_at_3": 0.8144329896907216,
+    "hit_at_3_note": "test_hardening uses hits[:3] — same cutoff as hit@3 here",
+    "hit_at_5": 0.8556701030927835,
+    "misses": [
+      {
+        "query": "فایلینگ دیوار چیست",
+        "expected": "intro-what-is-divar-filing",
+        "rank": null,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "filing-detail-map",
+          "filing-detail-map",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "فایلینگ دیوار چه امکاناتی دارد",
+        "expected": "workspace-product-map",
+        "rank": null,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "filing-detail-map",
+          "filing-detail-map",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "تفاوت crm و فایلینگ",
+        "expected": "intro-crm-filing-extractor",
+        "rank": null,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "crm-advisor-guide",
+          "extractor-to-filing",
+          "crm-advisor-guide"
+        ]
+      },
+      {
+        "query": "استخراج با crm چه فرقی داره",
+        "expected": "intro-crm-filing-extractor",
+        "rank": null,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "شروع کار بعد ثبت نام",
+        "expected": "support-getting-started",
+        "rank": null,
+        "top_5": [
+          "account-register-login",
+          "account-register-login",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "crm-contacts"
+        ]
+      },
+      {
+        "query": "لینک share فایل",
+        "expected": "share-public-file",
+        "rank": null,
+        "top_5": [
+          "filing-detail-map",
+          "intro-crm-filing-extractor",
+          "intro-crm-filing-extractor",
+          "filing-collections",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "سیاست مدنی ایران",
+        "expected": "public-assistant-scope",
+        "rank": null,
+        "top_5": []
+      },
+      {
+        "query": "api key فایلینگ",
+        "expected": "public-assistant-scope",
+        "rank": null,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "ai-features-overview"
+        ]
+      },
+      {
+        "query": "لایسنسم تموم شده چیکار کنم",
+        "expected": "license-activation",
+        "rank": null,
+        "top_5": [
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "ai-voice-note",
+          "ai-voice-note"
+        ]
+      },
+      {
+        "query": "چندتا آگهی یکجا بگیرم",
+        "expected": "extractor-single-batch",
+        "rank": null,
+        "top_5": [
+          "filing-divar-contact",
+          "filing-divar-contact",
+          "extractor-overview",
+          "extractor-overview",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "تو دیتاست نمیبینمش",
+        "expected": "extractor-to-filing",
+        "rank": null,
+        "top_5": [
+          "filing-collections",
+          "filing-collections"
+        ]
+      },
+      {
+        "query": "فیلتر قیمت تو فایلینگ",
+        "expected": "filing-collections",
+        "rank": null,
+        "top_5": [
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "crm-advisor-guide",
+          "extractor-overview",
+          "ai-features-overview"
+        ]
+      },
+      {
+        "query": "با صدا یادداشت بزنم",
+        "expected": "ai-voice-note",
+        "rank": null,
+        "top_5": []
+      },
+      {
+        "query": "تیمم سه نفره seat",
+        "expected": "agency-seats-licenses",
+        "rank": null,
+        "top_5": []
+      }
+    ],
+    "results": [
+      {
+        "query": "فایلینگ دیوار چیست",
+        "expected": "intro-what-is-divar-filing",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "filing-detail-map",
+          "filing-detail-map",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "فایلینگ دیوار چه امکاناتی دارد",
+        "expected": "workspace-product-map",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "filing-detail-map",
+          "filing-detail-map",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "crm چه کمکی به مشاور دارد",
+        "expected": "crm-advisor-guide",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "intro-crm-filing-extractor",
+          "ai-crm-message"
+        ]
+      },
+      {
+        "query": "برای مشاور املاک چه کمکی میکنه",
+        "expected": "crm-advisor-guide",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "intro-what-is-divar-filing",
+          "intro-what-is-divar-filing"
+        ]
+      },
+      {
+        "query": "تفاوت crm و فایلینگ",
+        "expected": "intro-crm-filing-extractor",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "crm-advisor-guide",
+          "extractor-to-filing",
+          "crm-advisor-guide"
+        ]
+      },
+      {
+        "query": "استخراج با crm چه فرقی داره",
+        "expected": "intro-crm-filing-extractor",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "نسخه وب و اندروید",
+        "expected": "platforms-web-android-windows",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "platforms-web-android-windows",
+          "platforms-web-android-windows",
+          "mobile-api-note",
+          "mobile-api-note",
+          "account-mobile-verify"
+        ]
+      },
+      {
+        "query": "دانلود اپ اندروید",
+        "expected": "platforms-web-android-windows",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "platforms-web-android-windows",
+          "platforms-web-android-windows",
+          "mobile-api-note",
+          "mobile-api-note",
+          "extractor-windows"
+        ]
+      },
+      {
+        "query": "دانلود ویندوز استخراج",
+        "expected": "extractor-windows",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-windows",
+          "extractor-windows",
+          "extractor-overview",
+          "extractor-overview",
+          "platforms-web-android-windows"
+        ]
+      },
+      {
+        "query": "ثبت نام چطوره",
+        "expected": "account-register-login",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "support-getting-started",
+          "support-getting-started",
+          "account-register-login",
+          "account-register-login",
+          "plans-trial-7d"
+        ]
+      },
+      {
+        "query": "ورود به میزکار",
+        "expected": "account-register-login",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "account-register-login",
+          "account-register-login",
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "ai-features-overview"
+        ]
+      },
+      {
+        "query": "کد پیامک نمیاد",
+        "expected": "account-mobile-verify",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "account-mobile-verify",
+          "account-mobile-verify"
+        ]
+      },
+      {
+        "query": "پروفایل کاربری",
+        "expected": "account-profile",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "account-profile",
+          "account-profile"
+        ]
+      },
+      {
+        "query": "قیمت پلن چنده",
+        "expected": "plans-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "plans-overview",
+          "plans-overview",
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-seats-licenses"
+        ]
+      },
+      {
+        "query": "خرید اشتراک",
+        "expected": "plans-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "plans-overview",
+          "plans-overview",
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-seats-licenses"
+        ]
+      },
+      {
+        "query": "هدیه هفت روزه",
+        "expected": "plans-trial-7d",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "plans-trial-7d",
+          "plans-trial-7d",
+          "support-getting-started"
+        ]
+      },
+      {
+        "query": "آزمایشی رایگان ثبت نام",
+        "expected": "plans-trial-7d",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "plans-trial-7d",
+          "plans-trial-7d",
+          "support-getting-started",
+          "support-getting-started",
+          "account-register-login"
+        ]
+      },
+      {
+        "query": "فعال سازی لایسنس",
+        "expected": "license-activation",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "license-activation",
+          "license-activation",
+          "plans-overview",
+          "agency-seats-licenses",
+          "agency-seats-licenses"
+        ]
+      },
+      {
+        "query": "کلید لایسنس کجاست",
+        "expected": "license-activation",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "license-activation",
+          "license-activation",
+          "plans-overview",
+          "plans-overview",
+          "agency-seats-licenses"
+        ]
+      },
+      {
+        "query": "آژانس چند نفره",
+        "expected": "agency-vs-personal",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "agency-seats-licenses"
+        ]
+      },
+      {
+        "query": "خرید چند لایسنس آژانس",
+        "expected": "agency-vs-personal",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-space-sharing",
+          "agency-seats-licenses",
+          "agency-space-sharing"
+        ]
+      },
+      {
+        "query": "استخراج آگهی",
+        "expected": "extractor-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "extractor-windows",
+          "extractor-to-filing",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "ربات دیوار",
+        "expected": "extractor-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "intro-what-is-divar-filing",
+          "filing-divar-contact",
+          "filing-divar-contact"
+        ]
+      },
+      {
+        "query": "استخراج گروهی",
+        "expected": "extractor-single-batch",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-single-batch",
+          "extractor-single-batch",
+          "extractor-overview",
+          "extractor-overview",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "آگهی تو میزکار نیست",
+        "expected": "extractor-to-filing",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "ai-listing-summary",
+          "extractor-overview",
+          "extractor-overview"
+        ]
+      },
+      {
+        "query": "مجموعه فایل",
+        "expected": "filing-collections",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "intro-crm-filing-extractor",
+          "intro-what-is-divar-filing",
+          "intro-crm-filing-extractor"
+        ]
+      },
+      {
+        "query": "dataset کجاست",
+        "expected": "filing-collections",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-collections",
+          "filing-collections"
+        ]
+      },
+      {
+        "query": "نقشه آگهی",
+        "expected": "filing-detail-map",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-detail-map",
+          "filing-detail-map",
+          "workspace-product-map",
+          "workspace-product-map",
+          "filing-divar-contact"
+        ]
+      },
+      {
+        "query": "چطور مشتری اضافه کنم",
+        "expected": "crm-contacts",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "crm-matching"
+        ]
+      },
+      {
+        "query": "مخاطب جدید crm",
+        "expected": "crm-contacts",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "crm-matching"
+        ]
+      },
+      {
+        "query": "ثبت خریدار",
+        "expected": "crm-contacts",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-matching",
+          "crm-matching",
+          "support-getting-started"
+        ]
+      },
+      {
+        "query": "یادآوری تماس",
+        "expected": "crm-activities-reminders",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-activities-reminders",
+          "crm-activities-reminders",
+          "filing-divar-contact",
+          "filing-divar-contact",
+          "account-mobile-verify"
+        ]
+      },
+      {
+        "query": "پیگیری مشتری",
+        "expected": "crm-activities-reminders",
+        "rank": 5,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "crm-activities-reminders"
+        ]
+      },
+      {
+        "query": "معامله deal",
+        "expected": "crm-deals",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-deals",
+          "crm-deals",
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor",
+          "crm-contacts"
+        ]
+      },
+      {
+        "query": "فایل شخصی مشاور",
+        "expected": "crm-personal-properties",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-personal-properties",
+          "crm-personal-properties",
+          "filing-detail-map",
+          "filing-detail-map",
+          "filing-collections"
+        ]
+      },
+      {
+        "query": "ملک شخصی",
+        "expected": "crm-personal-properties",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-personal-properties",
+          "crm-personal-properties",
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "share-public-file"
+        ]
+      },
+      {
+        "query": "تطبیق فایل مشتری",
+        "expected": "crm-matching",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-matching",
+          "crm-matching",
+          "crm-contacts",
+          "crm-contacts",
+          "crm-advisor-guide"
+        ]
+      },
+      {
+        "query": "هوش مصنوعی میزکار",
+        "expected": "ai-features-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "ai-features-overview",
+          "ai-features-overview",
+          "ai-nl-command",
+          "ai-listing-summary",
+          "ai-listing-summary"
+        ]
+      },
+      {
+        "query": "خلاصه آگهی ai",
+        "expected": "ai-listing-summary",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "ai-listing-summary",
+          "ai-listing-summary",
+          "ai-features-overview",
+          "ai-features-overview",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "پیام crm هوشمند",
+        "expected": "ai-crm-message",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "ai-crm-message",
+          "ai-crm-message",
+          "crm-advisor-guide",
+          "crm-contacts",
+          "ai-nl-command"
+        ]
+      },
+      {
+        "query": "فرمان هوشمند",
+        "expected": "ai-nl-command",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "ai-nl-command",
+          "ai-nl-command",
+          "ai-features-overview",
+          "workspace-product-map",
+          "ai-listing-summary"
+        ]
+      },
+      {
+        "query": "ورودی صوتی",
+        "expected": "ai-voice-note",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "ai-voice-note",
+          "ai-voice-note"
+        ]
+      },
+      {
+        "query": "دستیار عمومی سایت",
+        "expected": "public-assistant-scope",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "public-assistant-scope",
+          "public-assistant-scope",
+          "contracts-overview",
+          "filing-divar-contact",
+          "ai-features-overview"
+        ]
+      },
+      {
+        "query": "ساخت آژانس",
+        "expected": "agency-create-roles",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-create-roles",
+          "agency-create-roles",
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "agency-vs-personal"
+        ]
+      },
+      {
+        "query": "نقش منشی آژانس",
+        "expected": "agency-create-roles",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-create-roles",
+          "agency-create-roles",
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "workspace-product-map"
+        ]
+      },
+      {
+        "query": "صندلی لایسنس تیم",
+        "expected": "agency-seats-licenses",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-seats-licenses",
+          "agency-seats-licenses",
+          "license-activation",
+          "license-activation",
+          "agency-vs-personal"
+        ]
+      },
+      {
+        "query": "فضای آژانس اشتراک",
+        "expected": "agency-space-sharing",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "plans-overview"
+        ]
+      },
+      {
+        "query": "شروع کار بعد ثبت نام",
+        "expected": "support-getting-started",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "account-register-login",
+          "account-register-login",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "crm-contacts"
+        ]
+      },
+      {
+        "query": "مشکل ورود",
+        "expected": "support-common-errors",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "account-register-login",
+          "account-register-login",
+          "support-common-errors",
+          "support-common-errors",
+          "ai-voice-note"
+        ]
+      },
+      {
+        "query": "صف امروز",
+        "expected": "workspace-today-queue",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "workspace-today-queue",
+          "workspace-today-queue",
+          "crm-activities-reminders",
+          "crm-activities-reminders",
+          "crm-advisor-guide"
+        ]
+      },
+      {
+        "query": "قراردادها",
+        "expected": "contracts-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "contracts-overview",
+          "contracts-overview",
+          "platforms-web-android-windows",
+          "intro-what-is-divar-filing",
+          "workspace-product-map"
+        ]
+      },
+      {
+        "query": "آکادمی ویدیو",
+        "expected": "academy-public",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "academy-public",
+          "academy-public",
+          "workspace-product-map"
+        ]
+      },
+      {
+        "query": "روش پرداخت",
+        "expected": "payment-methods",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "payment-methods",
+          "payment-methods",
+          "plans-overview",
+          "crm-deals",
+          "crm-deals"
+        ]
+      },
+      {
+        "query": "حریم خصوصی",
+        "expected": "privacy-data",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "public-assistant-scope",
+          "public-assistant-scope",
+          "privacy-data",
+          "privacy-data",
+          "share-public-file"
+        ]
+      },
+      {
+        "query": "افیلیت",
+        "expected": "affiliate-program",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "affiliate-program",
+          "affiliate-program"
+        ]
+      },
+      {
+        "query": "api موبایل",
+        "expected": "mobile-api-note",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "mobile-api-note",
+          "mobile-api-note",
+          "account-mobile-verify",
+          "account-mobile-verify",
+          "platforms-web-android-windows"
+        ]
+      },
+      {
+        "query": "لینک share فایل",
+        "expected": "share-public-file",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "filing-detail-map",
+          "intro-crm-filing-extractor",
+          "intro-crm-filing-extractor",
+          "filing-collections",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "گزارش crm",
+        "expected": "crm-reports",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-reports",
+          "crm-reports",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "intro-crm-filing-extractor"
+        ]
+      },
+      {
+        "query": "آموزش اندروید",
+        "expected": "academy-public",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "academy-public",
+          "academy-public",
+          "platforms-web-android-windows",
+          "mobile-api-note",
+          "mobile-api-note"
+        ]
+      },
+      {
+        "query": "تماس پشتیبانی",
+        "expected": "support-common-errors",
+        "rank": 2,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "account-mobile-verify",
+          "support-common-errors",
+          "crm-activities-reminders",
+          "account-mobile-verify",
+          "crm-activities-reminders"
+        ]
+      },
+      {
+        "query": "سیاست مدنی ایران",
+        "expected": "public-assistant-scope",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": []
+      },
+      {
+        "query": "api key فایلینگ",
+        "expected": "public-assistant-scope",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "ai-features-overview"
+        ]
+      },
+      {
+        "query": "اطلاعات مشتریان من",
+        "expected": "public-assistant-scope",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "public-assistant-scope",
+          "public-assistant-scope",
+          "agency-space-sharing",
+          "agency-space-sharing"
+        ]
+      },
+      {
+        "query": "سلام میخوام شروع کنم کارم چیه",
+        "expected": "support-getting-started",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "support-getting-started",
+          "support-getting-started",
+          "intro-what-is-divar-filing",
+          "intro-what-is-divar-filing"
+        ]
+      },
+      {
+        "query": "یه مشاورم تازه کارم از کجا شروع کنم",
+        "expected": "intro-what-is-divar-filing",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "support-getting-started",
+          "support-getting-started",
+          "intro-what-is-divar-filing",
+          "intro-what-is-divar-filing"
+        ]
+      },
+      {
+        "query": "دیوار معمولی کافی نیست؟",
+        "expected": "intro-what-is-divar-filing",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-divar-contact",
+          "filing-divar-contact",
+          "intro-what-is-divar-filing",
+          "intro-what-is-divar-filing",
+          "extractor-overview"
+        ]
+      },
+      {
+        "query": "پلن ارزونتر کدومه",
+        "expected": "plans-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "plans-overview",
+          "plans-overview"
+        ]
+      },
+      {
+        "query": "هزینه اشتراک ماهانه",
+        "expected": "plans-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "plans-overview",
+          "plans-overview",
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-seats-licenses"
+        ]
+      },
+      {
+        "query": "لایسنسم تموم شده چیکار کنم",
+        "expected": "license-activation",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "ai-voice-note",
+          "ai-voice-note"
+        ]
+      },
+      {
+        "query": "شماره مالک میاد تو استخراج",
+        "expected": "extractor-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "extractor-windows",
+          "account-mobile-verify",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "تلفن آگهی کشیده میشه",
+        "expected": "extractor-overview",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-divar-contact",
+          "filing-divar-contact",
+          "extractor-overview",
+          "extractor-overview",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "استخراج دسته جمعی چطور",
+        "expected": "extractor-single-batch",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "extractor-single-batch",
+          "extractor-single-batch",
+          "extractor-to-filing"
+        ]
+      },
+      {
+        "query": "چندتا آگهی یکجا بگیرم",
+        "expected": "extractor-single-batch",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "filing-divar-contact",
+          "filing-divar-contact",
+          "extractor-overview",
+          "extractor-overview",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "همگام نمیشه با میزکار",
+        "expected": "extractor-to-filing",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "intro-what-is-divar-filing",
+          "ai-features-overview",
+          "intro-crm-filing-extractor"
+        ]
+      },
+      {
+        "query": "تو دیتاست نمیبینمش",
+        "expected": "extractor-to-filing",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "filing-collections",
+          "filing-collections"
+        ]
+      },
+      {
+        "query": "فیلتر قیمت تو فایلینگ",
+        "expected": "filing-collections",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": [
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "crm-advisor-guide",
+          "extractor-overview",
+          "ai-features-overview"
+        ]
+      },
+      {
+        "query": "پوشه بندی آگهی ها",
+        "expected": "filing-collections",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-collections",
+          "filing-collections",
+          "filing-detail-map",
+          "filing-detail-map",
+          "extractor-overview"
+        ]
+      },
+      {
+        "query": "رو نقشه ملک ببینم",
+        "expected": "filing-detail-map",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-detail-map",
+          "filing-detail-map",
+          "workspace-product-map",
+          "workspace-product-map",
+          "crm-personal-properties"
+        ]
+      },
+      {
+        "query": "برای این خریدار چی داری",
+        "expected": "crm-matching",
+        "rank": 4,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "share-public-file",
+          "crm-matching",
+          "crm-matching"
+        ]
+      },
+      {
+        "query": "مچ فایل با مشتری",
+        "expected": "crm-matching",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-matching",
+          "crm-matching",
+          "crm-advisor-guide"
+        ]
+      },
+      {
+        "query": "یادآوری فردا زنگ بزنم",
+        "expected": "crm-activities-reminders",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-activities-reminders",
+          "crm-activities-reminders"
+        ]
+      },
+      {
+        "query": "deal ثبت کنم کجا",
+        "expected": "crm-deals",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-deals",
+          "crm-deals",
+          "crm-contacts",
+          "crm-contacts",
+          "account-register-login"
+        ]
+      },
+      {
+        "query": "هوش مصنوعی چه کارایی داره",
+        "expected": "ai-features-overview",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "ai-features-overview",
+          "ai-features-overview",
+          "ai-nl-command",
+          "ai-nl-command",
+          "ai-listing-summary"
+        ]
+      },
+      {
+        "query": "محدودیت ai چیه",
+        "expected": "ai-features-overview",
+        "rank": 5,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": true,
+        "top_5": [
+          "ai-crm-message",
+          "intro-what-is-divar-filing",
+          "intro-what-is-divar-filing",
+          "ai-crm-message",
+          "ai-features-overview"
+        ]
+      },
+      {
+        "query": "با صدا یادداشت بزنم",
+        "expected": "ai-voice-note",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": []
+      },
+      {
+        "query": "آژانس بسازم چجوری",
+        "expected": "agency-create-roles",
+        "rank": 5,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-create-roles"
+        ]
+      },
+      {
+        "query": "تیمم سه نفره seat",
+        "expected": "agency-seats-licenses",
+        "rank": null,
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "hit_at_5": false,
+        "top_5": []
+      },
+      {
+        "query": "فضای مشترک آژانس",
+        "expected": "agency-space-sharing",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-create-roles"
+        ]
+      },
+      {
+        "query": "حساب شخصی با آژانس فرق",
+        "expected": "agency-vs-personal",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "agency-vs-personal",
+          "agency-vs-personal",
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "agency-create-roles"
+        ]
+      },
+      {
+        "query": "هفته رایگان دارید",
+        "expected": "plans-trial-7d",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "plans-trial-7d",
+          "plans-trial-7d"
+        ]
+      },
+      {
+        "query": "شماره تماس آگهی دیوار",
+        "expected": "filing-divar-contact",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-divar-contact",
+          "filing-divar-contact",
+          "extractor-overview",
+          "extractor-overview",
+          "intro-what-is-divar-filing"
+        ]
+      },
+      {
+        "query": "otp دیوار برای تلفن",
+        "expected": "filing-divar-contact",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "filing-divar-contact",
+          "filing-divar-contact",
+          "extractor-overview",
+          "extractor-overview",
+          "intro-what-is-divar-filing"
+        ]
+      },
+      {
+        "query": "چطوری مخاطب ثبت کنم",
+        "expected": "crm-contacts",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "crm-matching"
+        ]
+      },
+      {
+        "query": "چطوری فایل شخصی داشته باشم",
+        "expected": "crm-personal-properties",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-personal-properties",
+          "crm-personal-properties",
+          "extractor-to-filing",
+          "extractor-to-filing",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "لینک برای مشتری چطوری بفرستم",
+        "expected": "share-public-file",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "share-public-file",
+          "share-public-file",
+          "crm-advisor-guide"
+        ]
+      },
+      {
+        "query": "شماره تماس کجا وارد کنم در فایل شخصی",
+        "expected": "crm-personal-properties",
+        "rank": 1,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-personal-properties",
+          "crm-personal-properties",
+          "filing-detail-map",
+          "filing-collections",
+          "filing-detail-map"
+        ]
+      },
+      {
+        "query": "چطوری لینک برای مشتری بسازیم",
+        "expected": "share-public-file",
+        "rank": 3,
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "hit_at_5": true,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "share-public-file",
+          "share-public-file",
+          "crm-advisor-guide"
+        ]
+      }
+    ]
+  },
+  "scenario_eval": {
+    "scenarios": [
+      {
+        "query": "شماره مالک رو کجا بزنم توی فایل شخصی",
+        "expected": "crm-personal-properties",
+        "type": "howto",
+        "rank": 1,
+        "top_5": [
+          "crm-personal-properties",
+          "crm-personal-properties",
+          "filing-detail-map",
+          "filing-detail-map",
+          "filing-collections"
+        ],
+        "hit_at_5": true
+      },
+      {
+        "query": "پوشه بندی ملک شخصی",
+        "expected": null,
+        "type": "howto",
+        "note": "نیاز به مقاله مستقل — در کاتالوگ پوشش none",
+        "rank": null,
+        "top_5": [
+          "crm-personal-properties",
+          "crm-personal-properties",
+          "filing-collections",
+          "intro-what-is-divar-filing",
+          "filing-collections"
+        ],
+        "hit_at_5": false
+      },
+      {
+        "query": "کمیسیون معامله رو کجا ثبت کنم",
+        "expected": "crm-deals",
+        "type": "howto",
+        "rank": 1,
+        "top_5": [
+          "crm-deals",
+          "crm-deals",
+          "crm-contacts",
+          "crm-contacts",
+          "account-register-login"
+        ],
+        "hit_at_5": true
+      },
+      {
+        "query": "قرارداد PDF بگیرم",
+        "expected": "contracts-overview",
+        "type": "howto",
+        "rank": 3,
+        "top_5": [
+          "crm-deals",
+          "crm-deals",
+          "contracts-overview",
+          "contracts-overview"
+        ],
+        "hit_at_5": true
+      },
+      {
+        "query": "بعد از تماس مشتری چیکار کنم اندروید",
+        "expected": null,
+        "type": "android_post_call",
+        "rank": null,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-advisor-guide",
+          "extractor-overview",
+          "crm-advisor-guide"
+        ],
+        "hit_at_5": false
+      },
+      {
+        "query": "زمان بندی استخراج ویندوز",
+        "expected": "extractor-windows",
+        "type": "windows_scheduler",
+        "rank": 3,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "extractor-windows",
+          "extractor-windows",
+          "intro-crm-filing-extractor"
+        ],
+        "hit_at_5": true
+      },
+      {
+        "query": "ادغام دو مخاطب تکراری",
+        "expected": null,
+        "type": "crm_contacts",
+        "rank": null,
+        "top_5": [
+          "crm-contacts",
+          "crm-contacts",
+          "crm-advisor-guide",
+          "crm-advisor-guide",
+          "crm-matching"
+        ],
+        "hit_at_5": false
+      },
+      {
+        "query": "فضای آژانس فایل رو چطور منتشر کنم",
+        "expected": "agency-space-sharing",
+        "type": "howto",
+        "rank": 1,
+        "top_5": [
+          "agency-space-sharing",
+          "agency-space-sharing",
+          "extractor-overview",
+          "extractor-to-filing",
+          "extractor-to-filing"
+        ],
+        "hit_at_5": true
+      },
+      {
+        "query": "اول ثبت نام بعد استخراج",
+        "expected": "support-getting-started",
+        "type": "multi_topic",
+        "note": "retrieval تک‌مرحله‌ای؛ ارزیابی مکالمه در فاز ۳",
+        "rank": null,
+        "top_5": [
+          "extractor-overview",
+          "extractor-overview",
+          "account-register-login",
+          "account-register-login",
+          "extractor-to-filing"
+        ],
+        "hit_at_5": false
+      },
+      {
+        "query": "قیمت پلن رو گفتید حالا لایسنس ویندوز",
+        "expected": "license-activation",
+        "type": "topic_shift",
+        "note": "retrieval تک‌مرحله‌ای",
+        "rank": 5,
+        "top_5": [
+          "plans-overview",
+          "plans-overview",
+          "extractor-windows",
+          "extractor-windows",
+          "license-activation"
+        ],
+        "hit_at_5": true
+      }
+    ],
+    "hit_at_5_with_expected": 0.8571428571428571,
+    "count": 10
+  },
+  "generated_by": "public_assistant.audit.retrieval_baseline"
+}

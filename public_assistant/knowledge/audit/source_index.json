@@ -1,0 +1,1652 @@
+{
+  "entry_count": 80,
+  "missing_source_files": 0,
+  "priority_order_documented": [
+    "executable_code_and_permissions",
+    "templates_ui",
+    "tests",
+    "internal_guides"
+  ],
+  "entries": [
+    {
+      "feature_id": "intro-product",
+      "title": "معرفی فایلینگ دیوار",
+      "domain": "onboarding",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant/knowledge/articles/intro-what-is-divar-filing.md",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\intro-what-is-divar-filing.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/"
+      ],
+      "platforms": [
+        "web",
+        "android",
+        "windows"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "workspace-product-map",
+      "title": "نقشه امکانات میزکار",
+      "domain": "workspace",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant/knowledge/articles/workspace-product-map.md",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\workspace-product-map.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "account-register-login",
+      "title": "ثبت‌نام و ورود",
+      "domain": "account",
+      "source_refs": [
+        {
+          "ref": "public_assistant/knowledge/articles/account-register-login.md",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\account-register-login.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/accounts/register/",
+        "/accounts/login/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": [
+        "web_path_unmatched_in_urls:/accounts/register/",
+        "web_path_unmatched_in_urls:/accounts/login/"
+      ]
+    },
+    {
+      "feature_id": "account-mobile-verify",
+      "title": "تأیید موبایل و OTP",
+      "domain": "account",
+      "source_refs": [
+        {
+          "ref": "public_assistant/knowledge/articles/account-mobile-verify.md",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\account-mobile-verify.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "plans-overview",
+      "title": "پلن‌ها و خرید اشتراک",
+      "domain": "licensing",
+      "source_refs": [
+        {
+          "ref": "public_assistant/knowledge/articles/plans-overview.md",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\plans-overview.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\plans-trial-7d.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\payment-methods.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/products/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": [
+        "web_path_unmatched_in_urls:/products/"
+      ]
+    },
+    {
+      "feature_id": "license-activation",
+      "title": "فعال‌سازی لایسنس ربات",
+      "domain": "licensing",
+      "source_refs": [
+        {
+          "ref": "src/license_client.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant/knowledge/articles/license-activation.md",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\license-activation.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web",
+        "windows"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "extractor-overview",
+      "title": "استخراج آگهی از دیوار",
+      "domain": "extractor",
+      "source_refs": [
+        {
+          "ref": "src/export_divar_items.py",
+          "exists": true
+        },
+        {
+          "ref": "divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\extractor-overview.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\extractor-single-batch.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\extractor-to-filing.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/download/android/",
+        "/download/windows/"
+      ],
+      "platforms": [
+        "android",
+        "windows",
+        "web"
+      ],
+      "conflicts": [
+        "web_path_unmatched_in_urls:/download/android/",
+        "web_path_unmatched_in_urls:/download/windows/"
+      ]
+    },
+    {
+      "feature_id": "extractor-windows-scheduler",
+      "title": "زمان‌بندی استخراج ویندوز",
+      "domain": "windows",
+      "source_refs": [
+        {
+          "ref": "src/app_features.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\extractor-windows.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "windows"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "extractor-sync-filing",
+      "title": "همگام‌سازی خروجی با فایلینگ",
+      "domain": "extractor",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\extractor-to-filing.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\filing-collections.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/import/",
+        "/workspace/datasets/upload/"
+      ],
+      "platforms": [
+        "web",
+        "windows"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "filing-collections",
+      "title": "مجموعه فایل (Dataset)",
+      "domain": "filing",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\filing-collections.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/datasets/",
+        "/workspace/listings/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "filing-listing-detail",
+      "title": "جزئیات و ویرایش آگهی",
+      "domain": "filing",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "templates/workspace/",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\filing-collections.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\share-public-file.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\filing-detail-map.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/datasets/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "filing-divar-contact",
+      "title": "دریافت تماس آگهی از دیوار (OTP)",
+      "domain": "filing",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\filing-divar-contact.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "filing-analysis-tools",
+      "title": "تحلیل بازار و ابزارها",
+      "domain": "analysis",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\filing-collections.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/tools/",
+        "/workspace/compare/"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "share-public-file",
+      "title": "اشتراک عمومی لینک با مشتری",
+      "domain": "sharing",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant/knowledge/articles/share-public-file.md",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\share-public-file.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/properties/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-contacts-hub",
+      "title": "مدیریت مخاطبین CRM",
+      "domain": "crm_contacts",
+      "source_refs": [
+        {
+          "ref": "workspace/crm_views.py",
+          "exists": true
+        },
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-contacts.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/contacts/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-contacts-merge",
+      "title": "ادغام مخاطبین تکراری",
+      "domain": "crm_contacts",
+      "source_refs": [
+        {
+          "ref": "workspace/crm_views.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/contacts/"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-personal-properties-hub",
+      "title": "املاک شخصی (فایل شخصی)",
+      "domain": "crm_personal_properties",
+      "source_refs": [
+        {
+          "ref": "workspace/crm_views.py",
+          "exists": true
+        },
+        {
+          "ref": "templates/workspace/crm/",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-personal-properties.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/properties/",
+        "/workspace/crm/properties/new/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-property-owner-contact",
+      "title": "ثبت شماره تماس مالک",
+      "domain": "crm_personal_properties",
+      "source_refs": [
+        {
+          "ref": "templates/workspace/crm/includes/property_form_sections.html",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-personal-properties.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/properties/new/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-property-folders-cabinets",
+      "title": "پوشه‌ها و کابینت املاک شخصی",
+      "domain": "crm_personal_properties",
+      "source_refs": [
+        {
+          "ref": "workspace/crm_views.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/properties/"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-deals-hub",
+      "title": "معاملات (Deal)",
+      "domain": "crm_deals",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-deals.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/deals/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-deals-finance",
+      "title": "مالی و کمیسیون معامله",
+      "domain": "crm_deals",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-deals.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/deals/finance/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-scheduling",
+      "title": "تقویم و یادآور",
+      "domain": "crm_scheduling",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-activities-reminders.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\workspace-today-queue.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/today/",
+        "/workspace/crm/reminders/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-matching",
+      "title": "تطبیق فایل با مشتری",
+      "domain": "crm_contacts",
+      "source_refs": [
+        {
+          "ref": "workspace/crm_views.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-matching.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/contacts/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "crm-automation-templates",
+      "title": "قالب پیام و اتوماسیون",
+      "domain": "crm_automation",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/templates/"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "contracts-hub",
+      "title": "قراردادهای دیجیتال",
+      "domain": "contracts",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\contracts-overview.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/contracts/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "agency-hub",
+      "title": "مدیریت آژانس",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\agency-create-roles.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\agency-seats-licenses.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\agency-vs-personal.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/agency/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "agency-space-sharing",
+      "title": "فضای اشتراکی آژانس",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/agency_space_views.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\agency-space-sharing.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/crm/agency/space/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "ai-workspace-features",
+      "title": "هوش مصنوعی میزکار",
+      "domain": "ai",
+      "source_refs": [
+        {
+          "ref": "ai_workspace/",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\ai-features-overview.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\ai-listing-summary.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\ai-crm-message.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\ai-nl-command.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\ai-voice-note.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/ai/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "android-post-call-assistant",
+      "title": "دستیار پس از تماس (اندروید)",
+      "domain": "android",
+      "source_refs": [
+        {
+          "ref": "divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/feature/postcall/",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "android-extract-tab",
+      "title": "استخراج در اپ اندروید",
+      "domain": "android",
+      "source_refs": [
+        {
+          "ref": "divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\platforms-web-android-windows.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\extractor-overview.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "support-tickets",
+      "title": "پشتیبانی و خطاهای متداول",
+      "domain": "support",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\support-common-errors.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\support-getting-started.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/support/"
+      ],
+      "platforms": [
+        "web",
+        "android"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "academy-videos",
+      "title": "آکادمی ویدیویی",
+      "domain": "academy",
+      "source_refs": [
+        {
+          "ref": "workspace/urls.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\academy-public.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [
+        "/workspace/academy/"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "public-assistant-widget",
+      "title": "دستیار عمومی سایت",
+      "domain": "public_assistant",
+      "source_refs": [
+        {
+          "ref": "public_assistant/services/chat.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant/services/retrieval.py",
+          "exists": true
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\public-assistant-scope.md",
+          "exists": true,
+          "kind": "knowledge_article"
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-workspace-crm-overview",
+      "title": "داشبورد و صف کار CRM",
+      "domain": "crm",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-workspace-workspace-settings",
+      "title": "تنظیمات میزکار",
+      "domain": "account",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-bot-extraction-نصب-و-اولین-اجرا",
+      "title": "نصب و اولین اجرا",
+      "domain": "extractor",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-bot-extraction-فعال‌سازی-لایسنس",
+      "title": "فعال‌سازی لایسنس",
+      "domain": "extractor",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-bot-extraction-تنظیم-و-شروع-استخراج",
+      "title": "تنظیم و شروع استخراج",
+      "domain": "extractor",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-bot-extraction-خروجی-و-ساختار-پوشه‌ها",
+      "title": "خروجی و ساختار پوشه‌ها",
+      "domain": "extractor",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-workspace-filing-نمای-کلی-و-آپلود-سریع",
+      "title": "نمای کلی و آپلود سریع",
+      "domain": "filing",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-workspace-filing-آپلود-تکی",
+      "title": "آپلود تکی",
+      "domain": "filing",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-workspace-filing-آپلود-پوشه-(Bulk)",
+      "title": "آپلود پوشه (Bulk)",
+      "domain": "filing",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-workspace-filing-مدیریت-مجموعه‌ها-و-جدول-آگهی",
+      "title": "مدیریت مجموعه‌ها و جدول آگهی",
+      "domain": "filing",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-market-analysis-داشبورد-تحلیل-بازار",
+      "title": "داشبورد تحلیل بازار",
+      "domain": "analysis",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-market-analysis-نقشه-آگهی‌ها",
+      "title": "نقشه آگهی‌ها",
+      "domain": "analysis",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-market-analysis-جزئیات-آگهی-و-تبدیل-به-فایل-شخصی",
+      "title": "جزئیات آگهی و تبدیل به فایل شخصی",
+      "domain": "analysis",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-smart-tools-تبدیل-رهن-و-اجاره",
+      "title": "تبدیل رهن و اجاره",
+      "domain": "analysis",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-smart-tools-محاسبه-قیمت-هر-متر",
+      "title": "محاسبه قیمت هر متر",
+      "domain": "analysis",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-smart-tools-محاسبه-کمیسیون",
+      "title": "محاسبه کمیسیون",
+      "domain": "analysis",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-overview-داشبورد-CRM",
+      "title": "داشبورد CRM",
+      "domain": "crm",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-overview-صف-کار-امروز",
+      "title": "صف کار امروز",
+      "domain": "crm",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-overview-جستجوی-سراسری",
+      "title": "جستجوی سراسری",
+      "domain": "crm",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-contacts-ثبت-مخاطب-جدید",
+      "title": "ثبت مخاطب جدید",
+      "domain": "crm_contacts",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-contacts-پروفایل-و-پیگیری",
+      "title": "پروفایل و پیگیری",
+      "domain": "crm_contacts",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-contacts-Import،-Export-و-ادغام",
+      "title": "Import، Export و ادغام",
+      "domain": "crm_contacts",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-properties-ثبت-و-مدیریت-ملک",
+      "title": "ثبت و مدیریت ملک",
+      "domain": "crm_personal_properties",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-properties-تطبیق-ملک–مشتری",
+      "title": "تطبیق ملک–مشتری",
+      "domain": "crm_personal_properties",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-properties-فیلترهای-ذخیره‌شده",
+      "title": "فیلترهای ذخیره‌شده",
+      "domain": "crm_personal_properties",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-deals-ایجاد-معامله",
+      "title": "ایجاد معامله",
+      "domain": "crm_deals",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-deals-مراحل-و-چک‌لیست",
+      "title": "مراحل و چک‌لیست",
+      "domain": "crm_deals",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-deals-کمیسیون",
+      "title": "کمیسیون",
+      "domain": "crm_deals",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-scheduling-تقویم-CRM",
+      "title": "تقویم CRM",
+      "domain": "crm_scheduling",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-scheduling-یادآورها",
+      "title": "یادآورها",
+      "domain": "crm_scheduling",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-communication-قالب-پیام",
+      "title": "قالب پیام",
+      "domain": "crm_automation",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-communication-اتوماسیون",
+      "title": "اتوماسیون",
+      "domain": "crm_automation",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-team-مدیریت-اعضا",
+      "title": "مدیریت اعضا",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-team-تخصیص-و-انتقال",
+      "title": "تخصیص و انتقال",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-team-همگام‌سازی-CRM",
+      "title": "همگام‌سازی CRM",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-smart-assistant-فرمان-متنی-(دستیار-هوشمند)",
+      "title": "فرمان متنی (دستیار هوشمند)",
+      "domain": "ai",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-smart-assistant-ورود-صوتی-در-فرم‌ها",
+      "title": "ورود صوتی در فرم‌ها",
+      "domain": "ai",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-smart-assistant-فرمان-صوتی-در-دستیار",
+      "title": "فرمان صوتی در دستیار",
+      "domain": "ai",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-agency-hub-ورود-به-مرکز-آژانس",
+      "title": "ورود به مرکز آژانس",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-agency-hub-مشاوران-و-گزارش-عملکرد",
+      "title": "مشاوران و گزارش عملکرد",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-agency-hub-Agency-TV-و-اطلاع‌رسانی",
+      "title": "Agency TV و اطلاع‌رسانی",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-agency-hub-تنظیمات،-API-و-webhook",
+      "title": "تنظیمات، API و webhook",
+      "domain": "agency",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-finance-contracts-داشبورد-مالی-معاملات",
+      "title": "داشبورد مالی معاملات",
+      "domain": "contracts",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-finance-contracts-کمیسیون-در-معامله",
+      "title": "کمیسیون در معامله",
+      "domain": "contracts",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-crm-finance-contracts-قرارداد-و-صورت‌جلسه-تحویل",
+      "title": "قرارداد و صورت‌جلسه تحویل",
+      "domain": "contracts",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-workspace-settings-ظاهر-و-خوانایی",
+      "title": "ظاهر و خوانایی",
+      "domain": "account",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    },
+    {
+      "feature_id": "help-topic-workspace-settings-نقشه-و-PDF",
+      "title": "نقشه و PDF",
+      "domain": "account",
+      "source_refs": [
+        {
+          "ref": "workspace/help_content.py",
+          "exists": true
+        }
+      ],
+      "web_paths": [],
+      "platforms": [
+        "web"
+      ],
+      "conflicts": []
+    }
+  ]
+}

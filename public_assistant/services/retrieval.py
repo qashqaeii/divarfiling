@@ -101,6 +101,24 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         boost += 4.0
     if article_id == 'plans-trial-7d' and any(w in query_norm for w in ('هدیه', 'هفت', 'آزمایشی', 'رایگان', 'trial')):
         boost += 4.5
+    if article_id == 'plans-trial-vs-welcome' and any(
+        w in query_norm for w in ('هدیه', 'آزمایشی', 'رایگان', 'تفاوت', 'فرق')
+    ):
+        boost += 5.0
+    if article_id == 'plans-agency-pricing' and 'آژانس' in query_norm and any(
+        w in query_norm for w in ('قیمت', 'تخفیف', 'چند', 'نفر', 'مشاور')
+    ):
+        boost += 4.5
+    if article_id == 'plans-choose-advisor' and any(
+        w in query_norm for w in ('پیشنهاد', 'کدوم', 'کدام', 'بخرم', 'مناسب')
+    ):
+        boost += 3.5
+    if article_id == 'plans-personal-compare' and any(
+        w in query_norm for w in ('ماهانه', 'سه', 'سالانه', 'به صرفه', 'مقایسه')
+    ):
+        boost += 3.5
+    if article_id == 'plans-purchase-faq' and any(w in query_norm for w in ('تمدید', 'تمام شود', 'انقضا')):
+        boost += 3.0
     if article_id == 'extractor-overview' and any(
         w in query_norm for w in ('استخراج', 'چطور', 'چگونه', 'ربات', 'اسکرپ', 'کشیدن')
     ):

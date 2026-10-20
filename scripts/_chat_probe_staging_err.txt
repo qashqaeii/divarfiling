@@ -1,0 +1,54 @@
+﻿python : urllib3.exceptions.SSLError: EOF occurred in violation of protocol (_ssl.c:992)
+At C:\Users\qashq\AppData\Local\Temp\ps-script-5aa08c07-1a0e-44ac-bae9-bc644d0e38ca.ps1:123 char:162
++ ... _prod.json; python scripts/staging_chat_probe.py https://staging.diva ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (urllib3.excepti...ol (_ssl.c:992):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\qashq\AppData\Local\Programs\Python\Python310\Lib\site-packages\requests\adapters.py", line 667, in 
+send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "C:\Users\qashq\AppData\Local\Programs\Python\Python310\Lib\site-packages\urllib3\connectionpool.py", line 844, 
+in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\qashq\AppData\Local\Programs\Python\Python310\Lib\site-packages\urllib3\util\retry.py", line 515, in 
+increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='staging.divarfiling.ir', port=443): Max retries exceeded 
+with url: /api/public-assistant/config/ (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol 
+(_ssl.c:992)')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\MYROBOTS\DIVAR-SCRAPER\django\scripts\staging_chat_probe.py", line 69, in <module>
+    result = probe(base)
+             ^^^^^^^^^^^
+  File "D:\MYROBOTS\DIVAR-SCRAPER\django\scripts\staging_chat_probe.py", line 32, in probe
+    r = s.get(cfg_url, timeout=30)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\qashq\AppData\Local\Programs\Python\Python310\Lib\site-packages\requests\sessions.py", line 602, in 
+get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\qashq\AppData\Local\Programs\Python\Python310\Lib\site-packages\requests\sessions.py", line 589, in 
+request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\qashq\AppData\Local\Programs\Python\Python310\Lib\site-packages\requests\sessions.py", line 703, in 
+send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\qashq\AppData\Local\Programs\Python\Python310\Lib\site-packages\requests\adapters.py", line 698, in 
+send
+    raise SSLError(e, request=request)
+requests.exceptions.SSLError: HTTPSConnectionPool(host='staging.divarfiling.ir', port=443): Max retries exceeded with 
+url: /api/public-assistant/config/ (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol 
+(_ssl.c:992)')))

@@ -23,6 +23,14 @@ from public_assistant.services.public_copy import (
     format_public_fallback,
     polish_public_answer,
 )
+from public_assistant.services.plan_advisor import (
+    PLAN_ADVISOR_SYSTEM_ADDENDUM,
+    build_plan_advisor_context,
+    compose_no_catalog_answer,
+    compose_subscription_answer,
+)
+from public_assistant.services.plan_intent import analyze_subscription_query
+from public_assistant.services.public_plans import load_public_plan_catalog
 from public_assistant.services.security import (
     filter_sources,
     looks_like_prompt_injection,
@@ -217,6 +225,13 @@ def answer_question(
 
     retrieval_query = _compose_retrieval_query(session, user_text)
     chunks = retrieve(retrieval_query)
+    sub_ctx = analyze_subscription_query(user_text, session)
+    plan_catalog = load_public_plan_catalog() if sub_ctx.is_subscription else None
+    plan_live_context = (
+        build_plan_advisor_context(sub_ctx, plan_catalog)
+        if plan_catalog and sub_ctx.is_subscription
+        else ''
+    )
 
     if asks_internal_implementation(user_text):
         return {
@@ -237,7 +252,15 @@ def answer_question(
             'session_id': str(session.id),
         }
 
-    if not _has_relevant_knowledge(chunks):
+    has_plan_data = bool(plan_live_context)
+    if not _has_relevant_knowledge(chunks) and not (sub_ctx.is_subscription and has_plan_data):
+        if sub_ctx.is_subscription and not plan_catalog:
+            return {
+                'ok': True,
+                'answer': compose_no_catalog_answer(),
+                'sources': _collect_sources(chunks) if chunks else [],
+                'session_id': str(session.id),
+            }
         return {
             'ok': True,
             'answer': _low_confidence_answer(),
@@ -250,20 +273,33 @@ def answer_question(
     context = _format_context(chunks)
     history = _history_lines(session)
 
-    user_prompt = (
-        f'سابقه گفتگو:\n{history or "—"}\n\n'
-        f'سؤال کاربر:\n{user_text}\n\n'
-        f'منابع دانشنامه:\n{context}\n\n'
-        'فقط بر اساس منابع بالا پاسخ بده. پاسخ را کامل و کاربردی بنویس (نه فقط خلاصه). '
+    user_prompt_parts = [
+        f'سابقه گفتگو:\n{history or "—"}',
+        f'سؤال کاربر:\n{user_text}',
+    ]
+    if plan_live_context:
+        user_prompt_parts.append(f'داده فروشگاه زنده (قیمت معتبر):\n{plan_live_context}')
+    if context.strip():
+        user_prompt_parts.append(f'منابع دانشنامه:\n{context}')
+    user_prompt_parts.append(
+        'پاسخ را کامل و کاربردی بنویس. برای قیمت و مدت پلن، داده فروشگاه زنده اولویت دارد. '
         'اگر منبع کافی نیست صریح بگو مطمئن نیستی.'
     )
+    user_prompt = '\n\n'.join(user_prompt_parts)
 
-    text, provider, model, latency, in_tok, out_tok = llm.complete(SYSTEM_PROMPT, user_prompt)
+    system_prompt = SYSTEM_PROMPT
+    if plan_live_context:
+        system_prompt = f'{SYSTEM_PROMPT}\n\n{PLAN_ADVISOR_SYSTEM_ADDENDUM}'
+
+    text, provider, model, latency, in_tok, out_tok = llm.complete(system_prompt, user_prompt)
     status = PublicAssistantUsageLog.STATUS_OK
 
     if not text:
         status = PublicAssistantUsageLog.STATUS_FALLBACK
-        text = _fallback_from_chunks(chunks)
+        if plan_catalog and sub_ctx.is_subscription:
+            text = compose_subscription_answer(sub_ctx, plan_catalog)
+        if not text:
+            text = _fallback_from_chunks(chunks)
     else:
         text = polish_public_answer(text, chunks=chunks)
 

@@ -26,7 +26,7 @@ platforms_audit:
     namespace: product_hub
   help_sections: 15
   help_toc_entries: 17
-  knowledge_articles_markdown: 44
+  knowledge_articles_markdown: 50
   android:
     available: true
     note: ok
@@ -399,6 +399,7 @@ features:
   knowledge_articles:
   - extractor-to-filing
   - filing-collections
+  - support-wave1-crm-filing
   help_section_ids:
   - workspace-filing
   source_refs:
@@ -473,6 +474,7 @@ features:
   - filing-collections
   - share-public-file
   - filing-detail-map
+  - filing-listing-manage
   help_section_ids:
   - workspace-filing
   source_refs:
@@ -612,12 +614,13 @@ features:
   verification_status: code_reviewed
   knowledge_articles:
   - crm-contacts
+  - crm-contacts-manage
   help_section_ids:
   - crm-contacts
   source_refs:
   - workspace/crm_views.py
   - workspace/urls.py
-  last_verified_at: '2026-10-19'
+  last_verified_at: '2026-10-20'
   entity_type: feature
   catalog_role: primary
   user_impact: high
@@ -643,19 +646,22 @@ features:
   - advisor
   license_notes: ''
   release_status: shipped
-  verification_status: unverified
-  knowledge_articles: []
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-contacts-manage
   help_section_ids:
   - crm-contacts
   source_refs:
   - workspace/crm_views.py
-  last_verified_at: null
-  notes: در help احتمالاً هست؛ مقاله دانشنامه مستقل ندارد
+  - templates/workspace/crm/contacts/list.html
+  last_verified_at: '2026-10-20'
   entity_type: feature
   catalog_role: primary
   user_impact: medium
   source_refs_resolved:
   - ref: workspace/crm_views.py
+    exists: true
+  - ref: templates/workspace/crm/contacts/list.html
     exists: true
   web_paths_verified:
   - /workspace/crm/contacts/
@@ -681,6 +687,8 @@ features:
   verification_status: code_reviewed
   knowledge_articles:
   - crm-personal-properties
+  - crm-property-create-edit
+  - crm-property-folders-cabinets
   help_section_ids:
   - crm-properties
   source_refs:
@@ -716,6 +724,7 @@ features:
   release_status: shipped
   verification_status: code_reviewed
   knowledge_articles:
+  - crm-property-owner-contact
   - crm-personal-properties
   help_section_ids:
   - crm-properties
@@ -745,18 +754,22 @@ features:
   - advisor
   license_notes: ''
   release_status: shipped
-  verification_status: unverified
-  knowledge_articles: []
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-property-folders-cabinets
   help_section_ids:
   - crm-properties
   source_refs:
-  - workspace/crm_views.py
-  last_verified_at: null
+  - workspace/services/crm_property_folders.py
+  - templates/workspace/crm/includes/property_folders_tier.html
+  last_verified_at: '2026-10-20'
   entity_type: feature
   catalog_role: primary
   user_impact: medium
   source_refs_resolved:
-  - ref: workspace/crm_views.py
+  - ref: workspace/services/crm_property_folders.py
+    exists: true
+  - ref: templates/workspace/crm/includes/property_folders_tier.html
     exists: true
   web_paths_verified:
   - /workspace/crm/properties/
@@ -883,13 +896,16 @@ features:
   - crm-matching
   help_section_ids: []
   source_refs:
-  - workspace/crm_views.py
-  last_verified_at: '2026-10-19'
+  - workspace/services/crm_matching.py
+  - templates/workspace/crm/includes/matches_panel.html
+  last_verified_at: '2026-10-20'
   entity_type: feature
   catalog_role: primary
   user_impact: medium
   source_refs_resolved:
-  - ref: workspace/crm_views.py
+  - ref: workspace/services/crm_matching.py
+    exists: true
+  - ref: templates/workspace/crm/includes/matches_panel.html
     exists: true
   web_paths_verified:
   - /workspace/crm/contacts/

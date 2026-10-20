@@ -377,7 +377,8 @@
       "parent_id": "extractor-overview",
       "knowledge_article_ids": [
         "extractor-to-filing",
-        "filing-collections"
+        "filing-collections",
+        "support-wave1-crm-filing"
       ],
       "source_refs": [
         {
@@ -404,6 +405,15 @@
           "relevance": "primary",
           "article_id": "filing-collections",
           "trace": "feature:extractor-sync-filing->article:filing-collections"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\support-wave1-crm-filing.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "support-wave1-crm-filing",
+          "trace": "feature:extractor-sync-filing->article:support-wave1-crm-filing"
         }
       ],
       "web_paths": [
@@ -462,7 +472,8 @@
       "knowledge_article_ids": [
         "filing-collections",
         "share-public-file",
-        "filing-detail-map"
+        "filing-detail-map",
+        "filing-listing-manage"
       ],
       "source_refs": [
         {
@@ -505,6 +516,15 @@
           "relevance": "primary",
           "article_id": "filing-detail-map",
           "trace": "feature:filing-listing-detail->article:filing-detail-map"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\filing-listing-manage.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "filing-listing-manage",
+          "trace": "feature:filing-listing-detail->article:filing-listing-manage"
         }
       ],
       "web_paths": [
@@ -642,7 +662,8 @@
       "domain": "crm_contacts",
       "parent_id": null,
       "knowledge_article_ids": [
-        "crm-contacts"
+        "crm-contacts",
+        "crm-contacts-manage"
       ],
       "source_refs": [
         {
@@ -667,6 +688,15 @@
           "relevance": "primary",
           "article_id": "crm-contacts",
           "trace": "feature:crm-contacts-hub->article:crm-contacts"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-contacts-manage.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "crm-contacts-manage",
+          "trace": "feature:crm-contacts-hub->article:crm-contacts-manage"
         }
       ],
       "web_paths": [
@@ -684,7 +714,9 @@
       "title": "ادغام مخاطبین تکراری",
       "domain": "crm_contacts",
       "parent_id": "crm-contacts-hub",
-      "knowledge_article_ids": [],
+      "knowledge_article_ids": [
+        "crm-contacts-manage"
+      ],
       "source_refs": [
         {
           "ref": "workspace/crm_views.py",
@@ -692,6 +724,22 @@
           "linkage": "product_capability",
           "relevance": "primary",
           "trace": "feature:crm-contacts-merge->workspace/crm_views.py"
+        },
+        {
+          "ref": "templates/workspace/crm/contacts/list.html",
+          "exists": true,
+          "linkage": "product_capability",
+          "relevance": "primary",
+          "trace": "feature:crm-contacts-merge->templates/workspace/crm/contacts/list.html"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-contacts-manage.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "crm-contacts-manage",
+          "trace": "feature:crm-contacts-merge->article:crm-contacts-manage"
         }
       ],
       "web_paths": [
@@ -709,7 +757,9 @@
       "domain": "crm_personal_properties",
       "parent_id": null,
       "knowledge_article_ids": [
-        "crm-personal-properties"
+        "crm-personal-properties",
+        "crm-property-create-edit",
+        "crm-property-folders-cabinets"
       ],
       "source_refs": [
         {
@@ -734,6 +784,24 @@
           "relevance": "primary",
           "article_id": "crm-personal-properties",
           "trace": "feature:crm-personal-properties-hub->article:crm-personal-properties"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-property-create-edit.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "crm-property-create-edit",
+          "trace": "feature:crm-personal-properties-hub->article:crm-property-create-edit"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-property-folders-cabinets.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "crm-property-folders-cabinets",
+          "trace": "feature:crm-personal-properties-hub->article:crm-property-folders-cabinets"
         }
       ],
       "web_paths": [
@@ -753,6 +821,7 @@
       "domain": "crm_personal_properties",
       "parent_id": "crm-personal-properties-hub",
       "knowledge_article_ids": [
+        "crm-property-owner-contact",
         "crm-personal-properties"
       ],
       "source_refs": [
@@ -762,6 +831,15 @@
           "linkage": "product_capability",
           "relevance": "primary",
           "trace": "feature:crm-property-owner-contact->templates/workspace/crm/includes/property_form_sections.html"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-property-owner-contact.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "crm-property-owner-contact",
+          "trace": "feature:crm-property-owner-contact->article:crm-property-owner-contact"
         },
         {
           "ref": "public_assistant\\knowledge\\articles\\crm-personal-properties.md",
@@ -788,14 +866,32 @@
       "title": "پوشه‌ها و کابینت املاک شخصی",
       "domain": "crm_personal_properties",
       "parent_id": "crm-personal-properties-hub",
-      "knowledge_article_ids": [],
+      "knowledge_article_ids": [
+        "crm-property-folders-cabinets"
+      ],
       "source_refs": [
         {
-          "ref": "workspace/crm_views.py",
+          "ref": "workspace/services/crm_property_folders.py",
           "exists": true,
           "linkage": "product_capability",
           "relevance": "primary",
-          "trace": "feature:crm-property-folders-cabinets->workspace/crm_views.py"
+          "trace": "feature:crm-property-folders-cabinets->workspace/services/crm_property_folders.py"
+        },
+        {
+          "ref": "templates/workspace/crm/includes/property_folders_tier.html",
+          "exists": true,
+          "linkage": "product_capability",
+          "relevance": "primary",
+          "trace": "feature:crm-property-folders-cabinets->templates/workspace/crm/includes/property_folders_tier.html"
+        },
+        {
+          "ref": "public_assistant\\knowledge\\articles\\crm-property-folders-cabinets.md",
+          "exists": true,
+          "kind": "knowledge_article",
+          "linkage": "knowledge_article",
+          "relevance": "primary",
+          "article_id": "crm-property-folders-cabinets",
+          "trace": "feature:crm-property-folders-cabinets->article:crm-property-folders-cabinets"
         }
       ],
       "web_paths": [
@@ -936,11 +1032,18 @@
       ],
       "source_refs": [
         {
-          "ref": "workspace/crm_views.py",
+          "ref": "workspace/services/crm_matching.py",
           "exists": true,
           "linkage": "product_capability",
           "relevance": "primary",
-          "trace": "feature:crm-matching->workspace/crm_views.py"
+          "trace": "feature:crm-matching->workspace/services/crm_matching.py"
+        },
+        {
+          "ref": "templates/workspace/crm/includes/matches_panel.html",
+          "exists": true,
+          "linkage": "product_capability",
+          "relevance": "primary",
+          "trace": "feature:crm-matching->templates/workspace/crm/includes/matches_panel.html"
         },
         {
           "ref": "public_assistant\\knowledge\\articles\\crm-matching.md",

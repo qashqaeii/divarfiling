@@ -95,8 +95,8 @@ EVAL_QUESTIONS: list[tuple[str, str]] = [
     ('شماره تماس آگهی دیوار', 'filing-divar-contact'),
     ('otp دیوار برای تلفن', 'filing-divar-contact'),
     ('چطوری مخاطب ثبت کنم', 'crm-contacts'),
-    ('چطوری فایل شخصی داشته باشم', 'crm-personal-properties'),
+    ('چطوری فایل شخصی داشته باشم', 'crm-property-create-edit'),
     ('لینک برای مشتری چطوری بفرستم', 'share-public-file'),
-    ('شماره تماس کجا وارد کنم در فایل شخصی', 'crm-personal-properties'),
+    ('شماره تماس کجا وارد کنم در فایل شخصی', 'crm-property-owner-contact'),
     ('چطوری لینک برای مشتری بسازیم', 'share-public-file'),
 ]

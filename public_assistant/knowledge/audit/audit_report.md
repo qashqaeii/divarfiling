@@ -8,7 +8,7 @@
 - قابلیت‌های منطقی (`entity_type=feature`): **33**
 - توزیع entity: {'feature': 33, 'help_section': 2, 'help_topic': 45}
 - وضعیت انتشار: {'shipped': 32, 'gated': 1, 'documented_in_help': 47}
-- تأیید `code_reviewed` (feature): **24**
+- تأیید `code_reviewed` (feature): **26**
 
 ### پلتفرم‌ها
 
@@ -22,20 +22,21 @@
 
 | عمق | تعداد |
 |-----|------:|
-| `howto` | 18 |
-| `overview` | 16 |
+| `howto` | 21 |
+| `overview` | 13 |
 | `none` | 1 |
 
 ### verified_coverage (تأییدشده / نیازمند بازبینی)
 
 | وضعیت | تعداد |
 |--------|------:|
+| `full` | 7 |
 | `overview` | 1 |
-| `needs_review` | 33 |
+| `needs_review` | 26 |
 | `none` | 1 |
 
-- **full تأییدشده:** 0
-- **needs_review:** 33
+- **full تأییدشده:** 7
+- **needs_review:** 26
 
 > وضعیت `full` فقط با `code_reviewed` + `last_verified_at` + `technical_refs` + مراحل واقعی مجاز است.
 
@@ -46,16 +47,16 @@
 
 | معیار | Article (dedup) | Chunk |
 |-------|----------------:|------:|
-| hit@1 | 70.1% | 70.1% |
-| hit@3 | 85.6% | 81.4% |
-| hit@5 | 85.6% | 85.6% |
+| hit@1 | 74.2% | 74.2% |
+| hit@3 | 92.8% | 88.7% |
+| hit@5 | 92.8% | 92.8% |
 
 - out-of-scope accuracy: **0.0%** (4 سؤال)
 - scenario how-to hit@5: **1.0**
 
 ## ۴. Gap backlog (فقط feature)
 
-- P0: **15** | P1: **7** | P2: **11**
+- P0: **11** | P1: **4** | P2: **11**
 
 ## ۵. Source index
 

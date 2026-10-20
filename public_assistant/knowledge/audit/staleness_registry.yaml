@@ -1,5 +1,5 @@
 version: 2
-snapshot_count: 87
+snapshot_count: 90
 snapshots:
 - feature_id: intro-product
   ref: workspace/help_content.py
@@ -79,6 +79,7 @@ snapshots:
   article_ids:
   - extractor-to-filing
   - filing-collections
+  - support-wave1-crm-filing
   linkage: product_capability
 - feature_id: filing-collections
   ref: workspace/urls.py
@@ -93,6 +94,7 @@ snapshots:
   - filing-collections
   - share-public-file
   - filing-detail-map
+  - filing-listing-manage
   linkage: product_capability
 - feature_id: filing-divar-contact
   ref: workspace/urls.py
@@ -119,7 +121,7 @@ snapshots:
   linkage: product_capability
 - feature_id: share-public-file
   ref: public_assistant/knowledge/articles/share-public-file.md
-  content_sha256: b16f2fafcadf4bf147f3a13ca7d69f70ba288e39cd8954afb15473ce88eb9ea7
+  content_sha256: 85a7f0f775ce9af54e310bb88806bfae462a711697a23a31e4eb1ff306275bc4
   article_ids: *id006
   linkage: product_capability
 - feature_id: crm-contacts-hub
@@ -127,6 +129,7 @@ snapshots:
   content_sha256: 6798a1f7ce6cd9fbec1276b17d6be2c2b7e3f3bb740820b77caa6efd3d49036e
   article_ids: &id007
   - crm-contacts
+  - crm-contacts-manage
   linkage: product_capability
 - feature_id: crm-contacts-hub
   ref: workspace/urls.py
@@ -136,24 +139,39 @@ snapshots:
 - feature_id: crm-contacts-merge
   ref: workspace/crm_views.py
   content_sha256: 6798a1f7ce6cd9fbec1276b17d6be2c2b7e3f3bb740820b77caa6efd3d49036e
-  article_ids: []
+  article_ids: &id008
+  - crm-contacts-manage
+  linkage: product_capability
+- feature_id: crm-contacts-merge
+  ref: templates/workspace/crm/contacts/list.html
+  content_sha256: cd60f72da387b09a67ec7a6712212fb1885784ccbc05bec097f64e6878284311
+  article_ids: *id008
   linkage: product_capability
 - feature_id: crm-personal-properties-hub
   ref: workspace/crm_views.py
   content_sha256: 6798a1f7ce6cd9fbec1276b17d6be2c2b7e3f3bb740820b77caa6efd3d49036e
   article_ids:
   - crm-personal-properties
+  - crm-property-create-edit
+  - crm-property-folders-cabinets
   linkage: product_capability
 - feature_id: crm-property-owner-contact
   ref: templates/workspace/crm/includes/property_form_sections.html
   content_sha256: 2362278b045870b59067f2230b743d06fdc6730af1fa62ca4c89d414421b6f7f
   article_ids:
+  - crm-property-owner-contact
   - crm-personal-properties
   linkage: product_capability
 - feature_id: crm-property-folders-cabinets
-  ref: workspace/crm_views.py
-  content_sha256: 6798a1f7ce6cd9fbec1276b17d6be2c2b7e3f3bb740820b77caa6efd3d49036e
-  article_ids: []
+  ref: workspace/services/crm_property_folders.py
+  content_sha256: 6fc5c9443e03cf3ccb34d62d8ce080bff57cb40dfbb7e9e63119cd23e7f02f94
+  article_ids: &id009
+  - crm-property-folders-cabinets
+  linkage: product_capability
+- feature_id: crm-property-folders-cabinets
+  ref: templates/workspace/crm/includes/property_folders_tier.html
+  content_sha256: 3ca1a74e37c2019d36d673540e28d93d3f6f5f2b1d2574c0936cd20f1aae2bf6
+  article_ids: *id009
   linkage: product_capability
 - feature_id: crm-deals-hub
   ref: workspace/urls.py
@@ -175,20 +193,25 @@ snapshots:
   - workspace-today-queue
   linkage: product_capability
 - feature_id: crm-matching
-  ref: workspace/crm_views.py
-  content_sha256: 6798a1f7ce6cd9fbec1276b17d6be2c2b7e3f3bb740820b77caa6efd3d49036e
-  article_ids:
+  ref: workspace/services/crm_matching.py
+  content_sha256: 9106924f881f771317afd6f05d1e864667b99e6504fe6db9933136f865f7e4bd
+  article_ids: &id010
   - crm-matching
+  linkage: product_capability
+- feature_id: crm-matching
+  ref: templates/workspace/crm/includes/matches_panel.html
+  content_sha256: 3a17e0c615176e587999d794bbaaab259b001d1e1e635c4efd6c2b58f727c891
+  article_ids: *id010
   linkage: product_capability
 - feature_id: crm-automation-templates
   ref: workspace/urls.py
   content_sha256: f99c608d14ad5eb99916b21e704088d610df7b81a8931adb4bf3e87352c1da04
-  article_ids: &id008 []
+  article_ids: &id011 []
   linkage: product_capability
 - feature_id: crm-automation-templates
   ref: workspace/help_content.py
   content_sha256: e139479a336920ac7c7abf3475e6ffdb409ae478d662ba5365f64cfb06319b81
-  article_ids: *id008
+  article_ids: *id011
   linkage: product_capability
 - feature_id: contracts-hub
   ref: workspace/urls.py
@@ -233,13 +256,13 @@ snapshots:
 - feature_id: public-assistant-widget
   ref: public_assistant/services/chat.py
   content_sha256: 38ae6155c28ccdf9708705cde1127b5506663eb04524b58a1f9c6507a4c41e09
-  article_ids: &id009
+  article_ids: &id012
   - public-assistant-scope
   linkage: product_capability
 - feature_id: public-assistant-widget
   ref: public_assistant/services/retrieval.py
   content_sha256: 69350aaf55de086ceb8f4588f3467c75247df8986c81614c2157f280926b9fc3
-  article_ids: *id009
+  article_ids: *id012
   linkage: product_capability
 - feature_id: help-workspace-crm-overview
   ref: workspace/help_content.py
@@ -477,6 +500,11 @@ snapshots:
   article_ids: []
   linkage: help_content_topic
 last_diff_summary:
-  previous_snapshot_count: 87
-  changed_count: 0
-  changes: []
+  previous_snapshot_count: 90
+  changed_count: 1
+  changes:
+  - feature_id: share-public-file
+    ref: public_assistant/knowledge/articles/share-public-file.md
+    article_ids: *id006
+    previous_sha256: 49ba78b8d10baee12cb8edd740a57f2c4daffd63743615951f188b7aa4812a5c
+    current_sha256: 85a7f0f775ce9af54e310bb88806bfae462a711697a23a31e4eb1ff306275bc4

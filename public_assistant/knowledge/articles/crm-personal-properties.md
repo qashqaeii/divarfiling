@@ -26,7 +26,10 @@ links:
   url: /workspace/crm/properties/map/
 - label: اشتراک عمومی با مشتری
   url: /workspace/crm/properties/
-technical_refs: []
+technical_refs:
+  - templates/workspace/crm/includes/property_form_sections.html
+  - workspace/crm_views.py
+  - workspace/urls.py
 reviewed_at: '2026-10-20'
 is_public: true
 is_active: true
@@ -44,14 +47,13 @@ is_active: true
 ### راه دوم: از آگهی dataset
 در صفحهٔ یک آگهی در مجموعه فایل، **افزودن به فایل شخصی** را بزنید تا همان ملک در CRM برای پیگیری جدا ثبت شود.
 
-## شماره تماس مالک کجا وارد می‌شود؟
-در **فرم ایجاد یا ویرایش** ملک شخصی، بخش **اطلاعات پایه**:
-- فیلد **شماره تماس مالک**
-- فیلد **نام مالک**
+## شماره تماس مالک
+راهنمای کامل فیلدها و تفاوت با لینک مشتری: مقاله **«ثبت شماره تماس و نام مالک در فایل شخصی»** (`crm-property-owner-contact`).
 
-مسیر ویرایش: لیست املاک شخصی → باز کردن ملک → **ویرایش** (یا همان فرم در زمان «ملک جدید»).
-
-این شماره برای **مدیریت داخلی شما** در CRM است؛ نمایش آن به مشتری در **لینک اشتراک عمومی** جداگانه و با تنظیمات share کنترل می‌شود (مقاله «اشتراک عمومی فایل»).
+## راهنمای‌های مرتبط
+- ایجاد و ویرایش: `crm-property-create-edit`
+- کمد و زونکن: `crm-property-folders-cabinets`
+- لینک مشتری: `share-public-file`
 
 ## تفاوت با فایلینگ (dataset)
 | dataset (دیوار) | املاک شخصی |

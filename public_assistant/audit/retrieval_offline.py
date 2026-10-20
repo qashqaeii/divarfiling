@@ -82,8 +82,20 @@ def offline_retrieve(query: str, limit: int = MAX_RETRIEVAL_CHUNKS) -> list[Retr
         for ch in all_chunks:
             if any(tok in ch.search_blob for tok in long_tokens):
                 candidates.append(ch)
-        candidates = candidates[:100]
-    else:
+
+    if len(candidates) > 100:
+        probe = tokens[:14]
+
+        def _token_hits(ch: _OfflineChunk) -> int:
+            return sum(1 for tok in probe if tok in ch.search_blob)
+
+        candidates.sort(
+            key=lambda ch: (
+                -_token_hits(ch),
+                ch.chunk.article_id,
+                ch.chunk_index,
+            )
+        )
         candidates = candidates[:100]
 
     scored: list[RetrievedChunk] = []

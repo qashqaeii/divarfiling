@@ -1,0 +1,36 @@
+feature_id,entity_type,domain,title,heuristic_coverage,verified_coverage,dim_intro_purpose,dim_ui_location,dim_howto_steps,dim_prerequisites_limits,dim_specialist_scenarios,dim_troubleshooting,dim_compare_similar,dim_faq_synonyms,knowledge_articles,help_sections,release_status,verification_status
+intro-product,feature,onboarding,معرفی فایلینگ دیوار,howto,needs_review,yes,yes,yes,no,yes,yes,no,yes,intro-what-is-divar-filing,start,shipped,code_reviewed
+workspace-product-map,feature,workspace,نقشه امکانات میزکار,overview,needs_review,yes,yes,no,yes,yes,no,no,yes,workspace-product-map,,shipped,code_reviewed
+account-register-login,feature,account,ثبت‌نام و ورود,overview,needs_review,yes,yes,no,no,yes,yes,no,yes,account-register-login,start,shipped,code_reviewed
+account-mobile-verify,feature,account,تأیید موبایل و OTP,overview,needs_review,yes,no,no,no,yes,yes,no,no,account-mobile-verify,,shipped,code_reviewed
+plans-overview,feature,licensing,پلن‌ها و خرید اشتراک,howto,needs_review,yes,yes,yes,yes,yes,no,no,yes,plans-overview;plans-trial-7d;payment-methods,,shipped,code_reviewed
+license-activation,feature,licensing,فعال‌سازی لایسنس ربات,overview,overview,yes,no,no,no,yes,no,no,no,license-activation,bot-extraction,shipped,code_reviewed
+extractor-overview,feature,extractor,استخراج آگهی از دیوار,howto,needs_review,yes,yes,yes,yes,yes,yes,no,yes,extractor-overview;extractor-single-batch;extractor-to-filing,bot-extraction,shipped,code_reviewed
+extractor-windows-scheduler,feature,windows,زمان‌بندی استخراج ویندوز,overview,needs_review,yes,no,yes,no,yes,yes,no,yes,extractor-windows,bot-extraction,shipped,help_content_only
+extractor-sync-filing,feature,extractor,همگام‌سازی خروجی با فایلینگ,howto,needs_review,yes,yes,yes,yes,yes,yes,no,yes,extractor-to-filing;filing-collections;support-wave1-crm-filing,workspace-filing,shipped,code_reviewed
+filing-collections,feature,filing,مجموعه فایل (Dataset),howto,needs_review,yes,yes,yes,yes,yes,no,no,yes,filing-collections,workspace-filing,shipped,code_reviewed
+filing-listing-detail,feature,filing,جزئیات و ویرایش آگهی,howto,needs_review,yes,yes,yes,yes,yes,yes,yes,yes,filing-collections;share-public-file;filing-detail-map;filing-listing-manage,workspace-filing,shipped,code_reviewed
+filing-divar-contact,feature,filing,دریافت تماس آگهی از دیوار (OTP),howto,needs_review,yes,yes,yes,yes,yes,no,no,yes,filing-divar-contact,,gated,code_reviewed
+filing-analysis-tools,feature,analysis,تحلیل بازار و ابزارها,howto,needs_review,yes,yes,yes,yes,yes,no,no,yes,filing-collections,market-analysis;smart-tools,shipped,overview_only
+share-public-file,feature,sharing,اشتراک عمومی لینک با مشتری,howto,full,yes,yes,yes,yes,yes,yes,yes,yes,share-public-file,,shipped,code_reviewed
+crm-contacts-hub,feature,crm_contacts,مدیریت مخاطبین CRM,howto,full,yes,yes,yes,yes,yes,yes,yes,yes,crm-contacts;crm-contacts-manage,crm-contacts,shipped,code_reviewed
+crm-contacts-merge,feature,crm_contacts,ادغام مخاطبین تکراری,howto,full,yes,yes,yes,yes,yes,yes,yes,yes,crm-contacts-manage,crm-contacts,shipped,code_reviewed
+crm-personal-properties-hub,feature,crm_personal_properties,املاک شخصی (فایل شخصی),howto,full,yes,yes,yes,yes,yes,yes,yes,yes,crm-personal-properties;crm-property-create-edit;crm-property-folders-cabinets,crm-properties,shipped,code_reviewed
+crm-property-owner-contact,feature,crm_personal_properties,ثبت شماره تماس مالک,howto,full,yes,yes,yes,yes,yes,yes,yes,yes,crm-property-owner-contact;crm-personal-properties,crm-properties,shipped,code_reviewed
+crm-property-folders-cabinets,feature,crm_personal_properties,پوشه‌ها و کابینت املاک شخصی,howto,full,yes,yes,yes,yes,yes,yes,yes,yes,crm-property-folders-cabinets,crm-properties,shipped,code_reviewed
+crm-deals-hub,feature,crm_deals,معاملات (Deal),howto,needs_review,yes,yes,yes,yes,yes,no,no,yes,crm-deals,crm-deals,shipped,overview_only
+crm-deals-finance,feature,crm_deals,مالی و کمیسیون معامله,howto,needs_review,yes,yes,yes,yes,yes,no,no,yes,crm-deals,crm-finance-contracts,shipped,unverified
+crm-scheduling,feature,crm_scheduling,تقویم و یادآور,howto,needs_review,yes,yes,yes,yes,yes,no,no,yes,crm-activities-reminders;workspace-today-queue,crm-scheduling,shipped,code_reviewed
+crm-matching,feature,crm_contacts,تطبیق فایل با مشتری,howto,full,yes,yes,yes,yes,yes,yes,yes,yes,crm-matching,,shipped,code_reviewed
+crm-automation-templates,feature,crm_automation,قالب پیام و اتوماسیون,overview,needs_review,yes,no,no,no,no,no,no,no,,crm-communication,shipped,unverified
+contracts-hub,feature,contracts,قراردادهای دیجیتال,overview,needs_review,yes,yes,no,no,no,no,no,no,contracts-overview,crm-finance-contracts,shipped,overview_only
+agency-hub,feature,agency,مدیریت آژانس,overview,needs_review,yes,yes,no,no,yes,no,no,no,agency-create-roles;agency-seats-licenses;agency-vs-personal,agency-hub;crm-team,shipped,code_reviewed
+agency-space-sharing,feature,agency,فضای اشتراکی آژانس,overview,needs_review,yes,yes,no,yes,yes,no,no,yes,agency-space-sharing,agency-hub,shipped,code_reviewed
+ai-workspace-features,feature,ai,هوش مصنوعی میزکار,howto,needs_review,yes,yes,yes,yes,yes,yes,no,yes,ai-features-overview;ai-listing-summary;ai-crm-message;ai-nl-command;ai-voice-note,smart-assistant,shipped,code_reviewed
+android-post-call-assistant,feature,android,دستیار پس از تماس (اندروید),none,none,no,no,no,no,no,no,no,no,,,shipped,code_reviewed
+android-extract-tab,feature,android,استخراج در اپ اندروید,howto,needs_review,yes,yes,yes,yes,yes,yes,no,yes,platforms-web-android-windows;extractor-overview,,shipped,unverified
+support-tickets,feature,support,پشتیبانی و خطاهای متداول,howto,needs_review,yes,yes,yes,no,yes,yes,no,yes,support-common-errors;support-getting-started,faq,shipped,code_reviewed
+academy-videos,feature,academy,آکادمی ویدیویی,overview,needs_review,yes,yes,no,no,no,no,no,no,academy-public,,shipped,code_reviewed
+public-assistant-widget,feature,public_assistant,دستیار عمومی سایت,overview,needs_review,yes,yes,no,no,yes,no,no,yes,public-assistant-scope,,shipped,code_reviewed
+help-workspace-crm-overview,help_section,crm,داشبورد و صف کار CRM,overview,needs_review,yes,no,no,no,no,no,no,no,,crm-overview,documented_in_help,help_content_only
+help-workspace-workspace-settings,help_section,account,تنظیمات میزکار,overview,needs_review,yes,no,no,no,no,no,no,no,,workspace-settings,documented_in_help,help_content_only

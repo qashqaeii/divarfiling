@@ -22,8 +22,11 @@ links:
   url: /workspace/crm/contacts/
 - label: میزکار
   url: /workspace/
-technical_refs: []
-reviewed_at: '2026-10-19'
+technical_refs:
+  - workspace/crm_views.py
+  - workspace/urls.py
+  - templates/workspace/crm/contacts/list.html
+reviewed_at: '2026-10-20'
 is_public: true
 is_active: true
 ---
@@ -62,3 +65,7 @@ is_active: true
 ## محدودیت
 - دستیار عمومی سایت به مخاطبین شما دسترسی ندارد
 - برخی فیلدهای پیشرفته ممکن است فقط در وب میزکار کامل باشند؛ اپ موبایل همه سناریوها را پوشش نمی‌دهد
+
+## ادامه
+- **ویرایش و ادغام:** مقاله `crm-contacts-manage`
+- **تطبیق فایل:** مقاله `crm-matching`

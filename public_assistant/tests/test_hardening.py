@@ -11,6 +11,16 @@ from public_assistant.services.rate_limit import client_ip
 from public_assistant.services.security import is_allowed_public_link
 from django.test import RequestFactory
 from public_assistant.tests.eval_dataset import EVAL_QUESTIONS
+from public_assistant.tests.eval_wave1_dataset import WAVE1_EVAL_QUESTIONS
+
+# سؤالات پرتکرار از بازبینی UI / اسکرین‌شات (موج ۱)
+SCREENSHOT_GATE_QUESTIONS: list[tuple[str, str]] = [
+    ('چطوری فایل شخصی داشته باشم', 'crm-property-create-edit'),
+    ('شماره مالک کجا وارد میشه', 'crm-property-owner-contact'),
+    ('چطوری لینک برای مشتری بفرستم', 'share-public-file'),
+    ('چطور مخاطب ثبت کنم', 'crm-contacts'),
+    ('لینک مشتری باز نمیشه', 'support-wave1-crm-filing'),
+]
 
 
 @override_settings(PUBLIC_ASSISTANT_ENABLED=True)
@@ -157,6 +167,46 @@ class EvalRetrievalTest(TestCase):
                 misses.append((query, expected, ids))
         hit_rate = (len(EVAL_QUESTIONS) - len(misses)) / len(EVAL_QUESTIONS)
         self.assertGreaterEqual(hit_rate, 0.8, msg=f'retrieval misses ({len(misses)}): {misses[:10]}')
+
+    def test_wave1_db_retrieval_hit_at_5(self):
+        from public_assistant.audit.retrieval_baseline import evaluate_retrieval
+
+        report = evaluate_retrieval(self.retrieve, WAVE1_EVAL_QUESTIONS)
+        self.assertGreaterEqual(
+            report['article_hit_at_5'],
+            0.85,
+            msg=report.get('misses'),
+        )
+
+    def test_screenshot_gate_db_retrieval(self):
+        misses = []
+        for query, expected in SCREENSHOT_GATE_QUESTIONS:
+            hits = self.retrieve(query)
+            ids = [h.article_id for h in hits[:5]]
+            if expected not in ids:
+                misses.append((query, expected, ids))
+        self.assertEqual(misses, [], msg=f'screenshot gate misses: {misses}')
+
+    @patch('public_assistant.services.chat.llm.complete', return_value=('', 'mock', 'mock', 0, 0, 0))
+    def test_screenshot_gate_chat_fallback_content(self, _mock_llm):
+        """مسیر چت واقعی (fallback وقتی LLM خالی) — یک session per سؤال."""
+        checks = {
+            'چطوری فایل شخصی داشته باشم': ('crm/properties',),
+            'شماره مالک کجا وارد میشه': ('میزکار شما', 'لینک عمومی'),
+            'چطوری لینک برای مشتری بفرستم': ('اشتراک', 'مشتری'),
+            'چطور مخاطب ثبت کنم': ('crm/contacts', 'مخاطب'),
+            'لینک مشتری باز نمیشه': ('لینک فعال',),
+        }
+        for query, expected in SCREENSHOT_GATE_QUESTIONS:
+            session = PublicChatSession.objects.create(ip_hash=f'gate-{expected}')
+            out = answer_question(session=session, message=query)
+            self.assertTrue(out['ok'], msg=query)
+            ans = out.get('answer') or ''
+            self.assertNotIn('اطلاعات تأییدشدهٔ کافی', ans, msg=query)
+            for needle in checks[query]:
+                self.assertIn(needle, ans, msg=f'{query} missing {needle}')
+            if query == 'چطوری لینک برای مشتری بفرستم':
+                self.assertNotIn('سوئیچ نمایش شماره مالک', ans, msg=query)
 
 
 @override_settings(PUBLIC_ASSISTANT_ENABLED=True)

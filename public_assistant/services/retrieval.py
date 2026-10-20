@@ -232,6 +232,29 @@ def _score_chunk(
     return score
 
 
+_RETRIEVAL_CANDIDATE_POOL = 400
+_RETRIEVAL_CANDIDATE_CAP = 100
+
+
+def _cap_candidates_by_token_hits(candidates: list, tokens: list[str], cap: int = _RETRIEVAL_CANDIDATE_CAP) -> list:
+    """قبل از امتیازدهی، کاندیدها را بر اساس تطابق توکن مرتب کن (نه ترتیب تصادفی DB)."""
+    if len(candidates) <= cap:
+        return candidates
+    probe = tokens[:14]
+
+    def _hits(blob: str) -> int:
+        return sum(1 for tok in probe if tok in blob)
+
+    return sorted(
+        candidates,
+        key=lambda ch: (
+            -_hits(ch.search_blob),
+            ch.article.article_id,
+            ch.chunk_index,
+        ),
+    )[:cap]
+
+
 def retrieve(query: str, limit: int = MAX_RETRIEVAL_CHUNKS) -> list[RetrievedChunk]:
     query_norm = normalize_persian(query)
     tokens = tokenize_query(query)
@@ -259,13 +282,14 @@ def retrieve(query: str, limit: int = MAX_RETRIEVAL_CHUNKS) -> list[RetrievedChu
     q_filter = Q()
     for tok in tokens[:14]:
         q_filter |= Q(search_blob__icontains=tok)
-    candidates = list(qs.filter(q_filter)[:100])
+    candidates = list(qs.filter(q_filter)[:_RETRIEVAL_CANDIDATE_POOL])
     if not candidates:
         long_tokens = [t for t in tokens if len(t) >= 4][:8]
         q_filter = Q()
         for tok in long_tokens:
             q_filter |= Q(search_blob__icontains=tok)
-        candidates = list(qs.filter(q_filter)[:100])
+        candidates = list(qs.filter(q_filter)[:_RETRIEVAL_CANDIDATE_POOL])
+    candidates = _cap_candidates_by_token_hits(candidates, tokens)
 
     scored: list[RetrievedChunk] = []
     for ch in candidates:

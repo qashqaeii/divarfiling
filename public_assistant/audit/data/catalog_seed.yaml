@@ -1,0 +1,621 @@
+# Feature Catalog Seed — قابلیت‌های منطقی محصول (فاز ۱)
+# خروجی نهایی: knowledge/audit/feature_catalog.yaml (تولید command)
+
+features:
+  - id: intro-product
+    title: معرفی فایلینگ دیوار
+    domain: onboarding
+    parent_id: null
+    user_description: آشنایی با محصول و مخاطبان هدف
+    platforms: [web, android, windows]
+    web_paths: [/]
+    operations: [read]
+    roles: [guest, advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [intro-what-is-divar-filing]
+    help_section_ids: [start]
+    source_refs:
+      - workspace/help_content.py
+      - public_assistant/knowledge/articles/intro-what-is-divar-filing.md
+    last_verified_at: '2026-10-20'
+
+  - id: workspace-product-map
+    title: نقشه امکانات میزکار
+    domain: workspace
+    parent_id: null
+    user_description: مسیرهای اصلی منو و قابلیت‌ها در وب
+    platforms: [web]
+    web_paths: [/workspace/]
+    operations: [navigate]
+    roles: [advisor]
+    license_notes: برخی منوها gated
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [workspace-product-map]
+    help_section_ids: []
+    source_refs:
+      - workspace/urls.py
+      - public_assistant/knowledge/articles/workspace-product-map.md
+    last_verified_at: '2026-10-20'
+
+  - id: account-register-login
+    title: ثبت‌نام و ورود
+    domain: account
+    parent_id: null
+    user_description: ایجاد حساب و ورود به میزکار
+    platforms: [web, android]
+    web_paths: [/accounts/register/, /accounts/login/]
+    operations: [register, login]
+    roles: [guest]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [account-register-login]
+    help_section_ids: [start]
+    source_refs:
+      - public_assistant/knowledge/articles/account-register-login.md
+    last_verified_at: '2026-10-19'
+
+  - id: account-mobile-verify
+    title: تأیید موبایل و OTP
+    domain: account
+    parent_id: account-register-login
+    user_description: دریافت کد پیامک و تأیید شماره
+    platforms: [web, android]
+    web_paths: []
+    operations: [verify_otp]
+    roles: [guest, advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [account-mobile-verify]
+    help_section_ids: []
+    source_refs:
+      - public_assistant/knowledge/articles/account-mobile-verify.md
+    last_verified_at: '2026-10-19'
+
+  - id: plans-overview
+    title: پلن‌ها و خرید اشتراک
+    domain: licensing
+    parent_id: null
+    user_description: مقایسه پلن و پرداخت
+    platforms: [web, android]
+    web_paths: [/products/]
+    operations: [purchase]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [plans-overview, plans-trial-7d, payment-methods]
+    help_section_ids: []
+    source_refs:
+      - public_assistant/knowledge/articles/plans-overview.md
+    last_verified_at: '2026-10-19'
+
+  - id: license-activation
+    title: فعال‌سازی لایسنس ربات
+    domain: licensing
+    parent_id: plans-overview
+    user_description: کلید لایسنس ویندوز/استخراج
+    platforms: [web, windows]
+    web_paths: []
+    operations: [activate]
+    roles: [advisor]
+    license_notes: نیاز به خرید ربات
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [license-activation]
+    help_section_ids: [bot-extraction]
+    source_refs:
+      - src/license_client.py
+      - public_assistant/knowledge/articles/license-activation.md
+    last_verified_at: '2026-10-19'
+
+  - id: extractor-overview
+    title: استخراج آگهی از دیوار
+    domain: extractor
+    parent_id: null
+    user_description: جمع‌آوری آگهی با ربات/اپ
+    platforms: [android, windows, web]
+    web_paths: [/download/android/, /download/windows/]
+    operations: [extract]
+    roles: [advisor]
+    license_notes: لایسنس ربات
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [extractor-overview, extractor-single-batch, extractor-to-filing]
+    help_section_ids: [bot-extraction]
+    source_refs:
+      - src/export_divar_items.py
+      - divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt
+    last_verified_at: '2026-10-20'
+
+  - id: extractor-windows-scheduler
+    title: زمان‌بندی استخراج ویندوز
+    domain: windows
+    parent_id: extractor-overview
+    user_description: اجرای دوره‌ای استخراج در ربات دسکتاپ
+    platforms: [windows]
+    web_paths: []
+    operations: [schedule]
+    roles: [advisor]
+    license_notes: لایسنس ربات
+    release_status: shipped
+    verification_status: help_content_only
+    knowledge_articles: [extractor-windows]
+    help_section_ids: [bot-extraction]
+    source_refs:
+      - src/app_features.py
+    last_verified_at: null
+    notes: رفتار UI از app_features؛ بدون تأیید دستی این فاز
+
+  - id: extractor-sync-filing
+    title: همگام‌سازی خروجی با فایلینگ
+    domain: extractor
+    parent_id: extractor-overview
+    user_description: آپلود dataset و دیدن آگهی در میزکار
+    platforms: [web, windows]
+    web_paths: [/workspace/import/, /workspace/datasets/upload/]
+    operations: [upload, sync]
+    roles: [advisor]
+    license_notes: لایسنس فایلینگ
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [extractor-to-filing, filing-collections, support-wave1-crm-filing]
+    help_section_ids: [workspace-filing]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: filing-collections
+    title: مجموعه فایل (Dataset)
+    domain: filing
+    parent_id: null
+    user_description: نگهداری و فیلتر آگهی‌های ذخیره‌شده
+    platforms: [web, android]
+    web_paths: [/workspace/datasets/, /workspace/listings/]
+    operations: [list, filter, export]
+    roles: [advisor]
+    license_notes: لایسنس ربات/فایلینگ
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [filing-collections]
+    help_section_ids: [workspace-filing]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: filing-listing-detail
+    title: جزئیات و ویرایش آگهی
+    domain: filing
+    parent_id: filing-collections
+    user_description: ویرایش، حذف، علاقه‌مندی، share از صفحه آگهی
+    platforms: [web, android]
+    web_paths: [/workspace/datasets/]
+    operations: [edit, delete, favorite, share]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [filing-collections, share-public-file, filing-detail-map, filing-listing-manage]
+    help_section_ids: [workspace-filing]
+    source_refs:
+      - workspace/urls.py
+      - templates/workspace/
+    last_verified_at: '2026-10-20'
+
+  - id: filing-divar-contact
+    title: دریافت تماس آگهی از دیوار (OTP)
+    domain: filing
+    parent_id: filing-listing-detail
+    user_description: نمایش شماره آگهی پس از OTP دیوار
+    platforms: [web]
+    web_paths: []
+    operations: [otp, reveal_phone]
+    roles: [advisor]
+    license_notes: اتصال حساب دیوار
+    release_status: gated
+    verification_status: code_reviewed
+    knowledge_articles: [filing-divar-contact]
+    help_section_ids: []
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: filing-analysis-tools
+    title: تحلیل بازار و ابزارها
+    domain: analysis
+    parent_id: filing-collections
+    user_description: analyze، tools، compare، benchmark
+    platforms: [web]
+    web_paths: [/workspace/tools/, /workspace/compare/]
+    operations: [analyze, compare]
+    roles: [advisor]
+    license_notes: لایسنس تحلیل
+    release_status: shipped
+    verification_status: overview_only
+    knowledge_articles: [filing-collections]
+    help_section_ids: [market-analysis, smart-tools]
+    source_refs:
+      - workspace/urls.py
+      - workspace/help_content.py
+    last_verified_at: null
+
+  - id: share-public-file
+    title: اشتراک عمومی لینک با مشتری
+    domain: sharing
+    parent_id: null
+    user_description: ساخت لینک share برای آگهی یا ملک شخصی
+    platforms: [web, android]
+    web_paths: [/workspace/crm/properties/]
+    operations: [share]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [share-public-file]
+    help_section_ids: []
+    source_refs:
+      - workspace/urls.py
+      - public_assistant/knowledge/articles/share-public-file.md
+    last_verified_at: '2026-10-20'
+
+  - id: crm-contacts-hub
+    title: مدیریت مخاطبین CRM
+    domain: crm_contacts
+    parent_id: null
+    user_description: ثبت، ویرایش، جست‌وجو مخاطب
+    platforms: [web, android]
+    web_paths: [/workspace/crm/contacts/]
+    operations: [create, edit, search, import]
+    roles: [advisor]
+    license_notes: CRM رایگان
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [crm-contacts, crm-contacts-manage]
+    help_section_ids: [crm-contacts]
+    source_refs:
+      - workspace/crm_views.py
+      - workspace/urls.py
+    last_verified_at: '2026-10-20'
+
+  - id: crm-contacts-merge
+    title: ادغام مخاطبین تکراری
+    domain: crm_contacts
+    parent_id: crm-contacts-hub
+    user_description: merge دو رکورد مشتری
+    platforms: [web]
+    web_paths: [/workspace/crm/contacts/]
+    operations: [merge]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [crm-contacts-manage]
+    help_section_ids: [crm-contacts]
+    source_refs:
+      - workspace/crm_views.py
+      - templates/workspace/crm/contacts/list.html
+    last_verified_at: '2026-10-20'
+
+  - id: crm-personal-properties-hub
+    title: املاک شخصی (فایل شخصی)
+    domain: crm_personal_properties
+    parent_id: null
+    user_description: ملک تحت مدیریت مستقیم مشاور
+    platforms: [web, android]
+    web_paths: [/workspace/crm/properties/, /workspace/crm/properties/new/]
+    operations: [create, edit, map]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles:
+      - crm-personal-properties
+      - crm-property-create-edit
+      - crm-property-folders-cabinets
+    help_section_ids: [crm-properties]
+    source_refs:
+      - workspace/crm_views.py
+      - templates/workspace/crm/
+    last_verified_at: '2026-10-20'
+
+  - id: crm-property-owner-contact
+    title: ثبت شماره تماس مالک
+    domain: crm_personal_properties
+    parent_id: crm-personal-properties-hub
+    user_description: فیلد شماره مالک در فرم ملک شخصی
+    platforms: [web, android]
+    web_paths: [/workspace/crm/properties/new/]
+    operations: [edit_field]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [crm-property-owner-contact, crm-personal-properties]
+    help_section_ids: [crm-properties]
+    source_refs:
+      - templates/workspace/crm/includes/property_form_sections.html
+    last_verified_at: '2026-10-20'
+
+  - id: crm-property-folders-cabinets
+    title: پوشه‌ها و کابینت املاک شخصی
+    domain: crm_personal_properties
+    parent_id: crm-personal-properties-hub
+    user_description: سازمان‌دهی فایل شخصی در پوشه/کابینت
+    platforms: [web]
+    web_paths: [/workspace/crm/properties/]
+    operations: [organize]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [crm-property-folders-cabinets]
+    help_section_ids: [crm-properties]
+    source_refs:
+      - workspace/services/crm_property_folders.py
+      - templates/workspace/crm/includes/property_folders_tier.html
+    last_verified_at: '2026-10-20'
+
+  - id: crm-deals-hub
+    title: معاملات (Deal)
+    domain: crm_deals
+    parent_id: null
+    user_description: قیف معامله، مراحل، پیگیری
+    platforms: [web, android]
+    web_paths: [/workspace/crm/deals/]
+    operations: [create, stage, followup]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: overview_only
+    knowledge_articles: [crm-deals]
+    help_section_ids: [crm-deals]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: crm-deals-finance
+    title: مالی و کمیسیون معامله
+    domain: crm_deals
+    parent_id: crm-deals-hub
+    user_description: ثبت پرداخت‌ها و کمیسیون در deal
+    platforms: [web, android]
+    web_paths: [/workspace/crm/deals/finance/]
+    operations: [finance]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: unverified
+    knowledge_articles: [crm-deals]
+    help_section_ids: [crm-finance-contracts]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: null
+
+  - id: crm-scheduling
+    title: تقویم و یادآور
+    domain: crm_scheduling
+    parent_id: null
+    user_description: یادآوری تماس و صف امروز
+    platforms: [web, android]
+    web_paths: [/workspace/crm/today/, /workspace/crm/reminders/]
+    operations: [remind, calendar]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [crm-activities-reminders, workspace-today-queue]
+    help_section_ids: [crm-scheduling]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: crm-matching
+    title: تطبیق فایل با مشتری
+    domain: crm_contacts
+    parent_id: crm-contacts-hub
+    user_description: پیشنهاد ملک مناسب برای خریدار
+    platforms: [web, android]
+    web_paths: [/workspace/crm/contacts/]
+    operations: [match]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [crm-matching]
+    help_section_ids: []
+    source_refs:
+      - workspace/services/crm_matching.py
+      - templates/workspace/crm/includes/matches_panel.html
+    last_verified_at: '2026-10-20'
+
+  - id: crm-automation-templates
+    title: قالب پیام و اتوماسیون
+    domain: crm_automation
+    parent_id: null
+    user_description: پیام‌های آماده و اتوماسیون CRM
+    platforms: [web]
+    web_paths: [/workspace/crm/templates/]
+    operations: [automate]
+    roles: [advisor, agency_admin]
+    license_notes: ''
+    release_status: shipped
+    verification_status: unverified
+    knowledge_articles: []
+    help_section_ids: [crm-communication]
+    source_refs:
+      - workspace/urls.py
+      - workspace/help_content.py
+    last_verified_at: null
+
+  - id: contracts-hub
+    title: قراردادهای دیجیتال
+    domain: contracts
+    parent_id: null
+    user_description: ساخت، wizard، PDF، تحویل
+    platforms: [web, android]
+    web_paths: [/workspace/crm/contracts/]
+    operations: [create, sign, pdf]
+    roles: [advisor, agency_admin]
+    license_notes: ''
+    release_status: shipped
+    verification_status: overview_only
+    knowledge_articles: [contracts-overview]
+    help_section_ids: [crm-finance-contracts]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: agency-hub
+    title: مدیریت آژانس
+    domain: agency
+    parent_id: null
+    user_description: تیم، نقش‌ها، لایسنس صندلی
+    platforms: [web, android]
+    web_paths: [/workspace/crm/agency/]
+    operations: [invite, roles]
+    roles: [agency_admin]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [agency-create-roles, agency-seats-licenses, agency-vs-personal]
+    help_section_ids: [agency-hub, crm-team]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: agency-space-sharing
+    title: فضای اشتراکی آژانس
+    domain: agency
+    parent_id: agency-hub
+    user_description: انتشار کنترل‌شده فایل/مخاطب در فضای آژانس
+    platforms: [web, android]
+    web_paths: [/workspace/crm/agency/space/]
+    operations: [publish, moderate]
+    roles: [agency_admin, advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [agency-space-sharing]
+    help_section_ids: [agency-hub]
+    source_refs:
+      - workspace/agency_space_views.py
+    last_verified_at: '2026-10-19'
+
+  - id: ai-workspace-features
+    title: هوش مصنوعی میزکار
+    domain: ai
+    parent_id: null
+    user_description: خلاصه، پیام CRM، فرمان NL، صوت، سهمیه
+    platforms: [web, android]
+    web_paths: [/workspace/ai/]
+    operations: [summarize, nl_command, voice]
+    roles: [advisor]
+    license_notes: سهمیه روزانه
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles:
+      - ai-features-overview
+      - ai-listing-summary
+      - ai-crm-message
+      - ai-nl-command
+      - ai-voice-note
+    help_section_ids: [smart-assistant]
+    source_refs:
+      - ai_workspace/
+    last_verified_at: '2026-10-19'
+
+  - id: android-post-call-assistant
+    title: دستیار پس از تماس (اندروید)
+    domain: android
+    parent_id: null
+    user_description: ثبت سریع لید بعد از پایان تماس
+    platforms: [android]
+    web_paths: []
+    operations: [post_call, lead]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: []
+    help_section_ids: []
+    source_refs:
+      - divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/feature/postcall/
+    last_verified_at: null
+    notes: بدون مقاله دانشنامه عمومی؛ فقط کد اندروید
+
+  - id: android-extract-tab
+    title: استخراج در اپ اندروید
+    domain: android
+    parent_id: extractor-overview
+    user_description: تب استخراج و زمان‌بندی موبایل
+    platforms: [android]
+    web_paths: []
+    operations: [extract, schedule]
+    roles: [advisor]
+    license_notes: لایسنس
+    release_status: shipped
+    verification_status: unverified
+    knowledge_articles: [platforms-web-android-windows, extractor-overview]
+    help_section_ids: []
+    source_refs:
+      - divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt
+    last_verified_at: null
+
+  - id: support-tickets
+    title: پشتیبانی و خطاهای متداول
+    domain: support
+    parent_id: null
+    user_description: تیکت و رفع مشکل ورود/همگام‌سازی
+    platforms: [web, android]
+    web_paths: [/workspace/support/]
+    operations: [ticket]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [support-common-errors, support-getting-started]
+    help_section_ids: [faq]
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: academy-videos
+    title: آکادمی ویدیویی
+    domain: academy
+    parent_id: null
+    user_description: مسیرهای آموزشی ویدیو در میزکار
+    platforms: [web]
+    web_paths: [/workspace/academy/]
+    operations: [learn]
+    roles: [advisor]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [academy-public]
+    help_section_ids: []
+    source_refs:
+      - workspace/urls.py
+    last_verified_at: '2026-10-19'
+
+  - id: public-assistant-widget
+    title: دستیار عمومی سایت
+    domain: public_assistant
+    parent_id: null
+    user_description: چت عمومی بدون دسترسی به داده خصوصی کاربر
+    platforms: [web]
+    web_paths: []
+    operations: [chat]
+    roles: [guest]
+    license_notes: ''
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [public-assistant-scope]
+    help_section_ids: []
+    source_refs:
+      - public_assistant/services/chat.py
+      - public_assistant/services/retrieval.py
+    last_verified_at: '2026-10-19'

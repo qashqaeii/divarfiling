@@ -1,0 +1,2555 @@
+catalog_version: 2
+generated_at: '2026-10-20'
+entry_count: 80
+logical_feature_count: 33
+feature_count: 33
+entity_type_counts:
+  feature: 33
+  help_section: 2
+  help_topic: 45
+release_status_counts:
+  shipped: 32
+  gated: 1
+  documented_in_help: 47
+platforms_audit:
+  django_workspace_routes: 220
+  url_inventory_summary:
+    total_parsed: 220
+    user_page: 165
+    api: 53
+    internal: 2
+    with_params: 96
+  url_includes:
+  - mount: ai_workspace.urls
+    namespace: ai_workspace
+  - mount: product_hub.urls
+    namespace: product_hub
+  help_sections: 15
+  help_toc_entries: 17
+  knowledge_articles_markdown: 50
+  android:
+    available: true
+    note: ok
+    route_count: 62
+    source: divar-mobile-app\android\app\src\main\java\ir\divarfiling\mobile\navigation\DivarFilingNavHost.kt
+  windows:
+    available: true
+    note: inferred_from_src_layout
+    panels:
+    - saved_search
+    - scheduler
+    tabs:
+    - home
+    files:
+    - divar_gui.py
+    - export_divar_items.py
+    - app_features.py
+    - license_client.py
+    - app_storage.py
+    - app_crm.py
+    source_ref: src/app_features.py
+android_routes_sample:
+- const: LOGIN
+  route: login
+- const: MAIN
+  route: main
+- const: HOME
+  route: home
+- const: CRM
+  route: crm
+- const: CRM_CONTACTS
+  route: crm/contacts?customerType={customerType}
+- const: CRM_CONTACT_DETAIL
+  route: crm/contacts/{contactId}?openMatches={openMatches}
+- const: CRM_TODAY
+  route: crm/today
+- const: FILING
+  route: filing
+- const: FILING_SEARCH
+  route: filing/search?query={query}
+- const: FILING_RETENTION_WARNINGS
+  route: filing/retention-warnings
+- const: FILING_LISTINGS
+  route: filing/{datasetId}
+- const: FILING_LISTING_DETAIL
+  route: filing/listing/{token}
+- const: EXTRACT
+  route: extract
+- const: EXTRACT_SCHEDULES
+  route: extract/schedules
+- const: SETTINGS
+  route: settings
+- const: POST_CALL_SETUP
+  route: settings/post-call-setup
+- const: PLANS
+  route: plans
+- const: SETTINGS_INSTALL_HELP
+  route: settings/install-help
+- const: MORE
+  route: more
+- const: FILING_INSIGHTS
+  route: filing/{datasetId}/insights
+- const: FILING_MAP
+  route: filing/{datasetId}/map
+- const: TEMPLATES
+  route: templates
+- const: CALENDAR
+  route: calendar
+- const: AI
+  route: ai?contactId={contactId}&listingToken={listingToken}&mode={mode}
+- const: SUPPORT
+  route: support
+path_audit:
+  verified_path_refs: 28
+  unmatched_path_refs: 5
+features:
+- id: intro-product
+  title: معرفی فایلینگ دیوار
+  domain: onboarding
+  parent_id: null
+  user_description: آشنایی با محصول و مخاطبان هدف
+  platforms:
+  - web
+  - android
+  - windows
+  web_paths:
+  - /
+  operations:
+  - read
+  roles:
+  - guest
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - intro-what-is-divar-filing
+  help_section_ids:
+  - start
+  source_refs:
+  - workspace/help_content.py
+  - public_assistant/knowledge/articles/intro-what-is-divar-filing.md
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  - ref: public_assistant/knowledge/articles/intro-what-is-divar-filing.md
+    exists: true
+  web_paths_verified:
+  - /
+- id: workspace-product-map
+  title: نقشه امکانات میزکار
+  domain: workspace
+  parent_id: null
+  user_description: مسیرهای اصلی منو و قابلیت‌ها در وب
+  platforms:
+  - web
+  web_paths:
+  - /workspace/
+  operations:
+  - navigate
+  roles:
+  - advisor
+  license_notes: برخی منوها gated
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - workspace-product-map
+  help_section_ids: []
+  source_refs:
+  - workspace/urls.py
+  - public_assistant/knowledge/articles/workspace-product-map.md
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  - ref: public_assistant/knowledge/articles/workspace-product-map.md
+    exists: true
+  web_paths_verified:
+  - /workspace/
+- id: account-register-login
+  title: ثبت‌نام و ورود
+  domain: account
+  parent_id: null
+  user_description: ایجاد حساب و ورود به میزکار
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /accounts/register/
+  - /accounts/login/
+  operations:
+  - register
+  - login
+  roles:
+  - guest
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - account-register-login
+  help_section_ids:
+  - start
+  source_refs:
+  - public_assistant/knowledge/articles/account-register-login.md
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: public_assistant/knowledge/articles/account-register-login.md
+    exists: true
+  verification_notes:
+  - web_path_unmatched_in_urls:/accounts/register/
+  - web_path_unmatched_in_urls:/accounts/login/
+  web_paths_verified: []
+- id: account-mobile-verify
+  title: تأیید موبایل و OTP
+  domain: account
+  parent_id: account-register-login
+  user_description: دریافت کد پیامک و تأیید شماره
+  platforms:
+  - web
+  - android
+  web_paths: []
+  operations:
+  - verify_otp
+  roles:
+  - guest
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - account-mobile-verify
+  help_section_ids: []
+  source_refs:
+  - public_assistant/knowledge/articles/account-mobile-verify.md
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: public_assistant/knowledge/articles/account-mobile-verify.md
+    exists: true
+  web_paths_verified: []
+- id: plans-overview
+  title: پلن‌ها و خرید اشتراک
+  domain: licensing
+  parent_id: null
+  user_description: مقایسه پلن و پرداخت
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /products/
+  operations:
+  - purchase
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - plans-overview
+  - plans-trial-7d
+  - payment-methods
+  help_section_ids: []
+  source_refs:
+  - public_assistant/knowledge/articles/plans-overview.md
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: public_assistant/knowledge/articles/plans-overview.md
+    exists: true
+  verification_notes:
+  - web_path_unmatched_in_urls:/products/
+  web_paths_verified: []
+- id: license-activation
+  title: فعال‌سازی لایسنس ربات
+  domain: licensing
+  parent_id: plans-overview
+  user_description: کلید لایسنس ویندوز/استخراج
+  platforms:
+  - web
+  - windows
+  web_paths: []
+  operations:
+  - activate
+  roles:
+  - advisor
+  license_notes: نیاز به خرید ربات
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - license-activation
+  help_section_ids:
+  - bot-extraction
+  source_refs:
+  - src/license_client.py
+  - public_assistant/knowledge/articles/license-activation.md
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: src/license_client.py
+    exists: true
+  - ref: public_assistant/knowledge/articles/license-activation.md
+    exists: true
+  web_paths_verified: []
+- id: extractor-overview
+  title: استخراج آگهی از دیوار
+  domain: extractor
+  parent_id: null
+  user_description: جمع‌آوری آگهی با ربات/اپ
+  platforms:
+  - android
+  - windows
+  - web
+  web_paths:
+  - /download/android/
+  - /download/windows/
+  operations:
+  - extract
+  roles:
+  - advisor
+  license_notes: لایسنس ربات
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - extractor-overview
+  - extractor-single-batch
+  - extractor-to-filing
+  help_section_ids:
+  - bot-extraction
+  source_refs:
+  - src/export_divar_items.py
+  - divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: src/export_divar_items.py
+    exists: true
+  - ref: divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt
+    exists: true
+  verification_notes:
+  - web_path_unmatched_in_urls:/download/android/
+  - web_path_unmatched_in_urls:/download/windows/
+  web_paths_verified: []
+- id: extractor-windows-scheduler
+  title: زمان‌بندی استخراج ویندوز
+  domain: windows
+  parent_id: extractor-overview
+  user_description: اجرای دوره‌ای استخراج در ربات دسکتاپ
+  platforms:
+  - windows
+  web_paths: []
+  operations:
+  - schedule
+  roles:
+  - advisor
+  license_notes: لایسنس ربات
+  release_status: shipped
+  verification_status: help_content_only
+  knowledge_articles:
+  - extractor-windows
+  help_section_ids:
+  - bot-extraction
+  source_refs:
+  - src/app_features.py
+  last_verified_at: null
+  notes: رفتار UI از app_features؛ بدون تأیید دستی این فاز
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: src/app_features.py
+    exists: true
+  web_paths_verified: []
+- id: extractor-sync-filing
+  title: همگام‌سازی خروجی با فایلینگ
+  domain: extractor
+  parent_id: extractor-overview
+  user_description: آپلود dataset و دیدن آگهی در میزکار
+  platforms:
+  - web
+  - windows
+  web_paths:
+  - /workspace/import/
+  - /workspace/datasets/upload/
+  operations:
+  - upload
+  - sync
+  roles:
+  - advisor
+  license_notes: لایسنس فایلینگ
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - extractor-to-filing
+  - filing-collections
+  - support-wave1-crm-filing
+  help_section_ids:
+  - workspace-filing
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/import/
+  - /workspace/datasets/upload/
+- id: filing-collections
+  title: مجموعه فایل (Dataset)
+  domain: filing
+  parent_id: null
+  user_description: نگهداری و فیلتر آگهی‌های ذخیره‌شده
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/datasets/
+  - /workspace/listings/
+  operations:
+  - list
+  - filter
+  - export
+  roles:
+  - advisor
+  license_notes: لایسنس ربات/فایلینگ
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - filing-collections
+  help_section_ids:
+  - workspace-filing
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/datasets/
+  - /workspace/listings/
+- id: filing-listing-detail
+  title: جزئیات و ویرایش آگهی
+  domain: filing
+  parent_id: filing-collections
+  user_description: ویرایش، حذف، علاقه‌مندی، share از صفحه آگهی
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/datasets/
+  operations:
+  - edit
+  - delete
+  - favorite
+  - share
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - filing-collections
+  - share-public-file
+  - filing-detail-map
+  - filing-listing-manage
+  help_section_ids:
+  - workspace-filing
+  source_refs:
+  - workspace/urls.py
+  - templates/workspace/
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  - ref: templates/workspace/
+    exists: true
+  web_paths_verified:
+  - /workspace/datasets/
+- id: filing-divar-contact
+  title: دریافت تماس آگهی از دیوار (OTP)
+  domain: filing
+  parent_id: filing-listing-detail
+  user_description: نمایش شماره آگهی پس از OTP دیوار
+  platforms:
+  - web
+  web_paths: []
+  operations:
+  - otp
+  - reveal_phone
+  roles:
+  - advisor
+  license_notes: اتصال حساب دیوار
+  release_status: gated
+  verification_status: code_reviewed
+  knowledge_articles:
+  - filing-divar-contact
+  help_section_ids: []
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified: []
+- id: filing-analysis-tools
+  title: تحلیل بازار و ابزارها
+  domain: analysis
+  parent_id: filing-collections
+  user_description: analyze، tools، compare، benchmark
+  platforms:
+  - web
+  web_paths:
+  - /workspace/tools/
+  - /workspace/compare/
+  operations:
+  - analyze
+  - compare
+  roles:
+  - advisor
+  license_notes: لایسنس تحلیل
+  release_status: shipped
+  verification_status: overview_only
+  knowledge_articles:
+  - filing-collections
+  help_section_ids:
+  - market-analysis
+  - smart-tools
+  source_refs:
+  - workspace/urls.py
+  - workspace/help_content.py
+  last_verified_at: null
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified:
+  - /workspace/tools/
+  - /workspace/compare/
+- id: share-public-file
+  title: اشتراک عمومی لینک با مشتری
+  domain: sharing
+  parent_id: null
+  user_description: ساخت لینک share برای آگهی یا ملک شخصی
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/properties/
+  operations:
+  - share
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - share-public-file
+  help_section_ids: []
+  source_refs:
+  - workspace/urls.py
+  - public_assistant/knowledge/articles/share-public-file.md
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  - ref: public_assistant/knowledge/articles/share-public-file.md
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/properties/
+- id: crm-contacts-hub
+  title: مدیریت مخاطبین CRM
+  domain: crm_contacts
+  parent_id: null
+  user_description: ثبت، ویرایش، جست‌وجو مخاطب
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/contacts/
+  operations:
+  - create
+  - edit
+  - search
+  - import
+  roles:
+  - advisor
+  license_notes: CRM رایگان
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-contacts
+  - crm-contacts-manage
+  help_section_ids:
+  - crm-contacts
+  source_refs:
+  - workspace/crm_views.py
+  - workspace/urls.py
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/crm_views.py
+    exists: true
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/contacts/
+- id: crm-contacts-merge
+  title: ادغام مخاطبین تکراری
+  domain: crm_contacts
+  parent_id: crm-contacts-hub
+  user_description: merge دو رکورد مشتری
+  platforms:
+  - web
+  web_paths:
+  - /workspace/crm/contacts/
+  operations:
+  - merge
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-contacts-manage
+  help_section_ids:
+  - crm-contacts
+  source_refs:
+  - workspace/crm_views.py
+  - templates/workspace/crm/contacts/list.html
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/crm_views.py
+    exists: true
+  - ref: templates/workspace/crm/contacts/list.html
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/contacts/
+- id: crm-personal-properties-hub
+  title: املاک شخصی (فایل شخصی)
+  domain: crm_personal_properties
+  parent_id: null
+  user_description: ملک تحت مدیریت مستقیم مشاور
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/properties/
+  - /workspace/crm/properties/new/
+  operations:
+  - create
+  - edit
+  - map
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-personal-properties
+  - crm-property-create-edit
+  - crm-property-folders-cabinets
+  help_section_ids:
+  - crm-properties
+  source_refs:
+  - workspace/crm_views.py
+  - templates/workspace/crm/
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/crm_views.py
+    exists: true
+  - ref: templates/workspace/crm/
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/properties/
+  - /workspace/crm/properties/new/
+- id: crm-property-owner-contact
+  title: ثبت شماره تماس مالک
+  domain: crm_personal_properties
+  parent_id: crm-personal-properties-hub
+  user_description: فیلد شماره مالک در فرم ملک شخصی
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/properties/new/
+  operations:
+  - edit_field
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-property-owner-contact
+  - crm-personal-properties
+  help_section_ids:
+  - crm-properties
+  source_refs:
+  - templates/workspace/crm/includes/property_form_sections.html
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: templates/workspace/crm/includes/property_form_sections.html
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/properties/new/
+- id: crm-property-folders-cabinets
+  title: پوشه‌ها و کابینت املاک شخصی
+  domain: crm_personal_properties
+  parent_id: crm-personal-properties-hub
+  user_description: سازمان‌دهی فایل شخصی در پوشه/کابینت
+  platforms:
+  - web
+  web_paths:
+  - /workspace/crm/properties/
+  operations:
+  - organize
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-property-folders-cabinets
+  help_section_ids:
+  - crm-properties
+  source_refs:
+  - workspace/services/crm_property_folders.py
+  - templates/workspace/crm/includes/property_folders_tier.html
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/services/crm_property_folders.py
+    exists: true
+  - ref: templates/workspace/crm/includes/property_folders_tier.html
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/properties/
+- id: crm-deals-hub
+  title: معاملات (Deal)
+  domain: crm_deals
+  parent_id: null
+  user_description: قیف معامله، مراحل، پیگیری
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/deals/
+  operations:
+  - create
+  - stage
+  - followup
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: overview_only
+  knowledge_articles:
+  - crm-deals
+  help_section_ids:
+  - crm-deals
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/deals/
+- id: crm-deals-finance
+  title: مالی و کمیسیون معامله
+  domain: crm_deals
+  parent_id: crm-deals-hub
+  user_description: ثبت پرداخت‌ها و کمیسیون در deal
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/deals/finance/
+  operations:
+  - finance
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: unverified
+  knowledge_articles:
+  - crm-deals
+  help_section_ids:
+  - crm-finance-contracts
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: null
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/deals/finance/
+- id: crm-scheduling
+  title: تقویم و یادآور
+  domain: crm_scheduling
+  parent_id: null
+  user_description: یادآوری تماس و صف امروز
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/today/
+  - /workspace/crm/reminders/
+  operations:
+  - remind
+  - calendar
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-activities-reminders
+  - workspace-today-queue
+  help_section_ids:
+  - crm-scheduling
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/today/
+  - /workspace/crm/reminders/
+- id: crm-matching
+  title: تطبیق فایل با مشتری
+  domain: crm_contacts
+  parent_id: crm-contacts-hub
+  user_description: پیشنهاد ملک مناسب برای خریدار
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/contacts/
+  operations:
+  - match
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - crm-matching
+  help_section_ids: []
+  source_refs:
+  - workspace/services/crm_matching.py
+  - templates/workspace/crm/includes/matches_panel.html
+  last_verified_at: '2026-10-20'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/services/crm_matching.py
+    exists: true
+  - ref: templates/workspace/crm/includes/matches_panel.html
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/contacts/
+- id: crm-automation-templates
+  title: قالب پیام و اتوماسیون
+  domain: crm_automation
+  parent_id: null
+  user_description: پیام‌های آماده و اتوماسیون CRM
+  platforms:
+  - web
+  web_paths:
+  - /workspace/crm/templates/
+  operations:
+  - automate
+  roles:
+  - advisor
+  - agency_admin
+  license_notes: ''
+  release_status: shipped
+  verification_status: unverified
+  knowledge_articles: []
+  help_section_ids:
+  - crm-communication
+  source_refs:
+  - workspace/urls.py
+  - workspace/help_content.py
+  last_verified_at: null
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/templates/
+- id: contracts-hub
+  title: قراردادهای دیجیتال
+  domain: contracts
+  parent_id: null
+  user_description: ساخت، wizard، PDF، تحویل
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/contracts/
+  operations:
+  - create
+  - sign
+  - pdf
+  roles:
+  - advisor
+  - agency_admin
+  license_notes: ''
+  release_status: shipped
+  verification_status: overview_only
+  knowledge_articles:
+  - contracts-overview
+  help_section_ids:
+  - crm-finance-contracts
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/contracts/
+- id: agency-hub
+  title: مدیریت آژانس
+  domain: agency
+  parent_id: null
+  user_description: تیم، نقش‌ها، لایسنس صندلی
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/agency/
+  operations:
+  - invite
+  - roles
+  roles:
+  - agency_admin
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - agency-create-roles
+  - agency-seats-licenses
+  - agency-vs-personal
+  help_section_ids:
+  - agency-hub
+  - crm-team
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/agency/
+- id: agency-space-sharing
+  title: فضای اشتراکی آژانس
+  domain: agency
+  parent_id: agency-hub
+  user_description: انتشار کنترل‌شده فایل/مخاطب در فضای آژانس
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/crm/agency/space/
+  operations:
+  - publish
+  - moderate
+  roles:
+  - agency_admin
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - agency-space-sharing
+  help_section_ids:
+  - agency-hub
+  source_refs:
+  - workspace/agency_space_views.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/agency_space_views.py
+    exists: true
+  web_paths_verified:
+  - /workspace/crm/agency/space/
+- id: ai-workspace-features
+  title: هوش مصنوعی میزکار
+  domain: ai
+  parent_id: null
+  user_description: خلاصه، پیام CRM، فرمان NL، صوت، سهمیه
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/ai/
+  operations:
+  - summarize
+  - nl_command
+  - voice
+  roles:
+  - advisor
+  license_notes: سهمیه روزانه
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - ai-features-overview
+  - ai-listing-summary
+  - ai-crm-message
+  - ai-nl-command
+  - ai-voice-note
+  help_section_ids:
+  - smart-assistant
+  source_refs:
+  - ai_workspace/
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: ai_workspace/
+    exists: true
+  web_paths_verified:
+  - /workspace/ai/
+- id: android-post-call-assistant
+  title: دستیار پس از تماس (اندروید)
+  domain: android
+  parent_id: null
+  user_description: ثبت سریع لید بعد از پایان تماس
+  platforms:
+  - android
+  web_paths: []
+  operations:
+  - post_call
+  - lead
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles: []
+  help_section_ids: []
+  source_refs:
+  - divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/feature/postcall/
+  last_verified_at: null
+  notes: بدون مقاله دانشنامه عمومی؛ فقط کد اندروید
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/feature/postcall/
+    exists: true
+  web_paths_verified: []
+- id: android-extract-tab
+  title: استخراج در اپ اندروید
+  domain: android
+  parent_id: extractor-overview
+  user_description: تب استخراج و زمان‌بندی موبایل
+  platforms:
+  - android
+  web_paths: []
+  operations:
+  - extract
+  - schedule
+  roles:
+  - advisor
+  license_notes: لایسنس
+  release_status: shipped
+  verification_status: unverified
+  knowledge_articles:
+  - platforms-web-android-windows
+  - extractor-overview
+  help_section_ids: []
+  source_refs:
+  - divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt
+  last_verified_at: null
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/navigation/DivarFilingNavHost.kt
+    exists: true
+  web_paths_verified: []
+- id: support-tickets
+  title: پشتیبانی و خطاهای متداول
+  domain: support
+  parent_id: null
+  user_description: تیکت و رفع مشکل ورود/همگام‌سازی
+  platforms:
+  - web
+  - android
+  web_paths:
+  - /workspace/support/
+  operations:
+  - ticket
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - support-common-errors
+  - support-getting-started
+  help_section_ids:
+  - faq
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: high
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/support/
+- id: academy-videos
+  title: آکادمی ویدیویی
+  domain: academy
+  parent_id: null
+  user_description: مسیرهای آموزشی ویدیو در میزکار
+  platforms:
+  - web
+  web_paths:
+  - /workspace/academy/
+  operations:
+  - learn
+  roles:
+  - advisor
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - academy-public
+  help_section_ids: []
+  source_refs:
+  - workspace/urls.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: workspace/urls.py
+    exists: true
+  web_paths_verified:
+  - /workspace/academy/
+- id: public-assistant-widget
+  title: دستیار عمومی سایت
+  domain: public_assistant
+  parent_id: null
+  user_description: چت عمومی بدون دسترسی به داده خصوصی کاربر
+  platforms:
+  - web
+  web_paths: []
+  operations:
+  - chat
+  roles:
+  - guest
+  license_notes: ''
+  release_status: shipped
+  verification_status: code_reviewed
+  knowledge_articles:
+  - public-assistant-scope
+  help_section_ids: []
+  source_refs:
+  - public_assistant/services/chat.py
+  - public_assistant/services/retrieval.py
+  last_verified_at: '2026-10-19'
+  entity_type: feature
+  catalog_role: primary
+  user_impact: medium
+  source_refs_resolved:
+  - ref: public_assistant/services/chat.py
+    exists: true
+  - ref: public_assistant/services/retrieval.py
+    exists: true
+  web_paths_verified: []
+- id: help-workspace-crm-overview
+  entity_type: help_section
+  catalog_role: child_only
+  title: داشبورد و صف کار CRM
+  domain: crm
+  parent_id: null
+  user_description: نمای کلی فعالیت، کارهای امروز و جستجوی سراسری
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: free
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-overview
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_section
+  last_verified_at: null
+  notes: استخراج خودکار از help_content؛ مسیر UI جداگانه تأیید نشده
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-workspace-workspace-settings
+  entity_type: help_section
+  catalog_role: child_only
+  title: تنظیمات میزکار
+  domain: account
+  parent_id: null
+  user_description: تم، فونت، نقشه و برندینگ آژانس
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: all
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - workspace-settings
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_section
+  last_verified_at: null
+  notes: استخراج خودکار از help_content؛ مسیر UI جداگانه تأیید نشده
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-bot-extraction-نصب-و-اولین-اجرا
+  entity_type: help_topic
+  catalog_role: child_only
+  title: نصب و اولین اجرا
+  domain: extractor
+  parent_id: license-activation
+  user_description: نصب و اولین اجرا
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - bot-extraction
+  help_topic_title: نصب و اولین اجرا
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=license_guide
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-bot-extraction-فعال‌سازی-لایسنس
+  entity_type: help_topic
+  catalog_role: child_only
+  title: فعال‌سازی لایسنس
+  domain: extractor
+  parent_id: license-activation
+  user_description: فعال‌سازی لایسنس
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - bot-extraction
+  help_topic_title: فعال‌سازی لایسنس
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=license_guide
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-bot-extraction-تنظیم-و-شروع-استخراج
+  entity_type: help_topic
+  catalog_role: child_only
+  title: تنظیم و شروع استخراج
+  domain: extractor
+  parent_id: license-activation
+  user_description: تنظیم و شروع استخراج
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - bot-extraction
+  help_topic_title: تنظیم و شروع استخراج
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-bot-extraction-خروجی-و-ساختار-پوشه‌ها
+  entity_type: help_topic
+  catalog_role: child_only
+  title: خروجی و ساختار پوشه‌ها
+  domain: extractor
+  parent_id: license-activation
+  user_description: خروجی و ساختار پوشه‌ها
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - bot-extraction
+  help_topic_title: خروجی و ساختار پوشه‌ها
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-workspace-filing-نمای-کلی-و-آپلود-سریع
+  entity_type: help_topic
+  catalog_role: child_only
+  title: نمای کلی و آپلود سریع
+  domain: filing
+  parent_id: extractor-sync-filing
+  user_description: نمای کلی و آپلود سریع
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - workspace-filing
+  help_topic_title: نمای کلی و آپلود سریع
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:home
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-workspace-filing-آپلود-تکی
+  entity_type: help_topic
+  catalog_role: child_only
+  title: آپلود تکی
+  domain: filing
+  parent_id: extractor-sync-filing
+  user_description: آپلود تکی
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - workspace-filing
+  help_topic_title: آپلود تکی
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:dataset_upload
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-workspace-filing-آپلود-پوشه-(Bulk)
+  entity_type: help_topic
+  catalog_role: child_only
+  title: آپلود پوشه (Bulk)
+  domain: filing
+  parent_id: extractor-sync-filing
+  user_description: آپلود پوشه (Bulk)
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - workspace-filing
+  help_topic_title: آپلود پوشه (Bulk)
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:dataset_bulk_upload
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-workspace-filing-مدیریت-مجموعه‌ها-و-جدول-آگهی
+  entity_type: help_topic
+  catalog_role: child_only
+  title: مدیریت مجموعه‌ها و جدول آگهی
+  domain: filing
+  parent_id: extractor-sync-filing
+  user_description: مدیریت مجموعه‌ها و جدول آگهی
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - workspace-filing
+  help_topic_title: مدیریت مجموعه‌ها و جدول آگهی
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:dataset_list
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-market-analysis-داشبورد-تحلیل-بازار
+  entity_type: help_topic
+  catalog_role: child_only
+  title: داشبورد تحلیل بازار
+  domain: analysis
+  parent_id: filing-analysis-tools
+  user_description: داشبورد تحلیل بازار
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - market-analysis
+  help_topic_title: داشبورد تحلیل بازار
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:dataset_list
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-market-analysis-نقشه-آگهی‌ها
+  entity_type: help_topic
+  catalog_role: child_only
+  title: نقشه آگهی‌ها
+  domain: analysis
+  parent_id: filing-analysis-tools
+  user_description: نقشه آگهی‌ها
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - market-analysis
+  help_topic_title: نقشه آگهی‌ها
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:dataset_list
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-market-analysis-جزئیات-آگهی-و-تبدیل-به-فایل-شخصی
+  entity_type: help_topic
+  catalog_role: child_only
+  title: جزئیات آگهی و تبدیل به فایل شخصی
+  domain: analysis
+  parent_id: filing-analysis-tools
+  user_description: جزئیات آگهی و تبدیل به فایل شخصی
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - market-analysis
+  help_topic_title: جزئیات آگهی و تبدیل به فایل شخصی
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-smart-tools-تبدیل-رهن-و-اجاره
+  entity_type: help_topic
+  catalog_role: child_only
+  title: تبدیل رهن و اجاره
+  domain: analysis
+  parent_id: filing-analysis-tools
+  user_description: تبدیل رهن و اجاره
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - smart-tools
+  help_topic_title: تبدیل رهن و اجاره
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:tools
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-smart-tools-محاسبه-قیمت-هر-متر
+  entity_type: help_topic
+  catalog_role: child_only
+  title: محاسبه قیمت هر متر
+  domain: analysis
+  parent_id: filing-analysis-tools
+  user_description: محاسبه قیمت هر متر
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - smart-tools
+  help_topic_title: محاسبه قیمت هر متر
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:tools
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-smart-tools-محاسبه-کمیسیون
+  entity_type: help_topic
+  catalog_role: child_only
+  title: محاسبه کمیسیون
+  domain: analysis
+  parent_id: filing-analysis-tools
+  user_description: محاسبه کمیسیون
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - smart-tools
+  help_topic_title: محاسبه کمیسیون
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:tools
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-overview-داشبورد-CRM
+  entity_type: help_topic
+  catalog_role: child_only
+  title: داشبورد CRM
+  domain: crm
+  parent_id: help-workspace-crm-overview
+  user_description: داشبورد CRM
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-overview
+  help_topic_title: داشبورد CRM
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_dashboard
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-overview-صف-کار-امروز
+  entity_type: help_topic
+  catalog_role: child_only
+  title: صف کار امروز
+  domain: crm
+  parent_id: help-workspace-crm-overview
+  user_description: صف کار امروز
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-overview
+  help_topic_title: صف کار امروز
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_today
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-overview-جستجوی-سراسری
+  entity_type: help_topic
+  catalog_role: child_only
+  title: جستجوی سراسری
+  domain: crm
+  parent_id: help-workspace-crm-overview
+  user_description: جستجوی سراسری
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-overview
+  help_topic_title: جستجوی سراسری
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_contacts
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-contacts-ثبت-مخاطب-جدید
+  entity_type: help_topic
+  catalog_role: child_only
+  title: ثبت مخاطب جدید
+  domain: crm_contacts
+  parent_id: crm-contacts-hub
+  user_description: ثبت مخاطب جدید
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-contacts
+  help_topic_title: ثبت مخاطب جدید
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_contacts
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-contacts-پروفایل-و-پیگیری
+  entity_type: help_topic
+  catalog_role: child_only
+  title: پروفایل و پیگیری
+  domain: crm_contacts
+  parent_id: crm-contacts-hub
+  user_description: پروفایل و پیگیری
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-contacts
+  help_topic_title: پروفایل و پیگیری
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_contacts
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-contacts-Import،-Export-و-ادغام
+  entity_type: help_topic
+  catalog_role: child_only
+  title: Import، Export و ادغام
+  domain: crm_contacts
+  parent_id: crm-contacts-hub
+  user_description: Import، Export و ادغام
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-contacts
+  help_topic_title: Import، Export و ادغام
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_contacts
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-properties-ثبت-و-مدیریت-ملک
+  entity_type: help_topic
+  catalog_role: child_only
+  title: ثبت و مدیریت ملک
+  domain: crm_personal_properties
+  parent_id: crm-personal-properties-hub
+  user_description: ثبت و مدیریت ملک
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-properties
+  help_topic_title: ثبت و مدیریت ملک
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_properties
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-properties-تطبیق-ملک–مشتری
+  entity_type: help_topic
+  catalog_role: child_only
+  title: تطبیق ملک–مشتری
+  domain: crm_personal_properties
+  parent_id: crm-personal-properties-hub
+  user_description: تطبیق ملک–مشتری
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-properties
+  help_topic_title: تطبیق ملک–مشتری
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-properties-فیلترهای-ذخیره‌شده
+  entity_type: help_topic
+  catalog_role: child_only
+  title: فیلترهای ذخیره‌شده
+  domain: crm_personal_properties
+  parent_id: crm-personal-properties-hub
+  user_description: فیلترهای ذخیره‌شده
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-properties
+  help_topic_title: فیلترهای ذخیره‌شده
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-deals-ایجاد-معامله
+  entity_type: help_topic
+  catalog_role: child_only
+  title: ایجاد معامله
+  domain: crm_deals
+  parent_id: crm-deals-hub
+  user_description: ایجاد معامله
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-deals
+  help_topic_title: ایجاد معامله
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_deals
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-deals-مراحل-و-چک‌لیست
+  entity_type: help_topic
+  catalog_role: child_only
+  title: مراحل و چک‌لیست
+  domain: crm_deals
+  parent_id: crm-deals-hub
+  user_description: مراحل و چک‌لیست
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-deals
+  help_topic_title: مراحل و چک‌لیست
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_deal_stages
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-deals-کمیسیون
+  entity_type: help_topic
+  catalog_role: child_only
+  title: کمیسیون
+  domain: crm_deals
+  parent_id: crm-deals-hub
+  user_description: کمیسیون
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-deals
+  help_topic_title: کمیسیون
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-scheduling-تقویم-CRM
+  entity_type: help_topic
+  catalog_role: child_only
+  title: تقویم CRM
+  domain: crm_scheduling
+  parent_id: crm-scheduling
+  user_description: تقویم CRM
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-scheduling
+  help_topic_title: تقویم CRM
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_calendar
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-scheduling-یادآورها
+  entity_type: help_topic
+  catalog_role: child_only
+  title: یادآورها
+  domain: crm_scheduling
+  parent_id: crm-scheduling
+  user_description: یادآورها
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-scheduling
+  help_topic_title: یادآورها
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_reminders
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-communication-قالب-پیام
+  entity_type: help_topic
+  catalog_role: child_only
+  title: قالب پیام
+  domain: crm_automation
+  parent_id: crm-automation-templates
+  user_description: قالب پیام
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-communication
+  help_topic_title: قالب پیام
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_templates
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-communication-اتوماسیون
+  entity_type: help_topic
+  catalog_role: child_only
+  title: اتوماسیون
+  domain: crm_automation
+  parent_id: crm-automation-templates
+  user_description: اتوماسیون
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-communication
+  help_topic_title: اتوماسیون
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_automation
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-team-مدیریت-اعضا
+  entity_type: help_topic
+  catalog_role: child_only
+  title: مدیریت اعضا
+  domain: agency
+  parent_id: agency-hub
+  user_description: مدیریت اعضا
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-team
+  help_topic_title: مدیریت اعضا
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_team
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-team-تخصیص-و-انتقال
+  entity_type: help_topic
+  catalog_role: child_only
+  title: تخصیص و انتقال
+  domain: agency
+  parent_id: agency-hub
+  user_description: تخصیص و انتقال
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-team
+  help_topic_title: تخصیص و انتقال
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-team-همگام‌سازی-CRM
+  entity_type: help_topic
+  catalog_role: child_only
+  title: همگام‌سازی CRM
+  domain: agency
+  parent_id: agency-hub
+  user_description: همگام‌سازی CRM
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-team
+  help_topic_title: همگام‌سازی CRM
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-smart-assistant-فرمان-متنی-(دستیار-هوشمند)
+  entity_type: help_topic
+  catalog_role: child_only
+  title: فرمان متنی (دستیار هوشمند)
+  domain: ai
+  parent_id: ai-workspace-features
+  user_description: فرمان متنی (دستیار هوشمند)
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - smart-assistant
+  help_topic_title: فرمان متنی (دستیار هوشمند)
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_dashboard
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-smart-assistant-ورود-صوتی-در-فرم‌ها
+  entity_type: help_topic
+  catalog_role: child_only
+  title: ورود صوتی در فرم‌ها
+  domain: ai
+  parent_id: ai-workspace-features
+  user_description: ورود صوتی در فرم‌ها
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - smart-assistant
+  help_topic_title: ورود صوتی در فرم‌ها
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_contacts
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-smart-assistant-فرمان-صوتی-در-دستیار
+  entity_type: help_topic
+  catalog_role: child_only
+  title: فرمان صوتی در دستیار
+  domain: ai
+  parent_id: ai-workspace-features
+  user_description: فرمان صوتی در دستیار
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - smart-assistant
+  help_topic_title: فرمان صوتی در دستیار
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_today
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-agency-hub-ورود-به-مرکز-آژانس
+  entity_type: help_topic
+  catalog_role: child_only
+  title: ورود به مرکز آژانس
+  domain: agency
+  parent_id: agency-hub
+  user_description: ورود به مرکز آژانس
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - agency-hub
+  help_topic_title: ورود به مرکز آژانس
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:agency_hub
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-agency-hub-مشاوران-و-گزارش-عملکرد
+  entity_type: help_topic
+  catalog_role: child_only
+  title: مشاوران و گزارش عملکرد
+  domain: agency
+  parent_id: agency-hub
+  user_description: مشاوران و گزارش عملکرد
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - agency-hub
+  help_topic_title: مشاوران و گزارش عملکرد
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:agency_hub_advisors
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-agency-hub-Agency-TV-و-اطلاع‌رسانی
+  entity_type: help_topic
+  catalog_role: child_only
+  title: Agency TV و اطلاع‌رسانی
+  domain: agency
+  parent_id: agency-hub
+  user_description: Agency TV و اطلاع‌رسانی
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - agency-hub
+  help_topic_title: Agency TV و اطلاع‌رسانی
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:agency_hub_tv
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-agency-hub-تنظیمات،-API-و-webhook
+  entity_type: help_topic
+  catalog_role: child_only
+  title: تنظیمات، API و webhook
+  domain: agency
+  parent_id: agency-hub
+  user_description: تنظیمات، API و webhook
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - agency-hub
+  help_topic_title: تنظیمات، API و webhook
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:agency_hub_settings
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-finance-contracts-داشبورد-مالی-معاملات
+  entity_type: help_topic
+  catalog_role: child_only
+  title: داشبورد مالی معاملات
+  domain: contracts
+  parent_id: crm-deals-finance
+  user_description: داشبورد مالی معاملات
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-finance-contracts
+  help_topic_title: داشبورد مالی معاملات
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_deals_finance
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-finance-contracts-کمیسیون-در-معامله
+  entity_type: help_topic
+  catalog_role: child_only
+  title: کمیسیون در معامله
+  domain: contracts
+  parent_id: crm-deals-finance
+  user_description: کمیسیون در معامله
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-finance-contracts
+  help_topic_title: کمیسیون در معامله
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:crm_deals
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-crm-finance-contracts-قرارداد-و-صورت‌جلسه-تحویل
+  entity_type: help_topic
+  catalog_role: child_only
+  title: قرارداد و صورت‌جلسه تحویل
+  domain: contracts
+  parent_id: crm-deals-finance
+  user_description: قرارداد و صورت‌جلسه تحویل
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - crm-finance-contracts
+  help_topic_title: قرارداد و صورت‌جلسه تحویل
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:contracts_dashboard
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-workspace-settings-ظاهر-و-خوانایی
+  entity_type: help_topic
+  catalog_role: child_only
+  title: ظاهر و خوانایی
+  domain: account
+  parent_id: help-workspace-workspace-settings
+  user_description: ظاهر و خوانایی
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - workspace-settings
+  help_topic_title: ظاهر و خوانایی
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=workspace:home
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []
+- id: help-topic-workspace-settings-نقشه-و-PDF
+  entity_type: help_topic
+  catalog_role: child_only
+  title: نقشه و PDF
+  domain: account
+  parent_id: help-workspace-workspace-settings
+  user_description: نقشه و PDF
+  platforms:
+  - web
+  web_paths: []
+  operations: []
+  roles: []
+  license_notes: ''
+  release_status: documented_in_help
+  verification_status: help_content_only
+  knowledge_articles: []
+  help_section_ids:
+  - workspace-settings
+  help_topic_title: نقشه و PDF
+  source_refs:
+  - workspace/help_content.py
+  source_linkage: help_content_topic
+  last_verified_at: null
+  notes: topic از help_content؛ url_name=None
+  source_refs_resolved:
+  - ref: workspace/help_content.py
+    exists: true
+  web_paths_verified: []

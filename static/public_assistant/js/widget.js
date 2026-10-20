@@ -8,6 +8,18 @@
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 11v8a1 1 0 0 0 1 1h2.5a1 1 0 0 0 .95-.68L13 14h5.2a2 2 0 0 0 1.94-2.52l-1.2-5A2 2 0 0 0 17.06 5H14a2 2 0 0 0-2 2v1H9a2 2 0 0 0-2 2v1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
   var ICON_THUMB_DOWN =
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 13V5a1 1 0 0 0-1-1h-2.5a1 1 0 0 0-.95.68L11 10H5.8a2 2 0 0 0-1.94 2.52l1.2 5A2 2 0 0 0 6.94 19H10a2 2 0 0 0 2-2v-1h3a2 2 0 0 0 2-2v-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+  var ICON_CHIP =
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+  var ICON_LINK_EXT =
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_LINK_CART =
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12L6 6zM9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm8 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+  var ICON_LINK_WORKSPACE =
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>';
+  var ICON_LINK_SUPPORT =
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.6 1.2c0 1.5-2.1 1.8-2.1 3.3V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="17.5" r=".75" fill="currentColor"/></svg>';
+  var ICON_LINK_LICENSE =
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>';
 
   function getCookie(name) {
     var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
@@ -58,6 +70,15 @@
       .trim();
   }
 
+  function linkIconFor(label, url) {
+    var hay = (String(label) + ' ' + String(url)).toLowerCase();
+    if (/خرید|اشتراک|shop|checkout|pricing|plan/.test(hay)) return ICON_LINK_CART;
+    if (/میزکار|workspace|mizkar|crm/.test(hay)) return ICON_LINK_WORKSPACE;
+    if (/پشتیبانی|support|تماس/.test(hay)) return ICON_LINK_SUPPORT;
+    if (/لایسنس|license|فعال/.test(hay)) return ICON_LINK_LICENSE;
+    return ICON_LINK_EXT;
+  }
+
   function renderInline(safe) {
     safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     safe = safe.replace(/_(.+?)_/g, '<em>$1</em>');
@@ -66,13 +87,15 @@
       var href = escapeHtml(url);
       var dirAttr = /^https?:\/\//i.test(url) ? ' dir="ltr"' : '';
       return (
-        '<a href="' +
+        '<a class="pa-md-link" href="' +
         href +
         '" rel="noopener noreferrer" target="_blank"' +
         dirAttr +
         '>' +
+        linkIconFor(label, url) +
+        '<span>' +
         escapeHtml(label) +
-        '</a>'
+        '</span></a>'
       );
     });
     return safe;
@@ -169,8 +192,10 @@
   var input = document.getElementById('paInput');
   var sendBtn = document.getElementById('paSend');
   var closeBtn = document.getElementById('paClose');
+  var minimizeBtn = document.getElementById('paMinimize');
   var newChatBtn = document.getElementById('paNewChat');
   var headStatus = document.getElementById('paHeadStatus');
+  var headStatusText = headStatus ? headStatus.querySelector('.pa-head__status-text') : null;
   var jumpBtn = document.getElementById('paJumpEnd');
 
   var configUrl = root.dataset.configUrl;
@@ -190,17 +215,23 @@
   }
 
   function setHeadStatus(text) {
-    if (headStatus) headStatus.textContent = text;
+    if (headStatusText) headStatusText.textContent = text;
+    else if (headStatus) headStatus.textContent = text;
+  }
+
+  function updateSendState() {
+    if (!sendBtn) return;
+    var empty = !(input.value || '').trim();
+    sendBtn.disabled = empty || root.classList.contains('is-sending');
   }
 
   function setSending(on) {
     if (on) {
       root.classList.add('is-sending');
-      sendBtn.disabled = true;
     } else {
       root.classList.remove('is-sending');
-      sendBtn.disabled = false;
     }
+    updateSendState();
   }
 
   function unlockBodyScroll() {
@@ -268,6 +299,11 @@
   closeBtn.addEventListener('click', function () {
     setOpen(false);
   });
+  if (minimizeBtn) {
+    minimizeBtn.addEventListener('click', function () {
+      setOpen(false);
+    });
+  }
   backdrop.addEventListener('click', function () {
     setOpen(false);
   });
@@ -283,7 +319,11 @@
     input.style.height = Math.min(input.scrollHeight, 120) + 'px';
   }
 
-  input.addEventListener('input', autoResizeInput);
+  input.addEventListener('input', function () {
+    autoResizeInput();
+    updateSendState();
+  });
+  updateSendState();
   input.addEventListener('compositionstart', function () {
     composing = true;
   });
@@ -460,14 +500,10 @@
     el.setAttribute('role', 'status');
     el.setAttribute('aria-live', 'polite');
     el.innerHTML =
-      '<div class="pa-loading">' +
-      '<span class="pa-loading__avatar" aria-hidden="true">' +
-      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.2 2.4a.85.85 0 0 1 .84.73l1.05 3.72 3.72 1.05a.85.85 0 0 1 0 1.61l-3.72 1.05-1.05 3.72a.85.85 0 0 1-1.61 0l-1.05-3.72-3.72-1.05a.85.85 0 0 1 0-1.61l3.72-1.05 1.05-3.72a.85.85 0 0 1 .77-.53z" fill="currentColor"/></svg>' +
-      '</span>' +
+      '<div class="pa-loading-bubble" aria-label="' +
+      escapeHtml(label || 'در حال آماده‌سازی پاسخ') +
+      '">' +
       '<div class="pa-loading__dots" aria-hidden="true"><span></span><span></span><span></span></div>' +
-      '<p class="pa-loading__label">' +
-      escapeHtml(label || 'در حال آماده‌سازی پاسخ…') +
-      '</p>' +
       '</div>';
     messagesEl.appendChild(el);
     if (stickToBottom) scrollToBottom(false);
@@ -511,7 +547,12 @@
       chip.type = 'button';
       chip.className = 'pa-chip';
       chip.setAttribute('role', 'listitem');
-      chip.textContent = q;
+      chip.innerHTML =
+        '<span class="pa-chip__icon" aria-hidden="true">' +
+        ICON_CHIP +
+        '</span><span class="pa-chip__text">' +
+        escapeHtml(q) +
+        '</span>';
       chip.addEventListener('click', function () {
         input.value = q;
         autoResizeInput();
@@ -629,7 +670,7 @@
         if (typing) typing.remove();
         root.classList.remove('is-waiting', 'is-sending');
         setHeadStatus('آماده پاسخ‌گویی');
-        sendBtn.disabled = false;
+        updateSendState();
 
         Array.prototype.slice.call(messagesEl.querySelectorAll('.pa-msg')).forEach(function (node) {
           node.remove();

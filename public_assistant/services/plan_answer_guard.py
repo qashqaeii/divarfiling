@@ -243,7 +243,16 @@ def should_replace_llm_financials(
         if agency_noise:
             return True
         return False
-    if not (ctx.wants_price or ctx.team_size or ctx.wants_comparison or ctx.agency_context):
+    financial_intent = (
+        ctx.wants_price
+        or ctx.wants_comparison
+        or ctx.wants_recommendation
+        or ctx.newbie
+        or ctx.solo_advisor
+        or ctx.team_size
+        or ctx.agency_context
+    )
+    if not financial_intent:
         return False
     canonical_amounts, canonical_pcts = _canonical_facts(ctx, catalog)
     if not canonical_amounts and not canonical_pcts:

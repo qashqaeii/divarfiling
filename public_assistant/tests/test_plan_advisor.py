@@ -508,8 +508,8 @@ class PlanAdvisorCatalogTests(TestCase):
         llm = 'پلن ۷ روزه و ۲ دستگاه فعال؛ قیمت ماهانه ۹۹۰ هزار تومان.'
         self.assertFalse(should_replace_llm_financials(llm, ctx, cat))
         kept = reconcile_subscription_answer(llm, ctx, cat)
-        self.assertIn('990', kept.replace('٬', '').replace(',', ''))
-        self.assertIn('هزار', kept)
+        self.assertEqual(kept, llm)
+        self.assertIn(990_000, extract_money_amounts(llm))
         self.assertNotIn(extract_money_amounts('۷ روز و ۲ دستگاه'), {7, 2})
 
     def test_guard_persian_digits_price_conflict(self):

@@ -110,6 +110,37 @@ class PlanAdvisorCatalogTests(TestCase):
         self.assertIn('8', ans)
         self.assertIn('15', ans)
 
+    def test_agency_four_monthly_total_3_366m_not_8_5m(self):
+        cat = self.catalog()
+        q = 'برای ۴ مشاور، پلن ماهانه چقدر است؟'
+        ctx = analyze_subscription_query(q)
+        self.assertEqual(ctx.duration, 'monthly')
+        self.assertEqual(ctx.team_size, 4)
+        plan = cat.agency_by_type('monthly')
+        quote = public_plan_quote(cat, plan, quantity=4, strict=True)
+        self.assertEqual(quote['effective_unit_price'], Decimal('841500'))
+        self.assertEqual(quote['final_price'], Decimal('3366000'))
+        ans = compose_subscription_answer(ctx, cat)
+        self.assertNotIn('8500000', ans.replace(',', '').replace('٬', ''))
+        self.assertNotIn('8,500,000', ans)
+        self.assertIn('336', ans.replace(',', '').replace('٬', ''))
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_llm_four_monthly_wrong_8_5m_replaced(self, mock_complete):
+        call_command('sync_public_knowledge')
+        mock_complete.return_value = (
+            'جمع سفارش **۸٬۵۰۰٬۰۰۰ تومان** برای چهار مشاور ماهانه.',
+            'mock',
+            'mock',
+            1,
+            1,
+            1,
+        )
+        session = PublicChatSession.objects.create(ip_hash='m4-month')
+        out = answer_question(session=session, message='برای ۴ مشاور، پلن ماهانه چقدر است؟')
+        self.assertNotIn('8500000', out['answer'].replace(',', '').replace('٬', ''))
+        self.assertIn('336', out['answer'].replace(',', ''))
+
     def test_agency_discount_tiers(self):
         plan = self.plans['agency_monthly']
         for qty, total in (
@@ -386,6 +417,72 @@ class PlanAdvisorCatalogTests(TestCase):
         bad = 'هزینه: ۵ میلیون تومان'
         fixed = reconcile_subscription_answer(bad, ctx, cat)
         self.assertIn('990', fixed.replace(',', ''))
+
+    def test_multi_turn_agency_pricing_chain(self):
+        session = PublicChatSession.objects.create(ip_hash='mt-chain')
+        cat = self.catalog()
+        steps = [
+            (
+                'ما ۴ مشاور داریم، ماهانه چقدر؟',
+                4,
+                'monthly',
+                Decimal('3366000'),
+            ),
+            (
+                'حالا سه‌ماهه چقدر؟',
+                4,
+                'quarterly',
+                Decimal('8500000'),
+            ),
+            (
+                'اگر ۶ نفر بشیم چی؟',
+                6,
+                'quarterly',
+                Decimal('12000000'),
+            ),
+            (
+                'سالانه حساب کن',
+                6,
+                'yearly',
+                Decimal('38400000'),
+            ),
+        ]
+        for msg, team, duration, expected_total in steps:
+            PublicChatMessage.objects.create(
+                session=session,
+                role=PublicChatMessage.ROLE_USER,
+                content=msg,
+            )
+            ctx = analyze_subscription_query(msg, session)
+            self.assertEqual(ctx.team_size, team, msg=msg)
+            self.assertEqual(ctx.duration, duration, msg=msg)
+            plan = cat.agency_by_type(duration)
+            quote = public_plan_quote(cat, plan, quantity=team, strict=True)
+            self.assertEqual(quote['final_price'], expected_total, msg=msg)
+            compose_subscription_answer(ctx, cat)
+
+    def test_guard_keeps_seven_days_and_two_devices(self):
+        from public_assistant.services.plan_answer_guard import (
+            extract_money_amounts,
+            reconcile_subscription_answer,
+            should_replace_llm_financials,
+        )
+
+        cat = self.catalog()
+        ctx = analyze_subscription_query('قیمت ماهانه اشتراک')
+        llm = 'پلن ۷ روزه و ۲ دستگاه فعال؛ قیمت ماهانه ۹۹۰ هزار تومان.'
+        self.assertFalse(should_replace_llm_financials(llm, ctx, cat))
+        self.assertIn('990', reconcile_subscription_answer(llm, ctx, cat))
+        self.assertNotIn(extract_money_amounts('۷ روز و ۲ دستگاه'), {7, 2})
+
+    def test_guard_persian_digits_price_conflict(self):
+        from public_assistant.services.plan_answer_guard import reconcile_subscription_answer
+
+        cat = self.catalog()
+        ctx = analyze_subscription_query('۴ مشاور ماهانه قیمت')
+        bad = 'جمع: ۸٬۵۰۰٬۰۰۰ تومان'
+        fixed = reconcile_subscription_answer(bad, ctx, cat)
+        self.assertIn('336', fixed.replace(',', ''))
 
 
 class PlanAdvisorIntentMatrixTests(TestCase):

@@ -52,6 +52,16 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         boost += 2.0
     if article_id == 'crm-matching' and any(w in query_norm for w in ('تطبیق', 'مناسب', 'پیشنهاد فایل')):
         boost += 3.5
+    if article_id == 'crm-matching' and 'مخاطب' in query_norm and any(
+        w in query_norm for w in ('تب', 'پیشنهاد', 'پیشنهادها')
+    ):
+        boost += 9.0
+    if article_id == 'filing-listing-manage' and 'dataset' in query_norm and 'crm' in query_norm:
+        boost += 9.0
+    if article_id == 'share-public-file' and 'لینک' in query_norm and any(
+        w in query_norm for w in ('مالک', 'شماره')
+    ):
+        boost += 10.0
     if article_id == 'public-assistant-scope' and any(
         w in query_norm for w in (
             'api',
@@ -195,6 +205,12 @@ def _intent_penalty(query_norm: str, article_id: str) -> float:
         penalty += 2.5
     if article_id == 'crm-contacts' and 'پیگیری' in query_norm:
         penalty += 3.0
+    if article_id == 'crm-contacts-manage' and any(
+        w in query_norm for w in ('ثبت', 'اضافه', 'جدید', 'ساخت', 'چطور', 'چطوری', 'چگونه')
+    ) and not any(w in query_norm for w in ('ویرایش', 'ادغام', 'merge', 'تکراری', 'تب')):
+        penalty += 6.0
+    if article_id == 'crm-property-owner-contact' and 'لینک' in query_norm and 'مشتری' in query_norm:
+        penalty += 4.0
     if article_id == 'filing-collections' and any(
         w in query_norm for w in ('امکانات', 'چیست', 'چیه', 'تفاوت', 'فرق')
     ):

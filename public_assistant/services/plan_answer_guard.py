@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 
 from public_assistant.services.plan_advisor import compose_subscription_answer
 from public_assistant.services.plan_intent import SubscriptionQueryContext
@@ -10,11 +11,14 @@ from public_assistant.services.public_plans import (
     agency_quantity_status,
     public_plan_quote,
 )
+from shop.services.plan_pricing import get_agency_bulk_discount_percent
 
 _PERSIAN_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
-_MONEY_HINTS = ('تومان', 'میلیون', 'میلیارد', 'هزار', 'قیمت', 'جمع', 'مبلغ', 'هزینه')
+_MONEY_HINTS = ('تومان', 'میلیون', 'میلیارد', 'هزار', 'قیمت', 'جمع', 'مبلغ', 'هزینه', 'تخفیف')
+_SCALE_HINTS = {'میلیون': 1_000_000, 'هزار': 1_000, 'میلیارد': 1_000_000_000}
 _PERCENT_RE = re.compile(r'(\d{1,2})\s*(?:٪|%)')
-_DIGIT_RE = re.compile(r'\d[\d,٬]*')
+_DIGIT_RE = re.compile(r'\d[\d,٬.]*')
+_NON_MONEY_SMALL = frozenset({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 25, 30, 90, 365})
 
 
 def _ascii_digits(text: str) -> str:
@@ -23,20 +27,68 @@ def _ascii_digits(text: str) -> str:
 
 def _parse_int_token(token: str) -> int | None:
     t = _ascii_digits(token).replace(',', '').replace('٬', '').strip()
-    if not t.isdigit():
+    if not t or not re.fullmatch(r'\d+(\.\d+)?', t):
         return None
+    if '.' in t:
+        return int(float(t))
     return int(t)
 
 
-def extract_money_amounts(text: str) -> set[int]:
-    """اعداد بزرگ احتمالاً مبلغ — از متن فارسی/انگلیسی."""
+def _scale_amount(val: int, hint: str) -> int:
+    factor = _SCALE_HINTS.get(hint)
+    if factor and val < factor * 50:
+        return val * factor
+    return val
+
+
+def _amounts_near_money_hints(text: str) -> set[int]:
+    """فقط اعداد نزدیک واژه‌های مالی — نه «۷ روز» یا «۲ دستگاه»."""
     norm = _ascii_digits(text or '')
     amounts: set[int] = set()
-    for m in _DIGIT_RE.findall(norm):
-        val = _parse_int_token(m)
-        if val is not None and val >= 10_000:
-            amounts.add(val)
+    for hint in _MONEY_HINTS:
+        idx = 0
+        while True:
+            pos = norm.find(hint, idx)
+            if pos < 0:
+                break
+            start = max(0, pos - 48)
+            end = min(len(norm), pos + len(hint) + 48)
+            window = norm[start:end]
+            for m in _DIGIT_RE.findall(window):
+                val = _parse_int_token(m)
+                if val is None:
+                    continue
+                scaled = _scale_amount(val, hint)
+                if scaled in _NON_MONEY_SMALL and hint not in (
+                    'قیمت',
+                    'جمع',
+                    'مبلغ',
+                    'هزینه',
+                    'تومان',
+                    'میلیون',
+                    'میلیارد',
+                    'هزار',
+                ):
+                    continue
+                if scaled >= 10_000 or hint in (
+                    'تومان',
+                    'میلیون',
+                    'میلیارد',
+                    'هزار',
+                    'قیمت',
+                    'جمع',
+                    'مبلغ',
+                    'هزینه',
+                ):
+                    amounts.add(scaled)
+                elif hint in ('قیمت', 'جمع', 'مبلغ', 'هزینه') and scaled >= 100:
+                    amounts.add(scaled)
+            idx = pos + len(hint)
     return amounts
+
+
+def extract_money_amounts(text: str) -> set[int]:
+    return _amounts_near_money_hints(text)
 
 
 def extract_percentages(text: str) -> set[int]:
@@ -44,35 +96,64 @@ def extract_percentages(text: str) -> set[int]:
     return {int(m.group(1)) for m in _PERCENT_RE.finditer(norm)}
 
 
-def _canonical_facts(ctx: SubscriptionQueryContext, catalog: PublicPlanCatalog) -> tuple[set[int], set[int]]:
+def _add_decimal(amounts: set[int], value: Decimal | int | None) -> None:
+    if value is None:
+        return
+    amounts.add(int(value))
+
+
+def _canonical_facts(
+    ctx: SubscriptionQueryContext,
+    catalog: PublicPlanCatalog,
+) -> tuple[set[int], set[int]]:
+    """مبالغ و درصدها از موتور قیمت — نه از متن فرمت‌شده."""
     amounts: set[int] = set()
-    percents: set[int] = set()
-    answer = compose_subscription_answer(ctx, catalog)
-    if answer:
-        amounts |= extract_money_amounts(answer)
-        percents |= extract_percentages(answer)
+    pcts: set[int] = set()
+    if ctx.is_property_listing or ctx.needs_team_count:
+        return amounts, pcts
 
-    if ctx.team_size and ctx.agency_context:
+    team = ctx.team_size
+    if (ctx.agency_context or (team and team >= 2)) and team and team >= 2:
         duration = ctx.duration or 'quarterly'
-        plan = catalog.agency_by_type(duration)
-        if plan and agency_quantity_status(plan, ctx.team_size) == 'ok':
-            quote = public_plan_quote(catalog, plan, quantity=ctx.team_size, strict=True)
+        plan = catalog.agency_by_type(duration) or (catalog.agency[0] if catalog.agency else None)
+        if plan and agency_quantity_status(plan, team) == 'ok':
+            quote = public_plan_quote(catalog, plan, quantity=team, strict=True)
             if quote:
-                for key in ('base_unit_price', 'effective_unit_price', 'final_price', 'original_price'):
-                    amounts.add(int(quote[key]))
-                from shop.services.plan_pricing import get_agency_bulk_discount_percent
+                _add_decimal(amounts, quote.get('final_price'))
+                _add_decimal(amounts, quote.get('effective_unit_price'))
+                _add_decimal(amounts, quote.get('base_unit_price'))
+                pcts.add(int(get_agency_bulk_discount_percent(team)))
+        return amounts, pcts
 
-                pct = int(get_agency_bulk_discount_percent(ctx.team_size))
-                if pct:
-                    percents.add(pct)
+    if ctx.wants_trial_info or ctx.duration == 'daily':
+        if catalog.trial:
+            _add_decimal(amounts, catalog.trial.price)
+        return amounts, pcts
 
+    duration = ctx.duration or 'monthly'
     monthly = catalog.personal_by_type('monthly')
-    if monthly:
-        amounts.add(monthly.price)
-    quarterly = catalog.personal_by_type('quarterly')
-    if quarterly:
-        amounts.add(quarterly.price)
-    return amounts, percents
+    if duration == 'quarterly' and monthly:
+        quarterly = catalog.personal_by_type('quarterly')
+        if quarterly:
+            _add_decimal(amounts, quarterly.price)
+            _add_decimal(amounts, monthly.price * 3)
+        if ctx.wants_comparison:
+            pcts.update(extract_percentages(compose_subscription_answer(ctx, catalog) or ''))
+        return amounts, pcts
+
+    if duration == 'yearly' and monthly:
+        yearly = catalog.personal_by_type('yearly')
+        if yearly:
+            _add_decimal(amounts, yearly.price)
+            _add_decimal(amounts, monthly.price * 12)
+        return amounts, pcts
+
+    plan = catalog.personal_by_type(duration) or monthly
+    if plan:
+        _add_decimal(amounts, plan.price)
+        if plan.compare_at_price:
+            _add_decimal(amounts, plan.compare_at_price)
+    return amounts, pcts
 
 
 def _mentions_money(text: str) -> bool:
@@ -80,11 +161,18 @@ def _mentions_money(text: str) -> bool:
     return any(h in norm for h in _MONEY_HINTS) or bool(extract_money_amounts(text))
 
 
+def _close_enough(a: int, b: int) -> bool:
+    lo, hi = min(a, b), max(a, b)
+    if hi >= 50_000 and lo < max(hi // 50, 1000):
+        return False
+    return abs(a - b) <= max(1000, int(b * 0.02))
+
+
 def _amounts_conflict(llm_amounts: set[int], canonical: set[int]) -> bool:
     if not llm_amounts or not canonical:
         return False
     for a in llm_amounts:
-        if not any(abs(a - c) <= max(1000, int(c * 0.02)) for c in canonical):
+        if not any(_close_enough(a, c) for c in canonical):
             return True
     return False
 
@@ -102,9 +190,9 @@ def should_replace_llm_financials(
     ctx: SubscriptionQueryContext,
     catalog: PublicPlanCatalog | None,
 ) -> bool:
-    if not catalog or not llm_text:
+    if not catalog or not llm_text or not ctx.is_subscription:
         return False
-    if not ctx.is_subscription:
+    if not (ctx.wants_price or ctx.team_size or ctx.wants_comparison or ctx.agency_context):
         return False
     canonical_amounts, canonical_pcts = _canonical_facts(ctx, catalog)
     if not canonical_amounts and not canonical_pcts:
@@ -125,7 +213,6 @@ def reconcile_subscription_answer(
     ctx: SubscriptionQueryContext,
     catalog: PublicPlanCatalog | None,
 ) -> str:
-    """پاسخ نهایی — در تعارض مالی، نسخه قطعی جایگزین می‌شود."""
     canonical = compose_subscription_answer(ctx, catalog) if catalog else ''
     if not llm_text or not llm_text.strip():
         return canonical or ''
@@ -139,7 +226,6 @@ def strip_unverified_subscription_prices(
     ctx: SubscriptionQueryContext,
     catalog: PublicPlanCatalog | None,
 ) -> str:
-    """بدون کاتالوگ زنده، اعداد قیمتی از پاسخ حذف و به صفحه خرید ارجاع می‌شود."""
     if not ctx.is_subscription or catalog:
         return text
     if not text or not _mentions_money(text):

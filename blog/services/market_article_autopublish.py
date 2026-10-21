@@ -43,13 +43,21 @@ from blog.services.market_article_pipeline import (
 )
 from blog.services.market_article_post_publish import verify_published_post
 from blog.services.market_article_publish_decision import PublishAction, decide_publish_action
-from blog.services.market_article_quality_gates import QAReport, qa_passes_for_publish, run_quality_gates
+from blog.services.market_article_numeric_truth import assess_data_consistency
+from blog.services.market_article_qa_remediation import remediate_unverified_numeric_sentences
+from blog.services.market_article_quality_gates import (
+    QAReport,
+    find_unverified_numeric_claims,
+    qa_passes_for_publish,
+    run_quality_gates,
+)
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
 STUCK_RUN_MAX_HOURS = 6
-MAX_POLISH_RETRIES = 4
+MAX_POLISH_RETRIES = 2
+MAX_QA_AUTO_FIX_ATTEMPTS = 2
 POLISH_RETRY_BACKOFF_SECONDS = 2.0
 
 _ACTIVE_STATUSES = (
@@ -197,6 +205,73 @@ def _qa_to_dict(qa: QAReport) -> dict[str, Any]:
     }
 
 
+def _attach_final_summary(
+    autopublish_run: SystematicArticleAutoPublishRun,
+    *,
+    qa: QAReport | None,
+    publish_result: str,
+) -> None:
+    polish = autopublish_run.ai_polish_report if isinstance(autopublish_run.ai_polish_report, dict) else {}
+    existing = autopublish_run.qa_report if isinstance(autopublish_run.qa_report, dict) else {}
+    autopublish_run.qa_report = {
+        **existing,
+        'summary': {
+            'qa_score': qa.total_score if qa else existing.get('total_score'),
+            'qa_critical_errors': qa.critical_errors if qa else existing.get('critical_errors'),
+            'polish_ok': polish.get('ok'),
+            'fallback_ratio': polish.get('fallback_ratio'),
+            'polish_provider': polish.get('provider'),
+            'publish_result': publish_result,
+            'would_publish': autopublish_run.would_publish,
+        },
+    }
+
+
+def _run_post_polish_qa_with_remediation(
+    autopublish_run: SystematicArticleAutoPublishRun,
+    market_run: MarketArticleRun,
+    settings,
+) -> tuple[bool, QAReport | None]:
+    qa: QAReport | None = None
+    inconsistency = assess_data_consistency(market_run)
+    if inconsistency:
+        qa = run_quality_gates(market_run, settings)
+        autopublish_run.failure_reasons = [f'داده ناسازگار: {inconsistency[0]}']
+        append_autopublish_step(
+            autopublish_run,
+            'qa_data_inconsistent',
+            detail=inconsistency[0],
+        )
+        return False, qa
+
+    for attempt in range(MAX_QA_AUTO_FIX_ATTEMPTS + 1):
+        qa = run_quality_gates(market_run, settings)
+        if qa_passes_for_publish(qa, settings):
+            if attempt:
+                append_autopublish_step(
+                    autopublish_run,
+                    'qa_auto_remediate_ok',
+                    detail=f'attempt={attempt}',
+                )
+            return True, qa
+
+        unverified = find_unverified_numeric_claims(market_run)
+        numeric_failed = any(
+            c.key == 'data_numeric_claims' and not c.passed for c in qa.checks
+        )
+        if not numeric_failed or not unverified or attempt >= MAX_QA_AUTO_FIX_ATTEMPTS:
+            break
+        if not remediate_unverified_numeric_sentences(market_run, unverified):
+            break
+        append_autopublish_step(
+            autopublish_run,
+            'qa_auto_remediate',
+            detail=f'attempt={attempt + 1} tokens={len(unverified)}',
+        )
+
+    return False, qa
+
+
 def _store_pre_polish_qa(autopublish_run: SystematicArticleAutoPublishRun, qa: QAReport) -> None:
     existing = autopublish_run.qa_report if isinstance(autopublish_run.qa_report, dict) else {}
     autopublish_run.qa_report = {
@@ -287,7 +362,7 @@ def _run_ai_polish_with_retries(
     attempts = 0
     last_error = ''
     last_recoverable = False
-    while attempts <= MAX_POLISH_RETRIES:
+    while attempts < MAX_POLISH_RETRIES:
         attempts += 1
         try:
             result = polish_market_article_run(market_run, resume=True)
@@ -501,18 +576,25 @@ def _pipeline_after_market_preview(
     autopublish_run.save(update_fields=['status', 'updated_at'])
     append_autopublish_step(autopublish_run, 'qa_start', detail='کنترل کیفیت نهایی پس از پولیش')
 
-    qa = run_quality_gates(market_run, settings)
-    would_publish = _apply_qa_to_run(autopublish_run, qa, settings)
+    would_publish, qa = _run_post_polish_qa_with_remediation(
+        autopublish_run,
+        market_run,
+        settings,
+    )
+    if qa:
+        _apply_qa_to_run(autopublish_run, qa, settings)
 
     if not would_publish:
         autopublish_run.status = SystematicArticleAutoPublishRun.Status.QA_FAILED
-        append_autopublish_step(autopublish_run, 'qa_failed', detail=f'score={qa.total_score}')
+        append_autopublish_step(autopublish_run, 'qa_failed', detail=f'score={qa.total_score if qa else 0}')
+        _attach_final_summary(autopublish_run, qa=qa, publish_result='qa_failed')
         autopublish_run.save()
         touch_autopublish_last_run()
         return autopublish_run
 
     autopublish_run.status = SystematicArticleAutoPublishRun.Status.READY_TO_PUBLISH
     append_autopublish_step(autopublish_run, 'qa_passed', detail=f'score={qa.total_score}')
+    _attach_final_summary(autopublish_run, qa=qa, publish_result='qa_passed')
     autopublish_run.save(
         update_fields=[
             'status', 'qa_report', 'quality_score', 'critical_errors_count',
@@ -523,8 +605,9 @@ def _pipeline_after_market_preview(
     if shadow or publish_mode == SystematicArticleAutoPublishRun.PublishMode.SHADOW:
         autopublish_run.status = SystematicArticleAutoPublishRun.Status.NEEDS_REVIEW
         autopublish_run.failure_reasons = []
+        _attach_final_summary(autopublish_run, qa=qa, publish_result='shadow_ok')
         append_autopublish_step(autopublish_run, 'shadow_stop', detail='بدون انتشار واقعی')
-        autopublish_run.save(update_fields=['status', 'failure_reasons', 'updated_at'])
+        autopublish_run.save(update_fields=['status', 'failure_reasons', 'qa_report', 'updated_at'])
         touch_autopublish_last_run()
         return autopublish_run
 

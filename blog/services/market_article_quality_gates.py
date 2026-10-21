@@ -10,6 +10,12 @@ from PIL import Image
 from blog.models import MarketArticleRun, Post
 from blog.services.market_article_analyze import _PHONE_RE, _TOKEN_RE
 from blog.services.market_article_autopublish_config import AutoPublishSettings
+from blog.services.market_article_number_utils import extract_report_numbers, normalize_number_text
+from blog.services.market_article_numeric_truth import (
+    assess_data_consistency,
+    build_market_truth_registry,
+    find_unverified_public_claims,
+)
 from blog.services.market_article_pipeline import get_existing_link
 
 _H1_RE = re.compile(r'<h1[^>]*>(.*?)</h1>', re.I | re.S)
@@ -22,9 +28,6 @@ _STAT_CLAIM_RE = re.compile(
     r'|[\d۰-۹]+(?:[\.٫][\d۰-۹]+)?\s*٪',
     re.U,
 )
-_PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹'
-_ASCII_DIGITS = '0123456789'
-_DIGIT_TRANS = str.maketrans(_PERSIAN_DIGITS, _ASCII_DIGITS)
 _SCRIPT_STYLE_RE = re.compile(r'<(script|style)[^>]*>.*?</\1>', re.I | re.S)
 _ATTR_VALUE_RE = re.compile(
     r'\b(src|href|class|id|data-[a-z0-9_-]+)=("([^"]*)"|\'([^\']*)\')',
@@ -82,16 +85,6 @@ class QAReport:
         return self.critical_errors == 0 and self.total_score >= 0
 
 
-def normalize_number_text(text: str) -> str:
-    if not text:
-        return ''
-    t = text.translate(_DIGIT_TRANS)
-    t = t.replace('\u200c', '').replace('\u00a0', '')
-    t = t.replace('،', ',').replace('٬', ',').replace('٫', '.')
-    t = t.replace('٪', '%')
-    return t
-
-
 def public_content_surfaces(run: MarketArticleRun) -> str:
     """متن و HTML منتشرشده — بدون attributeهای URL/CSS."""
     html = run.content_html or ''
@@ -114,7 +107,7 @@ def build_snapshot_allowed_values(
     run: MarketArticleRun,
 ) -> set[str]:
     allowed: set[str] = set()
-    for fmt in _extract_report_numbers(inner_report):
+    for fmt in extract_report_numbers(inner_report):
         norm = normalize_number_text(fmt)
         if len(norm) >= 2:
             allowed.add(norm)
@@ -146,6 +139,7 @@ def number_allowed_in_public(normalized: str, allowed: set[str]) -> bool:
 
 
 def find_invented_public_claims(public_text: str, allowed: set[str]) -> list[str]:
+    """سازگاری با تست‌های قدیمی — ترجیحاً از find_unverified_numeric_claims استفاده کنید."""
     invented: list[str] = []
     for raw in _STAT_CLAIM_RE.findall(public_text or ''):
         norm = normalize_number_text(raw.strip())
@@ -156,25 +150,18 @@ def find_invented_public_claims(public_text: str, allowed: set[str]) -> list[str
     return list(dict.fromkeys(invented))
 
 
-def _extract_report_numbers(report: dict) -> list[str]:
-    nums: list[str] = []
+def find_unverified_numeric_claims(run: MarketArticleRun) -> list[str]:
+    registry = build_market_truth_registry(run)
+    public_text = public_content_surfaces(run)
+    return find_unverified_public_claims(
+        public_text,
+        registry,
+        is_significant=is_significant_stat_claim,
+        stat_claim_re=_STAT_CLAIM_RE,
+    )
 
-    def walk(value: Any) -> None:
-        if isinstance(value, dict):
-            for k, v in value.items():
-                if k.endswith('_fmt') and isinstance(v, str) and v.strip() and v.strip() != '—':
-                    nums.append(v.strip())
-                else:
-                    walk(v)
-        elif isinstance(value, list):
-            for item in value:
-                walk(item)
-        elif isinstance(value, (int, float)) and not isinstance(value, bool):
-            if value > 0:
-                nums.append(str(int(value)))
 
-    walk(report)
-    return list(dict.fromkeys(nums))
+_extract_report_numbers = extract_report_numbers
 
 
 def _check_data_quality(run: MarketArticleRun, settings: AutoPublishSettings, report: QAReport) -> None:
@@ -210,26 +197,33 @@ def _check_data_quality(run: MarketArticleRun, settings: AutoPublishSettings, re
     ))
 
 
+def _check_data_consistency(run: MarketArticleRun, report: QAReport) -> None:
+    issues = assess_data_consistency(run)
+    ok = not issues
+    report.add(QACheck(
+        'data_consistency', 'data', ok, True,
+        '✓ داده‌های بازار سازگار است' if ok else f'✗ {issues[0]}',
+        score_delta=8.0 if ok else 0.0,
+    ))
+
+
 def _check_numeric_claims(run: MarketArticleRun, report: QAReport) -> None:
     blob = run.report_json if isinstance(run.report_json, dict) else {}
     inner_report = blob.get('report') if isinstance(blob.get('report'), dict) else {}
-    metrics = blob.get('metrics') if isinstance(blob.get('metrics'), dict) else {}
     public_text = public_content_surfaces(run)
-    allowed = build_snapshot_allowed_values(inner_report, metrics, run)
-
-    invented = find_invented_public_claims(public_text, allowed)
+    invented = find_unverified_numeric_claims(run)
     ok_claims = len(invented) == 0
-    detail = '✓ ادعاهای عددی عمومی با Snapshot سازگار است'
+    detail = '✓ ادعاهای عددی عمومی با محاسبات بازار تأیید شد'
     if not ok_claims:
         sample = '، '.join(invented[:3])
-        detail = f'✗ {len(invented)} ادعای عددی نامعتبر در محتوا ({sample})'
+        detail = f'✗ {len(invented)} ادعای عددی غیرقابل‌تأیید ({sample})'
     report.add(QACheck(
         'data_numeric_claims', 'data', ok_claims, True,
         detail,
         score_delta=10.0 if ok_claims else 0.0,
     ))
 
-    headline_fmts = [f for f in _extract_report_numbers(inner_report) if len(f) >= 4][:8]
+    headline_fmts = [f for f in extract_report_numbers(inner_report) if len(f) >= 4][:8]
     mentioned = 0
     norm_public = normalize_number_text(public_text)
     for fmt in headline_fmts:
@@ -480,6 +474,7 @@ def run_quality_gates(
     dataset_meta = blob.get('dataset_meta') if isinstance(blob.get('dataset_meta'), dict) else {}
 
     _check_data_quality(run, settings, report)
+    _check_data_consistency(run, report)
     _check_numeric_claims(run, report)
     _check_content_quality(run, report)
     _check_seo(run, report)

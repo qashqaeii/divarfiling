@@ -1,14 +1,19 @@
 """تست Quality Gateهای انتشار خودکار مقالات سیستماتیک."""
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
 
 from blog.models import MarketArticleRun
 from blog.services.market_article_autopublish_config import get_autopublish_settings
+from blog.services.market_article_numeric_truth import build_market_truth_registry
+from blog.services.market_article_qa_remediation import remediate_unverified_numeric_sentences
 from blog.services.market_article_quality_gates import (
     build_snapshot_allowed_values,
     find_invented_public_claims,
+    find_unverified_numeric_claims,
     public_content_surfaces,
     run_quality_gates,
 )
@@ -36,6 +41,59 @@ class NumericQATests(SimpleTestCase):
         public = 'قیمت میانگین ۹۹,۹۹۹,۹۹۹ میلیون تومان'
         invented = find_invented_public_claims(public, allowed)
         self.assertTrue(invented)
+
+    def test_amenity_fraction_percent_verified(self):
+        run = MarketArticleRun(
+            valid_count=500,
+            raw_count=520,
+            quality_pct=96.0,
+            report_json={
+                'metrics': {'valid_count': 500},
+                'report': {
+                    'amenities_coverage': {
+                        'استخر و جکوزی': {'pct': 1.9},
+                    },
+                },
+            },
+            content_html='<p>حدود ۱٫۹٪ از واحدها استخر یا جکوزی دارند.</p>',
+            seo_json={'title': 't', 'excerpt': 'e'},
+        )
+        self.assertEqual(find_unverified_numeric_claims(run), [])
+
+    def test_remediate_drops_sentence_with_fake_percent(self):
+        run = MarketArticleRun(
+            valid_count=100,
+            raw_count=100,
+            report_json={'metrics': {'valid_count': 100}, 'report': {'insights': ['x']}},
+            content_html='<p>جمله اول. سهم بازار ۹۹٫۹٪ غیرواقعی است. جمله سوم.</p>',
+            seo_json={'title': 't', 'excerpt': 'e'},
+        )
+        tokens = find_unverified_numeric_claims(run)
+        self.assertTrue(tokens)
+        with patch.object(run, 'save'):
+            remediate_unverified_numeric_sentences(run, tokens)
+        self.assertNotIn('۹۹٫۹٪', run.content_html or '')
+        self.assertIn('جمله اول', run.content_html or '')
+
+    def test_percentile_band_80_verified_when_range_present(self):
+        run = MarketArticleRun(
+            valid_count=800,
+            raw_count=800,
+            report_json={
+                'metrics': {'valid_count': 800},
+                'report': {
+                    'price_per_sqm': {
+                        'median_fmt': '۱۲۰ میلیون',
+                        'range_80_fmt': '۱۰۰ تا ۱۴۰ میلیون',
+                    },
+                },
+            },
+            content_html='<p>۸۰٪ فایل‌ها بین ۱۰۰ تا ۱۴۰ میلیون قیمت‌گذاری شده‌اند.</p>',
+            seo_json={'title': 't', 'excerpt': 'e'},
+        )
+        self.assertEqual(find_unverified_numeric_claims(run), [])
+        registry = build_market_truth_registry(run)
+        self.assertIn(80.0, registry.percent_values)
 
     def test_attr_numbers_not_counted_as_public_claims(self):
         run = MarketArticleRun(

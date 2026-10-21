@@ -1,9 +1,12 @@
 """تست مدیریت عملیاتی خطوط استخراج و scheduler."""
 from __future__ import annotations
 
+from threading import Thread
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.contrib.auth import get_user_model
+from django.db import connection, connections
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 
 from accounts.models import (
@@ -18,11 +21,16 @@ from accounts.services.phone_detector_line_ops import (
     build_run_summary_message,
     count_schedulable_lines,
     excluded_phones_for_extraction,
+    mark_lines_run_started,
     probe_and_reactivate_line,
     recover_stale_running_lines,
+    schedulable_lines_qs,
     set_line_paused,
     sync_lines_from_sessions,
 )
+from workspace.divar_session_models import DivarAccountSession
+
+User = get_user_model()
 
 
 class PhoneDetectorLineOpsTests(TestCase):
@@ -286,6 +294,121 @@ class PhoneDetectorLineOpsTests(TestCase):
         run.refresh_from_db()
         self.assertIn('خط استخراج شماره 2', run.error_message)
         self.assertNotIn('تا زمان‌بندی بعدی', run.error_message)
+
+
+class MarkLinesRunStartedLockTests(TransactionTestCase):
+    """قفل schedulable + select_related روی FK nullable — regression PostgreSQL."""
+
+    def setUp(self):
+        self._no_pd = patch(
+            'accounts.services.phone_detector_line_ops.resolve_phone_detector_dir',
+            return_value=None,
+        )
+        self._no_pd.start()
+        self._sync_patch = patch(
+            'accounts.services.phone_detector_line_ops.sync_lines_from_sessions',
+            return_value=0,
+        )
+        self._sync_patch.start()
+        self._blocked_patch = patch(
+            'accounts.services.phone_detector_line_ops.blocked_phones_set',
+            return_value=set(),
+        )
+        self._blocked_patch.start()
+        self.user = User.objects.create_user(
+            username='09120001111',
+            phone='09120001111',
+            password='x',
+        )
+        self.line_no_session = PhoneDetectorExtractionLine.objects.create(
+            phone='09111111111',
+            line_index=1,
+            operational_status=PhoneDetectorExtractionLine.OperationalStatus.ACTIVE,
+        )
+        self.session = DivarAccountSession.objects.create(
+            user=self.user,
+            divar_phone='09222222222',
+            auth_status=DivarAccountSession.AuthStatus.CONNECTED,
+        )
+        self.line_connected = PhoneDetectorExtractionLine.objects.create(
+            phone='09222222222',
+            line_index=2,
+            operational_status=PhoneDetectorExtractionLine.OperationalStatus.ACTIVE,
+            divar_account_session=self.session,
+        )
+        self.session_expired = DivarAccountSession.objects.create(
+            user=self.user,
+            divar_phone='09333333333',
+            auth_status=DivarAccountSession.AuthStatus.EXPIRED,
+        )
+        self.line_invalid_session = PhoneDetectorExtractionLine.objects.create(
+            phone='09333333333',
+            line_index=3,
+            operational_status=PhoneDetectorExtractionLine.OperationalStatus.ACTIVE,
+            divar_account_session=self.session_expired,
+        )
+        self.errors: list[Exception] = []
+
+    def tearDown(self):
+        self._blocked_patch.stop()
+        self._sync_patch.stop()
+        self._no_pd.stop()
+
+    def test_schedulable_select_for_update_with_null_and_connected_session(self):
+        locked = list(schedulable_lines_qs().select_for_update(of=('self',)))
+        phones = {row.phone for row in locked}
+        self.assertIn('09111111111', phones)
+        self.assertIn('09222222222', phones)
+        self.assertNotIn('09333333333', phones)
+
+    def test_mark_lines_run_started_marks_only_schedulable(self):
+        mark_lines_run_started(run_id=501)
+        self.line_no_session.refresh_from_db()
+        self.line_connected.refresh_from_db()
+        self.line_invalid_session.refresh_from_db()
+        ops = PhoneDetectorExtractionLine.OperationalStatus
+        self.assertEqual(self.line_no_session.operational_status, ops.RUNNING)
+        self.assertEqual(self.line_no_session.last_run_id, 501)
+        self.assertEqual(self.line_connected.operational_status, ops.RUNNING)
+        self.assertEqual(self.line_connected.last_run_id, 501)
+        self.assertEqual(self.line_invalid_session.operational_status, ops.ACTIVE)
+        self.assertIsNone(self.line_invalid_session.last_run_id)
+
+    def test_concurrent_mark_lines_run_started_single_assignment_per_line(self):
+        if connection.vendor != 'postgresql':
+            self.skipTest('PostgreSQL required for concurrency test')
+
+        def worker(run_id: int) -> None:
+            try:
+                connection.close()
+                mark_lines_run_started(run_id=run_id)
+            except Exception as exc:
+                self.errors.append(exc)
+            finally:
+                connections.close_all()
+
+        t1 = Thread(target=worker, args=(601,))
+        t2 = Thread(target=worker, args=(602,))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        self.assertEqual(self.errors, [])
+        self.line_no_session.refresh_from_db()
+        self.line_connected.refresh_from_db()
+        self.assertEqual(
+            PhoneDetectorExtractionLine.objects.filter(
+                operational_status=PhoneDetectorExtractionLine.OperationalStatus.RUNNING,
+            ).count(),
+            2,
+        )
+        self.assertIn(self.line_no_session.last_run_id, (601, 602))
+        self.assertEqual(self.line_no_session.last_run_id, self.line_connected.last_run_id)
+        self.assertEqual(
+            PhoneDetectorExtractionLine.objects.filter(phone='09111111111').count(),
+            1,
+        )
 
 
 class RunnerStopLogicTests(TestCase):

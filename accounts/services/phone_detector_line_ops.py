@@ -231,7 +231,7 @@ def line_label(phone: str) -> str:
 @transaction.atomic
 def mark_lines_run_started(*, run_id: int) -> None:
     sync_lines_from_sessions()
-    schedulable = list(schedulable_lines_qs().select_for_update())
+    schedulable = list(schedulable_lines_qs().select_for_update(of=('self',)))
     now = timezone.now()
     for row in schedulable:
         row.operational_status = OPS.RUNNING

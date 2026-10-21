@@ -246,6 +246,8 @@ class SystematicArticleAutoPublishRun(models.Model):
         CANDIDATE = 'candidate', 'کاندید'
         QUEUED = 'queued', 'در صف'
         GENERATING = 'generating', 'در حال تولید'
+        AI_POLISHING = 'ai_polishing', 'پولیش AI'
+        AI_POLISH_FAILED = 'ai_polish_failed', 'شکست پولیش AI'
         QA_RUNNING = 'qa_running', 'کنترل کیفیت'
         QA_FAILED = 'qa_failed', 'رد QA'
         READY_TO_PUBLISH = 'ready_to_publish', 'آماده انتشار'
@@ -319,6 +321,9 @@ class SystematicArticleAutoPublishRun(models.Model):
     published_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان انتشار')
     post_publish_verified = models.BooleanField(default=False, verbose_name='تأیید پس از انتشار')
     post_publish_report = models.JSONField(default=dict, blank=True, verbose_name='گزارش پس از انتشار')
+    step_history = models.JSONField(default=list, blank=True, verbose_name='تاریخچه مراحل')
+    ai_polish_report = models.JSONField(default=dict, blank=True, verbose_name='گزارش پولیش AI')
+    retry_count = models.PositiveSmallIntegerField(default=0, verbose_name='تعداد تلاش مجدد')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

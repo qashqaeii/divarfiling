@@ -1,0 +1,16 @@
+[Unit]
+Description=Divar Filing — Systematic Article Auto Publish (daily)
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/DivarFiling
+Environment=DJANGO_SETTINGS_MODULE=divar_shop.settings
+EnvironmentFile=/root/DivarFiling/.env
+ExecStart=/root/DivarFiling/venv/bin/python manage.py run_systematic_article_autopublish
+StandardOutput=append:/var/log/divar-systematic-article-autopublish.log
+StandardError=append:/var/log/divar-systematic-article-autopublish.log
+
+[Install]
+WantedBy=multi-user.target

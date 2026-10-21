@@ -98,6 +98,20 @@
                 <span class="ab-kpi__lbl">اجرای بعدی</span>
             </div>
         </article>
+        <article class="ab-kpi" data-accent="teal">
+            <div class="ab-kpi__icon"><i class="fas fa-paper-plane"></i></div>
+            <div class="ab-kpi__body">
+                <span class="ab-kpi__val">{{ published_today|to_persian_digits }}/{{ config.max_daily_publish|to_persian_digits }}</span>
+                <span class="ab-kpi__lbl">انتشار امروز</span>
+            </div>
+        </article>
+        <article class="ab-kpi" data-accent="gold">
+            <div class="ab-kpi__icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+            <div class="ab-kpi__body">
+                <span class="ab-kpi__val ab-kpi__val--sm">{{ ai_polish_status }}</span>
+                <span class="ab-kpi__lbl">پولیش AI (آخرین اجرا)</span>
+            </div>
+        </article>
         <article class="ab-kpi" data-accent="{% if today_status == 'published' %}emerald{% elif today_status == 'needs_review' %}amber{% elif today_status == 'skipped' %}rose{% else %}teal{% endif %}">
             <div class="ab-kpi__icon"><i class="fas fa-sun"></i></div>
             <div class="ab-kpi__body">
@@ -179,6 +193,27 @@
         {% endif %}
 
         <aside class="ab-ap-sidebar">
+            {% if last_success %}
+            <article class="ab-glass ab-ap-side-card">
+                <div class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-flag-checkered"></i> آخرین اجرای موفق</h2>
+                        <p>{{ last_success.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }} · {{ last_success.get_status_display }}</p>
+                    </div>
+                    {% if last_success.quality_score %}
+                    <span class="ab-ap-qa-pill">{{ last_success.quality_score|floatformat:0|to_persian_digits }} QA</span>
+                    {% endif %}
+                </div>
+                <div class="ab-ap-side-card__body">
+                    {% if last_success.post %}
+                    <a href="{{ last_success.post.get_absolute_url }}" class="ab-ap-article-link" target="_blank" rel="noopener">{{ last_success.post.title }}</a>
+                    {% elif last_success.would_publish %}
+                    <span class="ab-ap-meta">Shadow — در حالت Live منتشر می‌شد</span>
+                    {% endif %}
+                </div>
+            </article>
+            {% endif %}
+
             {% if last_published and last_published.post %}
             <article class="ab-glass ab-ap-side-card">
                 <div class="ab-glass__head">
@@ -226,8 +261,9 @@
                     <li><span>۱</span> انتخاب Dataset</li>
                     <li><span>۲</span> CREATE / UPDATE</li>
                     <li><span>۳</span> Analyze + Media</li>
-                    <li><span>۴</span> QA Gates</li>
-                    <li><span>۵</span> Publish / Review</li>
+                    <li><span>۴</span> AI Polish</li>
+                    <li><span>۵</span> QA Gates</li>
+                    <li><span>۶</span> Publish / Review</li>
                 </ol>
             </article>
         </aside>
@@ -295,6 +331,22 @@
             </div>
         </form>
     </section>
+
+    {% if step_history %}
+    <section class="ab-glass ab-ap-history" id="ab-ap-steps">
+        <div class="ab-glass__head">
+            <div>
+                <h2><i class="fas fa-list-check"></i> مراحل آخرین اجرا</h2>
+                <p>لاگ pipeline برای دیباگ و مانیتورینگ</p>
+            </div>
+        </div>
+        <ol class="ab-ap-pipeline ab-ap-pipeline--steps">
+            {% for item in step_history %}
+            <li><span>{{ forloop.counter }}</span> <strong>{{ item.step }}</strong>{% if item.detail %} — {{ item.detail }}{% endif %}</li>
+            {% endfor %}
+        </ol>
+    </section>
+    {% endif %}
 
     <section class="ab-glass ab-ap-history" id="ab-ap-history">
         <div class="ab-glass__head">

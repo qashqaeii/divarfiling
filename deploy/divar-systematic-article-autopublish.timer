@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily systematic article auto publish (Asia/Tehran via Django TIME_ZONE)
+
+[Timer]
+OnCalendar=*-*-* 08:30:00
+Persistent=true
+Unit=divar-systematic-article-autopublish.service
+
+[Install]
+WantedBy=timers.target

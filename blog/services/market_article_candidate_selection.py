@@ -7,7 +7,7 @@ from typing import Any
 
 from django.utils import timezone
 
-from blog.models import MarketArticleLink, MarketArticleRun
+from blog.models import MarketArticleLink, MarketArticleRun, SystematicArticleAutoPublishRun
 from blog.services.market_article_autopublish_config import AutoPublishSettings, get_autopublish_settings, local_today
 from blog.services.market_article_eligibility import (
     ARTICLE_STATUS_NONE,
@@ -146,6 +146,21 @@ def _score_candidate(
     )
 
 
+def _dataset_ids_in_active_autopublish() -> set:
+    active = (
+        SystematicArticleAutoPublishRun.Status.QUEUED,
+        SystematicArticleAutoPublishRun.Status.GENERATING,
+        SystematicArticleAutoPublishRun.Status.AI_POLISHING,
+        SystematicArticleAutoPublishRun.Status.QA_RUNNING,
+        SystematicArticleAutoPublishRun.Status.READY_TO_PUBLISH,
+    )
+    return set(
+        SystematicArticleAutoPublishRun.objects.filter(status__in=active)
+        .exclude(dataset_id__isnull=True)
+        .values_list('dataset_id', flat=True),
+    )
+
+
 def rank_autopublish_candidates(
     settings: AutoPublishSettings | None = None,
     *,
@@ -154,8 +169,9 @@ def rank_autopublish_candidates(
     settings = settings or get_autopublish_settings()
 
     today = local_today()
+    in_flight_ids = _dataset_ids_in_active_autopublish()
     qs = eligible_datasets_qs().filter(row_count__gte=settings.min_records).order_by('-updated_at')[:500]
-    datasets = list(qs)
+    datasets = [d for d in qs if d.pk not in in_flight_ids]
 
     keys = [market_key_for_dataset(d) for d in datasets]
     links = {

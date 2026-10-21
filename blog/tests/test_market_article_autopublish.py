@@ -1,6 +1,7 @@
 """تست انتشار خودکار مقالات سیستماتیک."""
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -19,8 +20,10 @@ from blog.models import (
 from blog.services.market_article_autopublish import (
     AutoPublishBlocked,
     publish_market_article_from_run,
+    recover_stuck_autopublish_runs,
     run_systematic_article_autopublish,
 )
+from blog.services.market_article_ai_polish import PolishResult
 from blog.services.market_article_autopublish_config import get_autopublish_settings, local_today
 from blog.services.market_article_candidate_selection import pick_best_candidate
 from blog.services.market_article_pipeline import build_preview, create_draft
@@ -37,6 +40,10 @@ def _configure_autopublish(**kwargs):
         setattr(cfg, k, v)
     cfg.save()
     return cfg
+
+
+def _mock_polish_pass(run):
+    return PolishResult(applied=True, provider='test', model='test', latency_ms=1, report={'ok': True})
 
 
 @override_settings(MARKET_ARTICLE_SKIP_MAP_TILES=True, MARKET_ARTICLE_SKIP_ACCESS=True)
@@ -86,7 +93,8 @@ class MarketArticleAutoPublishTests(TestCase):
         self.assertTrue(run.would_publish or run.status == SystematicArticleAutoPublishRun.Status.SKIPPED)
 
     def test_shadow_mode_never_publishes(self):
-        run = run_systematic_article_autopublish(shadow=True, force=True)
+        with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
+            run = run_systematic_article_autopublish(shadow=True, force=True)
         self.assertIn(run.status, (
             SystematicArticleAutoPublishRun.Status.NEEDS_REVIEW,
             SystematicArticleAutoPublishRun.Status.QA_FAILED,
@@ -99,7 +107,8 @@ class MarketArticleAutoPublishTests(TestCase):
 
     def test_successful_live_publish(self):
         _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
-        run = run_systematic_article_autopublish(force=True)
+        with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
+            run = run_systematic_article_autopublish(force=True)
         if run.status == SystematicArticleAutoPublishRun.Status.QA_FAILED:
             self.skipTest(f'QA failed: {run.failure_reasons}')
         self.assertIn(run.status, (
@@ -110,7 +119,8 @@ class MarketArticleAutoPublishTests(TestCase):
 
     def test_max_one_publish_per_day(self):
         _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
-        first = run_systematic_article_autopublish(force=True)
+        with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
+            first = run_systematic_article_autopublish(force=True)
         if first.status not in (SystematicArticleAutoPublishRun.Status.PUBLISHED, SystematicArticleAutoPublishRun.Status.UPDATED):
             self.skipTest('First run did not publish')
         with self.assertRaises(AutoPublishBlocked):
@@ -167,7 +177,8 @@ class MarketArticleAutoPublishTests(TestCase):
 
     def test_concurrent_blocked_after_publish(self):
         _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
-        first = run_systematic_article_autopublish(force=True)
+        with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
+            first = run_systematic_article_autopublish(force=True)
         if first.status not in (SystematicArticleAutoPublishRun.Status.PUBLISHED, SystematicArticleAutoPublishRun.Status.UPDATED):
             self.skipTest('First publish failed')
         count = SystematicArticleAutoPublishRun.objects.filter(
@@ -178,3 +189,51 @@ class MarketArticleAutoPublishTests(TestCase):
             ),
         ).count()
         self.assertEqual(count, 1)
+
+    def test_recover_stuck_generating_run(self):
+        stuck = SystematicArticleAutoPublishRun.objects.create(
+            run_date=local_today(),
+            status=SystematicArticleAutoPublishRun.Status.GENERATING,
+            action=SystematicArticleAutoPublishRun.Action.CREATE_NEW,
+            publish_mode=SystematicArticleAutoPublishRun.PublishMode.SHADOW,
+        )
+        SystematicArticleAutoPublishRun.objects.filter(pk=stuck.pk).update(
+            updated_at=timezone.now() - timedelta(hours=7),
+        )
+        n = recover_stuck_autopublish_runs(max_age_hours=6)
+        self.assertEqual(n, 1)
+        stuck.refresh_from_db()
+        self.assertEqual(stuck.status, SystematicArticleAutoPublishRun.Status.NEEDS_REVIEW)
+
+    def test_ai_polish_failure_blocks_publish(self):
+        from blog.services.market_article_ai_polish import AIPolishRecoverableError
+
+        _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
+
+        def _fail_polish(_run):
+            raise AIPolishRecoverableError('providers down')
+
+        with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_fail_polish):
+            run = run_systematic_article_autopublish(force=True)
+        self.assertEqual(run.status, SystematicArticleAutoPublishRun.Status.AI_POLISH_FAILED)
+        self.assertFalse(Post.objects.filter(is_published=True).exists())
+
+    def test_duplicate_create_blocked_when_link_exists(self):
+        run = build_preview(self.ds, self.staff)
+        post = create_draft(run, self.staff)
+        post.is_published = True
+        post.published_at = timezone.now()
+        post.save()
+        self.ds.mark_updated()
+
+        _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
+        with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
+            ap_run = run_systematic_article_autopublish(force=True)
+        if ap_run.status == SystematicArticleAutoPublishRun.Status.PUBLISHED:
+            self.fail('Should not create duplicate published post')
+        self.assertIn(ap_run.status, (
+            SystematicArticleAutoPublishRun.Status.UPDATED,
+            SystematicArticleAutoPublishRun.Status.SKIPPED,
+            SystematicArticleAutoPublishRun.Status.QA_FAILED,
+            SystematicArticleAutoPublishRun.Status.NEEDS_REVIEW,
+        ))

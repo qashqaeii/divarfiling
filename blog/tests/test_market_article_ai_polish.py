@@ -58,8 +58,9 @@ class MarketArticleAIPolishTests(TestCase):
         self.assertTrue(errors)
 
     @patch('blog.services.market_article_ai_polish.run_quality_gates')
-    @patch('blog.services.market_article_ai_polish._call_llm')
-    def test_polish_applies_valid_json(self, mock_llm, mock_qa):
+    @patch('blog.services.market_article_ai_polish._polish_text_batch')
+    @patch('blog.services.market_article_ai_polish._polish_seo')
+    def test_polish_applies_valid_json(self, mock_seo, mock_batch, mock_qa):
         from blog.services.market_article_quality_gates import QAReport
 
         mock_qa.return_value = QAReport()
@@ -69,37 +70,34 @@ class MarketArticleAIPolishTests(TestCase):
         run = build_preview(self.ds, self.staff)
         parts = split_html_parts(run.content_html)
         segments = text_segment_payload(parts)
-        payload = {
-            'title': (run.seo_json or {}).get('title') or 't',
-            'excerpt': (run.seo_json or {}).get('excerpt') or 'e',
-            'texts': [{'id': s['id'], 'text': s['text']} for s in segments],
-        }
-        mock_llm.return_value = (json.dumps(payload, ensure_ascii=False), 'mock', 'mock-model', 10)
-        result = polish_market_article_run(run)
+        title = (run.seo_json or {}).get('title') or 't'
+        excerpt = (run.seo_json or {}).get('excerpt') or 'e'
+        mock_seo.return_value = (title, excerpt, 'mock', 'mock-model', 10, [])
+
+        def batch_side_effect(batch_index, batch, **kwargs):
+            return ({int(s['id']): s['text'] for s in batch}, 'mock', 'mock-model', 5, [])
+
+        mock_batch.side_effect = batch_side_effect
+        result = polish_market_article_run(run, resume=False)
         self.assertTrue(result.applied)
         run.refresh_from_db()
         self.assertIn('mk-market', run.content_html)
 
-    @patch('blog.services.market_article_ai_polish._call_llm')
-    def test_polish_rejects_invalid_output(self, mock_llm):
+    @patch('blog.services.market_article_ai_polish._polish_seo')
+    def test_polish_rejects_invalid_output(self, mock_seo):
         run = build_preview(self.ds, self.staff)
-        mock_llm.return_value = (
-            '{"title": "x", "excerpt": "y", "texts": []}',
-            'mock',
-            'm',
-            5,
-        )
+        mock_seo.side_effect = AIPolishError('SEO invalid')
         with self.assertRaises(AIPolishError):
-            polish_market_article_run(run)
+            polish_market_article_run(run, resume=False)
         run.refresh_from_db()
         self.assertNotEqual(run.content_html, '')
 
-    @patch('blog.services.market_article_ai_polish._call_llm', side_effect=AIPolishRecoverableError('down'))
+    @patch('blog.services.market_article_ai_polish._polish_seo', side_effect=AIPolishRecoverableError('down'))
     def test_polish_propagates_recoverable(self, _mock):
         run = build_preview(self.ds, self.staff)
         before = run.content_html
         with self.assertRaises(AIPolishRecoverableError):
-            polish_market_article_run(run)
+            polish_market_article_run(run, resume=False)
         run.refresh_from_db()
         self.assertEqual(run.content_html, before)
 

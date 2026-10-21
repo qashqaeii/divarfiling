@@ -54,6 +54,31 @@ python manage.py run_systematic_article_autopublish
 | `--force` | نادیده `is_enabled` و `publish_time` |
 | `--recover-stuck` | فقط بازیابی runهای فعال قدیمی |
 | `--no-recover` | بدون recover ابتدایی |
+| `--resume-market-run UUID` | ادامه پولиш/QA از پیش‌نمایش موجود (بدون ساخت نقشه) |
+| `--resume-autopublish-run UUID` | همان لاگ AutoPublish قبلی (اختیاری) |
+
+### Resume پس از `ai_polish_failed` (مثال پونک)
+
+```bash
+python manage.py run_systematic_article_autopublish \
+  --shadow --force \
+  --resume-market-run 57c4c9e2-45fc-41cc-91d8-f139b8e152e4 \
+  --resume-autopublish-run 7e3eb5c7-e7b1-40c3-8f4e-98c1d63a7c84
+```
+
+پیشرفت پولیش در `MarketArticleRun.chart_assets.autopublish_polish_state` ذخیره می‌شود؛ دسته‌های تکمیل‌شده دوباره به AI نمی‌روند.
+
+### AI Polish
+
+- پاسخ JSON: `json_mode` + repair محدود (trailing comma، استخراج `{...}`)
+- `JSONDecodeError` → `AIPolishJsonError` (recoverable + retry با backoff)
+- دسته‌های کوچک متن (حداکثر ۵ segment / ~۲۸۰۰ کاراکتر)
+- SEO جدا از بدنه
+- خروجی نامعتبر **هرگز** در `content_html` ذخیره نمی‌شود
+
+### نقشه‌ها (موضوع بعدی)
+
+Overpass timeout و کاشی ماهواره‌ای می‌تواند ساخت را ~۴ دقیقه کند؛ فعلاً با `MARKET_ARTICLE_SKIP_*` در تست کنترل می‌شود. برای production: timeout/cached fallback و ثبت صریح در QA اگر نقشه ضروری نبود — در فاز بعد.
 
 ## Systemd Timer (زمان‌بندی — مستقل از TIME_ZONE جنگو)
 

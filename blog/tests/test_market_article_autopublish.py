@@ -237,8 +237,10 @@ class MarketArticleAutoPublishTests(TestCase):
 
         _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
 
+        from blog.services.market_article_ai_polish import AIPolishJsonError
+
         def _fail_polish(_run):
-            raise AIPolishRecoverableError('providers down')
+            raise AIPolishJsonError('JSON invalid')
 
         with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_fail_polish):
             run = run_systematic_article_autopublish(force=True)

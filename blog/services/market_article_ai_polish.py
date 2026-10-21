@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -17,6 +18,14 @@ from blog.services.market_article_quality_gates import _extract_report_numbers, 
 logger = logging.getLogger(__name__)
 
 FEATURE = 'market_article_polish'
+
+BATCH_MAX_SEGMENTS = 5
+BATCH_MAX_CHARS = 2800
+BATCH_MAX_ATTEMPTS = 3
+SEO_MAX_ATTEMPTS = 3
+BACKOFF_BASE_SECONDS = 1.5
+
+_POLISH_STATE_KEY = 'autopublish_polish_state'
 
 _PlaceKind = Literal['markup', 'text']
 
@@ -36,6 +45,7 @@ _LOCKED_ATTR_RE = re.compile(
     re.I,
 )
 _CHART_SRC_HINT = re.compile(r'chart_|mk-chart|canvas', re.I)
+_TRAILING_COMMA_RE = re.compile(r',\s*([}\]])')
 
 
 class AIPolishError(Exception):
@@ -43,7 +53,11 @@ class AIPolishError(Exception):
 
 
 class AIPolishRecoverableError(Exception):
-    """همه providerها شکست خوردند — تلاش مجدد مجاز است."""
+    """خطای موقت provider — تلاش مجدد مجاز است."""
+
+
+class AIPolishJsonError(AIPolishRecoverableError):
+    """JSON نامعتبر یا ناقص — repair/retry."""
 
 
 @dataclass
@@ -57,7 +71,6 @@ class PolishResult:
 
 @dataclass
 class StatisticalProtection:
-    """توکن‌های آماری که نباید در خروجی حذف یا دستکاری شوند."""
     tokens: list[str] = field(default_factory=list)
 
     def all_present_in(self, *blobs: str) -> list[str]:
@@ -66,7 +79,6 @@ class StatisticalProtection:
 
 
 def split_html_parts(html: str) -> list[tuple[_PlaceKind, str]]:
-    """تفکیک markup و text — markup هرگز به AI نمی‌رود."""
     parts: list[tuple[_PlaceKind, str]] = []
     for chunk in re.split(r'(<[^>]+>)', html or ''):
         if not chunk:
@@ -84,6 +96,28 @@ def text_segment_payload(parts: list[tuple[_PlaceKind, str]]) -> list[dict[str, 
         if kind == 'text' and content.strip():
             out.append({'id': idx, 'text': content})
     return out
+
+
+def batch_text_segments(segments: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+    """دسته‌بندی segmentها برای پاسخ JSON کوچک‌تر."""
+    batches: list[list[dict[str, Any]]] = []
+    current: list[dict[str, Any]] = []
+    char_count = 0
+    for seg in segments:
+        text = str(seg.get('text') or '')
+        seg_len = len(text)
+        if current and (
+            len(current) >= BATCH_MAX_SEGMENTS
+            or char_count + seg_len > BATCH_MAX_CHARS
+        ):
+            batches.append(current)
+            current = []
+            char_count = 0
+        current.append(seg)
+        char_count += seg_len
+    if current:
+        batches.append(current)
+    return batches
 
 
 def apply_polished_texts(
@@ -136,8 +170,8 @@ def _table_counts(html: str) -> tuple[int, int, int]:
     )
 
 
-def _locked_attributes(html: str) -> list[tuple[str, str, str]]:
-    locked: list[tuple[str, str, str]] = []
+def _locked_attributes(html: str) -> list[tuple[str, str]]:
+    locked: list[tuple[str, str]] = []
     for match in _LOCKED_ATTR_RE.finditer(html or ''):
         attr = match.group(1).lower()
         value = match.group(3) if match.group(3) is not None else (match.group(4) or '')
@@ -151,7 +185,6 @@ def _chart_asset_srcs(html: str) -> set[str]:
 
 
 def validate_markup_unchanged(original_html: str, candidate_html: str) -> list[str]:
-    """Markup (تگ‌ها و src/href/class/id) باید عیناً حفظ شود — فقط متن عوض می‌شود."""
     errors: list[str] = []
     orig_parts = split_html_parts(original_html)
     cand_parts = split_html_parts(candidate_html)
@@ -167,19 +200,13 @@ def validate_markup_unchanged(original_html: str, candidate_html: str) -> list[s
             errors.append('تگ یا attribute (src/href/class/id) تغییر کرده است.')
             break
 
-    o_tables = _table_counts(original_html)
-    n_tables = _table_counts(candidate_html)
-    if o_tables != n_tables:
+    if _table_counts(original_html) != _table_counts(candidate_html):
         errors.append('ساختار جدول (table/tr/cell) تغییر کرده است.')
 
-    o_charts = _chart_asset_srcs(original_html)
-    n_charts = _chart_asset_srcs(candidate_html)
-    if o_charts != n_charts:
+    if _chart_asset_srcs(original_html) != _chart_asset_srcs(candidate_html):
         errors.append('src نمودار/دارایی chart تغییر کرده است.')
 
-    o_locked = sorted(_locked_attributes(original_html))
-    n_locked = sorted(_locked_attributes(candidate_html))
-    if o_locked != n_locked:
+    if sorted(_locked_attributes(original_html)) != sorted(_locked_attributes(candidate_html)):
         errors.append('attributeهای قفل‌شده (src/href/class/id) با نسخه اصلی یکی نیست.')
 
     return errors
@@ -220,7 +247,6 @@ def validate_polished_html(
     polished_html: str,
     protected_numbers: list[str],
 ) -> list[str]:
-    """لیست خطاهای اعتبارسنجی — خالی یعنی قابل قبول."""
     errors: list[str] = []
     if not (polished_html or '').strip():
         errors.append('خروجی AI خالی است.')
@@ -244,6 +270,13 @@ def validate_polished_html(
         errors.append('ساختار اصلی مقاله (mk-market) در HTML نیست.')
 
     return errors
+
+
+def validate_segment_numbers(original: str, polished: str, protection: StatisticalProtection) -> list[str]:
+    missing = [t for t in protection.tokens if t in original and t not in polished]
+    if missing:
+        return [f'اعداد segment حذف شده: {len(missing)}']
+    return []
 
 
 def validate_polished_article(
@@ -297,20 +330,70 @@ def validate_polished_article(
     return errors
 
 
-def _parse_polish_json(raw: str) -> dict[str, Any]:
-    text = (raw or '').strip()
-    text = _JSON_FENCE_RE.sub('', text).strip()
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise AIPolishError(f'پاسخ AI JSON معتبر نیست: {exc}') from exc
-    if not isinstance(data, dict):
-        raise AIPolishError('پاسخ AI باید شیء JSON باشد.')
-    return data
+def _extract_outer_json_object(text: str) -> str:
+    start = text.find('{')
+    if start < 0:
+        return text.strip()
+    depth = 0
+    in_str = False
+    escape = False
+    quote = ''
+    for i in range(start, len(text)):
+        ch = text[i]
+        if in_str:
+            if escape:
+                escape = False
+                continue
+            if ch == '\\':
+                escape = True
+                continue
+            if ch == quote:
+                in_str = False
+            continue
+        if ch in ('"', "'"):
+            in_str = True
+            quote = ch
+            continue
+        if ch == '{':
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    return text[start:].strip()
+
+
+def repair_json_text(text: str) -> str:
+    """ترمیم محدود و امن — بدون اجرای کد."""
+    cleaned = _JSON_FENCE_RE.sub('', (text or '').strip()).strip()
+    cleaned = _extract_outer_json_object(cleaned)
+    cleaned = _TRAILING_COMMA_RE.sub(r'\1', cleaned)
+    return cleaned
+
+
+def parse_polish_json(raw: str) -> dict[str, Any]:
+    """json.loads + repair محدود؛ خطا → AIPolishJsonError (recoverable)."""
+    attempts = [(raw or '').strip(), repair_json_text(raw or '')]
+    last_exc: json.JSONDecodeError | None = None
+    for candidate in attempts:
+        if not candidate:
+            continue
+        try:
+            data = json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            last_exc = exc
+            continue
+        if not isinstance(data, dict):
+            raise AIPolishError('پاسخ AI باید شیء JSON باشد.')
+        return data
+    raise AIPolishJsonError(f'پاسخ AI JSON معتبر نیست: {last_exc}')
 
 
 def _generation() -> dict[str, Any]:
-    return get_feature_generation(FEATURE)
+    gen = get_feature_generation(FEATURE)
+    if int(gen.get('max_tokens', 0)) < 4000:
+        gen = {**gen, 'max_tokens': max(4000, int(gen.get('max_tokens', 1200)))}
+    return gen
 
 
 def _call_llm(system: str, user: str) -> tuple[str, str, str, int]:
@@ -335,14 +418,17 @@ def _call_llm(system: str, user: str) -> tuple[str, str, str, int]:
     raise AIPolishRecoverableError(f'همه providerهای AI شکست خوردند ({last_code}).')
 
 
-def _coerce_polished_texts(
+def _sleep_backoff(attempt: int) -> None:
+    time.sleep(min(12.0, BACKOFF_BASE_SECONDS * (2 ** max(0, attempt - 1))))
+
+
+def _coerce_batch_texts(
     data: dict[str, Any],
-    parts: list[tuple[_PlaceKind, str]],
+    allowed_ids: set[int],
 ) -> dict[int, str]:
-    allowed_ids = {idx for idx, (k, c) in enumerate(parts) if k == 'text' and c.strip()}
     texts = data.get('texts')
     if not isinstance(texts, list):
-        raise AIPolishError('کلید texts در JSON الزامی است.')
+        raise AIPolishJsonError('کلید texts در JSON الزامی است.')
 
     polished: dict[int, str] = {}
     for item in texts:
@@ -356,19 +442,132 @@ def _coerce_polished_texts(
             raise AIPolishError(f'segment id نامعتبر: {seg_id}')
         polished[seg_id] = str(item.get('text') or '')
 
-    if not polished:
-        raise AIPolishError('هیچ segment متنی از AI برنگشت.')
     if set(polished.keys()) != allowed_ids:
         missing = allowed_ids - set(polished.keys())
-        raise AIPolishError(f'{len(missing)} segment متنی در پاسخ AI نیست.')
-
+        raise AIPolishJsonError(f'{len(missing)} segment در پاسخ AI نیست (پاسخ ناقص).')
     return polished
 
 
-def polish_market_article_run(run: MarketArticleRun) -> PolishResult:
+def _load_polish_state(run: MarketArticleRun) -> dict[str, Any]:
+    chart = run.chart_assets if isinstance(run.chart_assets, dict) else {}
+    state = chart.get(_POLISH_STATE_KEY)
+    return dict(state) if isinstance(state, dict) else {}
+
+
+def _save_polish_state(run: MarketArticleRun, state: dict[str, Any]) -> None:
+    chart = dict(run.chart_assets or {})
+    chart[_POLISH_STATE_KEY] = state
+    run.chart_assets = chart
+    run.save(update_fields=['chart_assets', 'updated_at'])
+
+
+def _clear_polish_state(run: MarketArticleRun) -> None:
+    chart = dict(run.chart_assets or {})
+    chart.pop(_POLISH_STATE_KEY, None)
+    run.chart_assets = chart
+    run.save(update_fields=['chart_assets', 'updated_at'])
+
+
+def _polish_seo(
+    *,
+    original_title: str,
+    original_excerpt: str,
+    protection: StatisticalProtection,
+) -> tuple[str, str, str, str, int, list[dict[str, Any]]]:
+    system = (
+        'ویراستار SEO فارسی. فقط JSON: {"title":"...","excerpt":"..."}. '
+        'اعداد و آمار را عیناً حفظ کن. HTML برنگردان.'
+    )
+    user = json.dumps(
+        {'title': original_title, 'excerpt': original_excerpt},
+        ensure_ascii=False,
+    )
+    attempts_log: list[dict[str, Any]] = []
+    last_error = ''
+    for attempt in range(1, SEO_MAX_ATTEMPTS + 1):
+        try:
+            raw, provider, model, latency = _call_llm(system, user)
+            data = parse_polish_json(raw)
+            title = str(data.get('title') or original_title).strip()
+            excerpt = str(data.get('excerpt') or original_excerpt).strip()
+            seo_errors = validate_seo_fields(
+                original_title=original_title,
+                original_excerpt=original_excerpt,
+                new_title=title,
+                new_excerpt=excerpt,
+                protection=protection,
+            )
+            if seo_errors:
+                raise AIPolishError('; '.join(seo_errors))
+            attempts_log.append({'phase': 'seo', 'attempt': attempt, 'status': 'ok'})
+            return title, excerpt, provider, model, latency, attempts_log
+        except (AIPolishJsonError, AIPolishRecoverableError) as exc:
+            last_error = str(exc)
+            attempts_log.append({'phase': 'seo', 'attempt': attempt, 'status': 'retry', 'error': last_error})
+            _sleep_backoff(attempt)
+        except AIPolishError:
+            raise
+    raise AIPolishJsonError(last_error or 'SEO polish failed')
+
+
+def _polish_text_batch(
+    batch_index: int,
+    batch: list[dict[str, Any]],
+    *,
+    protection: StatisticalProtection,
+) -> tuple[dict[int, str], str, str, int, list[dict[str, Any]]]:
+    allowed_ids = {int(s['id']) for s in batch}
+    originals = {int(s['id']): str(s['text']) for s in batch}
+    system = (
+        'ویراستار متن مقاله املاک ایران. فقط JSON: {"texts":[{"id":NUMBER,"text":"..."}]}. '
+        'فقط idهای درخواستی را برگردان. اعداد/قیمت/درصد را حفظ کن. HTML برنگردان.'
+    )
+    user = json.dumps({'texts': batch}, ensure_ascii=False)
+    attempts_log: list[dict[str, Any]] = []
+    last_error = ''
+    for attempt in range(1, BATCH_MAX_ATTEMPTS + 1):
+        try:
+            raw, provider, model, latency = _call_llm(system, user)
+            data = parse_polish_json(raw)
+            polished = _coerce_batch_texts(data, allowed_ids)
+            for seg_id, new_text in polished.items():
+                seg_errors = validate_segment_numbers(
+                    originals[seg_id],
+                    new_text,
+                    protection,
+                )
+                if seg_errors:
+                    raise AIPolishError('; '.join(seg_errors))
+            attempts_log.append({
+                'phase': 'batch',
+                'batch_index': batch_index,
+                'attempt': attempt,
+                'status': 'ok',
+                'segment_ids': sorted(allowed_ids),
+            })
+            return polished, provider, model, latency, attempts_log
+        except (AIPolishJsonError, AIPolishRecoverableError) as exc:
+            last_error = str(exc)
+            attempts_log.append({
+                'phase': 'batch',
+                'batch_index': batch_index,
+                'attempt': attempt,
+                'status': 'retry',
+                'error': last_error,
+            })
+            _sleep_backoff(attempt)
+        except AIPolishError:
+            raise
+    raise AIPolishJsonError(last_error or f'batch {batch_index} failed')
+
+
+def polish_market_article_run(
+    run: MarketArticleRun,
+    *,
+    resume: bool = True,
+) -> PolishResult:
     """
-    پولیش محتوا با AI؛ فقط متن و SEO — markup ثابت می‌ماند.
-    خروجی بدون اعتبارسنجی هرگز جایگزین نمی‌شود.
+    پولیش مرحله‌ای؛ پیشرفت در chart_assets ذخیره می‌شود (Resume بدون ساخت مجدد نقشه).
     """
     original_html = run.content_html or ''
     seo = dict(run.seo_json or {})
@@ -377,33 +576,81 @@ def polish_market_article_run(run: MarketArticleRun) -> PolishResult:
 
     parts = split_html_parts(original_html)
     segments = text_segment_payload(parts)
-
-    system = (
-        'تو ویراستار حرفه‌ای مقالات تحلیل بازار املاک ایران هستی. '
-        'فقط JSON برگردان با کلیدهای: title, excerpt, texts (آرایه {id, text}). '
-        'فقط فیلد text هر segment را ویرایش کن — id را عوض نکن. '
-        'هرگز HTML، تگ، src، href، class، id یا جدول برنگردان. '
-        'اعداد، قیمت‌ها، درصدها و آمار را در هر segment دقیقاً حفظ کن. '
-        'لحن مناسب مشاوران املاک؛ روان؛ بدون تکرار؛ مقدمه و نتیجه‌گیری بهتر.'
-    )
-    user = json.dumps(
-        {
-            'title': original_title,
-            'excerpt': original_excerpt,
-            'texts': segments,
-            'rules': 'Do not invent numbers. Do not remove statistical tokens.',
-        },
-        ensure_ascii=False,
+    batches = batch_text_segments(segments)
+    protection = collect_statistical_protection(
+        run,
+        title=original_title,
+        excerpt=original_excerpt,
+        html=original_html,
     )
 
-    raw, provider, model, latency_ms = _call_llm(system, user)
-    data = _parse_polish_json(raw)
+    state = _load_polish_state(run) if resume else {}
+    polished_map: dict[int, str] = {
+        int(k): v for k, v in (state.get('polished_by_id') or {}).items()
+    }
+    completed_batches = set(state.get('completed_batches') or [])
+    new_title = str(state.get('title') or original_title)
+    new_excerpt = str(state.get('excerpt') or original_excerpt)
+    seo_done = bool(state.get('seo_done'))
 
-    new_title = str(data.get('title') or original_title).strip()
-    new_excerpt = str(data.get('excerpt') or original_excerpt).strip()
-    polished_map = _coerce_polished_texts(data, parts)
+    batch_logs: list[dict[str, Any]] = list(state.get('batch_logs') or [])
+    provider = str(state.get('provider') or '')
+    model = str(state.get('model') or '')
+    total_latency = int(state.get('latency_ms') or 0)
+
+    if not seo_done:
+        title, excerpt, provider, model, latency, logs = _polish_seo(
+            original_title=original_title,
+            original_excerpt=original_excerpt,
+            protection=protection,
+        )
+        new_title, new_excerpt = title, excerpt
+        seo_done = True
+        batch_logs.extend(logs)
+        total_latency += latency
+        _save_polish_state(
+            run,
+            {
+                'seo_done': True,
+                'title': new_title,
+                'excerpt': new_excerpt,
+                'polished_by_id': polished_map,
+                'completed_batches': sorted(completed_batches),
+                'batch_logs': batch_logs,
+                'provider': provider,
+                'model': model,
+                'latency_ms': total_latency,
+            },
+        )
+
+    for batch_index, batch in enumerate(batches):
+        if batch_index in completed_batches:
+            continue
+        polished_batch, provider, model, latency, logs = _polish_text_batch(
+            batch_index,
+            batch,
+            protection=protection,
+        )
+        polished_map.update(polished_batch)
+        completed_batches.add(batch_index)
+        batch_logs.extend(logs)
+        total_latency += latency
+        _save_polish_state(
+            run,
+            {
+                'seo_done': True,
+                'title': new_title,
+                'excerpt': new_excerpt,
+                'polished_by_id': polished_map,
+                'completed_batches': sorted(completed_batches),
+                'batch_logs': batch_logs,
+                'provider': provider,
+                'model': model,
+                'latency_ms': total_latency,
+            },
+        )
+
     new_html = apply_polished_texts(parts, polished_map)
-
     validation_errors = validate_polished_article(
         run,
         original_html=original_html,
@@ -423,13 +670,23 @@ def polish_market_article_run(run: MarketArticleRun) -> PolishResult:
         'excerpt': new_excerpt[:300],
     }
     run.save(update_fields=['content_html', 'seo_json', 'updated_at'])
+    _clear_polish_state(run)
 
     report = {
         'ok': True,
         'provider': provider,
         'model': model,
-        'latency_ms': latency_ms,
+        'latency_ms': total_latency,
         'text_segments': len(segments),
+        'batch_count': len(batches),
+        'batch_logs': batch_logs,
+        'resumed': bool(state),
         'validation_errors': [],
     }
-    return PolishResult(applied=True, provider=provider, model=model, latency_ms=latency_ms, report=report)
+    return PolishResult(
+        applied=True,
+        provider=provider,
+        model=model,
+        latency_ms=total_latency,
+        report=report,
+    )

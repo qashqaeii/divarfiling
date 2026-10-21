@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import asdict
 from datetime import timedelta
 from typing import Any
@@ -19,6 +20,7 @@ from blog.models import (
 )
 from blog.services.market_article_ai_polish import (
     AIPolishError,
+    AIPolishJsonError,
     AIPolishRecoverableError,
     polish_market_article_run,
 )
@@ -46,7 +48,8 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 STUCK_RUN_MAX_HOURS = 6
-MAX_POLISH_RETRIES = 2
+MAX_POLISH_RETRIES = 4
+POLISH_RETRY_BACKOFF_SECONDS = 2.0
 
 _ACTIVE_STATUSES = (
     SystematicArticleAutoPublishRun.Status.QUEUED,
@@ -289,7 +292,7 @@ def _run_ai_polish_with_retries(
             )
             autopublish_run.save(update_fields=['ai_polish_report', 'retry_count', 'updated_at'])
             return True
-        except AIPolishRecoverableError as exc:
+        except (AIPolishRecoverableError, AIPolishJsonError) as exc:
             last_error = str(exc)
             logger.warning('autopublish ai polish recoverable attempt=%s run=%s', attempts, autopublish_run.pk)
             autopublish_run.retry_count = attempts
@@ -297,20 +300,23 @@ def _run_ai_polish_with_retries(
                 autopublish_run,
                 'ai_polish_retry',
                 detail=last_error,
-                extra={'attempt': attempts},
+                extra={'attempt': attempts, 'kind': type(exc).__name__},
             )
             autopublish_run.save(update_fields=['retry_count', 'updated_at'])
+            time.sleep(min(30.0, POLISH_RETRY_BACKOFF_SECONDS * (2 ** (attempts - 1))))
             continue
         except AIPolishError as exc:
             last_error = str(exc)
             break
 
+    failed_report = autopublish_run.ai_polish_report if isinstance(autopublish_run.ai_polish_report, dict) else {}
     autopublish_run.status = SystematicArticleAutoPublishRun.Status.AI_POLISH_FAILED
     autopublish_run.ai_polish_report = {
+        **failed_report,
         'ok': False,
         'error': last_error,
         'attempts': attempts,
-        'recoverable': isinstance(last_error, str) and 'provider' in last_error.lower(),
+        'recoverable': True,
     }
     autopublish_run.failure_reasons = [f'پولیش AI ناموفق: {last_error}']
     append_autopublish_step(autopublish_run, 'ai_polish_failed', detail=last_error)
@@ -424,6 +430,30 @@ def run_systematic_article_autopublish(
     autopublish_run.market_article_run = market_run
     append_autopublish_step(autopublish_run, 'generated', detail=str(market_run.pk))
 
+    return _pipeline_after_market_preview(
+        autopublish_run,
+        market_run,
+        decision,
+        settings=settings,
+        publish_mode=publish_mode,
+        shadow=shadow,
+        run_date=run_date,
+        user=user,
+    )
+
+
+def _pipeline_after_market_preview(
+    autopublish_run: SystematicArticleAutoPublishRun,
+    market_run: MarketArticleRun,
+    decision,
+    *,
+    settings,
+    publish_mode: str,
+    shadow: bool,
+    run_date,
+    user,
+) -> SystematicArticleAutoPublishRun:
+    """ادامه pipeline پس از داشتن MarketArticleRun — بدون ساخت مجدد."""
     dup_reason = _duplicate_publish_blocked(
         market_run,
         decision.action,
@@ -509,6 +539,96 @@ def run_systematic_article_autopublish(
 
     touch_autopublish_last_run()
     return autopublish_run
+
+
+def resume_systematic_article_autopublish(
+    *,
+    market_article_run_id,
+    autopublish_run_id=None,
+    shadow: bool = False,
+    force: bool = False,
+    recover_stuck: bool = True,
+) -> SystematicArticleAutoPublishRun:
+    """
+    ادامه از MarketArticleRun موجود — بدون build_preview (نقشه/نمودار دوباره ساخته نمی‌شود).
+    پیشرفت پولیش از chart_assets.autopublish_polish_state خوانده می‌شود.
+    """
+    run_date = local_today()
+    settings = get_autopublish_settings()
+    publish_mode = _resolve_publish_mode(shadow=shadow, dry_run=False)
+
+    if recover_stuck:
+        recover_stuck_autopublish_runs()
+
+    config = get_autopublish_config()
+    if not _should_run_for_schedule(config, force=force):
+        raise AutoPublishBlocked(f'هنوز زمان ترجیحی اجرا ({config.publish_time}) نرسیده است.')
+
+    market_run = MarketArticleRun.objects.select_related('dataset').filter(pk=market_article_run_id).first()
+    if not market_run:
+        raise AutoPublishBlocked('MarketArticleRun یافت نشد.')
+    if market_run.status not in (
+        MarketArticleRun.Status.PREVIEW,
+        MarketArticleRun.Status.DRAFT_LINKED,
+    ):
+        raise AutoPublishBlocked(f'وضعیت MarketArticleRun برای Resume مناسب نیست: {market_run.status}')
+    if not (market_run.content_html or '').strip():
+        raise AutoPublishBlocked('محتوای HTML پیش‌نمایش خالی است.')
+
+    dataset = market_run.dataset
+    if not dataset or not dataset.is_active:
+        raise AutoPublishBlocked('دیتاست منبع غیرفعال است.')
+
+    if publish_mode == SystematicArticleAutoPublishRun.PublishMode.LIVE:
+        if not config.is_enabled and not force:
+            raise AutoPublishBlocked('انتشار خودکار غیرفعال است.')
+        if config.shadow_mode and not force:
+            publish_mode = SystematicArticleAutoPublishRun.PublishMode.SHADOW
+            shadow = True
+
+    user = _system_user()
+    decision = decide_publish_action(dataset, None)
+
+    if autopublish_run_id:
+        autopublish_run = SystematicArticleAutoPublishRun.objects.filter(pk=autopublish_run_id).first()
+        if not autopublish_run:
+            raise AutoPublishBlocked('AutoPublishRun یافت نشد.')
+        autopublish_run.market_article_run = market_run
+        autopublish_run.dataset = dataset
+        autopublish_run.failure_reasons = []
+        autopublish_run.status = SystematicArticleAutoPublishRun.Status.GENERATING
+        autopublish_run.publish_mode = publish_mode
+        autopublish_run.save()
+    else:
+        if not force:
+            _acquire_run_lock(run_date)
+        autopublish_run = SystematicArticleAutoPublishRun.objects.create(
+            run_date=run_date,
+            status=SystematicArticleAutoPublishRun.Status.GENERATING,
+            publish_mode=publish_mode,
+            dataset=dataset,
+            market_article_run=market_run,
+            action=decision.action,
+            candidate_snapshot={'market_key': market_run.market_key, 'resume': True},
+        )
+
+    append_autopublish_step(
+        autopublish_run,
+        'resume_market_run',
+        detail=str(market_run.pk),
+        extra={'autopublish_run_id': str(autopublish_run.pk)},
+    )
+
+    return _pipeline_after_market_preview(
+        autopublish_run,
+        market_run,
+        decision,
+        settings=settings,
+        publish_mode=publish_mode,
+        shadow=shadow,
+        run_date=run_date,
+        user=user,
+    )
 
 
 def get_autopublish_dashboard_context() -> dict[str, Any]:

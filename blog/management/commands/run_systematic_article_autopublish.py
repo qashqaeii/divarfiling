@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 from blog.services.market_article_autopublish import (
     AutoPublishBlocked,
     recover_stuck_autopublish_runs,
+    resume_systematic_article_autopublish,
     run_systematic_article_autopublish,
 )
 
@@ -39,6 +40,16 @@ class Command(BaseCommand):
             action='store_true',
             help='اجرای pipeline بدون بازیابی ابتدایی stuck runs',
         )
+        parser.add_argument(
+            '--resume-market-run',
+            metavar='UUID',
+            help='ادامه از MarketArticleRun موجود — بدون ساخت مجدد نقشه/نمودار',
+        )
+        parser.add_argument(
+            '--resume-autopublish-run',
+            metavar='UUID',
+            help='همان SystematicArticleAutoPublishRun قبلی (با --resume-market-run)',
+        )
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
@@ -53,16 +64,30 @@ class Command(BaseCommand):
         if dry_run and shadow:
             self.stderr.write(self.style.WARNING('هر دو --dry-run و --shadow: dry-run اولویت دارد.'))
 
-        try:
-            run = run_systematic_article_autopublish(
-                shadow=shadow,
-                dry_run=dry_run,
-                force=force,
-                recover_stuck=not options['no_recover'],
-            )
-        except AutoPublishBlocked as exc:
-            self.stdout.write(self.style.WARNING(str(exc)))
-            return
+        resume_market = options.get('resume_market_run')
+        if resume_market:
+            try:
+                run = resume_systematic_article_autopublish(
+                    market_article_run_id=resume_market,
+                    autopublish_run_id=options.get('resume_autopublish_run'),
+                    shadow=shadow,
+                    force=force,
+                    recover_stuck=not options['no_recover'],
+                )
+            except AutoPublishBlocked as exc:
+                self.stdout.write(self.style.WARNING(str(exc)))
+                return
+        else:
+            try:
+                run = run_systematic_article_autopublish(
+                    shadow=shadow,
+                    dry_run=dry_run,
+                    force=force,
+                    recover_stuck=not options['no_recover'],
+                )
+            except AutoPublishBlocked as exc:
+                self.stdout.write(self.style.WARNING(str(exc)))
+                return
 
         self.stdout.write(f'Run ID: {run.pk}')
         self.stdout.write(f'Status: {run.status}')

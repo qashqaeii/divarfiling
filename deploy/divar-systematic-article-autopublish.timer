@@ -1,8 +1,10 @@
 [Unit]
-Description=Daily systematic article auto publish (Asia/Tehran via Django TIME_ZONE)
+Description=Daily systematic article auto publish (calendar: Asia/Tehran)
 
 [Timer]
+# زمان‌بندی مستقل از TIME_ZONE جنگو — فقط Timezone= واحد systemd
 OnCalendar=*-*-* 08:30:00
+Timezone=Asia/Tehran
 Persistent=true
 Unit=divar-systematic-article-autopublish.service
 

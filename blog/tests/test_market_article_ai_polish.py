@@ -10,7 +10,11 @@ from django.test import TestCase, override_settings
 from blog.services.market_article_ai_polish import (
     AIPolishError,
     AIPolishRecoverableError,
+    apply_polished_texts,
     polish_market_article_run,
+    split_html_parts,
+    text_segment_payload,
+    validate_markup_unchanged,
     validate_polished_html,
 )
 from blog.services.market_article_pipeline import build_preview
@@ -47,15 +51,30 @@ class MarketArticleAIPolishTests(TestCase):
         )
         self.assertEqual(errors, [])
 
+    def test_markup_change_rejected(self):
+        orig = '<a href="/blog/x" class="x">متن</a>'
+        bad = '<a href="/blog/y" class="x">متن</a>'
+        errors = validate_markup_unchanged(orig, bad)
+        self.assertTrue(errors)
+
+    @patch('blog.services.market_article_ai_polish.run_quality_gates')
     @patch('blog.services.market_article_ai_polish._call_llm')
-    def test_polish_applies_valid_json(self, mock_llm):
+    def test_polish_applies_valid_json(self, mock_llm, mock_qa):
+        from blog.services.market_article_quality_gates import QAReport
+
+        mock_qa.return_value = QAReport()
+        mock_qa.return_value.total_score = 90
+        mock_qa.return_value.critical_errors = 0
+
         run = build_preview(self.ds, self.staff)
-        original = run.content_html
-        payload = json.dumps(
-            {'title': 'تحلیل بازار', 'excerpt': 'خلاصه', 'content_html': original},
-            ensure_ascii=False,
-        )
-        mock_llm.return_value = (payload, 'mock', 'mock-model', 10)
+        parts = split_html_parts(run.content_html)
+        segments = text_segment_payload(parts)
+        payload = {
+            'title': (run.seo_json or {}).get('title') or 't',
+            'excerpt': (run.seo_json or {}).get('excerpt') or 'e',
+            'texts': [{'id': s['id'], 'text': s['text']} for s in segments],
+        }
+        mock_llm.return_value = (json.dumps(payload, ensure_ascii=False), 'mock', 'mock-model', 10)
         result = polish_market_article_run(run)
         self.assertTrue(result.applied)
         run.refresh_from_db()
@@ -65,16 +84,26 @@ class MarketArticleAIPolishTests(TestCase):
     def test_polish_rejects_invalid_output(self, mock_llm):
         run = build_preview(self.ds, self.staff)
         mock_llm.return_value = (
-            '{"title": "x", "excerpt": "y", "content_html": "<p>lorem ipsum</p>"}',
+            '{"title": "x", "excerpt": "y", "texts": []}',
             'mock',
             'm',
             5,
         )
         with self.assertRaises(AIPolishError):
             polish_market_article_run(run)
+        run.refresh_from_db()
+        self.assertNotEqual(run.content_html, '')
 
     @patch('blog.services.market_article_ai_polish._call_llm', side_effect=AIPolishRecoverableError('down'))
     def test_polish_propagates_recoverable(self, _mock):
         run = build_preview(self.ds, self.staff)
+        before = run.content_html
         with self.assertRaises(AIPolishRecoverableError):
             polish_market_article_run(run)
+        run.refresh_from_db()
+        self.assertEqual(run.content_html, before)
+
+    def test_apply_polished_texts_keeps_markup(self):
+        parts = split_html_parts('<p class="a">سلام</p>')
+        out = apply_polished_texts(parts, {1: 'درود'})
+        self.assertEqual(out, '<p class="a">درود</p>')

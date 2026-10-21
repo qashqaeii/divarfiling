@@ -1,12 +1,49 @@
 # Systematic Article Auto Publish — Production
 
-انتشار خودکار روزانه مقالات تحلیل بازار (حداکثر ۱ در روز، QA + AI Polish).
+انتشار خودکار روزانه مقالات تحلیل بازار (حداکثر ۱ در روز، AI Polish + QA).
+
+## پیش‌نیاز Deploy (کد فقط — Production config را دستی تغییر دهید)
+
+1. Pull آخرین `main`
+2. **Migration** (مسیر وابسته به وضعیت سرور — بخش Migration Conflict)
+3. `collectstatic` در صورت تغییر استاتیک
+4. Restart `divar_shop` (Gunicorn)
+5. **Timer را تا پایان Shadow فعال نکنید**
+
+```bash
+cd /path/to/project   # e.g. /root/DivarFiling
+source venv/bin/activate
+git pull origin main
+python manage.py showmigrations blog | tail -5
+python manage.py migrate blog
+sudo systemctl restart divar_shop
+```
+
+## Migration conflict (سرور vs GitHub)
+
+| محیط | وضعیت |
+|------|--------|
+| **سرور (اعمال‌شده)** | `0007_rename_blog_autopub_run_date_status_idx_blog_system_run_dat_7f48f5_idx` |
+| **ریپو (جدید)** | همان `0007` (rename) + `0008_autopublish_polish_and_steps` |
+
+**سروری که قبلاً 0007 rename دارد:**
+
+```bash
+python manage.py migrate blog 0007_rename_blog_autopub_run_date_status_idx_blog_system_run_dat_7f48f5_idx  # اگر قبلاً applied است: skip
+python manage.py migrate blog   # فقط 0008 اعمال می‌شود
+```
+
+**سرور تازه (فقط تا 0006):**
+
+```bash
+python manage.py migrate blog   # 0007 سپس 0008
+```
+
+**هرگز** migration اعمال‌شده روی سرور را حذف یا squash نکنید. اگر نام فایل 0007 روی سرور با ریپو یکی است، Django آن را applied می‌شناسد.
 
 ## Command
 
 ```bash
-cd /path/to/django   # e.g. /root/DivarFiling
-source venv/bin/activate
 python manage.py run_systematic_article_autopublish
 ```
 
@@ -14,59 +51,62 @@ python manage.py run_systematic_article_autopublish
 |------|--------|
 | `--dry-run` | کاندید + تصمیم — بدون ساخت |
 | `--shadow` | ساخت + پولیش + QA — بدون Publish |
-| `--force` | نادیده `is_enabled` و `publish_time` (shadow_mode همچنان از config) |
-| `--recover-stuck` | فقط بازیابی runهای `generating` / `ai_polishing` قدیمی |
-| `--no-recover` | pipeline بدون recover ابتدایی |
+| `--force` | نادیده `is_enabled` و `publish_time` |
+| `--recover-stuck` | فقط بازیابی runهای فعال قدیمی |
+| `--no-recover` | بدون recover ابتدایی |
 
-## Deploy steps (code only — تنظیمات prod را دستی تغییر دهید)
+## Systemd Timer (زمان‌بندی — مستقل از TIME_ZONE جنگو)
 
-```bash
-git pull origin main
-python manage.py migrate blog
-sudo systemctl daemon-reload
-sudo systemctl enable --now divar-systematic-article-autopublish.timer
+فایل‌ها: `deploy/divar-systematic-article-autopublish.service` + `.timer`
+
+```ini
+[Timer]
+OnCalendar=*-*-* 08:30:00
+Timezone=Asia/Tehran
+Persistent=true
 ```
 
-Copy unit files from `django/deploy/`:
+**نصب (پس از تأیید Shadow — الان enable نکنید):**
 
 ```bash
 sudo cp deploy/divar-systematic-article-autopublish.service /etc/systemd/system/
 sudo cp deploy/divar-systematic-article-autopublish.timer /etc/systemd/system/
+# مسیر WorkingDirectory و venv در .service را اصلاح کنید
+sudo systemctl daemon-reload
+# sudo systemctl enable --now divar-systematic-article-autopublish.timer   # فقط بعد از Go-Live
 ```
 
-Adjust `WorkingDirectory`, `User`, and log path in the service file for your server.
-
-## Recommended rollout
-
-1. **Shadow یک هفته:** `shadow_mode=True`, `is_enabled=True` — timer با `--shadow` یا config shadow (بدون live).
-2. **Dry run دستی:** `python manage.py run_systematic_article_autopublish --dry-run`
-3. **Shadow کامل:** `python manage.py run_systematic_article_autopublish --shadow --force`
-4. **Live:** `shadow_mode=False` در پنل — timer همان `run_systematic_article_autopublish` بدون فلگ.
-
-## Stuck runs
-
-اجراهای فعال بیش از ۶ ساعت بدون `updated_at` به `needs_review` منتقل می‌شوند (`recover_stuck_autopublish_runs`).
-
-دستی:
+**بررسی تقویم روی سرور Linux:**
 
 ```bash
-python manage.py run_systematic_article_autopublish --recover-stuck
+systemd-analyze calendar "*-*-* 08:30:00" --timezone=Asia/Tehran
+systemctl list-timers divar-systematic-article-autopublish.timer
 ```
 
-## Timezone
+روی Windows/WSL بدون systemd این دستور در دسترس نیست.
 
-`publish_time` روی config و `OnCalendar` تایمر باید با `TIME_ZONE=Asia/Tehran` هم‌خوان باشند.
+`publish_time` در پنل Django فقط برای **اجرای دستی/command** است؛ trigger اصلی production = `Timezone=Asia/Tehran` در unit.
+
+## Rollback
+
+1. **کد:** `git checkout <previous-tag>` + restart Gunicorn
+2. **Timer:** `sudo systemctl disable --now divar-systematic-article-autopublish.timer`
+3. **Migration:** فیلدهای 0008 را برگردانید فقط اگر واقعاً لازم است — ترجیحاً forward-fix؛ `migrate blog 0007` فقط با تصمیم DBA (داده `step_history` از دست می‌رود)
+4. **Run گیرکرده:** `python manage.py run_systematic_article_autopublish --recover-stuck`
+
+## Rollout
+
+1. `migrate blog` + restart اپ
+2. `--recover-stuck` برای run قدیمی `generating`
+3. چند بار `--shadow --force`
+4. Timer را **بعد از** خاموش کردن `shadow_mode` در پنل enable کنید (نه قبل)
 
 ## AI Polish
 
-از زنجیره `ai_workspace.providers` استفاده می‌کند. تنظیم اختیاری:
+- فقط **segmentهای متنی** به AI می‌رود؛ markup (src/href/class/id/table/chart) ثابت
+- شکست AI → `ai_polish_failed` — **بدون انتشار** نسخه بدون پولیش
+- QA کامل پس از پولیش
 
-```python
-AI_FEATURE_GENERATION = {
-    'market_article_polish': {'temperature': 0.25, 'max_tokens': 8000},
-}
-```
+## Admin
 
-## Admin UI
-
-`/accounts/admin-panel/blog/systematic/autopublish/` — وضعیت، Shadow/Live، اجرای بعدی، پولیش AI، تاریخچه مراحل.
+`/accounts/admin-panel/blog/systematic/autopublish/`

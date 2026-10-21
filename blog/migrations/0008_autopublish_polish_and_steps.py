@@ -1,4 +1,4 @@
-# Migration: AI polish metadata and step history for systematic autopublish
+# AI polish metadata and step history — after server index rename migration.
 
 from django.db import migrations, models
 
@@ -6,7 +6,10 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('blog', '0006_systematic_article_autopublish'),
+        (
+            'blog',
+            '0007_rename_blog_autopub_run_date_status_idx_blog_system_run_dat_7f48f5_idx',
+        ),
     ]
 
     operations = [

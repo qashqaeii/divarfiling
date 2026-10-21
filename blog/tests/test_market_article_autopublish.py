@@ -46,6 +46,10 @@ def _mock_polish_pass(run):
     return PolishResult(applied=True, provider='test', model='test', latency_ms=1, report={'ok': True})
 
 
+def _clear_today_autopublish_runs():
+    SystematicArticleAutoPublishRun.objects.filter(run_date=local_today()).delete()
+
+
 @override_settings(MARKET_ARTICLE_SKIP_MAP_TILES=True, MARKET_ARTICLE_SKIP_ACCESS=True)
 class MarketArticleAutoPublishTests(TestCase):
     def setUp(self):
@@ -53,7 +57,7 @@ class MarketArticleAutoPublishTests(TestCase):
             username='owner_auto', password='pass1234', phone='09120003001',
         )
         self.staff = User.objects.create_user(
-            username='admin_auto', password='pass1234', phone='09120003002', is_staff=True,
+            username='admin_auto', password='pass1234', phone='09120003002', is_staff=True, is_superuser=True,
         )
         self.ds = _seed_dataset(self.user, n=160, city='کرج', district='مهرشهر')
         _configure_autopublish(
@@ -105,24 +109,38 @@ class MarketArticleAutoPublishTests(TestCase):
         published = Post.objects.filter(is_published=True).count()
         self.assertEqual(published, 0)
 
-    def test_successful_live_publish(self):
+    @patch('blog.services.market_article_autopublish.run_quality_gates')
+    def test_successful_live_publish(self, mock_qa):
+        from blog.services.market_article_quality_gates import QAReport
+
+        _clear_today_autopublish_runs()
+        mock_qa.return_value = QAReport()
+        mock_qa.return_value.total_score = 95
+        mock_qa.return_value.critical_errors = 0
         _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
         with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
             run = run_systematic_article_autopublish(force=True)
-        if run.status == SystematicArticleAutoPublishRun.Status.QA_FAILED:
-            self.skipTest(f'QA failed: {run.failure_reasons}')
         self.assertIn(run.status, (
             SystematicArticleAutoPublishRun.Status.PUBLISHED,
             SystematicArticleAutoPublishRun.Status.UPDATED,
         ))
         self.assertTrue(run.post.is_published)
 
-    def test_max_one_publish_per_day(self):
+    @patch('blog.services.market_article_autopublish.run_quality_gates')
+    def test_max_one_publish_per_day(self, mock_qa):
+        from blog.services.market_article_quality_gates import QAReport
+
+        _clear_today_autopublish_runs()
+        mock_qa.return_value = QAReport()
+        mock_qa.return_value.total_score = 95
+        mock_qa.return_value.critical_errors = 0
         _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
         with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
             first = run_systematic_article_autopublish(force=True)
-        if first.status not in (SystematicArticleAutoPublishRun.Status.PUBLISHED, SystematicArticleAutoPublishRun.Status.UPDATED):
-            self.skipTest('First run did not publish')
+        self.assertIn(
+            first.status,
+            (SystematicArticleAutoPublishRun.Status.PUBLISHED, SystematicArticleAutoPublishRun.Status.UPDATED),
+        )
         with self.assertRaises(AutoPublishBlocked):
             run_systematic_article_autopublish(force=True)
 
@@ -175,12 +193,21 @@ class MarketArticleAutoPublishTests(TestCase):
         run = run_systematic_article_autopublish(shadow=True, force=True)
         self.assertEqual(run.status, SystematicArticleAutoPublishRun.Status.SKIPPED)
 
-    def test_concurrent_blocked_after_publish(self):
+    @patch('blog.services.market_article_autopublish.run_quality_gates')
+    def test_concurrent_blocked_after_publish(self, mock_qa):
+        from blog.services.market_article_quality_gates import QAReport
+
+        _clear_today_autopublish_runs()
+        mock_qa.return_value = QAReport()
+        mock_qa.return_value.total_score = 95
+        mock_qa.return_value.critical_errors = 0
         _configure_autopublish(is_enabled=True, shadow_mode=False, quality_threshold=60, min_insights=0)
         with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_mock_polish_pass):
             first = run_systematic_article_autopublish(force=True)
-        if first.status not in (SystematicArticleAutoPublishRun.Status.PUBLISHED, SystematicArticleAutoPublishRun.Status.UPDATED):
-            self.skipTest('First publish failed')
+        self.assertIn(
+            first.status,
+            (SystematicArticleAutoPublishRun.Status.PUBLISHED, SystematicArticleAutoPublishRun.Status.UPDATED),
+        )
         count = SystematicArticleAutoPublishRun.objects.filter(
             run_date=local_today(),
             status__in=(

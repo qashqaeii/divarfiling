@@ -132,6 +132,11 @@ systemctl list-timers divar-systematic-article-autopublish.timer
 - قرارداد JSON: SEO `{"title","excerpt"}`؛ batch `{"texts":[{"id","text"}]}` — آرایه خام یا کلیدهای `segments/items` نرمال می‌شوند
 - دسته‌های کوچک (۲ segment / ~۱۲۰۰ کاراکتر)؛ پیشرفت در `chart_assets.autopublish_polish_state` برای Resume
 - پس از چند شکست JSON در یک دسته، **identity fallback** (متن اصلی همان segment) با schema معتبر
+- خطای عددی در segment → retry تک‌segment؛ سپس **numeric_safety_fallback** (بازگشت متن اصلی) با `segment_id` و توکن در `batch_logs`
+- مقایسه اعداد با نرمال‌سازی ارقام فارسی/انگلیسی و جداکننده‌ها؛ رد عدد/قیمت ساختگی جدید
+- گزارش: `polish_change_ratio`, `fallback_ratio`, `numeric_safety_fallback_count`
+- Shield عددی `⟦DFN:n⟧` قبل از LLM؛ Resume با `completed_segment_ids` + `batch_plan_version`
+- شمارش: `polished_segments`, `unchanged_segments`, `identity_fallback_count`, `numeric_safety_fallback_count`
 - Providerهای `403` / `geo_blocked` / `auth_error` در همان دسته دوباره صدا زده نمی‌شوند
 - شکست نهایی → `ai_polish_failed` + `ai_polish_report.batch_logs` — **بدون انتشار** نسخه بدون پولیش
 - QA کامل پس از پولیش

@@ -14,20 +14,84 @@ from blog.services.market_article_ai_polish import (
     AIPolishRecoverableError,
     SCHEMA_BATCH,
     SCHEMA_SEO,
+    StatisticalProtection,
     _polish_text_batch,
     batch_text_segments,
+    find_missing_numeric_tokens,
+    migrate_polish_state,
+    normalize_number_text,
+    shield_numeric_spans,
+    unshield_numeric_spans,
     parse_llm_response,
     parse_polish_json,
     polish_market_article_run,
     repair_json_text,
+    repair_polished_map_numeric_safety,
+    segment_numeric_issues,
     split_html_parts,
     text_segment_payload,
+    token_present_in_text,
 )
 from blog.services.market_article_autopublish import resume_systematic_article_autopublish
 from blog.services.market_article_pipeline import build_preview
 from blog.tests.test_market_articles import _seed_dataset
 
 User = get_user_model()
+
+
+class NumericSafetyTests(TestCase):
+    def test_persian_ascii_digits_equivalent(self):
+        self.assertTrue(token_present_in_text('۱۲,۵۰۰', 'قیمت 12,500 تومان'))
+        self.assertEqual(normalize_number_text('۱۲٬۵۰۰'), normalize_number_text('12,500'))
+
+    def test_missing_token_detected_with_detail(self):
+        prot = StatisticalProtection(tokens=['۱۲,۵۰۰,۰۰۰'])
+        missing = find_missing_numeric_tokens('قیمت ۱۲,۵۰۰,۰۰۰', 'قیمت بالا', prot)
+        self.assertEqual(len(missing), 1)
+
+    def test_invented_number_detected(self):
+        issue = segment_numeric_issues(
+            1,
+            'قیمت ۱۰,۰۰۰,۰۰۰ تومان',
+            'قیمت ۱۲,۰۰۰,۰۰۰ تومان',
+            StatisticalProtection(),
+        )
+        self.assertTrue(issue['invented_numbers'])
+
+    def test_shield_unshield_million_stats(self):
+        text = 'میانگین 255 و 372 میلیون تومان/متر در پونک'
+        shielded, mapping = shield_numeric_spans(text)
+        self.assertIn('⟦DFN:', shielded)
+        restored = unshield_numeric_spans(shielded, mapping)
+        self.assertIn('255', restored)
+        self.assertIn('372', restored)
+
+    def test_migrate_state_adds_completed_segment_ids(self):
+        segments = [{'id': 0, 'text': 'a'}, {'id': 2, 'text': 'b'}]
+        state = migrate_polish_state(
+            {'completed_batches': [0], 'polished_by_id': {'0': 'a'}},
+            segments,
+            plan_version=2,
+        )
+        self.assertIn(0, state['completed_segment_ids'])
+
+    @patch('blog.services.market_article_ai_polish._polish_single_segment_numeric')
+    def test_repair_map_only_bad_segments(self, mock_single):
+        mock_single.return_value = ('متن اصلاح‌شده', 'mock', 'm', 1)
+        originals = {1: '۱,۰۰۰ تومان', 2: 'بدون عدد طولانی'}
+        polished = {1: 'بدون عدد', 2: 'بدون عدد طولانی ویرایش'}
+        segments = [{'id': 1, 'text': originals[1]}, {'id': 2, 'text': originals[2]}]
+        prot = StatisticalProtection(tokens=['۱,۰۰۰'])
+        out = repair_polished_map_numeric_safety(
+            segments,
+            originals,
+            polished,
+            protection=prot,
+            attempts_log=[],
+        )
+        self.assertEqual(out[1], 'متن اصلاح‌شده')
+        mock_single.assert_called_once()
+        self.assertEqual(out[2], polished[2])
 
 
 class JsonRepairTests(TestCase):
@@ -78,10 +142,11 @@ class BatchPolishTests(TestCase):
         batches = batch_text_segments(segments)
         self.assertGreater(len(batches), 1)
 
+    @patch('blog.services.market_article_ai_polish.repair_polished_map_numeric_safety')
     @patch('blog.services.market_article_ai_polish.run_quality_gates')
     @patch('blog.services.market_article_ai_polish._polish_text_batch')
     @patch('blog.services.market_article_ai_polish._polish_seo')
-    def test_resume_skips_completed_batch(self, mock_seo, mock_batch, mock_qa):
+    def test_resume_skips_completed_batch(self, mock_seo, mock_batch, mock_qa, mock_repair):
         from blog.services.market_article_quality_gates import QAReport
 
         mock_qa.return_value = QAReport()
@@ -101,6 +166,8 @@ class BatchPolishTests(TestCase):
                 'excerpt': (run.seo_json or {}).get('excerpt'),
                 'polished_by_id': polished,
                 'completed_batches': [0],
+                'completed_segment_ids': [int(s['id']) for s in first_batch],
+                'batch_plan_version': 2,
                 'batch_logs': [],
                 'provider': 'test',
                 'model': 'test',
@@ -114,6 +181,7 @@ class BatchPolishTests(TestCase):
 
         mock_seo.return_value = ('t', 'e', 'p', 'm', 1, [])
         mock_batch.side_effect = batch_side_effect
+        mock_repair.side_effect = lambda _segments, _orig, polished, **_: polished
 
         result = polish_market_article_run(run, resume=True)
         self.assertTrue(result.applied)
@@ -209,7 +277,32 @@ class IdentityFallbackTests(TestCase):
             0,
             batch,
             protection=StatisticalProtection(),
+            segment_outcomes={},
         )
         self.assertEqual(polished[5], batch[0]['text'])
         self.assertEqual(provider, 'identity')
         self.assertTrue(any(l.get('status') == 'identity_fallback' for l in logs))
+
+    @patch('blog.services.market_article_ai_polish._polish_single_segment_numeric')
+    @patch('blog.services.market_article_ai_polish._call_llm')
+    def test_batch_numeric_mismatch_triggers_segment_retry(self, mock_llm, mock_single):
+        from blog.services.market_article_ai_polish import LLMCallResult, StatisticalProtection
+
+        mock_llm.return_value = LLMCallResult(
+            text='{"texts":[{"id":7,"text":"قیمت بالا"}]}',
+            provider='mock',
+            model='mock',
+            latency_ms=1,
+            input_tokens=1,
+            output_tokens=1,
+        )
+        mock_single.return_value = ('قیمت ۱۲,۵۰۰,۰۰۰ تومان', 'mock', 'm', 0)
+        batch = [{'id': 7, 'text': 'قیمت ۱۲,۵۰۰,۰۰۰ تومان'}]
+        prot = StatisticalProtection(tokens=['۱۲,۵۰۰,۰۰۰'])
+        outcomes: dict[str, str] = {}
+        polished, _, _, _, logs = _polish_text_batch(
+            3, batch, protection=prot, segment_outcomes=outcomes,
+        )
+        self.assertEqual(polished[7], 'قیمت ۱۲,۵۰۰,۰۰۰ تومان')
+        mock_single.assert_called_once()
+        self.assertTrue(any(e.get('status') == 'segment_retry' for e in logs))

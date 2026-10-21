@@ -57,10 +57,11 @@ class MarketArticleAIPolishTests(TestCase):
         errors = validate_markup_unchanged(orig, bad)
         self.assertTrue(errors)
 
+    @patch('blog.services.market_article_ai_polish.repair_polished_map_numeric_safety')
     @patch('blog.services.market_article_ai_polish.run_quality_gates')
     @patch('blog.services.market_article_ai_polish._polish_text_batch')
     @patch('blog.services.market_article_ai_polish._polish_seo')
-    def test_polish_applies_valid_json(self, mock_seo, mock_batch, mock_qa):
+    def test_polish_applies_valid_json(self, mock_seo, mock_batch, mock_qa, mock_repair):
         from blog.services.market_article_quality_gates import QAReport
 
         mock_qa.return_value = QAReport()
@@ -78,6 +79,7 @@ class MarketArticleAIPolishTests(TestCase):
             return ({int(s['id']): s['text'] for s in batch}, 'mock', 'mock-model', 5, [])
 
         mock_batch.side_effect = batch_side_effect
+        mock_repair.side_effect = lambda _segments, _orig, polished, **_: polished
         result = polish_market_article_run(run, resume=False)
         self.assertTrue(result.applied)
         run.refresh_from_db()

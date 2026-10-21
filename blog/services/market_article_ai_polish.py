@@ -19,11 +19,25 @@ logger = logging.getLogger(__name__)
 
 FEATURE = 'market_article_polish'
 
+BATCH_PLAN_VERSION = 2
 BATCH_MAX_SEGMENTS = 2
 BATCH_MAX_CHARS = 1200
+_BATCH_PLANS: dict[int, dict[str, int]] = {
+    1: {'max_segments': 2, 'max_chars': 1200},
+    2: {'max_segments': 2, 'max_chars': 1200},
+}
+_NUM_SHIELD_TOKEN = '⟦DFN:{idx}⟧'
+_STAT_PHRASE_RE = re.compile(
+    r'[\d۰-۹]{1,3}(?:[,\،][\d۰-۹]{3})+(?:\s*(?:میلیون|میلیارد|تومان|متر(?:\s*/\s*متر)?|%|٪))?'
+    r'|[\d۰-۹]+(?:\s*(?:میلیون|میلیارد))(?:\s*(?:تومان|متر(?:\s*/\s*متر)?))?'
+    r'|[\d۰-۹]+(?:[\.٫][\d۰-۹]+)?\s*٪',
+    re.U,
+)
 BATCH_MAX_ATTEMPTS = 4
 SEO_MAX_ATTEMPTS = 4
+SEGMENT_NUMERIC_MAX_ATTEMPTS = 3
 BACKOFF_BASE_SECONDS = 1.5
+MAX_NUMERIC_SAFETY_FALLBACK_RATIO = 0.25
 SCHEMA_SEO = 'seo'
 SCHEMA_BATCH = 'batch'
 _PROVIDER_SKIP_CODES = frozenset({
@@ -55,6 +69,9 @@ _LOCKED_ATTR_RE = re.compile(
 )
 _CHART_SRC_HINT = re.compile(r'chart_|mk-chart|canvas', re.I)
 _TRAILING_COMMA_RE = re.compile(r',\s*([}\]])')
+_PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹'
+_ASCII_DIGITS = '0123456789'
+_DIGIT_TRANS = str.maketrans(_PERSIAN_DIGITS, _ASCII_DIGITS)
 
 
 class AIPolishError(Exception):
@@ -63,6 +80,23 @@ class AIPolishError(Exception):
 
 class AIPolishRecoverableError(Exception):
     """خطای موقت provider — تلاش مجدد مجاز است."""
+
+
+class AIPolishNumericError(AIPolishRecoverableError):
+    """حذف/تغییر عدد در segment — retry تک‌segment."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        segment_id: int,
+        missing_tokens: list[str],
+        error_type: str = 'numeric_mismatch',
+    ):
+        super().__init__(message)
+        self.segment_id = segment_id
+        self.missing_tokens = missing_tokens
+        self.error_type = error_type
 
 
 class AIPolishJsonError(AIPolishRecoverableError):
@@ -103,9 +137,24 @@ def split_html_parts(html: str) -> list[tuple[_PlaceKind, str]]:
     return parts
 
 
+def segment_is_low_value_for_ai(text: str) -> bool:
+    """تیتر کوتاه یا متن کم‌ارزش — بدون فراخوانی AI."""
+    t = (text or '').strip()
+    if len(t) < 12:
+        return True
+    words = [w for w in re.split(r'\s+', t) if w]
+    if len(words) <= 5 and len(t) < 72 and not re.search(r'[.!؟؛]', t):
+        return True
+    if len(t) < 24 and not _STAT_PHRASE_RE.search(t):
+        return True
+    return False
+
+
 def segment_eligible_for_polish(text: str) -> bool:
     """متن‌های خیلی کوتاه یا صرفاً عددی به AI نمی‌روند."""
     t = (text or '').strip()
+    if segment_is_low_value_for_ai(t):
+        return False
     if len(t) < 8:
         return False
     if '<' in t or 'script' in t.lower() or 'style=' in t.lower():
@@ -123,8 +172,16 @@ def text_segment_payload(parts: list[tuple[_PlaceKind, str]]) -> list[dict[str, 
     return out
 
 
-def batch_text_segments(segments: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+def batch_text_segments(
+    segments: list[dict[str, Any]],
+    *,
+    plan_version: int | None = None,
+) -> list[list[dict[str, Any]]]:
     """دسته‌بندی segmentها برای پاسخ JSON کوچک‌تر."""
+    version = plan_version if plan_version is not None else BATCH_PLAN_VERSION
+    plan = _BATCH_PLANS.get(version, _BATCH_PLANS[BATCH_PLAN_VERSION])
+    max_segments = int(plan['max_segments'])
+    max_chars = int(plan['max_chars'])
     batches: list[list[dict[str, Any]]] = []
     current: list[dict[str, Any]] = []
     char_count = 0
@@ -132,8 +189,8 @@ def batch_text_segments(segments: list[dict[str, Any]]) -> list[list[dict[str, A
         text = str(seg.get('text') or '')
         seg_len = len(text)
         if current and (
-            len(current) >= BATCH_MAX_SEGMENTS
-            or char_count + seg_len > BATCH_MAX_CHARS
+            len(current) >= max_segments
+            or char_count + seg_len > max_chars
         ):
             batches.append(current)
             current = []
@@ -143,6 +200,129 @@ def batch_text_segments(segments: list[dict[str, Any]]) -> list[list[dict[str, A
     if current:
         batches.append(current)
     return batches
+
+
+def shield_numeric_spans(text: str) -> tuple[str, dict[str, str]]:
+    """جایگزینی عبارات آماری با placeholder داخلی ⟦DFN:n⟧."""
+    if not text:
+        return '', {}
+    matches = list(_STAT_PHRASE_RE.finditer(text))
+    if not matches:
+        return text, {}
+    mapping: dict[str, str] = {}
+    chunks: list[str] = []
+    cursor = 0
+    for idx, match in enumerate(matches):
+        token = _NUM_SHIELD_TOKEN.format(idx=idx)
+        mapping[token] = match.group()
+        chunks.append(text[cursor : match.start()])
+        chunks.append(token)
+        cursor = match.end()
+    chunks.append(text[cursor:])
+    return ''.join(chunks), mapping
+
+
+def unshield_numeric_spans(text: str, mapping: dict[str, str]) -> str:
+    out = text or ''
+    for token, original in mapping.items():
+        out = out.replace(token, original)
+    return out
+
+
+def validate_shield_tokens(text: str, mapping: dict[str, str]) -> list[str]:
+    if not mapping:
+        return []
+    errors: list[str] = []
+    for token in mapping:
+        count = (text or '').count(token)
+        if count != 1:
+            errors.append(f'placeholder {token} count={count}')
+    return errors
+
+
+def shield_segment_for_llm(text: str) -> tuple[str, dict[str, str]]:
+    return shield_numeric_spans(text)
+
+
+def unshield_and_validate_segment(
+    seg_id: int,
+    original: str,
+    llm_text: str,
+    shield_map: dict[str, str],
+    protection: StatisticalProtection,
+) -> tuple[str, list[str]]:
+    shield_errors = validate_shield_tokens(llm_text, shield_map)
+    if shield_errors:
+        return llm_text, [f'segment {seg_id}: shield: {"; ".join(shield_errors)}']
+    restored = unshield_numeric_spans(llm_text, shield_map)
+    numeric_errors = validate_segment_numbers(seg_id, original, restored, protection)
+    return restored, numeric_errors
+
+
+def migrate_polish_state(
+    state: dict[str, Any],
+    segments: list[dict[str, Any]],
+    *,
+    plan_version: int,
+) -> dict[str, Any]:
+    """سازگاری Resume — segment_id محور + نسخه batch plan."""
+    migrated = dict(state)
+    if not migrated.get('batch_plan_version'):
+        migrated['batch_plan_version'] = plan_version if migrated.get('completed_batches') else BATCH_PLAN_VERSION
+    if migrated.get('completed_segment_ids'):
+        migrated['completed_segment_ids'] = [int(x) for x in migrated['completed_segment_ids']]
+        return migrated
+    completed_ids: set[int] = set()
+    for key in migrated.get('polished_by_id') or {}:
+        try:
+            completed_ids.add(int(key))
+        except (TypeError, ValueError):
+            continue
+    batches = batch_text_segments(segments, plan_version=int(migrated['batch_plan_version']))
+    for batch_index in migrated.get('completed_batches') or []:
+        if 0 <= int(batch_index) < len(batches):
+            for seg in batches[int(batch_index)]:
+                completed_ids.add(int(seg['id']))
+    migrated['completed_segment_ids'] = sorted(completed_ids)
+    if 'segment_outcomes' not in migrated:
+        migrated['segment_outcomes'] = {}
+    return migrated
+
+
+def batch_segments_done(batch: list[dict[str, Any]], completed_segment_ids: set[int]) -> bool:
+    ids = {int(s['id']) for s in batch}
+    return ids.issubset(completed_segment_ids)
+
+
+def build_polish_state_payload(
+    *,
+    seo_done: bool,
+    title: str,
+    excerpt: str,
+    polished_map: dict[int, str],
+    completed_batches: set[int],
+    completed_segment_ids: set[int],
+    batch_logs: list[dict[str, Any]],
+    provider: str,
+    model: str,
+    latency_ms: int,
+    batch_plan_version: int,
+    segment_outcomes: dict[str, str],
+) -> dict[str, Any]:
+    return {
+        'batch_plan_version': batch_plan_version,
+        'seo_done': seo_done,
+        'title': title,
+        'excerpt': excerpt,
+        'polished_by_id': polished_map,
+        'completed_batches': sorted(completed_batches),
+        'completed_segment_ids': sorted(completed_segment_ids),
+        'segment_outcomes': segment_outcomes,
+        'batch_logs': batch_logs,
+        'provider': provider,
+        'model': model,
+        'latency_ms': latency_ms,
+    }
 
 
 def apply_polished_texts(
@@ -156,6 +336,72 @@ def apply_polished_texts(
         else:
             rebuilt.append(polished_by_id.get(idx, content))
     return ''.join(rebuilt)
+
+
+def normalize_number_text(text: str) -> str:
+    """یکسان‌سازی ارقام فارسی/انگلیسی و جداکننده‌ها برای مقایسه امن."""
+    if not text:
+        return ''
+    t = text.translate(_DIGIT_TRANS)
+    t = t.replace('\u200c', '').replace('\u00a0', '')
+    t = t.replace('،', ',').replace('٬', ',').replace('٫', '.')
+    t = t.replace('٪', '%')
+    return t
+
+
+def token_present_in_text(token: str, text: str) -> bool:
+    nt = normalize_number_text(token).strip()
+    if not nt or len(nt) < 2:
+        return token in (text or '')
+    return nt in normalize_number_text(text or '')
+
+
+def protection_tokens_relevant_to_text(text: str, protection: StatisticalProtection) -> list[str]:
+    return [t for t in protection.tokens if t and token_present_in_text(t, text)]
+
+
+def extract_normalized_number_spans(text: str) -> set[str]:
+    spans: set[str] = set()
+    for match in _NUM_FMT_RE.findall(text or ''):
+        normalized = normalize_number_text(match.strip())
+        if len(normalized) >= 2:
+            spans.add(normalized)
+    return spans
+
+
+def find_missing_numeric_tokens(
+    original: str,
+    polished: str,
+    protection: StatisticalProtection,
+) -> list[str]:
+    missing: list[str] = []
+    for token in protection_tokens_relevant_to_text(original, protection):
+        if not token_present_in_text(token, polished):
+            missing.append(token)
+    return missing
+
+
+def find_new_numeric_claims(original: str, polished: str) -> list[str]:
+    """اعداد تازه در خروجی که در متن اصلی segment نبودند."""
+    orig = extract_normalized_number_spans(original)
+    new_spans = extract_normalized_number_spans(polished) - orig
+    return sorted(new_spans)
+
+
+def segment_numeric_issues(
+    seg_id: int,
+    original: str,
+    polished: str,
+    protection: StatisticalProtection,
+) -> dict[str, Any]:
+    missing = find_missing_numeric_tokens(original, polished, protection)
+    invented = find_new_numeric_claims(original, polished)
+    return {
+        'segment_id': seg_id,
+        'missing_tokens': missing,
+        'invented_numbers': invented,
+        'ok': not missing and not invented,
+    }
 
 
 def collect_statistical_protection(
@@ -253,13 +499,11 @@ def validate_seo_fields(
     if not (new_excerpt or '').strip():
         errors.append('Meta Description پس از پولیش خالی است.')
 
-    title_missing = [t for t in protection.tokens if t in (original_title or '') and t not in (new_title or '')]
+    title_missing = find_missing_numeric_tokens(original_title or '', new_title or '', protection)
     if title_missing:
         errors.append(f'{len(title_missing)} عدد آماری از عنوان حذف شده است.')
 
-    excerpt_missing = [
-        t for t in protection.tokens if t in (original_excerpt or '') and t not in (new_excerpt or '')
-    ]
+    excerpt_missing = find_missing_numeric_tokens(original_excerpt or '', new_excerpt or '', protection)
     if excerpt_missing:
         errors.append(f'{len(excerpt_missing)} عدد آماری از Meta Description حذف شده است.')
 
@@ -285,7 +529,8 @@ def validate_polished_html(
     if orig_words and new_words < int(orig_words * 0.75):
         errors.append('طول متن پس از پولیش بیش از حد کاهش یافته است.')
 
-    missing_nums = [token for token in protected_numbers if token not in polished_html]
+    prot = StatisticalProtection(tokens=protected_numbers)
+    missing_nums = find_missing_numeric_tokens(original_html, polished_html, prot)
     if missing_nums:
         errors.append(f'{len(missing_nums)} عدد آماری از بدنه HTML حذف شده است.')
 
@@ -297,11 +542,82 @@ def validate_polished_html(
     return errors
 
 
-def validate_segment_numbers(original: str, polished: str, protection: StatisticalProtection) -> list[str]:
-    missing = [t for t in protection.tokens if t in original and t not in polished]
-    if missing:
-        return [f'اعداد segment حذف شده: {len(missing)}']
-    return []
+def validate_segment_numbers(
+    seg_id: int,
+    original: str,
+    polished: str,
+    protection: StatisticalProtection,
+) -> list[str]:
+    issues = segment_numeric_issues(seg_id, original, polished, protection)
+    if issues['ok']:
+        return []
+    parts: list[str] = []
+    if issues['missing_tokens']:
+        sample = ','.join(issues['missing_tokens'][:3])
+        parts.append(
+            f'segment {seg_id}: حذف عدد ({len(issues["missing_tokens"])}): {sample}',
+        )
+    if issues['invented_numbers']:
+        sample = ','.join(issues['invented_numbers'][:3])
+        parts.append(
+            f'segment {seg_id}: عدد جدید ({len(issues["invented_numbers"])}): {sample}',
+        )
+    return parts
+
+
+def compute_polish_coverage_metrics(
+    *,
+    segments: list[dict[str, Any]],
+    polished_map: dict[int, str],
+    originals_by_id: dict[int, str],
+    batch_logs: list[dict[str, Any]],
+    segment_outcomes: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    eligible_ids = {int(s['id']) for s in segments}
+    outcomes = segment_outcomes or {}
+    polished_count = sum(1 for sid in eligible_ids if outcomes.get(str(sid)) == 'polished')
+    unchanged_count = sum(1 for sid in eligible_ids if outcomes.get(str(sid)) == 'unchanged')
+    identity_fb = sum(1 for sid in eligible_ids if outcomes.get(str(sid)) == 'identity_fallback')
+    numeric_fb = sum(1 for sid in eligible_ids if outcomes.get(str(sid)) == 'numeric_safety_fallback')
+    if not outcomes:
+        identity_fb = sum(1 for e in batch_logs if e.get('status') == 'identity_fallback')
+        numeric_fb = sum(
+            1 for e in batch_logs if e.get('status') == 'numeric_safety_fallback'
+        )
+    changed = 0
+    for seg_id in eligible_ids:
+        orig = originals_by_id.get(seg_id, '')
+        new = polished_map.get(seg_id, orig)
+        if (new or '').strip() != (orig or '').strip():
+            changed += 1
+    eligible = len(eligible_ids) or 1
+    fb_total = identity_fb + numeric_fb
+    return {
+        'eligible_segments': len(eligible_ids),
+        'polished_segments': polished_count,
+        'unchanged_segments': unchanged_count,
+        'polished_segments_changed': changed,
+        'polish_change_ratio': round(changed / eligible, 4),
+        'identity_fallback_count': identity_fb,
+        'numeric_safety_fallback_count': numeric_fb,
+        'fallback_ratio': round(fb_total / eligible, 4),
+    }
+
+
+def assert_polish_coverage_acceptable(metrics: dict[str, Any]) -> None:
+    eligible = int(metrics.get('eligible_segments') or 0)
+    if eligible <= 0:
+        return
+    if metrics.get('fallback_ratio', 0) > MAX_NUMERIC_SAFETY_FALLBACK_RATIO:
+        raise AIPolishError(
+            f'نسبت fallback پولیش ({metrics["fallback_ratio"]}) از حد مجاز بیشتر است.',
+        )
+    changed = int(metrics.get('polished_segments_changed') or 0)
+    fallbacks = int(metrics.get('identity_fallback_count') or 0) + int(
+        metrics.get('numeric_safety_fallback_count') or 0,
+    )
+    if fallbacks >= eligible and changed == 0:
+        raise AIPolishError('پولیش AI هیچ segment معتبری تولید نکرد (همه fallback).')
 
 
 def validate_polished_article(
@@ -670,22 +986,187 @@ def _polish_seo(
     raise AIPolishJsonError(last_error or 'SEO polish failed', error_type=last_type)
 
 
+def _batch_system_prompt(id_list: list[int]) -> str:
+    return (
+        'ویراستار متن مقاله املاک ایران. خروجی فقط JSON object با یک کلید texts. '
+        'فرمت: {"texts":[{"id":NUMBER,"text":"..."}]}. '
+        f'باید دقیقاً این idها را برگردانی: {id_list}. '
+        'توکن‌های ⟦DFN:n⟧ را عیناً و یک‌بار در همان متن نگه دار؛ حذف یا تغییر ممنوع. '
+        'عدد جدید یا قیمت ساختگی اضافه نکن. HTML برنگردان.'
+    )
+
+
+def _segments_with_numeric_issues(
+    polished: dict[int, str],
+    originals: dict[int, str],
+    allowed_ids: set[int],
+    protection: StatisticalProtection,
+) -> dict[int, dict[str, Any]]:
+    bad: dict[int, dict[str, Any]] = {}
+    for seg_id in allowed_ids:
+        issue = segment_numeric_issues(seg_id, originals[seg_id], polished[seg_id], protection)
+        if not issue['ok']:
+            bad[seg_id] = issue
+    return bad
+
+
+def _polish_single_segment_numeric(
+    seg_id: int,
+    original_text: str,
+    *,
+    batch_index: int,
+    protection: StatisticalProtection,
+    attempts_log: list[dict[str, Any]],
+    blocked: set[str],
+) -> tuple[str, str, str, int]:
+    shielded, shield_map = shield_segment_for_llm(original_text)
+    batch = [{'id': seg_id, 'text': shielded}]
+    system = _batch_system_prompt([seg_id])
+    user = json.dumps({'texts': batch}, ensure_ascii=False)
+    last_issue: dict[str, Any] = {}
+    for attempt in range(1, SEGMENT_NUMERIC_MAX_ATTEMPTS + 1):
+        try:
+            llm = _call_llm(system, user, blocked_providers=blocked)
+            data = parse_llm_response(llm.text, SCHEMA_BATCH)
+            polished = _coerce_batch_texts(data, {seg_id})
+            candidate, val_errors = unshield_and_validate_segment(
+                seg_id,
+                original_text,
+                polished[seg_id],
+                shield_map,
+                protection,
+            )
+            if not val_errors:
+                _log_attempt(
+                    attempts_log,
+                    phase='segment_numeric_retry',
+                    status='ok',
+                    attempt=attempt,
+                    batch_index=batch_index,
+                    segment_count=1,
+                    llm=llm,
+                    validation='passed',
+                )
+                return candidate, llm.provider, llm.model, llm.latency_ms
+            last_issue = segment_numeric_issues(seg_id, original_text, candidate, protection)
+            _log_attempt(
+                attempts_log,
+                phase='segment_numeric_retry',
+                status='retry',
+                attempt=attempt,
+                batch_index=batch_index,
+                segment_count=1,
+                error_type='numeric_mismatch',
+                error='; '.join(val_errors),
+                llm=llm,
+            )
+            _sleep_backoff(attempt)
+        except (AIPolishJsonError, AIPolishRecoverableError) as exc:
+            _log_attempt(
+                attempts_log,
+                phase='segment_numeric_retry',
+                status='retry',
+                attempt=attempt,
+                batch_index=batch_index,
+                segment_count=1,
+                error=str(exc),
+                error_type=getattr(exc, 'error_type', 'json_error'),
+            )
+            _sleep_backoff(attempt)
+    _log_attempt(
+        attempts_log,
+        phase='segment_numeric_retry',
+        status='numeric_safety_fallback',
+        attempt=SEGMENT_NUMERIC_MAX_ATTEMPTS,
+        batch_index=batch_index,
+        segment_count=1,
+        error_type='numeric_mismatch',
+        error=json.dumps(
+            {
+                'segment_id': seg_id,
+                'missing_tokens': last_issue.get('missing_tokens', [])[:5],
+                'invented_numbers': last_issue.get('invented_numbers', [])[:5],
+            },
+            ensure_ascii=False,
+        ),
+    )
+    attempts_log[-1]['segment_id'] = seg_id
+    return original_text, 'numeric_safety', 'passthrough', 0
+
+
+def _apply_numeric_safety_to_batch(
+    polished: dict[int, str],
+    originals: dict[int, str],
+    allowed_ids: set[int],
+    *,
+    batch_index: int,
+    protection: StatisticalProtection,
+    attempts_log: list[dict[str, Any]],
+    blocked: set[str],
+) -> tuple[dict[int, str], str, str, int]:
+    result = dict(polished)
+    provider, model, latency = 'arvan', '', 0
+    bad = _segments_with_numeric_issues(result, originals, allowed_ids, protection)
+    for seg_id, issue in bad.items():
+        fixed, provider, model, seg_latency = _polish_single_segment_numeric(
+            seg_id,
+            originals[seg_id],
+            batch_index=batch_index,
+            protection=protection,
+            attempts_log=attempts_log,
+            blocked=blocked,
+        )
+        result[seg_id] = fixed
+        latency += seg_latency
+    return result, provider, model, latency
+
+
+def _prepare_shielded_batch(
+    batch: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[int, dict[str, str]]]:
+    shield_maps: dict[int, dict[str, str]] = {}
+    shielded_batch: list[dict[str, Any]] = []
+    for seg in batch:
+        seg_id = int(seg['id'])
+        text = str(seg.get('text') or '')
+        shielded, shield_map = shield_segment_for_llm(text)
+        shield_maps[seg_id] = shield_map
+        shielded_batch.append({'id': seg_id, 'text': shielded})
+    return shielded_batch, shield_maps
+
+
+def _record_segment_outcomes(
+    segment_outcomes: dict[str, str],
+    originals: dict[int, str],
+    final: dict[int, str],
+    *,
+    fallback_kinds: dict[int, str],
+) -> None:
+    for seg_id, original in originals.items():
+        new_text = final.get(seg_id, original)
+        key = str(seg_id)
+        kind = fallback_kinds.get(seg_id)
+        if kind:
+            segment_outcomes[key] = kind
+        elif (new_text or '').strip() == (original or '').strip():
+            segment_outcomes[key] = 'unchanged'
+        else:
+            segment_outcomes[key] = 'polished'
+
+
 def _polish_text_batch(
     batch_index: int,
     batch: list[dict[str, Any]],
     *,
     protection: StatisticalProtection,
+    segment_outcomes: dict[str, str],
 ) -> tuple[dict[int, str], str, str, int, list[dict[str, Any]]]:
     allowed_ids = {int(s['id']) for s in batch}
     originals = {int(s['id']): str(s['text']) for s in batch}
     id_list = sorted(allowed_ids)
-    system = (
-        'ویراستار متن مقاله املاک ایران. خروجی فقط JSON object با یک کلید texts. '
-        'فرمت: {"texts":[{"id":NUMBER,"text":"..."}]}. '
-        f'باید دقیقاً این idها را برگردانی: {id_list}. '
-        'اگر اصلاح لازم نیست همان متن را برگردان. اعداد/قیمت/درصد را حفظ کن. HTML برنگردان.'
-    )
-    user = json.dumps({'texts': batch}, ensure_ascii=False)
+    shielded_batch, shield_maps = _prepare_shielded_batch(batch)
+    system = _batch_system_prompt(id_list)
+    user = json.dumps({'texts': shielded_batch}, ensure_ascii=False)
     attempts_log: list[dict[str, Any]] = []
     blocked: set[str] = set()
     last_error = ''
@@ -694,15 +1175,55 @@ def _polish_text_batch(
         try:
             llm = _call_llm(system, user, blocked_providers=blocked)
             data = parse_llm_response(llm.text, SCHEMA_BATCH)
-            polished = _coerce_batch_texts(data, allowed_ids)
-            for seg_id, new_text in polished.items():
-                seg_errors = validate_segment_numbers(
+            polished_raw = _coerce_batch_texts(data, allowed_ids)
+            final: dict[int, str] = {}
+            bad_ids: list[int] = []
+            for seg_id in allowed_ids:
+                restored, errors = unshield_and_validate_segment(
+                    seg_id,
                     originals[seg_id],
-                    new_text,
+                    polished_raw[seg_id],
+                    shield_maps[seg_id],
                     protection,
                 )
-                if seg_errors:
-                    raise AIPolishError('; '.join(seg_errors))
+                if errors:
+                    bad_ids.append(seg_id)
+                    _log_attempt(
+                        attempts_log,
+                        phase='batch',
+                        status='segment_retry',
+                        attempt=attempt,
+                        batch_index=batch_index,
+                        segment_count=1,
+                        error='; '.join(errors),
+                        error_type='numeric_mismatch',
+                        llm=llm,
+                    )
+                else:
+                    final[seg_id] = restored
+            extra_latency = 0
+            provider, model = llm.provider, llm.model
+            fallback_kinds: dict[int, str] = {}
+            for seg_id in bad_ids:
+                fixed, provider, model, seg_latency = _polish_single_segment_numeric(
+                    seg_id,
+                    originals[seg_id],
+                    batch_index=batch_index,
+                    protection=protection,
+                    attempts_log=attempts_log,
+                    blocked=blocked,
+                )
+                final[seg_id] = fixed
+                extra_latency += seg_latency
+                if (fixed or '').strip() == (originals[seg_id] or '').strip():
+                    fallback_kinds[seg_id] = 'numeric_safety_fallback'
+            _record_segment_outcomes(
+                segment_outcomes,
+                originals,
+                final,
+                fallback_kinds=fallback_kinds,
+            )
+            validation = 'passed' if not bad_ids else 'numeric_safety_applied'
             _log_attempt(
                 attempts_log,
                 phase='batch',
@@ -711,11 +1232,9 @@ def _polish_text_batch(
                 batch_index=batch_index,
                 segment_count=len(batch),
                 llm=llm,
-                validation='passed',
+                validation=validation,
             )
-            return polished, llm.provider, llm.model, llm.latency_ms, attempts_log
-        except AIPolishError:
-            raise
+            return final, provider, model, llm.latency_ms + extra_latency, attempts_log
         except (AIPolishJsonError, AIPolishRecoverableError) as exc:
             last_error = str(exc)
             last_type = getattr(exc, 'error_type', 'json_error')
@@ -730,19 +1249,50 @@ def _polish_text_batch(
                 error_type=last_type,
             )
             _sleep_backoff(attempt)
-            if attempt >= BATCH_MAX_ATTEMPTS:
-                _log_attempt(
-                    attempts_log,
-                    phase='batch',
-                    status='identity_fallback',
-                    attempt=attempt,
-                    batch_index=batch_index,
-                    segment_count=len(batch),
-                    error_type=last_type,
-                    error=last_error,
-                )
-                return originals, 'identity', 'passthrough', 0, attempts_log
-    raise AIPolishJsonError(last_error or f'batch {batch_index} failed', error_type=last_type)
+
+    _log_attempt(
+        attempts_log,
+        phase='batch',
+        status='identity_fallback',
+        attempt=BATCH_MAX_ATTEMPTS,
+        batch_index=batch_index,
+        segment_count=len(batch),
+        error_type=last_type,
+        error=last_error,
+    )
+    for seg_id, original in originals.items():
+        segment_outcomes[str(seg_id)] = 'identity_fallback'
+    return originals, 'identity', 'passthrough', 0, attempts_log
+
+
+def repair_polished_map_numeric_safety(
+    segments: list[dict[str, Any]],
+    originals_by_id: dict[int, str],
+    polished_map: dict[int, str],
+    *,
+    protection: StatisticalProtection,
+    attempts_log: list[dict[str, Any]],
+) -> dict[int, str]:
+    """پس از Resume — segmentهای مشکل‌دار عددی را تک‌به‌تک اصلاح می‌کند."""
+    blocked: set[str] = set()
+    updated = dict(polished_map)
+    for seg in segments:
+        seg_id = int(seg['id'])
+        original = originals_by_id.get(seg_id, str(seg.get('text') or ''))
+        current = updated.get(seg_id, original)
+        issue = segment_numeric_issues(seg_id, original, current, protection)
+        if issue['ok']:
+            continue
+        fixed, _, _, _ = _polish_single_segment_numeric(
+            seg_id,
+            original,
+            batch_index=-1,
+            protection=protection,
+            attempts_log=attempts_log,
+            blocked=blocked,
+        )
+        updated[seg_id] = fixed
+    return updated
 
 
 def polish_market_article_run(
@@ -767,7 +1317,7 @@ def polish_market_article_run(
             segments.append(seg)
         else:
             auto_passthrough[int(seg['id'])] = str(seg['text'])
-    batches = batch_text_segments(segments)
+    originals_by_id = {int(s['id']): str(s['text']) for s in all_segments}
     protection = collect_statistical_protection(
         run,
         title=original_title,
@@ -776,11 +1326,21 @@ def polish_market_article_run(
     )
 
     state = _load_polish_state(run) if resume else {}
+    plan_version = int(state.get('batch_plan_version') or BATCH_PLAN_VERSION)
+    if state.get('completed_batches') and not state.get('batch_plan_version'):
+        plan_version = 1
+    state = migrate_polish_state(state, segments, plan_version=plan_version) if state else state
+    batches = batch_text_segments(segments, plan_version=plan_version)
+
     polished_map: dict[int, str] = {
         int(k): v for k, v in (state.get('polished_by_id') or {}).items()
     }
     polished_map.update(auto_passthrough)
-    completed_batches = set(state.get('completed_batches') or [])
+    completed_batches = {int(x) for x in (state.get('completed_batches') or [])}
+    completed_segment_ids = {int(x) for x in (state.get('completed_segment_ids') or [])}
+    segment_outcomes: dict[str, str] = dict(state.get('segment_outcomes') or {})
+    for seg_id, text in auto_passthrough.items():
+        segment_outcomes.setdefault(str(seg_id), 'unchanged')
     new_title = str(state.get('title') or original_title)
     new_excerpt = str(state.get('excerpt') or original_excerpt)
     seo_done = bool(state.get('seo_done'))
@@ -789,6 +1349,25 @@ def polish_market_article_run(
     provider = str(state.get('provider') or '')
     model = str(state.get('model') or '')
     total_latency = int(state.get('latency_ms') or 0)
+
+    def _persist_state() -> None:
+        _save_polish_state(
+            run,
+            build_polish_state_payload(
+                seo_done=seo_done,
+                title=new_title,
+                excerpt=new_excerpt,
+                polished_map=polished_map,
+                completed_batches=completed_batches,
+                completed_segment_ids=completed_segment_ids,
+                batch_logs=batch_logs,
+                provider=provider,
+                model=model,
+                latency_ms=total_latency,
+                batch_plan_version=plan_version,
+                segment_outcomes=segment_outcomes,
+            ),
+        )
 
     if not seo_done:
         title, excerpt, provider, model, latency, logs = _polish_seo(
@@ -800,47 +1379,51 @@ def polish_market_article_run(
         seo_done = True
         batch_logs.extend(logs)
         total_latency += latency
-        _save_polish_state(
-            run,
-            {
-                'seo_done': True,
-                'title': new_title,
-                'excerpt': new_excerpt,
-                'polished_by_id': polished_map,
-                'completed_batches': sorted(completed_batches),
-                'batch_logs': batch_logs,
-                'provider': provider,
-                'model': model,
-                'latency_ms': total_latency,
-            },
-        )
+        _persist_state()
 
     for batch_index, batch in enumerate(batches):
-        if batch_index in completed_batches:
+        if batch_segments_done(batch, completed_segment_ids):
+            completed_batches.add(batch_index)
+            continue
+        pending_batch = [
+            s for s in batch if int(s['id']) not in completed_segment_ids
+        ]
+        if not pending_batch:
+            completed_batches.add(batch_index)
             continue
         polished_batch, provider, model, latency, logs = _polish_text_batch(
             batch_index,
-            batch,
+            pending_batch,
             protection=protection,
+            segment_outcomes=segment_outcomes,
         )
         polished_map.update(polished_batch)
+        for seg in pending_batch:
+            completed_segment_ids.add(int(seg['id']))
         completed_batches.add(batch_index)
         batch_logs.extend(logs)
         total_latency += latency
-        _save_polish_state(
-            run,
-            {
-                'seo_done': True,
-                'title': new_title,
-                'excerpt': new_excerpt,
-                'polished_by_id': polished_map,
-                'completed_batches': sorted(completed_batches),
-                'batch_logs': batch_logs,
-                'provider': provider,
-                'model': model,
-                'latency_ms': total_latency,
-            },
-        )
+        _persist_state()
+
+    repaired = repair_polished_map_numeric_safety(
+        segments,
+        originals_by_id,
+        polished_map,
+        protection=protection,
+        attempts_log=batch_logs,
+    )
+    if repaired != polished_map:
+        polished_map = repaired
+        _persist_state()
+
+    coverage = compute_polish_coverage_metrics(
+        segments=segments,
+        polished_map=polished_map,
+        originals_by_id=originals_by_id,
+        batch_logs=batch_logs,
+        segment_outcomes=segment_outcomes,
+    )
+    assert_polish_coverage_acceptable(coverage)
 
     new_html = apply_polished_texts(parts, polished_map)
     validation_errors = validate_polished_article(
@@ -874,6 +1457,7 @@ def polish_market_article_run(
         'batch_logs': batch_logs,
         'resumed': bool(state),
         'validation_errors': [],
+        **coverage,
     }
     return PolishResult(
         applied=True,

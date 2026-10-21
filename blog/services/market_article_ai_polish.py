@@ -13,7 +13,11 @@ from ai_workspace.providers.registry import get_http_provider_chain
 from ai_workspace.services.generation import get_feature_generation
 from blog.models import MarketArticleRun
 from blog.services.market_article_autopublish_config import get_autopublish_settings
-from blog.services.market_article_quality_gates import _extract_report_numbers, run_quality_gates
+from blog.services.market_article_quality_gates import (
+    QA_POLISH_PHASE_EXCLUDE,
+    _extract_report_numbers,
+    run_quality_gates,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -672,9 +676,13 @@ def validate_polished_article(
         'excerpt': new_excerpt[:300],
     }
     try:
-        qa = run_quality_gates(run, get_autopublish_settings())
+        qa = run_quality_gates(
+            run,
+            get_autopublish_settings(),
+            exclude_checks=QA_POLISH_PHASE_EXCLUDE,
+        )
         if qa.critical_errors > 0:
-            errors.append(f'QA پس از پولیش: {qa.critical_errors} خطای بحرانی')
+            errors.append(f'کنترل پولیش: {qa.critical_errors} خطای بحرانی')
             errors.extend(qa.failure_reasons[:5])
     finally:
         run.content_html = saved_html
@@ -937,6 +945,11 @@ def _save_polish_state(run: MarketArticleRun, state: dict[str, Any]) -> None:
     chart[_POLISH_STATE_KEY] = state
     run.chart_assets = chart
     run.save(update_fields=['chart_assets', 'updated_at'])
+
+
+def finalize_polish_resume_state(run: MarketArticleRun) -> None:
+    """پس از عبور QA نهایی — پاک‌سازی state Resume پولیش."""
+    _clear_polish_state(run)
 
 
 def _clear_polish_state(run: MarketArticleRun) -> None:
@@ -1311,6 +1324,7 @@ def polish_market_article_run(
     run: MarketArticleRun,
     *,
     resume: bool = True,
+    clear_resume_state_on_apply: bool = False,
 ) -> PolishResult:
     """
     پولیش مرحله‌ای؛ پیشرفت در chart_assets ذخیره می‌شود (Resume بدون ساخت مجدد نقشه).
@@ -1469,7 +1483,8 @@ def polish_market_article_run(
         'excerpt': new_excerpt[:300],
     }
     run.save(update_fields=['content_html', 'seo_json', 'updated_at'])
-    _clear_polish_state(run)
+    if clear_resume_state_on_apply:
+        _clear_polish_state(run)
 
     report = {
         'ok': True,

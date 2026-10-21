@@ -38,8 +38,8 @@ def remediate_unverified_numeric_sentences(
                 continue
             kept.append(sentence)
         new_text = ' '.join(s for s in kept if s).strip()
-        if new_text != content:
-            polished[idx] = new_text if new_text else content
+        if new_text != content.strip():
+            polished[idx] = new_text
             changed = True
     if not changed:
         return False

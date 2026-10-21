@@ -22,6 +22,7 @@ from blog.services.market_article_ai_polish import (
     AIPolishError,
     AIPolishJsonError,
     AIPolishRecoverableError,
+    finalize_polish_resume_state,
     polish_failure_snapshot,
     polish_market_article_run,
 )
@@ -59,6 +60,7 @@ STUCK_RUN_MAX_HOURS = 6
 MAX_POLISH_RETRIES = 2
 MAX_QA_AUTO_FIX_ATTEMPTS = 2
 POLISH_RETRY_BACKOFF_SECONDS = 2.0
+_PRE_POLISH_SNAPSHOT_KEY = 'autopublish_pre_polish_snapshot'
 
 _ACTIVE_STATUSES = (
     SystematicArticleAutoPublishRun.Status.QUEUED,
@@ -203,6 +205,29 @@ def _qa_to_dict(qa: QAReport) -> dict[str, Any]:
             for c in qa.checks
         ],
     }
+
+
+def _snapshot_pre_polish_content(market_run: MarketArticleRun) -> None:
+    assets = dict(market_run.chart_assets or {})
+    if _PRE_POLISH_SNAPSHOT_KEY in assets:
+        return
+    assets[_PRE_POLISH_SNAPSHOT_KEY] = {
+        'content_html': market_run.content_html,
+        'seo_json': dict(market_run.seo_json or {}),
+    }
+    market_run.chart_assets = assets
+    market_run.save(update_fields=['chart_assets', 'updated_at'])
+
+
+def _restore_pre_polish_content(market_run: MarketArticleRun) -> bool:
+    assets = dict(market_run.chart_assets or {})
+    snap = assets.get(_PRE_POLISH_SNAPSHOT_KEY)
+    if not isinstance(snap, dict):
+        return False
+    market_run.content_html = snap.get('content_html') or ''
+    market_run.seo_json = snap.get('seo_json') or {}
+    market_run.save(update_fields=['content_html', 'seo_json', 'updated_at'])
+    return True
 
 
 def _attach_final_summary(
@@ -568,6 +593,7 @@ def _pipeline_after_market_preview(
         detail=f'score={pre_qa.total_score} critical={pre_qa.critical_errors}',
     )
 
+    _snapshot_pre_polish_content(market_run)
     if not _run_ai_polish_with_retries(autopublish_run, market_run):
         touch_autopublish_last_run()
         return autopublish_run
@@ -585,12 +611,23 @@ def _pipeline_after_market_preview(
         _apply_qa_to_run(autopublish_run, qa, settings)
 
     if not would_publish:
+        restored = _restore_pre_polish_content(market_run)
         autopublish_run.status = SystematicArticleAutoPublishRun.Status.QA_FAILED
-        append_autopublish_step(autopublish_run, 'qa_failed', detail=f'score={qa.total_score if qa else 0}')
+        append_autopublish_step(
+            autopublish_run,
+            'qa_failed',
+            detail=f'score={qa.total_score if qa else 0} restored={restored}',
+        )
         _attach_final_summary(autopublish_run, qa=qa, publish_result='qa_failed')
         autopublish_run.save()
         touch_autopublish_last_run()
         return autopublish_run
+
+    finalize_polish_resume_state(market_run)
+    assets = dict(market_run.chart_assets or {})
+    assets.pop(_PRE_POLISH_SNAPSHOT_KEY, None)
+    market_run.chart_assets = assets
+    market_run.save(update_fields=['chart_assets', 'updated_at'])
 
     autopublish_run.status = SystematicArticleAutoPublishRun.Status.READY_TO_PUBLISH
     append_autopublish_step(autopublish_run, 'qa_passed', detail=f'score={qa.total_score}')

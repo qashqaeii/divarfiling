@@ -42,6 +42,9 @@ PRIVACY_PATTERNS = [
     re.compile(r'share[_-]?token', re.I),
 ]
 
+# فاز پولیش: ادعای عددی در QA نهایی + remediation بررسی می‌شود.
+QA_POLISH_PHASE_EXCLUDE = frozenset({'data_numeric_claims'})
+
 REQUIRED_SECTION_IDS = (
     'executive-summary',
     'market-kpis',
@@ -468,14 +471,18 @@ def _finalize_scores(report: QAReport) -> None:
 def run_quality_gates(
     run: MarketArticleRun,
     settings: AutoPublishSettings,
+    *,
+    exclude_checks: frozenset[str] | None = None,
 ) -> QAReport:
     report = QAReport()
     blob = run.report_json if isinstance(run.report_json, dict) else {}
     dataset_meta = blob.get('dataset_meta') if isinstance(blob.get('dataset_meta'), dict) else {}
+    skip = exclude_checks or frozenset()
 
     _check_data_quality(run, settings, report)
     _check_data_consistency(run, report)
-    _check_numeric_claims(run, report)
+    if 'data_numeric_claims' not in skip:
+        _check_numeric_claims(run, report)
     _check_content_quality(run, report)
     _check_seo(run, report)
     _check_media(run, report, dataset_meta)

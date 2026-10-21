@@ -332,6 +332,47 @@
         </form>
     </section>
 
+    {% if last_run.qa_report.pre_polish or last_run.qa_report.post_polish %}
+    <section class="ab-glass ab-ap-history" id="ab-ap-qa-compare">
+        <div class="ab-glass__head">
+            <div>
+                <h2><i class="fas fa-scale-balanced"></i> QA قبل / بعد پولیش</h2>
+                <p>آخرین اجرا — مقایسه امتیاز و خطاهای بحرانی</p>
+            </div>
+        </div>
+        <div class="ab-ap-form__grid">
+            {% if last_run.qa_report.pre_polish %}
+            <article class="ab-ap-side-card ab-glass">
+                <h3 class="ab-ap-meta">قبل از پولیش AI</h3>
+                <p><strong>{{ last_run.qa_report.pre_polish.total_score|floatformat:1|to_persian_digits }}</strong> / ۱۰۰
+                · بحرانی: {{ last_run.qa_report.pre_polish.critical_errors|to_persian_digits }}</p>
+                <ul class="ab-ap-fail-list">
+                    {% for check in last_run.qa_report.pre_polish.checks %}
+                    {% if not check.passed %}
+                    <li><code>{{ check.key }}</code> — {{ check.message }}</li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </article>
+            {% endif %}
+            {% if last_run.qa_report.post_polish %}
+            <article class="ab-ap-side-card ab-glass">
+                <h3 class="ab-ap-meta">بعد از پولیش AI</h3>
+                <p><strong>{{ last_run.qa_report.post_polish.total_score|floatformat:1|to_persian_digits }}</strong> / ۱۰۰
+                · بحرانی: {{ last_run.qa_report.post_polish.critical_errors|to_persian_digits }}</p>
+                <ul class="ab-ap-fail-list">
+                    {% for check in last_run.qa_report.post_polish.checks %}
+                    {% if not check.passed %}
+                    <li><code>{{ check.key }}</code> — {{ check.message }}</li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </article>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
     {% if step_history %}
     <section class="ab-glass ab-ap-history" id="ab-ap-steps">
         <div class="ab-glass__head">

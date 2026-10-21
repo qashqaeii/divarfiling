@@ -294,6 +294,18 @@ def batch_segments_done(batch: list[dict[str, Any]], completed_segment_ids: set[
     return ids.issubset(completed_segment_ids)
 
 
+def polish_ai_work_complete(
+    segments: list[dict[str, Any]],
+    completed_segment_ids: set[int],
+    *,
+    seo_done: bool,
+) -> bool:
+    if not seo_done:
+        return False
+    eligible = {int(s['id']) for s in segments}
+    return bool(eligible) and eligible.issubset(completed_segment_ids)
+
+
 def build_polish_state_payload(
     *,
     seo_done: bool,
@@ -1369,6 +1381,12 @@ def polish_market_article_run(
             ),
         )
 
+    ai_batches_complete = polish_ai_work_complete(
+        segments,
+        completed_segment_ids,
+        seo_done=seo_done,
+    )
+
     if not seo_done:
         title, excerpt, provider, model, latency, logs = _polish_seo(
             original_title=original_title,
@@ -1380,30 +1398,36 @@ def polish_market_article_run(
         batch_logs.extend(logs)
         total_latency += latency
         _persist_state()
-
-    for batch_index, batch in enumerate(batches):
-        if batch_segments_done(batch, completed_segment_ids):
-            completed_batches.add(batch_index)
-            continue
-        pending_batch = [
-            s for s in batch if int(s['id']) not in completed_segment_ids
-        ]
-        if not pending_batch:
-            completed_batches.add(batch_index)
-            continue
-        polished_batch, provider, model, latency, logs = _polish_text_batch(
-            batch_index,
-            pending_batch,
-            protection=protection,
-            segment_outcomes=segment_outcomes,
+        ai_batches_complete = polish_ai_work_complete(
+            segments,
+            completed_segment_ids,
+            seo_done=seo_done,
         )
-        polished_map.update(polished_batch)
-        for seg in pending_batch:
-            completed_segment_ids.add(int(seg['id']))
-        completed_batches.add(batch_index)
-        batch_logs.extend(logs)
-        total_latency += latency
-        _persist_state()
+
+    if not ai_batches_complete:
+        for batch_index, batch in enumerate(batches):
+            if batch_segments_done(batch, completed_segment_ids):
+                completed_batches.add(batch_index)
+                continue
+            pending_batch = [
+                s for s in batch if int(s['id']) not in completed_segment_ids
+            ]
+            if not pending_batch:
+                completed_batches.add(batch_index)
+                continue
+            polished_batch, provider, model, latency, logs = _polish_text_batch(
+                batch_index,
+                pending_batch,
+                protection=protection,
+                segment_outcomes=segment_outcomes,
+            )
+            polished_map.update(polished_batch)
+            for seg in pending_batch:
+                completed_segment_ids.add(int(seg['id']))
+            completed_batches.add(batch_index)
+            batch_logs.extend(logs)
+            total_latency += latency
+            _persist_state()
 
     repaired = repair_polished_map_numeric_safety(
         segments,
@@ -1456,6 +1480,7 @@ def polish_market_article_run(
         'batch_count': len(batches),
         'batch_logs': batch_logs,
         'resumed': bool(state),
+        'ai_batches_skipped': ai_batches_complete,
         'validation_errors': [],
         **coverage,
     }

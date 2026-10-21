@@ -139,7 +139,9 @@ systemctl list-timers divar-systematic-article-autopublish.timer
 - شمارش: `polished_segments`, `unchanged_segments`, `identity_fallback_count`, `numeric_safety_fallback_count`
 - Providerهای `403` / `geo_blocked` / `auth_error` در همان دسته دوباره صدا زده نمی‌شوند
 - شکست نهایی → `ai_polish_failed` + `ai_polish_report.batch_logs` — **بدون انتشار** نسخه بدون پولیش
-- QA کامل پس از پولیش
+- QA قبل (`qa_pre_polish`) و بعد پولیش در `qa_report.pre_polish` / `post_polish` (پنل autopublish)
+- ادعای عددی عمومی با Snapshot تطبیق داده می‌شود؛ نبود اعداد خام داخلی در متن خطای بحرانی نیست
+- `privacy` فقط خروجی عمومی؛ `privacy_internal_storage` غیربحرانی برای report_json
 
 ## Admin
 

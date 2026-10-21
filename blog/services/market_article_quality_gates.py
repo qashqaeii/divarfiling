@@ -16,6 +16,20 @@ _H1_RE = re.compile(r'<h1[^>]*>(.*?)</h1>', re.I | re.S)
 _IMG_RE = re.compile(r'<img[^>]+>', re.I)
 _HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.I)
 _NUM_FMT_RE = re.compile(r'[\d۰-۹]{1,3}(?:[,\،][\d۰-۹]{3})+(?:\s*(?:میلیون|میلیارد|تومان|متر))?', re.U)
+_STAT_CLAIM_RE = re.compile(
+    r'[\d۰-۹]{1,3}(?:[,\،][\d۰-۹]{3})+(?:\s*(?:میلیون|میلیارد|تومان|متر(?:\s*/\s*متر)?|%|٪))?'
+    r'|[\d۰-۹]+(?:\s*(?:میلیون|میلیارد))(?:\s*(?:تومان|متر(?:\s*/\s*متر)?))?'
+    r'|[\d۰-۹]+(?:[\.٫][\d۰-۹]+)?\s*٪',
+    re.U,
+)
+_PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹'
+_ASCII_DIGITS = '0123456789'
+_DIGIT_TRANS = str.maketrans(_PERSIAN_DIGITS, _ASCII_DIGITS)
+_SCRIPT_STYLE_RE = re.compile(r'<(script|style)[^>]*>.*?</\1>', re.I | re.S)
+_ATTR_VALUE_RE = re.compile(
+    r'\b(src|href|class|id|data-[a-z0-9_-]+)=("([^"]*)"|\'([^\']*)\')',
+    re.I,
+)
 _PLACEHOLDER_IMG_RE = re.compile(r'placeholder|via\.placeholder|dummyimage|data:image/gif', re.I)
 
 PRIVACY_PATTERNS = [
@@ -25,12 +39,13 @@ PRIVACY_PATTERNS = [
     re.compile(r'share[_-]?token', re.I),
 ]
 
-SECTION_MARKERS = (
-    'mk-market-section',
+REQUIRED_SECTION_IDS = (
     'executive-summary',
+    'market-kpis',
     'market-status',
-    'conclusion',
-    'mk-market-faq',
+    'price-per-sqm',
+    'faq',
+    'verdict',
 )
 
 
@@ -65,6 +80,80 @@ class QAReport:
     @property
     def passed(self) -> bool:
         return self.critical_errors == 0 and self.total_score >= 0
+
+
+def normalize_number_text(text: str) -> str:
+    if not text:
+        return ''
+    t = text.translate(_DIGIT_TRANS)
+    t = t.replace('\u200c', '').replace('\u00a0', '')
+    t = t.replace('،', ',').replace('٬', ',').replace('٫', '.')
+    t = t.replace('٪', '%')
+    return t
+
+
+def public_content_surfaces(run: MarketArticleRun) -> str:
+    """متن و HTML منتشرشده — بدون attributeهای URL/CSS."""
+    html = run.content_html or ''
+    html = _SCRIPT_STYLE_RE.sub(' ', html)
+    html = _ATTR_VALUE_RE.sub(' ', html)
+    html = re.sub(r'<[^>]+>', ' ', html)
+    seo = run.seo_json if isinstance(run.seo_json, dict) else {}
+    parts = [
+        html,
+        str(seo.get('title') or ''),
+        str(seo.get('excerpt') or ''),
+        str(seo.get('json_ld') or ''),
+    ]
+    return '\n'.join(parts)
+
+
+def build_snapshot_allowed_values(
+    inner_report: dict,
+    metrics: dict,
+    run: MarketArticleRun,
+) -> set[str]:
+    allowed: set[str] = set()
+    for fmt in _extract_report_numbers(inner_report):
+        norm = normalize_number_text(fmt)
+        if len(norm) >= 2:
+            allowed.add(norm)
+    for key in ('valid_count', 'raw_count', 'median_price', 'median_area'):
+        val = metrics.get(key)
+        if val is not None and val != '':
+            allowed.add(normalize_number_text(str(val)))
+    if run.valid_count:
+        allowed.add(normalize_number_text(str(run.valid_count)))
+    if run.raw_count:
+        allowed.add(normalize_number_text(str(run.raw_count)))
+    return {a for a in allowed if a}
+
+
+def is_significant_stat_claim(raw: str, normalized: str) -> bool:
+    if any(u in raw for u in ('میلیون', 'میلیارد', 'تومان', 'متر', '%', '٪')):
+        return True
+    digits = re.sub(r'[^\d]', '', normalized)
+    return len(digits) >= 6
+
+
+def number_allowed_in_public(normalized: str, allowed: set[str]) -> bool:
+    if normalized in allowed:
+        return True
+    for candidate in allowed:
+        if len(normalized) >= 4 and (normalized in candidate or candidate in normalized):
+            return True
+    return False
+
+
+def find_invented_public_claims(public_text: str, allowed: set[str]) -> list[str]:
+    invented: list[str] = []
+    for raw in _STAT_CLAIM_RE.findall(public_text or ''):
+        norm = normalize_number_text(raw.strip())
+        if not norm or not is_significant_stat_claim(raw, norm):
+            continue
+        if not number_allowed_in_public(norm, allowed):
+            invented.append(raw.strip())
+    return list(dict.fromkeys(invented))
 
 
 def _extract_report_numbers(report: dict) -> list[str]:
@@ -122,32 +211,35 @@ def _check_data_quality(run: MarketArticleRun, settings: AutoPublishSettings, re
 
 
 def _check_numeric_claims(run: MarketArticleRun, report: QAReport) -> None:
-    blob = run.report_json or {}
+    blob = run.report_json if isinstance(run.report_json, dict) else {}
     inner_report = blob.get('report') if isinstance(blob.get('report'), dict) else {}
     metrics = blob.get('metrics') if isinstance(blob.get('metrics'), dict) else {}
-    content = run.content_html or ''
-    seo = run.seo_json or {}
+    public_text = public_content_surfaces(run)
+    allowed = build_snapshot_allowed_values(inner_report, metrics, run)
 
-    must_have: list[str] = []
-    if metrics.get('valid_count'):
-        must_have.append(str(metrics['valid_count']))
-    if run.valid_count:
-        must_have.append(str(run.valid_count))
-
-    for fmt in _extract_report_numbers(inner_report)[:12]:
-        if len(fmt) >= 3:
-            must_have.append(fmt)
-
-    missing = []
-    for token in must_have:
-        if token not in content and token not in (seo.get('excerpt') or ''):
-            missing.append(token)
-
-    ok = len(missing) == 0
+    invented = find_invented_public_claims(public_text, allowed)
+    ok_claims = len(invented) == 0
+    detail = '✓ ادعاهای عددی عمومی با Snapshot سازگار است'
+    if not ok_claims:
+        sample = '، '.join(invented[:3])
+        detail = f'✗ {len(invented)} ادعای عددی نامعتبر در محتوا ({sample})'
     report.add(QACheck(
-        'data_numeric_claims', 'data', ok, True,
-        '✓ اعداد مقاله با Snapshot همخوان است' if ok else f'✗ {len(missing)} عدد با Snapshot تطابق ندارد',
-        score_delta=10.0 if ok else 0.0,
+        'data_numeric_claims', 'data', ok_claims, True,
+        detail,
+        score_delta=10.0 if ok_claims else 0.0,
+    ))
+
+    headline_fmts = [f for f in _extract_report_numbers(inner_report) if len(f) >= 4][:8]
+    mentioned = 0
+    norm_public = normalize_number_text(public_text)
+    for fmt in headline_fmts:
+        if normalize_number_text(fmt) in norm_public or fmt in public_text:
+            mentioned += 1
+    coverage_ok = headline_fmts and mentioned >= min(2, len(headline_fmts))
+    report.add(QACheck(
+        'data_numeric_snapshot_coverage', 'data', coverage_ok, False,
+        f'{"✓" if coverage_ok else "—"} پوشش KPIهای Snapshot در متن ({mentioned}/{len(headline_fmts) or 0})',
+        score_delta=4.0 if coverage_ok else 1.0,
     ))
 
 
@@ -163,15 +255,19 @@ def _check_content_quality(run: MarketArticleRun, report: QAReport) -> None:
         score_delta=10.0 if ok_length else 0.0,
     ))
 
-    sections_found = sum(1 for m in SECTION_MARKERS if m in content)
-    ok_structure = sections_found >= 4
+    sections_found = sum(
+        1 for section_id in REQUIRED_SECTION_IDS
+        if f'id="{section_id}"' in content or f"id='{section_id}'" in content
+    )
+    section_blocks = len(re.findall(r'\bmk-market-section\b', content))
+    ok_structure = sections_found >= 4 and section_blocks >= 6
     report.add(QACheck(
         'content_structure', 'content', ok_structure, False,
-        f'{"✓" if ok_structure else "✗"} ساختار مقاله ({sections_found} بخش)',
+        f'{"✓" if ok_structure else "✗"} ساختار مقاله ({sections_found} بخش اصلی، {section_blocks} بلاک)',
         score_delta=8.0 if ok_structure else 2.0,
     ))
 
-    ok_intro = 'executive-summary' in content or 'mk-market-section' in content
+    ok_intro = 'id="executive-summary"' in content or 'mk-market-section' in content
     report.add(QACheck(
         'content_intro', 'content', ok_intro, False,
         '✓ مقدمه/خلاصه اجرایی' if ok_intro else '✗ مقدمه ناقص',
@@ -329,17 +425,31 @@ def _check_technical(run: MarketArticleRun, report: QAReport) -> None:
     ))
 
 
-def _check_privacy(run: MarketArticleRun, report: QAReport) -> None:
-    blob = str(run.report_json or {}) + (run.content_html or '') + str(run.seo_json or {})
-    hits = []
+def _privacy_hits(blob: str) -> list[str]:
+    hits: list[str] = []
     for pat in PRIVACY_PATTERNS:
-        if pat.search(blob):
-            hits.append(pat.pattern[:30])
-    ok = len(hits) == 0
+        if pat.search(blob or ''):
+            hits.append(pat.pattern[:40])
+    return hits
+
+
+def _check_privacy(run: MarketArticleRun, report: QAReport) -> None:
+    public_blob = public_content_surfaces(run)
+    public_hits = _privacy_hits(public_blob)
+    ok_public = len(public_hits) == 0
     report.add(QACheck(
-        'privacy', 'data', ok, True,
-        '✓ بدون داده خصوصی' if ok else f'✗ داده خصوصی ({len(hits)} مورد)',
-        score_delta=5.0 if ok else 0.0,
+        'privacy', 'data', ok_public, True,
+        '✓ بدون داده خصوصی در خروجی عمومی' if ok_public else f'✗ داده خصوصی در محتوا ({len(public_hits)} مورد)',
+        score_delta=5.0 if ok_public else 0.0,
+    ))
+
+    internal_blob = str(run.report_json or {})
+    internal_hits = _privacy_hits(internal_blob)
+    ok_internal = len(internal_hits) == 0
+    report.add(QACheck(
+        'privacy_internal_storage', 'data', ok_internal, False,
+        '✓ report_json بدون الگوی حساس' if ok_internal else f'— الگوی حساس در report_json ({len(internal_hits)} مورد)',
+        score_delta=2.0 if ok_internal else 0.0,
     ))
 
 

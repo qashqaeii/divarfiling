@@ -197,8 +197,18 @@ def _qa_to_dict(qa: QAReport) -> dict[str, Any]:
     }
 
 
+def _store_pre_polish_qa(autopublish_run: SystematicArticleAutoPublishRun, qa: QAReport) -> None:
+    existing = autopublish_run.qa_report if isinstance(autopublish_run.qa_report, dict) else {}
+    autopublish_run.qa_report = {
+        **existing,
+        'pre_polish': _qa_to_dict(qa),
+    }
+
+
 def _apply_qa_to_run(autopublish_run: SystematicArticleAutoPublishRun, qa: QAReport, settings) -> bool:
-    autopublish_run.qa_report = _qa_to_dict(qa)
+    existing = autopublish_run.qa_report if isinstance(autopublish_run.qa_report, dict) else {}
+    post = _qa_to_dict(qa)
+    autopublish_run.qa_report = {**existing, **post, 'post_polish': post}
     autopublish_run.quality_score = qa.total_score
     autopublish_run.critical_errors_count = qa.critical_errors
     autopublish_run.failure_reasons = list(qa.failure_reasons)
@@ -473,6 +483,15 @@ def _pipeline_after_market_preview(
         autopublish_run.save()
         touch_autopublish_last_run()
         return autopublish_run
+
+    pre_qa = run_quality_gates(market_run, settings)
+    _store_pre_polish_qa(autopublish_run, pre_qa)
+    autopublish_run.save(update_fields=['qa_report', 'updated_at'])
+    append_autopublish_step(
+        autopublish_run,
+        'qa_pre_polish',
+        detail=f'score={pre_qa.total_score} critical={pre_qa.critical_errors}',
+    )
 
     if not _run_ai_polish_with_retries(autopublish_run, market_run):
         touch_autopublish_last_run()

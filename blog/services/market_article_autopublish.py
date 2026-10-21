@@ -22,6 +22,7 @@ from blog.services.market_article_ai_polish import (
     AIPolishError,
     AIPolishJsonError,
     AIPolishRecoverableError,
+    polish_failure_snapshot,
     polish_market_article_run,
 )
 from blog.services.market_article_autopublish_config import (
@@ -275,10 +276,11 @@ def _run_ai_polish_with_retries(
 
     attempts = 0
     last_error = ''
+    last_recoverable = False
     while attempts <= MAX_POLISH_RETRIES:
         attempts += 1
         try:
-            result = polish_market_article_run(market_run)
+            result = polish_market_article_run(market_run, resume=True)
             autopublish_run.ai_polish_report = {
                 **result.report,
                 'attempts': attempts,
@@ -294,6 +296,7 @@ def _run_ai_polish_with_retries(
             return True
         except (AIPolishRecoverableError, AIPolishJsonError) as exc:
             last_error = str(exc)
+            last_recoverable = True
             logger.warning('autopublish ai polish recoverable attempt=%s run=%s', attempts, autopublish_run.pk)
             autopublish_run.retry_count = attempts
             append_autopublish_step(
@@ -307,16 +310,19 @@ def _run_ai_polish_with_retries(
             continue
         except AIPolishError as exc:
             last_error = str(exc)
+            last_recoverable = False
             break
 
     failed_report = autopublish_run.ai_polish_report if isinstance(autopublish_run.ai_polish_report, dict) else {}
+    progress = polish_failure_snapshot(market_run)
     autopublish_run.status = SystematicArticleAutoPublishRun.Status.AI_POLISH_FAILED
     autopublish_run.ai_polish_report = {
         **failed_report,
+        **progress,
         'ok': False,
         'error': last_error,
         'attempts': attempts,
-        'recoverable': True,
+        'recoverable': last_recoverable,
     }
     autopublish_run.failure_reasons = [f'پولیش AI ناموفق: {last_error}']
     append_autopublish_step(autopublish_run, 'ai_polish_failed', detail=last_error)

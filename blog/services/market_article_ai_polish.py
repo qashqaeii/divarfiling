@@ -19,11 +19,20 @@ logger = logging.getLogger(__name__)
 
 FEATURE = 'market_article_polish'
 
-BATCH_MAX_SEGMENTS = 5
-BATCH_MAX_CHARS = 2800
-BATCH_MAX_ATTEMPTS = 3
-SEO_MAX_ATTEMPTS = 3
+BATCH_MAX_SEGMENTS = 2
+BATCH_MAX_CHARS = 1200
+BATCH_MAX_ATTEMPTS = 4
+SEO_MAX_ATTEMPTS = 4
 BACKOFF_BASE_SECONDS = 1.5
+SCHEMA_SEO = 'seo'
+SCHEMA_BATCH = 'batch'
+_PROVIDER_SKIP_CODES = frozenset({
+    'geo_blocked',
+    'auth_error',
+    'client_error',
+    '403',
+    'no_key',
+})
 
 _POLISH_STATE_KEY = 'autopublish_polish_state'
 
@@ -59,6 +68,10 @@ class AIPolishRecoverableError(Exception):
 class AIPolishJsonError(AIPolishRecoverableError):
     """JSON نامعتبر یا ناقص — repair/retry."""
 
+    def __init__(self, message: str, *, error_type: str = 'json_error'):
+        super().__init__(message)
+        self.error_type = error_type
+
 
 @dataclass
 class PolishResult:
@@ -88,6 +101,18 @@ def split_html_parts(html: str) -> list[tuple[_PlaceKind, str]]:
         else:
             parts.append(('text', chunk))
     return parts
+
+
+def segment_eligible_for_polish(text: str) -> bool:
+    """متن‌های خیلی کوتاه یا صرفاً عددی به AI نمی‌روند."""
+    t = (text or '').strip()
+    if len(t) < 8:
+        return False
+    if '<' in t or 'script' in t.lower() or 'style=' in t.lower():
+        return False
+    if re.fullmatch(r'[\d\s\.,،٪%\-–—:+]+', t):
+        return False
+    return True
 
 
 def text_segment_payload(parts: list[tuple[_PlaceKind, str]]) -> list[dict[str, Any]]:
@@ -371,36 +396,97 @@ def repair_json_text(text: str) -> str:
     return cleaned
 
 
-def parse_polish_json(raw: str) -> dict[str, Any]:
-    """json.loads + repair محدود؛ خطا → AIPolishJsonError (recoverable)."""
-    attempts = [(raw or '').strip(), repair_json_text(raw or '')]
+def normalize_parsed_payload(parsed: Any, schema: str) -> dict[str, Any]:
+    if schema == SCHEMA_SEO:
+        if isinstance(parsed, dict) and ('title' in parsed or 'excerpt' in parsed):
+            return parsed
+        raise AIPolishJsonError('قرارداد SEO نقض شد.', error_type='seo_schema_mismatch')
+
+    if schema == SCHEMA_BATCH:
+        if isinstance(parsed, list):
+            return {'texts': parsed}
+        if isinstance(parsed, dict):
+            texts = parsed.get('texts')
+            if isinstance(texts, list):
+                return parsed
+            for alt in ('segments', 'items', 'data', 'results'):
+                alt_list = parsed.get(alt)
+                if isinstance(alt_list, list):
+                    return {'texts': alt_list}
+            if 'id' in parsed and 'text' in parsed:
+                return {'texts': [parsed]}
+        raise AIPolishJsonError('کلید texts در JSON الزامی است.', error_type='missing_texts')
+
+    raise AIPolishJsonError('schema نامعتبر', error_type='invalid_schema')
+
+
+def parse_llm_response(raw: str, schema: str) -> dict[str, Any]:
+    """Parse + normalize — همه خطاهای قالب‌بندی recoverable هستند."""
+    stripped = (raw or '').strip()
+    if not stripped:
+        raise AIPolishJsonError('پاسخ AI خالی است.', error_type='empty_response')
+    if stripped[0] not in '{[':
+        raise AIPolishJsonError('خروجی متنی به‌جای JSON.', error_type='plain_text')
+
+    candidates = [stripped, repair_json_text(stripped)]
     last_exc: json.JSONDecodeError | None = None
-    for candidate in attempts:
+    parsed: Any = None
+    for candidate in candidates:
         if not candidate:
             continue
         try:
-            data = json.loads(candidate)
+            parsed = json.loads(candidate)
+            break
         except json.JSONDecodeError as exc:
             last_exc = exc
-            continue
-        if not isinstance(data, dict):
-            raise AIPolishError('پاسخ AI باید شیء JSON باشد.')
-        return data
-    raise AIPolishJsonError(f'پاسخ AI JSON معتبر نیست: {last_exc}')
+    if parsed is None:
+        raise AIPolishJsonError(
+            f'پاسخ AI JSON معتبر نیست: {last_exc}',
+            error_type='json_malformed',
+        )
+
+    try:
+        return normalize_parsed_payload(parsed, schema)
+    except AIPolishJsonError:
+        raise
+    except Exception as exc:
+        raise AIPolishJsonError(str(exc), error_type='schema_error') from exc
+
+
+def parse_polish_json(raw: str) -> dict[str, Any]:
+    return parse_llm_response(raw, SCHEMA_BATCH)
 
 
 def _generation() -> dict[str, Any]:
     gen = get_feature_generation(FEATURE)
-    if int(gen.get('max_tokens', 0)) < 4000:
-        gen = {**gen, 'max_tokens': max(4000, int(gen.get('max_tokens', 1200)))}
+    if int(gen.get('max_tokens', 0)) < 6000:
+        gen = {**gen, 'max_tokens': max(6000, int(gen.get('max_tokens', 1200)))}
     return gen
 
 
-def _call_llm(system: str, user: str) -> tuple[str, str, str, int]:
+@dataclass
+class LLMCallResult:
+    text: str
+    provider: str
+    model: str
+    latency_ms: int
+    input_tokens: int | None
+    output_tokens: int | None
+
+
+def _call_llm(
+    system: str,
+    user: str,
+    *,
+    blocked_providers: set[str] | None = None,
+) -> LLMCallResult:
     generation = _generation()
     chain = get_http_provider_chain()
+    blocked = blocked_providers or set()
     last_code = ''
     for provider in chain:
+        if provider.name in blocked:
+            continue
         try:
             result = provider.complete(
                 system=system,
@@ -410,12 +496,23 @@ def _call_llm(system: str, user: str) -> tuple[str, str, str, int]:
             )
             text = (result.text or '').strip()
             if text:
-                return text, result.provider, result.model, result.latency_ms
+                return LLMCallResult(
+                    text=text,
+                    provider=result.provider,
+                    model=result.model,
+                    latency_ms=result.latency_ms,
+                    input_tokens=result.input_tokens,
+                    output_tokens=result.output_tokens,
+                )
         except ProviderError as exc:
             last_code = exc.code or 'provider_error'
             logger.warning('market_article_polish provider failed: %s %s', provider.name, last_code)
+            if last_code in _PROVIDER_SKIP_CODES or not exc.retryable:
+                blocked.add(provider.name)
             continue
-    raise AIPolishRecoverableError(f'همه providerهای AI شکست خوردند ({last_code}).')
+    raise AIPolishRecoverableError(
+        f'همه providerهای AI شکست خوردند ({last_code}).',
+    )
 
 
 def _sleep_backoff(attempt: int) -> None:
@@ -428,7 +525,7 @@ def _coerce_batch_texts(
 ) -> dict[int, str]:
     texts = data.get('texts')
     if not isinstance(texts, list):
-        raise AIPolishJsonError('کلید texts در JSON الزامی است.')
+        raise AIPolishJsonError('کلید texts در JSON الزامی است.', error_type='missing_texts')
 
     polished: dict[int, str] = {}
     for item in texts:
@@ -444,14 +541,67 @@ def _coerce_batch_texts(
 
     if set(polished.keys()) != allowed_ids:
         missing = allowed_ids - set(polished.keys())
-        raise AIPolishJsonError(f'{len(missing)} segment در پاسخ AI نیست (پاسخ ناقص).')
+        raise AIPolishJsonError(
+            f'{len(missing)} segment در پاسخ AI نیست (پاسخ ناقص).',
+            error_type='incomplete_ids',
+        )
     return polished
+
+
+def _log_attempt(
+    attempts_log: list[dict[str, Any]],
+    *,
+    phase: str,
+    status: str,
+    attempt: int,
+    error_type: str = '',
+    error: str = '',
+    batch_index: int | None = None,
+    segment_count: int = 0,
+    llm: LLMCallResult | None = None,
+    validation: str = '',
+) -> None:
+    entry: dict[str, Any] = {
+        'phase': phase,
+        'status': status,
+        'attempt': attempt,
+    }
+    if batch_index is not None:
+        entry['batch_index'] = batch_index
+    if segment_count:
+        entry['segment_count'] = segment_count
+    if error_type:
+        entry['error_type'] = error_type
+    if error:
+        entry['error'] = error[:240]
+    if validation:
+        entry['validation'] = validation
+    if llm:
+        entry['provider'] = llm.provider
+        entry['model'] = llm.model
+        entry['latency_ms'] = llm.latency_ms
+        entry['input_tokens'] = llm.input_tokens
+        entry['output_tokens'] = llm.output_tokens
+    attempts_log.append(entry)
 
 
 def _load_polish_state(run: MarketArticleRun) -> dict[str, Any]:
     chart = run.chart_assets if isinstance(run.chart_assets, dict) else {}
     state = chart.get(_POLISH_STATE_KEY)
     return dict(state) if isinstance(state, dict) else {}
+
+
+def polish_failure_snapshot(run: MarketArticleRun) -> dict[str, Any]:
+    """خلاصه پیشرفت پولیش برای گزارش خطا — بدون متن مقاله."""
+    state = _load_polish_state(run)
+    if not state:
+        return {}
+    return {
+        'seo_done': bool(state.get('seo_done')),
+        'completed_batches': list(state.get('completed_batches') or []),
+        'batch_logs': list(state.get('batch_logs') or []),
+        'batch_count_done': len(state.get('completed_batches') or []),
+    }
 
 
 def _save_polish_state(run: MarketArticleRun, state: dict[str, Any]) -> None:
@@ -475,19 +625,21 @@ def _polish_seo(
     protection: StatisticalProtection,
 ) -> tuple[str, str, str, str, int, list[dict[str, Any]]]:
     system = (
-        'ویراستار SEO فارسی. فقط JSON: {"title":"...","excerpt":"..."}. '
-        'اعداد و آمار را عیناً حفظ کن. HTML برنگردان.'
+        'ویراستار SEO فارسی. خروجی فقط یک JSON object با دقیقاً دو کلید: title و excerpt. '
+        'بدون کلید اضافه. اعداد و آمار را عیناً حفظ کن. HTML برنگردان.'
     )
     user = json.dumps(
         {'title': original_title, 'excerpt': original_excerpt},
         ensure_ascii=False,
     )
     attempts_log: list[dict[str, Any]] = []
+    blocked: set[str] = set()
     last_error = ''
+    last_type = 'json_error'
     for attempt in range(1, SEO_MAX_ATTEMPTS + 1):
         try:
-            raw, provider, model, latency = _call_llm(system, user)
-            data = parse_polish_json(raw)
+            llm = _call_llm(system, user, blocked_providers=blocked)
+            data = parse_llm_response(llm.text, SCHEMA_SEO)
             title = str(data.get('title') or original_title).strip()
             excerpt = str(data.get('excerpt') or original_excerpt).strip()
             seo_errors = validate_seo_fields(
@@ -499,15 +651,23 @@ def _polish_seo(
             )
             if seo_errors:
                 raise AIPolishError('; '.join(seo_errors))
-            attempts_log.append({'phase': 'seo', 'attempt': attempt, 'status': 'ok'})
-            return title, excerpt, provider, model, latency, attempts_log
-        except (AIPolishJsonError, AIPolishRecoverableError) as exc:
-            last_error = str(exc)
-            attempts_log.append({'phase': 'seo', 'attempt': attempt, 'status': 'retry', 'error': last_error})
-            _sleep_backoff(attempt)
+            _log_attempt(attempts_log, phase='seo', status='ok', attempt=attempt, llm=llm, validation='passed')
+            return title, excerpt, llm.provider, llm.model, llm.latency_ms, attempts_log
         except AIPolishError:
             raise
-    raise AIPolishJsonError(last_error or 'SEO polish failed')
+        except (AIPolishJsonError, AIPolishRecoverableError) as exc:
+            last_error = str(exc)
+            last_type = getattr(exc, 'error_type', 'json_error')
+            _log_attempt(
+                attempts_log,
+                phase='seo',
+                status='retry',
+                attempt=attempt,
+                error=last_error,
+                error_type=last_type,
+            )
+            _sleep_backoff(attempt)
+    raise AIPolishJsonError(last_error or 'SEO polish failed', error_type=last_type)
 
 
 def _polish_text_batch(
@@ -518,17 +678,22 @@ def _polish_text_batch(
 ) -> tuple[dict[int, str], str, str, int, list[dict[str, Any]]]:
     allowed_ids = {int(s['id']) for s in batch}
     originals = {int(s['id']): str(s['text']) for s in batch}
+    id_list = sorted(allowed_ids)
     system = (
-        'ویراستار متن مقاله املاک ایران. فقط JSON: {"texts":[{"id":NUMBER,"text":"..."}]}. '
-        'فقط idهای درخواستی را برگردان. اعداد/قیمت/درصد را حفظ کن. HTML برنگردان.'
+        'ویراستار متن مقاله املاک ایران. خروجی فقط JSON object با یک کلید texts. '
+        'فرمت: {"texts":[{"id":NUMBER,"text":"..."}]}. '
+        f'باید دقیقاً این idها را برگردانی: {id_list}. '
+        'اگر اصلاح لازم نیست همان متن را برگردان. اعداد/قیمت/درصد را حفظ کن. HTML برنگردان.'
     )
     user = json.dumps({'texts': batch}, ensure_ascii=False)
     attempts_log: list[dict[str, Any]] = []
+    blocked: set[str] = set()
     last_error = ''
+    last_type = 'json_error'
     for attempt in range(1, BATCH_MAX_ATTEMPTS + 1):
         try:
-            raw, provider, model, latency = _call_llm(system, user)
-            data = parse_polish_json(raw)
+            llm = _call_llm(system, user, blocked_providers=blocked)
+            data = parse_llm_response(llm.text, SCHEMA_BATCH)
             polished = _coerce_batch_texts(data, allowed_ids)
             for seg_id, new_text in polished.items():
                 seg_errors = validate_segment_numbers(
@@ -538,27 +703,46 @@ def _polish_text_batch(
                 )
                 if seg_errors:
                     raise AIPolishError('; '.join(seg_errors))
-            attempts_log.append({
-                'phase': 'batch',
-                'batch_index': batch_index,
-                'attempt': attempt,
-                'status': 'ok',
-                'segment_ids': sorted(allowed_ids),
-            })
-            return polished, provider, model, latency, attempts_log
-        except (AIPolishJsonError, AIPolishRecoverableError) as exc:
-            last_error = str(exc)
-            attempts_log.append({
-                'phase': 'batch',
-                'batch_index': batch_index,
-                'attempt': attempt,
-                'status': 'retry',
-                'error': last_error,
-            })
-            _sleep_backoff(attempt)
+            _log_attempt(
+                attempts_log,
+                phase='batch',
+                status='ok',
+                attempt=attempt,
+                batch_index=batch_index,
+                segment_count=len(batch),
+                llm=llm,
+                validation='passed',
+            )
+            return polished, llm.provider, llm.model, llm.latency_ms, attempts_log
         except AIPolishError:
             raise
-    raise AIPolishJsonError(last_error or f'batch {batch_index} failed')
+        except (AIPolishJsonError, AIPolishRecoverableError) as exc:
+            last_error = str(exc)
+            last_type = getattr(exc, 'error_type', 'json_error')
+            _log_attempt(
+                attempts_log,
+                phase='batch',
+                status='retry',
+                attempt=attempt,
+                batch_index=batch_index,
+                segment_count=len(batch),
+                error=last_error,
+                error_type=last_type,
+            )
+            _sleep_backoff(attempt)
+            if attempt >= BATCH_MAX_ATTEMPTS:
+                _log_attempt(
+                    attempts_log,
+                    phase='batch',
+                    status='identity_fallback',
+                    attempt=attempt,
+                    batch_index=batch_index,
+                    segment_count=len(batch),
+                    error_type=last_type,
+                    error=last_error,
+                )
+                return originals, 'identity', 'passthrough', 0, attempts_log
+    raise AIPolishJsonError(last_error or f'batch {batch_index} failed', error_type=last_type)
 
 
 def polish_market_article_run(
@@ -575,7 +759,14 @@ def polish_market_article_run(
     original_excerpt = str(seo.get('excerpt') or '').strip()
 
     parts = split_html_parts(original_html)
-    segments = text_segment_payload(parts)
+    all_segments = text_segment_payload(parts)
+    auto_passthrough: dict[int, str] = {}
+    segments: list[dict[str, Any]] = []
+    for seg in all_segments:
+        if segment_eligible_for_polish(str(seg.get('text') or '')):
+            segments.append(seg)
+        else:
+            auto_passthrough[int(seg['id'])] = str(seg['text'])
     batches = batch_text_segments(segments)
     protection = collect_statistical_protection(
         run,
@@ -588,6 +779,7 @@ def polish_market_article_run(
     polished_map: dict[int, str] = {
         int(k): v for k, v in (state.get('polished_by_id') or {}).items()
     }
+    polished_map.update(auto_passthrough)
     completed_batches = set(state.get('completed_batches') or [])
     new_title = str(state.get('title') or original_title)
     new_excerpt = str(state.get('excerpt') or original_excerpt)

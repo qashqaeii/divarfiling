@@ -26,7 +26,7 @@ from blog.tests.test_market_articles import _seed_dataset
 User = get_user_model()
 
 
-def _mock_polish(run):
+def _mock_polish(run, **kwargs):
     return PolishResult(applied=True, provider='t', model='t', latency_ms=1, report={'ok': True})
 
 

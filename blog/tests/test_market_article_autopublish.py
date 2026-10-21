@@ -42,7 +42,7 @@ def _configure_autopublish(**kwargs):
     return cfg
 
 
-def _mock_polish_pass(run):
+def _mock_polish_pass(run, **kwargs):
     return PolishResult(applied=True, provider='test', model='test', latency_ms=1, report={'ok': True})
 
 
@@ -239,7 +239,7 @@ class MarketArticleAutoPublishTests(TestCase):
 
         from blog.services.market_article_ai_polish import AIPolishJsonError
 
-        def _fail_polish(_run):
+        def _fail_polish(_run, **kwargs):
             raise AIPolishJsonError('JSON invalid')
 
         with patch('blog.services.market_article_autopublish.polish_market_article_run', side_effect=_fail_polish):

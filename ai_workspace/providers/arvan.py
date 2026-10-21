@@ -110,7 +110,8 @@ class ArvanAIProvider:
                 'temperature': temperature,
                 'max_tokens': max_tokens,
             }
-            # JSON mode: rely on prompt contract + gateway parser (no response_format guess).
+            if json_mode:
+                body['response_format'] = {'type': 'json_object'}
 
             for attempt in range(max_retries + 1):
                 started = time.perf_counter()

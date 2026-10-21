@@ -7,9 +7,16 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
+from ai_workspace.providers.base import ProviderError
+
 from blog.services.market_article_ai_polish import (
     AIPolishJsonError,
+    AIPolishRecoverableError,
+    SCHEMA_BATCH,
+    SCHEMA_SEO,
+    _polish_text_batch,
     batch_text_segments,
+    parse_llm_response,
     parse_polish_json,
     polish_market_article_run,
     repair_json_text,
@@ -32,6 +39,25 @@ class JsonRepairTests(TestCase):
     def test_invalid_json_raises_recoverable(self):
         with self.assertRaises(AIPolishJsonError):
             parse_polish_json('{not json at all')
+
+    def test_array_json_normalized_to_texts(self):
+        raw = '[{"id": 3, "text": "سلام"}]'
+        data = parse_llm_response(raw, SCHEMA_BATCH)
+        self.assertEqual(data['texts'][0]['id'], 3)
+
+    def test_missing_texts_error_type(self):
+        with self.assertRaises(AIPolishJsonError) as ctx:
+            parse_llm_response('{"foo": 1}', SCHEMA_BATCH)
+        self.assertEqual(ctx.exception.error_type, 'missing_texts')
+
+    def test_plain_text_error_type(self):
+        with self.assertRaises(AIPolishJsonError) as ctx:
+            parse_llm_response('این JSON نیست', SCHEMA_BATCH)
+        self.assertEqual(ctx.exception.error_type, 'plain_text')
+
+    def test_seo_schema(self):
+        data = parse_llm_response('{"title":"a","excerpt":"b"}', SCHEMA_SEO)
+        self.assertEqual(data['title'], 'a')
 
     def test_extract_outer_object(self):
         fixed = repair_json_text('prefix {"a": 1} suffix')
@@ -117,3 +143,73 @@ class BatchPolishTests(TestCase):
         )
         mock_build.assert_not_called()
         self.assertIsNotNone(ap.pk)
+
+
+class ProviderFallbackTests(TestCase):
+    @patch('blog.services.market_article_ai_polish.get_http_provider_chain')
+    def test_skips_geo_blocked_provider(self, mock_chain):
+        from blog.services.market_article_ai_polish import _call_llm
+
+        class P:
+            name = 'gemini'
+
+            def complete(self, **kwargs):
+                raise ProviderError('geo', retryable=True, code='geo_blocked')
+
+        class Ok:
+            name = 'arvan'
+
+            def complete(self, **kwargs):
+                from ai_workspace.providers.base import ProviderResult
+
+                return ProviderResult(
+                    text='{"texts":[{"id":1,"text":"x"}]}',
+                    provider='arvan',
+                    model='m',
+                    latency_ms=1,
+                    input_tokens=1,
+                    output_tokens=2,
+                )
+
+        mock_chain.return_value = [P(), Ok()]
+        result = _call_llm('sys', 'user')
+        self.assertEqual(result.provider, 'arvan')
+
+    @patch('blog.services.market_article_ai_polish.get_http_provider_chain')
+    def test_all_providers_fail_raises_recoverable(self, mock_chain):
+        from blog.services.market_article_ai_polish import _call_llm
+
+        class P:
+            name = 'openrouter'
+
+            def complete(self, **kwargs):
+                raise ProviderError('403', retryable=False, code='403')
+
+        mock_chain.return_value = [P()]
+        with self.assertRaises(AIPolishRecoverableError):
+            _call_llm('sys', 'user')
+
+
+class IdentityFallbackTests(TestCase):
+    @patch('blog.services.market_article_ai_polish.BATCH_MAX_ATTEMPTS', 2)
+    @patch('blog.services.market_article_ai_polish._call_llm')
+    def test_batch_identity_fallback_after_json_failures(self, mock_llm):
+        from blog.services.market_article_ai_polish import LLMCallResult, StatisticalProtection
+
+        mock_llm.return_value = LLMCallResult(
+            text='{"no_texts": true}',
+            provider='mock',
+            model='mock',
+            latency_ms=1,
+            input_tokens=1,
+            output_tokens=1,
+        )
+        batch = [{'id': 5, 'text': 'متن نمونه برای پولیش'}]
+        polished, provider, model, latency, logs = _polish_text_batch(
+            0,
+            batch,
+            protection=StatisticalProtection(),
+        )
+        self.assertEqual(polished[5], batch[0]['text'])
+        self.assertEqual(provider, 'identity')
+        self.assertTrue(any(l.get('status') == 'identity_fallback' for l in logs))

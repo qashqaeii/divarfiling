@@ -90,7 +90,7 @@ class MarketArticleAutoPublishTests(TestCase):
         self.assertEqual(decision.action, PublishAction.UPDATE_EXISTING)
 
     def test_dry_run_never_builds(self):
-        with patch('blog.services.market_article_autopublish.build_preview') as mock_build:
+        with patch('blog.services.market_article_autopublish.build_preview_for_autopublish') as mock_build:
             run = run_systematic_article_autopublish(dry_run=True)
             mock_build.assert_not_called()
         self.assertEqual(run.publish_mode, SystematicArticleAutoPublishRun.PublishMode.DRY_RUN)

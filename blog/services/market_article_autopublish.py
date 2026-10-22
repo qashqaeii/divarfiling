@@ -36,8 +36,9 @@ from blog.services.market_article_candidate_selection import (
     AutoPublishCandidate,
     pick_best_candidate,
 )
+from blog.services.market_article_data_readiness import MarketArticleDataInsufficient
 from blog.services.market_article_pipeline import (
-    build_preview,
+    build_preview_for_autopublish,
     create_draft,
     get_existing_link,
     update_existing_post,
@@ -48,6 +49,7 @@ from blog.services.market_article_numeric_truth import assess_data_consistency
 from blog.services.market_article_qa_remediation import remediate_unverified_numeric_sentences
 from blog.services.market_article_quality_gates import (
     QAReport,
+    critical_pre_polish_data_failures,
     find_unverified_numeric_claims,
     qa_passes_for_publish,
     run_quality_gates,
@@ -217,6 +219,27 @@ def _snapshot_pre_polish_content(market_run: MarketArticleRun) -> None:
     }
     market_run.chart_assets = assets
     market_run.save(update_fields=['chart_assets', 'updated_at'])
+
+
+def _stop_for_data_quality(
+    autopublish_run: SystematicArticleAutoPublishRun,
+    *,
+    reasons: list[str],
+    market_run: MarketArticleRun | None = None,
+    qa: QAReport | None = None,
+    step: str = 'data_quality_failed',
+) -> SystematicArticleAutoPublishRun:
+    autopublish_run.status = SystematicArticleAutoPublishRun.Status.DATA_QUALITY_FAILED
+    autopublish_run.failure_reasons = reasons
+    autopublish_run.critical_errors_count = len(reasons)
+    autopublish_run.would_publish = False
+    if market_run:
+        autopublish_run.market_article_run = market_run
+    _attach_final_summary(autopublish_run, qa=qa, publish_result='data_quality_failed')
+    append_autopublish_step(autopublish_run, step, detail='; '.join(reasons)[:400])
+    autopublish_run.save()
+    touch_autopublish_last_run()
+    return autopublish_run
 
 
 def _restore_pre_polish_content(market_run: MarketArticleRun) -> bool:
@@ -532,7 +555,20 @@ def run_systematic_article_autopublish(
 
     user = _system_user()
     try:
-        market_run = build_preview(dataset, user)
+        market_run = build_preview_for_autopublish(dataset, user)
+    except MarketArticleDataInsufficient as exc:
+        logger.warning('autopublish data quality blocked dataset=%s: %s', dataset.pk, exc.reason)
+        failed_run = (
+            MarketArticleRun.objects.filter(dataset=dataset)
+            .order_by('-created_at')
+            .first()
+        )
+        return _stop_for_data_quality(
+            autopublish_run,
+            reasons=[f'✗ {exc.reason}'],
+            market_run=failed_run,
+            step='data_quality_failed_build',
+        )
     except Exception as exc:
         logger.exception('autopublish build failed dataset=%s', dataset.pk)
         autopublish_run.status = SystematicArticleAutoPublishRun.Status.NEEDS_REVIEW
@@ -592,6 +628,16 @@ def _pipeline_after_market_preview(
         'qa_pre_polish',
         detail=f'score={pre_qa.total_score} critical={pre_qa.critical_errors}',
     )
+
+    data_failures = critical_pre_polish_data_failures(pre_qa)
+    if data_failures:
+        return _stop_for_data_quality(
+            autopublish_run,
+            reasons=data_failures,
+            market_run=market_run,
+            qa=pre_qa,
+            step='data_quality_failed',
+        )
 
     _snapshot_pre_polish_content(market_run)
     if not _run_ai_polish_with_retries(autopublish_run, market_run):
@@ -807,6 +853,7 @@ def get_autopublish_dashboard_context() -> dict[str, Any]:
             status__in=(
                 SystematicArticleAutoPublishRun.Status.QA_FAILED,
                 SystematicArticleAutoPublishRun.Status.AI_POLISH_FAILED,
+                SystematicArticleAutoPublishRun.Status.DATA_QUALITY_FAILED,
                 SystematicArticleAutoPublishRun.Status.NEEDS_REVIEW,
                 SystematicArticleAutoPublishRun.Status.SKIPPED,
             ),
@@ -826,6 +873,7 @@ def get_autopublish_dashboard_context() -> dict[str, Any]:
         if last_run.status in (
             SystematicArticleAutoPublishRun.Status.QA_FAILED,
             SystematicArticleAutoPublishRun.Status.AI_POLISH_FAILED,
+            SystematicArticleAutoPublishRun.Status.DATA_QUALITY_FAILED,
             SystematicArticleAutoPublishRun.Status.NEEDS_REVIEW,
         ):
             today_status = 'needs_review'

@@ -25,6 +25,10 @@ from blog.services.market_article_access import analyze_district_access
 from blog.services.market_article_assets import render_article_maps, render_featured_image
 from blog.services.market_article_charts import render_article_charts
 from blog.services.market_article_composer import compose_market_article
+from blog.services.market_article_data_readiness import (
+    MarketArticleDataInsufficient,
+    assert_autopublish_data_readiness,
+)
 from blog.services.market_article_eligibility import market_key_for_dataset
 from blog.utils import get_or_create_tag
 from workspace.models import Dataset
@@ -220,6 +224,17 @@ def build_preview(dataset: Dataset, user) -> MarketArticleRun:
     return _complete_preview_build(run)
 
 
+def build_preview_for_autopublish(dataset: Dataset, user) -> MarketArticleRun:
+    """ساخت مقاله برای Autopublish — پس از analyze، قبل از نقشه/نمودار، کیفیت داده بررسی می‌شود."""
+    _validate_dataset_for_article(dataset)
+    run = _create_building_run(dataset, user)
+    assets = dict(run.chart_assets or {})
+    assets['autopublish_strict_data'] = True
+    run.chart_assets = assets
+    run.save(update_fields=['chart_assets', 'updated_at'])
+    return _complete_preview_build(run)
+
+
 def enqueue_preview_build(
     dataset: Dataset,
     user,
@@ -282,6 +297,33 @@ def _complete_preview_build(run: MarketArticleRun) -> MarketArticleRun:
     trends = report.get('price_trends') or {}
     conf = report.get('confidence') or {}
     valid_n = int(metrics.get('valid_count') or 0)
+
+    if (run.chart_assets or {}).get('autopublish_strict_data'):
+        from blog.services.market_article_autopublish_config import get_autopublish_settings
+
+        try:
+            assert_autopublish_data_readiness(
+                dataset=dataset,
+                metrics=metrics,
+                settings=get_autopublish_settings(),
+            )
+        except MarketArticleDataInsufficient as exc:
+            run.valid_count = valid_n
+            run.raw_count = int(metrics.get('raw_count') or valid_n or 0)
+            run.quality_pct = metrics.get('quality_pct')
+            run.status = MarketArticleRun.Status.FAILED
+            run.report_json = {
+                'metrics': metrics,
+                'build_error': exc.reason,
+                'data_quality_failed': True,
+            }
+            run.save(
+                update_fields=[
+                    'valid_count', 'raw_count', 'quality_pct',
+                    'status', 'report_json', 'updated_at',
+                ],
+            )
+            raise
 
     if is_rent:
         metric_label = 'معادل رهن کامل'

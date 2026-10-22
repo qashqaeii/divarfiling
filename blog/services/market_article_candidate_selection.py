@@ -76,11 +76,16 @@ def _score_candidate(
 
     valid_count = run.valid_count if run else None
     quality_pct = run.quality_pct if run else None
-    effective_valid = valid_count if valid_count is not None else int(row_count * 0.9)
-    valid_ratio = (effective_valid / row_count) if row_count else 0.0
-
-    if valid_ratio < settings.min_valid_ratio:
-        return None
+    valid_ratio = 1.0
+    if run and valid_count is not None and row_count:
+        valid_ratio = valid_count / row_count
+        if valid_ratio < settings.min_valid_ratio:
+            return None
+    elif quality_pct is not None:
+        valid_ratio = quality_pct / 100.0
+        if valid_ratio < settings.min_valid_ratio:
+            return None
+    effective_valid = valid_count if valid_count is not None else row_count
 
     updated_at = dataset.updated_at
     freshness_days = None

@@ -248,6 +248,7 @@ class SystematicArticleAutoPublishRun(models.Model):
         GENERATING = 'generating', 'در حال تولید'
         AI_POLISHING = 'ai_polishing', 'پولیش AI'
         AI_POLISH_FAILED = 'ai_polish_failed', 'شکست پولیش AI'
+        DATA_QUALITY_FAILED = 'data_quality_failed', 'رد کیفیت داده'
         QA_RUNNING = 'qa_running', 'کنترل کیفیت'
         QA_FAILED = 'qa_failed', 'رد QA'
         READY_TO_PUBLISH = 'ready_to_publish', 'آماده انتشار'

@@ -196,12 +196,16 @@ class PolishQaRemediationFlowTests(TestCase):
             action_hint='create',
             score_breakdown={'quality': 88.0},
             has_direct_duplicate=False,
+            freshness_days=3,
         )
         with patch(
             'blog.services.market_article_autopublish.pick_best_candidate',
             return_value=candidate,
         ):
-            with patch('blog.services.market_article_autopublish.build_preview', return_value=clean):
+            with patch(
+                'blog.services.market_article_autopublish.build_preview_for_autopublish',
+                return_value=clean,
+            ):
                 with patch(
                     'blog.services.market_article_autopublish.polish_market_article_run',
                     side_effect=_polish_inject_bad,

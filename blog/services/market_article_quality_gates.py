@@ -6,10 +6,11 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from PIL import Image
+from django.utils import timezone
 
 from blog.models import MarketArticleRun, Post
 from blog.services.market_article_analyze import _PHONE_RE, _TOKEN_RE
-from blog.services.market_article_autopublish_config import AutoPublishSettings
+from blog.services.market_article_autopublish_config import AutoPublishSettings, local_today
 from blog.services.market_article_number_utils import extract_report_numbers, normalize_number_text
 from blog.services.market_article_numeric_truth import (
     assess_data_consistency,
@@ -42,8 +43,26 @@ PRIVACY_PATTERNS = [
     re.compile(r'share[_-]?token', re.I),
 ]
 
-# فاز پولیش: ادعای عددی در QA نهایی + remediation بررسی می‌شود.
-QA_POLISH_PHASE_EXCLUDE = frozenset({'data_numeric_claims'})
+# فاز پولیش: کیفیت داده و ادعای عددی در QA نهایی / remediation بررسی می‌شوند.
+PRE_POLISH_DATA_GATE_KEYS = frozenset({
+    'data_min_records',
+    'data_valid_ratio',
+    'data_consistency',
+    'data_freshness',
+})
+
+QA_POLISH_PHASE_EXCLUDE = frozenset({
+    'data_numeric_claims',
+    'data_insights',
+    *PRE_POLISH_DATA_GATE_KEYS,
+})
+
+
+def critical_pre_polish_data_failures(qa: QAReport) -> list[str]:
+    return [
+        c.message for c in qa.checks
+        if c.key in PRE_POLISH_DATA_GATE_KEYS and c.critical and not c.passed
+    ]
 
 REQUIRED_SECTION_IDS = (
     'executive-summary',
@@ -167,36 +186,68 @@ def find_unverified_numeric_claims(run: MarketArticleRun) -> list[str]:
 _extract_report_numbers = extract_report_numbers
 
 
-def _check_data_quality(run: MarketArticleRun, settings: AutoPublishSettings, report: QAReport) -> None:
+def _check_data_quality(
+    run: MarketArticleRun,
+    settings: AutoPublishSettings,
+    report: QAReport,
+    *,
+    skip_keys: frozenset[str] | None = None,
+) -> None:
+    skip = skip_keys or frozenset()
     valid = int(run.valid_count or 0)
     raw = int(run.raw_count or 0) or valid
     ratio = (valid / raw) if raw else 0.0
     pct = run.quality_pct or (ratio * 100)
 
-    ok_records = valid >= settings.min_records
-    report.add(QACheck(
-        'data_min_records', 'data', ok_records, True,
-        f'{"✓" if ok_records else "✗"} {valid} رکورد معتبر (حداقل {settings.min_records})',
-        score_delta=15.0 if ok_records else 0.0,
-    ))
+    if 'data_min_records' not in skip:
+        ok_records = valid >= settings.min_records
+        report.add(QACheck(
+            'data_min_records', 'data', ok_records, True,
+            f'{"✓" if ok_records else "✗"} {valid} رکورد معتبر (حداقل {settings.min_records})',
+            score_delta=15.0 if ok_records else 0.0,
+        ))
 
-    ok_ratio = ratio >= settings.min_valid_ratio
-    report.add(QACheck(
-        'data_valid_ratio', 'data', ok_ratio, True,
-        f'{"✓" if ok_ratio else "✗"} کیفیت داده {pct:.1f}٪',
-        score_delta=15.0 if ok_ratio else 0.0,
-    ))
+    if 'data_valid_ratio' not in skip:
+        ok_ratio = ratio >= settings.min_valid_ratio
+        report.add(QACheck(
+            'data_valid_ratio', 'data', ok_ratio, True,
+            f'{"✓" if ok_ratio else "✗"} کیفیت داده {pct:.1f}٪',
+            score_delta=15.0 if ok_ratio else 0.0,
+        ))
 
-    insights = []
-    blob = run.report_json or {}
-    inner = blob.get('report') if isinstance(blob.get('report'), dict) else blob
-    if isinstance(inner, dict):
-        insights = inner.get('insights') or []
-    ok_insights = len(insights) >= settings.min_insights
+    if 'data_insights' not in skip:
+        insights = []
+        blob = run.report_json or {}
+        inner = blob.get('report') if isinstance(blob.get('report'), dict) else blob
+        if isinstance(inner, dict):
+            insights = inner.get('insights') or []
+        ok_insights = len(insights) >= settings.min_insights
+        report.add(QACheck(
+            'data_insights', 'data', ok_insights, False,
+            f'{"✓" if ok_insights else "✗"} {len(insights)} Insight (حداقل {settings.min_insights})',
+            score_delta=10.0 if ok_insights else 3.0,
+        ))
+
+
+def _check_data_freshness(run: MarketArticleRun, settings: AutoPublishSettings, report: QAReport) -> None:
+    ds = None
+    try:
+        ds = run.dataset
+    except MarketArticleRun.dataset.RelatedObjectDoesNotExist:
+        ds = None
+    if not ds or not getattr(ds, 'updated_at', None):
+        report.add(QACheck(
+            'data_freshness', 'data', False, True,
+            '✗ تاریخ به‌روزرسانی دیتاست نامشخص',
+            score_delta=0.0,
+        ))
+        return
+    days = (local_today() - timezone.localtime(ds.updated_at).date()).days
+    ok = days <= settings.max_dataset_age_days
     report.add(QACheck(
-        'data_insights', 'data', ok_insights, False,
-        f'{"✓" if ok_insights else "✗"} {len(insights)} Insight (حداقل {settings.min_insights})',
-        score_delta=10.0 if ok_insights else 3.0,
+        'data_freshness', 'data', ok, True,
+        f'{"✓" if ok else "✗"} تازگی دیتاست ({days} روز)',
+        score_delta=8.0 if ok else 0.0,
     ))
 
 
@@ -479,8 +530,11 @@ def run_quality_gates(
     dataset_meta = blob.get('dataset_meta') if isinstance(blob.get('dataset_meta'), dict) else {}
     skip = exclude_checks or frozenset()
 
-    _check_data_quality(run, settings, report)
-    _check_data_consistency(run, report)
+    _check_data_quality(run, settings, report, skip_keys=skip)
+    if 'data_freshness' not in skip:
+        _check_data_freshness(run, settings, report)
+    if 'data_consistency' not in skip:
+        _check_data_consistency(run, report)
     if 'data_numeric_claims' not in skip:
         _check_numeric_claims(run, report)
     _check_content_quality(run, report)

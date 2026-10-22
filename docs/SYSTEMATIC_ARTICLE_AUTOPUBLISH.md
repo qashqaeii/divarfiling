@@ -141,7 +141,9 @@ systemctl list-timers divar-systematic-article-autopublish.timer
 - شکست نهایی → `ai_polish_failed` + `ai_polish_report.batch_logs` — **بدون انتشار** نسخه بدون پولیش
 - QA قبل (`qa_pre_polish`) و بعد پولیش در `qa_report.pre_polish` / `post_polish` (پنل autopublish)
 - **Numeric QA (Source of Truth):** `market_article_numeric_truth.MarketTruthRegistry` از `report_json` (امکانات، عمق بازار، سهم متراژ، `range_50_fmt` / `range_80_fmt`) — نه فقط حضور عدد در متن
-- فاز **AI Polish** فقط کنترل ساختاری/حریم خصوصی (`QA_POLISH_PHASE_EXCLUDE` → بدون `data_numeric_claims`); QA عددی + remediation در `_run_post_polish_qa_with_remediation`
+- **قبل از پولیش:** `critical_pre_polish_data_failures` (رکورد، نسبت معتبر، تازگی، سازگاری) → `data_quality_failed` بدون فراخوانی AI
+- **قبل از نقشه (Autopublish):** `build_preview_for_autopublish` پس از `analyze` کیفیت را چک می‌کند
+- فاز **AI Polish** فقط کنترل ساختاری/حریم خصوصی (`QA_POLISH_PHASE_EXCLUDE`); QA عددی + remediation در `_run_post_polish_qa_with_remediation`
 - حداکثر **۲** تلاش خودکار `qa_auto_remediate` (حذف جمله با عدد غیرقابل‌تأیید)؛ سپس `QA_FAILED` + بازگردانی `autopublish_pre_polish_snapshot`
 - `data_consistency` برای report ناقص/ناسازگار → توقف بدون انتشار
 - `qa_report.summary`: امتیاز QA، `fallback_ratio` پولیش، `publish_result`

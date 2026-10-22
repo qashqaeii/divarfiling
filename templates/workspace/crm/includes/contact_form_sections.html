@@ -176,18 +176,31 @@
             <h4 class="crm-prefs-section-title" id="crmPrefsTitle">ترجیحات ملک</h4>
         </div>
         <div class="crm-field crm-field-full crm-prefs-core crm-prefs-search-types" data-crm-search-property-types-wrap>
-            <span class="crm-label">نوع ملک</span>
-            <p class="crm-form-hint crm-form-hint--tight">خالی = همه انواع · چند انتخاب مجاز است</p>
-            {% with ptypes=form.search_property_types %}
-            <div class="crm-property-type-chips" role="group" aria-label="نوع ملک">
-                {% for value, label in ptypes.field.choices %}
-                <label class="crm-property-type-chip">
-                    <input type="checkbox" name="{{ ptypes.html_name }}" value="{{ value }}"{% if value in ptypes.value %} checked{% endif %}>
-                    <span>{{ label }}</span>
-                </label>
-                {% endfor %}
+            <div class="crm-property-type-panel">
+                <div class="crm-property-type-panel__head">
+                    <span class="crm-label">نوع ملک</span>
+                    <span class="crm-property-type-panel__meta">چند انتخاب · خالی = همه</span>
+                </div>
+                {% with ptypes=form.search_property_types %}
+                <div class="crm-property-type-grid" role="group" aria-label="نوع ملک">
+                    {% for value, label in ptypes.field.choices %}
+                    <label class="crm-property-type-option">
+                        <span class="crm-property-type-option__lead">
+                            <span class="crm-property-type-option__icon" aria-hidden="true">
+                                <i class="fas {{ value|crm_property_type_icon }}"></i>
+                            </span>
+                            <span class="crm-property-type-option__text">{{ label }}</span>
+                        </span>
+                        <input type="checkbox"
+                               class="crm-property-type-option__cb"
+                               name="{{ ptypes.html_name }}"
+                               value="{{ value }}"
+                               {% if value in ptypes.value %}checked{% endif %}>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% endwith %}
             </div>
-            {% endwith %}
             {% for error in form.search_property_types.errors %}
             <p class="crm-field-error" role="alert">{{ error }}</p>
             {% endfor %}

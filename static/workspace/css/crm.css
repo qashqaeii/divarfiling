@@ -19760,56 +19760,105 @@ button.crm-prop-hero-cover {
     gap: .35rem;
     font-size: .8125rem;
 }
-.crm-property-type-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 0.45rem;
-    margin-top: 0.35rem;
+.crm-property-type-panel {
+    margin-top: 0.15rem;
+    padding: 0.65rem 0.7rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2, var(--ws-surface)) 70%, var(--ws-surface));
 }
-.crm-property-type-chip {
-    display: inline-flex;
+.crm-property-type-panel__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.55rem;
+}
+.crm-property-type-panel__head .crm-label {
+    margin-bottom: 0;
+}
+.crm-property-type-panel__meta {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+.crm-property-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+@media (min-width: 480px) {
+    .crm-property-type-grid {
+        grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    }
+}
+.crm-property-type-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
     margin: 0;
+    padding: 0.5rem 0.55rem 0.5rem 0.6rem;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+    background: var(--ws-surface);
     cursor: pointer;
     user-select: none;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    min-height: 2.65rem;
 }
-.crm-property-type-chip > span {
+.crm-property-type-option:hover {
+    border-color: color-mix(in srgb, var(--ws-primary, var(--crm-accent)) 25%, var(--ws-border));
+}
+.crm-property-type-option:has(input:checked) {
+    border-color: color-mix(in srgb, var(--ws-primary, var(--crm-accent)) 55%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary, var(--crm-accent)) 9%, var(--ws-surface));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ws-primary, var(--crm-accent)) 12%, transparent);
+}
+.crm-property-type-option:has(input:focus-visible) {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, var(--crm-accent)) 45%, transparent);
+    outline-offset: 1px;
+}
+.crm-property-type-option__lead {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    flex: 1;
+}
+.crm-property-type-option__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2rem;
-    padding: 0.35rem 0.7rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-text-muted) 12%, transparent);
+    color: var(--ws-text-secondary);
+    flex-shrink: 0;
+    font-size: 0.72rem;
+}
+.crm-property-type-option:has(input:checked) .crm-property-type-option__icon {
+    background: color-mix(in srgb, var(--ws-primary, var(--crm-accent)) 18%, transparent);
+    color: var(--ws-primary, var(--crm-accent));
+}
+.crm-property-type-option__text {
+    font-size: 0.78rem;
+    font-weight: 600;
     line-height: 1.25;
-    border: 1px solid var(--crm-border);
-    border-radius: 999px;
-    background: var(--crm-surface);
     color: var(--ws-text);
-    transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
 }
-.crm-property-type-chip input[type="checkbox"] {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-.crm-property-type-chip:has(input:checked) > span {
-    background: var(--crm-accent);
-    border-color: var(--crm-accent);
-    color: #fff;
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--crm-accent) 40%, transparent);
-}
-.crm-property-type-chip:has(input:focus-visible) > span {
-    outline: 2px solid color-mix(in srgb, var(--crm-accent) 55%, transparent);
-    outline-offset: 2px;
+.crm-property-type-option__cb {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: var(--ws-primary, var(--crm-accent));
+    cursor: pointer;
 }
 .crm-prefs-search-types {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.65rem;
 }
 .crm-matches-builder {
     display: flex;

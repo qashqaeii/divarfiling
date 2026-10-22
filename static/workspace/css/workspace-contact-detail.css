@@ -2289,29 +2289,6 @@
     transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
-#crmMatches.crm-matches-v3 .crm-match-card-v3::before {
-    content: "";
-    position: absolute;
-    inset-inline: 12px;
-    top: 0;
-    height: 3px;
-    border-radius: 0 0 6px 6px;
-    background: color-mix(in srgb, var(--ws-border) 55%, transparent);
-    opacity: 0.85;
-}
-
-#crmMatches.crm-matches-v3 .crm-match-card-v3[data-score-tier="high"]::before {
-    background: linear-gradient(90deg, #22c55e, #15803d);
-}
-
-#crmMatches.crm-matches-v3 .crm-match-card-v3[data-score-tier="mid"]::before {
-    background: linear-gradient(90deg, #fbbf24, #d97706);
-}
-
-#crmMatches.crm-matches-v3 .crm-match-card-v3[data-score-tier="low"]::before {
-    background: color-mix(in srgb, var(--ws-text-muted) 35%, var(--ws-border));
-}
-
 #crmMatches.crm-matches-v3 .crm-match-card-v3:hover {
     border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
@@ -2418,8 +2395,36 @@
 }
 
 #crmMatches.crm-matches-v3 .crm-match-source.is-divar {
-    background: color-mix(in srgb, #64748b 12%, var(--ws-surface-2));
-    color: #475569;
+    --crm-divar-brand: var(--ws-divar-brand, #a62626);
+    padding: 3px 9px 3px 7px;
+    color: var(--crm-divar-brand);
+    background: var(--ws-divar-brand-soft, rgba(166, 38, 38, 0.09));
+    border: 1px solid var(--ws-divar-brand-border, rgba(166, 38, 38, 0.22));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+    font-weight: 800;
+}
+
+#crmMatches.crm-matches-v3 .crm-match-source.is-divar i {
+    display: none;
+}
+
+#crmMatches.crm-matches-v3 .crm-match-source.is-divar .crm-match-source__mark {
+    display: inline-block;
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 3px;
+    background: var(--crm-divar-brand);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--crm-divar-brand) 35%, transparent);
+    flex-shrink: 0;
+}
+
+#crmMatches.crm-matches-v3 .crm-match-quick-link--divar {
+    color: var(--ws-divar-brand, #a62626);
+    font-weight: 700;
+}
+
+#crmMatches.crm-matches-v3 .crm-match-quick-link--divar:hover {
+    color: var(--ws-divar-brand-hover, #8f2121);
 }
 
 #crmMatches.crm-matches-v3 .crm-match-price-v3 {

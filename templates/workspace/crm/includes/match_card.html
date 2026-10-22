@@ -21,7 +21,11 @@
     <div class="crm-match-body crm-match-body-v3">
         <div class="crm-match-card-head">
             <span class="crm-match-source{% if source == 'divar' %} is-divar{% else %} is-crm{% endif %}">
-                <i class="fas {% if source == 'divar' %}fa-bolt{% else %}fa-folder-open{% endif %}" aria-hidden="true"></i>
+                {% if source == 'divar' %}
+                <span class="crm-match-source__mark" aria-hidden="true"></span>
+                {% else %}
+                <i class="fas fa-folder-open" aria-hidden="true"></i>
+                {% endif %}
                 {% if source == 'divar' %}دیوار{% else %}شخصی{% endif %}
             </span>
             <div class="crm-match-score crm-match-score-v3" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">
@@ -60,7 +64,7 @@
             <a href="{{ m.internal_url }}" class="crm-match-quick-link">مشاهده فایل</a>
             {% endif %}
             {% if m.link %}
-            <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-quick-link crm-match-quick-link--muted">آگهی دیوار</a>
+            <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-quick-link crm-match-quick-link--divar">آگهی دیوار</a>
             {% endif %}
         </div>
         {% endif %}

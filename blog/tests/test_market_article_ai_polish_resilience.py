@@ -16,11 +16,13 @@ from blog.services.market_article_ai_editorial import (
 from blog.services.market_article_ai_polish import (
     AIPolishJsonError,
     AIPolishRecoverableError,
+    LLMCallResult,
     SCHEMA_BATCH,
     SCHEMA_SEO,
     StatisticalProtection,
     _polish_text_batch,
     batch_text_segments,
+    reopen_identity_fallback_segments,
     segment_eligible_for_polish,
     find_missing_numeric_tokens,
     migrate_polish_state,
@@ -143,6 +145,11 @@ class JsonRepairTests(TestCase):
     def test_extract_outer_object(self):
         fixed = repair_json_text('prefix {"a": 1} suffix')
         self.assertEqual(json.loads(fixed)['a'], 1)
+
+    def test_parse_plain_text_with_embedded_json(self):
+        raw = 'متن اضافی\n```json\n{"texts": [{"id": 2, "text": "سلام"}]}\n```'
+        data = parse_llm_response(raw, SCHEMA_BATCH)
+        self.assertEqual(data['texts'][0]['id'], 2)
 
 
 @override_settings(MARKET_ARTICLE_SKIP_MAP_TILES=True, MARKET_ARTICLE_SKIP_ACCESS=True)
@@ -289,6 +296,63 @@ class BatchPolishTests(TestCase):
         )
         mock_build.assert_not_called()
         self.assertIsNotNone(ap.pk)
+
+
+class AdaptiveBatchTests(TestCase):
+    def test_reopen_identity_fallback_segments(self):
+        state = reopen_identity_fallback_segments({
+            'completed_segment_ids': [1, 2, 3],
+            'segment_outcomes': {'2': 'identity_fallback', '1': 'polished'},
+            'completed_batches': [0, 1],
+        })
+        self.assertEqual(state['completed_segment_ids'], [1, 3])
+        self.assertEqual(state['completed_batches'], [])
+
+    @patch('blog.services.market_article_ai_polish._call_llm')
+    def test_adaptive_split_on_plain_text(self, mock_llm):
+        calls = {'n': 0}
+
+        def side_effect(_system, user, **_k):
+            calls['n'] += 1
+            if calls['n'] <= 2:
+                return LLMCallResult(
+                    text='این JSON نیست',
+                    provider='mock',
+                    model='m',
+                    latency_ms=1,
+                    input_tokens=10,
+                    output_tokens=5,
+                )
+            payload = json.loads(user)
+            seg_id = int(payload['texts'][0]['id'])
+            letter = 'a' if seg_id == 1 else 'b'
+            body = json.dumps({'texts': [{'id': seg_id, 'text': letter}]}, ensure_ascii=False)
+            return LLMCallResult(
+                text=body,
+                provider='mock',
+                model='m',
+                latency_ms=1,
+                input_tokens=8,
+                output_tokens=4,
+            )
+
+        mock_llm.side_effect = side_effect
+        batch = [
+            {'id': 1, 'text': 'متن اولیه طولانی برای تست'},
+            {'id': 2, 'text': 'متن دوم طولانی برای تست'},
+        ]
+        outcomes: dict[str, str] = {}
+        result, provider, _model, _lat, logs = _polish_text_batch(
+            0,
+            batch,
+            protection=StatisticalProtection(),
+            segment_outcomes=outcomes,
+        )
+        self.assertEqual(result[1], 'a')
+        self.assertEqual(result[2], 'b')
+        self.assertTrue(any(e.get('phase') == 'batch_split' for e in logs))
+        self.assertGreaterEqual(mock_llm.call_count, 2)
+        self.assertEqual(provider, 'mock')
 
 
 class ProviderFallbackTests(TestCase):

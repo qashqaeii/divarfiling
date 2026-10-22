@@ -51,10 +51,20 @@ _STAT_PHRASE_RE = re.compile(
     re.U,
 )
 BATCH_MAX_ATTEMPTS = 4
+BATCH_JSON_ATTEMPTS_SAME_SIZE = 2
+ADAPTIVE_SPLIT_MAX_DEPTH = 8
 SEO_MAX_ATTEMPTS = 4
-SEGMENT_NUMERIC_MAX_ATTEMPTS = 3
+SEGMENT_NUMERIC_MAX_ATTEMPTS = 2
 BACKOFF_BASE_SECONDS = 1.5
 MAX_NUMERIC_SAFETY_FALLBACK_RATIO = 0.25
+_JSON_BATCH_SPLIT_ERRORS = frozenset({
+    'plain_text',
+    'json_malformed',
+    'empty_response',
+    'missing_texts',
+    'incomplete_ids',
+    'json_error',
+})
 SCHEMA_SEO = 'seo'
 SCHEMA_BATCH = 'batch'
 _PROVIDER_SKIP_CODES = frozenset({
@@ -97,6 +107,10 @@ class AIPolishError(Exception):
 
 class AIPolishRecoverableError(Exception):
     """خطای موقت provider — تلاش مجدد مجاز است."""
+
+    def __init__(self, message: str, *, error_type: str = 'provider_exhausted'):
+        super().__init__(message)
+        self.error_type = error_type
 
 
 class AIPolishNumericError(AIPolishRecoverableError):
@@ -782,14 +796,19 @@ def parse_llm_response(raw: str, schema: str) -> dict[str, Any]:
     stripped = (raw or '').strip()
     if not stripped:
         raise AIPolishJsonError('پاسخ AI خالی است.', error_type='empty_response')
-    if stripped[0] not in '{[':
+
+    candidates: list[str] = []
+    for item in (stripped, repair_json_text(stripped), _extract_outer_json_object(stripped)):
+        item = (item or '').strip()
+        if item and item not in candidates:
+            candidates.append(item)
+    if not any(c and c[0] in '{[' for c in candidates):
         raise AIPolishJsonError('خروجی متنی به‌جای JSON.', error_type='plain_text')
 
-    candidates = [stripped, repair_json_text(stripped)]
     last_exc: json.JSONDecodeError | None = None
     parsed: Any = None
     for candidate in candidates:
-        if not candidate:
+        if not candidate or candidate[0] not in '{[':
             continue
         try:
             parsed = json.loads(candidate)
@@ -869,6 +888,7 @@ def _call_llm(
             continue
     raise AIPolishRecoverableError(
         f'همه providerهای AI شکست خوردند ({last_code}).',
+        error_type=last_code or 'provider_exhausted',
     )
 
 
@@ -940,6 +960,22 @@ def _log_attempt(
         entry['input_tokens'] = llm.input_tokens
         entry['output_tokens'] = llm.output_tokens
     attempts_log.append(entry)
+
+
+def reopen_identity_fallback_segments(state: dict[str, Any]) -> dict[str, Any]:
+    """برای Resume — segmentهای identity_fallback دوباره در صف پولیش قرار می‌گیرند."""
+    if not state:
+        return state
+    outcomes = dict(state.get('segment_outcomes') or {})
+    retry_ids = {int(k) for k, v in outcomes.items() if v == 'identity_fallback'}
+    if not retry_ids:
+        return state
+    completed = {int(x) for x in (state.get('completed_segment_ids') or [])}
+    completed -= retry_ids
+    updated = dict(state)
+    updated['completed_segment_ids'] = sorted(completed)
+    updated['completed_batches'] = []
+    return updated
 
 
 def _load_polish_state(run: MarketArticleRun) -> dict[str, Any]:
@@ -1210,15 +1246,124 @@ def _record_segment_outcomes(
             segment_outcomes[key] = 'polished'
 
 
-def _polish_text_batch(
+def _batch_json_error_type(exc: BaseException) -> str:
+    if isinstance(exc, AIPolishJsonError):
+        return exc.error_type or 'json_error'
+    if isinstance(exc, AIPolishRecoverableError):
+        return 'provider_exhausted'
+    return 'json_error'
+
+
+def _should_split_batch(exc: BaseException, batch_len: int) -> bool:
+    if batch_len <= 1:
+        return False
+    if isinstance(exc, AIPolishRecoverableError):
+        return True
+    if isinstance(exc, AIPolishJsonError):
+        return exc.error_type in _JSON_BATCH_SPLIT_ERRORS
+    return False
+
+
+def _merge_polish_results(
+    left: tuple[dict[int, str], str, str, int, list[dict[str, Any]]],
+    right: tuple[dict[int, str], str, str, int, list[dict[str, Any]]],
+) -> tuple[dict[int, str], str, str, int, list[dict[str, Any]]]:
+    merged_map = {**left[0], **right[0]}
+    provider = right[1] or left[1]
+    model = right[2] or left[2]
+    latency = left[3] + right[3]
+    logs = left[4] + right[4]
+    return merged_map, provider, model, latency, logs
+
+
+def _apply_parsed_batch(
+    *,
+    batch_index: int,
+    batch: list[dict[str, Any]],
+    allowed_ids: set[int],
+    originals: dict[int, str],
+    shield_maps: dict[int, dict[str, str]],
+    polished_raw: dict[int, str],
+    protection: StatisticalProtection,
+    segment_outcomes: dict[str, str],
+    attempts_log: list[dict[str, Any]],
+    blocked: set[str],
+    llm: LLMCallResult,
+    attempt: int,
+) -> dict[int, str]:
+    final: dict[int, str] = {}
+    bad_ids: list[int] = []
+    for seg_id in allowed_ids:
+        restored, errors = unshield_and_validate_segment(
+            seg_id,
+            originals[seg_id],
+            polished_raw[seg_id],
+            shield_maps[seg_id],
+            protection,
+        )
+        if errors:
+            bad_ids.append(seg_id)
+            _log_attempt(
+                attempts_log,
+                phase='batch',
+                status='segment_retry',
+                attempt=attempt,
+                batch_index=batch_index,
+                segment_count=1,
+                error='; '.join(errors),
+                error_type='numeric_mismatch',
+                llm=llm,
+            )
+        else:
+            final[seg_id] = restored
+    fallback_kinds: dict[int, str] = {}
+    for seg_id in bad_ids:
+        fixed, _, _, _ = _polish_single_segment_numeric(
+            seg_id,
+            originals[seg_id],
+            batch_index=batch_index,
+            protection=protection,
+            attempts_log=attempts_log,
+            blocked=blocked,
+        )
+        final[seg_id] = fixed
+        if (fixed or '').strip() == (originals[seg_id] or '').strip():
+            fallback_kinds[seg_id] = 'numeric_safety_fallback'
+    _record_segment_outcomes(
+        segment_outcomes,
+        originals,
+        final,
+        fallback_kinds=fallback_kinds,
+    )
+    validation = 'passed' if not bad_ids else 'numeric_safety_applied'
+    _log_attempt(
+        attempts_log,
+        phase='batch',
+        status='ok',
+        attempt=attempt,
+        batch_index=batch_index,
+        segment_count=len(batch),
+        llm=llm,
+        validation=validation,
+    )
+    return final
+
+
+def _polish_segment_group(
     batch_index: int,
     batch: list[dict[str, Any]],
     *,
+    depth: int,
     protection: StatisticalProtection,
     segment_outcomes: dict[str, str],
-    editorial_context: dict[str, Any] | None = None,
-    editorial_angle: str = '',
+    editorial_context: dict[str, Any] | None,
+    editorial_angle: str,
+    attempts_log: list[dict[str, Any]],
+    blocked: set[str],
 ) -> tuple[dict[int, str], str, str, int, list[dict[str, Any]]]:
+    if not batch:
+        return {}, '', '', 0, attempts_log
+
     allowed_ids = {int(s['id']) for s in batch}
     originals = {int(s['id']): str(s['text']) for s in batch}
     id_list = sorted(allowed_ids)
@@ -1238,77 +1383,40 @@ def _polish_text_batch(
         },
         ensure_ascii=False,
     )
-    attempts_log: list[dict[str, Any]] = []
-    blocked: set[str] = set()
+
+    provider = ''
+    model = ''
+    total_latency = 0
     last_error = ''
     last_type = 'json_error'
-    for attempt in range(1, BATCH_MAX_ATTEMPTS + 1):
+    last_llm: LLMCallResult | None = None
+
+    for attempt in range(1, BATCH_JSON_ATTEMPTS_SAME_SIZE + 1):
         try:
             llm = _call_llm(system, user, blocked_providers=blocked)
+            last_llm = llm
             data = parse_llm_response(llm.text, SCHEMA_BATCH)
             polished_raw = _coerce_batch_texts(data, allowed_ids)
-            final: dict[int, str] = {}
-            bad_ids: list[int] = []
-            for seg_id in allowed_ids:
-                restored, errors = unshield_and_validate_segment(
-                    seg_id,
-                    originals[seg_id],
-                    polished_raw[seg_id],
-                    shield_maps[seg_id],
-                    protection,
-                )
-                if errors:
-                    bad_ids.append(seg_id)
-                    _log_attempt(
-                        attempts_log,
-                        phase='batch',
-                        status='segment_retry',
-                        attempt=attempt,
-                        batch_index=batch_index,
-                        segment_count=1,
-                        error='; '.join(errors),
-                        error_type='numeric_mismatch',
-                        llm=llm,
-                    )
-                else:
-                    final[seg_id] = restored
-            extra_latency = 0
             provider, model = llm.provider, llm.model
-            fallback_kinds: dict[int, str] = {}
-            for seg_id in bad_ids:
-                fixed, provider, model, seg_latency = _polish_single_segment_numeric(
-                    seg_id,
-                    originals[seg_id],
-                    batch_index=batch_index,
-                    protection=protection,
-                    attempts_log=attempts_log,
-                    blocked=blocked,
-                )
-                final[seg_id] = fixed
-                extra_latency += seg_latency
-                if (fixed or '').strip() == (originals[seg_id] or '').strip():
-                    fallback_kinds[seg_id] = 'numeric_safety_fallback'
-            _record_segment_outcomes(
-                segment_outcomes,
-                originals,
-                final,
-                fallback_kinds=fallback_kinds,
-            )
-            validation = 'passed' if not bad_ids else 'numeric_safety_applied'
-            _log_attempt(
-                attempts_log,
-                phase='batch',
-                status='ok',
-                attempt=attempt,
+            total_latency += llm.latency_ms
+            final = _apply_parsed_batch(
                 batch_index=batch_index,
-                segment_count=len(batch),
+                batch=batch,
+                allowed_ids=allowed_ids,
+                originals=originals,
+                shield_maps=shield_maps,
+                polished_raw=polished_raw,
+                protection=protection,
+                segment_outcomes=segment_outcomes,
+                attempts_log=attempts_log,
+                blocked=blocked,
                 llm=llm,
-                validation=validation,
+                attempt=attempt,
             )
-            return final, provider, model, llm.latency_ms + extra_latency, attempts_log
+            return final, provider, model, total_latency, attempts_log
         except (AIPolishJsonError, AIPolishRecoverableError) as exc:
             last_error = str(exc)
-            last_type = getattr(exc, 'error_type', 'json_error')
+            last_type = _batch_json_error_type(exc)
             _log_attempt(
                 attempts_log,
                 phase='batch',
@@ -1318,22 +1426,88 @@ def _polish_text_batch(
                 segment_count=len(batch),
                 error=last_error,
                 error_type=last_type,
+                llm=last_llm,
             )
+            if _should_split_batch(exc, len(batch)):
+                break
             _sleep_backoff(attempt)
+
+    if len(batch) > 1 and depth < ADAPTIVE_SPLIT_MAX_DEPTH:
+        mid = max(1, len(batch) // 2)
+        left_batch, right_batch = batch[:mid], batch[mid:]
+        _log_attempt(
+            attempts_log,
+            phase='batch_split',
+            status='split',
+            attempt=depth + 1,
+            batch_index=batch_index,
+            segment_count=len(batch),
+            error_type=last_type,
+            error=last_error[:200],
+            llm=last_llm,
+        )
+        left = _polish_segment_group(
+            batch_index,
+            left_batch,
+            depth=depth + 1,
+            protection=protection,
+            segment_outcomes=segment_outcomes,
+            editorial_context=editorial_context,
+            editorial_angle=editorial_angle,
+            attempts_log=attempts_log,
+            blocked=blocked,
+        )
+        right = _polish_segment_group(
+            batch_index,
+            right_batch,
+            depth=depth + 1,
+            protection=protection,
+            segment_outcomes=segment_outcomes,
+            editorial_context=editorial_context,
+            editorial_angle=editorial_angle,
+            attempts_log=attempts_log,
+            blocked=blocked,
+        )
+        return _merge_polish_results(left, right)
 
     _log_attempt(
         attempts_log,
         phase='batch',
         status='identity_fallback',
-        attempt=BATCH_MAX_ATTEMPTS,
+        attempt=BATCH_JSON_ATTEMPTS_SAME_SIZE,
         batch_index=batch_index,
         segment_count=len(batch),
         error_type=last_type,
         error=last_error,
+        llm=last_llm,
     )
     for seg_id, original in originals.items():
         segment_outcomes[str(seg_id)] = 'identity_fallback'
-    return originals, 'identity', 'passthrough', 0, attempts_log
+    return originals, provider or 'identity', model or 'passthrough', total_latency, attempts_log
+
+
+def _polish_text_batch(
+    batch_index: int,
+    batch: list[dict[str, Any]],
+    *,
+    protection: StatisticalProtection,
+    segment_outcomes: dict[str, str],
+    editorial_context: dict[str, Any] | None = None,
+    editorial_angle: str = '',
+) -> tuple[dict[int, str], str, str, int, list[dict[str, Any]]]:
+    attempts_log: list[dict[str, Any]] = []
+    blocked: set[str] = set()
+    return _polish_segment_group(
+        batch_index,
+        batch,
+        depth=0,
+        protection=protection,
+        segment_outcomes=segment_outcomes,
+        editorial_context=editorial_context,
+        editorial_angle=editorial_angle,
+        attempts_log=attempts_log,
+        blocked=blocked,
+    )
 
 
 def repair_polished_map_numeric_safety(
@@ -1411,6 +1585,8 @@ def polish_market_article_run(
     )
 
     state = _load_polish_state(run) if resume else {}
+    if resume and state:
+        state = reopen_identity_fallback_segments(state)
     editorial_angle = str(state.get('editorial_angle') or '') or select_editorial_angle(run)
     plan_version = int(state.get('batch_plan_version') or BATCH_PLAN_VERSION)
     if state.get('completed_batches') and not state.get('batch_plan_version'):
@@ -1504,8 +1680,12 @@ def polish_market_article_run(
             )
             polished_map.update(polished_batch)
             for seg in pending_batch:
-                completed_segment_ids.add(int(seg['id']))
-            completed_batches.add(batch_index)
+                seg_id = int(seg['id'])
+                if segment_outcomes.get(str(seg_id)) == 'identity_fallback':
+                    continue
+                completed_segment_ids.add(seg_id)
+            if batch_segments_done(batch, completed_segment_ids):
+                completed_batches.add(batch_index)
             batch_logs.extend(logs)
             total_latency += latency
             _persist_state()

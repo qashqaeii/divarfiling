@@ -10,6 +10,9 @@ from django.urls import reverse
 from workspace.models import CRMProperty, Customer, Listing
 from workspace.services.formatting import format_toman
 from workspace.services.listing_public_share import get_or_create_listing_share
+from workspace.services.crm_matching_access import can_create_property_public_link, mask_crm_match_for_viewer
+from workspace.services.crm_property_share import build_property_share_context
+from workspace.services.crm_scope import properties_qs
 from workspace.services.property_public_share import get_or_create_property_share
 
 
@@ -72,16 +75,26 @@ def enrich_match_with_links(user, request, match: Dict[str, Any]) -> Dict[str, A
     internal_url = (out.get('internal_url') or '').strip()
 
     if match.get('source') == 'crm' and match.get('property_id'):
-        prop = CRMProperty.objects.filter(pk=match['property_id'], user=user).first()
+        prop = properties_qs(user).filter(pk=match['property_id']).first()
         if prop:
-            if not public_url:
-                try:
-                    public_url = public_share_url_for_property(user, request, prop)
-                except Exception:
-                    public_url = ''
-            if not internal_url:
+            share_ctx = build_property_share_context(user, prop)
+            if share_ctx.mask_sensitive:
+                out = mask_crm_match_for_viewer(user, prop, out)
+            elif can_create_property_public_link(user, prop):
+                if not public_url:
+                    try:
+                        public_url = public_share_url_for_property(user, request, prop)
+                    except Exception:
+                        public_url = ''
+            else:
+                public_url = ''
+            if not share_ctx.mask_sensitive and not internal_url:
                 internal_url = _internal_url_for_property(request, prop)
-            if not (out.get('link') or '').strip() and prop.link:
+            if (
+                not share_ctx.mask_sensitive
+                and not (out.get('link') or '').strip()
+                and prop.link
+            ):
                 out['link'] = prop.link
     elif match.get('source') == 'divar':
         listing = None

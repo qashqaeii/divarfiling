@@ -10,26 +10,22 @@ from django.utils import timezone
 from licenses.models import License, LicenseActivation
 from shop.models import Order
 from shop.services.license_entitlement import LICENSE_ACCESS_ORDER_STATUSES
+from workspace.services.bot_license_query import license_entitlement_valid_q
 
 
 def _paid_license_qs(user):
     """لایسنس‌های مرتبط با سفارش معتبر (پرداخت یا هدیه کمپین) و معتبر زمانی."""
     return License.objects.filter(
         order__user=user,
-        order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
-    ).filter(
-        Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
-    ).exclude(status__in=['suspended', 'expired'])
+        status='active',
+    ).filter(license_entitlement_valid_q())
 
 
 def _assigned_license_qs(user):
     """کلیدهای تخصیص‌یافته به عضو تیم — هم‌تراز allocated_licenses داشبورد."""
     return License.objects.filter(
         assigned_user=user,
-        order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
-    ).filter(
-        Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
-    ).exclude(status__in=['suspended', 'expired'])
+    ).filter(license_entitlement_valid_q())
 
 
 def _assigned_active_seat_qs(user):
@@ -37,11 +33,8 @@ def _assigned_active_seat_qs(user):
     return LicenseActivation.objects.filter(
         assigned_user=user,
         is_active=True,
-        license__order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
         license__status='active',
-    ).filter(
-        Q(license__expires_at__isnull=True) | Q(license__expires_at__gt=timezone.now())
-    ).exclude(license__status__in=['suspended', 'expired'])
+    ).filter(license_entitlement_valid_q(prefix='license__'))
 
 
 def has_purchased_bot_license(user) -> bool:

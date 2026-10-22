@@ -106,6 +106,19 @@ def offer_signup_welcome_gift(user, *, channel: str = 'unknown') -> str:
     """
     ok, reason = user_may_receive_signup_gift(user)
     if not ok:
+        logger.info(
+            'signup_welcome_gift skipped user_id=%s reason=%s channel=%s',
+            getattr(user, 'pk', None),
+            reason,
+            (channel or 'unknown')[:32],
+            extra={
+                'event': 'signup_welcome_gift_offer',
+                'user_id': getattr(user, 'pk', None),
+                'skip_reason': reason,
+                'channel': (channel or 'unknown')[:32],
+                'gift_result': f'skipped:{reason}',
+            },
+        )
         return f'skipped:{reason}'
 
     try:

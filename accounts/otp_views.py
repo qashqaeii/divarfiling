@@ -170,8 +170,9 @@ class OtpLoginVerifyView(View):
             _clear_otp_session(request)
             return redirect('otp_login')
 
-        if not user.phone_verified:
-            user.mark_phone_verified()
+        from accounts.services.phone_verification import complete_phone_verification
+
+        complete_phone_verification(user, channel='web_otp_login')
 
         login(request, user, backend='accounts.backends.PhoneAuthBackend')
         next_url = _safe_next(request)
@@ -488,14 +489,9 @@ class OtpVerifyPhoneView(View):
                 'resend_url': reverse('otp_verify_phone_resend'),
             })
 
-        request.user.mark_phone_verified()
-        try:
-            from licenses.services.signup_welcome_gift import offer_signup_welcome_gift
+        from accounts.services.phone_verification import complete_phone_verification
 
-            offer_signup_welcome_gift(request.user, channel='web_phone_verify')
-        except Exception:
-            import logging
-            logging.getLogger(__name__).exception('signup welcome gift after phone verify failed')
+        complete_phone_verification(request.user, channel='web_phone_verify')
         next_url = _safe_next(request, 'dashboard')
         _clear_otp_session(request)
         messages.success(request, 'شماره موبایل شما با موفقیت تأیید شد.')

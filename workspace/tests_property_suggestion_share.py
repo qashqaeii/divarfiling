@@ -133,7 +133,14 @@ class PropertySuggestionShareTests(TestCase):
             city='تهران',
             area=100,
         )
-        share_property(owner, shared_prop, advisor_member.pk)
+        from workspace.models import CRMResourceShare
+
+        share_property(
+            owner,
+            shared_prop,
+            advisor_member.pk,
+            share_mode=CRMResourceShare.SHARE_MODE_COLLABORATIVE,
+        )
         customer = Customer.objects.create(
             user=advisor,
             agency=agency,

@@ -24,6 +24,13 @@ from licenses.models import ClientAppEvent, License, LicenseActivation
 from mobile_api.models import MobileDevice
 from shop.models import DownloadLog, Order
 from workspace.models import CRMDeal, Customer, Dataset
+from workspace.services.bot_license_query import (
+    annotate_pending_bot_activation,
+    annotate_user_bot_license_access,
+    bot_access_display,
+    license_entitlement_valid_q,
+    resolve_bot_access_kind,
+)
 from workspace.services.jalali_input import to_persian_digits
 
 User = get_user_model()
@@ -72,29 +79,55 @@ def _annotate_users_qs(qs=None):
     if qs is None:
         qs = User.objects.all()
 
-    now = timezone.now()
-    active_lic_exists = License.objects.filter(
-        order__user=OuterRef('pk'),
-        status='active',
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
-
-    latest_active_plan = (
+    latest_owner_plan = (
         License.objects.filter(
             order__user=OuterRef('pk'),
             status='active',
         )
-        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+        .filter(license_entitlement_valid_q())
         .order_by('-expires_at', '-created_at')
         .values('plan__name')[:1]
     )
-    latest_active_expires = (
+    latest_owner_expires = (
         License.objects.filter(
             order__user=OuterRef('pk'),
             status='active',
         )
-        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+        .filter(license_entitlement_valid_q())
         .order_by('-expires_at', '-created_at')
         .values('expires_at')[:1]
+    )
+    latest_assigned_plan = (
+        License.objects.filter(assigned_user=OuterRef('pk'))
+        .filter(license_entitlement_valid_q())
+        .order_by('-expires_at', '-created_at')
+        .values('plan__name')[:1]
+    )
+    latest_assigned_expires = (
+        License.objects.filter(assigned_user=OuterRef('pk'))
+        .filter(license_entitlement_valid_q())
+        .order_by('-expires_at', '-created_at')
+        .values('expires_at')[:1]
+    )
+    latest_seat_plan = (
+        LicenseActivation.objects.filter(
+            assigned_user=OuterRef('pk'),
+            is_active=True,
+            license__status='active',
+        )
+        .filter(license_entitlement_valid_q(prefix='license__'))
+        .order_by('-license__expires_at', '-activated_at')
+        .values('license__plan__name')[:1]
+    )
+    latest_seat_expires = (
+        LicenseActivation.objects.filter(
+            assigned_user=OuterRef('pk'),
+            is_active=True,
+            license__status='active',
+        )
+        .filter(license_entitlement_valid_q(prefix='license__'))
+        .order_by('-license__expires_at', '-activated_at')
+        .values('license__expires_at')[:1]
     )
 
     paid_count_sq = (
@@ -193,7 +226,7 @@ def _annotate_users_qs(qs=None):
     zero_int = Value(0, output_field=IntegerField())
     zero_dec = Value(0, output_field=DecimalField(max_digits=14, decimal_places=0))
 
-    return qs.annotate(
+    qs = qs.annotate(
         paid_orders_count=Coalesce(
             Subquery(paid_count_sq, output_field=IntegerField()),
             zero_int,
@@ -207,9 +240,12 @@ def _annotate_users_qs(qs=None):
             Subquery(pending_count_sq, output_field=IntegerField()),
             zero_int,
         ),
-        has_active_license=Exists(active_lic_exists),
-        license_plan_name=Subquery(latest_active_plan),
-        license_expires_at=Subquery(latest_active_expires),
+        license_plan_owner=Subquery(latest_owner_plan),
+        license_plan_assigned=Subquery(latest_assigned_plan),
+        license_plan_seat=Subquery(latest_seat_plan),
+        license_expires_owner=Subquery(latest_owner_expires),
+        license_expires_assigned=Subquery(latest_assigned_expires),
+        license_expires_seat=Subquery(latest_seat_expires),
         windows_downloaded=Exists(windows_download),
         windows_activated=Exists(windows_activation),
         windows_first_launch=Exists(windows_launch),
@@ -239,6 +275,8 @@ def _annotate_users_qs(qs=None):
         ),
         has_crm=Exists(has_crm),
     )
+    qs = annotate_user_bot_license_access(qs)
+    return annotate_pending_bot_activation(qs)
 
 
 def _apply_filters(qs, *, q: str = '', filters: Optional[Dict[str, str]] = None):
@@ -304,8 +342,33 @@ def _sort_qs(qs, sort: str = '-date_joined'):
     return qs.order_by(sort, '-id')
 
 
+def _primary_license_fields(u) -> tuple[str, Any, str]:
+    kind = resolve_bot_access_kind(u)
+    if kind == 'owner':
+        return (
+            getattr(u, 'license_plan_owner', None) or '',
+            getattr(u, 'license_expires_owner', None),
+            kind,
+        )
+    if kind == 'assigned':
+        return (
+            getattr(u, 'license_plan_assigned', None) or '',
+            getattr(u, 'license_expires_assigned', None),
+            kind,
+        )
+    if kind == 'seat':
+        return (
+            getattr(u, 'license_plan_seat', None) or '',
+            getattr(u, 'license_expires_seat', None),
+            kind,
+        )
+    return '', None, kind
+
+
 def _row_from_user(u) -> Dict[str, Any]:
-    expires = getattr(u, 'license_expires_at', None)
+    plan, expires, _kind = _primary_license_fields(u)
+    access = bot_access_display(u)
+    has_access = access['has_bot_license_access']
     return {
         'id': u.id,
         'name': _user_display(u),
@@ -318,10 +381,14 @@ def _row_from_user(u) -> Dict[str, Any]:
         'date_joined_jalali': _jalali(u.date_joined),
         'last_login': u.last_login.isoformat() if u.last_login else None,
         'last_login_jalali': _jalali(u.last_login) or '—',
-        'has_active_license': bool(getattr(u, 'has_active_license', False)),
-        'license_plan': getattr(u, 'license_plan_name', None) or '',
+        'has_active_license': has_access,
+        'has_bot_license_access': has_access,
+        'has_pending_bot_activation': bool(getattr(u, 'has_pending_bot_activation', False)),
+        'license_access_kind': access['license_access_kind'],
+        'license_access_label': access['license_access_label'],
+        'license_plan': plan,
         'license_expires_at': expires.isoformat() if expires else None,
-        'license_expires_jalali': _jalali(expires) if expires else ('نامحدود' if getattr(u, 'has_active_license', False) else '—'),
+        'license_expires_jalali': _jalali(expires) if expires else ('نامحدود' if has_access else '—'),
         'paid_orders_count': int(getattr(u, 'paid_orders_count', 0) or 0),
         'pending_orders_count': int(getattr(u, 'pending_orders_count', 0) or 0),
         'total_spent': int(getattr(u, 'total_spent', 0) or 0),
@@ -572,7 +639,7 @@ def get_user_management_detail(user_id: int) -> Optional[Dict[str, Any]]:
 def export_users_management_rows() -> Tuple[List[str], List[Dict[str, Any]]]:
     headers = [
         'نام', 'موبایل', 'ایمیل', 'فعال',
-        'لایسنس فعال', 'پلن', 'انقضای لایسنس',
+        'لایسنس فعال', 'نوع دسترسی', 'پلن', 'انقضای لایسنس',
         'سفارش پرداخت‌شده', 'مجموع پرداخت (تومان)', 'آخرین پرداخت',
         'دانلود ویندوز', 'فعال‌سازی ویندوز', 'اولین اجرای ویندوز',
         'اندروید نصب', 'تعداد دستگاه اندروید', 'آخرین بازدید اندروید',
@@ -591,6 +658,7 @@ def export_users_management_rows() -> Tuple[List[str], List[Dict[str, Any]]]:
             'ایمیل': r['email'],
             'فعال': yes_no(r['is_active']),
             'لایسنس فعال': yes_no(r['has_active_license']),
+            'نوع دسترسی': r['license_access_label'],
             'پلن': r['license_plan'],
             'انقضای لایسنس': r['license_expires_jalali'],
             'سفارش پرداخت‌شده': r['paid_orders_count'],

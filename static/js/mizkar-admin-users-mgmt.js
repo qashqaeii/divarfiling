@@ -105,10 +105,12 @@
         }
         bodyEl.innerHTML = results.map(function (u) {
             const lic = u.has_active_license
-                ? '<span class="ecc-um-flag ecc-um-flag--ok">' + esc(u.license_plan || 'فعال') + '</span>'
+                ? '<span class="ecc-um-flag ecc-um-flag--ok">' + esc(u.license_access_label || u.license_plan || 'فعال') + '</span>'
                   + '<small style="display:block;margin-top:.15rem;color:var(--ecc-text-muted);font-size:.65rem">'
                   + esc(u.license_expires_jalali) + '</small>'
-                : '<span class="ecc-um-flag ecc-um-flag--warn">بدون لایسنس</span>';
+                : (u.has_pending_bot_activation
+                    ? '<span class="ecc-um-flag ecc-um-flag--warn">در انتظار فعال‌سازی</span>'
+                    : '<span class="ecc-um-flag ecc-um-flag--warn">بدون لایسنس</span>');
             const paid = u.paid_orders_count
                 ? '<strong>' + money(u.total_spent) + '</strong><small style="display:block;color:var(--ecc-text-muted)">'
                   + toFa(u.paid_orders_count) + ' سفارش</small>'
@@ -189,7 +191,7 @@
     function renderDetail(u) {
         const usage = u.usage || {};
         const kpis = [
-            ['لایسنس', u.has_active_license ? (u.license_plan || 'فعال') : 'ندارد'],
+            ['لایسنس', u.has_active_license ? (u.license_access_label || u.license_plan || 'فعال') : (u.has_pending_bot_activation ? 'در انتظار فعال‌سازی' : 'ندارد')],
             ['مجموع پرداخت', money(u.total_spent) + ' تومان'],
             ['دیتاست / آگهی', toFa(usage.datasets || 0) + ' / ' + toFa(usage.listings || 0)],
             ['CRM مخاطب', toFa(usage.crm_contacts || 0)],

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from ai_workspace.constants import crm_tone_meta, normalize_crm_tone
 from workspace.models import Customer, CustomerActivity, Listing
 from workspace.services.crm_matching import get_customer_matches
+from workspace.services.crm_matching_access import can_create_property_public_link
 from workspace.services.crm_scope import properties_qs
 from workspace.services.formatting import format_toman
 from workspace.services.listing_public_share import get_or_create_listing_share
@@ -55,7 +56,7 @@ def _resolve_match_public_url(user, match: Dict[str, Any]) -> str:
                 )
         if match.get('source') == 'crm' and match.get('property_id'):
             prop = properties_qs(user).filter(pk=match['property_id']).first()
-            if prop:
+            if prop and can_create_property_public_link(user, prop):
                 share = get_or_create_property_share(user, prop)
                 return absolute_public_share_url(
                     'listing_public:property_view',

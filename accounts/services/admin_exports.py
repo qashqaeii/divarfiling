@@ -174,17 +174,13 @@ def _all_users_rows() -> Tuple[List[str], Iterable[ExportRow]]:
         'نام', 'نام کاربری', 'موبایل', 'ایمیل', 'فعال', 'staff',
         'تعداد سفارش پرداخت‌شده', 'لایسنس فعال', 'تاریخ عضویت',
     ]
-    active_license = License.objects.filter(
-        order__user=OuterRef('pk'),
-        status='active',
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
-    qs = (
+    from workspace.services.bot_license_query import annotate_user_bot_license_access
+
+    qs = annotate_user_bot_license_access(
         User.objects.annotate(
             paid_orders=Count('orders', filter=Q(orders__status='paid')),
-            has_active_license=Exists(active_license),
         )
-        .order_by('-date_joined')
-    )
+    ).order_by('-date_joined')
     rows = [
         {
             'نام': _user_display(u),
@@ -236,18 +232,14 @@ def _users_without_license_rows() -> Tuple[List[str], Iterable[ExportRow]]:
         'نام', 'موبایل', 'ایمیل', 'سفارش پرداخت‌شده', 'سفارش معلق',
         'تاریخ عضویت',
     ]
-    active_license = License.objects.filter(
-        order__user=OuterRef('pk'),
-        status='active',
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    from workspace.services.bot_license_query import users_without_bot_license_qs
+
     qs = (
-        User.objects.filter(is_active=True)
+        users_without_bot_license_qs(User.objects.filter(is_active=True))
         .annotate(
-            has_active_license=Exists(active_license),
             paid_orders=Count('orders', filter=Q(orders__status='paid')),
             pending_orders=Count('orders', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
         )
-        .filter(has_active_license=False)
         .order_by('-date_joined')
     )
     rows = [

@@ -9,8 +9,8 @@ from django.db.models import Count, Exists, OuterRef, Q
 from django.urls import reverse
 from django.utils import timezone
 
-from licenses.models import License
 from mobile_api.models import MobileDevice
+from workspace.services.bot_license_query import users_without_bot_license_qs
 from accounts.services.admin_dashboard import (
     TABLE_PREVIEW_ROWS,
     _chart_day_label,
@@ -39,14 +39,6 @@ USERS_EXPORT_KEYS = (
     'users_management',
     'users_with_pending_orders',
 )
-
-
-def _active_license_exists():
-    now = timezone.now()
-    return License.objects.filter(
-        order__user=OuterRef('pk'),
-        status='active',
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
 
 
 def _users_active_between(start, end) -> int:
@@ -144,13 +136,9 @@ def _users_active_daily_series(days: int) -> Dict[str, List]:
 
 def _snapshot_counts() -> Dict[str, int]:
     now = timezone.now()
-    active_license_q = _active_license_exists()
-    without_license = (
-        User.objects.filter(is_active=True)
-        .annotate(has_active_license=Exists(active_license_q))
-        .filter(has_active_license=False)
-        .count()
-    )
+    without_license = users_without_bot_license_qs(
+        User.objects.filter(is_active=True),
+    ).count()
     idle_threshold = now - timedelta(days=30)
     inactive = User.objects.filter(is_active=True).filter(
         Q(last_login__isnull=True) | Q(last_login__lt=idle_threshold),

@@ -227,13 +227,11 @@ def get_overview_stats() -> Dict[str, Any]:
         orders__status__in=PENDING_ORDER_STATUSES,
     ).distinct().count()
 
-    active_license_q = License.objects.filter(
-        order__user=OuterRef('pk'),
-        status='active',
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
-    users_without_license = User.objects.filter(is_active=True).annotate(
-        has_active_license=Exists(active_license_q),
-    ).filter(has_active_license=False).count()
+    from workspace.services.bot_license_query import users_without_bot_license_qs
+
+    users_without_license = users_without_bot_license_qs(
+        User.objects.filter(is_active=True),
+    ).count()
 
     datasets_total = Dataset.objects.count()
 
@@ -491,19 +489,14 @@ def get_expiring_licenses(limit: int = TABLE_FETCH_LIMIT):
 
 
 def get_users_without_license_preview(limit: int = TABLE_FETCH_LIMIT):
-    now = timezone.now()
-    active_license_q = License.objects.filter(
-        order__user=OuterRef('pk'),
-        status='active',
-    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    from workspace.services.bot_license_query import users_without_bot_license_qs
+
     return (
-        User.objects.filter(is_active=True)
+        users_without_bot_license_qs(User.objects.filter(is_active=True))
         .annotate(
-            has_active_license=Exists(active_license_q),
             paid_orders=Count('orders', filter=Q(orders__status='paid')),
             pending_orders=Count('orders', filter=Q(orders__status__in=PENDING_ORDER_STATUSES)),
         )
-        .filter(has_active_license=False)
         .order_by('-date_joined')[:limit]
     )
 
@@ -642,14 +635,12 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
                         date_joined__lt=timezone.now() - timedelta(days=30),
                     ).count()),
                     User.objects.filter(date_joined__gte=timezone.now() - timedelta(days=30)).count(),
-                    User.objects.filter(is_active=True).annotate(
-                        has_active_license=Exists(
-                            License.objects.filter(
-                                order__user=OuterRef('pk'),
-                                status='active',
-                            ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
-                        ),
-                    ).filter(has_active_license=False).count(),
+                    __import__(
+                        'workspace.services.bot_license_query',
+                        fromlist=['users_without_bot_license_qs'],
+                    ).users_without_bot_license_qs(
+                        User.objects.filter(is_active=True),
+                    ).count(),
                 ],
                 'backgroundColor': [
                     'rgba(16, 185, 129, 0.85)',

@@ -67,14 +67,11 @@ def create_user_from_verified_phone(phone: str, password: str, *, request=None) 
     except Exception:
         logger.exception('lead acquisition signup attribution failed')
 
-    try:
-        from licenses.services.signup_welcome_gift import offer_signup_welcome_gift
+    from accounts.services.phone_verification import complete_phone_verification
 
-        req_path = getattr(request, 'path', '') if request is not None else ''
-        channel = 'android_otp' if req_path.startswith('/api/mobile/') else 'web_otp'
-        offer_signup_welcome_gift(user, channel=channel)
-    except Exception:
-        logger.exception('signup welcome gift grant failed during registration')
+    req_path = getattr(request, 'path', '') if request is not None else ''
+    channel = 'android_otp' if req_path.startswith('/api/mobile/') else 'web_otp'
+    complete_phone_verification(user, channel=channel)
 
     return user
 

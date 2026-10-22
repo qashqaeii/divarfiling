@@ -148,8 +148,9 @@ def verify_login_otp(phone: str, code: str) -> User:
             code='USER_NOT_FOUND',
             status=404,
         )
-    if not user.phone_verified:
-        user.mark_phone_verified()
+    from accounts.services.phone_verification import complete_phone_verification
+
+    complete_phone_verification(user, channel='android_otp_login')
     return user
 
 
@@ -233,13 +234,9 @@ def complete_verify_phone(user, code: str) -> User:
         verify_otp(phone, PURPOSE_VERIFY, code)
     except OtpError as exc:
         raise _map_otp_error(exc) from exc
-    user.mark_phone_verified()
-    try:
-        from licenses.services.signup_welcome_gift import offer_signup_welcome_gift
+    from accounts.services.phone_verification import complete_phone_verification
 
-        offer_signup_welcome_gift(user, channel='android_phone_verify')
-    except Exception:
-        logger.exception('signup welcome gift after android phone verify failed')
+    complete_phone_verification(user, channel='android_phone_verify')
     return user
 
 

@@ -51,6 +51,23 @@
         });
     }
 
+    function initOtpSendWaitingHint(form) {
+        let hint = form.querySelector('[data-auth-otp-send-hint]');
+        if (!hint) {
+            hint = document.createElement('p');
+            hint.className = 'auth-hint auth-hint-spam';
+            hint.setAttribute('data-auth-otp-send-hint', '');
+            hint.setAttribute('role', 'status');
+            hint.textContent =
+                'در حال ارسال پیامک… اگر کد تا چند لحظه نرسید، پوشهٔ هرزنامه (Spam) پیامک را هم بررسی کنید.';
+            const btn = form.querySelector('.auth-submit-btn');
+            if (btn && btn.parentNode) {
+                btn.parentNode.insertBefore(hint, btn.nextSibling);
+            }
+        }
+        hint.hidden = false;
+    }
+
     function initSubmitState() {
         document.querySelectorAll('.auth-form').forEach(form => {
             form.addEventListener('submit', () => {
@@ -60,7 +77,13 @@
                 btn.classList.add('is-loading');
                 const span = btn.querySelector('span');
                 if (span) span.dataset.prev = span.textContent;
-                if (span) span.textContent = 'لطفاً صبر کنید…';
+                const isOtpSend = form.hasAttribute('data-auth-otp-send');
+                if (span) {
+                    span.textContent = isOtpSend ? 'در حال ارسال کد…' : 'لطفاً صبر کنید…';
+                }
+                if (isOtpSend) {
+                    initOtpSendWaitingHint(form);
+                }
             });
         });
     }
@@ -71,7 +94,10 @@
 
     function initOtpResend() {
         document.querySelectorAll('[data-otp-resend]').forEach(btn => {
-            const seconds = parseInt(btn.getAttribute('data-seconds') || '60', 10);
+            const seconds = parseInt(
+                btn.getAttribute('data-seconds') || btn.closest('form')?.getAttribute('data-otp-resend-seconds') || '60',
+                10
+            );
             if (!seconds || seconds < 1) return;
             let left = seconds;
             const label = btn.textContent;

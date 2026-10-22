@@ -37,7 +37,7 @@ def _existing_keys(user, customer: Customer) -> Set[str]:
         PropertyMatchAlert.objects.filter(
             user=user,
             customer=customer,
-        ).exclude(status=PropertyMatchAlert.STATUS_DISMISSED).values_list('match_key', flat=True)
+        ).values_list('match_key', flat=True)
     )
 
 
@@ -79,6 +79,13 @@ def record_match_alerts(
     created: List[PropertyMatchAlert] = []
     for m in matches:
         key = m.get('match_key') or _match_key(m)
+        if PropertyMatchAlert.objects.filter(
+            user=user,
+            customer=customer,
+            match_key=key,
+            status=PropertyMatchAlert.STATUS_DISMISSED,
+        ).exists():
+            continue
         alert, was_created = PropertyMatchAlert.objects.get_or_create(
             user=user,
             customer=customer,
@@ -306,8 +313,18 @@ def notify_matches_after_extract(user, *, dataset_id: str = '') -> int:
     )
 
 
+def _post_extract_match_cache_key(user_id: int, dataset_id: str = '') -> str:
+    return f'crm:post-extract-match:{user_id}:{dataset_id or "all"}'
+
+
 def _run_post_extract_matching(user_id: int, dataset_id: str = '') -> None:
+    from django.core.cache import cache
+
     close_old_connections()
+    lock_key = _post_extract_match_cache_key(user_id, dataset_id)
+    if not cache.add(lock_key, '1', timeout=900):
+        logger.info('skip duplicate post-extract matching key=%s', lock_key)
+        return
     try:
         User = get_user_model()
         user = User.objects.filter(pk=user_id, is_active=True).first()
@@ -317,6 +334,7 @@ def _run_post_extract_matching(user_id: int, dataset_id: str = '') -> None:
     except Exception:
         logger.exception('post-extract customer matching failed user=%s dataset=%s', user_id, dataset_id)
     finally:
+        cache.delete(lock_key)
         close_old_connections()
 
 
@@ -397,7 +415,10 @@ def suggest_contact_matches(
         selected = [m for m in selected if m.get('source') != 'divar']
     if not selected:
         raise ValueError('تطبیق فایلینگ دیوار نیاز به لایسنس فعال دارد.')
-    text, linked = apply_property_suggestions(customer, user, selected, note=note, request=request)
+    divar_enabled = has_active_bot_license(user)
+    text, linked = apply_property_suggestions(
+        customer, user, selected, note=note, request=request, divar_enabled=divar_enabled,
+    )
     now = timezone.now()
     for m in selected:
         key = _match_key(m)

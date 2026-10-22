@@ -148,6 +148,7 @@ class OtpAuthFlowTests(TestCase):
             'password2': 'ComplexPass123!',
         })
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('otp_verify_phone'))
         user = User.objects.get(phone=phone)
         self.assertFalse(user.phone_verified)
         self.assertTrue(user.check_password('ComplexPass123!'))

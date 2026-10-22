@@ -279,6 +279,8 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             instance.rooms = str(instance.rooms_min)
         elif instance.rooms_max is not None:
             instance.rooms = str(instance.rooms_max)
+        elif self.is_bound and ('rooms_min' in self.data or 'rooms_max' in self.data):
+            instance.rooms = ''
         if self.is_bound:
             active, links = contact_channels_from_post(self.data)
             instance.active_channels = active

@@ -102,6 +102,7 @@ TEMPLATES = [
                 'workspace.context_processors.workspace_context',
                 'affiliates.context_processors.affiliate_context',
                 'accounts.context_processors.admin_panel_shell',
+                'accounts.context_processors.otp_auth_ui',
                 'public_assistant.context_processors.public_assistant',
             ],
         },
@@ -485,7 +486,7 @@ if _FARAZSMS_PATTERN_OTP:
             FARAZSMS_PATTERNS[_otp_key] = _FARAZSMS_PATTERN_OTP
 
 OTP_LENGTH = config('OTP_LENGTH', default=6, cast=int)
-OTP_EXPIRY_SECONDS = config('OTP_EXPIRY_SECONDS', default=120, cast=int)
+OTP_EXPIRY_SECONDS = config('OTP_EXPIRY_SECONDS', default=300, cast=int)
 OTP_RESEND_SECONDS = config('OTP_RESEND_SECONDS', default=60, cast=int)
 OTP_MAX_ATTEMPTS = config('OTP_MAX_ATTEMPTS', default=5, cast=int)
 OTP_MAX_SENDS_PER_HOUR = config('OTP_MAX_SENDS_PER_HOUR', default=5, cast=int)

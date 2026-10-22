@@ -1898,11 +1898,21 @@ def apply_property_suggestions(
     *,
     note: str = '',
     request=None,
+    divar_enabled: bool = True,
 ) -> tuple[str, int]:
     """ثبت پیشنهادها در activity و پیوند ملک‌ها. برگشت: (متن واتساپ, تعداد پیوند موفق)."""
+    from workspace.services.crm_property_suggestions import resolve_property_suggestion_items
+    from workspace.services.crm_scope import property_for_user
+
+    resolved, _failures = resolve_property_suggestion_items(
+        user,
+        customer,
+        matches,
+        divar_enabled=divar_enabled,
+    )
+    matches = resolved
     if not matches:
         return '', 0
-    from workspace.services.crm_scope import property_for_user
 
     if request is not None:
         from workspace.services.property_suggestion_share import enrich_matches_with_public_urls
@@ -1918,12 +1928,10 @@ def apply_property_suggestions(
             except (TypeError, ValueError):
                 continue
             prop = property_for_user(user, prop_id)
-            if prop is None and m.get('token'):
-                prop = get_crm_property_by_token(user, m['token'])
             if prop:
                 link_customer_property(
                     customer, prop, 'پیشنهادی',
-                    deal_type='خرید' if prop.deal_mode == 'فروش' else 'رهن و اجاره',
+                    deal_type=_deal_type_for_property(prop),
                     interest_level='متوسط',
                     notes='پیشنهاد خودکار',
                 )

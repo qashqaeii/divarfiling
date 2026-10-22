@@ -59,7 +59,7 @@
                 <span class="auth-step-line"></span>
                 <span class="auth-step">۲</span>
             </div>
-            <form method="post" class="auth-form" novalidate>
+            <form method="post" class="auth-form" novalidate data-auth-otp-send>
                 {% csrf_token %}
                 {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
                 <div class="auth-field">
@@ -93,17 +93,17 @@
                         {{ form.code }}
                         <i class="fas fa-shield-halved auth-input-icon" aria-hidden="true"></i>
                     </div>
-                    <p class="auth-hint">کد تا ۲ دقیقه معتبر است</p>
+                    {% include 'accounts/partials/otp_code_field_hints.html' %}
                     {% if form.code.errors %}
                     <div class="auth-form-error-v2"><i class="fas fa-circle-exclamation"></i> {{ form.code.errors.0 }}</div>
                     {% endif %}
                 </div>
                 <button type="submit" class="auth-submit-btn auth-submit-btn-v2"><span>تأیید و ورود</span></button>
             </form>
-            <form method="post" action="{{ resend_url }}" class="auth-resend-form">
+            <form method="post" action="{{ resend_url }}" class="auth-resend-form" data-otp-resend-seconds="{{ otp_resend_seconds }}">
                 {% csrf_token %}
                 {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-                <button type="submit" class="auth-resend-btn" data-otp-resend data-seconds="60">ارسال مجدد کد</button>
+                <button type="submit" class="auth-resend-btn" data-otp-resend>ارسال مجدد کد</button>
             </form>
             <p class="auth-hint auth-hint-center"><a href="{% url 'otp_login' %}">تغییر شماره موبایل</a></p>
             {% endif %}
@@ -118,5 +118,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/auth.js' %}?v=2"></script>
+<script src="{% static 'js/auth.js' %}?v=3"></script>
 {% endblock %}

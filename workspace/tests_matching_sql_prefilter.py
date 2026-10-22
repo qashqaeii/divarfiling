@@ -55,9 +55,9 @@ class MatchingSqlPrefilterAreaTests(TestCase):
             rooms='2',
         )
         self.assertTrue(self._eligible(prop))
-        candidate_ids = set(
-            _crm_match_candidates_qs(self.buyer, self.user, scan_limit=50).values_list('pk', flat=True)
-        )
+        candidate_ids = {
+            p.pk for p in _crm_match_candidates_qs(self.buyer, self.user, scan_limit=50)
+        }
         self.assertIn(prop.pk, candidate_ids)
 
     def test_match_crm_properties_includes_area_none_property(self):
@@ -107,7 +107,7 @@ class MatchingSqlPrefilterRentUnknownTests(TestCase):
             city='تهران',
             area=90,
         )
-        candidate_ids = set(
-            _crm_match_candidates_qs(self.tenant, self.user, scan_limit=50).values_list('pk', flat=True)
-        )
+        candidate_ids = {
+            p.pk for p in _crm_match_candidates_qs(self.tenant, self.user, scan_limit=50)
+        }
         self.assertIn(prop.pk, candidate_ids)

@@ -88,8 +88,13 @@ class RegisterView(CreateView):
                 logging.getLogger(__name__).exception('lead acquisition signup attribution failed')
             messages.info(
                 self.request,
-                'حساب شما ساخته شد. برای امنیت بیشتر، بعداً شماره موبایل را با پیامک تأیید کنید.',
+                'حساب شما ساخته شد. برای دریافت هدیه خوش‌آمدگویی و امنیت بیشتر، شماره موبایل را با پیامک تأیید کنید.',
             )
+            next_url = self.get_success_url()
+            verify_url = reverse('otp_verify_phone')
+            if next_url and str(next_url).startswith('/'):
+                verify_url = f'{verify_url}?next={next_url}'
+            return redirect(verify_url)
         return response
 
 

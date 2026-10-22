@@ -19,12 +19,20 @@ from workspace.services.advertiser_signal import (
     listing_advertiser_signal,
     property_advertiser_display,
 )
+from workspace.services.crm_matching_geo import (
+    location_match_quality,
+    location_tokens_equivalent,
+    match_preferred_locations,
+    profile_city_blocks_match,
+)
 from workspace.services.crm_matching_prefilter import (
     apply_area_max_prefilter,
     apply_area_min_prefilter,
     apply_int_max_prefilter,
     apply_int_min_prefilter,
 )
+from workspace.services.crm_matching_scan import collect_match_scan_pool
+from workspace.services.crm_matching_types import infer_listing_property_type
 from workspace.services.formatting import format_toman
 
 MATCH_TYPES = {
@@ -204,7 +212,7 @@ def _profile_property_type_eligible(profile, prop_type: Optional[str]) -> bool:
     if allowed is None:
         return True
     if not prop_type:
-        return True
+        return False
     return prop_type in allowed
 
 
@@ -230,16 +238,7 @@ def _location_field_values(
 
 
 def _location_tokens_equivalent(preferred: str, location: str) -> bool:
-    """آیا ترجیح مشتری با یکی از فیلدهای موقعیت ملک هم‌پوشانی دارد."""
-    token = _norm(preferred)
-    loc = _norm(location)
-    if not token or not loc:
-        return False
-    if token == loc:
-        return True
-    if len(token) < 2 or len(loc) < 2:
-        return False
-    return token in loc or loc in token
+    return location_tokens_equivalent(preferred, location)
 
 
 def _match_preferred_locations(
@@ -248,20 +247,7 @@ def _match_preferred_locations(
     city: str = '',
     district: str = '',
 ) -> Tuple[bool, str]:
-    """تطبیق لیست محله/منطقه ترجیحی با فیلدهای واقعی ملک."""
-    fields = _location_field_values(neighborhood, city, district)
-    if not fields or not preferred:
-        return False, ''
-    for pref in preferred:
-        for raw, _ in fields:
-            if not _location_tokens_equivalent(pref, raw):
-                continue
-            if _location_tokens_equivalent(pref, neighborhood):
-                return True, (neighborhood or raw).strip()
-            if _location_tokens_equivalent(pref, district):
-                return True, (district or raw).strip()
-            return True, raw.strip()
-    return False, ''
+    return match_preferred_locations(preferred, neighborhood, city, district)
 
 
 def _profile_neighborhood_eligible(
@@ -271,6 +257,8 @@ def _profile_neighborhood_eligible(
     district: str = '',
 ) -> bool:
     """اگر کاربر محله/منطقه مشخص کرده، ملک باید در همان محدوده باشد."""
+    if profile_city_blocks_match(getattr(profile, 'city', '') or '', city):
+        return False
     areas = _parse_areas(getattr(profile, 'areas', '') or '')
     want_district = (getattr(profile, 'district', None) or '').strip()
     if not areas and not want_district:
@@ -442,21 +430,10 @@ def _area_match_profile(profile, area: Optional[float]) -> Tuple[float, str]:
 
 
 def _neighborhood_match_profile(profile, neighborhood: str, city: str, district: str = '') -> Tuple[float, str]:
-    areas = _parse_areas(getattr(profile, 'areas', '') or '')
-    want_district = (getattr(profile, 'district', None) or '').strip()
-    if not areas and not want_district:
-        return 0.5, ''
-    if areas:
-        matched, label = _match_preferred_locations(areas, neighborhood, city, district)
-        if matched:
-            return 1.0, f'محله {label or areas[0]}'
-    if want_district:
-        matched, label = _match_preferred_locations([want_district], neighborhood, city, district)
-        if matched:
-            return 0.85, f'منطقه {label or want_district}'
-    if not _location_field_values(neighborhood, city, district):
-        return 0.15, 'محله نامشخص'
-    return 0.15, 'محله متفاوت'
+    score, note, _quality = location_match_quality(
+        profile, neighborhood=neighborhood, city=city, district=district,
+    )
+    return score, note
 
 
 def _rooms_match_profile(profile, rooms: str) -> Tuple[float, str]:
@@ -800,20 +777,7 @@ def _builder_acquisition_profile(customer: Customer):
 
 
 def _infer_listing_property_type(listing: Listing) -> str:
-    title = _norm(listing.title or '')
-    category = _norm(str((listing.data or {}).get('category', '')))
-    hay = f'{title} {category}'
-    if 'زمین' in hay or 'باغچه' in hay:
-        return 'زمین'
-    if 'کلنگی' in hay:
-        return 'کلنگی'
-    if 'ویلا' in hay or 'باغ' in hay:
-        return 'ویلا'
-    if 'مغازه' in hay or 'تجاری' in hay:
-        return 'مغازه'
-    if 'اداری' in hay or 'دفتر' in hay:
-        return 'اداری'
-    return 'آپارتمان'
+    return infer_listing_property_type(listing)
 
 
 def _score_crm_property_with_profile(
@@ -1001,12 +965,24 @@ def _crm_properties_qs(user):
     ).exclude(publish_status='بایگانی')
 
 
-def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
-    """پیش‌فیلتر SQL تا فایل‌های داخل بازه بودجه/متراژ از دست نروند."""
+def _sale_budget_target(profile) -> Optional[int]:
+    lo = getattr(profile, 'budget_min', None)
+    hi = getattr(profile, 'budget_max', None)
+    if lo and hi:
+        return (int(lo) + int(hi)) // 2
+    if lo:
+        return int(lo)
+    if hi:
+        return int(hi)
+    return None
+
+
+def _crm_match_candidates_filtered_qs(customer: Customer, user):
+    """پیش‌فیلتر SQL — بدون محدودیت اسکن."""
     qs = _crm_properties_qs(user)
     tol = profile_tolerance_ratio(customer)
     if is_builder_customer(customer):
-        return qs.order_by('-updated_at')[:scan_limit]
+        return qs
 
     if _is_rent_customer(customer):
         qs = qs.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).filter(
@@ -1038,25 +1014,35 @@ def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
     qs = apply_area_min_prefilter(qs, customer.min_area, tol)
     qs = apply_area_max_prefilter(qs, customer.max_area, tol)
 
-    return qs.order_by('-updated_at')[:scan_limit]
+    return qs
+
+
+def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
+    qs = _crm_match_candidates_filtered_qs(customer, user)
+    budget_target = _sale_budget_target(customer) if _is_sale_customer(customer) else None
+    return collect_match_scan_pool(
+        qs,
+        scan_limit,
+        recency_field='updated_at',
+        budget_field='sale_price' if budget_target else None,
+        budget_target=budget_target,
+    )
 
 
 def _divar_listings_base_qs(user, *, dataset_id=None):
-    qs = (
-        Listing.objects.filter(dataset__user=user, dataset__is_active=True, is_expired=False)
-        .select_related('dataset')
-        .order_by('-published_at')
-    )
+    qs = Listing.objects.filter(
+        dataset__user=user, dataset__is_active=True, is_expired=False,
+    ).select_related('dataset')
     if dataset_id:
         qs = qs.filter(dataset_id=dataset_id)
     return qs
 
 
-def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int, dataset_id=None):
+def _divar_match_candidates_filtered_qs(customer: Customer, user, *, dataset_id=None):
     qs = _divar_listings_base_qs(user, dataset_id=dataset_id)
     tol = profile_tolerance_ratio(customer)
     if is_builder_customer(customer):
-        return qs[:scan_limit]
+        return qs
 
     if _is_rent_customer(customer):
         qs = qs.filter(Q(deposit__gt=0) | Q(rent__gt=0))
@@ -1086,11 +1072,23 @@ def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int, dat
     qs = apply_area_min_prefilter(qs, customer.min_area, tol)
     qs = apply_area_max_prefilter(qs, customer.max_area, tol)
 
-    return qs[:scan_limit]
+    return qs
+
+
+def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int, dataset_id=None):
+    qs = _divar_match_candidates_filtered_qs(customer, user, dataset_id=dataset_id)
+    budget_target = _sale_budget_target(customer) if _is_sale_customer(customer) else None
+    return collect_match_scan_pool(
+        qs,
+        scan_limit,
+        recency_field='published_at',
+        budget_field='price' if budget_target else None,
+        budget_target=budget_target,
+    )
 
 
 def _divar_listings_qs(user):
-    return _divar_listings_base_qs(user)[:MATCH_DIVAR_SCAN_LIMIT]
+    return _divar_listings_base_qs(user).order_by('-published_at')[:MATCH_DIVAR_SCAN_LIMIT]
 
 
 def _filter_builder_crm_props(props, allowed_types: Set[str], *, sale_only: bool = True):
@@ -1163,7 +1161,19 @@ def _match_builder_group(
     min_score: int = 25,
 ) -> Dict[str, Any]:
     meta = BUILDER_MATCH_INTENTS[intent]
-    crm_props = list(_filter_builder_crm_props(_crm_properties_qs(user)[:250], allowed_types))
+    builder_qs = _crm_properties_qs(user).filter(deal_mode__in=['فروش', 'پیش‌فروش'])
+    expanded_types: Set[str] = set()
+    for item in allowed_types:
+        expanded_types |= _PROPERTY_TYPE_MAP.get(item, {item})
+    if expanded_types:
+        builder_qs = builder_qs.filter(property_type__in=sorted(expanded_types))
+    crm_props = list(
+        collect_match_scan_pool(
+            builder_qs,
+            MATCH_CRM_SCAN_LIMIT,
+            recency_field='updated_at',
+        )
+    )
     crm_scored = [
         item for item in (
             _score_crm_property_with_profile(
@@ -1263,6 +1273,12 @@ def _match_payload_with_tolerance(payload: Dict[str, Any], customer: Customer) -
     return payload
 
 
+def _finalize_match_payload_for_user(user, payload: Dict[str, Any]) -> Dict[str, Any]:
+    from workspace.services.crm_matching_access import sanitize_match_payload_for_viewer
+
+    return sanitize_match_payload_for_viewer(user, payload)
+
+
 def get_customer_matches(customer: Customer, user, *, divar_enabled: bool, dataset_id=None) -> Dict[str, Any]:
     if customer.customer_type not in MATCH_TYPES and customer.customer_type not in LEAD_TYPES:
         return _match_payload_with_tolerance({
@@ -1276,8 +1292,17 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool, datas
             'message': 'تطبیق خودکار برای این نوع مخاطب فعال نیست.',
         }, customer)
 
+    from workspace.services.crm_matching_diagnostics import attach_match_guidance
+
     if is_builder_customer(customer):
-        return get_builder_customer_matches(customer, user, divar_enabled=divar_enabled)
+        payload = get_builder_customer_matches(customer, user, divar_enabled=divar_enabled)
+        payload = _finalize_match_payload_for_user(user, payload)
+        payload = attach_match_guidance(
+            payload, customer, user,
+            divar_enabled=divar_enabled,
+            include_staff_diagnostics=getattr(user, 'is_staff', False),
+        )
+        return _match_payload_with_tolerance(payload, customer)
 
     crm_matches = match_crm_properties(customer, user)
     divar_matches = match_divar_listings(customer, user, dataset_id=dataset_id) if divar_enabled else []
@@ -1292,6 +1317,13 @@ def get_customer_matches(customer: Customer, user, *, divar_enabled: bool, datas
         'message': '',
     }
     payload['total_count'] = compute_match_total_count(payload)
+    payload = _finalize_match_payload_for_user(user, payload)
+    payload = attach_match_guidance(
+        payload, customer, user,
+        divar_enabled=divar_enabled,
+        dataset_id=dataset_id,
+        include_staff_diagnostics=getattr(user, 'is_staff', False),
+    )
     return _match_payload_with_tolerance(payload, customer)
 
 
@@ -1542,7 +1574,18 @@ def _customer_match_candidates_qs(prop: CRMProperty, user, *, scan_limit: int):
         )
         qs = qs.filter(Q(customer_type='سازنده') | area_ok)
 
-    return qs.order_by('-updated_at')[:scan_limit]
+    budget_target = None
+    budget_field = None
+    if is_sale and prop.sale_price:
+        budget_target = int(prop.sale_price)
+        budget_field = 'budget_max'
+    return collect_match_scan_pool(
+        qs,
+        scan_limit,
+        recency_field='updated_at',
+        budget_field=budget_field,
+        budget_target=budget_target,
+    )
 
 
 def match_customers_for_property(
@@ -1575,6 +1618,12 @@ def get_property_contact_matches(prop: CRMProperty, user) -> Dict[str, Any]:
             'message': 'تطبیق مخاطب فقط برای فایل‌های فعال فروش یا اجاره در دسترس است.',
         }
     matches = match_customers_for_property(prop, user)
+    message = ''
+    if not matches:
+        message = (
+            'مخاطب سازگار در پرونده‌های شما پیدا نشد. '
+            'بودجه/محله مخاطبین یا معیارهای این فایل را بازبینی کنید.'
+        )
     return {
         'eligible': True,
         'matches': matches,
@@ -1583,5 +1632,5 @@ def get_property_contact_matches(prop: CRMProperty, user) -> Dict[str, Any]:
         'deal_label': _property_deal_label(prop),
         'is_sale': _crm_property_is_sale_listing(prop),
         'is_rent': _crm_property_is_rent_listing(prop),
-        'message': '',
+        'message': message,
     }

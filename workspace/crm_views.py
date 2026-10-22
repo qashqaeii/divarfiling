@@ -1085,6 +1085,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                     customer, request.user, selected,
                     note=request.POST.get('suggest_note', ''),
                     request=request,
+                    divar_enabled=divar_enabled,
                 )
                 if linked:
                     request.session['crm_last_suggestion_text'] = text

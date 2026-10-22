@@ -262,7 +262,9 @@ function initCRMTypeProfiles(root) {
 
         function getSelectedSearchPropertyTypes() {
             if (!searchTypesWrap) return [];
-            return Array.from(searchTypesWrap.querySelectorAll('input[type="checkbox"]:checked'))
+            return Array.from(
+                searchTypesWrap.querySelectorAll('.crm-property-type-chips input[type="checkbox"]:checked'),
+            )
                 .map((el) => String(el.value || '').trim())
                 .filter(Boolean);
         }

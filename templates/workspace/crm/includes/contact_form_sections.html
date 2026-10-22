@@ -175,15 +175,24 @@
         <div class="crm-prefs-standard hidden">
             <h4 class="crm-prefs-section-title" id="crmPrefsTitle">ترجیحات ملک</h4>
         </div>
-        <div class="crm-fields crm-fields-2">
-            <div class="crm-field crm-field-full crm-prefs-core crm-prefs-search-types" data-crm-search-property-types-wrap>
-                <span class="crm-label">نوع ملک</span>
-                <p class="crm-form-hint crm-form-hint--tight">بدون انتخاب = همه انواع — می‌توانید چند نوع انتخاب کنید</p>
-                <div class="crm-property-type-chips-wrap">{{ form.search_property_types }}</div>
-                {% for error in form.search_property_types.errors %}
-                <p class="crm-field-error" role="alert">{{ error }}</p>
+        <div class="crm-field crm-field-full crm-prefs-core crm-prefs-search-types" data-crm-search-property-types-wrap>
+            <span class="crm-label">نوع ملک</span>
+            <p class="crm-form-hint crm-form-hint--tight">خالی = همه انواع · چند انتخاب مجاز است</p>
+            {% with ptypes=form.search_property_types %}
+            <div class="crm-property-type-chips" role="group" aria-label="نوع ملک">
+                {% for value, label in ptypes.field.choices %}
+                <label class="crm-property-type-chip">
+                    <input type="checkbox" name="{{ ptypes.html_name }}" value="{{ value }}"{% if value in ptypes.value %} checked{% endif %}>
+                    <span>{{ label }}</span>
+                </label>
                 {% endfor %}
             </div>
+            {% endwith %}
+            {% for error in form.search_property_types.errors %}
+            <p class="crm-field-error" role="alert">{{ error }}</p>
+            {% endfor %}
+        </div>
+        <div class="crm-fields crm-fields-2">
             <div class="crm-field crm-prefs-builder-type crm-builder-section hidden">
                 {% crm_field form.property_type 'نوع واحد فروش' %}
             </div>

@@ -300,11 +300,12 @@ class BatchPolishTests(TestCase):
 
 class AdaptiveBatchTests(TestCase):
     def test_reopen_identity_fallback_segments(self):
-        state = reopen_identity_fallback_segments({
+        state, reopened = reopen_identity_fallback_segments({
             'completed_segment_ids': [1, 2, 3],
             'segment_outcomes': {'2': 'identity_fallback', '1': 'polished'},
             'completed_batches': [0, 1],
         })
+        self.assertEqual(reopened, 1)
         self.assertEqual(state['completed_segment_ids'], [1, 3])
         self.assertEqual(state['completed_batches'], [])
 

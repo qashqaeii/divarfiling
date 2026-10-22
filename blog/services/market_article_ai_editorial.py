@@ -307,22 +307,38 @@ def extract_intro_plain(html: str) -> str:
     return plain[:600]
 
 
+def _llm_usage_signature(entry: dict[str, Any]) -> tuple[Any, ...]:
+    return (
+        entry.get('provider'),
+        entry.get('model'),
+        entry.get('input_tokens'),
+        entry.get('output_tokens'),
+        entry.get('latency_ms'),
+    )
+
+
 def aggregate_llm_usage(batch_logs: list[dict[str, Any]]) -> dict[str, int]:
     input_tokens = 0
     output_tokens = 0
     ai_call_count = 0
     retry_count = 0
     fallback_count = 0
+    billed_calls: set[tuple[Any, ...]] = set()
     for entry in batch_logs:
         status = entry.get('status') or ''
         if status == 'retry':
             retry_count += 1
         if status in ('identity_fallback', 'numeric_safety_fallback'):
             fallback_count += 1
-        if entry.get('input_tokens') is not None:
-            ai_call_count += 1
-            input_tokens += int(entry.get('input_tokens') or 0)
-            output_tokens += int(entry.get('output_tokens') or 0)
+        if entry.get('input_tokens') is None:
+            continue
+        sig = _llm_usage_signature(entry)
+        if sig in billed_calls:
+            continue
+        billed_calls.add(sig)
+        ai_call_count += 1
+        input_tokens += int(entry.get('input_tokens') or 0)
+        output_tokens += int(entry.get('output_tokens') or 0)
     return {
         'input_tokens': input_tokens,
         'output_tokens': output_tokens,

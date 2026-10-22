@@ -6,6 +6,7 @@ from django.test import TestCase, override_settings
 
 from blog.services.market_article_ai_editorial import (
     _deterministic_tie_seed,
+    aggregate_llm_usage,
     batch_segments_by_section,
     build_editorial_context,
     changed_text_ratio,
@@ -70,6 +71,37 @@ class EditorialV2Tests(TestCase):
         mapping = map_text_segment_sections(parts)
         text_idx = next(i for i, (k, c) in enumerate(parts) if k == 'text')
         self.assertEqual(mapping.get(text_idx), 'b')
+
+    def test_aggregate_llm_usage_dedupes_same_call(self):
+        logs = [
+            {
+                'status': 'retry',
+                'provider': 'arvan',
+                'model': 'm',
+                'input_tokens': 100,
+                'output_tokens': 50,
+                'latency_ms': 10,
+            },
+            {
+                'status': 'split',
+                'provider': 'arvan',
+                'model': 'm',
+                'input_tokens': 100,
+                'output_tokens': 50,
+                'latency_ms': 10,
+            },
+            {
+                'status': 'ok',
+                'provider': 'arvan',
+                'model': 'm',
+                'input_tokens': 200,
+                'output_tokens': 80,
+                'latency_ms': 12,
+            },
+        ]
+        usage = aggregate_llm_usage(logs)
+        self.assertEqual(usage['ai_call_count'], 2)
+        self.assertEqual(usage['total_recorded_tokens'], 430)
 
     def test_deterministic_tie_seed_stable(self):
         run = build_preview(self.ds, self.staff)

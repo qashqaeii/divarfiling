@@ -11,7 +11,7 @@ from typing import Any, Literal
 from ai_workspace.providers.base import ProviderError
 from ai_workspace.providers.registry import get_http_provider_chain
 from ai_workspace.services.generation import get_feature_generation
-from blog.models import MarketArticleRun
+from blog.models import MarketArticleRun, SystematicArticleAutoPublishRun
 from blog.services.market_article_ai_editorial import (
     batch_segments_by_section,
     build_editorial_context,
@@ -962,20 +962,60 @@ def _log_attempt(
     attempts_log.append(entry)
 
 
-def reopen_identity_fallback_segments(state: dict[str, Any]) -> dict[str, Any]:
+def reopen_identity_fallback_segments(state: dict[str, Any]) -> tuple[dict[str, Any], int]:
     """برای Resume — segmentهای identity_fallback دوباره در صف پولیش قرار می‌گیرند."""
     if not state:
-        return state
+        return state, 0
     outcomes = dict(state.get('segment_outcomes') or {})
     retry_ids = {int(k) for k, v in outcomes.items() if v == 'identity_fallback'}
     if not retry_ids:
-        return state
+        return state, 0
     completed = {int(x) for x in (state.get('completed_segment_ids') or [])}
     completed -= retry_ids
     updated = dict(state)
     updated['completed_segment_ids'] = sorted(completed)
     updated['completed_batches'] = []
-    return updated
+    return updated, len(retry_ids)
+
+
+class AIPolishResumeError(ValueError):
+    """ورودی نامعتبر برای Resume پولیش."""
+
+
+def validate_market_run_for_polish_resume(market_run: MarketArticleRun) -> None:
+    if market_run.status not in (
+        MarketArticleRun.Status.PREVIEW,
+        MarketArticleRun.Status.DRAFT_LINKED,
+    ):
+        raise AIPolishResumeError(
+            f'وضعیت MarketArticleRun برای Resume مناسب نیست: {market_run.status}',
+        )
+    if not (market_run.content_html or '').strip():
+        raise AIPolishResumeError('محتوای HTML پیش‌نمایش خالی است.')
+
+
+def validate_autopublish_polish_resume(
+    market_run: MarketArticleRun,
+    autopublish_run: SystematicArticleAutoPublishRun,
+) -> None:
+    validate_market_run_for_polish_resume(market_run)
+    if autopublish_run.status != SystematicArticleAutoPublishRun.Status.AI_POLISH_FAILED:
+        raise AIPolishResumeError(
+            f'وضعیت Autopublish باید ai_polish_failed باشد؛ فعلی: {autopublish_run.status}',
+        )
+    linked_id = autopublish_run.market_article_run_id
+    if linked_id and str(linked_id) != str(market_run.pk):
+        raise AIPolishResumeError(
+            'market_article_run این Autopublish با --market-run داده‌شده یکی نیست.',
+        )
+
+
+def reopen_and_persist_polish_resume_state(market_run: MarketArticleRun) -> int:
+    """بازگشایی segmentهای شکست‌خورده و ذخیره state — بدون فراخوانی AI."""
+    state, reopened = reopen_identity_fallback_segments(_load_polish_state(market_run))
+    if reopened:
+        _save_polish_state(market_run, state)
+    return reopened
 
 
 def _load_polish_state(run: MarketArticleRun) -> dict[str, Any]:
@@ -1444,7 +1484,6 @@ def _polish_segment_group(
             segment_count=len(batch),
             error_type=last_type,
             error=last_error[:200],
-            llm=last_llm,
         )
         left = _polish_segment_group(
             batch_index,
@@ -1586,7 +1625,7 @@ def polish_market_article_run(
 
     state = _load_polish_state(run) if resume else {}
     if resume and state:
-        state = reopen_identity_fallback_segments(state)
+        state, _ = reopen_identity_fallback_segments(state)
     editorial_angle = str(state.get('editorial_angle') or '') or select_editorial_angle(run)
     plan_version = int(state.get('batch_plan_version') or BATCH_PLAN_VERSION)
     if state.get('completed_batches') and not state.get('batch_plan_version'):

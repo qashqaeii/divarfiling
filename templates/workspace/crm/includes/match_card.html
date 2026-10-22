@@ -1,7 +1,9 @@
 <li class="crm-match-card crm-match-card-v3"
     data-match-card
     data-source="{{ source }}"
-    data-score="{{ m.score|default:0 }}">
+    data-score="{{ m.score|default:0 }}"
+    data-score-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}"
+    style="--match-pct: {{ m.score|default:0 }};">
     <label class="crm-match-check crm-match-check-v3">
         <input type="checkbox" class="crm-match-select"
                data-source="{{ source }}"
@@ -17,22 +19,32 @@
     </label>
 
     <div class="crm-match-body crm-match-body-v3">
-        <div class="crm-match-title-row crm-match-title-row-v3">
-            <strong class="crm-match-title">{{ m.title }}</strong>
-            <span class="crm-match-source{% if source == 'divar' %} is-divar{% else %} is-crm{% endif %}">{% if source == 'divar' %}دیوار{% else %}شخصی{% endif %}</span>
+        <div class="crm-match-card-head">
+            <span class="crm-match-source{% if source == 'divar' %} is-divar{% else %} is-crm{% endif %}">
+                <i class="fas {% if source == 'divar' %}fa-bolt{% else %}fa-folder-open{% endif %}" aria-hidden="true"></i>
+                {% if source == 'divar' %}دیوار{% else %}شخصی{% endif %}
+            </span>
+            <div class="crm-match-score crm-match-score-v3" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">
+                <span class="crm-match-score-v3__value">{{ m.score }}٪</span>
+                <span class="crm-match-score-v3__label">تطابق</span>
+            </div>
         </div>
+
+        <strong class="crm-match-title">{{ m.title }}</strong>
 
         {% if m.price_label %}
         <p class="crm-match-price crm-match-price-v3{% if 'بالای بودجه' in m.price_label %} is-warn{% elif 'زیر بودجه' in m.price_label %} is-note{% endif %}">{{ m.price_label }}</p>
         {% endif %}
 
+        <div class="crm-match-score-track" aria-hidden="true"><span></span></div>
+
+        {% if m.deal_mode or m.area or m.neighborhood or m.city %}
         <p class="crm-match-facts">
             {% if m.deal_mode %}<span>{{ m.deal_mode }}</span>{% endif %}
             {% if m.area %}<span>{{ m.area|floatformat:0 }} متر</span>{% endif %}
             {% if m.neighborhood %}<span>{{ m.neighborhood }}</span>{% elif m.city %}<span>{{ m.city }}</span>{% endif %}
         </p>
-
-        <span class="crm-match-score crm-match-score-v3" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">{{ m.score }}٪ تطابق</span>
+        {% endif %}
 
         {% if m.property_type or m.rooms or m.intent_label %}
         <div class="crm-match-features">
@@ -41,11 +53,22 @@
             {% if m.intent_label %}<span>{{ m.intent_label }}</span>{% endif %}
         </div>
         {% endif %}
+
+        {% if m.internal_url or m.link %}
+        <div class="crm-match-quick-links">
+            {% if m.internal_url %}
+            <a href="{{ m.internal_url }}" class="crm-match-quick-link">مشاهده فایل</a>
+            {% endif %}
+            {% if m.link %}
+            <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-quick-link crm-match-quick-link--muted">آگهی دیوار</a>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 
-    {% if m.reasons or m.advertiser or m.internal_url or m.public_share_url or m.link %}
+    {% if m.reasons or m.advertiser or m.public_share_url %}
     <details class="crm-match-more">
-        <summary>بیشتر</summary>
+        <summary>جزئیات تطبیق</summary>
         <div class="crm-match-more-body">
             {% if m.reasons %}
             <div class="crm-match-reasons crm-match-reasons-v3">
@@ -61,14 +84,8 @@
             </span>
             {% endif %}
             <div class="crm-match-more-actions">
-                {% if m.internal_url %}
-                <a href="{{ m.internal_url }}" class="crm-match-more-link">مشاهده در سیستم</a>
-                {% endif %}
                 {% if m.public_share_url %}
                 <a href="{{ m.public_share_url }}" target="_blank" rel="noopener" class="crm-match-more-link">لینک اشتراک</a>
-                {% endif %}
-                {% if m.link %}
-                <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-more-link">آگهی دیوار</a>
                 {% endif %}
             </div>
         </div>

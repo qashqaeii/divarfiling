@@ -4,6 +4,7 @@
     <header class="crm-matches-head">
         {% if match_data.eligible and match_data.total_count %}
         <div class="crm-matches-head-copy">
+            <p class="crm-matches-head-eyebrow"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> پیشنهاد هوشمند</p>
             <h3>{% crm_match_tab_count match_data %} فایل پیشنهادی برای این مخاطب</h3>
             <p>{% if match_data.is_builder %}بر اساس نیاز پروژه و ترجیحات ثبت‌شده{% else %}بر اساس نیاز و ترجیحات ثبت‌شده{% endif %}</p>
         </div>
@@ -65,6 +66,7 @@
             </button>
         </div>
         <div class="crm-matches-sort" aria-label="مرتب‌سازی">
+            <i class="fas fa-arrow-trend-up" aria-hidden="true"></i>
             <span>بهترین تطابق</span>
         </div>
     </div>

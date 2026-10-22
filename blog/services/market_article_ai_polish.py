@@ -1371,10 +1371,14 @@ def polish_market_article_run(
     *,
     resume: bool = True,
     clear_resume_state_on_apply: bool = False,
+    persist: bool = True,
+    persist_resume_state: bool | None = None,
 ) -> PolishResult:
     """
     پولیش مرحله‌ای؛ پیشرفت در chart_assets ذخیره می‌شود (Resume بدون ساخت مجدد نقشه).
+    با persist=False خروجی اعتبارسنجی می‌شود اما content_html/seo_json ذخیره نمی‌شود.
     """
+    save_resume = persist_resume_state if persist_resume_state is not None else persist
     original_html = run.content_html or ''
     seo = dict(run.seo_json or {})
     original_title = str(seo.get('title') or '').strip()
@@ -1433,6 +1437,8 @@ def polish_market_article_run(
     total_latency = int(state.get('latency_ms') or 0)
 
     def _persist_state() -> None:
+        if not save_resume:
+            return
         _save_polish_state(
             run,
             build_polish_state_payload(
@@ -1537,15 +1543,16 @@ def polish_market_article_run(
     if validation_errors:
         raise AIPolishError('; '.join(validation_errors))
 
-    run.content_html = new_html
-    run.seo_json = {
-        **seo,
-        'title': new_title[:200],
-        'excerpt': new_excerpt[:300],
-    }
-    run.save(update_fields=['content_html', 'seo_json', 'updated_at'])
-    if clear_resume_state_on_apply:
-        _clear_polish_state(run)
+    if persist:
+        run.content_html = new_html
+        run.seo_json = {
+            **seo,
+            'title': new_title[:200],
+            'excerpt': new_excerpt[:300],
+        }
+        run.save(update_fields=['content_html', 'seo_json', 'updated_at'])
+        if clear_resume_state_on_apply:
+            _clear_polish_state(run)
 
     editorial_quality = compute_editorial_quality(
         run=run,
@@ -1571,6 +1578,7 @@ def polish_market_article_run(
         'resumed': bool(state),
         'ai_batches_skipped': ai_batches_complete,
         'validation_errors': [],
+        'persisted': persist,
         **coverage,
         'editorial_quality': editorial_quality,
     }

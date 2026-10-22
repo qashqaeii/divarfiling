@@ -9,6 +9,10 @@ from django.test import TestCase, override_settings
 
 from ai_workspace.providers.base import ProviderError
 
+from blog.services.market_article_ai_editorial import (
+    map_text_segment_sections,
+    section_eligible_for_editorial,
+)
 from blog.services.market_article_ai_polish import (
     AIPolishJsonError,
     AIPolishRecoverableError,
@@ -17,6 +21,7 @@ from blog.services.market_article_ai_polish import (
     StatisticalProtection,
     _polish_text_batch,
     batch_text_segments,
+    segment_eligible_for_polish,
     find_missing_numeric_tokens,
     migrate_polish_state,
     normalize_number_text,
@@ -37,6 +42,18 @@ from blog.services.market_article_pipeline import build_preview
 from blog.tests.test_market_articles import _seed_dataset
 
 User = get_user_model()
+
+
+def _eligible_segments_for_polish(parts, segs):
+    section_map = map_text_segment_sections(parts)
+    eligible = []
+    for seg in segs:
+        seg_id = int(seg['id'])
+        sid = section_map.get(seg_id, '')
+        text = str(seg.get('text') or '')
+        if segment_eligible_for_polish(text) and section_eligible_for_editorial(sid):
+            eligible.append({**seg, 'section_id': sid})
+    return eligible
 
 
 class NumericSafetyTests(TestCase):
@@ -156,7 +173,8 @@ class BatchPolishTests(TestCase):
         run = build_preview(self.ds, self.staff)
         parts = split_html_parts(run.content_html)
         segs = text_segment_payload(parts)
-        first_batch = batch_text_segments(segs)[0]
+        eligible = _eligible_segments_for_polish(parts, segs)
+        first_batch = batch_text_segments(eligible)[0]
         polished = {int(s['id']): s['text'] for s in first_batch}
 
         run.chart_assets = {
@@ -187,6 +205,66 @@ class BatchPolishTests(TestCase):
         self.assertTrue(result.applied)
         self.assertFalse(mock_seo.called)
         self.assertGreaterEqual(mock_batch.call_count, 0)
+
+    @patch('blog.services.market_article_ai_polish.repair_polished_map_numeric_safety')
+    @patch('blog.services.market_article_ai_polish.run_quality_gates')
+    @patch('blog.services.market_article_ai_polish._polish_text_batch')
+    @patch('blog.services.market_article_ai_polish._polish_seo')
+    def test_resume_v2_plan_continues_after_partial_batches(
+        self,
+        mock_seo,
+        mock_batch,
+        mock_qa,
+        mock_repair,
+    ):
+        from blog.services.market_article_quality_gates import QAReport
+
+        mock_qa.return_value = QAReport()
+        mock_qa.return_value.total_score = 90
+        mock_qa.return_value.critical_errors = 0
+
+        run = build_preview(self.ds, self.staff)
+        before_html = run.content_html
+        parts = split_html_parts(before_html)
+        segs = text_segment_payload(parts)
+        eligible = _eligible_segments_for_polish(parts, segs)
+        batches_v2 = batch_text_segments(eligible, plan_version=2)
+        self.assertGreater(len(batches_v2), 1)
+        first = batches_v2[0]
+        polished = {int(s['id']): s['text'] for s in first}
+
+        run.chart_assets = {
+            'autopublish_polish_state': {
+                'seo_done': True,
+                'editorial_angle': 'pricing_range',
+                'title': (run.seo_json or {}).get('title'),
+                'excerpt': (run.seo_json or {}).get('excerpt'),
+                'polished_by_id': polished,
+                'completed_batches': [0],
+                'completed_segment_ids': [int(s['id']) for s in first],
+                'batch_plan_version': 2,
+                'batch_logs': [],
+                'provider': 'test',
+                'model': 'test',
+                'latency_ms': 0,
+            },
+        }
+        run.save(update_fields=['chart_assets'])
+
+        def batch_side_effect(batch_index, batch, **kwargs):
+            out = {int(s['id']): f'ویرایش {s["text"]}' for s in batch}
+            return (out, 'p', 'm', 1, [])
+
+        mock_seo.return_value = ('t', 'e', 'p', 'm', 1, [])
+        mock_batch.side_effect = batch_side_effect
+        mock_repair.side_effect = lambda _segments, _orig, polished, **_: polished
+
+        result = polish_market_article_run(run, resume=True)
+        self.assertTrue(result.applied)
+        self.assertEqual(result.report.get('batch_plan_version'), 2)
+        run.refresh_from_db()
+        self.assertNotEqual(run.content_html, before_html)
+        self.assertIn('mk-market', run.content_html)
 
     @patch('blog.services.market_article_autopublish._run_ai_polish_with_retries', return_value=True)
     @patch('blog.services.market_article_autopublish.run_quality_gates')

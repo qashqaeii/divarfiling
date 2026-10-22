@@ -1,22 +1,17 @@
 """AI Editorial v2 — بلوک‌های معنایی، زاویه محتوا و معیار کیفیت تحریریه."""
 from __future__ import annotations
 
+import hashlib
 import re
 from difflib import SequenceMatcher
-from typing import Any
+from typing import Any, Literal
 
-from blog.models import MarketArticleRun
+from blog.models import MarketArticleRun, Post
 
-_SECTION_OPEN_RE = re.compile(
-    r'<section\b[^>]*\bid=["\']([^"\']+)["\']',
-    re.I,
-)
-_SECTION_CLOSE_RE = re.compile(r'</section>', re.I)
-_ASIDE_OPEN_RE = re.compile(
-    r'<aside\b[^>]*\bid=["\']([^"\']+)["\']',
-    re.I,
-)
-_ASIDE_CLOSE_RE = re.compile(r'</aside>', re.I)
+_ContainerTag = Literal['section', 'aside']
+_OPEN_CONTAINER_RE = re.compile(r'^<(section|aside)\b([^>]*)>$', re.I)
+_CLOSE_CONTAINER_RE = re.compile(r'^</(section|aside)>$', re.I)
+_ID_ATTR_RE = re.compile(r'\bid=["\']([^"\']+)["\']', re.I)
 
 # بخش‌های داده‌محور / قالب ثابت — بدون بازنویسی AI
 PROTECTED_SECTION_IDS = frozenset({
@@ -56,36 +51,72 @@ _INTRO_BOILERPLATE_RE = re.compile(
     r'در این گزارش[،,]?\s*بازار',
     re.I,
 )
+_STAT_BOILERPLATE_RE = re.compile(
+    r'[\d۰-۹]+',
+)
+_ANALYTICAL_SECTION_IDS = ('market-status', 'audiences', 'verdict', 'negotiation', 'opportunities')
+
+
+def _parse_container_open(tag_chunk: str) -> tuple[_ContainerTag, str] | None:
+    match = _OPEN_CONTAINER_RE.match((tag_chunk or '').strip())
+    if not match:
+        return None
+    tag = match.group(1).lower()
+    attrs = match.group(2) or ''
+    id_match = _ID_ATTR_RE.search(attrs)
+    section_id = id_match.group(1).strip() if id_match else ''
+    return tag, section_id
+
+
+def _parse_container_close(tag_chunk: str) -> _ContainerTag | None:
+    match = _CLOSE_CONTAINER_RE.match((tag_chunk or '').strip())
+    if not match:
+        return None
+    return match.group(1).lower()
+
+
+def _pop_container(stack: list[tuple[_ContainerTag, str]], tag: _ContainerTag) -> None:
+    """بستن تگ — فقط اگر نوع با بالای پشته یکی باشد (بدون pop اشتباه)."""
+    if stack and stack[-1][0] == tag:
+        stack.pop()
+
+
+def _active_section_id(stack: list[tuple[_ContainerTag, str]]) -> str:
+    if not stack:
+        return ''
+    for _tag, sid in reversed(stack):
+        if sid:
+            return sid
+    return stack[-1][1]
 
 
 def map_text_segment_sections(parts: list[tuple[str, str]]) -> dict[int, str]:
-    """نگاشت id segment متنی به section/aside فعلی در HTML."""
-    section_stack: list[str] = []
+    """نگاشت id segment متنی به section/aside فعال — پشته نوع‌دار section/aside."""
+    stack: list[tuple[_ContainerTag, str]] = []
     mapping: dict[int, str] = {}
     for idx, (kind, content) in enumerate(parts):
         if kind == 'markup':
-            for match in _SECTION_OPEN_RE.finditer(content):
-                section_stack.append(match.group(1).strip())
-            for match in _ASIDE_OPEN_RE.finditer(content):
-                section_stack.append(match.group(1).strip())
-            if _SECTION_CLOSE_RE.search(content):
-                if section_stack:
-                    section_stack.pop()
-            if _ASIDE_CLOSE_RE.search(content):
-                if section_stack:
-                    section_stack.pop()
+            opened = _parse_container_open(content)
+            if opened:
+                stack.append(opened)
+                continue
+            closed = _parse_container_close(content)
+            if closed:
+                _pop_container(stack, closed)
         elif content.strip():
-            mapping[idx] = section_stack[-1] if section_stack else ''
+            mapping[idx] = _active_section_id(stack)
     return mapping
 
 
 def section_eligible_for_editorial(section_id: str) -> bool:
     sid = (section_id or '').strip()
     if not sid:
-        return True
+        return False
     if sid in PROTECTED_SECTION_IDS:
         return False
     if any(sid.startswith(p) for p in PROTECTED_ASIDE_PREFIXES):
+        return False
+    if sid not in _SECTION_ROLE_FA:
         return False
     return True
 
@@ -165,9 +196,26 @@ def select_editorial_angle(run: MarketArticleRun) -> str:
     scores['seller_pricing'] += 0.8
     scores['advisor_filing'] += 0.5
 
-    seed = abs(hash(f'{run.pk}:{ctx.get("district")}:{ctx.get("city")}:{valid_seed_n(ctx)}')) % 997
-    ranked = sorted(EDITORIAL_ANGLES, key=lambda k: (-scores[k], (seed + EDITORIAL_ANGLES.index(k)) % 7))
+    seed = _deterministic_tie_seed(run, ctx)
+    ranked = sorted(
+        EDITORIAL_ANGLES,
+        key=lambda k: (-scores[k], (seed + EDITORIAL_ANGLES.index(k)) % 997, k),
+    )
     return ranked[0]
+
+
+def _deterministic_tie_seed(run: MarketArticleRun, ctx: dict[str, Any]) -> int:
+    payload = '|'.join(
+        [
+            str(run.pk),
+            str(ctx.get('district') or ''),
+            str(ctx.get('city') or ''),
+            str(valid_seed_n(ctx)),
+            str(ctx.get('subcategory') or ''),
+        ],
+    )
+    digest = hashlib.sha256(payload.encode('utf-8')).hexdigest()
+    return int(digest[:12], 16)
 
 
 def valid_seed_n(ctx: dict[str, Any]) -> int:
@@ -285,29 +333,71 @@ def aggregate_llm_usage(batch_logs: list[dict[str, Any]]) -> dict[str, int]:
     }
 
 
-def editorial_similarity_to_recent_posts(
-    run: MarketArticleRun,
-    intro_plain: str,
-    *,
-    limit: int = 6,
-) -> float:
-    """شباهت مقدمه با مقالات اخیر (۰=متفاوت، ۱=یکسان)."""
-    needle = normalize_editorial_text(intro_plain)
-    if len(needle) < 40:
+def _strip_stats_for_fingerprint(text: str) -> str:
+    t = _STAT_BOILERPLATE_RE.sub(' ', text or '')
+    return normalize_editorial_text(t)
+
+
+def analytical_fingerprint(html: str) -> str:
+    chunks: list[str] = []
+    for section_id in _ANALYTICAL_SECTION_IDS:
+        plain = extract_section_plain(html, section_id)
+        if plain:
+            chunks.append(_strip_stats_for_fingerprint(plain))
+    return ' '.join(chunks).strip()
+
+
+def _max_similarity_to_corpus(needle: str, corpus: list[str]) -> float:
+    if len(needle) < 30:
         return 0.0
-    qs = (
-        MarketArticleRun.objects.exclude(pk=run.pk)
-        .exclude(content_html='')
-        .order_by('-updated_at')[:limit]
-    )
     best = 0.0
-    for other in qs:
-        other_intro = normalize_editorial_text(extract_intro_plain(other.content_html or ''))
-        if len(other_intro) < 40:
+    for hay in corpus:
+        if len(hay) < 30:
             continue
-        ratio = SequenceMatcher(None, needle, other_intro).ratio()
-        best = max(best, ratio)
+        best = max(best, SequenceMatcher(None, needle, hay).ratio())
     return round(best, 4)
+
+
+def _published_market_post_htmls(
+    *,
+    exclude_post_id: int | None,
+    limit: int,
+) -> list[str]:
+    qs = Post.objects.filter(is_published=True, content__icontains='mk-market').order_by(
+        '-published_at',
+        '-updated_at',
+    )
+    if exclude_post_id:
+        qs = qs.exclude(pk=exclude_post_id)
+    return [p.content for p in qs[:limit] if (p.content or '').strip()]
+
+
+def editorial_similarity_to_published_posts(
+    run: MarketArticleRun,
+    *,
+    intro_plain: str,
+    analytical_plain: str,
+    limit: int = 8,
+) -> dict[str, float]:
+    """شباهت با مقالات وبلاگ منتشرشده — مقدمه و بخش تحلیلی جدا."""
+    exclude_post_id = run.post_id
+    htmls = _published_market_post_htmls(exclude_post_id=exclude_post_id, limit=limit)
+    intro_needle = normalize_editorial_text(intro_plain)
+    analytical_needle = _strip_stats_for_fingerprint(analytical_plain)
+    intro_corpus = [normalize_editorial_text(extract_intro_plain(h)) for h in htmls]
+    analytical_corpus = [_strip_stats_for_fingerprint(analytical_fingerprint(h)) for h in htmls]
+    return {
+        'intro_similarity_published': _max_similarity_to_corpus(intro_needle, intro_corpus),
+        'analytical_similarity_published': _max_similarity_to_corpus(
+            analytical_needle,
+            analytical_corpus,
+        ),
+    }
+
+
+def _has_intro_cliche(text: str) -> bool:
+    plain = strip_html_to_plain(text).lower()
+    return bool(_INTRO_BOILERPLATE_RE.search(plain))
 
 
 def compute_editorial_quality(
@@ -338,36 +428,59 @@ def compute_editorial_quality(
     intro_before = extract_intro_plain(original_html)
     intro_after = extract_intro_plain(polished_html)
     intro_changed = normalize_editorial_text(intro_before) != normalize_editorial_text(intro_after)
-    similarity = editorial_similarity_to_recent_posts(run, intro_after)
+    analytical_after = analytical_fingerprint(polished_html)
+    similarities = editorial_similarity_to_published_posts(
+        run,
+        intro_plain=intro_after,
+        analytical_plain=analytical_after,
+    )
+    intro_sim = similarities['intro_similarity_published']
+    analytical_sim = similarities['analytical_similarity_published']
 
-    score = 50.0
-    score += min(25.0, ratio * 120)
-    if title_changed:
-        score += 8
-    if intro_changed:
-        score += 10
-    score -= similarity * 15
+    cliche_before = _has_intro_cliche(intro_before)
+    cliche_after = _has_intro_cliche(intro_after)
+
+    score = 0.0
+    if cliche_before and not cliche_after:
+        score += 18.0
+    elif cliche_after:
+        score -= 22.0
+    score += max(0.0, (1.0 - intro_sim) * 28.0)
+    score += max(0.0, (1.0 - analytical_sim) * 22.0)
+    if title_changed and normalize_editorial_text(original_title) != normalize_editorial_text(new_title):
+        score += 6.0
+    if intro_changed and not cliche_after:
+        score += 8.0
+    if 0.04 <= ratio <= 0.42:
+        score += 6.0
+    elif ratio > 0.55 and cliche_after:
+        score -= 8.0
     fb = usage['fallback_count']
     if fb:
-        score -= min(20, fb * 2)
+        score -= min(24.0, fb * 4.0)
+    if usage['retry_count'] > usage['ai_call_count']:
+        score -= 5.0
     score = max(0.0, min(100.0, round(score, 1)))
 
     return {
         **usage,
-        'editorial_plan': 'v2',
+        'editorial_plan': 'v3',
         'editorial_angle': editorial_angle,
         'editorial_angle_label': editorial_angle_label(editorial_angle),
         'rewritten_block_count': rewritten,
         'changed_text_ratio': ratio,
         'title_changed': title_changed,
         'intro_changed': intro_changed,
-        'editorial_similarity_to_recent_posts': similarity,
+        'intro_cliche_removed': cliche_before and not cliche_after,
+        'intro_cliche_remaining': cliche_after,
+        **similarities,
         'editorial_quality_score': score,
         'snapshots': {
             'title_before': (original_title or '')[:200],
             'title_after': (new_title or '')[:200],
             'intro_before': intro_before[:500],
             'intro_after': intro_after[:500],
+            'analytical_after': analytical_after[:500],
         },
     }
 
@@ -404,7 +517,7 @@ def editorial_batch_system_prompt(
     )
 
 
-_SECTION_ROLE_FA: dict[str, str] = {
+_SECTION_ROLE_FA: dict[str, str] = {  # whitelist بخش‌های قابل ویرایش
     'who': 'مقدمه مخاطبان — کوتاه و مفید',
     'executive-summary': 'خلاصه اجرایی و مقدمه اختصاصی محله',
     'market-status': 'تحلیل وضعیت بازار به زبان ساده',

@@ -107,3 +107,38 @@ class MarketArticleAIPolishTests(TestCase):
         parts = split_html_parts('<p class="a">سلام</p>')
         out = apply_polished_texts(parts, {1: 'درود'})
         self.assertEqual(out, '<p class="a">درود</p>')
+
+    @patch('blog.services.market_article_ai_polish.repair_polished_map_numeric_safety')
+    @patch('blog.services.market_article_ai_polish.run_quality_gates')
+    @patch('blog.services.market_article_ai_polish._polish_text_batch')
+    @patch('blog.services.market_article_ai_polish._polish_seo')
+    def test_polish_dry_run_does_not_persist_html(self, mock_seo, mock_batch, mock_qa, mock_repair):
+        from blog.services.market_article_quality_gates import QAReport
+
+        mock_qa.return_value = QAReport()
+        mock_qa.return_value.total_score = 90
+        mock_qa.return_value.critical_errors = 0
+        run = build_preview(self.ds, self.staff)
+        before = run.content_html
+        seo = run.seo_json or {}
+        mock_seo.return_value = (
+            seo.get('title') or 't',
+            seo.get('excerpt') or 'e',
+            'mock',
+            'm',
+            1,
+            [],
+        )
+        mock_batch.side_effect = lambda _i, batch, **_: (
+            {int(s['id']): s['text'] for s in batch},
+            'mock',
+            'm',
+            1,
+            [],
+        )
+        mock_repair.side_effect = lambda _segments, _orig, polished, **_: polished
+        result = polish_market_article_run(run, resume=False, persist=False)
+        self.assertTrue(result.applied)
+        self.assertFalse(result.report.get('persisted'))
+        run.refresh_from_db()
+        self.assertEqual(run.content_html, before)

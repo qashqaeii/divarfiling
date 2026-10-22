@@ -1757,25 +1757,37 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 ctx['contact_suggestion_text'] = self.request.session.pop(
                     'crm_last_contact_suggestion_text', '',
                 )
-        if ctx.get('is_property_owner') and not ctx.get('property_is_deleted'):
+        if (
+            ctx.get('is_property_owner')
+            and not ctx.get('property_is_deleted')
+            and not ctx.get('mask_sensitive')
+        ):
+            from workspace.services.crm_matching_access import can_create_property_public_link
             from workspace.services.property_public_share import (
                 get_or_create_property_share,
                 property_public_share_url,
             )
-            pub_share = get_or_create_property_share(self.request.user, p)
-            ctx['public_property_share'] = pub_share
-            ctx['public_property_share_url'] = property_public_share_url(self.request, pub_share)
-            from workspace.services.public_share_common import share_profile_context
-            profile = share_profile_context(
-                self.request.user, pub_share,
-                title=p.title or '',
-                share_url=ctx['public_property_share_url'],
-            )
-            ctx['consultant_name'] = profile['consultant_name']
-            ctx['consultant_phone'] = profile['consultant_phone']
-            ctx['share_profile'] = profile
-            from workspace.services.nearby_pois import property_share_nearby_meta
-            ctx['public_share_nearby_meta'] = property_share_nearby_meta(p)
+            if not can_create_property_public_link(self.request.user, p):
+                pub_share = None
+            else:
+                pub_share = get_or_create_property_share(self.request.user, p)
+            if not pub_share:
+                ctx['public_property_share'] = None
+                ctx['public_property_share_url'] = ''
+            else:
+                ctx['public_property_share'] = pub_share
+                ctx['public_property_share_url'] = property_public_share_url(self.request, pub_share)
+                from workspace.services.public_share_common import share_profile_context
+                profile = share_profile_context(
+                    self.request.user, pub_share,
+                    title=p.title or '',
+                    share_url=ctx['public_property_share_url'],
+                )
+                ctx['consultant_name'] = profile['consultant_name']
+                ctx['consultant_phone'] = profile['consultant_phone']
+                ctx['share_profile'] = profile
+                from workspace.services.nearby_pois import property_share_nearby_meta
+                ctx['public_share_nearby_meta'] = property_share_nearby_meta(p)
 
         from workspace.services.crm_property_folders import FOLDER_COLORS, FOLDER_ICONS, list_property_folders
         ctx['property_folders'] = list_property_folders(self.request.user)

@@ -42,6 +42,12 @@ from workspace.services.public_share_common import (
 
 
 def get_or_create_property_share(user, prop: CRMProperty) -> CRMPropertyPublicShare:
+    from django.core.exceptions import PermissionDenied
+
+    from workspace.services.crm_matching_access import can_create_property_public_link
+
+    if not can_create_property_public_link(user, prop):
+        raise PermissionDenied('امکان ایجاد یا دریافت لینک عمومی برای این فایل وجود ندارد.')
     share = CRMPropertyPublicShare.objects.filter(
         property=prop, created_by=user, is_active=True,
     ).order_by('-created_at').first()

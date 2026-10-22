@@ -26,6 +26,12 @@ def is_match_eligible(customer: Customer) -> bool:
     return customer.customer_type in MATCH_ELIGIBLE_TYPES
 
 
+def _match_snapshot_for_alert(user, match: Dict[str, Any]) -> Dict[str, Any]:
+    from workspace.services.crm_matching_access import match_alert_snapshot_for_viewer
+
+    return match_alert_snapshot_for_viewer(user, match)
+
+
 def _match_key(match: Dict[str, Any]) -> str:
     if match.get('source') == 'crm':
         return f'crm:{match.get("property_id")}'
@@ -95,13 +101,7 @@ def record_match_alerts(
                 'crm_property_id': m.get('property_id') if m.get('source') == 'crm' else None,
                 'listing_token': (m.get('token') or '') if m.get('source') == 'divar' else '',
                 'score': int(m.get('score') or 0),
-                'match_snapshot': {
-                    'title': m.get('title', ''),
-                    'price_label': m.get('price_label', ''),
-                    'neighborhood': m.get('neighborhood', ''),
-                    'reasons': m.get('reasons', [])[:4],
-                    'score': m.get('score', 0),
-                },
+                'match_snapshot': _match_snapshot_for_alert(user, m),
                 'status': status,
                 'notified_at': notified_at,
             },

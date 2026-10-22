@@ -64,6 +64,8 @@ class ConfidentialShareMatchingTests(TestCase):
         self.assertNotIn('divar.ir', (match.get('link') or '').lower())
         self.assertNotIn('۱۲', match.get('price_label') or '')
         self.assertNotIn('ونک', match.get('neighborhood') or '')
+        self.assertNotIn('میلیارد', ' '.join(match.get('reasons') or []))
+        self.assertEqual(match.get('token'), '')
 
     def test_enrich_match_does_not_create_public_link_for_confidential(self):
         match = {
@@ -78,6 +80,8 @@ class ConfidentialShareMatchingTests(TestCase):
         self.assertTrue(enriched.get('mask_sensitive'))
         self.assertEqual(enriched.get('public_share_url'), '')
         self.assertEqual(enriched.get('link'), '')
+        self.assertEqual(enriched.get('internal_url'), '')
+        self.assertNotIn('evil', enriched.get('public_share_url', ''))
 
     def test_apply_suggestions_ignores_tampered_title(self):
         matches = [{

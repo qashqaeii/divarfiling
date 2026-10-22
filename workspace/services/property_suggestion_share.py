@@ -37,6 +37,8 @@ def _crm_price_label(prop: CRMProperty) -> str:
 
 
 def public_share_url_for_property(user, request, prop: CRMProperty) -> str:
+    if not can_create_property_public_link(user, prop):
+        return ''
     share = get_or_create_property_share(user, prop)
     path = reverse('listing_public:property_view', kwargs={'share_token': share.share_token})
     return absolute_uri(request, path)
@@ -71,8 +73,8 @@ def enrich_match_with_public_url(user, request, match: Dict[str, Any]) -> Dict[s
 def enrich_match_with_links(user, request, match: Dict[str, Any]) -> Dict[str, Any]:
     """افزودن لینک داخلی سیستم، لینک عمومی و حفظ لینک دیوار."""
     out = dict(match)
-    public_url = (out.get('public_share_url') or '').strip()
-    internal_url = (out.get('internal_url') or '').strip()
+    public_url = ''
+    internal_url = ''
 
     if match.get('source') == 'crm' and match.get('property_id'):
         prop = properties_qs(user).filter(pk=match['property_id']).first()
@@ -81,21 +83,16 @@ def enrich_match_with_links(user, request, match: Dict[str, Any]) -> Dict[str, A
             if share_ctx.mask_sensitive:
                 out = mask_crm_match_for_viewer(user, prop, out)
             elif can_create_property_public_link(user, prop):
-                if not public_url:
-                    try:
-                        public_url = public_share_url_for_property(user, request, prop)
-                    except Exception:
-                        public_url = ''
+                try:
+                    public_url = public_share_url_for_property(user, request, prop)
+                except Exception:
+                    public_url = ''
+                if not internal_url:
+                    internal_url = _internal_url_for_property(request, prop)
+                if not (out.get('link') or '').strip() and prop.link:
+                    out['link'] = prop.link
             else:
-                public_url = ''
-            if not share_ctx.mask_sensitive and not internal_url:
-                internal_url = _internal_url_for_property(request, prop)
-            if (
-                not share_ctx.mask_sensitive
-                and not (out.get('link') or '').strip()
-                and prop.link
-            ):
-                out['link'] = prop.link
+                out = mask_crm_match_for_viewer(user, prop, out)
     elif match.get('source') == 'divar':
         listing = None
         listing_id = match.get('listing_id')

@@ -1,0 +1,85 @@
+{% load workspace_tags crm_tags %}
+<li class="crm-pcm-card crm-pcm-card-v3"
+    data-prop-match-card
+    data-customer-type="{{ m.customer_type }}"
+    data-score-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}"
+    style="--match-pct: {{ m.score|default:0 }};">
+    <label class="crm-pcm-check crm-pcm-check-v3">
+        <input type="checkbox" class="crm-prop-match-select"
+               data-customer-id="{{ m.customer_id }}"
+               data-name="{{ m.name }}"
+               data-phone="{{ m.phone }}"
+               data-customer-type="{{ m.customer_type }}"
+               {% if m.match_intent %}data-match-intent="{{ m.match_intent }}"{% endif %}>
+        <span class="crm-pcm-check-ui" aria-hidden="true"></span>
+        <span class="sr-only">انتخاب {{ m.name }}</span>
+    </label>
+
+    <div class="crm-pcm-card-body">
+        <div class="crm-pcm-card-head">
+            {% if m.customer_type %}
+            <span class="crm-pcm-type">{{ m.customer_type }}</span>
+            {% else %}
+            <span class="crm-pcm-type crm-pcm-type--muted">مخاطب</span>
+            {% endif %}
+            <div class="crm-pcm-score crm-pcm-score-v3" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">
+                <span class="crm-pcm-score-v3__value">{{ m.score }}٪</span>
+                <span class="crm-pcm-score-v3__label">تطابق</span>
+            </div>
+        </div>
+
+        <div class="crm-pcm-title-row">
+            <span class="crm-pcm-avatar" aria-hidden="true">{{ m.name|slice:":1" }}</span>
+            <strong class="crm-pcm-name">
+                <a href="{% url 'workspace:crm_detail' m.customer_id %}">{{ m.name }}</a>
+            </strong>
+        </div>
+
+        {% if m.budget_label %}
+        <p class="crm-pcm-budget-line">{{ m.budget_label }}</p>
+        {% endif %}
+
+        <div class="crm-pcm-score-track" aria-hidden="true"><span></span></div>
+
+        <p class="crm-pcm-meta">
+            {% if m.phone %}<span dir="ltr">{{ m.phone }}</span>{% endif %}
+            {% if m.areas %}<span>{{ m.areas }}</span>{% endif %}
+            {% if m.matching_tolerance_percent != None %}<span>تلورانس {{ m.matching_tolerance_percent }}٪</span>{% endif %}
+        </p>
+
+        {% if m.status or m.intent_label or m.property_type %}
+        <div class="crm-pcm-tags">
+            {% if m.status %}<span>{{ m.status }}</span>{% endif %}
+            {% if m.intent_label %}<span>{{ m.intent_label }}</span>{% endif %}
+            {% if m.property_type %}<span>{{ m.property_type }}</span>{% endif %}
+        </div>
+        {% endif %}
+
+        <div class="crm-pcm-acts crm-pcm-acts-v3">
+            {% if m.phone %}
+            <a href="{{ m.phone|phone_tel_href }}" class="crm-pcm-act crm-pcm-act--call">
+                <i class="fas fa-phone" aria-hidden="true"></i> تماس
+            </a>
+            <a href="{{ m.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-pcm-act crm-pcm-act--wa">
+                <i class="fab fa-whatsapp" aria-hidden="true"></i> واتساپ
+            </a>
+            {% endif %}
+            <a href="{% url 'workspace:crm_detail' m.customer_id %}" class="crm-pcm-act crm-pcm-act--profile">
+                <i class="fas fa-folder-open" aria-hidden="true"></i> پرونده
+            </a>
+        </div>
+    </div>
+
+    {% if m.reasons %}
+    <details class="crm-pcm-more">
+        <summary>جزئیات تطبیق</summary>
+        <div class="crm-pcm-more-body">
+            <div class="crm-pcm-reasons-v3">
+                {% for r in m.reasons %}
+                <em>{{ r }}</em>
+                {% endfor %}
+            </div>
+        </div>
+    </details>
+    {% endif %}
+</li>

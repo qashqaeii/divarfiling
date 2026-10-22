@@ -1,88 +1,46 @@
 {% load workspace_tags crm_tags %}
 
-<section class="crm-pcm" id="crmPropContactMatches">
-    <header class="crm-pcm-head">
+<section class="crm-pcm crm-pcm-v3" id="crmPropContactMatches">
+    <header class="crm-pcm-head crm-pcm-head-v3">
         <div class="crm-pcm-head-copy">
-            <h3>
-                مخاطب‌های پیشنهادی
-                {% if contact_match_data.eligible %}
-                <span class="crm-pcm-count">{{ contact_match_data.total_count }}</span>
-                {% endif %}
-            </h3>
+            {% if contact_match_data.eligible and contact_match_data.total_count %}
+            <p class="crm-pcm-head-eyebrow"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> پیشنهاد هوشمند</p>
+            <h3>{{ contact_match_data.total_count }} مخاطب پیشنهادی برای این فایل</h3>
+            {% else %}
+            <h3>مخاطب‌های پیشنهادی</h3>
+            {% endif %}
             <p>
-                {% if contact_match_data.deal_label %}{{ contact_match_data.deal_label }} · {% endif %}{% if contact_match_data.is_sale and not contact_match_data.is_rent %}خریدار، متقاضی و سازنده{% elif contact_match_data.is_rent and not contact_match_data.is_sale %}مستاجر و متقاضی اجاره{% else %}بر اساس بودجه، محله و متراژ{% endif %}
+                {% if contact_match_data.deal_label %}{{ contact_match_data.deal_label }} · {% endif %}
+                {% if contact_match_data.is_sale and not contact_match_data.is_rent %}خریدار، متقاضی و سازنده
+                {% elif contact_match_data.is_rent and not contact_match_data.is_sale %}مستاجر و متقاضی اجاره
+                {% else %}بر اساس بودجه، محله و متراژ{% endif %}
             </p>
         </div>
-        {% if contact_match_data.eligible and contact_match_data.matches %}
-        <div class="crm-pcm-chips" data-prop-match-type-chips hidden role="tablist" aria-label="نوع مخاطب"></div>
-        {% endif %}
     </header>
 
     {% if not contact_match_data.eligible %}
-    <div class="crm-pcm-empty">
+    <div class="crm-pcm-empty crm-pcm-empty-v3">
         <p>{{ contact_match_data.message }}</p>
     </div>
     {% else %}
 
     {% if contact_match_data.matches %}
-    <ul class="crm-pcm-list">
+    <div class="crm-pcm-toolbar">
+        <div class="crm-pcm-chips crm-pcm-chips-v3" data-prop-match-type-chips hidden role="tablist" aria-label="نوع مخاطب"></div>
+        <div class="crm-pcm-sort" aria-hidden="true">
+            <i class="fas fa-arrow-trend-up" aria-hidden="true"></i>
+            <span>بهترین تطابق</span>
+        </div>
+    </div>
+
+    <ul class="crm-pcm-list crm-pcm-grid">
         {% for m in contact_match_data.matches %}
-        <li class="crm-pcm-row" data-prop-match-card data-customer-type="{{ m.customer_type }}">
-            <label class="crm-pcm-check">
-                <input type="checkbox" class="crm-prop-match-select"
-                       data-customer-id="{{ m.customer_id }}"
-                       data-name="{{ m.name }}"
-                       data-phone="{{ m.phone }}"
-                       data-customer-type="{{ m.customer_type }}"
-                       {% if m.match_intent %}data-match-intent="{{ m.match_intent }}"{% endif %}>
-                <span class="crm-pcm-check-ui" aria-hidden="true"></span>
-                <span class="sr-only">انتخاب {{ m.name }}</span>
-            </label>
-
-            <div class="crm-pcm-body">
-                <div class="crm-pcm-top">
-                    <strong class="crm-pcm-name">{{ m.name }}</strong>
-                    <span class="crm-pcm-score" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}" title="امتیاز تطبیق">{{ m.score }}٪</span>
-                </div>
-
-                <div class="crm-pcm-status">
-                    {% if m.customer_type %}<span>{{ m.customer_type }}</span>{% endif %}
-                    {% if m.status %}<span>{{ m.status }}</span>{% endif %}
-                    {% if m.intent_label %}<span>{{ m.intent_label }}</span>{% endif %}
-                    {% if m.property_type %}<span>{{ m.property_type }}</span>{% endif %}
-                </div>
-
-                <dl class="crm-pcm-facts">
-                    {% if m.phone %}<div><dt>تلفن</dt><dd dir="ltr">{{ m.phone }}</dd></div>{% endif %}
-                    {% if m.budget_label %}<div><dt>بودجه</dt><dd class="crm-pcm-budget">{{ m.budget_label }}</dd></div>{% endif %}
-                    {% if m.matching_tolerance_percent != None %}<div><dt>تلورانس</dt><dd>{{ m.matching_tolerance_percent }}٪</dd></div>{% endif %}
-                    {% if m.areas %}<div><dt>محله</dt><dd>{{ m.areas }}</dd></div>{% endif %}
-                </dl>
-
-                {% if m.reasons %}
-                <p class="crm-pcm-reasons">{% for r in m.reasons %}{{ r }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
-                {% endif %}
-
-                <div class="crm-pcm-acts">
-                    {% if m.phone %}
-                    <a href="{{ m.phone|phone_tel_href }}" class="crm-pcm-act crm-pcm-act--call">
-                        <i class="fas fa-phone" aria-hidden="true"></i> تماس
-                    </a>
-                    <a href="{{ m.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-pcm-act crm-pcm-act--wa">
-                        <i class="fab fa-whatsapp" aria-hidden="true"></i> واتساپ
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'workspace:crm_detail' m.customer_id %}" class="crm-pcm-act">
-                        <i class="fas fa-folder-open" aria-hidden="true"></i> پرونده
-                    </a>
-                </div>
-            </div>
-        </li>
+        {% include 'workspace/crm/includes/contact_match_card.html' %}
         {% endfor %}
     </ul>
     <p class="crm-pcm-filter-empty" data-prop-match-filter-empty hidden>مخاطبی با این نوع در فهرست نیست.</p>
     {% else %}
-    <div class="crm-pcm-empty">
+    <div class="crm-pcm-empty crm-pcm-empty-v3">
         <strong>مخاطب مناسبی یافت نشد</strong>
         <p>ترجیحات بودجه، محله و نوع ملک را در پرونده مخاطبان تکمیل کنید.</p>
     </div>
@@ -93,7 +51,7 @@
         {% csrf_token %}
         <input type="hidden" name="action" value="suggest_contacts">
         <input type="hidden" name="matches_json" id="crmPropMatchesJson" value="[]">
-        <div class="crm-suggest-dock crm-pcm-dock" id="crmPropSuggestDock">
+        <div class="crm-suggest-dock crm-pcm-dock crm-pcm-dock-v3" id="crmPropSuggestDock">
             <div class="crm-suggest-dock-inner crm-pcm-dock-inner">
                 <span class="crm-suggest-count"><strong id="crmPropSuggestCount">0</strong> انتخاب‌شده</span>
                 <div class="crm-suggest-actions crm-pcm-dock-acts">

@@ -19,6 +19,12 @@ from workspace.services.advertiser_signal import (
     listing_advertiser_signal,
     property_advertiser_display,
 )
+from workspace.services.crm_matching_prefilter import (
+    apply_area_max_prefilter,
+    apply_area_min_prefilter,
+    apply_int_max_prefilter,
+    apply_int_min_prefilter,
+)
 from workspace.services.formatting import format_toman
 
 MATCH_TYPES = {
@@ -1007,14 +1013,10 @@ def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
             Q(deposit__gt=0) | Q(monthly_rent__gt=0),
         )
         bounds = _deposit_rent_sql_bounds(customer, tolerance=tol)
-        if bounds['deposit_lo'] is not None:
-            qs = qs.filter(deposit__gte=bounds['deposit_lo'])
-        if bounds['deposit_hi'] is not None:
-            qs = qs.filter(deposit__lte=bounds['deposit_hi'])
-        if bounds['rent_lo'] is not None:
-            qs = qs.filter(monthly_rent__gte=bounds['rent_lo'])
-        if bounds['rent_hi'] is not None:
-            qs = qs.filter(monthly_rent__lte=bounds['rent_hi'])
+        qs = apply_int_min_prefilter(qs, 'deposit', bounds['deposit_lo'])
+        qs = apply_int_max_prefilter(qs, 'deposit', bounds['deposit_hi'])
+        qs = apply_int_min_prefilter(qs, 'monthly_rent', bounds['rent_lo'])
+        qs = apply_int_max_prefilter(qs, 'monthly_rent', bounds['rent_hi'])
     elif _is_sale_customer(customer):
         qs = qs.filter(deal_mode__in=['فروش', 'پیش‌فروش']).filter(sale_price__gt=0)
         sql_lo, sql_hi = _budget_sql_bounds(customer, tolerance=tol)
@@ -1033,10 +1035,8 @@ def _crm_match_candidates_qs(customer: Customer, user, *, scan_limit: int):
     if allowed:
         qs = qs.filter(property_type__in=sorted(allowed))
 
-    if customer.min_area:
-        qs = qs.filter(area__gte=customer.min_area * (1 - tol))
-    if customer.max_area:
-        qs = qs.filter(area__lte=customer.max_area * (1 + tol))
+    qs = apply_area_min_prefilter(qs, customer.min_area, tol)
+    qs = apply_area_max_prefilter(qs, customer.max_area, tol)
 
     return qs.order_by('-updated_at')[:scan_limit]
 
@@ -1061,14 +1061,10 @@ def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int, dat
     if _is_rent_customer(customer):
         qs = qs.filter(Q(deposit__gt=0) | Q(rent__gt=0))
         bounds = _deposit_rent_sql_bounds(customer, tolerance=tol)
-        if bounds['deposit_lo'] is not None:
-            qs = qs.filter(deposit__gte=bounds['deposit_lo'])
-        if bounds['deposit_hi'] is not None:
-            qs = qs.filter(deposit__lte=bounds['deposit_hi'])
-        if bounds['rent_lo'] is not None:
-            qs = qs.filter(rent__gte=bounds['rent_lo'])
-        if bounds['rent_hi'] is not None:
-            qs = qs.filter(rent__lte=bounds['rent_hi'])
+        qs = apply_int_min_prefilter(qs, 'deposit', bounds['deposit_lo'])
+        qs = apply_int_max_prefilter(qs, 'deposit', bounds['deposit_hi'])
+        qs = apply_int_min_prefilter(qs, 'rent', bounds['rent_lo'])
+        qs = apply_int_max_prefilter(qs, 'rent', bounds['rent_hi'])
     elif _is_sale_customer(customer):
         qs = qs.filter(price__gt=0).filter(
             Q(deposit__isnull=True) | Q(deposit=0),
@@ -1087,10 +1083,8 @@ def _divar_match_candidates_qs(customer: Customer, user, *, scan_limit: int, dat
             | Q(rent__gt=0)
         )
 
-    if customer.min_area:
-        qs = qs.filter(area__gte=customer.min_area * (1 - tol))
-    if customer.max_area:
-        qs = qs.filter(area__lte=customer.max_area * (1 + tol))
+    qs = apply_area_min_prefilter(qs, customer.min_area, tol)
+    qs = apply_area_max_prefilter(qs, customer.max_area, tol)
 
     return qs[:scan_limit]
 

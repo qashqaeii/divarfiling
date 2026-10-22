@@ -190,7 +190,7 @@ class BatchPolishTests(TestCase):
 
     @patch('blog.services.market_article_autopublish._run_ai_polish_with_retries', return_value=True)
     @patch('blog.services.market_article_autopublish.run_quality_gates')
-    @patch('blog.services.market_article_autopublish.build_preview')
+    @patch('blog.services.market_article_pipeline.build_preview')
     def test_resume_autopublish_skips_build(self, mock_build, mock_qa, _mock_polish):
         from blog.models import SystematicArticleAutoPublishConfig
         from blog.services.market_article_quality_gates import QAReport

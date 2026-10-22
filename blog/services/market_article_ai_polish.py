@@ -12,6 +12,18 @@ from ai_workspace.providers.base import ProviderError
 from ai_workspace.providers.registry import get_http_provider_chain
 from ai_workspace.services.generation import get_feature_generation
 from blog.models import MarketArticleRun
+from blog.services.market_article_ai_editorial import (
+    batch_segments_by_section,
+    build_editorial_context,
+    compute_editorial_quality,
+    editorial_batch_system_prompt,
+    editorial_seo_system_prompt,
+    map_text_segment_sections,
+    section_eligible_for_editorial,
+    section_role_fa,
+    select_editorial_angle,
+    editorial_angle_label,
+)
 from blog.services.market_article_autopublish_config import get_autopublish_settings
 from blog.services.market_article_quality_gates import (
     QA_POLISH_PHASE_EXCLUDE,
@@ -23,12 +35,13 @@ logger = logging.getLogger(__name__)
 
 FEATURE = 'market_article_polish'
 
-BATCH_PLAN_VERSION = 2
+BATCH_PLAN_VERSION = 3
 BATCH_MAX_SEGMENTS = 2
 BATCH_MAX_CHARS = 1200
-_BATCH_PLANS: dict[int, dict[str, int]] = {
-    1: {'max_segments': 2, 'max_chars': 1200},
-    2: {'max_segments': 2, 'max_chars': 1200},
+_BATCH_PLANS: dict[int, dict[str, int | str]] = {
+    1: {'max_segments': 2, 'max_chars': 1200, 'mode': 'chars'},
+    2: {'max_segments': 2, 'max_chars': 1200, 'mode': 'chars'},
+    3: {'max_segments': 28, 'max_chars': 4800, 'mode': 'section'},
 }
 _NUM_SHIELD_TOKEN = '⟦DFN:{idx}⟧'
 _STAT_PHRASE_RE = re.compile(
@@ -181,11 +194,17 @@ def batch_text_segments(
     *,
     plan_version: int | None = None,
 ) -> list[list[dict[str, Any]]]:
-    """دسته‌بندی segmentها برای پاسخ JSON کوچک‌تر."""
+    """دسته‌بندی segmentها — v3: بلوک معنایی per section."""
     version = plan_version if plan_version is not None else BATCH_PLAN_VERSION
     plan = _BATCH_PLANS.get(version, _BATCH_PLANS[BATCH_PLAN_VERSION])
     max_segments = int(plan['max_segments'])
     max_chars = int(plan['max_chars'])
+    if plan.get('mode') == 'section':
+        return batch_segments_by_section(
+            segments,
+            max_segments=max_segments,
+            max_chars=max_chars,
+        )
     batches: list[list[dict[str, Any]]] = []
     current: list[dict[str, Any]] = []
     char_count = 0
@@ -324,9 +343,11 @@ def build_polish_state_payload(
     latency_ms: int,
     batch_plan_version: int,
     segment_outcomes: dict[str, str],
+    editorial_angle: str = '',
 ) -> dict[str, Any]:
     return {
         'batch_plan_version': batch_plan_version,
+        'editorial_angle': editorial_angle,
         'seo_done': seo_done,
         'title': title,
         'excerpt': excerpt,
@@ -964,13 +985,18 @@ def _polish_seo(
     original_title: str,
     original_excerpt: str,
     protection: StatisticalProtection,
+    editorial_context: dict[str, Any] | None = None,
+    editorial_angle: str = '',
 ) -> tuple[str, str, str, str, int, list[dict[str, Any]]]:
-    system = (
-        'ویراستار SEO فارسی. خروجی فقط یک JSON object با دقیقاً دو کلید: title و excerpt. '
-        'بدون کلید اضافه. اعداد و آمار را عیناً حفظ کن. HTML برنگردان.'
-    )
+    angle_label = editorial_angle_label(editorial_angle) if editorial_angle else 'تحلیل بازار محلی'
+    system = editorial_seo_system_prompt(angle_label)
     user = json.dumps(
-        {'title': original_title, 'excerpt': original_excerpt},
+        {
+            'title': original_title,
+            'excerpt': original_excerpt,
+            'market': editorial_context or {},
+            'editorial_angle': editorial_angle,
+        },
         ensure_ascii=False,
     )
     attempts_log: list[dict[str, Any]] = []
@@ -1011,13 +1037,18 @@ def _polish_seo(
     raise AIPolishJsonError(last_error or 'SEO polish failed', error_type=last_type)
 
 
-def _batch_system_prompt(id_list: list[int]) -> str:
-    return (
-        'ویراستار متن مقاله املاک ایران. خروجی فقط JSON object با یک کلید texts. '
-        'فرمت: {"texts":[{"id":NUMBER,"text":"..."}]}. '
-        f'باید دقیقاً این idها را برگردانی: {id_list}. '
-        'توکن‌های ⟦DFN:n⟧ را عیناً و یک‌بار در همان متن نگه دار؛ حذف یا تغییر ممنوع. '
-        'عدد جدید یا قیمت ساختگی اضافه نکن. HTML برنگردان.'
+def _batch_system_prompt(
+    id_list: list[int],
+    *,
+    editorial_angle: str = '',
+    section_id: str = '',
+) -> str:
+    angle_label = editorial_angle_label(editorial_angle) if editorial_angle else 'تحلیل بازار محلی'
+    return editorial_batch_system_prompt(
+        id_list,
+        angle_label=angle_label,
+        section_id=section_id,
+        section_role=section_role_fa(section_id),
     )
 
 
@@ -1185,13 +1216,28 @@ def _polish_text_batch(
     *,
     protection: StatisticalProtection,
     segment_outcomes: dict[str, str],
+    editorial_context: dict[str, Any] | None = None,
+    editorial_angle: str = '',
 ) -> tuple[dict[int, str], str, str, int, list[dict[str, Any]]]:
     allowed_ids = {int(s['id']) for s in batch}
     originals = {int(s['id']): str(s['text']) for s in batch}
     id_list = sorted(allowed_ids)
+    section_id = str(batch[0].get('section_id') or '') if batch else ''
     shielded_batch, shield_maps = _prepare_shielded_batch(batch)
-    system = _batch_system_prompt(id_list)
-    user = json.dumps({'texts': shielded_batch}, ensure_ascii=False)
+    system = _batch_system_prompt(
+        id_list,
+        editorial_angle=editorial_angle,
+        section_id=section_id,
+    )
+    user = json.dumps(
+        {
+            'texts': shielded_batch,
+            'market': editorial_context or {},
+            'editorial_angle': editorial_angle,
+            'section_id': section_id,
+        },
+        ensure_ascii=False,
+    )
     attempts_log: list[dict[str, Any]] = []
     blocked: set[str] = set()
     last_error = ''
@@ -1336,13 +1382,22 @@ def polish_market_article_run(
 
     parts = split_html_parts(original_html)
     all_segments = text_segment_payload(parts)
+    segment_sections = map_text_segment_sections(parts)
+    editorial_context = build_editorial_context(run)
     auto_passthrough: dict[int, str] = {}
     segments: list[dict[str, Any]] = []
     for seg in all_segments:
-        if segment_eligible_for_polish(str(seg.get('text') or '')):
-            segments.append(seg)
+        seg_id = int(seg['id'])
+        section_id = segment_sections.get(seg_id, '')
+        text = str(seg.get('text') or '')
+        eligible = (
+            segment_eligible_for_polish(text)
+            and section_eligible_for_editorial(section_id)
+        )
+        if eligible:
+            segments.append({**seg, 'section_id': section_id})
         else:
-            auto_passthrough[int(seg['id'])] = str(seg['text'])
+            auto_passthrough[seg_id] = text
     originals_by_id = {int(s['id']): str(s['text']) for s in all_segments}
     protection = collect_statistical_protection(
         run,
@@ -1352,6 +1407,7 @@ def polish_market_article_run(
     )
 
     state = _load_polish_state(run) if resume else {}
+    editorial_angle = str(state.get('editorial_angle') or '') or select_editorial_angle(run)
     plan_version = int(state.get('batch_plan_version') or BATCH_PLAN_VERSION)
     if state.get('completed_batches') and not state.get('batch_plan_version'):
         plan_version = 1
@@ -1392,6 +1448,7 @@ def polish_market_article_run(
                 latency_ms=total_latency,
                 batch_plan_version=plan_version,
                 segment_outcomes=segment_outcomes,
+                editorial_angle=editorial_angle,
             ),
         )
 
@@ -1406,6 +1463,8 @@ def polish_market_article_run(
             original_title=original_title,
             original_excerpt=original_excerpt,
             protection=protection,
+            editorial_context=editorial_context,
+            editorial_angle=editorial_angle,
         )
         new_title, new_excerpt = title, excerpt
         seo_done = True
@@ -1434,6 +1493,8 @@ def polish_market_article_run(
                 pending_batch,
                 protection=protection,
                 segment_outcomes=segment_outcomes,
+                editorial_context=editorial_context,
+                editorial_angle=editorial_angle,
             )
             polished_map.update(polished_batch)
             for seg in pending_batch:
@@ -1486,6 +1547,18 @@ def polish_market_article_run(
     if clear_resume_state_on_apply:
         _clear_polish_state(run)
 
+    editorial_quality = compute_editorial_quality(
+        run=run,
+        original_html=original_html,
+        polished_html=new_html,
+        original_title=original_title,
+        new_title=new_title,
+        originals_by_id=originals_by_id,
+        polished_map=polished_map,
+        eligible_segment_ids={int(s['id']) for s in segments},
+        batch_logs=batch_logs,
+        editorial_angle=editorial_angle,
+    )
     report = {
         'ok': True,
         'provider': provider,
@@ -1493,11 +1566,13 @@ def polish_market_article_run(
         'latency_ms': total_latency,
         'text_segments': len(segments),
         'batch_count': len(batches),
+        'batch_plan_version': plan_version,
         'batch_logs': batch_logs,
         'resumed': bool(state),
         'ai_batches_skipped': ai_batches_complete,
         'validation_errors': [],
         **coverage,
+        'editorial_quality': editorial_quality,
     }
     return PolishResult(
         applied=True,

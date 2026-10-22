@@ -683,12 +683,21 @@
                 </div>
 
                 {% else %}
-                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.lease_deadline or customer.min_area or customer.max_area or customer.rooms_min or customer.rooms_max or customer.rooms or customer.year_min or customer.year_max or customer.floor_min or customer.floor_max or customer.want_parking or customer.want_storage or customer.want_elevator or customer.areas %}
+                {% customer_search_property_types customer as search_property_types %}
+                {% if search_property_types or customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.lease_deadline or customer.min_area or customer.max_area or customer.rooms_min or customer.rooms_max or customer.rooms or customer.year_min or customer.year_max or customer.floor_min or customer.floor_max or customer.want_parking or customer.want_storage or customer.want_elevator or customer.areas %}
                 <div class="crm-contact-prefs">
-                    {% if customer.property_type %}
+                    {% if search_property_types %}
+                    <div class="crm-contact-pref-types">
+                        <div class="crm-areas-display-tags">
+                            {% for t in search_property_types %}
+                            <span class="crm-area-tag"><i class="fas {{ t|crm_property_type_icon }}" aria-hidden="true"></i> {{ t|crm_customer_property_type_label }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% elif customer.property_type %}
                     <div class="crm-contact-pref-type">
                         <i class="fas {{ customer.property_type|crm_property_type_icon }}" aria-hidden="true"></i>
-                        <span>{{ customer.property_type }}</span>
+                        <span>{{ customer.property_type|crm_customer_property_type_label }}</span>
                     </div>
                     {% endif %}
 

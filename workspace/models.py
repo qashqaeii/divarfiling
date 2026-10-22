@@ -451,6 +451,12 @@ class Customer(models.Model):
         max_length=30, choices=[(p, p) for p in CRM_PROPERTIES],
         blank=True, verbose_name='نوع ملک',
     )
+    property_types = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='انواع ملک (ترجیح جستجو)',
+        help_text='لیست خالی یعنی بدون محدودیت نوع ملک (مگر property_type legacy)',
+    )
     source = models.CharField(
         max_length=30, choices=[(s, s) for s in CRM_SOURCES],
         blank=True, verbose_name='منبع',

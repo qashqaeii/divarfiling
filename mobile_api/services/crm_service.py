@@ -126,7 +126,30 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
     if _field_present(data, 'notes'):
         c.notes = data['notes'] or ''
     if _field_present(data, 'property_type'):
-        c.property_type = (data['property_type'] or '').strip()
+        from workspace.services.customer_search_property_types import (
+            apply_customer_search_property_types,
+            normalize_customer_search_property_types,
+        )
+        pt = (data['property_type'] or '').strip()
+        if pt:
+            c.property_type = pt
+            if not _field_present(data, 'property_types'):
+                apply_customer_search_property_types(c, [pt])
+        elif not _field_present(data, 'property_types'):
+            apply_customer_search_property_types(c, [])
+    if _field_present(data, 'property_types'):
+        from workspace.services.customer_search_property_types import (
+            apply_customer_search_property_types,
+            normalize_customer_search_property_types,
+        )
+        raw = data['property_types']
+        if isinstance(raw, list):
+            apply_customer_search_property_types(
+                c,
+                normalize_customer_search_property_types(raw),
+            )
+        else:
+            apply_customer_search_property_types(c, [])
     if _field_present(data, 'rooms'):
         c.rooms = (data['rooms'] or '').strip()
     if _field_present(data, 'areas'):

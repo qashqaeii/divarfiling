@@ -176,7 +176,17 @@
             <h4 class="crm-prefs-section-title" id="crmPrefsTitle">ترجیحات ملک</h4>
         </div>
         <div class="crm-fields crm-fields-2">
-            {% crm_field form.property_type 'نوع ملک' 'crm-prefs-core' %}
+            <div class="crm-field crm-field-full crm-prefs-core crm-prefs-search-types" data-crm-search-property-types-wrap>
+                <span class="crm-label">نوع ملک</span>
+                <p class="crm-form-hint crm-form-hint--tight">بدون انتخاب = همه انواع — می‌توانید چند نوع انتخاب کنید</p>
+                <div class="crm-property-type-chips-wrap">{{ form.search_property_types }}</div>
+                {% for error in form.search_property_types.errors %}
+                <p class="crm-field-error" role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div class="crm-field crm-prefs-builder-type crm-builder-section hidden">
+                {% crm_field form.property_type 'نوع واحد فروش' %}
+            </div>
             {% crm_field form.rooms_min 'اتاق از' 'crm-prefs-rooms' %}
             {% crm_field form.rooms_max 'اتاق تا' 'crm-prefs-rooms' %}
             {% crm_field form.min_area 'متراژ از' 'crm-prefs-size' %}

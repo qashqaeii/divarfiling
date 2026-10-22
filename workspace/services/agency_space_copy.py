@@ -21,7 +21,7 @@ from workspace.services.crm_property_duplicate import create_property_copy_from_
 User = get_user_model()
 
 CUSTOMER_COPY_SCALAR_FIELDS = [
-    'name', 'customer_type', 'status', 'priority', 'property_type',
+    'name', 'customer_type', 'status', 'priority', 'property_type', 'property_types',
     'city', 'district', 'job', 'is_legal_entity', 'company_name',
     'gender',
     'budget_min', 'budget_max', 'deposit_min', 'deposit_max',

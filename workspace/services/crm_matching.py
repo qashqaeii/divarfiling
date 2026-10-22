@@ -33,6 +33,7 @@ from workspace.services.crm_matching_prefilter import (
 )
 from workspace.services.crm_matching_scan import collect_match_scan_pool
 from workspace.services.crm_matching_types import infer_listing_property_type
+from workspace.services.customer_search_property_types import customer_search_property_types_restricted
 from workspace.services.formatting import format_toman
 
 MATCH_TYPES = {
@@ -201,6 +202,15 @@ def _profile_allowed_property_types(profile) -> Optional[Set[str]]:
         for item in allowed:
             expanded |= _PROPERTY_TYPE_MAP.get(item, {item})
         return expanded
+    types_raw = getattr(profile, 'property_types', None)
+    if isinstance(types_raw, list) and types_raw:
+        expanded: Set[str] = set()
+        for item in types_raw:
+            text = (item or '').strip()
+            if not text or text == 'سایر':
+                continue
+            expanded |= _PROPERTY_TYPE_MAP.get(text, {text})
+        return expanded if expanded else None
     want = (getattr(profile, 'property_type', None) or '').strip()
     if not want or want == 'سایر':
         return None
@@ -639,7 +649,7 @@ def _is_broad_seeker_profile(customer: Customer) -> bool:
     if span is not None and span >= BROAD_BUDGET_SPAN_RATIO:
         return True
     if customer.min_area is None and customer.max_area is None:
-        if not customer.property_type or customer.property_type == 'سایر':
+        if not customer_search_property_types_restricted(customer):
             if not customer.budget_min and not customer.budget_max:
                 return True
     return False

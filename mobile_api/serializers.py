@@ -297,6 +297,18 @@ def user_to_dict(user, request=None) -> Dict[str, Any]:
     }
 
 
+def _contact_property_types_api(c: Customer) -> List[str]:
+    from workspace.services.customer_search_property_types import customer_search_property_types_list
+    return customer_search_property_types_list(c)
+
+
+def _contact_property_type_legacy(c: Customer) -> str:
+    types = _contact_property_types_api(c)
+    if types:
+        return types[0]
+    return c.property_type or ''
+
+
 def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
     from accounts.avatar_catalog import resolve_contact_avatar_display
 
@@ -319,7 +331,8 @@ def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
         'deposit_max': c.deposit_max,
         'rent_min': c.rent_min,
         'rent_max': c.rent_max,
-        'property_type': c.property_type or '',
+        'property_type': _contact_property_type_legacy(c),
+        'property_types': _contact_property_types_api(c),
         'min_area': c.min_area,
         'max_area': c.max_area,
         'rooms': c.rooms or '',

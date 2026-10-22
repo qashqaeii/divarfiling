@@ -17,6 +17,12 @@ from workspace.services.jalali_input import (
     parse_jalali_datetime_string,
 )
 from workspace.services.contact_channels import contact_channels_from_post
+from workspace.services.customer_search_property_types import (
+    apply_customer_search_property_types,
+    customer_search_property_type_choices,
+    customer_search_property_types_list,
+    normalize_customer_search_property_types,
+)
 from workspace.models import (
     CRMAutomationRule, CRMDeal, CRMMessageTemplate, CRMProperty, Customer, CustomerDocument,
     Dataset, Listing, ListingMeta, PropertyContact, PropertyVisit, Reminder, WorkspaceSettings,
@@ -158,6 +164,13 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'crm-check-list'}),
     )
 
+    search_property_types = forms.MultipleChoiceField(
+        label='نوع ملک',
+        choices=customer_search_property_type_choices(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'crm-property-type-chips'}),
+    )
+
     next_follow_up = forms.CharField(
         label='پیگیری بعدی',
         required=False,
@@ -201,6 +214,9 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 self.initial['builder_buy_types'] = list(BUILDER_BUY_PROPERTY_TYPES)
             if self.instance.customer_type == 'سازنده' and not self.instance.property_type:
                 self.initial.setdefault('property_type', 'آپارتمان')
+            search_types = customer_search_property_types_list(self.instance)
+            if search_types:
+                self.initial['search_property_types'] = search_types
         if self.instance.pk and not self.instance.rooms_min and self.instance.rooms:
             digits = ''.join(ch for ch in self.instance.rooms if ch.isdigit())
             if digits:
@@ -249,6 +265,11 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         from workspace.services.crm import normalize_phone
         return normalize_phone(self.cleaned_data.get('phone') or '')
 
+    def clean_search_property_types(self):
+        return normalize_customer_search_property_types(
+            self.cleaned_data.get('search_property_types') or [],
+        )
+
     def clean(self):
         cleaned = super().clean()
         user = self._crm_user or getattr(self.instance, 'user', None)
@@ -271,8 +292,14 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         instance = super().save(commit=False)
         selected = self.cleaned_data.get('builder_buy_types') or []
         instance.builder_buy_property_types = ', '.join(selected)
-        if instance.customer_type == 'سازنده' and not instance.property_type:
-            instance.property_type = 'آپارتمان'
+        if instance.customer_type == 'سازنده':
+            if not instance.property_type:
+                instance.property_type = 'آپارتمان'
+        elif self.is_bound:
+            apply_customer_search_property_types(
+                instance,
+                self.cleaned_data.get('search_property_types') or [],
+            )
         if instance.rooms_min is not None and instance.rooms_max is not None:
             instance.rooms = f'{instance.rooms_min}-{instance.rooms_max}'
         elif instance.rooms_min is not None:

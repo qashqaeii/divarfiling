@@ -496,6 +496,18 @@ def crm_reminder_overdue_stale(reminder):
 
 
 @register.filter
+def crm_customer_property_type_label(value):
+    from workspace.services.customer_search_property_types import customer_property_type_display_label
+    return customer_property_type_display_label(value)
+
+
+@register.simple_tag
+def customer_search_property_types(customer):
+    from workspace.services.customer_search_property_types import customer_search_property_types_list
+    return customer_search_property_types_list(customer)
+
+
+@register.filter
 def crm_property_type_icon(property_type):
     icons = {
         'آپارتمان': 'fa-building',

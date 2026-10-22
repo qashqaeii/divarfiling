@@ -19760,6 +19760,47 @@ button.crm-prop-hero-cover {
     gap: .35rem;
     font-size: .8125rem;
 }
+.crm-property-type-chips-wrap ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+.crm-property-type-chips-wrap li {
+    margin: 0;
+}
+.crm-property-type-chips-wrap label {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin: 0;
+    padding: .4rem .75rem;
+    font-size: .8125rem;
+    border: 1px solid var(--crm-border);
+    border-radius: 999px;
+    background: var(--crm-surface);
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+    user-select: none;
+}
+.crm-property-type-chips-wrap label:has(input:checked) {
+    background: var(--crm-accent);
+    border-color: var(--crm-accent);
+    color: #fff;
+}
+.crm-property-type-chips-wrap input[type="checkbox"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
 .crm-matches-builder {
     display: flex;
     flex-direction: column;

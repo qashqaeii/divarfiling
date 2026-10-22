@@ -255,12 +255,28 @@ function initCRMTypeProfiles(root) {
         const prefsLocation = section.querySelectorAll('.crm-prefs-location');
         const prefsAmenities = section.querySelectorAll('.crm-prefs-amenities-block');
         const leaseDeadlineFields = section.querySelectorAll('.crm-lease-deadline');
-        const propertyTypeSelect = section.querySelector('[name="property_type"]');
+        const propertyTypeSelect = section.querySelector('.crm-prefs-builder-type [name="property_type"]')
+            || section.querySelector('[name="property_type"]');
+        const searchTypesWrap = section.querySelector('[data-crm-search-property-types-wrap]');
+        const builderTypeWrap = section.querySelector('.crm-prefs-builder-type');
+
+        function getSelectedSearchPropertyTypes() {
+            if (!searchTypesWrap) return [];
+            return Array.from(searchTypesWrap.querySelectorAll('input[type="checkbox"]:checked'))
+                .map((el) => String(el.value || '').trim())
+                .filter(Boolean);
+        }
 
         function applyResidentialVisibility(propType, prefsMode) {
             const isBuilder = prefsMode === 'builder';
             const showDetail = prefsMode === 'seeker' || prefsMode === 'listing' || prefsMode === 'flexible' || isBuilder;
-            const landLike = LAND_LIKE.has(propType || '');
+            const selected = getSelectedSearchPropertyTypes();
+            let landLike;
+            if (selected.length) {
+                landLike = selected.every((t) => LAND_LIKE.has(t));
+            } else {
+                landLike = LAND_LIKE.has(propType || '');
+            }
             const showUnitDetails = showDetail && !landLike;
             const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
             show(prefsRooms, showUnitDetails);
@@ -296,6 +312,8 @@ function initCRMTypeProfiles(root) {
             show(builderBuyFields, isBuilder);
             show(builderBuyMoney, isBuilder);
             show(leaseDeadlineFields, crmShowsLeaseDeadline(type));
+            if (searchTypesWrap) show([searchTypesWrap], !isBuilder);
+            if (builderTypeWrap) show([builderTypeWrap], isBuilder);
 
             const bl = p.budget_labels || ['بودجه از', 'بودجه تا'];
             const dl = p.deposit_labels || ['ودیعه از', 'ودیعه تا'];
@@ -351,6 +369,15 @@ function initCRMTypeProfiles(root) {
         if (typeSelect.dataset.crmTypeBound !== '1') {
             typeSelect.dataset.crmTypeBound = '1';
             typeSelect.addEventListener('change', () => applyProfile(typeSelect.value));
+        }
+        if (searchTypesWrap && searchTypesWrap.dataset.crmSearchTypesBound !== '1') {
+            searchTypesWrap.dataset.crmSearchTypesBound = '1';
+            searchTypesWrap.addEventListener('change', () => {
+                applyResidentialVisibility(
+                    propertyTypeSelect ? propertyTypeSelect.value : '',
+                    section.dataset.crmPrefsMode || '',
+                );
+            });
         }
         if (propertyTypeSelect && propertyTypeSelect.dataset.crmPropTypeBound !== '1') {
             propertyTypeSelect.dataset.crmPropTypeBound = '1';

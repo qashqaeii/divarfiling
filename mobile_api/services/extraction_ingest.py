@@ -12,6 +12,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from mobile_api.services.divar_flatten import items_to_export_records
+from mobile_api.services.divar_location import fields_for_existing_listing_update
 from workspace.models import Dataset, Listing, PriceHistory
 from workspace.services.advertiser_signal import count_signals
 from workspace.services.columns import detect_metadata, normalize_location_label, row_to_listing_fields
@@ -208,6 +209,7 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         category,
         advertiser_filter=advertiser_filter,
         max_items=max_items,
+        location_filters=filters,
     )
     if not export_records:
         raise ValueError('آگهی معتبری برای ذخیره یافت نشد.')
@@ -343,7 +345,8 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
 
             if token in existing_by_token:
                 listing = existing_by_token[token]
-                if _update_listing_from_fields(listing, fields):
+                update_fields = fields_for_existing_listing_update(fields)
+                if _update_listing_from_fields(listing, update_fields):
                     listings_to_update.append(listing)
                 else:
                     duplicate_skipped += 1

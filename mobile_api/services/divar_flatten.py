@@ -7,6 +7,10 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from mobile_api.services.divar_location import (
+    apply_location_to_export_record,
+    extract_post_location,
+)
 from workspace.services.advertiser_signal import row_matches_advertiser_filter
 from workspace.services.columns import extract_consultant_name
 from workspace.services.property_images import (
@@ -228,6 +232,7 @@ def items_to_export_records(
     *,
     advertiser_filter: str = 'all',
     max_items: int = 100,
+    location_filters: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[Dict[str, Any]], int]:
     """
     تبدیل آیتم‌های خام موبایل به ردیف‌های export اکسل (مثل فایل JSON ویندوز).
@@ -259,17 +264,26 @@ def items_to_export_records(
 
     export_records = _export_records_from_raw_rows(raw_rows, category)
 
+    raw_by_token: Dict[str, Dict[str, Any]] = {}
     item_by_token: Dict[str, Dict[str, Any]] = {}
     for item in items:
         tok = str(item.get('token') or '').strip()
-        if tok:
-            item_by_token[tok] = item
+        if not tok:
+            continue
+        item_by_token[tok] = item
+        raw = item.get('raw') or item
+        if isinstance(raw, dict):
+            raw_by_token[tok] = raw
 
     for rec in export_records:
         tok = str(rec.get('شناسه') or rec.get('token') or '').strip()
         client_item = item_by_token.get(tok)
         if client_item:
             _merge_client_images(rec, client_item)
+        raw_detail = raw_by_token.get(tok)
+        if raw_detail:
+            loc = extract_post_location(raw_detail, filters=location_filters)
+            apply_location_to_export_record(rec, loc)
 
     filtered: List[Dict[str, Any]] = []
     adv = str(advertiser_filter or 'all').strip().lower()

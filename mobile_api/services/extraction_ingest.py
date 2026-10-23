@@ -12,7 +12,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from mobile_api.services.divar_flatten import items_to_export_records
-from mobile_api.services.divar_location import fields_for_existing_listing_update
+from mobile_api.services.divar_location import (
+    NEW_MOBILE_LOCATION_COLUMNS,
+    fields_for_existing_listing_update,
+)
 from workspace.models import Dataset, Listing, PriceHistory
 from workspace.services.advertiser_signal import count_signals
 from workspace.services.columns import detect_metadata, normalize_location_label, row_to_listing_fields
@@ -276,12 +279,23 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
 
         if existing:
             dataset = existing
+            existing_by_token = {
+                listing.token: listing
+                for listing in Listing.objects.filter(dataset=dataset)
+            }
             metadata = _preserve_dataset_location_meta(metadata, path_info, dataset)
             dataset.metadata = {**(dataset.metadata or {}), **metadata}
             dataset.last_opened_at = now
-            dataset.column_count = len(columns)
-            merged_columns = list(dict.fromkeys(list((dataset.columns or [])) + columns))
+            ingest_has_new_tokens = any(t not in existing_by_token for t in tokens)
+            if ingest_has_new_tokens:
+                merged_columns = list(dict.fromkeys(list((dataset.columns or [])) + columns))
+                for col in NEW_MOBILE_LOCATION_COLUMNS:
+                    if col in columns and col not in merged_columns:
+                        merged_columns.append(col)
+            else:
+                merged_columns = list(dataset.columns or [])
             dataset.columns = merged_columns
+            dataset.column_count = len(merged_columns)
             if path_info['city']:
                 dataset.city = path_info['city']
             elif dataset.city:
@@ -292,10 +306,6 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
                 dataset.transaction_type = tx_type
             if subcat:
                 dataset.subcategory = subcat
-            existing_by_token = {
-                listing.token: listing
-                for listing in Listing.objects.filter(dataset=dataset)
-            }
         else:
             dataset = Dataset(
                 user=user,

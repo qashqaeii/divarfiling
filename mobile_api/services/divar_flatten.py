@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from mobile_api.services.divar_location import (
     apply_location_to_export_record,
     extract_post_location,
+    location_tokens_agree,
 )
 from workspace.services.advertiser_signal import row_matches_advertiser_filter
 from workspace.services.columns import extract_consultant_name
@@ -281,7 +282,11 @@ def items_to_export_records(
         if client_item:
             _merge_client_images(rec, client_item)
         raw_detail = raw_by_token.get(tok)
-        if raw_detail:
+        if raw_detail and client_item and location_tokens_agree(
+            str(client_item.get('token') or '').strip(),
+            raw_detail,
+            tok,
+        ):
             loc = extract_post_location(raw_detail, filters=location_filters)
             apply_location_to_export_record(rec, loc)
 

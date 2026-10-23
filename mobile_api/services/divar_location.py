@@ -9,21 +9,24 @@ from workspace.services.columns import normalize_location_label
 _FA_COMMA = re.compile(r'[,،]\s*')
 _RELATIVE_TIME_PREFIX = re.compile(
     r'^(?:'
-    r'پریروز|دیروز|امروز|الان|لحظاتی\s*پیش'
-    r'|[\d۰-۹]+\s*(?:ثانیه|دقیقه|ساعت|روز|هفته|ماه|سال)\s*پیش'
+    r'پریروز|دیروز|امروز|الان|'
+    r'لحظاتی\s*پیش|دقایقی\s*پیش|ثانیه‌هایی\s*پیش|'
+    r'[\d۰-۹]+\s*(?:ثانیه|دقیقه|ساعت|روز|هفته|ماه|سال)\s*پیش'
     r')\s*',
     re.UNICODE,
 )
-_STREET_PREFIXES = (
-    'خ ',
-    'خ.',
-    'خیابان ',
-    'کوچه ',
-    'بلوار ',
-    'جاده ',
-    'میدان ',
-    'بزرگراه ',
-    'آزادراه ',
+_STREET_RE = re.compile(
+    r'^(?:'
+    r'خ(?:\.|[\s\u200c]+)|'
+    r'خیابان[\s\u200c]+|'
+    r'کوچه[\s\u200c]+|'
+    r'بلوار[\s\u200c]+|'
+    r'جاده[\s\u200c]+|'
+    r'میدان[\s\u200c]+|'
+    r'بزرگراه[\s\u200c]+|'
+    r'آزادراه[\s\u200c]+'
+    r')',
+    re.UNICODE,
 )
 _NEIGHBORHOOD_PREFIX = 'محله '
 
@@ -38,13 +41,16 @@ def _safe_get(d: Any, path: List[str]) -> Any:
 
 
 def _find_location_headline_title(detail: Dict[str, Any]) -> str:
-    sections = detail.get('sections') or []
+    sections = detail.get('sections')
     if not isinstance(sections, list):
         return ''
     for section in sections:
         if not isinstance(section, dict) or section.get('section_name') != 'TITLE':
             continue
-        for widget in section.get('widgets') or []:
+        widgets = section.get('widgets')
+        if not isinstance(widgets, list):
+            continue
+        for widget in widgets:
             if not isinstance(widget, dict):
                 continue
             if widget.get('widget_type') != 'EXPANDABLE_SECTION':
@@ -70,9 +76,7 @@ def _split_location_body(text: str) -> List[str]:
     if not t:
         return []
     if t.startswith('در '):
-        body = t[2:].strip()
-    elif t.startswith('در'):
-        body = t[1:].strip()
+        body = t[3:].strip()
     else:
         idx = t.find(' در ')
         if idx >= 0:
@@ -88,11 +92,7 @@ def _looks_like_street(part: str) -> bool:
     s = (part or '').strip()
     if not s:
         return False
-    low = s.lower()
-    for prefix in _STREET_PREFIXES:
-        if s.startswith(prefix) or low.startswith(prefix.strip().lower()):
-            return True
-    return False
+    return bool(_STREET_RE.match(s))
 
 
 def _extract_neighborhood_part(part: str) -> Optional[str]:
@@ -127,11 +127,10 @@ def _parse_headline_parts(
     remaining = list(parts)
     if city and remaining and _labels_equal(remaining[0], city):
         remaining.pop(0)
-    elif remaining and not city:
-        out['city'] = normalize_location_label(remaining[0])
-        remaining.pop(0)
 
     for part in remaining:
+        if district and _labels_equal(part, district):
+            continue
         nb = _extract_neighborhood_part(part)
         if nb:
             out['neighborhood'] = normalize_location_label(nb)
@@ -139,11 +138,6 @@ def _parse_headline_parts(
         if _looks_like_street(part):
             out['street'] = part.strip()
             continue
-        if district and _labels_equal(part, district):
-            continue
-        if not out['district'] and not _looks_like_street(part):
-            out['district'] = normalize_location_label(part)
-
     return out
 
 
@@ -153,18 +147,14 @@ def extract_post_location(
 ) -> Dict[str, Optional[str]]:
     """
     استخراج استان/شهر/منطقه/محله/خیابان از JSON خام دیوار.
-    بدون DB، بدون حدس استان از نام شهر.
+    بدون DB، بدون حدس استان از نام شهر، بدون خواندن عنوان تبلیغاتی.
     """
     if not isinstance(detail, dict):
         detail = {}
-    filters = filters or {}
+    filters = filters if isinstance(filters, dict) else {}
 
-    province = normalize_location_label(filters.get('province_name'))
-
-    seo = detail.get('seo') or {}
-    web_info = seo.get('web_info') if isinstance(seo, dict) else {}
-    if not isinstance(web_info, dict):
-        web_info = {}
+    seo = detail.get('seo') if isinstance(detail.get('seo'), dict) else {}
+    web_info = seo.get('web_info') if isinstance(seo.get('web_info'), dict) else {}
 
     city = normalize_location_label(_safe_get(web_info, ['city_persian']))
     if not city:
@@ -183,13 +173,13 @@ def extract_post_location(
         district=district,
     )
 
-    if not city and parsed.get('city'):
-        city = parsed['city']
-    if not district and parsed.get('district'):
-        district = parsed['district']
-
     neighborhood = parsed.get('neighborhood')
     street = parsed.get('street')
+
+    filter_city = normalize_location_label(filters.get('city_name'))
+    province = normalize_location_label(filters.get('province_name'))
+    if province and filter_city and city and not _labels_equal(filter_city, city):
+        province = ''
 
     sources: List[str] = []
     if province:
@@ -198,15 +188,15 @@ def extract_post_location(
         sources.append('seo:city_persian')
     elif isinstance(detail.get('city'), dict) and detail['city'].get('name'):
         sources.append('city.name')
-    elif normalize_location_label(filters.get('city_name')):
+    elif filter_city:
         sources.append('filter:city')
-    if normalize_location_label(_safe_get(web_info, ['district_persian'])):
+    if district:
         sources.append('seo:district_persian')
     if location_raw_title:
         sources.append('title:expandable_section')
-    if parsed.get('street'):
+    if street:
         sources.append('title:street')
-    if parsed.get('neighborhood'):
+    if neighborhood:
         sources.append('title:neighborhood')
 
     return {
@@ -249,25 +239,57 @@ def apply_location_to_export_record(
         _set_if_empty('محله', location['district'])
 
     if location.get('neighborhood'):
-        record['مکان_محله'] = normalize_location_label(location['neighborhood'])
+        existing_nb = normalize_location_label(record.get('مکان_محله'))
+        if not existing_nb:
+            record['مکان_محله'] = normalize_location_label(location['neighborhood'])
 
     if location.get('street'):
-        record['مکان_خیابان'] = str(location['street']).strip()
+        existing_st = str(record.get('مکان_خیابان') or '').strip()
+        if not existing_st:
+            record['مکان_خیابان'] = str(location['street']).strip()
 
     if location.get('location_raw_title'):
-        record['مکان_عنوان_نمایشی'] = str(location['location_raw_title']).strip()
+        existing_raw = str(record.get('مکان_عنوان_نمایشی') or '').strip()
+        if not existing_raw:
+            record['مکان_عنوان_نمایشی'] = str(location['location_raw_title']).strip()
 
     if location.get('location_sources'):
-        record['مکان_منبع_جزئیات'] = str(location['location_sources']).strip()
+        existing_src = str(record.get('مکان_منبع_جزئیات') or '').strip()
+        if not existing_src:
+            record['مکان_منبع_جزئیات'] = str(location['location_sources']).strip()
 
 
-MOBILE_LOCATION_DATA_KEYS = frozenset({
+def token_from_raw_detail(raw: Any) -> str:
+    if not isinstance(raw, dict):
+        return ''
+    we = raw.get('webengage')
+    if isinstance(we, dict):
+        tok = str(we.get('token') or '').strip()
+        if tok:
+            return tok
+    return str(raw.get('token') or '').strip()
+
+
+def location_tokens_agree(item_token: str, raw: Any, record_token: str) -> bool:
+    item_token = str(item_token or '').strip()
+    record_token = str(record_token or '').strip()
+    if not item_token or not record_token or item_token != record_token:
+        return False
+    raw_token = token_from_raw_detail(raw)
+    if raw_token and raw_token != record_token:
+        return False
+    return True
+
+
+NEW_MOBILE_LOCATION_COLUMNS = frozenset({
     'مکان_استان',
     'مکان_محله',
     'مکان_خیابان',
     'مکان_عنوان_نمایشی',
     'مکان_منبع_جزئیات',
 })
+
+MOBILE_LOCATION_DATA_KEYS = NEW_MOBILE_LOCATION_COLUMNS
 
 _EXISTING_LISTING_STRIP_DATA_KEYS = MOBILE_LOCATION_DATA_KEYS | frozenset({
     'مکان_شهر',

@@ -7,9 +7,12 @@ from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
 from mobile_api.services.divar_flatten import items_to_export_records
-from mobile_api.services.divar_location import extract_post_location
+from mobile_api.services.divar_location import (
+    extract_post_location,
+    location_tokens_agree,
+)
 from mobile_api.services.extraction_ingest import ingest_mobile_extraction
-from workspace.models import Listing
+from workspace.models import Dataset, Listing
 
 User = get_user_model()
 
@@ -89,6 +92,20 @@ def _rent_sections() -> list:
     ]
 
 
+def _headline_sections(location_headline: str, advertising_title: str = '') -> list:
+    widgets = []
+    if advertising_title:
+        widgets.append({
+            'widget_type': 'LEGEND_TITLE_ROW',
+            'data': {'title': advertising_title, 'subtitle': ''},
+        })
+    widgets.append({
+        'widget_type': 'EXPANDABLE_SECTION',
+        'data': {'title': location_headline, 'widget_list': []},
+    })
+    return [{'section_name': 'TITLE', 'widgets': widgets}]
+
+
 def _detail_with_headline(title_line: str, **seo_web) -> dict:
     base = {
         'sections': [
@@ -109,6 +126,90 @@ def _detail_with_headline(title_line: str, **seo_web) -> dict:
     if seo_web is not None:
         base['seo'] = {'web_info': seo_web}
     return base
+
+
+def _sell_sections() -> list:
+    return [
+        {
+            'section_name': 'LIST_DATA',
+            'widgets': [
+                {
+                    'widget_type': 'UNEXPANDABLE_ROW',
+                    'data': {'title': 'قیمت کل', 'value': '۱۰٬۰۰۰٬۰۰۰٬۰۰۰ تومان'},
+                },
+            ],
+        },
+    ]
+
+
+def _build_real_sample(
+    token: str,
+    location_headline: str,
+    city_persian: str,
+    district_persian: str = '',
+    *,
+    advertising_title: str = '',
+    description: str = '',
+    description_street: str = '',
+    office_address: str = '',
+    listing_feature: dict | None = None,
+    category: str = 'apartment-rent',
+) -> dict:
+    sections = _headline_sections(location_headline, advertising_title=advertising_title)
+    if description:
+        sections.append({
+            'section_name': 'DESCRIPTION',
+            'widgets': [
+                {'widget_type': 'DESCRIPTION_ROW', 'data': {'text': description}},
+            ],
+        })
+    if category == 'apartment-sell' or category == 'partnership':
+        sections.extend(_sell_sections())
+    else:
+        sections.extend(_rent_sections())
+    if listing_feature:
+        sections.append({
+            'section_name': 'LIST_DATA',
+            'widgets': [
+                {
+                    'widget_type': 'UNEXPANDABLE_ROW',
+                    'data': {
+                        'title': listing_feature['title'],
+                        'value': listing_feature['value'],
+                    },
+                },
+            ],
+        })
+    detail = {
+        'sections': sections,
+        'seo': {'web_info': {'city_persian': city_persian, 'district_persian': district_persian}},
+        'webengage': {'token': token, 'business_type': 'personal'},
+        'share': {'web_url': f'https://divar.ir/v/{token}', 'title': advertising_title},
+        'city': {'name': city_persian},
+    }
+    if description_street:
+        detail['note_street_trap'] = description_street
+    if office_address:
+        detail['office_address_trap'] = office_address
+    return detail
+
+
+def _assert_location(
+    testcase,
+    loc: dict,
+    *,
+    city=None,
+    district=None,
+    neighborhood=None,
+    street=None,
+    raw=None,
+):
+    testcase.assertEqual(loc.get('city'), city)
+    testcase.assertEqual(loc.get('district'), district)
+    testcase.assertEqual(loc.get('neighborhood'), neighborhood)
+    testcase.assertEqual(loc.get('street'), street)
+    if raw is not None:
+        testcase.assertEqual(loc.get('location_raw_title'), raw)
 
 
 class DivarLocationExtractTest(SimpleTestCase):
@@ -257,6 +358,120 @@ class DivarLocationExtractTest(SimpleTestCase):
         self.assertEqual(loc['district'], 'مرزداران')
         self.assertNotEqual(loc['district'], loc['street'])
 
+    def test_real_sample_1_chalus(self):
+        loc = extract_post_location(_build_real_sample(
+            'gaDbUBzO', '۲ هفته پیش در چالوس، خ دریای شرقی ۱', 'چالوس',
+        ))
+        _assert_location(
+            self, loc,
+            city='چالوس', district=None, neighborhood=None,
+            street='خ دریای شرقی ۱',
+            raw='۲ هفته پیش در چالوس، خ دریای شرقی ۱',
+        )
+
+    def test_real_sample_2_tehran(self):
+        loc = extract_post_location(_build_real_sample(
+            'gaXDhvQB', 'پریروز در تهران، مرزداران، خ میثاق دوم', 'تهران', 'مرزداران',
+        ))
+        _assert_location(
+            self, loc,
+            city='تهران', district='مرزداران', neighborhood=None,
+            street='خ میثاق دوم',
+        )
+
+    def test_real_sample_3_rasht_janbazan(self):
+        loc = extract_post_location(_build_real_sample(
+            'gaG7HOde', '۲ هفته پیش در رشت، جانبازان، خ نهم', 'رشت', 'جانبازان',
+            category='house-villa-rent',
+        ))
+        _assert_location(self, loc, city='رشت', district='جانبازان', street='خ نهم')
+
+    def test_real_sample_4_rasht_jamaran_only_district(self):
+        loc = extract_post_location(_build_real_sample(
+            'gabPRSqX', 'دقایقی پیش در رشت، جماران', 'رشت', 'جماران',
+        ))
+        _assert_location(
+            self, loc,
+            city='رشت', district='جماران', neighborhood=None, street=None,
+            raw='دقایقی پیش در رشت، جماران',
+        )
+
+    def test_real_sample_5_dezful_street_only_from_headline(self):
+        loc = extract_post_location(_build_real_sample(
+            'gaUToySG',
+            '۴ روز پیش در دزفول، خ حافظ',
+            'دزفول',
+            advertising_title='واحد آپارتمان ۹۲ متری کلید اول خیابان حافظ جنوبی',
+            description='خیابان حافظ جنوبی — آدرس دفتر: خیابان انقلاب',
+            category='apartment-sell',
+        ))
+        _assert_location(self, loc, city='دزفول', district=None, street='خ حافظ')
+
+    def test_real_sample_6_dezful_city_only(self):
+        loc = extract_post_location(_build_real_sample(
+            'gaY32hxb',
+            'پریروز در دزفول',
+            'دزفول',
+            advertising_title='فروش آپارتمان سه خواب کلید اول کوی گلریز',
+            category='apartment-sell',
+        ))
+        _assert_location(self, loc, city='دزفول', district=None, neighborhood=None, street=None)
+
+    def test_real_sample_7_partnership_no_street_from_ads(self):
+        loc = extract_post_location(_build_real_sample(
+            'gaXzcZWA',
+            'پریروز در دزفول',
+            'دزفول',
+            advertising_title='مشارکت خیابان نونچی ۱۳۵متری',
+            description='املاک مطهری: خ شریعتی بین پیام‌آوران و ارسطو',
+            listing_feature={'title': 'موقعیت ملک', 'value': 'بر خیابان فرعی'},
+            category='partnership',
+        ))
+        _assert_location(self, loc, city='دزفول', district=None, neighborhood=None, street=None)
+
+    def test_khavar_not_street(self):
+        loc = extract_post_location(_detail_with_headline(
+            'پریروز در تهران، خاوران',
+            city_persian='تهران',
+            district_persian='خاوران',
+        ))
+        self.assertIsNone(loc['street'])
+
+    def test_khorramabad_not_street(self):
+        loc = extract_post_location(_detail_with_headline(
+            'پریروز در خرم‌آباد',
+            city_persian='خرم‌آباد',
+            district_persian='',
+        ))
+        self.assertIsNone(loc['street'])
+
+    def test_dot_hafiz_is_street(self):
+        loc = extract_post_location(_detail_with_headline(
+            'پریروز در دزفول، خ. حافظ',
+            city_persian='دزفول',
+            district_persian='',
+        ))
+        self.assertEqual(loc['street'], 'خ. حافظ')
+
+    def test_kooche_bahar_is_street(self):
+        loc = extract_post_location(_detail_with_headline(
+            'پریروز در تهران، کوچه بهار',
+            city_persian='تهران',
+            district_persian='',
+        ))
+        self.assertEqual(loc['street'], 'کوچه بهار')
+
+    def test_near_metro_not_district(self):
+        loc = extract_post_location(_detail_with_headline(
+            'دیروز در تهران، نزدیک مترو',
+            city_persian='تهران',
+            district_persian='',
+        ))
+        self.assertIsNone(loc['district'])
+
+    def test_token_mismatch_skips_location_merge(self):
+        self.assertFalse(location_tokens_agree('tokA', {'webengage': {'token': 'tokB'}}, 'tokA'))
+
 
 class DivarLocationFlattenIngestTest(TestCase):
     def _ingest(self, user, token: str, detail: dict):
@@ -376,3 +591,63 @@ class DivarLocationFlattenIngestTest(TestCase):
         blob = json.dumps(loc, ensure_ascii=False)
         self.assertNotIn('phone', blob.lower())
         self.assertNotIn('09', blob)
+
+    def test_dataset_columns_unchanged_on_full_duplicate_reingest(self):
+        user = User.objects.create_user(username='09131000007', password='x')
+        first = self._ingest(user, 'col-dup', SAMPLE_CHALUS)
+        ds = first.dataset
+        cols_before = list(ds.columns or [])
+        self._ingest(user, 'col-dup', SAMPLE_CHALUS)
+        ds.refresh_from_db()
+        self.assertEqual(list(ds.columns or []), cols_before)
+
+    def test_mixed_reingest_new_gets_street_old_unchanged(self):
+        user = User.objects.create_user(username='09131000009', password='x')
+        shared_hint = 'loc-mixed-shared'
+        raw_first = copy.deepcopy(SAMPLE_CHALUS)
+        raw_first['webengage'] = {'token': 'old-mix', 'business_type': 'personal'}
+        first = ingest_mobile_extraction(user, {
+            'filters': {
+                'category': 'apartment-rent',
+                'category_label': 'آپارتمان',
+                'transaction_type_label': 'اجاره مسکونی',
+                'city_name': 'چالوس',
+                'max_items': 1,
+                'output_name_hint': shared_hint,
+            },
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'old-mix', 'raw': raw_first}],
+        })
+        listing = first.dataset.listings.get(token='old-mix')
+        listing.neighborhood = 'قدیم'
+        listing.data = {'مکان_خیابان': 'خ قدیم'}
+        listing.save()
+        detail_new = _build_real_sample(
+            'new-mix', 'پریروز در چالوس، خ جدید', 'چالوس', '',
+        )
+        raw_old = copy.deepcopy(SAMPLE_CHALUS)
+        raw_old['webengage'] = {'token': 'old-mix', 'business_type': 'personal'}
+        common_filters = {
+            'category': 'apartment-rent',
+            'category_label': 'آپارتمان',
+            'transaction_type_label': 'اجاره مسکونی',
+            'city_name': 'چالوس',
+            'max_items': 2,
+            'output_name_hint': shared_hint,
+        }
+        result = ingest_mobile_extraction(user, {
+            'filters': common_filters,
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [
+                {'token': 'old-mix', 'raw': raw_old},
+                {'token': 'new-mix', 'raw': detail_new},
+            ],
+        })
+        self.assertEqual(str(result.dataset.pk), str(first.dataset.pk))
+        self.assertEqual(result.created_count, 1)
+        listing.refresh_from_db()
+        self.assertEqual(listing.data.get('مکان_خیابان'), 'خ قدیم')
+        new_listing = result.dataset.listings.get(token='new-mix')
+        self.assertEqual(new_listing.data.get('مکان_خیابان'), 'خ جدید')

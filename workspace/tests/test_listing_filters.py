@@ -2,7 +2,55 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from workspace.models import Dataset, Listing
-from workspace.services.filters import apply_amenity_filters, apply_listing_filters, parse_filter_params, parse_filter_params_from_mapping
+from workspace.services.filters import (
+    apply_amenity_filters,
+    apply_listing_filters,
+    normalize_listing_search_query,
+    parse_filter_params,
+    parse_filter_params_from_mapping,
+)
+
+
+class ListingSearchQueryTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='searchuser', password='pass', phone='09128887766')
+        self.dataset = Dataset.objects.create(
+            user=self.user,
+            name='search-test',
+            original_filename='s.xlsx',
+            file_format='xlsx',
+        )
+        self.by_token = Listing.objects.create(
+            dataset=self.dataset,
+            token='gabTSMvj',
+            title='آپارتمان نمونه',
+        )
+        Listing.objects.create(
+            dataset=self.dataset,
+            token='otherTok',
+            title='ویلا شمال',
+        )
+
+    def test_q_matches_divar_token(self):
+        qs = apply_listing_filters(self.dataset.listings.all(), {'q': 'gabTSMvj'}, self.user)
+        self.assertEqual(list(qs), [self.by_token])
+
+    def test_q_matches_partial_token(self):
+        qs = apply_listing_filters(self.dataset.listings.all(), {'q': 'gabTS'}, self.user)
+        self.assertEqual(list(qs), [self.by_token])
+
+    def test_q_extracts_token_from_divar_url(self):
+        self.assertEqual(
+            normalize_listing_search_query('https://divar.ir/v/gabTSMvj'),
+            'gabTSMvj',
+        )
+        qs = apply_listing_filters(
+            self.dataset.listings.all(),
+            {'q': 'https://divar.ir/v/gabTSMvj'},
+            self.user,
+        )
+        self.assertEqual(list(qs), [self.by_token])
 
 
 class ListingRoomsFilterTests(TestCase):

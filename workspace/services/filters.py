@@ -1,6 +1,7 @@
 """فیلتر پیشرفته جدول آگهی‌ها."""
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from django.db.models import Case, Count, F, IntegerField, Q, QuerySet, Value, When
@@ -115,9 +116,38 @@ def parse_filter_params(request) -> Dict[str, Any]:
     return parse_filter_params_from_mapping(request.GET)
 
 
+_DIVAR_TOKEN_IN_URL = re.compile(
+    r'(?:https?://)?(?:www\.)?divar\.ir/v/([A-Za-z0-9_-]+)',
+    re.IGNORECASE,
+)
+
+
+def normalize_listing_search_query(raw: str) -> str:
+    """استخراج شناسه دیوار از لینک یا متن جستجو."""
+    q = str(raw or '').strip()
+    if not q:
+        return ''
+    m = _DIVAR_TOKEN_IN_URL.search(q)
+    if m:
+        return m.group(1)
+    return q
+
+
+def listing_search_q(term: str) -> Q:
+    """جستجوی متن آزاد: عنوان، شناسه آگهی، لینک دیوار."""
+    q = normalize_listing_search_query(term)
+    if not q:
+        return Q()
+    return (
+        Q(title__icontains=q)
+        | Q(token__icontains=q)
+        | Q(link__icontains=q)
+    )
+
+
 def apply_listing_filters(qs: QuerySet, filters: Dict, user) -> QuerySet:
     if filters.get('q'):
-        qs = qs.filter(title__icontains=filters['q'])
+        qs = qs.filter(listing_search_q(filters['q']))
     if filters.get('token'):
         qs = qs.filter(token__icontains=filters['token'])
     if filters.get('desc'):

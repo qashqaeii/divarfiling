@@ -32,7 +32,7 @@ BUILD_YEAR_KEYS = frozenset({
 
 # فیلدهای مکان — در تب «مکان»
 CORE_LOCATION_MARKERS = (
-    'شهر', 'city', 'محله', 'neighborhood', 'آدرس', 'address',
+    'استان', 'شهر', 'city', 'محله', 'neighborhood', 'خیابان', 'آدرس', 'address',
     'منطقه', 'district', 'عرض جغرافیایی', 'طول جغرافیایی',
     'latitude', 'longitude', 'lat', 'lng', 'مختصات', 'شعاع', 'نوع مختصات',
 )
@@ -56,6 +56,8 @@ FIELD_LABELS = {
     'city': 'شهر',
     'neighborhood': 'محله',
     'district': 'منطقه',
+    'استان': 'استان',
+    'خیابان': 'خیابان',
     'area': 'متراژ',
     'rooms': 'اتاق',
     'floor': 'طبقه',
@@ -79,8 +81,8 @@ PROPERTY_FIELD_ORDER = (
 )
 
 LOCATION_FIELD_ORDER = (
-    'شهر', 'city', 'منطقه', 'district', 'محله', 'neighborhood',
-    'آدرس', 'address', 'عرض جغرافیایی', 'طول جغرافیایی',
+    'استان', 'شهر', 'city', 'منطقه', 'district', 'محله', 'neighborhood',
+    'خیابان', 'آدرس', 'address', 'عرض جغرافیایی', 'طول جغرافیایی',
     'latitude', 'longitude', 'نوع مختصات', 'در شعاع (متر)',
 )
 
@@ -395,13 +397,27 @@ def _enrich_dossier_financial_fields(data: dict, listing, profile: Dict, raw: di
                 data['اجاره ماهانه (شرایط تبدیل)'] = conv_rent
 
 
+def _promote_dossier_location_alias(data: dict, source_key: str, target_key: str) -> None:
+    """کلیدهای مکان_ در JSON را به برچسب پرونده منتقل می‌کند — فقط روی کپی نمایش."""
+    val = _clean_dossier_label(data.get(source_key))
+    if val and not _clean_dossier_label(data.get(target_key)):
+        data[target_key] = val
+    data.pop(source_key, None)
+
+
 def _normalize_dossier_location_fields(data: dict) -> None:
     city = _clean_dossier_label(data.get('شهر'))
     neighborhood = _clean_dossier_label(data.get('محله'))
     address = _clean_dossier_label(data.get('آدرس'))
 
+    _promote_dossier_location_alias(data, 'مکان_استان', 'استان')
+    _promote_dossier_location_alias(data, 'مکان_منطقه', 'منطقه')
+    _promote_dossier_location_alias(data, 'مکان_محله', 'محله')
+    _promote_dossier_location_alias(data, 'مکان_خیابان', 'خیابان')
+    _promote_dossier_location_alias(data, 'مکان_آدرس', 'آدرس')
+
     for alias in (
-        'مکان_شهر', 'مکان_منطقه', 'مکان_آدرس',
+        'مکان_شهر',
         'city', 'city_persian', 'district', 'district_persian', 'address',
     ):
         data.pop(alias, None)

@@ -248,6 +248,24 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
             'تقریبی',
         )
 
+    def test_location_section_shows_province_and_street_from_data(self):
+        raw = {
+            'شهر': 'تهران',
+            'محله': 'مرزداران',
+            'مکان_استان': 'تهران',
+            'مکان_خیابان': 'خ میثاق دوم',
+            'مکان_منبع_جزئیات': 'seo:city_persian',
+        }
+        listing = _rent_listing(raw, city='تهران', neighborhood='مرزداران')
+        data = build_listing_display_data(listing, {}, transaction_type='اجاره')
+        loc = format_sections(data, transaction_profile('اجاره')).get('مکان', {})
+        self.assertEqual(loc.get('استان'), 'تهران')
+        self.assertEqual(loc.get('شهر'), 'تهران')
+        self.assertEqual(loc.get('محله'), 'مرزداران')
+        self.assertEqual(loc.get('خیابان'), 'خ میثاق دوم')
+        self.assertNotIn('مکان_خیابان', data)
+        self.assertNotIn('مکان_منبع_جزئیات', data)
+
     def test_legacy_excel_minimal_fields(self):
         listing = Listing(
             token='legacy',

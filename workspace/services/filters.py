@@ -1,6 +1,7 @@
 """فیلتر پیشرفته جدول آگهی‌ها."""
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from django.db.models import Case, Count, F, IntegerField, Q, QuerySet, Value, When
@@ -115,11 +116,87 @@ def parse_filter_params(request) -> Dict[str, Any]:
     return parse_filter_params_from_mapping(request.GET)
 
 
+_DIVAR_TOKEN_IN_URL = re.compile(
+    r'(?:https?://)?(?:www\.)?divar\.ir/v/([A-Za-z0-9_-]+)',
+    re.IGNORECASE,
+)
+_DIVAR_TOKEN_SHAPE = re.compile(r'^[A-Za-z0-9_-]+$')
+_TOKEN_CONFUSION_PAIRS: Tuple[Tuple[str, str], ...] = (
+    ('Z', '2'),
+    ('z', '2'),
+    ('O', '0'),
+    ('o', '0'),
+    ('l', '1'),
+    ('I', '1'),
+)
+
+
+def normalize_listing_search_query(raw: str) -> str:
+    """استخراج شناسه دیوار از لینک یا متن جستجو."""
+    q = str(raw or '').strip()
+    if not q:
+        return ''
+    m = _DIVAR_TOKEN_IN_URL.search(q)
+    if m:
+        return _normalize_numeric_str(m.group(1))
+    return _normalize_numeric_str(q)
+
+
+def _looks_like_divar_token(term: str) -> bool:
+    return 6 <= len(term) <= 12 and bool(_DIVAR_TOKEN_SHAPE.match(term))
+
+
+def divar_token_search_variants(term: str, *, max_variants: int = 48) -> frozenset[str]:
+    """واریانت‌های رایج اشتباه تایپ/خواندن شناسه (مثلاً Z به‌جای ۲ در فونت کوچک)."""
+    base = _normalize_numeric_str((term or '').strip())
+    if not base or not _looks_like_divar_token(base):
+        return frozenset({base}) if base else frozenset()
+    variants = {base}
+    queue = [base]
+    while queue and len(variants) < max_variants:
+        s = queue.pop(0)
+        for i, ch in enumerate(s):
+            for a, b in _TOKEN_CONFUSION_PAIRS:
+                for src, dst in ((a, b), (b, a)):
+                    if ch != src:
+                        continue
+                    candidate = s[:i] + dst + s[i + 1:]
+                    if candidate in variants:
+                        continue
+                    variants.add(candidate)
+                    if len(variants) < max_variants:
+                        queue.append(candidate)
+    return frozenset(variants)
+
+
+def token_field_search_q(term: str) -> Q:
+    q = _normalize_numeric_str((term or '').strip())
+    if not q:
+        return Q()
+    q_obj = Q(token__icontains=q)
+    if _looks_like_divar_token(q):
+        for variant in divar_token_search_variants(q):
+            q_obj |= Q(token__iexact=variant)
+    return q_obj
+
+
+def listing_search_q(term: str) -> Q:
+    """جستجوی متن آزاد: عنوان، شناسه آگهی، لینک دیوار."""
+    q = normalize_listing_search_query(term)
+    if not q:
+        return Q()
+    return (
+        Q(title__icontains=q)
+        | Q(link__icontains=q)
+        | token_field_search_q(q)
+    )
+
+
 def apply_listing_filters(qs: QuerySet, filters: Dict, user) -> QuerySet:
     if filters.get('q'):
-        qs = qs.filter(title__icontains=filters['q'])
+        qs = qs.filter(listing_search_q(filters['q']))
     if filters.get('token'):
-        qs = qs.filter(token__icontains=filters['token'])
+        qs = qs.filter(token_field_search_q(filters['token']))
     if filters.get('desc'):
         qs = qs.filter(description__icontains=filters['desc'])
     if filters.get('neighborhood'):

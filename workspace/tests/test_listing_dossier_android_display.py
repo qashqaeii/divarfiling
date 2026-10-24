@@ -1,7 +1,11 @@
 """پرونده آگهی — پنهان‌سازی کلیدهای فنی JSON اندروید و نمایش مالی/مکان."""
-from django.test import SimpleTestCase
+from unittest.mock import patch
 
-from workspace.models import Listing
+from django.contrib.auth import get_user_model
+from django.test import Client, SimpleTestCase, TestCase
+from django.urls import reverse
+
+from workspace.models import Dataset, Listing
 from workspace.services.display import (
     apply_convertible_rent_to_dossier,
     build_listing_display_data,
@@ -248,24 +252,6 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
             'تقریبی',
         )
 
-    def test_location_section_shows_province_and_street_from_data(self):
-        raw = {
-            'شهر': 'تهران',
-            'محله': 'مرزداران',
-            'مکان_استان': 'تهران',
-            'مکان_خیابان': 'خ میثاق دوم',
-            'مکان_منبع_جزئیات': 'seo:city_persian',
-        }
-        listing = _rent_listing(raw, city='تهران', neighborhood='مرزداران')
-        data = build_listing_display_data(listing, {}, transaction_type='اجاره')
-        loc = format_sections(data, transaction_profile('اجاره')).get('مکان', {})
-        self.assertEqual(loc.get('استان'), 'تهران')
-        self.assertEqual(loc.get('شهر'), 'تهران')
-        self.assertEqual(loc.get('محله'), 'مرزداران')
-        self.assertEqual(loc.get('خیابان'), 'خ میثاق دوم')
-        self.assertNotIn('مکان_خیابان', data)
-        self.assertNotIn('مکان_منبع_جزئیات', data)
-
     def test_legacy_excel_minimal_fields(self):
         listing = Listing(
             token='legacy',
@@ -283,3 +269,93 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
         self.assertIn('قیمت', sections.get('مالی', {}))
         self.assertIn('متراژ', sections.get('ملک', {}))
         self.assertIn('شهر', sections.get('مکان', {}))
+        self.assertEqual(sections.get('مکان', {}).get('محله'), 'صادقیه')
+
+    def test_android_street_promoted_to_location_section(self):
+        raw = {
+            'مکان_خیابان': 'خ بوستان چهارم غربی',
+            'مکان_منطقه': 'مرزداران',
+            'شهر': 'تهران',
+        }
+        listing = Listing(
+            token='gaazQkGD',
+            title='۸۰و۷۲ متر ۲ خ فول شمال مرزداران',
+            city='تهران',
+            neighborhood='مرزداران',
+            data=raw,
+        )
+        data = build_listing_display_data(listing, {}, transaction_type='اجاره')
+        self.assertNotIn('مکان_خیابان', data)
+        loc = format_sections(data, transaction_profile('اجاره')).get('مکان', {})
+        self.assertEqual(loc.get('خیابان'), 'خ بوستان چهارم غربی')
+        self.assertEqual(loc.get('منطقه'), 'مرزداران')
+        self.assertNotIn('محله', loc)
+
+    def test_no_street_row_when_missing(self):
+        listing = Listing(
+            token='no-street',
+            title='بدون خیابان',
+            city='تهران',
+            neighborhood='سعادت‌آباد',
+            data={'شهر': 'تهران', 'محله': 'سعادت‌آباد'},
+        )
+        loc = format_sections(
+            build_listing_display_data(listing, {}, transaction_type='فروش'),
+            transaction_profile('فروش'),
+        ).get('مکان', {})
+        self.assertNotIn('خیابان', loc)
+
+    def test_region_and_neighborhood_not_duplicated(self):
+        listing = Listing(
+            token='dedupe-loc',
+            title='تست',
+            city='تهران',
+            neighborhood='مرزداران',
+            data={'مکان_منطقه': 'مرزداران', 'شهر': 'تهران'},
+        )
+        loc = format_sections(
+            build_listing_display_data(listing, {}, transaction_type='اجاره'),
+            transaction_profile('اجاره'),
+        ).get('مکان', {})
+        self.assertEqual(loc.get('منطقه'), 'مرزداران')
+        self.assertNotIn('محله', loc)
+
+
+class ListingDossierLocationHtmlTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='09124445566',
+            phone='09124445566',
+            password='testpass123',
+        )
+        self.dataset = Dataset.objects.create(
+            user=self.user,
+            name='loc-html',
+            original_filename='t.xlsx',
+            file_format='xlsx',
+            transaction_type='اجاره',
+        )
+        self.listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='gaazQkGD',
+            title='۸۰و۷۲ متر ۲ خ فول شمال مرزداران',
+            city='تهران',
+            neighborhood='مرزداران',
+            latitude=35.744,
+            longitude=51.334,
+            data={'مکان_خیابان': 'خ بوستان چهارم غربی', 'مکان_منطقه': 'مرزداران'},
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    @patch('workspace.mixins.has_active_bot_license', return_value=True)
+    def test_listing_detail_html_includes_street(self, _license):
+        url = reverse(
+            'workspace:listing_detail',
+            kwargs={'dataset_id': self.dataset.pk, 'listing_id': self.listing.pk},
+        )
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'خ بوستان چهارم غربی')
+        self.assertNotContains(resp, 'مکان_خیابان')

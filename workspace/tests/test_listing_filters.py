@@ -5,6 +5,7 @@ from workspace.models import Dataset, Listing
 from workspace.services.filters import (
     apply_amenity_filters,
     apply_listing_filters,
+    divar_token_search_variants,
     normalize_listing_search_query,
     parse_filter_params,
     parse_filter_params_from_mapping,
@@ -39,6 +40,18 @@ class ListingSearchQueryTests(TestCase):
     def test_q_matches_partial_token(self):
         qs = apply_listing_filters(self.dataset.listings.all(), {'q': 'gabTS'}, self.user)
         self.assertEqual(list(qs), [self.by_token])
+
+    def test_q_matches_token_with_common_z_and_two_confusion(self):
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='ga2LvaYW',
+            title='اجاره واحد نمونه',
+        )
+        qs = apply_listing_filters(self.dataset.listings.all(), {'q': 'gaZLvaYW'}, self.user)
+        self.assertEqual(list(qs), [listing])
+
+    def test_divar_token_variants_include_two_for_z(self):
+        self.assertIn('ga2LvaYW', divar_token_search_variants('gaZLvaYW'))
 
     def test_q_extracts_token_from_divar_url(self):
         self.assertEqual(

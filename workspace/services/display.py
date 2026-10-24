@@ -928,7 +928,6 @@ def _normalize_contact_fields(data: dict, listing) -> None:
     for key in (*OWNER_PHONE_KEYS, *OWNER_NAME_KEYS, 'phone_text'):
         data.pop(key, None)
 
-    # کلیدهای انگلیسی باقی‌ماندهٔ تماس را هم حذف کن
     for key in list(data.keys()):
         kl = str(key).strip().lower()
         if kl in ('owner_phone', 'owner_name', 'phone', 'phone_text'):

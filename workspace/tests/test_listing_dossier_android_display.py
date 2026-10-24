@@ -359,3 +359,5 @@ class ListingDossierLocationHtmlTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'خ بوستان چهارم غربی')
         self.assertNotContains(resp, 'مکان_خیابان')
+        self.assertContains(resp, 'crm-prop-hero-chips')
+        self.assertContains(resp, 'crm-prop-hero-chip--loc')

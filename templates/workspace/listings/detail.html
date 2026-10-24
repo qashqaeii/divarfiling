@@ -178,10 +178,10 @@
                     <h1 class="crm-prop-hero-title">{{ listing.title }}</h1>
 
                     <div class="crm-prop-hero-chips">
-                        {% if listing.neighborhood or listing.city %}
+                        {% if location_side_summary or listing.neighborhood or listing.city %}
                         <span class="crm-prop-hero-chip crm-prop-hero-chip--loc">
                             <i class="fas fa-location-dot" aria-hidden="true"></i>
-                            {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}
+                            {% if location_side_summary %}{{ location_side_summary }}{% else %}{% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}{% endif %}
                         </span>
                         {% endif %}
                         <span class="crm-prop-hero-chip crm-prop-hero-chip--token">

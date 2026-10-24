@@ -32,7 +32,7 @@ BUILD_YEAR_KEYS = frozenset({
 
 # فیلدهای مکان — در تب «مکان»
 CORE_LOCATION_MARKERS = (
-    'شهر', 'city', 'محله', 'neighborhood', 'آدرس', 'address',
+    'شهر', 'city', 'استان', 'محله', 'neighborhood', 'آدرس', 'address', 'خیابان',
     'منطقه', 'district', 'عرض جغرافیایی', 'طول جغرافیایی',
     'latitude', 'longitude', 'lat', 'lng', 'مختصات', 'شعاع', 'نوع مختصات',
 )
@@ -79,8 +79,8 @@ PROPERTY_FIELD_ORDER = (
 )
 
 LOCATION_FIELD_ORDER = (
-    'شهر', 'city', 'منطقه', 'district', 'محله', 'neighborhood',
-    'آدرس', 'address', 'عرض جغرافیایی', 'طول جغرافیایی',
+    'استان', 'شهر', 'city', 'منطقه', 'district', 'محله', 'neighborhood',
+    'خیابان', 'آدرس', 'address', 'عرض جغرافیایی', 'طول جغرافیایی',
     'latitude', 'longitude', 'نوع مختصات', 'در شعاع (متر)',
 )
 
@@ -303,6 +303,21 @@ def _clean_dossier_label(val: Any) -> str:
     return s
 
 
+def _normalize_location_label(val: str) -> str:
+    s = _clean_dossier_label(val)
+    if not s:
+        return ''
+    s = s.replace('ي', 'ی').replace('ى', 'ی').replace('ك', 'ک')
+    s = re.sub(r'\s+', ' ', s)
+    return s.casefold()
+
+
+def _location_labels_equal(a: str, b: str) -> bool:
+    na = _normalize_location_label(a)
+    nb = _normalize_location_label(b)
+    return bool(na and nb and na == nb)
+
+
 def _is_dossier_internal_key(key: str) -> bool:
     """کلیدهای فنی JSON/Android — فقط برای ذخیره، نه ردیف پرونده."""
     k = str(key or '').strip()
@@ -396,13 +411,48 @@ def _enrich_dossier_financial_fields(data: dict, listing, profile: Dict, raw: di
 
 
 def _normalize_dossier_location_fields(data: dict) -> None:
-    city = _clean_dossier_label(data.get('شهر'))
-    neighborhood = _clean_dossier_label(data.get('محله'))
-    address = _clean_dossier_label(data.get('آدرس'))
+    province = _clean_dossier_label(data.get('استان') or data.get('مکان_استان'))
+    region = _clean_dossier_label(data.get('منطقه') or data.get('مکان_منطقه'))
+    street = _clean_dossier_label(data.get('خیابان') or data.get('مکان_خیابان'))
+    locality_indep = _clean_dossier_label(data.get('مکان_محله'))
+
+    city = _clean_dossier_label(
+        data.get('شهر') or data.get('مکان_شهر') or data.get('city') or data.get('city_persian')
+    )
+    neighborhood = _clean_dossier_label(data.get('محله') or data.get('neighborhood'))
+    address = _clean_dossier_label(
+        data.get('آدرس') or data.get('مکان_آدرس') or data.get('address')
+    )
+
+    if province:
+        data['استان'] = province
+    if city:
+        data['شهر'] = city
+    if region:
+        data['منطقه'] = region
+    if street:
+        data['خیابان'] = street
+
+    if locality_indep:
+        if not region or not _location_labels_equal(locality_indep, region):
+            data['محله'] = locality_indep
+        else:
+            data.pop('محله', None)
+    elif neighborhood:
+        if region and _location_labels_equal(neighborhood, region):
+            data.pop('محله', None)
+        else:
+            data['محله'] = neighborhood
+    else:
+        data.pop('محله', None)
+
+    if address:
+        data['آدرس'] = address
 
     for alias in (
-        'مکان_شهر', 'مکان_منطقه', 'مکان_آدرس',
-        'city', 'city_persian', 'district', 'district_persian', 'address',
+        'مکان_شهر', 'مکان_منطقه', 'مکان_محله', 'مکان_خیابان', 'مکان_استان', 'مکان_آدرس',
+        'مکان_عنوان_نمایشی', 'مکان_منبع_جزئیات',
+        'city', 'city_persian', 'district', 'district_persian', 'address', 'neighborhood',
     ):
         data.pop(alias, None)
 
@@ -423,11 +473,29 @@ def _normalize_dossier_location_fields(data: dict) -> None:
         elif norm in _FUZZY_COORD_MARKERS or 'تقری' in coord:
             data['نوع مختصات'] = 'تقریبی'
 
+    address = _clean_dossier_label(data.get('آدرس'))
+    mahalle = _clean_dossier_label(data.get('محله'))
     if address:
-        if city and address == city:
+        if city and _location_labels_equal(address, city):
             data.pop('آدرس', None)
-        elif neighborhood and address == neighborhood:
+        elif mahalle and _location_labels_equal(address, mahalle):
             data.pop('آدرس', None)
+        elif region and _location_labels_equal(address, region):
+            data.pop('آدرس', None)
+
+
+def listing_location_side_summary(data: Optional[Dict[str, Any]] = None) -> str:
+    """خلاصه فشرده موقعیت برای ستون کناری پرونده."""
+    data = data or {}
+    parts: List[str] = []
+    for key in ('خیابان', 'محله', 'منطقه', 'شهر', 'استان'):
+        label = _clean_dossier_label(data.get(key))
+        if not label:
+            continue
+        if parts and _location_labels_equal(label, parts[-1]):
+            continue
+        parts.append(label)
+    return ' · '.join(parts)
 
 
 def _strip_dossier_internal_keys(data: dict) -> None:

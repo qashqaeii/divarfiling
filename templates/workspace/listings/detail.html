@@ -725,7 +725,7 @@
             {% if listing.latitude and listing.longitude %}
             <div class="crm-prop-side-card crm-prop-side-card--pro">
                 <h3>موقعیت</h3>
-                {% if listing.neighborhood %}<p class="ws-ld-side-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
+                {% if location_side_summary %}<p class="ws-ld-side-loc">{{ location_side_summary }}</p>{% elif listing.neighborhood %}<p class="ws-ld-side-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
                 {% if location_accuracy.label %}<p class="ws-ld-side-accuracy">{{ location_accuracy.label }}</p>{% endif %}
                 <a href="#wsLdMapFinale" class="crm-dash-act" data-ld-map-jump>
                     <i class="fas fa-map" aria-hidden="true"></i><span>مشاهده نقشه</span>

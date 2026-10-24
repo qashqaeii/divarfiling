@@ -63,7 +63,8 @@ from workspace.services.importer import import_dataset, import_message
 from workspace.services.display import (
     apply_convertible_rent_to_dossier,
     build_listing_display_data, dedupe_listing_dossier_rows, format_field_rows, format_sections,
-    format_supplementary_fields, format_supplementary_groups, location_accuracy_for_map,
+    format_supplementary_fields, format_supplementary_groups, listing_location_side_summary,
+    location_accuracy_for_map,
     resolve_convertible_rent_card, transaction_profile,
 )
 from workspace.services.features import extract_listing_features
@@ -1053,6 +1054,7 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['convertible_rent'] = convertible_rent or {}
         apply_convertible_rent_to_dossier(sections, ctx['section_rows'], convertible_rent)
         ctx['location_accuracy'] = location_accuracy_for_map(data)
+        ctx['location_side_summary'] = listing_location_side_summary(data)
         ctx['supplementary_fields'] = format_supplementary_fields(data, tx, sections)
         ctx['supplementary_groups'] = format_supplementary_groups(data, tx, sections)
         from workspace.services.divar_listing_datetime import resolve_listing_last_bump_datetime

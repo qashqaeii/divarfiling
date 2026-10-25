@@ -1474,7 +1474,9 @@ def _score_customer_for_property(
 ) -> Optional[Dict[str, Any]]:
     if customer.customer_type not in MATCH_ELIGIBLE_CUSTOMER_TYPES:
         return None
-    if customer.status == 'بایگانی':
+    from workspace.services.crm_contact_archive import is_contact_archived
+
+    if is_contact_archived(customer):
         return None
     # فقط مخاطب متعلق به خود کاربر قابل پیشنهاد/پیوند است
     if getattr(customer, 'user_id', None) is None:
@@ -1506,8 +1508,10 @@ def _customer_match_candidates_qs(prop: CRMProperty, user, *, scan_limit: int):
     qs = (
         _owned_match_customers_qs(user)
         .filter(customer_type__in=MATCH_ELIGIBLE_CUSTOMER_TYPES)
-        .exclude(status='بایگانی')
     )
+    from workspace.services.crm_contact_archive import archived_contacts_q
+
+    qs = qs.exclude(archived_contacts_q())
     if linked_ids:
         qs = qs.exclude(pk__in=linked_ids)
 

@@ -4,7 +4,7 @@
 {% block page_title %}{{ customer.name }}{% endblock %}
 {% block mobile_bar_title %}{{ customer.name|truncatechars:22 }}{% endblock %}
 {% block crm_title %}{{ customer.name }}{% endblock %}
-{% block crm_desc %}{{ customer.customer_type }} · {{ customer.status }}{% endblock %}
+{% block crm_desc %}{{ customer.customer_type }} · {{ contact_display_status }}{% if contact_last_communication_status %} · آخرین وضعیت: {{ contact_last_communication_status }}{% endif %}{% endblock %}
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
@@ -122,7 +122,10 @@
                         {% if customer.company_name %}<p class="crm-contact-hero__company">{{ customer.company_name }}</p>{% endif %}
                         <div class="crm-contact-hero__badges">
                             <span class="crm-contact-hero__type" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
-                            {% if not customer_is_shared %}
+                            {% if contact_is_archived %}
+                            <span class="crm-contact-hero__status crm-contact-hero__status--archived">{{ contact_display_status }}</span>
+                            {% if contact_last_communication_status %}<span class="crm-contact-hero__status-meta">آخرین وضعیت ارتباط: {{ contact_last_communication_status }}</span>{% endif %}
+                            {% elif not customer_is_shared %}
                             <div class="crm-contact-hero__status-picker" data-crm-status-picker data-url="{% url 'workspace:crm_contact_status' customer.id %}">
                                 <label class="sr-only" for="crmContactStatusSelect">وضعیت مخاطب</label>
                                 <select id="crmContactStatusSelect" class="crm-contact-hero__status-select" aria-label="تغییر وضعیت">
@@ -132,7 +135,7 @@
                                 </select>
                             </div>
                             {% else %}
-                            <span class="crm-contact-hero__status">{{ customer.status }}</span>
+                            <span class="crm-contact-hero__status">{{ contact_display_status }}</span>
                             {% endif %}
                             {% if customer.priority == 'بالا' %}<span class="crm-contact-hero__priority">اولویت بالا</span>{% endif %}
                             {% if crm_agency and customer_is_shared %}
@@ -164,6 +167,17 @@
                 <a href="{{ customer.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contact-hero__action">
                     <i class="fas fa-comment" aria-hidden="true"></i><span>پیام</span>
                 </a>
+                {% endif %}
+                {% if can_edit_customer %}
+                    {% if contact_is_archived %}
+                    <button type="button" class="crm-contact-hero__action crm-contact-hero__action--archive" id="crmContactRestoreBtn" data-crm-contact-restore>
+                        <i class="fas fa-rotate-left" aria-hidden="true"></i><span>بازگردانی</span>
+                    </button>
+                    {% else %}
+                    <button type="button" class="crm-contact-hero__action crm-contact-hero__action--archive" id="crmContactArchiveBtn" data-crm-contact-archive>
+                        <i class="fas fa-box-archive" aria-hidden="true"></i><span>بایگانی</span>
+                    </button>
+                    {% endif %}
                 {% endif %}
                 {% if can_share_team_resources and is_customer_owner %}
                 {% if agency_space_enabled and agency_space_item %}
@@ -1400,4 +1414,94 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+{% if can_edit_customer and not customer_is_shared %}
+<div id="crmContactArchiveModal" class="rrd-backdrop crm-prop-archive-backdrop" hidden aria-modal="true" role="dialog" aria-labelledby="crmContactArchiveTitle">
+    <div class="rrd-card crm-prop-archive-modal" role="document" style="max-width:420px;">
+        <header class="crm-prop-archive-modal__head">
+            <h2 id="crmContactArchiveTitle">بایگانی مخاطب</h2>
+            <p>مخاطب از لیست جاری خارج می‌شود؛ سابقه و فایل‌ها حفظ می‌مانند.</p>
+        </header>
+        {% if contact_open_reminders_count %}
+        <p class="crm-contacts-muted" style="margin:0 0 0.75rem;">این مخاطب {{ contact_open_reminders_count }} یادآور باز دارد؛ بایگانی آن‌ها را انجام‌شده نمی‌کند.</p>
+        {% endif %}
+        <label class="crm-contacts-mob-filter-field">
+            <span>دلیل (اختیاری)</span>
+            <select id="crmContactArchiveReason" class="crm-contacts-select">
+                <option value="">—</option>
+                {% for r in contact_archive_reasons %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+            </select>
+        </label>
+        <label class="crm-contacts-mob-filter-field">
+            <span>یادداشت کوتاه (اختیاری)</span>
+            <textarea id="crmContactArchiveNote" class="crm-contacts-select" rows="2" maxlength="500"></textarea>
+        </label>
+        <label class="crm-contacts-mob-filter-field">
+            <span>پیگیری مجدد (اختیاری — شمسی)</span>
+            <input type="text" id="crmContactArchiveReactivate" class="crm-contacts-select" placeholder="1404/08/01" dir="ltr" value="{{ contact_lease_reactivation_suggestion }}">
+        </label>
+        <footer style="display:flex;gap:0.5rem;margin-top:1rem;">
+            <button type="button" class="crm-dash-act" id="crmContactArchiveCancel">انصراف</button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" id="crmContactArchiveConfirm">بایگانی</button>
+        </footer>
+    </div>
+</div>
+<div id="crmContactRestoreModal" class="rrd-backdrop crm-prop-archive-backdrop" hidden aria-modal="true" role="dialog" aria-labelledby="crmContactRestoreTitle">
+    <div class="rrd-card crm-prop-archive-modal" role="document" style="max-width:400px;">
+        <header class="crm-prop-archive-modal__head">
+            <h2 id="crmContactRestoreTitle">بازگردانی از بایگانی</h2>
+        </header>
+        {% if customer.status == 'بایگانی' %}
+        <label class="crm-contacts-mob-filter-field">
+            <span>مرحله ارتباط</span>
+            <select id="crmContactRestoreStatus" class="crm-contacts-select" required>
+                <option value="">انتخاب کنید</option>
+                {% for s in crm_statuses_restore %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+        </label>
+        {% endif %}
+        <footer style="display:flex;gap:0.5rem;margin-top:1rem;">
+            <button type="button" class="crm-dash-act" id="crmContactRestoreCancel">انصراف</button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" id="crmContactRestoreConfirm">بازگردانی</button>
+        </footer>
+    </div>
+</div>
+<script>
+(function() {
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    const archiveUrl = '{% url "workspace:crm_contact_archive" customer.id %}';
+    const restoreUrl = '{% url "workspace:crm_contact_restore" customer.id %}';
+    const archiveModal = document.getElementById('crmContactArchiveModal');
+    const restoreModal = document.getElementById('crmContactRestoreModal');
+    function postJson(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
+            body: JSON.stringify(body || {}),
+        }).then(r => r.json());
+    }
+    document.getElementById('crmContactArchiveBtn')?.addEventListener('click', () => { if (archiveModal) archiveModal.hidden = false; });
+    document.getElementById('crmContactArchiveCancel')?.addEventListener('click', () => { if (archiveModal) archiveModal.hidden = true; });
+    document.getElementById('crmContactArchiveConfirm')?.addEventListener('click', async () => {
+        const data = await postJson(archiveUrl, {
+            reason: document.getElementById('crmContactArchiveReason')?.value || '',
+            note: document.getElementById('crmContactArchiveNote')?.value || '',
+            reactivation_due_jalali: document.getElementById('crmContactArchiveReactivate')?.value || '',
+        });
+        if (data.ok) location.reload();
+        else alert(data.error || 'خطا');
+    });
+    document.querySelectorAll('[data-crm-contact-restore]').forEach(btn => {
+        btn.addEventListener('click', () => { if (restoreModal) restoreModal.hidden = false; });
+    });
+    document.getElementById('crmContactRestoreCancel')?.addEventListener('click', () => { if (restoreModal) restoreModal.hidden = true; });
+    document.getElementById('crmContactRestoreConfirm')?.addEventListener('click', async () => {
+        const data = await postJson(restoreUrl, {
+            restore_status: document.getElementById('crmContactRestoreStatus')?.value || '',
+        });
+        if (data.ok) location.reload();
+        else alert(data.error || 'خطا');
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

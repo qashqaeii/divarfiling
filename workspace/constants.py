@@ -6,6 +6,7 @@ CRM_TYPES = [
     'فروشنده ملک', 'اشخاص حقوقی',
 ]
 CRM_STATUSES = ['جدید', 'در حال پیگیری', 'بازدید انجام شد', 'قرارداد', 'بایگانی']
+CRM_STATUSES_UI = [s for s in CRM_STATUSES if s != 'بایگانی']
 CRM_PRIORITIES = ['بالا', 'متوسط', 'پایین']
 CRM_PROPERTIES = ['آپارتمان', 'ویلا', 'کلنگی', 'اداری', 'مغازه', 'زمین', 'سایر']
 PROPERTY_ADVERTISER_TYPES = ['شخصی', 'مشاور', 'مشاور املاک', 'business', 'مالک']
@@ -38,7 +39,7 @@ PROPERTY_TX_COLORS = {
 CRM_FILTER_SCOPES = ['contacts', 'properties', 'deals', 'listings']
 
 CRM_FILTER_PARAMS = {
-    'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag', 'match_alerts'},
+    'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag', 'match_alerts', 'archive_scope'},
     'properties': {
         'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
         'folder_id', 'cabinet_id', 'archive_scope',

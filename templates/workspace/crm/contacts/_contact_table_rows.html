@@ -19,10 +19,11 @@
                         </div>
                     </div>
                     <div class="crm-contacts-mob-card__state">
-                        <span class="crm-contacts-mob-status-pill{% if c.status == 'جدید' %} crm-contacts-mob-status-pill--new{% elif c.status == 'در حال پیگیری' %} crm-contacts-mob-status-pill--following{% elif c.status == 'بازدید انجام شد' %} crm-contacts-mob-status-pill--visited{% elif c.status == 'قرارداد' %} crm-contacts-mob-status-pill--visited{% else %} crm-contacts-mob-status-pill--default{% endif %}">
+                        <span class="crm-contacts-mob-status-pill{% if c|crm_contact_is_archived %} crm-contacts-mob-status-pill--default{% elif c.status == 'جدید' %} crm-contacts-mob-status-pill--new{% elif c.status == 'در حال پیگیری' %} crm-contacts-mob-status-pill--following{% elif c.status == 'بازدید انجام شد' %} crm-contacts-mob-status-pill--visited{% elif c.status == 'قرارداد' %} crm-contacts-mob-status-pill--visited{% else %} crm-contacts-mob-status-pill--default{% endif %}">
                             <span class="crm-contacts-dot" aria-hidden="true"></span>
-                            {{ c.status }}
+                            {{ c|crm_contact_display_status }}
                         </span>
+                        {% with last_st=c|crm_contact_last_comm_status %}{% if last_st %}<span class="crm-contacts-mob-type crm-contacts-mob-type--muted">آخرین وضعیت: {{ last_st }}</span>{% endif %}{% endwith %}
                         {% contact_followup_mob c.next_follow_up today as fu %}
                         {% if fu.label %}
                         <span class="crm-contacts-mob-followup-pill crm-contacts-mob-followup-pill--{{ fu.tone }}">
@@ -78,9 +79,10 @@
     <td class="crm-contacts-col-type"><span class="crm-contacts-type">{{ c.customer_type }}</span></td>
     <td class="crm-contacts-col-status">
         <span class="crm-contacts-status">
-            <span class="crm-contacts-dot" style="background:{{ c.status|crm_status_dot }}"></span>
-            {{ c.status }}
+            <span class="crm-contacts-dot" style="background:{% if c|crm_contact_is_archived %}#94a3b8{% else %}{{ c.status|crm_status_dot }}{% endif %}"></span>
+            {{ c|crm_contact_display_status }}
         </span>
+        {% with last_st=c|crm_contact_last_comm_status %}{% if last_st %}<span class="crm-contacts-muted" style="display:block;font-size:0.75rem;margin-top:2px;">آخرین وضعیت: {{ last_st }}</span>{% endif %}{% endwith %}
     </td>
     <td class="crm-contacts-col-priority">
         {% if c.priority == 'بالا' %}

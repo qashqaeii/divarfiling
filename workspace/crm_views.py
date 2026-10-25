@@ -20,7 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 
 from workspace.constants import (
-    AGENCY_ROLES, CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES,
+    AGENCY_ROLES, CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_STATUSES_UI, CRM_TYPES,
     DEAL_FOLLOWUP_TYPES, DEAL_NEXT_ACTION_TYPES, DEAL_STAGES, DEFAULT_STAGNANT_DAYS,
     LEAD_ROUTING_CHOICES, LOST_REASONS, MESSAGE_PLACEHOLDERS,
     MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_ADVERTISER_TYPES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
@@ -414,17 +414,46 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
             return ctx
         user = self.request.user
         today = timezone.now().date()
+        from workspace.services.crm_contact_archive import (
+            ARCHIVE_SCOPE_ACTIVE,
+            ARCHIVE_SCOPE_ALL,
+            ARCHIVE_SCOPE_ARCHIVED,
+            archived_contacts_q,
+        )
+
         cqs = customers_qs(user)
+        active_cqs = cqs.exclude(archived_contacts_q())
+        archived_cqs = cqs.filter(archived_contacts_q())
+        archive_scope = (self.request.GET.get('archive_scope') or ARCHIVE_SCOPE_ACTIVE).strip().lower()
+        ctx['archive_scope'] = archive_scope
+
+        def _tab_qs(scope: str) -> str:
+            pairs = {
+                k: v for k, v in self.request.GET.items()
+                if k not in ('page', 'partial', 'archive_scope') and v
+            }
+            if scope != ARCHIVE_SCOPE_ACTIVE:
+                pairs['archive_scope'] = scope
+            return urlencode(pairs)
+
+        ctx['archive_tab_qs'] = {
+            ARCHIVE_SCOPE_ACTIVE: _tab_qs(ARCHIVE_SCOPE_ACTIVE),
+            ARCHIVE_SCOPE_ARCHIVED: _tab_qs(ARCHIVE_SCOPE_ARCHIVED),
+            ARCHIVE_SCOPE_ALL: _tab_qs(ARCHIVE_SCOPE_ALL),
+        }
         ctx['stats'] = {
-            'total': cqs.count(),
-            'new': cqs.filter(status='جدید').count(),
-            'in_progress': cqs.filter(status='در حال پیگیری').count(),
-            'due_today': cqs.filter(next_follow_up=today).count(),
+            'total': active_cqs.count(),
+            'archived': archived_cqs.count(),
+            'all': cqs.count(),
+            'new': active_cqs.filter(status='جدید').count(),
+            'in_progress': active_cqs.filter(status='در حال پیگیری').count(),
+            'due_today': active_cqs.filter(next_follow_up=today).count(),
         }
         ctx['customer_form'] = ctx.get('customer_form', CustomerForm())
         ctx['open_modal'] = self.request.GET.get('open', ctx.get('open_modal', ''))
         ctx['crm_types'] = CRM_TYPES
-        ctx['crm_statuses'] = CRM_STATUSES
+        ctx['crm_statuses'] = CRM_STATUSES_UI
+        ctx['crm_statuses_all'] = CRM_STATUSES
         ctx['crm_priorities'] = CRM_PRIORITIES
         ctx['crm_sources'] = CRM_SOURCES
         ctx['type_profiles_json'] = json.dumps(TYPE_PROFILES, ensure_ascii=False)
@@ -451,7 +480,7 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
             'priorities': list(CRM_PRIORITIES),
             'sources': list(CRM_SOURCES),
         }
-        ctx['bulk_statuses'] = CRM_STATUSES
+        ctx['bulk_statuses'] = CRM_STATUSES_UI
         ctx['saved_filters'] = list_saved_filters(user, 'contacts')
         ctx['saved_filter_scope'] = 'contacts'
         ctx['saved_filter_base'] = reverse('workspace:crm_contacts')
@@ -520,13 +549,127 @@ class CustomerStatusUpdateView(LoginRequiredMixin, View):
         if new_status not in CRM_STATUSES:
             return JsonResponse({'ok': False, 'error': 'وضعیت نامعتبر'}, status=400)
         try:
-            update_customer_status(customer, new_status)
+            update_customer_status(customer, new_status, user=request.user)
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        customer.refresh_from_db()
+        from workspace.services.crm_contact_archive import contact_display_status, is_contact_archived
+
         return JsonResponse({
             'ok': True,
-            'status': new_status,
+            'status': customer.status,
+            'display_status': contact_display_status(customer),
+            'archived': is_contact_archived(customer),
             'customer_id': customer.pk,
+        })
+
+
+class CRMContactArchiveView(LoginRequiredMixin, View):
+    """بایگانی تک‌مخاطب."""
+
+    def post(self, request, customer_id):
+        from workspace.services.crm_contact_archive import archive_contact, is_contact_archived
+
+        customer = customer_for_user(request.user, customer_id)
+        if not customer:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        try:
+            archive_contact(
+                request.user,
+                customer,
+                reason=(payload.get('reason') or ''),
+                archive_note=(payload.get('note') or ''),
+                reactivation_due_jalali=(payload.get('reactivation_due_jalali') or ''),
+            )
+        except PermissionError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        customer.refresh_from_db()
+        return JsonResponse({
+            'ok': True,
+            'archived': is_contact_archived(customer),
+            'customer_id': customer.pk,
+        })
+
+
+class CRMContactRestoreView(LoginRequiredMixin, View):
+    def post(self, request, customer_id):
+        from workspace.services.crm_contact_archive import (
+            contact_display_status,
+            is_contact_archived,
+            restore_contact,
+        )
+
+        customer = customer_for_user(request.user, customer_id)
+        if not customer:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            payload = {}
+        try:
+            restore_contact(
+                request.user,
+                customer,
+                restore_status=(payload.get('restore_status') or request.POST.get('restore_status') or ''),
+            )
+        except PermissionError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        customer.refresh_from_db()
+        return JsonResponse({
+            'ok': True,
+            'archived': is_contact_archived(customer),
+            'status': customer.status,
+            'display_status': contact_display_status(customer),
+            'customer_id': customer.pk,
+        })
+
+
+class CRMContactBulkArchiveView(LoginRequiredMixin, View):
+    def post(self, request):
+        from workspace.services.crm_contact_archive import bulk_archive_contacts, bulk_restore_contacts
+
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+            ids = payload.get('contact_ids') or payload.get('ids') or []
+            action = (payload.get('action') or 'archive').strip().lower()
+            reason = (payload.get('reason') or '').strip()
+            restore_status = (payload.get('restore_status') or '').strip()
+        else:
+            ids = request.POST.getlist('contact_ids') or request.POST.get('ids', '').split(',')
+            action = (request.POST.get('action') or 'archive').strip().lower()
+            reason = (request.POST.get('reason') or '').strip()
+            restore_status = (request.POST.get('restore_status') or '').strip()
+
+        if action == 'restore':
+            result = bulk_restore_contacts(request.user, ids, restore_status=restore_status)
+            ok_count = result.get('restored', 0)
+            label = 'بازگردانی'
+        else:
+            result = bulk_archive_contacts(request.user, ids, reason=reason)
+            ok_count = result.get('archived', 0)
+            label = 'بایگانی'
+
+        if ok_count == 0:
+            return JsonResponse({
+                'ok': False,
+                'error': f'مخاطبی برای {label} انتخاب نشده یا دسترسی ندارید.',
+                **result,
+            }, status=400)
+        return JsonResponse({
+            'ok': True,
+            'message': f'{ok_count} مخاطب {label} شد.',
+            **result,
         })
 
 
@@ -828,7 +971,25 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['customer_share'] = (
             share_for_customer_recipient(self.request.user, c) if ctx['customer_is_shared'] else None
         )
-        ctx['crm_statuses'] = CRM_STATUSES
+        from workspace.services.crm_contact_archive import (
+            ARCHIVE_REASON_CHOICES,
+            COMMUNICATION_STATUSES,
+            contact_display_status,
+            contact_last_communication_status,
+            is_contact_archived,
+            lease_deadline_reactivation_suggestion,
+            open_reminders_count,
+        )
+
+        ctx['contact_is_archived'] = is_contact_archived(c)
+        ctx['contact_display_status'] = contact_display_status(c)
+        ctx['contact_last_communication_status'] = contact_last_communication_status(c)
+        ctx['contact_open_reminders_count'] = open_reminders_count(self.request.user, c)
+        has_lease_suggestion, lease_suggestion_jalali = lease_deadline_reactivation_suggestion(c)
+        ctx['contact_lease_reactivation_suggestion'] = lease_suggestion_jalali if has_lease_suggestion else ''
+        ctx['contact_archive_reasons'] = ARCHIVE_REASON_CHOICES
+        ctx['crm_statuses'] = COMMUNICATION_STATUSES if ctx['contact_is_archived'] else CRM_STATUSES_UI
+        ctx['crm_statuses_restore'] = COMMUNICATION_STATUSES
         ctx.update(_contact_areas_context(self.request.user))
         from workspace.services.contact_nba import build_contact_workflow
         workflow = build_contact_workflow(
@@ -3227,30 +3388,50 @@ class CustomerBulkActionView(LoginRequiredMixin, View):
             messages.warning(request, 'مخاطبی انتخاب نشده است.')
             return redirect(nxt)
 
-        qs = customers_qs(request.user).filter(pk__in=ids)
-        count = qs.count()
+        from workspace.services.crm_contact_archive import (
+            bulk_archive_contacts,
+            bulk_restore_contacts,
+        )
 
+        ok_count = 0
         if action == 'delete':
-            qs.delete()
-            messages.success(request, f'{count} مخاطب حذف شد.')
-        elif action == 'status' and request.POST.get('status') in CRM_STATUSES:
+            for c in customers_qs(request.user).filter(pk__in=ids):
+                if can_edit_customer(request.user, c):
+                    c.delete()
+                    ok_count += 1
+            messages.success(request, f'{ok_count} مخاطب حذف شد.')
+        elif action == 'status' and request.POST.get('status') in CRM_STATUSES_UI:
             new_status = request.POST['status']
-            for c in qs:
-                update_customer_status(c, new_status)
-            messages.success(request, f'وضعیت {count} مخاطب به «{new_status}» تغییر کرد.')
+            for c in customers_qs(request.user).filter(pk__in=ids):
+                if not can_edit_customer(request.user, c):
+                    continue
+                try:
+                    update_customer_status(c, new_status, user=request.user)
+                    ok_count += 1
+                except ValueError:
+                    continue
+            messages.success(request, f'وضعیت {ok_count} مخاطب به «{new_status}» تغییر کرد.')
         elif action == 'archive':
-            for c in qs:
-                update_customer_status(c, 'بایگانی')
-            messages.success(request, f'{count} مخاطب بایگانی شد.')
+            result = bulk_archive_contacts(request.user, ids)
+            ok_count = result.get('archived', 0)
+            messages.success(request, f'{ok_count} مخاطب بایگانی شد.')
+        elif action == 'restore':
+            restore_status = (request.POST.get('restore_status') or '').strip()
+            result = bulk_restore_contacts(request.user, ids, restore_status=restore_status)
+            ok_count = result.get('restored', 0)
+            messages.success(request, f'{ok_count} مخاطب از بایگانی بازگردانی شد.')
         elif action == 'tag':
             tag = request.POST.get('tag', '').strip()
             if tag:
-                for c in qs:
+                for c in customers_qs(request.user).filter(pk__in=ids):
+                    if not can_edit_customer(request.user, c):
+                        continue
                     tags = set(t.strip() for t in (c.tags or '').split(',') if t.strip())
                     tags.add(tag)
                     c.tags = ', '.join(sorted(tags))
                     c.save(update_fields=['tags', 'updated_at'])
-                messages.success(request, f'برچسب به {count} مخاطب اضافه شد.')
+                    ok_count += 1
+                messages.success(request, f'برچسب به {ok_count} مخاطب اضافه شد.')
         else:
             messages.error(request, 'عملیات نامعتبر است.')
         return redirect(nxt)

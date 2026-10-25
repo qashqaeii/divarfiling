@@ -514,6 +514,10 @@ class Customer(models.Model):
         help_text='لیست شبکه‌هایی که مخاطب در آن‌ها فعال است',
     )
     next_follow_up = models.DateField(null=True, blank=True, verbose_name='پیگیری بعدی')
+    archived_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان بایگانی')
+    archive_reason = models.CharField(
+        max_length=500, blank=True, default='', verbose_name='دلیل بایگانی',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

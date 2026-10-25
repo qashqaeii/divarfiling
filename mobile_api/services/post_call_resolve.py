@@ -52,16 +52,23 @@ def _areas_summary(customer: Customer) -> str:
 
 
 def _contact_brief(customer: Customer) -> Dict[str, Any]:
-    return {
+    from workspace.services.crm_contact_archive import contact_display_status, is_contact_archived
+
+    payload = {
         'id': customer.pk,
         'full_name': customer.name,
         'phone': customer.phone or '',
         'customer_type': customer.customer_type or '',
         'status': customer.status or '',
+        'display_status': contact_display_status(customer),
+        'is_archived': is_contact_archived(customer),
         'last_follow_up': _last_follow_up_summary(customer),
         'areas_summary': _areas_summary(customer),
         'budget_summary': _budget_summary(customer),
     }
+    if customer.archived_at:
+        payload['archived_at'] = customer.archived_at.isoformat()
+    return payload
 
 
 def find_customers_by_phone_in_scope(user, phone: str) -> List[Customer]:
@@ -78,6 +85,7 @@ def find_customers_by_phone_in_scope(user, phone: str) -> List[Customer]:
         'status',
         'next_follow_up',
         'user_id',
+        'archived_at',
     )
     for customer in qs:
         if normalize_phone(customer.phone) == key or normalize_phone(customer.phone_alt) == key:

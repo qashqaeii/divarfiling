@@ -1191,19 +1191,22 @@ def resolve_district_for_property(prop) -> str:
 
 
 def get_dashboard_stats(user) -> Dict[str, Any]:
+    from workspace.services.crm_contact_archive import archived_contacts_q
+
     today = timezone.now().date()
     customers = customers_qs(user)
+    active_customers = customers.exclude(archived_contacts_q())
     properties = properties_qs(user)
 
     by_type = dict(
-        customers.values('customer_type').annotate(c=Count('id')).values_list('customer_type', 'c')
+        active_customers.values('customer_type').annotate(c=Count('id')).values_list('customer_type', 'c')
     )
     by_status = dict(
-        customers.values('status').annotate(c=Count('id')).values_list('status', 'c')
+        active_customers.values('status').annotate(c=Count('id')).values_list('status', 'c')
     )
 
     return {
-        'total_contacts': customers.count(),
+        'total_contacts': active_customers.count(),
         'total_properties': properties.count(),
         'owners': customers.filter(customer_type='مالک').count(),
         'buyers': customers.filter(customer_type='خریدار').count(),
@@ -1211,11 +1214,11 @@ def get_dashboard_stats(user) -> Dict[str, Any]:
         'leads': customers.filter(customer_type__in=LEAD_TYPES).count(),
         'sale_files': properties.filter(deal_mode='فروش').count(),
         'rent_files': properties.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).count(),
-        'new_contacts': customers.filter(status='جدید').count(),
-        'in_progress': customers.filter(status='در حال پیگیری').count(),
-        'contracts': customers.filter(status='قرارداد').count(),
-        'due_today': customers.filter(next_follow_up=today).count(),
-        'overdue_followups': customers.filter(
+        'new_contacts': active_customers.filter(status='جدید').count(),
+        'in_progress': active_customers.filter(status='در حال پیگیری').count(),
+        'contracts': active_customers.filter(status='قرارداد').count(),
+        'due_today': active_customers.filter(next_follow_up=today).count(),
+        'overdue_followups': active_customers.filter(
             next_follow_up__lt=today, status__in=['جدید', 'در حال پیگیری'],
         ).count(),
         'active_reminders': reminders_qs(user).filter(is_done=False).count(),
@@ -1235,11 +1238,13 @@ def get_dashboard_stats(user) -> Dict[str, Any]:
 
 
 def get_pipeline_data(user, per_column: int = 10) -> List[Dict[str, Any]]:
-    from workspace.constants import CRM_STATUSES
+    from workspace.constants import CRM_STATUSES_UI
+    from workspace.services.crm_contact_archive import archived_contacts_q
 
+    base = customers_qs(user).exclude(archived_contacts_q())
     rows = []
-    for status in CRM_STATUSES:
-        qs = customers_qs(user).filter(status=status)
+    for status in CRM_STATUSES_UI:
+        qs = base.filter(status=status)
         rows.append({
             'status': status,
             'count': qs.count(),
@@ -1537,7 +1542,10 @@ def global_search(user, query: str, limit: int = 12) -> Dict[str, list]:
 
 
 def filter_contacts(user, params: dict):
+    from workspace.services.crm_contact_archive import apply_contact_archive_scope, archived_contacts_q
+
     qs = customers_qs(user)
+    qs = apply_contact_archive_scope(qs, params)
     q = params.get('q', '').strip()
     if q:
         qs = qs.filter(
@@ -1545,10 +1553,13 @@ def filter_contacts(user, params: dict):
             | Q(email__icontains=q) | Q(national_id__icontains=q) | Q(tags__icontains=q)
             | Q(notes__icontains=q) | Q(areas__icontains=q) | Q(company_name__icontains=q)
         )
-    for field in ('status', 'customer_type', 'priority', 'source'):
+    for field in ('customer_type', 'priority', 'source'):
         val = params.get(field, '').strip()
         if val:
             qs = qs.filter(**{field: val})
+    status_val = params.get('status', '').strip()
+    if status_val and status_val != 'بایگانی':
+        qs = qs.filter(status=status_val)
     tags = params.get('tags', '').strip()
     if tags:
         for tag in tags.split(','):
@@ -1560,7 +1571,9 @@ def filter_contacts(user, params: dict):
     if due == 'today':
         qs = qs.filter(next_follow_up=today)
     elif due == 'overdue':
-        qs = qs.filter(next_follow_up__lt=today, status__in=['جدید', 'در حال پیگیری'])
+        qs = qs.filter(next_follow_up__lt=today, status__in=['جدید', 'در حال پیگیری']).exclude(
+            archived_contacts_q(),
+        )
     elif due == 'none':
         qs = qs.filter(next_follow_up__isnull=True)
     if params.get('match_alerts') == '1':
@@ -1805,12 +1818,20 @@ def link_listing_to_customer(customer, listing, tx, *, role='پیشنهادی', 
     return link
 
 
-def update_customer_status(customer: Customer, new_status: str) -> None:
+def update_customer_status(customer: Customer, new_status: str, *, user=None) -> None:
     """تغییر وضعیت مخاطب با ثبت لاگ."""
     from workspace.constants import CRM_STATUSES
+    from workspace.services.crm_contact_archive import archive_contact, is_contact_archived
 
     if new_status not in CRM_STATUSES:
         raise ValueError('وضعیت نامعتبر')
+    if new_status == 'بایگانی':
+        if user is None:
+            raise ValueError('کاربر الزامی است')
+        archive_contact(user, customer, via_legacy_status=True)
+        return
+    if is_contact_archived(customer):
+        raise ValueError('برای تغییر وضعیت، ابتدا مخاطب را از بایگانی بازگردانید.')
     old_status = customer.status
     if old_status == new_status:
         return

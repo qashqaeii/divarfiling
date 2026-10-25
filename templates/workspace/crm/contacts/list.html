@@ -56,6 +56,27 @@
         {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' warn=stats.due_today value=stats.due_today label='امروز' %}
     </section>
 
+    <nav class="crm-files-archive-tabs crm-contacts-archive-tabs" role="tablist" aria-label="نمای مخاطبین">
+        <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab crm-files-archive-tab--current {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab">
+            <span class="crm-files-archive-tab__inner">
+                <span class="crm-files-archive-tab__label-short">جاری</span>
+                <span class="crm-files-archive-tab__count">{{ stats.total }}</span>
+            </span>
+        </a>
+        <a href="?{{ archive_tab_qs.archived }}" class="crm-files-archive-tab crm-files-archive-tab--archived {% if archive_scope == 'archived' %}is-active{% endif %}" role="tab">
+            <span class="crm-files-archive-tab__inner">
+                <span class="crm-files-archive-tab__label-short">بایگانی</span>
+                <span class="crm-files-archive-tab__count">{{ stats.archived }}</span>
+            </span>
+        </a>
+        <a href="?{{ archive_tab_qs.all }}" class="crm-files-archive-tab crm-files-archive-tab--all {% if archive_scope == 'all' %}is-active{% endif %}" role="tab">
+            <span class="crm-files-archive-tab__inner">
+                <span class="crm-files-archive-tab__label-short">همه</span>
+                <span class="crm-files-archive-tab__count">{{ stats.all }}</span>
+            </span>
+        </a>
+    </nav>
+
     <div class="crm-contacts-smart-anchor crm-smart-command-anchor--minimal">
         {% include 'workspace/crm/includes/crm_smart_command.html' %}
     </div>
@@ -63,6 +84,7 @@
     <div class="crm-contacts-mob-chrome">
     <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
         <input type="hidden" name="view" value="{{ view_mode }}">
+        {% if archive_scope and archive_scope != 'active' %}<input type="hidden" name="archive_scope" value="{{ archive_scope }}">{% endif %}
 
         <div class="crm-contacts-mob-toolbar-sticky">
         <div class="crm-contacts-filter-primary crm-contacts-mob-toolbar-row">

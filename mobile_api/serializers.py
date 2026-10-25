@@ -312,9 +312,15 @@ def _contact_property_type_legacy(c: Customer) -> str:
 def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
     from accounts.avatar_catalog import resolve_contact_avatar_display
 
+    from workspace.services.crm_contact_archive import (
+        contact_display_status,
+        contact_last_communication_status,
+        is_contact_archived,
+    )
+
     budget = c.budget_max or c.budget_min
     contact_avatar = resolve_contact_avatar_display(c, request=request)
-    return {
+    data = {
         'id': c.pk,
         'full_name': c.name,
         'photo_url': contact_avatar['photo_url'],
@@ -373,7 +379,15 @@ def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
         'social_links': getattr(c, 'social_links', None) or {},
         'active_channels': getattr(c, 'active_channels', None) or [],
         'matching_tolerance_percent': c.matching_tolerance_percent,
+        'is_archived': is_contact_archived(c),
+        'archived_at': c.archived_at.isoformat() if getattr(c, 'archived_at', None) else None,
+        'archive_reason': (getattr(c, 'archive_reason', '') or '').strip(),
+        'display_status': contact_display_status(c),
     }
+    last_comm = contact_last_communication_status(c)
+    if last_comm:
+        data['last_communication_status'] = last_comm
+    return data
 
 
 def dataset_to_dict(

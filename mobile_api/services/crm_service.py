@@ -35,6 +35,7 @@ def list_contacts(
     due: str = '',
     sort: str = '',
     tag: str = '',
+    archive_scope: str = '',
 ) -> Tuple[List[dict], dict]:
     qs = filter_contacts(user, {
         'q': q,
@@ -44,6 +45,7 @@ def list_contacts(
         'due': due,
         'sort': sort,
         'tags': tag,
+        'archive_scope': archive_scope,
     })
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
@@ -53,7 +55,7 @@ def list_contacts(
 
 
 def get_contact(user, contact_id: int) -> Optional[Customer]:
-    contact = filter_contacts(user, {}).filter(pk=contact_id).first()
+    contact = customers_qs(user).filter(pk=contact_id).first()
     if contact:
         return contact
     from workspace.services.agency_data_scope import customer_for_agency_viewer
@@ -104,9 +106,22 @@ def _field_present(data: Dict[str, Any], key: str) -> bool:
 
 
 def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Customer]:
+    from workspace.services.crm import update_customer_status
+    from workspace.services.crm_contact_archive import is_contact_archived, restore_contact
+    from workspace.services.crm_scope import can_edit_customer
+
     c = get_contact(user, contact_id)
     if not c:
         return None
+    writes = any(
+        _field_present(data, k) or k in data
+        for k in (
+            'full_name', 'name', 'phone', 'email', 'source', 'status', 'customer_type',
+            'priority', 'notes', 'property_type', 'property_types', 'lease_deadline',
+        )
+    )
+    if writes and not can_edit_customer(user, c):
+        raise ValueError('امکان ویرایش این مخاطب را ندارید')
     if _field_present(data, 'full_name') or _field_present(data, 'name'):
         c.name = (data.get('full_name') or data.get('name') or c.name).strip()
     if _field_present(data, 'phone'):
@@ -118,7 +133,17 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
     if 'source' in data and data['source'] is not None:
         c.source = (data.get('source') or '').strip()[:30]
     if _field_present(data, 'status') and data['status']:
-        c.status = data['status']
+        new_status = (data['status'] or '').strip()
+        if new_status == 'بایگانی' or data.get('is_archived') is True:
+            from workspace.services.crm_contact_archive import archive_contact
+            archive_contact(user, c, via_legacy_status=True)
+            c.refresh_from_db()
+        elif data.get('is_archived') is False and is_contact_archived(c):
+            restore_contact(user, c, restore_status=new_status if new_status != 'بایگانی' else '')
+            c.refresh_from_db()
+        elif new_status:
+            update_customer_status(c, new_status, user=user)
+            c.refresh_from_db()
     if _field_present(data, 'customer_type') and data['customer_type']:
         c.customer_type = data['customer_type']
     if _field_present(data, 'priority') and data['priority']:

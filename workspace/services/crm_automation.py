@@ -59,7 +59,7 @@ def apply_rule(rule: CRMAutomationRule, customer: Customer) -> bool:
 
     if rule.action == 'set_status' and rule.action_status in CRM_STATUSES:
         old = customer.status
-        update_customer_status(customer, rule.action_status)
+        update_customer_status(customer, rule.action_status, user=rule.user)
         log_activity(
             customer, 'وظیفه',
             content=f'قانون «{rule.name}»: وضعیت به «{rule.action_status}» تغییر کرد.',

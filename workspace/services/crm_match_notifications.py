@@ -121,7 +121,9 @@ def discover_customer_matches(
 ) -> List[Dict[str, Any]]:
     if not is_match_eligible(customer):
         return []
-    if customer.status == 'بایگانی':
+    from workspace.services.crm_contact_archive import is_contact_archived
+
+    if is_contact_archived(customer):
         return []
     data = get_customer_matches(
         customer,
@@ -245,10 +247,12 @@ def process_user_customer_matches(
     if not user_push_enabled(user, 'customer_match'):
         return 0
 
+    from workspace.services.crm_contact_archive import archived_contacts_q
+
     batch: List[Tuple[Customer, List[Dict[str, Any]]]] = []
     customers = (
         Customer.objects.filter(user=user)
-        .exclude(status='بایگانی')
+        .exclude(archived_contacts_q())
         .filter(customer_type__in=MATCH_ELIGIBLE_TYPES)
         .order_by('-updated_at')[:max_customers]
     )

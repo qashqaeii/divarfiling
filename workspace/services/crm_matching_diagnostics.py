@@ -46,7 +46,9 @@ def build_empty_match_message(
     crm_sql_count: int = 0,
     divar_sql_count: int = 0,
 ) -> str:
-    if customer.status == 'بایگانی':
+    from workspace.services.crm_contact_archive import is_contact_archived
+
+    if is_contact_archived(customer):
         return 'مخاطب بایگانی است؛ تطبیق خودکار غیرفعال است.'
     if _profile_incomplete(customer):
         return (

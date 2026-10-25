@@ -346,6 +346,7 @@ class ContactsListView(APIView):
             'due': request.GET.get('due', ''),
             'sort': request.GET.get('sort', ''),
             'tag': request.GET.get('tag', '') or request.GET.get('tags', ''),
+            'archive_scope': request.GET.get('archive_scope', ''),
         }
         items, meta = list_contacts(request.user, page=page, page_size=page_size, **params)
         return api_ok(items, meta=meta)

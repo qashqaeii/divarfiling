@@ -125,6 +125,24 @@ def crm_status_dot(status):
 
 
 @register.filter
+def crm_contact_is_archived(customer):
+    from workspace.services.crm_contact_archive import is_contact_archived
+    return is_contact_archived(customer)
+
+
+@register.filter
+def crm_contact_display_status(customer):
+    from workspace.services.crm_contact_archive import contact_display_status
+    return contact_display_status(customer)
+
+
+@register.filter
+def crm_contact_last_comm_status(customer):
+    from workspace.services.crm_contact_archive import contact_last_communication_status
+    return contact_last_communication_status(customer)
+
+
+@register.filter
 def crm_follow_due_class(customer):
     """کلاس CSS برای تاریخ پیگیری: is-overdue | is-today."""
     follow = getattr(customer, 'next_follow_up', None)

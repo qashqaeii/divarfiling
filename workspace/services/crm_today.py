@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Tuple
 from django.utils import timezone
 
 from workspace.models import Customer, Reminder
+from workspace.services.crm_contact_archive import archived_contacts_q
 from workspace.services.crm_scope import customers_qs, reminders_qs
 from workspace.services.crm_property_rental_renewal import sanitize_reminder_note_for_display
 from workspace.services.jalali_input import format_jalali_date
@@ -20,7 +21,7 @@ def _followup_items(user, today) -> List[Dict[str, Any]]:
     active_statuses = ['جدید', 'در حال پیگیری']
 
     overdue_qs = (
-        customers_qs(user).filter(
+        customers_qs(user).exclude(archived_contacts_q()).filter(
             next_follow_up__lt=today,
             status__in=active_statuses,
         )
@@ -30,7 +31,7 @@ def _followup_items(user, today) -> List[Dict[str, Any]]:
         items.append(_followup_item(c, 'overdue', today))
 
     today_qs = (
-        customers_qs(user).filter(
+        customers_qs(user).exclude(archived_contacts_q()).filter(
             next_follow_up=today,
             status__in=active_statuses,
         )

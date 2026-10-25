@@ -107,6 +107,12 @@ def upsert_renewal_schedule(
     prop.save(update_fields=['rental_contract_end_date', 'updated_at'])
 
     if not create_reminder:
+        Reminder.objects.filter(
+            user=user,
+            property=prop,
+            reminder_kind=RENEWAL_REMINDER_KIND,
+            is_done=False,
+        ).update(is_done=True)
         return None
 
     follow = renewal_followup_date(contract_end)

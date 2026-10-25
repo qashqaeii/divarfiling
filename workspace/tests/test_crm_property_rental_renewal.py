@@ -11,6 +11,7 @@ from workspace.models import CRMProperty, Reminder
 from workspace.services.crm_property_archive import archive_property
 from workspace.services.crm_property_rental_renewal import (
     RENEWAL_REMINDER_KIND,
+    build_renewal_panel,
     format_renewal_reminder_note,
     renewal_followup_date,
     sanitize_reminder_note_for_display,
@@ -84,6 +85,23 @@ class RentalRenewalReminderTests(TestCase):
             ).count(),
             1,
         )
+
+    def test_contract_change_without_reminder_clears_active_schedule(self):
+        first_end = jdatetime.date(1406, 8, 3).togregorian()
+        upsert_renewal_schedule(self.user, self.prop, first_end, create_reminder=True)
+        second_end = jdatetime.date(1407, 1, 15).togregorian()
+        upsert_renewal_schedule(self.user, self.prop, second_end, create_reminder=False)
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.rental_contract_end_date, second_end)
+        self.assertEqual(
+            Reminder.objects.filter(
+                user=self.user, property=self.prop, reminder_kind=RENEWAL_REMINDER_KIND, is_done=False,
+            ).count(),
+            0,
+        )
+        panel = build_renewal_panel(self.user, self.prop)
+        self.assertEqual(panel['reminder_state'], 'done')
+        self.assertNotEqual(panel['reminder'].due_at.date(), renewal_followup_date(second_end))
 
 
 class PropertyDetailArchiveUxTests(TestCase):

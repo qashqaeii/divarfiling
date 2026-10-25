@@ -39,7 +39,9 @@ def apply_archive_scope(qs: QuerySet, params: dict) -> QuerySet:
 
     if tx == 'بایگانی':
         return qs.filter(archived_properties_q())
-    if tx and tx != 'بایگانی':
+    # فیلتر وضعیت معامله روی لیست جاری: بایگانی‌ها جدا هستند؛ در تب بایگانی/همه نباید حذف شوند.
+    scope_includes_archived = scope in (ARCHIVE_SCOPE_ARCHIVED, 'بایگانی', ARCHIVE_SCOPE_ALL)
+    if tx and tx != 'بایگانی' and not scope_includes_archived:
         qs = qs.exclude(archived_properties_q())
 
     if scope in ('', ARCHIVE_SCOPE_ACTIVE, 'current', 'جاری'):

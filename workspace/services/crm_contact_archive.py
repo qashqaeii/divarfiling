@@ -44,9 +44,9 @@ def is_contact_archived(customer: Customer) -> bool:
 
 
 def contact_last_communication_status(customer: Customer) -> str:
-    """وضعیت ارتباط واقعی برای نمایش — برای legacy بایگانی خالی."""
+    """وضعیت ارتباط قبل از بایگانی — فقط برای مخاطب بایگانی‌شده (نه تکرار status جاری)."""
     if not is_contact_archived(customer):
-        return customer.status or ''
+        return ''
     status = (customer.status or '').strip()
     if status == 'بایگانی':
         return ''

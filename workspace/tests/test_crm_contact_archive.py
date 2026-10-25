@@ -12,6 +12,7 @@ from workspace.services.crm_contact_archive import (
     archive_contact,
     bulk_archive_contacts,
     bulk_restore_contacts,
+    contact_last_communication_status,
     is_contact_archived,
     restore_contact,
 )
@@ -39,6 +40,14 @@ class CRMContactArchiveServiceTests(TestCase):
         self.assertTrue(is_contact_archived(self.customer))
         self.assertEqual(self.customer.status, 'قرارداد')
         self.assertIsNotNone(self.customer.archived_at)
+
+    def test_last_comm_status_empty_for_active_contact(self):
+        self.assertEqual(contact_last_communication_status(self.customer), '')
+
+    def test_last_comm_status_shown_when_archived(self):
+        archive_contact(self.user, self.customer)
+        self.customer.refresh_from_db()
+        self.assertEqual(contact_last_communication_status(self.customer), 'قرارداد')
 
     def test_restore_keeps_status(self):
         archive_contact(self.user, self.customer)

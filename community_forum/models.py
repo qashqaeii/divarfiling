@@ -57,6 +57,7 @@ class ForumMessage(models.Model):
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
     edited_at = models.DateTimeField(null=True, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    reactions_updated_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         verbose_name = 'پیام تالار'

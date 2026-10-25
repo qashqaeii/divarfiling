@@ -11,7 +11,11 @@ from django.views.decorators.csrf import csrf_protect
 
 from community_forum.constants import MAX_BODY_LENGTH, REPORT_REASONS
 from community_forum.models import ForumPinnedNotice
-from community_forum.services.access import is_forum_enabled, user_can_moderate_forum
+from community_forum.services.access import (
+    is_forum_enabled,
+    user_can_access_forum,
+    user_can_moderate_forum,
+)
 from community_forum.services.members import get_or_create_member, update_display_name
 from community_forum.services.messages import (
     delete_message,
@@ -35,6 +39,8 @@ class ForumAPIBase(LoginRequiredMixin, View):
     def dispatch(self, request, *args, **kwargs):
         if not is_forum_enabled():
             return JsonResponse({'ok': False, 'error': 'تالار گفتگو فعال نیست.'}, status=404)
+        if request.user.is_authenticated and not user_can_access_forum(request.user):
+            return JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست.'}, status=404)
         return super().dispatch(request, *args, **kwargs)
 
     def _member(self, request):
@@ -281,13 +287,19 @@ class ForumSyncAPIView(ForumAPIBase):
         since = request.GET.get('since', '')
         try:
             anchor_id = int(request.GET.get('anchor_id', 0) or 0)
+            cursor_id = int(request.GET.get('cursor', 0) or 0)
         except ValueError:
             return JsonResponse({'ok': False, 'error': 'شناسه نامعتبر'}, status=400)
         try:
-            messages = list_sync_changes(member, anchor_id=anchor_id, since_iso=since)
+            page = list_sync_changes(
+                member,
+                anchor_id=anchor_id,
+                since_iso=since,
+                cursor_id=cursor_id,
+            )
         except ValidationError as exc:
             return self._err(exc)
-        return JsonResponse({'ok': True, 'messages': messages})
+        return JsonResponse({'ok': True, **page})
 
 
 class ForumUnreadAPIView(ForumAPIBase):

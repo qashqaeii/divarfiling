@@ -27,6 +27,7 @@
     lastId: 0,
     lastSyncAt: null,
     sending: false,
+    pendingSend: null,
     reportReasons: [],
     ui: { editId: null, deleteId: null, reportId: null, reactionId: null },
   };
@@ -255,13 +256,23 @@
 
   function syncChanges() {
     if (!state.lastId || !state.lastSyncAt) return Promise.resolve();
-    var url = apiUrl(
-      'sync/?anchor_id=' + state.lastId + '&since=' + encodeURIComponent(state.lastSyncAt),
-    );
-    return fetchJson(url).then(function (data) {
-      (data.messages || []).forEach(function (m) { upsertFromPayload(m, false); });
-      touchSyncClock();
-    }).catch(function () {});
+    var cursor = 0;
+    function step() {
+      var url = apiUrl(
+        'sync/?anchor_id=' + state.lastId
+          + '&since=' + encodeURIComponent(state.lastSyncAt)
+          + '&cursor=' + cursor,
+      );
+      return fetchJson(url).then(function (data) {
+        (data.messages || []).forEach(function (m) { upsertFromPayload(m, false); });
+        if (data.has_more && data.next_cursor) {
+          cursor = data.next_cursor;
+          return step();
+        }
+        touchSyncClock();
+      });
+    }
+    return step().catch(function () {});
   }
 
   function fetchMissed() {
@@ -281,13 +292,16 @@
     });
   }
 
-  function teardownWs() {
+  function teardownWs(opts) {
+    opts = opts || {};
     if (state.heartbeatTimer) { clearInterval(state.heartbeatTimer); state.heartbeatTimer = null; }
     if (state.ws) {
       try { state.ws.onclose = null; state.ws.close(); } catch (e) {}
       state.ws = null;
     }
-    state.wsConnecting = false;
+    if (!opts.preserveConnecting) {
+      state.wsConnecting = false;
+    }
   }
 
   function scheduleReconnect() {
@@ -315,10 +329,13 @@
     if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
   }
 
+  var wsConnectSeq = 0;
+
   function connectWs() {
     if (state.wsConnecting || (state.ws && state.ws.readyState <= 1)) return;
     state.wsConnecting = true;
-    teardownWs();
+    wsConnectSeq += 1;
+    teardownWs({ preserveConnecting: true });
     var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     var url = proto + '//' + location.host + wsPath;
     try { state.ws = new WebSocket(url); } catch (e) {
@@ -381,13 +398,22 @@
     ev.preventDefault();
     if (state.sending) return;
     var text = ($('cfComposerInput').value || '').trim();
-    if (!text) return;
+    if (!state.pendingSend) {
+      if (!text) return;
+      state.pendingSend = {
+        body: text,
+        reply_to_id: state.replyToId,
+        client_message_id: uuid(),
+      };
+    }
     state.sending = true;
     $('cfSendBtn').disabled = true;
+    var payload = state.pendingSend;
     fetchJson(messagesUrl, {
       method: 'POST',
-      body: { body: text, reply_to_id: state.replyToId, client_message_id: uuid() },
+      body: payload,
     }).then(function (data) {
+      state.pendingSend = null;
       $('cfComposerInput').value = '';
       updateChar();
       clearReply();
@@ -398,6 +424,7 @@
       toast((err && err.error) || 'ارسال ناموفق بود', true);
     }).finally(function () {
       state.sending = false;
+      $('cfSendBtn').disabled = false;
       updateChar();
     });
   }
@@ -562,6 +589,14 @@
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden && (!state.ws || state.ws.readyState !== 1)) connectWs();
   });
+
+  window.cfForumWsDiag = function () {
+    return {
+      wsConnecting: state.wsConnecting,
+      readyState: state.ws ? state.ws.readyState : null,
+      connectSeq: wsConnectSeq,
+    };
+  };
 
   fetchJson(bootstrapUrl).then(function (data) {
     state.myPublicId = data.member && data.member.public_id;

@@ -138,8 +138,18 @@ def send_message(
     return msg
 
 
-def list_sync_changes(viewer_member, *, anchor_id: int, since_iso: str):
-    """ویرایش/حذف پیام‌های با id <= anchor از زمان since."""
+SYNC_PAGE_SIZE = 200
+
+
+def list_sync_changes(
+    viewer_member,
+    *,
+    anchor_id: int,
+    since_iso: str,
+    cursor_id: int = 0,
+    limit: int = SYNC_PAGE_SIZE,
+):
+    """ویرایش/حذف/واکنش پیام‌های با id <= anchor از زمان since (صفحه‌بندی)."""
     from django.utils.dateparse import parse_datetime
 
     since = parse_datetime(since_iso)
@@ -147,13 +157,36 @@ def list_sync_changes(viewer_member, *, anchor_id: int, since_iso: str):
         raise ValidationError('زمان نامعتبر', code='since_invalid')
     if anchor_id < 0:
         raise ValidationError('شناسه نامعتبر', code='anchor_invalid')
+    if cursor_id < 0:
+        raise ValidationError('شناسه نامعتبر', code='cursor_invalid')
 
-    qs = ForumMessage.objects.filter(id__lte=anchor_id).filter(
-        Q(edited_at__gte=since) | Q(deleted_at__gte=since),
-    ).select_related('sender__user', 'reply_to__sender__user')
-    qs = qs.filter(created_at__gte=retention_cutoff())
-    items = list(qs.order_by('id')[:200])
-    return serialize_many(items, viewer_member)
+    limit = min(max(int(limit or SYNC_PAGE_SIZE), 1), SYNC_PAGE_SIZE)
+    cutoff = retention_cutoff()
+    change_filter = (
+        Q(edited_at__gte=since)
+        | Q(deleted_at__gte=since)
+        | Q(reactions_updated_at__gte=since)
+    )
+    qs = (
+        ForumMessage.objects.filter(
+            id__lte=anchor_id,
+            id__gt=cursor_id,
+            created_at__gte=cutoff,
+        )
+        .filter(change_filter)
+        .select_related('sender__user', 'reply_to__sender__user')
+        .order_by('id')
+    )
+    batch = list(qs[: limit + 1])
+    has_more = len(batch) > limit
+    items = batch[:limit]
+    messages = serialize_many(items, viewer_member)
+    next_cursor = items[-1].pk if has_more and items else None
+    return {
+        'messages': messages,
+        'has_more': has_more,
+        'next_cursor': next_cursor,
+    }
 
 
 def edit_message(member, message_id: int, body: str) -> ForumMessage:
@@ -206,14 +239,22 @@ def set_reaction(member, message_id: int, emoji: str | None) -> dict:
         raise ValidationError('پیام یافت نشد.', code='not_found')
 
     existing = ForumReaction.objects.filter(message=msg, member=member).first()
+    changed = False
     if not emoji:
         if existing:
             existing.delete()
+            changed = True
     elif existing:
-        existing.emoji = emoji
-        existing.save(update_fields=['emoji'])
+        if existing.emoji != emoji:
+            existing.emoji = emoji
+            existing.save(update_fields=['emoji'])
+            changed = True
     else:
         ForumReaction.objects.create(message=msg, member=member, emoji=emoji)
+        changed = True
+
+    if changed:
+        ForumMessage.objects.filter(pk=msg.pk).update(reactions_updated_at=timezone.now())
 
     counts, _ = build_reactions_map([msg.pk])
     payload = {'message_id': msg.pk, 'reactions': counts.get(msg.pk, [])}

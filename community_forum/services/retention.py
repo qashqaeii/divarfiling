@@ -35,13 +35,20 @@ def is_message_visible(msg: ForumMessage) -> bool:
     return msg.created_at >= retention_cutoff()
 
 
-def _try_pg_advisory_lock() -> bool:
+def _pg_advisory_lock_state() -> str:
+    """
+    unavailable — PostgreSQL نیست یا قفل advisory پشتیبانی نمی‌شود.
+    acquired — قفل گرفته شد.
+    busy — قفل در اختیار پردازش دیگر است.
+    """
     if connection.vendor != 'postgresql':
-        return False
+        return 'unavailable'
     with connection.cursor() as cursor:
         cursor.execute('SELECT pg_try_advisory_lock(%s)', [_PG_ADVISORY_LOCK_ID])
         row = cursor.fetchone()
-    return bool(row and row[0])
+    if row and row[0]:
+        return 'acquired'
+    return 'busy'
 
 
 def _release_pg_advisory_lock() -> None:
@@ -64,9 +71,15 @@ def _purge_batch(expired_ids: list[int]) -> dict:
 def purge_expired_messages(*, retention_days: int = RETENTION_DAYS, max_batches: int = 50) -> dict:
     token = str(uuid.uuid4())
     cache = shared_cache()
-    pg_locked = _try_pg_advisory_lock()
-    if not pg_locked and not cache.add(PURGE_LOCK_KEY, token, timeout=3600):
+    pg_state = _pg_advisory_lock_state()
+    if pg_state == 'busy':
         return {'messages': 0, 'reactions': 0, 'reports': 0, 'skipped': True}
+    pg_locked = pg_state == 'acquired'
+    cache_locked = False
+    if not pg_locked:
+        if not cache.add(PURGE_LOCK_KEY, token, timeout=3600):
+            return {'messages': 0, 'reactions': 0, 'reports': 0, 'skipped': True}
+        cache_locked = True
 
     totals = {'messages': 0, 'reactions': 0, 'reports': 0, 'batches': 0}
     cutoff = timezone.now() - timedelta(days=retention_days)
@@ -88,7 +101,7 @@ def purge_expired_messages(*, retention_days: int = RETENTION_DAYS, max_batches:
     finally:
         if pg_locked:
             _release_pg_advisory_lock()
-        elif cache.get(PURGE_LOCK_KEY) == token:
+        elif cache_locked and cache.get(PURGE_LOCK_KEY) == token:
             cache.delete(PURGE_LOCK_KEY)
 
     logger.info('forum purge complete: %s', totals)

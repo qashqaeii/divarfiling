@@ -23,6 +23,7 @@ FORUM_SETTINGS = {
     'DEBUG': True,
     'FORUM_REDIS_URL': '',
     'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS': False,
+    'COMMUNITY_FORUM_ROLLOUT_MODE': 'all',
     'CHANNEL_LAYERS': {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}},
 }
 
@@ -100,5 +101,5 @@ class ForumSyncAPITests(TestCase):
         since = timezone.now().isoformat()
         msg = send_message(self.member, 'نسخه اول')
         edit_message(self.member, msg.pk, 'نسخه دوم')
-        items = list_sync_changes(self.member, anchor_id=msg.pk, since_iso=since)
-        self.assertTrue(any(m['body'] == 'نسخه دوم' for m in items))
+        page = list_sync_changes(self.member, anchor_id=msg.pk, since_iso=since)
+        self.assertTrue(any(m['body'] == 'نسخه دوم' for m in page['messages']))

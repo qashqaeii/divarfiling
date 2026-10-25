@@ -23,7 +23,9 @@ HTTP اصلی سایت همچنان از Gunicorn + `divar_shop.asgi` / WSGI ا�
 
 | متغیر | توضیح |
 |--------|--------|
-| `COMMUNITY_FORUM_ENABLED` | فعال‌سازی تالار |
+| `COMMUNITY_FORUM_ENABLED` | فعال‌سازی تالار (سوئیچ اصلی) |
+| `COMMUNITY_FORUM_ROLLOUT_MODE` | `none` (پیش‌فرض)، `allowlist`، `all` |
+| `COMMUNITY_FORUM_ALLOWED_USER_IDS` | شناسه کاربران مجاز (با کاما) برای `allowlist` |
 | `FORUM_REDIS_URL` | Redis مشترک: Channel Layer، Rate Limit (Lua)، و `forum_shared` (ban و قفل fallback) |
 | `COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS` | `true` = بدون Redis ارسال fail-closed |
 | `FORUM_SHARED_CACHE_BACKEND` | در صورت نبود `FORUM_REDIS_URL`، backend جدا برای ban (production: Redis) |

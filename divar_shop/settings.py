@@ -431,6 +431,22 @@ CACHES = {
 
 # ── تالار گفتگو (Community Forum) ──
 COMMUNITY_FORUM_ENABLED = config('COMMUNITY_FORUM_ENABLED', default=False, cast=bool)
+
+
+def _parse_forum_allowed_user_ids(raw: str) -> frozenset:
+    ids = set()
+    for part in (raw or '').split(','):
+        part = part.strip()
+        if part.isdigit():
+            ids.add(int(part))
+    return frozenset(ids)
+
+
+# none = حتی با ENABLED هیچ کاربری دسترسی ندارد؛ allowlist = فقط شناسه‌ها؛ all = همه
+COMMUNITY_FORUM_ROLLOUT_MODE = config('COMMUNITY_FORUM_ROLLOUT_MODE', default='none')
+COMMUNITY_FORUM_ALLOWED_USER_IDS = _parse_forum_allowed_user_ids(
+    config('COMMUNITY_FORUM_ALLOWED_USER_IDS', default=''),
+)
 COMMUNITY_FORUM_RETENTION_DAYS = config('COMMUNITY_FORUM_RETENTION_DAYS', default=30, cast=int)
 COMMUNITY_FORUM_MAX_BODY_LENGTH = config('COMMUNITY_FORUM_MAX_BODY_LENGTH', default=2000, cast=int)
 COMMUNITY_FORUM_MIN_SEND_INTERVAL = config('COMMUNITY_FORUM_MIN_SEND_INTERVAL', default=3, cast=int)

@@ -16,6 +16,7 @@ FORUM_SETTINGS = {
     'DEBUG': True,
     'FORUM_REDIS_URL': '',
     'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS': False,
+    'COMMUNITY_FORUM_ROLLOUT_MODE': 'all',
     'ALLOWED_HOSTS': ['127.0.0.1', 'localhost', 'testserver'],
     'CHANNEL_LAYERS': {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}},
 }

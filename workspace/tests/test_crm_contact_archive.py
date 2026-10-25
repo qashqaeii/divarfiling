@@ -235,3 +235,24 @@ class CRMContactArchiveViewTests(TestCase):
         res = self.client.get(f'{url}?archive_scope=archived')
         self.assertContains(res, 'name="restore_status"')
         self.assertContains(res, 'data-for="restore"')
+
+    def test_archived_scope_with_pipeline_request_paginates_table_rows(self):
+        """view=pipeline روی تب بایگانی نباید همه مخاطبین را یک‌جا بارگذاری کند."""
+        for i in range(30):
+            c = Customer.objects.create(user=self.user, name=f'بایگانی {i:02d}', status='جدید')
+            archive_contact(self.user, c)
+        url = reverse('workspace:crm_contacts')
+        res = self.client.get(f'{url}?archive_scope=archived&view=pipeline')
+        self.assertEqual(res.status_code, 200)
+        html = res.content.decode()
+        self.assertIn('crm-contacts-table-wrap', html)
+        self.assertNotIn('crm-contacts-pipeline', html)
+        self.assertIn('data-has-next="1"', html)
+        self.assertEqual(html.count('crm-row-check'), 25)
+
+        partial = self.client.get(f'{url}?archive_scope=archived&view=pipeline&partial=1&page=2')
+        self.assertEqual(partial.status_code, 200)
+        data = partial.json()
+        self.assertFalse(data['has_next'])
+        self.assertIsNone(data['next_page'])
+        self.assertEqual(data['html'].count('crm-row-check'), 5)

@@ -384,11 +384,26 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
 
     def get_paginate_by(self, queryset):
         if self.request.GET.get('view') == 'pipeline':
+            from workspace.services.crm_contact_archive import (
+                ARCHIVE_SCOPE_ALL,
+                ARCHIVE_SCOPE_ARCHIVED,
+            )
+            archive_scope = (self.request.GET.get('archive_scope') or 'active').strip().lower()
+            if archive_scope in (ARCHIVE_SCOPE_ARCHIVED, ARCHIVE_SCOPE_ALL):
+                return self.paginate_by
             return None
         return self.paginate_by
 
     def render_to_response(self, context, **response_kwargs):
+        from workspace.services.crm_contact_archive import (
+            ARCHIVE_SCOPE_ACTIVE,
+            ARCHIVE_SCOPE_ALL,
+            ARCHIVE_SCOPE_ARCHIVED,
+        )
+        archive_scope = (self.request.GET.get('archive_scope') or ARCHIVE_SCOPE_ACTIVE).strip().lower()
         view_mode = context.get('view_mode') or self.request.GET.get('view', 'table')
+        if archive_scope in (ARCHIVE_SCOPE_ARCHIVED, ARCHIVE_SCOPE_ALL):
+            view_mode = 'table'
         if self.request.GET.get('partial') == '1' and view_mode != 'pipeline':
             page_obj = context.get('page_obj')
             html = render_to_string(

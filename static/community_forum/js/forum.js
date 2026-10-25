@@ -9,7 +9,10 @@
   var bootstrapUrl = root.dataset.bootstrapUrl;
   var messagesUrl = root.dataset.apiBase;
   var wsPath = root.dataset.wsPath || '/ws/forum/';
-  var EMOJIS = ['👍', '❤️', '👏', '😂', '🙏'];
+  var EMOJIS = (window.CFForumEmoji && window.CFForumEmoji.REACTION_EMOJIS) ||
+    ['👍', '❤️', '👏', '😂', '🙏'];
+  var maxBodyLen = 2000;
+  var reactionPopover = null;
 
   var state = {
     messages: new Map(),
@@ -148,6 +151,74 @@
     return d.innerHTML;
   }
 
+  function isNoticeMessage(msg) {
+    if (!msg || msg.is_mine) return false;
+    var l = (msg.sender_label || '').toLowerCase();
+    return l.indexOf('مدیریت') >= 0 || l.indexOf('فایلینگ دیوار') >= 0 || l.indexOf('پشتیبانی') >= 0;
+  }
+
+  function shouldGroupWith(prev, msg) {
+    if (!prev || prev.is_deleted || msg.is_deleted || isNoticeMessage(msg) || isNoticeMessage(prev)) return false;
+    if (prev.sender_public_id !== msg.sender_public_id) return false;
+    if (dayKey(prev.created_at) !== dayKey(msg.created_at)) return false;
+    try {
+      return (new Date(msg.created_at) - new Date(prev.created_at)) < 300000;
+    } catch (e) { return false; }
+  }
+
+  function setMessageBody(el, text, useRich) {
+    if (!el) return;
+    el.textContent = '';
+    var s = text || '';
+    if (!s) return;
+    if (!useRich || s.indexOf('**') < 0) {
+      el.textContent = s;
+      return;
+    }
+    var re = /\*\*([^*]+)\*\*/g;
+    var last = 0;
+    var m;
+    while ((m = re.exec(s)) !== null) {
+      if (m.index > last) el.appendChild(document.createTextNode(s.slice(last, m.index)));
+      var strong = document.createElement('strong');
+      strong.textContent = m[1];
+      el.appendChild(strong);
+      last = m.index + m[0].length;
+    }
+    if (last < s.length) el.appendChild(document.createTextNode(s.slice(last)));
+  }
+
+  function bindReactionChip(btn, msg, reaction) {
+    if (msg.my_reaction === reaction.emoji) btn.classList.add('cf-reaction--mine');
+    btn.addEventListener('click', function () {
+      if (msg.my_reaction === reaction.emoji) postReaction(msg.id, null);
+      else postReaction(msg.id, reaction.emoji);
+    });
+  }
+
+  function scrollToMessageId(id, highlight) {
+    if (!id) return;
+    if (!state.messages.has(id)) {
+      return fetchJson(messagesUrl + '?before_id=' + (id + 1)).then(function (data) {
+        (data.messages || []).forEach(function (m) { mergeMessage(m); });
+        renderAll();
+        focusMessageNode(id, highlight);
+      }).catch(function () { toast('پیام پیدا نشد', true); });
+    }
+    focusMessageNode(id, highlight);
+    return Promise.resolve();
+  }
+
+  function focusMessageNode(id, highlight) {
+    var node = findMessageNode(id);
+    if (!node) { toast('پیام در این بخش از گفتگو نیست', true); return; }
+    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (highlight) {
+      node.classList.add('cf-msg--flash');
+      setTimeout(function () { node.classList.remove('cf-msg--flash'); }, 2200);
+    }
+  }
+
   function initials(label) {
     var parts = (label || '?').trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return '?';
@@ -201,6 +272,7 @@
     var items = [
       { act: 'reply', label: 'پاسخ' },
       { act: 'react', label: 'واکنش' },
+      { act: 'copy', label: 'کپی متن' },
     ];
     if (msg.is_mine) {
       items.push({ act: 'edit', label: 'ویرایش' });
@@ -218,11 +290,39 @@
     if (act === 'edit') openEdit(msg);
     if (act === 'del') openDelete(msg.id);
     if (act === 'report') openReport(msg.id);
+    if (act === 'copy') copyMessageText(msg);
   }
 
-  function buildMessageEl(msg) {
+  function copyMessageText(msg) {
+    var text = msg.is_deleted ? '' : (msg.body || '');
+    if (!text) { toast('متنی برای کپی نیست', true); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast('متن کپی شد'); })
+        .catch(function () { toast('کپی ناموفق بود', true); });
+      return;
+    }
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('متن کپی شد');
+    } catch (e) {
+      toast('کپی ناموفق بود', true);
+    }
+  }
+
+  function buildMessageEl(msg, opts) {
+    opts = opts || {};
     var wrap = document.createElement('div');
     wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') + (msg.is_deleted ? ' cf-msg--deleted' : '');
+    if (opts.grouped) wrap.classList.add('cf-msg--grouped');
+    if (isNoticeMessage(msg)) wrap.classList.add('cf-msg--notice');
     wrap.dataset.id = String(msg.id);
 
     var av;
@@ -249,17 +349,24 @@
     bubble.className = 'cf-msg__bubble';
 
     if (msg.reply_to) {
-      var rp = document.createElement('div');
+      var rp = document.createElement('button');
+      rp.type = 'button';
       rp.className = 'cf-msg__reply';
       rp.textContent = msg.reply_to.unavailable ? 'پیام در دسترس نیست' :
         ((msg.reply_to.sender_label || '') + ': ' + (msg.reply_to.body_preview || ''));
+      if (!msg.reply_to.unavailable && msg.reply_to.id) {
+        rp.addEventListener('click', function () { scrollToMessageId(msg.reply_to.id, true); });
+      } else {
+        rp.disabled = true;
+      }
       bubble.appendChild(rp);
     }
 
     var body = document.createElement('div');
     body.className = 'cf-msg__body';
     body.setAttribute('dir', 'auto');
-    body.textContent = msg.is_deleted ? 'پیام حذف شده' : msg.body;
+    if (msg.is_deleted) body.textContent = 'پیام حذف شده';
+    else setMessageBody(body, msg.body, isNoticeMessage(msg));
     bubble.appendChild(body);
 
     var rx = document.createElement('div');
@@ -270,7 +377,7 @@
         s.type = 'button';
         s.className = 'cf-reaction';
         s.textContent = r.emoji + ' ' + r.count;
-        s.addEventListener('click', function () { openReaction(msg.id); });
+        bindReactionChip(s, msg, r);
         rx.appendChild(s);
       });
     }
@@ -310,11 +417,7 @@
       });
       toolbar.appendChild(menuBtn);
       toolbar.appendChild(menu);
-      bubble.style.position = 'relative';
-      toolbar.style.position = 'absolute';
-      toolbar.style.top = '4px';
-      toolbar.style.insetInlineEnd = '4px';
-      bubble.appendChild(toolbar);
+      stack.appendChild(toolbar);
     }
     wrap.appendChild(av);
     wrap.appendChild(stack);
@@ -325,7 +428,10 @@
     msg = normalizeIncoming(msg);
     wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') + (msg.is_deleted ? ' cf-msg--deleted' : '');
     var body = wrap.querySelector('.cf-msg__body');
-    if (body) body.textContent = msg.is_deleted ? 'پیام حذف شده' : msg.body;
+    if (body) {
+      if (msg.is_deleted) body.textContent = 'پیام حذف شده';
+      else setMessageBody(body, msg.body, isNoticeMessage(msg));
+    }
     var meta = wrap.querySelector('.cf-msg__meta');
     if (meta) {
       meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>' +
@@ -340,7 +446,7 @@
         s.type = 'button';
         s.className = 'cf-reaction';
         s.textContent = r.emoji + ' ' + r.count;
-        s.addEventListener('click', function () { openReaction(msg.id); });
+        bindReactionChip(s, msg, r);
         rx.appendChild(s);
       });
     }
@@ -384,19 +490,22 @@
     var empty = $('cfEmptyState');
     el.querySelectorAll('.cf-msg, .cf-day-sep').forEach(function (n) { n.remove(); });
     var lastDay = '';
+    var prevMsg = null;
     state.orderedIds.forEach(function (id) {
       var msg = state.messages.get(id);
       if (!msg) return;
       var dk = dayKey(msg.created_at);
       if (dk && dk !== lastDay) {
         lastDay = dk;
+        prevMsg = null;
         var sep = document.createElement('div');
         sep.className = 'cf-day-sep';
         sep.dataset.day = dk;
         sep.textContent = dk;
         el.appendChild(sep);
       }
-      el.appendChild(buildMessageEl(msg));
+      el.appendChild(buildMessageEl(msg, { grouped: shouldGroupWith(prevMsg, msg) }));
+      if (!msg.is_deleted) prevMsg = msg;
     });
     if (loading) el.appendChild(loading);
     if (empty) el.appendChild(empty);
@@ -407,7 +516,9 @@
 
   function appendMessageDom(msg) {
     var el = $('cfMessages');
-    var node = buildMessageEl(msg);
+    var prevId = state.orderedIds[state.orderedIds.indexOf(msg.id) - 1];
+    var prevMsg = prevId ? state.messages.get(prevId) : null;
+    var node = buildMessageEl(msg, { grouped: shouldGroupWith(prevMsg, msg) });
     var loading = $('cfLoadingState');
     var empty = $('cfEmptyState');
     ensureDaySepBefore(msg, loading || empty);
@@ -719,6 +830,7 @@
         var msg = state.messages.get(mid);
         if (msg) {
           msg.reactions = data.reactions;
+          msg.my_reaction = emoji || '';
           var node = findMessageNode(mid);
           if (node) patchMessageEl(node, msg);
         }
@@ -735,6 +847,10 @@
   function updateChar() {
     var n = ($('cfComposerInput').value || '').length;
     $('cfCharCount').textContent = String(n);
+    var wrap = $('cfCharCountWrap');
+    if (wrap) {
+      wrap.hidden = !(n > maxBodyLen * 0.82 || n >= maxBodyLen - 80);
+    }
     $('cfSendBtn').disabled = !n || state.sending;
   }
 
@@ -755,10 +871,11 @@
           row.className = 'cf-search-hit';
           row.textContent = (m.sender_label || '') + ': ' + (m.body || '').slice(0, 80);
           row.addEventListener('click', function () {
-            if (!state.messages.has(m.id)) mergeMessage(m);
-            renderAll();
-            var node = findMessageNode(m.id);
-            if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            mergeMessage(m);
+            if (!findMessageNode(m.id)) renderAll();
+            scrollToMessageId(m.id, true);
+            $('cfSearchPanel').hidden = true;
+            $('cfSearchToggle').setAttribute('aria-expanded', 'false');
           });
           box.appendChild(row);
         });
@@ -826,6 +943,30 @@
     $('cfSearchPanel').hidden = true;
     $('cfSearchToggle').setAttribute('aria-expanded', 'false');
   });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Escape') return;
+    var search = $('cfSearchPanel');
+    if (search && !search.hidden) {
+      search.hidden = true;
+      $('cfSearchToggle').setAttribute('aria-expanded', 'false');
+      $('cfSearchToggle').focus();
+    }
+  });
+  var pinnedRoot = $('cfPinned');
+  if ($('cfPinnedToggle') && pinnedRoot) {
+    $('cfPinnedToggle').addEventListener('click', function () {
+      var collapsed = pinnedRoot.classList.toggle('cf-pinned--collapsed');
+      this.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+  }
+  if (window.CFForumEmoji && $('cfEmojiToggle') && $('cfEmojiPopover')) {
+    window.CFForumEmoji.createPicker({
+      toggle: $('cfEmojiToggle'),
+      popover: $('cfEmojiPopover'),
+      textarea: $('cfComposerInput'),
+      onPick: function () { updateChar(); growComposer(); },
+    });
+  }
   $('cfSearchInput').addEventListener('keydown', function (ev) {
     if (ev.key === 'Enter') runSearch(1);
   });
@@ -901,10 +1042,14 @@
     if (data.member && data.member.display_name) {
       $('cfDisplayNameInput').value = data.member.display_name;
     }
-    $('cfComposerInput').maxLength = (data.limits && data.limits.max_body) || 2000;
+    maxBodyLen = (data.limits && data.limits.max_body) || 2000;
+    $('cfComposerInput').maxLength = maxBodyLen;
     if (data.pinned_notices && data.pinned_notices.length) {
       $('cfPinned').hidden = false;
-      $('cfPinned').textContent = data.pinned_notices.map(function (n) { return n.body; }).join(' — ');
+      var bodyEl = $('cfPinnedBody');
+      if (bodyEl) {
+        bodyEl.textContent = data.pinned_notices.map(function (n) { return n.body; }).join('\n');
+      }
     }
     if (!data.member.welcome_seen) {
       var dlg = $('cfWelcomeDialog');

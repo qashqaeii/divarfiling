@@ -4,7 +4,7 @@
 {% block body_extra_class %} ws-body--forum{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=7">
 {% endblock %}
 
 {% block page_title %}تالار گفتگو{% endblock %}
@@ -40,7 +40,14 @@
         </div>
     </header>
 
-    <div class="cf-pinned" id="cfPinned" hidden></div>
+    <div class="cf-pinned" id="cfPinned" hidden>
+        <button type="button" class="cf-pinned__toggle" id="cfPinnedToggle" aria-expanded="true">
+            <i class="fas fa-thumbtack cf-pinned__icon" aria-hidden="true"></i>
+            <span class="cf-pinned__title">اطلاعیه</span>
+            <i class="fas fa-chevron-up cf-pinned__chev" aria-hidden="true"></i>
+        </button>
+        <div class="cf-pinned__body" id="cfPinnedBody"></div>
+    </div>
 
     <div class="cf-search" id="cfSearchPanel" hidden>
         <div class="cf-search__bar">
@@ -91,14 +98,18 @@
                 </button>
             </div>
             <form class="cf-composer" id="cfComposer">
+                <button type="button" class="cf-composer__emoji" id="cfEmojiToggle" aria-label="ایموجی" aria-expanded="false" aria-controls="cfEmojiPopover">
+                    <i class="far fa-smile" aria-hidden="true"></i>
+                </button>
                 <div class="cf-composer__field">
                     <textarea class="cf-composer__input" id="cfComposerInput" rows="1" maxlength="2000" placeholder="پیام خود را بنویسید…" aria-label="متن پیام"></textarea>
-                    <span class="cf-composer__count" aria-hidden="true"><span id="cfCharCount">0</span>/2000</span>
+                    <span class="cf-composer__count" id="cfCharCountWrap" hidden aria-hidden="true"><span id="cfCharCount">0</span>/2000</span>
                 </div>
                 <button type="submit" class="cf-composer__send" id="cfSendBtn" disabled aria-label="ارسال">
                     <i class="fas fa-paper-plane" aria-hidden="true"></i>
                 </button>
             </form>
+            <div class="cf-emoji-popover" id="cfEmojiPopover" hidden role="dialog" aria-label="انتخاب ایموجی"></div>
         </div>
     </section>
 </div>
@@ -217,5 +228,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community_forum/js/forum.js' %}?v=6" defer></script>
+<script src="{% static 'community_forum/js/forum-emoji.js' %}?v=7" defer></script>
+<script src="{% static 'community_forum/js/forum.js' %}?v=7" defer></script>
 {% endblock %}

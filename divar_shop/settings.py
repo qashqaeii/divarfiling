@@ -472,7 +472,14 @@ if _CHANNELS_AVAILABLE:
         CHANNEL_LAYERS = {
             'default': {
                 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-                'CONFIG': {'hosts': [FORUM_REDIS_URL]},
+                'CONFIG': {
+                    'hosts': [
+                        {
+                            'address': FORUM_REDIS_URL,
+                            'socket_timeout': None,
+                        },
+                    ],
+                },
             },
         }
     else:

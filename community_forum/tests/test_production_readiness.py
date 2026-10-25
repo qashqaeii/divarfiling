@@ -1,6 +1,10 @@
+import os
 import threading
 import uuid
+from pathlib import Path
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache, caches
@@ -34,6 +38,13 @@ class ForumSettingsTests(TestCase):
         from django.conf import settings as s
 
         self.assertEqual(s.FORUM_REDIS_URL, 'redis://127.0.0.1:6379/3')
+
+    def test_channel_layers_redis_hosts_use_blocking_socket_timeout(self):
+        """redis-py 8 defaults socket_timeout=5s; Channels BRPOP needs blocking reads."""
+        settings_path = Path(settings.BASE_DIR) / 'divar_shop' / 'settings.py'
+        source = settings_path.read_text(encoding='utf-8')
+        self.assertIn("'address': FORUM_REDIS_URL", source)
+        self.assertIn("'socket_timeout': None", source)
 
     @override_settings(COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS=True)
     def test_rate_limit_require_redis_setting(self):
@@ -103,3 +114,54 @@ class ForumSyncAPITests(TestCase):
         edit_message(self.member, msg.pk, 'نسخه دوم')
         page = list_sync_changes(self.member, anchor_id=msg.pk, since_iso=since)
         self.assertTrue(any(m['body'] == 'نسخه دوم' for m in page['messages']))
+
+
+def _redis_channel_layers(redis_url):
+    return {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [
+                    {
+                        'address': redis_url,
+                        'socket_timeout': None,
+                    },
+                ],
+            },
+        },
+    }
+
+
+@override_settings()
+class ForumRedisChannelLayerIntegrationTests(TestCase):
+    """Requires local Redis (same host as production FORUM_REDIS_URL)."""
+
+    def setUp(self):
+        self.redis_url = (os.environ.get('FORUM_REDIS_URL') or '').strip()
+        if not self.redis_url:
+            self.redis_url = 'redis://127.0.0.1:6379/15'
+
+    def test_send_receive_between_channels(self):
+        try:
+            import redis
+
+            client = redis.from_url(self.redis_url, socket_connect_timeout=1)
+            client.ping()
+        except Exception as exc:
+            self.skipTest(f'Redis unavailable: {exc}')
+
+        with self.settings(CHANNEL_LAYERS=_redis_channel_layers(self.redis_url)):
+            from channels.layers import channel_layers
+
+            channel_layers.backends.clear()
+            layer = get_channel_layer()
+            channel_a = async_to_sync(layer.new_channel)()
+            channel_b = async_to_sync(layer.new_channel)()
+
+            async_to_sync(layer.send)(channel_a, {'type': 'forum.test', 'value': 42})
+            message = async_to_sync(layer.receive)(channel_a)
+            self.assertEqual(message['value'], 42)
+
+            async_to_sync(layer.send)(channel_b, {'type': 'forum.test', 'value': 99})
+            message_b = async_to_sync(layer.receive)(channel_b)
+            self.assertEqual(message_b['value'], 99)

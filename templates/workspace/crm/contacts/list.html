@@ -38,8 +38,8 @@
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
                 <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
             </button>
-            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-dash-act crm-dash-act--icon js-secure-export" data-export-label="مخاطبین Excel" title="خروجی Excel">
-                <i class="fas fa-file-excel" aria-hidden="true"></i>
+            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-dash-act js-secure-export" data-export-type="fetch-blob" data-export-label="مخاطبین Excel" data-export-filename="crm_contacts.xlsx" title="خروجی Excel">
+                <i class="fas fa-file-excel" aria-hidden="true"></i><span>خروجی Excel</span>
             </a>
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
                 <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
@@ -140,7 +140,7 @@
                     <button type="button" class="crm-contacts-mob-toolbar-item" role="menuitem" data-drawer-open="drawer-import">
                         <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
                     </button>
-                    <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-contacts-mob-toolbar-item js-secure-export" data-export-label="مخاطبین Excel" role="menuitem">
+                    <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-contacts-mob-toolbar-item js-secure-export" data-export-type="fetch-blob" data-export-label="مخاطبین Excel" data-export-filename="crm_contacts.xlsx" role="menuitem">
                         <i class="fas fa-file-excel" aria-hidden="true"></i><span>خروجی Excel</span>
                     </a>
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-contacts-mob-toolbar-item" role="menuitem">

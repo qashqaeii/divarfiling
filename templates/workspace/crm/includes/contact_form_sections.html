@@ -32,9 +32,8 @@
         </button>
     </nav>
 
-    {% crm_contact_channels_form form %}
-
     <div data-panel="basic" class="crm-form-panel">
+        {% crm_contact_channels_form form %}
         <section class="crm-form-section" aria-labelledby="crmFormSecIdentity">
             <h3 class="crm-form-section-title" id="crmFormSecIdentity"><i class="fas fa-id-card" aria-hidden="true"></i> اطلاعات هویتی</h3>
             <div class="crm-fields crm-fields-2">
@@ -48,44 +47,60 @@
             {% crm_field form.job 'شغل' voice=1 %}
             </div>
         </section>
-        <section class="crm-form-section" aria-labelledby="crmFormSecExtra">
-            <h3 class="crm-form-section-title" id="crmFormSecExtra"><i class="fas fa-user-pen" aria-hidden="true"></i> اطلاعات تکمیلی</h3>
-            <div class="crm-fields crm-fields-2">
-            <div class="crm-contact-identity-block crm-field-full">
-                <div class="crm-field crm-gender-field{% if form.gender.errors %} crm-field-has-error{% endif %}" data-field="gender" data-crm-gender-field>
-                    <span class="crm-label" id="crmGenderLabel">جنسیت</span>
-                    <div class="crm-gender-segment" role="radiogroup" aria-labelledby="crmGenderLabel">
-                        {% with selected=form.gender.value|default_if_none:'' %}
-                        <label class="crm-gender-seg">
-                            <input type="radio" name="gender" value=""{% if not selected %} checked{% endif %}>
-                            <span>مشخص نشده</span>
-                        </label>
-                        <label class="crm-gender-seg">
-                            <input type="radio" name="gender" value="female"{% if selected == 'female' %} checked{% endif %}>
-                            <span>خانم</span>
-                        </label>
-                        <label class="crm-gender-seg">
-                            <input type="radio" name="gender" value="male"{% if selected == 'male' %} checked{% endif %}>
-                            <span>آقا</span>
-                        </label>
-                        {% endwith %}
+        <section class="crm-form-section crm-form-section--extra" aria-labelledby="crmFormSecExtra">
+            <header class="crm-form-section-head">
+                <h3 class="crm-form-section-title" id="crmFormSecExtra">اطلاعات تکمیلی</h3>
+                <span class="crm-form-section-optional">اختیاری</span>
+            </header>
+            <div class="crm-contact-identity-block">
+                <div class="crm-contact-identity-person" data-crm-identity-person>
+                    <div class="crm-field crm-gender-field{% if form.gender.errors %} crm-field-has-error{% endif %}" data-field="gender" data-crm-gender-field>
+                        <div class="crm-contact-identity-row">
+                            <span class="crm-contact-identity-label" id="crmGenderLabel">جنسیت</span>
+                            <div class="crm-gender-segment crm-gender-segment--compact" role="radiogroup" aria-labelledby="crmGenderLabel">
+                                {% with selected=form.gender.value|default_if_none:'' %}
+                                <label class="crm-gender-seg">
+                                    <input type="radio" name="gender" value=""{% if not selected %} checked{% endif %}>
+                                    <span>نامشخص</span>
+                                </label>
+                                <label class="crm-gender-seg">
+                                    <input type="radio" name="gender" value="female"{% if selected == 'female' %} checked{% endif %}>
+                                    <span>خانم</span>
+                                </label>
+                                <label class="crm-gender-seg">
+                                    <input type="radio" name="gender" value="male"{% if selected == 'male' %} checked{% endif %}>
+                                    <span>آقا</span>
+                                </label>
+                                {% endwith %}
+                            </div>
+                        </div>
+                        {% for error in form.gender.errors %}
+                        <p class="crm-field-error" role="alert">{{ error }}</p>
+                        {% endfor %}
                     </div>
-                    {% for error in form.gender.errors %}
-                    <p class="crm-field-error" role="alert">{{ error }}</p>
-                    {% endfor %}
+                    <div class="crm-contact-identity-field-row">
+                        {% crm_field form.national_id 'کد ملی' 'crm-contact-national-field crm-contact-identity-input' %}
+                    </div>
                 </div>
-                <div class="crm-contact-legal-fields">
-                    <div class="crm-field crm-field-check crm-contact-legal-toggle{% if form.is_legal_entity.errors %} crm-field-has-error{% endif %}" data-field="is_legal_entity">
-                        {{ form.is_legal_entity }}
-                        <label class="crm-label crm-label-check" for="{{ form.is_legal_entity.id_for_label }}">شخص حقوقی</label>
+
+                <div class="crm-contact-identity-legal" data-crm-identity-legal>
+                    <div class="crm-field crm-contact-legal-toggle{% if form.is_legal_entity.errors %} crm-field-has-error{% endif %}" data-field="is_legal_entity">
+                        <div class="crm-contact-legal-toggle__text">
+                            <label class="crm-contact-legal-toggle__label" for="{{ form.is_legal_entity.id_for_label }}">شخص حقوقی</label>
+                            <span class="crm-contact-legal-toggle__hint">شرکت یا نهاد — به‌جای فرد حقیقی</span>
+                        </div>
+                        <label class="crm-contact-legal-switch" for="{{ form.is_legal_entity.id_for_label }}">
+                            {{ form.is_legal_entity }}
+                            <span class="crm-contact-legal-switch__track" aria-hidden="true"></span>
+                        </label>
                         {% for error in form.is_legal_entity.errors %}
                         <p class="crm-field-error" role="alert">{{ error }}</p>
                         {% endfor %}
                     </div>
-                    {% crm_field form.company_name 'نام شرکت' 'crm-legal-field' voice=1 %}
-                    {% crm_field form.national_id 'کد ملی' 'crm-contact-national-field' %}
+                    <div class="crm-contact-identity-field-row crm-contact-identity-company{% if not form.instance.is_legal_entity %} is-collapsed{% endif %}" data-crm-identity-company>
+                        {% crm_field form.company_name 'نام شرکت' 'crm-legal-field crm-contact-identity-input' voice=1 %}
+                    </div>
                 </div>
-            </div>
             </div>
         </section>
         <div class="crm-field crm-field-full crm-lease-deadline crm-lease-panel{% if not form.instance.customer_type|shows_lease_deadline_filter %} hidden{% endif %}{% if form.lease_deadline.errors %} crm-field-has-error{% endif %}" data-field="lease_deadline">

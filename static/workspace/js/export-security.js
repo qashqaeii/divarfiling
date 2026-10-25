@@ -243,27 +243,38 @@
         }
 
         if (pending.type === 'fetch-blob') {
-            try {
-                const res = await fetch(pending.url, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                });
-                if (!res.ok) throw new Error('دانلود ناموفق');
-                const blob = await res.blob();
-                const disposition = res.headers.get('Content-Disposition') || '';
-                const match = disposition.match(/filename="([^"]+)"/);
-                const filename = match?.[1] || pending.filename || 'export';
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = filename;
-                a.click();
-                URL.revokeObjectURL(a.href);
-            } catch (_) {
-                window.location.href = pending.url;
-            }
+            const ok = await downloadBlobExport(pending);
+            if (!ok) openModal(pending);
             return;
         }
 
         window.location.href = pending.url;
+    }
+
+    async function downloadBlobExport(pending) {
+        try {
+            const res = await fetch(pending.url, {
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (res.status === 403) {
+                return false;
+            }
+            if (!res.ok) throw new Error('دانلود ناموفق');
+            const blob = await res.blob();
+            const disposition = res.headers.get('Content-Disposition') || '';
+            const match = disposition.match(/filename="([^"]+)"/);
+            const filename = match?.[1] || pending.filename || 'export';
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            return true;
+        } catch (_) {
+            window.location.href = pending.url;
+            return true;
+        }
     }
 
     function openModal(pending) {
@@ -275,19 +286,42 @@
                 ? `برای خروجی «${pending.label}» ابتدا هویت خود را تأیید کنید.`
                 : 'برای خروجی داده‌های حساس، رمز عبور و کد پیامک ورود لازم است.';
         }
-        if (typeof WSModal !== 'undefined') {
-            WSModal.open('modal-export-security');
+        const modalId = 'modal-export-security';
+        if (typeof WSModal !== 'undefined' && typeof WSModal.open === 'function') {
+            WSModal.open(modalId);
+            return;
+        }
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.removeAttribute('hidden');
+            modal.classList.add('is-open');
+            document.body.classList.add('ws-modal-open');
+            return;
+        }
+        if (pending?.url) {
+            window.location.href = pending.url;
         }
     }
 
-    function requestExport(url, options) {
-        openModal({
+    async function requestExport(url, options) {
+        const pending = {
             url,
             type: options?.type || 'navigate',
             filename: options?.filename,
             label: options?.label,
             button: options?.button || null,
-        });
+        };
+        if (pending.type === 'fetch-blob') {
+            state.pending = pending;
+            const ok = await downloadBlobExport(pending);
+            if (!ok) {
+                openModal(pending);
+            } else {
+                state.pending = null;
+            }
+            return;
+        }
+        openModal(pending);
     }
 
     function bindEvents() {
@@ -318,17 +352,21 @@
             }
         });
 
-        document.addEventListener('click', (e) => {
-            const trigger = e.target.closest('.js-secure-export');
-            if (!trigger) return;
-            e.preventDefault();
-            const url = trigger.dataset.exportUrl || trigger.getAttribute('href');
-            if (!url || url === '#') return;
-            requestExport(url, {
-                type: trigger.dataset.exportType || 'navigate',
-                label: trigger.dataset.exportLabel || trigger.title || '',
-                filename: trigger.dataset.exportFilename || '',
-            });
+        document.addEventListener('click', onSecureExportClick, true);
+    }
+
+    function onSecureExportClick(e) {
+        const trigger = e.target.closest('.js-secure-export');
+        if (!trigger) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const url = trigger.dataset.exportUrl || trigger.getAttribute('href');
+        if (!url || url === '#') return;
+        requestExport(url, {
+            type: trigger.dataset.exportType || 'navigate',
+            label: trigger.dataset.exportLabel || trigger.title || '',
+            filename: trigger.dataset.exportFilename || '',
+            button: trigger.tagName === 'BUTTON' ? trigger : null,
         });
     }
 
@@ -338,5 +376,15 @@
         runPendingExport,
     };
 
-    document.addEventListener('DOMContentLoaded', bindEvents);
+    function initExportSecurity() {
+        if (document.documentElement.dataset.exportSecurityBound === '1') return;
+        document.documentElement.dataset.exportSecurityBound = '1';
+        bindEvents();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initExportSecurity);
+    } else {
+        initExportSecurity();
+    }
 })();

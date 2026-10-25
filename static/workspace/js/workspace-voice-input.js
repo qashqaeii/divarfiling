@@ -36,7 +36,7 @@
         + '.agency-filter-bar, .crm-files-adv-filters, .mk-filter-field, .crm-list-search, '
         + '.crm-bulk-dock, [role="searchbox"], .ct-wizard-picker-search, '
         + '#crmTemplateForm [name="name"], #crmRuleForm [name="name"], '
-        + '[data-voice-input-scope="off"]';
+        + '[data-voice-input-scope="off"], .crm-contact-channels, [name^="contact_social_"]';
 
     const INPUT_SELECTOR =
         'textarea:not([readonly]):not([aria-hidden="true"]), input[type="text"]:not([readonly])';

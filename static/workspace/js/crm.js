@@ -2810,16 +2810,22 @@ function initCRMAreasPicker(root) {
 
 function initCRMContactGender(root) {
     const scope = root || document;
-    scope.querySelectorAll('[data-crm-gender-field]').forEach(block => {
-        if (block.dataset.genderInit === '1') return;
-        block.dataset.genderInit = '1';
-        const form = block.closest('form');
+    scope.querySelectorAll('.crm-contact-identity-block').forEach(identityBlock => {
+        if (identityBlock.dataset.identityInit === '1') return;
+        identityBlock.dataset.identityInit = '1';
+        const form = identityBlock.closest('form');
         const legalCb = form?.querySelector('[name="is_legal_entity"]');
+        const personBlock = identityBlock.querySelector('[data-crm-identity-person]');
+        const genderField = identityBlock.querySelector('[data-crm-gender-field]');
+        const companyWrap = identityBlock.querySelector('[data-crm-identity-company]');
         const sync = () => {
             const legal = !!legalCb?.checked;
-            block.classList.toggle('is-hidden', legal);
+            personBlock?.classList.toggle('is-collapsed', legal);
+            genderField?.classList.toggle('is-hidden', legal);
+            companyWrap?.classList.toggle('is-collapsed', !legal);
+            identityBlock.classList.toggle('is-legal-mode', legal);
             if (legal) {
-                const unset = block.querySelector('input[name="gender"][value=""]');
+                const unset = identityBlock.querySelector('input[name="gender"][value=""]');
                 if (unset) unset.checked = true;
             }
         };
@@ -2836,10 +2842,19 @@ function initCRMContactChannels(root) {
 
         const form = block.closest('form');
         const editor = block.querySelector('[data-crm-channels-editor]');
+        const fold = block.querySelector('.crm-contact-channels-fold');
         const summary = block.querySelector('[data-crm-channels-summary]');
         const panelNotes = block.closest('.crm-form-sections')?.querySelectorAll('[data-crm-panel-channels-note]') || [];
         const phoneInput = form?.querySelector('[name="phone"]');
         const openBtn = block.closest('.crm-form-sections')?.querySelector('[data-crm-channels-open]');
+
+        function openChannelsFold(focusField) {
+            if (fold) fold.open = true;
+            if (focusField) {
+                const first = block.querySelector('.crm-contact-channel-input:not(:disabled)');
+                first?.focus();
+            }
+        }
 
         function channelRows() {
             return block.querySelectorAll('.crm-channel-chip');
@@ -2906,11 +2921,15 @@ function initCRMContactChannels(root) {
             const cb = chip.querySelector('.crm-channel-chip-input');
             cb?.addEventListener('change', () => {
                 refresh();
-                if (cb.checked && editor?.hidden) {
-                    editor.hidden = false;
+                if (cb.checked) {
                     const key = chip.dataset.channelKey;
                     const field = block.querySelector(`#crm-ch-handle-${key}`);
-                    if (field && !field.disabled) field.focus();
+                    if (field && !field.disabled) {
+                        openChannelsFold(false);
+                        field.focus();
+                    } else {
+                        openChannelsFold(false);
+                    }
                 }
             });
         });
@@ -2921,12 +2940,18 @@ function initCRMContactChannels(root) {
         phoneInput?.addEventListener('input', refresh);
 
         openBtn?.addEventListener('click', () => {
-            if (!editor) return;
-            editor.hidden = !editor.hidden;
-            if (!editor.hidden) {
-                crmActivateFormTab(block.closest('.crm-form-sections'), 'basic');
-                const first = editor.querySelector('.crm-contact-channel-input:not(:disabled)');
-                first?.focus();
+            crmActivateFormTab(block.closest('.crm-form-sections'), 'basic');
+            if (fold) {
+                fold.open = true;
+            }
+            openChannelsFold(true);
+            block.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        });
+
+        fold?.addEventListener('toggle', () => {
+            const actionText = block.querySelector('[data-crm-channels-fold-action] .crm-contact-channels-fold__action-text');
+            if (actionText) {
+                actionText.textContent = fold.open ? 'بستن' : 'مشاهده';
             }
         });
 

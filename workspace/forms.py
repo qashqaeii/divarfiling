@@ -346,8 +346,8 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'city': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
             'district': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
             'job': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
-            'company_name': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
-            'national_id': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
+            'company_name': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'نام ثبت‌شده شرکت'}),
+            'national_id': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': '۱۰ رقم', 'inputmode': 'numeric'}),
             'customer_type': forms.Select(attrs={'class': 'crm-select', 'data-crm-type': '1'}),
             'status': forms.Select(attrs={'class': 'crm-select'}),
             'priority': forms.Select(attrs={'class': 'crm-select'}),
@@ -381,7 +381,7 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'builder_buy_max_area': forms.NumberInput(attrs={'class': 'crm-input'}),
             'tags': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'با کاما جدا کنید'}),
             'notes': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 3}),
-            'is_legal_entity': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
+            'is_legal_entity': forms.CheckboxInput(attrs={'class': 'crm-contact-legal-switch-input'}),
         }
 
 

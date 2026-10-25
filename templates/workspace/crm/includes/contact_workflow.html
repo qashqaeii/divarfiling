@@ -1,17 +1,26 @@
 {% load workspace_tags crm_tags %}
 <section class="crm-contact-workflow" aria-label="اقدام و خلاصه پرونده">
     {% if after_call_prompt %}
-    <div class="crm-contact-nba crm-contact-after-call" role="status">
-        <div class="crm-contact-nba__copy">
-            <strong>تماس ثبت شد — پیگیری بعدی؟</strong>
-            <p>یک زمان انتخاب کنید یا فعلاً رد شوید.</p>
+    <div class="crm-contact-nba crm-contact-after-call" role="status" aria-live="polite">
+        <div class="crm-contact-after-call__head">
+            <span class="crm-contact-after-call__mark" aria-hidden="true">
+                <i class="fas fa-check"></i>
+            </span>
+            <div class="crm-contact-after-call__copy">
+                <strong>تماس ثبت شد</strong>
+                <p>پیگیری بعدی را زمان‌بندی کنید</p>
+            </div>
+            <a href="{% url 'workspace:crm_detail' customer.id %}" class="crm-contact-after-call__dismiss" aria-label="فعلاً نه، بستن">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </a>
         </div>
-        <div class="crm-contact-after-call__actions crm-followup-v2-quick">
-            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="1"><button type="submit">فردا</button></form>
-            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="3"><button type="submit">۳ روز</button></form>
-            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="7"><button type="submit">۱ هفته</button></form>
-            <button type="button" data-drawer-open="drawer-followup">انتخاب تاریخ</button>
-            <a href="{% url 'workspace:crm_detail' customer.id %}" class="crm-contact-after-call__skip">فعلاً نه</a>
+        <div class="crm-contact-after-call__chips" role="group" aria-label="زمان‌بندی سریع پیگیری">
+            <form method="post" class="crm-contact-after-call__chip-form">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="1"><button type="submit" class="crm-contact-after-call__chip">فردا</button></form>
+            <form method="post" class="crm-contact-after-call__chip-form">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="3"><button type="submit" class="crm-contact-after-call__chip">۳ روز</button></form>
+            <form method="post" class="crm-contact-after-call__chip-form">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="7"><button type="submit" class="crm-contact-after-call__chip">۱ هفته</button></form>
+            <button type="button" class="crm-contact-after-call__chip crm-contact-after-call__chip--calendar" data-drawer-open="drawer-followup">
+                <i class="fas fa-calendar-day" aria-hidden="true"></i><span>تاریخ</span>
+            </button>
         </div>
     </div>
     {% elif contact_nba %}

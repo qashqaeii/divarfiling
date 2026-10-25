@@ -1,20 +1,6 @@
 /* CRM Mobile Sheets & Dialogs — ≤768px only. Desktop drawer styles unchanged. */
 
 @media (min-width: 769px) {
-    .crm-contact-channels-fold {
-        display: block;
-        border: none;
-        background: transparent;
-    }
-
-    .crm-contact-channels-fold__summary {
-        display: none;
-    }
-
-    .crm-contact-channels-fold > .crm-contact-channels-bar {
-        display: block !important;
-    }
-
     .crm-mob-settings-row__text small {
         display: none;
     }
@@ -282,11 +268,11 @@
     }
 
     .crm-app .crm-contact-form .crm-contact-identity-block {
-        padding: 0;
-        margin: 0;
-        border: none;
-        background: transparent;
-        gap: 0.75rem;
+        gap: 0.55rem;
+    }
+
+    .crm-app .crm-contact-form .crm-gender-segment--compact {
+        max-width: none;
     }
 
     .crm-app .crm-contact-form .crm-label {
@@ -354,113 +340,27 @@
         box-shadow: none;
     }
 
-    /* Legal entity switch row */
     .crm-app .crm-contact-form .crm-contact-legal-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        min-height: 3rem;
-        padding: 0.55rem 0.75rem;
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
-        background: var(--ws-surface);
-    }
-
-    .crm-app .crm-contact-form .crm-contact-legal-toggle .crm-label-check {
-        margin: 0;
-        font-weight: 700;
-        font-size: 0.8rem;
-        color: var(--ws-text);
-    }
-
-    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"] {
-        appearance: none;
-        width: 2.75rem;
-        height: 1.55rem;
-        margin: 0;
-        flex-shrink: 0;
-        border-radius: 999px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
-        background: color-mix(in srgb, var(--ws-surface-2) 80%, var(--ws-surface));
-        position: relative;
-        cursor: pointer;
-        transition: background 0.18s ease, border-color 0.18s ease;
-    }
-
-    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"]::after {
-        content: "";
-        position: absolute;
-        top: 2px;
-        inset-inline-start: 2px;
-        width: 1.15rem;
-        height: 1.15rem;
-        border-radius: 50%;
-        background: var(--ws-surface);
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
-        transition: transform 0.18s ease;
-    }
-
-    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"]:checked {
-        background: color-mix(in srgb, var(--ws-primary) 75%, #5b21b6);
-        border-color: transparent;
-    }
-
-    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"]:checked::after {
-        inset-inline-start: calc(100% - 1.15rem - 2px);
-        transform: none;
-    }
-
-    /* Channels collapsible */
-    .crm-app .crm-contact-channels-fold {
-        margin-bottom: 0.65rem;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
-        border-radius: 12px;
-        background: var(--ws-surface);
-        overflow: hidden;
+        min-height: 2.75rem;
+        padding: 0.35rem 0;
     }
 
     .crm-app .crm-contact-channels-fold__summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
         min-height: 3rem;
         padding: 0.55rem 0.75rem;
-        list-style: none;
-        cursor: pointer;
         font-size: 0.78rem;
-        font-weight: 700;
-        color: var(--ws-text);
     }
 
-    .crm-app .crm-contact-channels-fold__summary::-webkit-details-marker {
-        display: none;
-    }
-
-    .crm-app .crm-contact-channels-fold__action {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: var(--ws-text-muted);
-    }
-
-    .crm-app .crm-contact-channels-fold:not([open]) .crm-contact-channels-bar {
-        display: none;
+    .crm-app .crm-contact-channels-fold__body {
+        padding: 0 0.75rem 0.65rem;
     }
 
     .crm-app .crm-contact-channels-fold .crm-contact-channels-bar {
         border: none;
         border-radius: 0;
-        padding: 0 0.75rem 0.65rem;
+        padding: 0;
         background: transparent;
         box-shadow: none;
-    }
-
-    .crm-app .crm-contact-channels-fold .crm-contact-channels-bar-head {
-        display: none;
     }
 
     /* Social settings row */

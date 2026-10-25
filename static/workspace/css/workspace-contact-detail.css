@@ -216,6 +216,10 @@
     padding: 0;
 }
 
+.crm-contact-share-bar__mob-head {
+    display: none;
+}
+
 .crm-contact-agency-bar__row {
     display: flex;
     flex-wrap: wrap;
@@ -1227,33 +1231,138 @@
 }
 
 .crm-contact-nba.crm-contact-after-call {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    padding: 0.75rem 0.85rem 0.8rem;
+    border: 1px solid color-mix(in srgb, #10b981 22%, var(--ws-border));
+    border-radius: 14px;
+    background:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, #10b981 7%, var(--ws-surface)) 0%,
+            var(--ws-surface) 52%
+        );
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.crm-contact-after-call__head {
+    display: flex;
     align-items: flex-start;
+    gap: 0.55rem;
+    min-width: 0;
 }
 
-.crm-contact-after-call .crm-contact-nba__copy {
-    flex: 1 1 100%;
+.crm-contact-after-call__mark {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    color: #047857;
+    background: color-mix(in srgb, #10b981 14%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, #10b981 28%, transparent);
 }
 
-.crm-contact-after-call .crm-followup-v2-quick {
+.crm-contact-after-call__mark i {
+    font-size: 0.72rem;
+}
+
+.crm-contact-after-call__copy {
+    flex: 1;
+    min-width: 0;
+    padding-top: 0.05rem;
+}
+
+.crm-contact-after-call__copy strong {
+    display: block;
+    font-size: 0.86rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--ws-text);
+}
+
+.crm-contact-after-call__copy p {
+    margin: 0.12rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ws-text-muted);
+    line-height: 1.35;
+}
+
+.crm-contact-after-call__dismiss {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: -0.1rem -0.15rem 0 0;
+    border-radius: 8px;
+    color: var(--ws-text-muted);
+    text-decoration: none;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.crm-contact-after-call__dismiss:hover {
+    color: var(--ws-text-secondary);
+    background: color-mix(in srgb, var(--ws-border) 35%, transparent);
+}
+
+.crm-contact-after-call__dismiss i {
+    font-size: 0.8rem;
+}
+
+.crm-contact-after-call__chips {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem;
+}
+
+.crm-contact-after-call__chip-form {
     margin: 0;
 }
 
-.crm-contact-after-call .crm-followup-v2-quick button,
-.crm-contact-after-call .crm-followup-v2-quick a {
+.crm-contact-after-call__chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
     min-height: 2rem;
-    padding: 0.3rem 0.7rem;
-    font-size: 0.75rem;
-    font-weight: 650;
+    padding: 0.28rem 0.72rem;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
+    border-radius: 999px;
+    background: var(--ws-surface);
+    color: var(--ws-text);
+    font: inherit;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
 
-.crm-contact-after-call__skip {
-    color: var(--ws-text-muted);
-    text-decoration: none;
+.crm-contact-after-call__chip:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 40%, var(--ws-border));
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+}
+
+.crm-contact-after-call__chip:active {
+    transform: scale(0.98);
+}
+
+.crm-contact-after-call__chip--calendar {
+    color: var(--ws-text-secondary);
+    background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+}
+
+.crm-contact-after-call__chip--calendar i {
+    font-size: 0.68rem;
+    opacity: 0.85;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1385,25 +1494,7 @@
 }
 
 .crm-contact-nba.crm-contact-after-call {
-    border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
-}
-
-.crm-contact-after-call .crm-followup-v2-quick button,
-.crm-contact-after-call .crm-followup-v2-quick a {
-    min-height: 2.15rem;
-    padding: 0.35rem 0.8rem;
-    border-radius: 999px;
-    border: 1px solid var(--ws-border);
-    background: var(--ws-surface);
-    color: var(--ws-text);
-    font: inherit;
-    cursor: pointer;
-}
-
-.crm-contact-after-call .crm-followup-v2-quick button:hover,
-.crm-contact-after-call .crm-followup-v2-quick a:hover {
-    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
-    color: var(--ws-primary);
+    border-color: color-mix(in srgb, #10b981 24%, var(--ws-border));
 }
 
 .crm-contact-summary {

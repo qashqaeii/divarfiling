@@ -412,22 +412,189 @@
         margin: 0;
         border-radius: 0;
         border: none;
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
-        padding: 0.5rem var(--crm-dossier-pad) 0.65rem;
-        background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 22%, var(--ws-surface));
+        border-top: 1px solid color-mix(in srgb, var(--ws-primary) 12%, var(--ws-border));
+        padding: 0.65rem var(--crm-dossier-pad) 0.75rem;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface)) 0%,
+                var(--ws-surface) 100%
+            );
     }
 
-    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar--pro {
-        flex-wrap: wrap;
-        gap: 0.45rem 0.35rem;
+    .crm-contact-dossier .crm-contact-share-bar__mob-head {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.15rem;
+    }
+
+    .crm-contact-dossier .crm-contact-share-bar__mob-head-ico {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 8px;
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
+    }
+
+    .crm-contact-dossier .crm-contact-share-bar__mob-head-ico i {
+        font-size: 0.72rem;
+    }
+
+    .crm-contact-dossier .crm-contact-share-bar__mob-head-title {
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--ws-text);
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-contact-share-bar.crm-prop-share-bar--pro {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+        min-height: 0;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar-vrule {
+        display: none;
     }
 
     .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar__cluster--mode {
-        flex: 1 1 100%;
+        flex: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.4rem;
+        width: 100%;
+        padding: 0.55rem 0.6rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar-label {
+        align-self: flex-start;
+        font-size: 0.68rem;
+        padding: 0.2rem 0.45rem;
+        border-radius: 8px;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-segment {
+        display: flex;
+        width: 100%;
+        padding: 3px;
+        border-radius: 11px;
+        gap: 3px;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-seg {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-seg > span {
+        justify-content: center;
+        width: 100%;
+        min-height: 2.35rem;
+        padding: 0.35rem 0.4rem;
+        font-size: 0.7rem;
+        border-radius: 8px;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-seg input:checked + span {
+        background: var(--ws-surface);
+        color: var(--ws-primary);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar__cluster--agency {
+        width: 100%;
+        justify-content: stretch;
+        padding: 0 0.05rem;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar__cluster--agency .crm-prop-share-bar__link-btn,
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar__cluster--agency .agency-space-badge {
+        flex: 1;
+        justify-content: center;
+        min-height: 2.35rem;
+        border-radius: 11px;
+        font-size: 0.72rem;
     }
 
     .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar__cluster--send {
-        flex: 1 1 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0.55rem 0.6rem 0.6rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-contact-team-actions--grouped {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+        width: 100%;
+        margin: 0;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-contact-team-actions--grouped .crm-select-sm {
+        grid-column: 1 / -1;
+        width: 100%;
+        max-width: none;
+        min-height: 2.65rem;
+        padding-inline: 0.65rem;
+        border-radius: 11px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-contact-team-actions--grouped .crm-dash-act {
+        grid-column: 1;
+        min-height: 2.65rem;
+        border-radius: 11px;
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-contact-team-actions--grouped .crm-prop-share-bar__link-btn {
+        grid-column: 2;
+        min-height: 2.65rem;
+        justify-content: center;
+        border-radius: 11px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-out-list {
+        margin: 0.35rem 0 0;
+        padding: 0;
+        gap: 0.4rem;
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-out-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-out-flow {
+        width: 100%;
+        justify-content: space-between;
     }
 
     /* Workflow: compact NBA + snapshot */
@@ -443,6 +610,67 @@
         border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
         border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
         padding-inline: var(--crm-dossier-pad);
+    }
+
+    .crm-contact-dossier .crm-contact-workflow .crm-contact-after-call {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+        padding: 0.65rem var(--crm-dossier-pad) 0.7rem;
+        border: none;
+        border-top: 1px solid color-mix(in srgb, #10b981 18%, var(--ws-border));
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, #10b981 5%, var(--ws-surface)) 0%,
+                var(--ws-surface) 100%
+            );
+        box-shadow: none;
+    }
+
+    .crm-contact-dossier .crm-contact-after-call__copy strong {
+        font-size: 0.8rem;
+    }
+
+    .crm-contact-dossier .crm-contact-after-call__copy p {
+        display: block;
+        font-size: 0.68rem;
+    }
+
+    .crm-contact-dossier .crm-contact-after-call__chips {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.35rem;
+    }
+
+    .crm-contact-dossier .crm-contact-after-call__chip-form {
+        min-width: 0;
+    }
+
+    .crm-contact-dossier .crm-contact-after-call__chip {
+        width: 100%;
+        min-height: 2.15rem;
+        padding-inline: 0.35rem;
+        font-size: 0.68rem;
+    }
+
+    .crm-contact-dossier .crm-contact-after-call__chip--calendar span {
+        display: none;
+    }
+
+    @media (max-width: 360px) {
+        .crm-contact-dossier .crm-contact-after-call__chips {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .crm-contact-dossier .crm-contact-after-call__chip--calendar {
+            grid-column: span 2;
+        }
+
+        .crm-contact-dossier .crm-contact-after-call__chip--calendar span {
+            display: inline;
+        }
     }
 
     .crm-contact-dossier .crm-contact-workflow .crm-contact-snapshot-block {

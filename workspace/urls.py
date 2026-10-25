@@ -42,6 +42,7 @@ urlpatterns = [
     path('api/export-security/verify-password/', export_security_views.ExportSecurityVerifyPasswordView.as_view(), name='export_security_verify_password'),
     path('api/export-security/verify-otp/', export_security_views.ExportSecurityVerifyOtpView.as_view(), name='export_security_verify_otp'),
     path('api/export-security/resend-otp/', export_security_views.ExportSecurityResendOtpView.as_view(), name='export_security_resend_otp'),
+    path('forum/', include(('community_forum.urls', 'community_forum'))),
     path('ai/', include(('ai_workspace.urls', 'ai_workspace'))),
     path('product/', include(('product_hub.urls', 'product_hub'))),
 

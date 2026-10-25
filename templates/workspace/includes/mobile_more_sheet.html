@@ -71,6 +71,19 @@
                 </nav>
             </section>
 
+            {% if forum_nav_enabled %}
+            <section class="ws-mob-sheet-section" aria-label="جامعه">
+                <p class="ws-mob-sheet-kicker">جامعه</p>
+                <nav class="ws-mob-sheet-nav">
+                    <a href="{% url 'workspace:community_forum:home' %}" class="ws-mob-sheet-link{% if '/forum' in request.path %} is-active{% endif %}">
+                        <i class="fas fa-comments" aria-hidden="true"></i>
+                        <span>تالار گفتگو</span>
+                        {% if forum_nav_unread %}<span class="ws-mob-sheet-badge">{{ forum_nav_unread|nav_badge_count }}</span>{% endif %}
+                    </a>
+                </nav>
+            </section>
+            {% endif %}
+
             <section class="ws-mob-sheet-section" aria-label="ابزارها و بیشتر">
                 <p class="ws-mob-sheet-kicker">ابزارها</p>
                 <nav class="ws-mob-sheet-nav ws-mob-sheet-nav--compact">

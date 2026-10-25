@@ -8,6 +8,13 @@
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='house' size='nav' only %}</span><span>میزکار</span>
     </a>
 
+    {% if forum_nav_enabled %}
+    <a href="{% url 'workspace:community_forum:home' %}" class="ws-nav-item {% if '/forum' in path %}active{% endif %}" data-tour="nav-forum">
+        <span class="ws-nav-icon" aria-hidden="true"><i class="fas fa-comments" aria-hidden="true"></i></span><span>تالار گفتگو</span>
+        {% if forum_nav_unread %}<span class="ws-nav-badge">{{ forum_nav_unread|nav_badge_count }}</span>{% endif %}
+    </a>
+    {% endif %}
+
     {% if has_bot_license %}
     <a href="{% url 'workspace:dataset_list' %}" class="ws-nav-item {% if 'dataset' in url_name or 'listing' in url_name or url_name == 'import' or url_name == 'multi_listings' or url_name == 'multi_map' %}active{% endif %}" data-tour="nav-filing">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='folder' size='nav' only %}</span><span>فایلینگ</span>

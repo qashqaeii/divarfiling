@@ -1,0 +1,14 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% block admin_title %}مدیریت تالار گفتگو{% endblock %}
+{% block admin_content %}
+<section class="adm-section">
+    <h1>تالار گفتگو</h1>
+    <ul class="adm-kpi-list">
+        <li>پیام‌های امروز: {{ forum_stats.messages_today }}</li>
+        <li>پیام‌های ۷ روز اخیر: {{ forum_stats.messages_7d }}</li>
+        <li>گزارش‌های در انتظار: {{ forum_stats.pending_reports }}</li>
+        <li>محدودیت‌های فعال: {{ forum_stats.active_bans }}</li>
+    </ul>
+    <p>جزئیات پیام‌ها و گزارش‌ها از Django Admin و APIهای مدیریتی در دسترس است.</p>
+</section>
+{% endblock %}

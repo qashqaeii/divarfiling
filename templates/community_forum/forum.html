@@ -1,0 +1,109 @@
+{% extends 'workspace/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=1">
+{% endblock %}
+
+{% block page_title %}تالار گفتگو{% endblock %}
+{% block mobile_bar_title %}تالار گفتگو{% endblock %}
+
+{% block content %}
+<div class="cf-page" id="cfForumApp"
+     data-api-base="{% url 'workspace:community_forum:api_messages' %}"
+     data-bootstrap-url="{% url 'workspace:community_forum:api_bootstrap' %}"
+     data-ws-path="/ws/forum/"
+     data-csrf="{{ csrf_token }}">
+    <header class="cf-header">
+        <div class="cf-header__main">
+            <h1 class="cf-header__title">تالار گفتگو</h1>
+            <p class="cf-header__sub">گفتگوی آزاد اعضای فایلینگ دیوار</p>
+            <p class="cf-header__hint">شماره تماس اعضا نمایش داده نمی‌شود. پیام‌ها پس از ۳۰ روز حذف می‌شوند.</p>
+        </div>
+        <div class="cf-header__actions">
+            <button type="button" class="cf-btn cf-btn--ghost" id="cfSearchToggle" aria-label="جستجو">
+                <i class="fas fa-search" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="cf-btn cf-btn--ghost" id="cfRulesBtn">قوانین</button>
+            <button type="button" class="cf-btn cf-btn--ghost" id="cfProfileBtn">نام نمایشی</button>
+        </div>
+    </header>
+
+    <div class="cf-pinned" id="cfPinned" hidden></div>
+
+    <div class="cf-search" id="cfSearchPanel" hidden>
+        <input type="search" class="cf-search__input" id="cfSearchInput" placeholder="جستجو در ۳۰ روز اخیر…" autocomplete="off">
+        <div class="cf-search__results" id="cfSearchResults"></div>
+    </div>
+
+    <div class="cf-layout">
+        <main class="cf-chat" aria-label="گفتگو">
+            <div class="cf-status" id="cfConnStatus" hidden></div>
+            <div class="cf-messages" id="cfMessages" role="log" aria-live="polite"></div>
+            <button type="button" class="cf-new-msgs" id="cfNewMsgsBtn" hidden>پیام‌های جدید</button>
+            <button type="button" class="cf-scroll-end" id="cfScrollEndBtn" hidden aria-label="رفتن به آخر گفتگو">
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </button>
+        </main>
+        <aside class="cf-aside" id="cfAside" aria-label="قوانین و راهنما">
+            <h2 class="cf-aside__title">قوانین تالار</h2>
+            <ul class="cf-rules">
+                <li>احترام به سایر اعضا</li>
+                <li>عدم انتشار شماره تماس و اطلاعات شخصی</li>
+                <li>عدم انتشار اطلاعات محرمانه مشتریان</li>
+                <li>ممنوعیت تبلیغات مزاحم و جعل هویت</li>
+                <li>حذف خودکار پیام‌ها پس از ۳۰ روز</li>
+            </ul>
+        </aside>
+    </div>
+
+    <div class="cf-composer-wrap">
+        <div class="cf-reply-preview" id="cfReplyPreview" hidden>
+            <span id="cfReplyPreviewText"></span>
+            <button type="button" class="cf-reply-preview__close" id="cfReplyCancel" aria-label="لغو پاسخ">&times;</button>
+        </div>
+        <form class="cf-composer" id="cfComposer">
+            <textarea class="cf-composer__input" id="cfComposerInput" rows="1" maxlength="2000" placeholder="پیام خود را بنویسید…" aria-label="متن پیام"></textarea>
+            <button type="submit" class="cf-composer__send" id="cfSendBtn" disabled aria-label="ارسال">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+            </button>
+        </form>
+        <p class="cf-composer__meta"><span id="cfCharCount">0</span> / 2000</p>
+    </div>
+</div>
+
+<dialog class="cf-dialog" id="cfWelcomeDialog">
+    <p>به تالار گفتگوی فایلینگ دیوار خوش آمدید. اینجا می‌توانید با سایر مشاوران املاک گفتگو کنید، تجربه‌هایتان را به اشتراک بگذارید و از یکدیگر کمک بگیرید.</p>
+    <form method="dialog"><button type="submit" class="cf-btn cf-btn--primary">متوجه شدم</button></form>
+</dialog>
+
+<dialog class="cf-dialog" id="cfRulesDialog">
+    <h2>قوانین تالار</h2>
+    <ul class="cf-rules">
+        <li>احترام به سایر اعضا</li>
+        <li>عدم انتشار شماره تماس و اطلاعات شخصی</li>
+        <li>عدم انتشار اطلاعات محرمانه مشتریان</li>
+        <li>ممنوعیت تبلیغات مزاحم</li>
+        <li>ممنوعیت جعل هویت</li>
+        <li>ممنوعیت محتوای توهین‌آمیز یا غیرقانونی</li>
+        <li>حذف خودکار پیام‌ها پس از ۳۰ روز</li>
+    </ul>
+    <form method="dialog"><button type="submit" class="cf-btn">بستن</button></form>
+</dialog>
+
+<dialog class="cf-dialog" id="cfProfileDialog">
+    <h2>نام نمایشی</h2>
+    <p class="cf-dialog__hint">نام مستقل از حساب شما در تالار نمایش داده می‌شود.</p>
+    <label class="cf-label" for="cfDisplayNameInput">نام نمایشی</label>
+    <input type="text" class="cf-input" id="cfDisplayNameInput" maxlength="64" autocomplete="nickname">
+    <p class="cf-error" id="cfProfileError" hidden></p>
+    <div class="cf-dialog__actions">
+        <button type="button" class="cf-btn cf-btn--primary" id="cfProfileSave">ذخیره</button>
+        <button type="button" class="cf-btn" id="cfProfileClose">انصراف</button>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'community_forum/js/forum.js' %}?v=1" defer></script>
+{% endblock %}

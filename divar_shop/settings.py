@@ -69,7 +69,18 @@ INSTALLED_APPS = [
     'mobile_api',
     'desktop_api',
     'contracts',
+    'community_forum',
 ]
+
+# Channels فقط اگر پکیج نصب باشد (بدون آن runserver و HTTP عادی کار می‌کند)
+_CHANNELS_AVAILABLE = False
+try:
+    import channels  # noqa: F401
+
+    INSTALLED_APPS.append('channels')
+    _CHANNELS_AVAILABLE = True
+except ImportError:
+    pass
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -104,6 +115,7 @@ TEMPLATES = [
                 'accounts.context_processors.admin_panel_shell',
                 'accounts.context_processors.otp_auth_ui',
                 'public_assistant.context_processors.public_assistant',
+                'community_forum.context_processors.forum_nav',
             ],
         },
     },
@@ -394,8 +406,42 @@ CACHES = {
             default='django.core.cache.backends.locmem.LocMemCache',
         ),
         'LOCATION': config('CACHE_LOCATION', default='divar-shop-default'),
-    }
+    },
+    'forum_rate_limit': {
+        'BACKEND': config(
+            'FORUM_RATE_LIMIT_CACHE_BACKEND',
+            default=config(
+                'CACHE_BACKEND',
+                default='django.core.cache.backends.locmem.LocMemCache',
+            ),
+        ),
+        'LOCATION': config('FORUM_RATE_LIMIT_CACHE_LOCATION', default='divar-forum-rate-limit'),
+    },
 }
+
+# ── تالار گفتگو (Community Forum) ──
+COMMUNITY_FORUM_ENABLED = config('COMMUNITY_FORUM_ENABLED', default=False, cast=bool)
+COMMUNITY_FORUM_RETENTION_DAYS = config('COMMUNITY_FORUM_RETENTION_DAYS', default=30, cast=int)
+COMMUNITY_FORUM_MAX_BODY_LENGTH = config('COMMUNITY_FORUM_MAX_BODY_LENGTH', default=2000, cast=int)
+COMMUNITY_FORUM_MIN_SEND_INTERVAL = config('COMMUNITY_FORUM_MIN_SEND_INTERVAL', default=3, cast=int)
+COMMUNITY_FORUM_MAX_PER_MINUTE = config('COMMUNITY_FORUM_MAX_PER_MINUTE', default=10, cast=int)
+COMMUNITY_FORUM_MAX_PER_HOUR = config('COMMUNITY_FORUM_MAX_PER_HOUR', default=60, cast=int)
+
+_FORUM_REDIS_URL = config('FORUM_REDIS_URL', default='')
+if _CHANNELS_AVAILABLE:
+    if _FORUM_REDIS_URL:
+        CHANNEL_LAYERS = {
+            'default': {
+                'BACKEND': 'channels_redis.core.RedisChannelLayer',
+                'CONFIG': {'hosts': [_FORUM_REDIS_URL]},
+            },
+        }
+    else:
+        CHANNEL_LAYERS = {
+            'default': {
+                'BACKEND': 'channels.layers.InMemoryChannelLayer',
+            },
+        }
 
 # Affiliate Settings
 AFFILIATE_DEFAULT_COMMISSION = 10  # درصد پیش‌فرض کمیسیون

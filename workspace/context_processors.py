@@ -40,6 +40,7 @@ def _ws_nav_flags(request, user, show_agency_nav: bool):
         or path.startswith('/workspace/product')
         or path.startswith('/workspace/support')
         or path.startswith('/workspace/ai')
+        or path.startswith('/workspace/forum')
         or path.startswith('/workspace/crm/agency')
     )
     return {

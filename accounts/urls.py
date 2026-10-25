@@ -3,6 +3,7 @@ URLهای مربوط به حساب کاربری
 """
 from django.urls import path
 
+from community_forum.admin_panel_views import AdminForumPanelView
 from . import otp_views, views
 from .admin_views import (
     AdminAcademyAnalyticsJsonView,
@@ -118,6 +119,7 @@ urlpatterns = [
     path('dashboard/licenses/activate-for-owner/', views.ActivateLicenseForOwnerView.as_view(), name='license_activate_for_owner'),
     path('dashboard/licenses/release-to-pool/', views.ReleaseLicenseToPoolView.as_view(), name='license_release_to_pool'),
     path('admin-panel/', AdminDashboardView.as_view(), name='admin_panel'),
+    path('admin-panel/forum/', AdminForumPanelView.as_view(), name='admin_panel_forum'),
     path(
         'admin-panel/ai-analysis/<str:section>/',
         AdminManagementAIAnalysisView.as_view(),

@@ -4,14 +4,14 @@
 {% block body_extra_class %} ws-body--forum{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=6">
 {% endblock %}
 
 {% block page_title %}تالار گفتگو{% endblock %}
 {% block mobile_bar_title %}تالار گفتگو{% endblock %}
 
 {% block content %}
-<div class="cf-page" id="cfForumApp"
+<div class="cf-page" id="cfForumApp" dir="rtl"
      data-api-base="{% url 'workspace:community_forum:api_messages' %}"
      data-bootstrap-url="{% url 'workspace:community_forum:api_bootstrap' %}"
      data-ws-path="/ws/forum/"
@@ -103,20 +103,23 @@
     </section>
 </div>
 
-<dialog class="cf-dialog" id="cfWelcomeDialog" aria-labelledby="cfWelcomeTitle">
-    <div class="cf-dialog__head">
+<dialog class="cf-dialog cf-dialog--welcome" id="cfWelcomeDialog" aria-labelledby="cfWelcomeTitle" dir="rtl">
+    <div class="cf-dialog__hero" aria-hidden="true">
+        <span class="cf-dialog__hero-icon"><i class="fas fa-comments"></i></span>
+    </div>
+    <div class="cf-dialog__head cf-dialog__head--center">
         <h2 class="cf-dialog__title" id="cfWelcomeTitle">به تالار گفتگو خوش آمدید</h2>
         <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
             <i class="fas fa-times" aria-hidden="true"></i>
         </button>
     </div>
     <p class="cf-dialog__body">اینجا می‌توانید با سایر مشاوران املاک گفتگو کنید، تجربه‌ها را به اشتراک بگذارید و از یکدیگر کمک بگیرید. شماره تماس اعضا نمایش داده نمی‌شود و پیام‌ها پس از ۳۰ روز حذف می‌شوند.</p>
-    <div class="cf-dialog__foot">
-        <button type="button" class="cf-btn cf-btn--primary" id="cfWelcomeAck">متوجه شدم</button>
+    <div class="cf-dialog__foot cf-dialog__foot--single">
+        <button type="button" class="cf-btn cf-btn--primary cf-btn--block" id="cfWelcomeAck">متوجه شدم</button>
     </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfRulesDialog" aria-labelledby="cfRulesTitle">
+<dialog class="cf-dialog cf-dialog--rules" id="cfRulesDialog" aria-labelledby="cfRulesTitle" dir="rtl">
     <div class="cf-dialog__head">
         <h2 class="cf-dialog__title" id="cfRulesTitle">قوانین تالار</h2>
         <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
@@ -124,20 +127,20 @@
         </button>
     </div>
     <ul class="cf-rules">
-        <li>احترام به سایر اعضا</li>
-        <li>عدم انتشار شماره تماس و اطلاعات شخصی</li>
-        <li>عدم انتشار اطلاعات محرمانه مشتریان</li>
-        <li>ممنوعیت تبلیغات مزاحم</li>
-        <li>ممنوعیت جعل هویت</li>
-        <li>ممنوعیت محتوای توهین‌آمیز یا غیرقانونی</li>
-        <li>حذف خودکار پیام‌ها پس از ۳۰ روز</li>
+        <li><i class="fas fa-heart" aria-hidden="true"></i><span>احترام به سایر اعضا</span></li>
+        <li><i class="fas fa-shield-halved" aria-hidden="true"></i><span>عدم انتشار شماره تماس و اطلاعات شخصی</span></li>
+        <li><i class="fas fa-user-lock" aria-hidden="true"></i><span>عدم انتشار اطلاعات محرمانه مشتریان</span></li>
+        <li><i class="fas fa-ban" aria-hidden="true"></i><span>ممنوعیت تبلیغات مزاحم</span></li>
+        <li><i class="fas fa-id-card" aria-hidden="true"></i><span>ممنوعیت جعل هویت</span></li>
+        <li><i class="fas fa-scale-balanced" aria-hidden="true"></i><span>ممنوعیت محتوای توهین‌آمیز یا غیرقانونی</span></li>
+        <li><i class="fas fa-clock" aria-hidden="true"></i><span>حذف خودکار پیام‌ها پس از ۳۰ روز</span></li>
     </ul>
-    <div class="cf-dialog__foot">
-        <button type="button" class="cf-btn" data-cf-dialog-close>بستن</button>
+    <div class="cf-dialog__foot cf-dialog__foot--single">
+        <button type="button" class="cf-btn cf-btn--primary cf-btn--block" data-cf-dialog-close>متوجه شدم</button>
     </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfEditDialog" aria-labelledby="cfEditTitle">
+<dialog class="cf-dialog" id="cfEditDialog" aria-labelledby="cfEditTitle" dir="rtl">
     <div class="cf-dialog__head">
         <h2 class="cf-dialog__title" id="cfEditTitle">ویرایش پیام</h2>
         <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
@@ -151,7 +154,7 @@
     </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfDeleteDialog" aria-labelledby="cfDeleteTitle">
+<dialog class="cf-dialog" id="cfDeleteDialog" aria-labelledby="cfDeleteTitle" dir="rtl">
     <div class="cf-dialog__head">
         <h2 class="cf-dialog__title" id="cfDeleteTitle">حذف پیام</h2>
         <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
@@ -165,7 +168,7 @@
     </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfReportDialog" aria-labelledby="cfReportTitle">
+<dialog class="cf-dialog" id="cfReportDialog" aria-labelledby="cfReportTitle" dir="rtl">
     <div class="cf-dialog__head">
         <h2 class="cf-dialog__title" id="cfReportTitle">گزارش تخلف</h2>
         <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
@@ -180,7 +183,7 @@
     </div>
 </dialog>
 
-<dialog class="cf-dialog cf-dialog--sheet" id="cfReactionDialog" aria-labelledby="cfReactionTitle">
+<dialog class="cf-dialog cf-dialog--sheet" id="cfReactionDialog" aria-labelledby="cfReactionTitle" dir="rtl">
     <div class="cf-dialog__head">
         <h2 class="cf-dialog__title" id="cfReactionTitle">واکنش</h2>
         <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
@@ -193,7 +196,7 @@
     </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfProfileDialog" aria-labelledby="cfProfileTitle">
+<dialog class="cf-dialog" id="cfProfileDialog" aria-labelledby="cfProfileTitle" dir="rtl">
     <div class="cf-dialog__head">
         <h2 class="cf-dialog__title" id="cfProfileTitle">نام نمایشی</h2>
         <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
@@ -214,5 +217,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community_forum/js/forum.js' %}?v=5" defer></script>
+<script src="{% static 'community_forum/js/forum.js' %}?v=6" defer></script>
 {% endblock %}

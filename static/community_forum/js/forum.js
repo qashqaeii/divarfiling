@@ -241,8 +241,9 @@
 
     var meta = document.createElement('div');
     meta.className = 'cf-msg__meta';
-    meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span><span class="cf-msg__time">' +
-      formatTime(msg.created_at) + (msg.is_edited ? ' · ویرایش‌شده' : '') + '</span>';
+    meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>' +
+      '<span class="cf-msg__time">' + formatTime(msg.created_at) +
+      (msg.is_edited ? ' <span class="cf-msg__edited">· ویرایش‌شده</span>' : '') + '</span>';
 
     var bubble = document.createElement('div');
     bubble.className = 'cf-msg__bubble';
@@ -257,6 +258,7 @@
 
     var body = document.createElement('div');
     body.className = 'cf-msg__body';
+    body.setAttribute('dir', 'auto');
     body.textContent = msg.is_deleted ? 'پیام حذف شده' : msg.body;
     bubble.appendChild(body);
 
@@ -326,8 +328,9 @@
     if (body) body.textContent = msg.is_deleted ? 'پیام حذف شده' : msg.body;
     var meta = wrap.querySelector('.cf-msg__meta');
     if (meta) {
-      meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span><span class="cf-msg__time">' +
-        formatTime(msg.created_at) + (msg.is_edited ? ' · ویرایش‌شده' : '') + '</span>';
+      meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>' +
+        '<span class="cf-msg__time">' + formatTime(msg.created_at) +
+        (msg.is_edited ? ' <span class="cf-msg__edited">· ویرایش‌شده</span>' : '') + '</span>';
     }
     var rx = wrap.querySelector('.cf-reactions');
     if (rx) {
@@ -788,6 +791,11 @@
     document.body.classList.add('ws-modal-open');
     dlg.showModal();
   }
+
+  ['cfComposerInput', 'cfEditInput', 'cfReportNote'].forEach(function (id) {
+    var el = $(id);
+    if (el) el.setAttribute('dir', 'auto');
+  });
 
   $('cfComposer').addEventListener('submit', sendMessage);
   $('cfComposerInput').addEventListener('input', function () {

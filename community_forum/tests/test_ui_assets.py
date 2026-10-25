@@ -33,5 +33,5 @@ class ForumTemplateAssetVersionTests(SimpleTestCase):
     def test_forum_static_versions_bumped(self):
         path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'
         html = path.read_text(encoding='utf-8')
-        self.assertIn("community_forum/css/forum.css' %}?v=5", html)
-        self.assertIn("community_forum/js/forum.js' %}?v=5", html)
+        self.assertIn("community_forum/css/forum.css' %}?v=6", html)
+        self.assertIn("community_forum/js/forum.js' %}?v=6", html)

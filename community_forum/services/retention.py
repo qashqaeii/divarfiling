@@ -1,18 +1,20 @@
 """نگهداری ۳۰ روزه."""
 import logging
+import uuid
 from datetime import timedelta
 
-from django.core.cache import cache
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils import timezone
 
 from community_forum.constants import RETENTION_DAYS
 from community_forum.models import ForumMessage, ForumReaction, ForumReport
+from community_forum.services.forum_cache import shared_cache
 
 logger = logging.getLogger(__name__)
 
 PURGE_LOCK_KEY = 'forum:purge:lock'
 PURGE_BATCH_SIZE = 5000
+_PG_ADVISORY_LOCK_ID = 904_251_007
 
 
 def retention_cutoff():
@@ -33,6 +35,22 @@ def is_message_visible(msg: ForumMessage) -> bool:
     return msg.created_at >= retention_cutoff()
 
 
+def _try_pg_advisory_lock() -> bool:
+    if connection.vendor != 'postgresql':
+        return False
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT pg_try_advisory_lock(%s)', [_PG_ADVISORY_LOCK_ID])
+        row = cursor.fetchone()
+    return bool(row and row[0])
+
+
+def _release_pg_advisory_lock() -> None:
+    if connection.vendor != 'postgresql':
+        return
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT pg_advisory_unlock(%s)', [_PG_ADVISORY_LOCK_ID])
+
+
 @transaction.atomic
 def _purge_batch(expired_ids: list[int]) -> dict:
     if not expired_ids:
@@ -44,8 +62,10 @@ def _purge_batch(expired_ids: list[int]) -> dict:
 
 
 def purge_expired_messages(*, retention_days: int = RETENTION_DAYS, max_batches: int = 50) -> dict:
-    """پاکسازی دسته‌ای تا خالی شدن؛ با قفل کوتاه برای جلوگیری از اجرای همزمان."""
-    if not cache.add(PURGE_LOCK_KEY, '1', timeout=3600):
+    token = str(uuid.uuid4())
+    cache = shared_cache()
+    pg_locked = _try_pg_advisory_lock()
+    if not pg_locked and not cache.add(PURGE_LOCK_KEY, token, timeout=3600):
         return {'messages': 0, 'reactions': 0, 'reports': 0, 'skipped': True}
 
     totals = {'messages': 0, 'reactions': 0, 'reports': 0, 'batches': 0}
@@ -66,7 +86,10 @@ def purge_expired_messages(*, retention_days: int = RETENTION_DAYS, max_batches:
         logger.exception('forum purge failed')
         raise
     finally:
-        cache.delete(PURGE_LOCK_KEY)
+        if pg_locked:
+            _release_pg_advisory_lock()
+        elif cache.get(PURGE_LOCK_KEY) == token:
+            cache.delete(PURGE_LOCK_KEY)
 
     logger.info('forum purge complete: %s', totals)
     return totals

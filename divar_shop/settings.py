@@ -417,6 +417,16 @@ CACHES = {
         ),
         'LOCATION': config('FORUM_RATE_LIMIT_CACHE_LOCATION', default='divar-forum-rate-limit'),
     },
+    'forum_shared': {
+        'BACKEND': config(
+            'FORUM_SHARED_CACHE_BACKEND',
+            default=config(
+                'CACHE_BACKEND',
+                default='django.core.cache.backends.locmem.LocMemCache',
+            ),
+        ),
+        'LOCATION': config('FORUM_SHARED_CACHE_LOCATION', default='divar-forum-shared'),
+    },
 }
 
 # ── تالار گفتگو (Community Forum) ──
@@ -426,14 +436,27 @@ COMMUNITY_FORUM_MAX_BODY_LENGTH = config('COMMUNITY_FORUM_MAX_BODY_LENGTH', defa
 COMMUNITY_FORUM_MIN_SEND_INTERVAL = config('COMMUNITY_FORUM_MIN_SEND_INTERVAL', default=3, cast=int)
 COMMUNITY_FORUM_MAX_PER_MINUTE = config('COMMUNITY_FORUM_MAX_PER_MINUTE', default=10, cast=int)
 COMMUNITY_FORUM_MAX_PER_HOUR = config('COMMUNITY_FORUM_MAX_PER_HOUR', default=60, cast=int)
+COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS = config(
+    'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS',
+    default=False,
+    cast=bool,
+)
+FORUM_REDIS_URL = config('FORUM_REDIS_URL', default='')
 
-_FORUM_REDIS_URL = config('FORUM_REDIS_URL', default='')
+if FORUM_REDIS_URL:
+    _redis_cache = {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': FORUM_REDIS_URL,
+    }
+    CACHES['forum_rate_limit'] = {**_redis_cache, 'KEY_PREFIX': 'forum_rl'}
+    CACHES['forum_shared'] = {**_redis_cache, 'KEY_PREFIX': 'forum_shared'}
+
 if _CHANNELS_AVAILABLE:
-    if _FORUM_REDIS_URL:
+    if FORUM_REDIS_URL:
         CHANNEL_LAYERS = {
             'default': {
                 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-                'CONFIG': {'hosts': [_FORUM_REDIS_URL]},
+                'CONFIG': {'hosts': [FORUM_REDIS_URL]},
             },
         }
     else:

@@ -17,6 +17,7 @@ from community_forum.services.messages import (
     delete_message,
     edit_message,
     list_messages,
+    list_sync_changes,
     report_message,
     search_messages,
     send_message,
@@ -267,6 +268,26 @@ class ForumProfileAPIView(ForumAPIBase):
                 'display_name': member.display_name,
             })
         return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+
+
+@method_decorator(csrf_protect, name='dispatch')
+class ForumSyncAPIView(ForumAPIBase):
+    """همگام‌سازی ویرایش/حذف پس از قطع WebSocket."""
+
+    def get(self, request):
+        member, err = self._active_member(request)
+        if err:
+            return err
+        since = request.GET.get('since', '')
+        try:
+            anchor_id = int(request.GET.get('anchor_id', 0) or 0)
+        except ValueError:
+            return JsonResponse({'ok': False, 'error': 'شناسه نامعتبر'}, status=400)
+        try:
+            messages = list_sync_changes(member, anchor_id=anchor_id, since_iso=since)
+        except ValidationError as exc:
+            return self._err(exc)
+        return JsonResponse({'ok': True, 'messages': messages})
 
 
 class ForumUnreadAPIView(ForumAPIBase):

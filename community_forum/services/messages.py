@@ -85,7 +85,6 @@ def serialize_many(messages, viewer_member):
     ]
 
 
-@transaction.atomic
 def send_message(
     member,
     body: str,
@@ -120,22 +119,41 @@ def send_message(
             raise ValidationError('پیام مورد پاسخ در دسترس نیست.', code='reply_invalid')
 
     try:
-        msg = ForumMessage.objects.create(
-            sender=member,
-            body=text,
-            reply_to=reply_to,
-            client_message_id=client_uuid,
-        )
+        with transaction.atomic():
+            msg = ForumMessage.objects.create(
+                sender=member,
+                body=text,
+                reply_to=reply_to,
+                client_message_id=client_uuid,
+            )
     except IntegrityError:
         if client_uuid:
             existing = ForumMessage.objects.filter(sender=member, client_message_id=client_uuid).first()
-            if existing:
+            if existing and not existing.deleted_at and existing.created_at >= retention_cutoff():
                 return existing
         raise
 
     pub = serialize_message_public(msg, reactions_map={})
     transaction.on_commit(lambda p=pub: broadcast_event('message.new', {'message': p}))
     return msg
+
+
+def list_sync_changes(viewer_member, *, anchor_id: int, since_iso: str):
+    """ویرایش/حذف پیام‌های با id <= anchor از زمان since."""
+    from django.utils.dateparse import parse_datetime
+
+    since = parse_datetime(since_iso)
+    if not since:
+        raise ValidationError('زمان نامعتبر', code='since_invalid')
+    if anchor_id < 0:
+        raise ValidationError('شناسه نامعتبر', code='anchor_invalid')
+
+    qs = ForumMessage.objects.filter(id__lte=anchor_id).filter(
+        Q(edited_at__gte=since) | Q(deleted_at__gte=since),
+    ).select_related('sender__user', 'reply_to__sender__user')
+    qs = qs.filter(created_at__gte=retention_cutoff())
+    items = list(qs.order_by('id')[:200])
+    return serialize_many(items, viewer_member)
 
 
 def edit_message(member, message_id: int, body: str) -> ForumMessage:

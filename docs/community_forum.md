@@ -24,8 +24,9 @@ HTTP اصلی سایت همچنان از Gunicorn + `divar_shop.asgi` / WSGI ا�
 | متغیر | توضیح |
 |--------|--------|
 | `COMMUNITY_FORUM_ENABLED` | فعال‌سازی تالار |
-| `FORUM_REDIS_URL` | Redis برای Channel Layer (مثلاً `redis://127.0.0.1:6379/1`) |
-| `FORUM_RATE_LIMIT_CACHE_BACKEND` | کش مشترک Rate Limit (در production Redis) |
+| `FORUM_REDIS_URL` | Redis مشترک: Channel Layer، Rate Limit (Lua)، و `forum_shared` (ban و قفل fallback) |
+| `COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS` | `true` = بدون Redis ارسال fail-closed |
+| `FORUM_SHARED_CACHE_BACKEND` | در صورت نبود `FORUM_REDIS_URL`، backend جدا برای ban (production: Redis) |
 | `COMMUNITY_FORUM_RETENTION_DAYS` | پیش‌فرض ۳۰ |
 
 ## REST API (نیاز به Session)
@@ -43,6 +44,7 @@ HTTP اصلی سایت همچنان از Gunicorn + `divar_shop.asgi` / WSGI ا�
 | `search/?q=` | جستجو |
 | `profile/` | نام نمایشی / خوش‌آمد |
 | `unread/` | شمارنده |
+| `sync/?anchor_id=&since=` | ویرایش/حذف پیام‌های با `id ≤ anchor` پس از قطع WS |
 
 ## WebSocket
 
@@ -55,9 +57,10 @@ HTTP اصلی سایت همچنان از Gunicorn + `divar_shop.asgi` / WSGI ا�
 
 ## Rate limit
 
-- در production `FORUM_REDIS_URL` را تنظیم کنید (Lua اتمیک).
-- کش جدا: `forum_rate_limit` — LocMem فقط dev/test.
-- اختیاری: `COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS=true` برای fail-closed بدون Redis.
+- `settings.FORUM_REDIS_URL` از env خوانده می‌شود (نه متغیر داخلی تنها).
+- با `FORUM_REDIS_URL`، aliasهای `forum_rate_limit` و `forum_shared` روی Redis تنظیم می‌شوند.
+- اگر تالار فعال و `DEBUG=false` و Redis خالی باشد، ارسال fail-closed است.
+- اختیاری: `COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS=true` همیشه fail-closed بدون Redis.
 
 ## نگهداری
 

@@ -95,8 +95,16 @@ def _raise_rate(code: str):
 def _enforce_redis(member_id: int, user, limits: dict) -> None:
     client = _redis_client()
     if client is None:
-        if getattr(settings, 'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS', False):
-            raise ValidationError('سرویس محدودیت ارسال موقتاً در دسترس نیست.', code='rate_unavailable')
+        require = getattr(settings, 'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS', False)
+        forum_on = getattr(settings, 'COMMUNITY_FORUM_ENABLED', False)
+        redis_url = (getattr(settings, 'FORUM_REDIS_URL', '') or '').strip()
+        if require or (forum_on and not redis_url and not settings.DEBUG):
+            raise ValidationError(
+                'سرویس محدودیت ارسال موقتاً در دسترس نیست.',
+                code='rate_unavailable',
+            )
+        if forum_on and not redis_url:
+            logger.warning('forum rate limit: FORUM_REDIS_URL unset; using cache fallback (dev)')
         _enforce_cache_fallback(member_id, user, limits)
         return
     now = time.time()

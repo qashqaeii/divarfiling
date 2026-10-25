@@ -13,6 +13,9 @@ User = get_user_model()
 
 FORUM_SETTINGS = {
     'COMMUNITY_FORUM_ENABLED': True,
+    'DEBUG': True,
+    'FORUM_REDIS_URL': '',
+    'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS': False,
     'ALLOWED_HOSTS': ['127.0.0.1', 'localhost', 'testserver'],
     'CHANNEL_LAYERS': {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}},
 }

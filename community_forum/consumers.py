@@ -5,7 +5,7 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 
-from community_forum.services.access import user_can_access_forum
+from community_forum.services.access import is_forum_enabled, user_can_access_forum
 from community_forum.services.members import get_or_create_member
 from community_forum.services.moderation import member_can_read
 from community_forum.services.realtime import GROUP_NAME, member_group_name
@@ -13,7 +13,9 @@ from community_forum.services.realtime import GROUP_NAME, member_group_name
 
 @database_sync_to_async
 def _resolve_member(user):
-    if not user_can_access_forum(user):
+    if not is_forum_enabled() or not user_can_access_forum(user):
+        return None
+    if not user.is_active:
         return None
     member = get_or_create_member(user)
     if not member_can_read(member):
@@ -22,7 +24,11 @@ def _resolve_member(user):
 
 
 @database_sync_to_async
-def _still_can_read(member_id: int) -> bool:
+def _session_still_valid(user, member_id: int) -> bool:
+    if not is_forum_enabled() or not user_can_access_forum(user):
+        return False
+    if not user.is_active:
+        return False
     from community_forum.models import ForumMember
 
     member = ForumMember.objects.filter(pk=member_id).first()
@@ -43,6 +49,7 @@ class ForumConsumer(AsyncJsonWebsocketConsumer):
             return
         self.member_ok = True
         self.member_id = member.id
+        self.user_id = user.pk
         self.public_id = str(member.public_id)
         await self.channel_layer.group_add(GROUP_NAME, self.channel_name)
         await self.channel_layer.group_add(member_group_name(member.id), self.channel_name)
@@ -59,17 +66,18 @@ class ForumConsumer(AsyncJsonWebsocketConsumer):
 
     async def receive_json(self, content, **kwargs):
         if content.get('type') == 'ping':
-            if not await _still_can_read(self.member_id):
+            user = self.scope.get('user')
+            if not await _session_still_valid(user, self.member_id):
                 await self.close(code=4403)
                 return
             await self.send_json({'type': 'pong'})
 
     async def forum_event(self, event):
         if event.get('event') == 'session.revoked':
-            if event.get('payload', {}).get('reason') == 'ban':
-                await self.close(code=4403)
+            await self.close(code=4403)
             return
-        if not await _still_can_read(self.member_id):
+        user = self.scope.get('user')
+        if not await _session_still_valid(user, self.member_id):
             await self.close(code=4403)
             return
         await self.send(

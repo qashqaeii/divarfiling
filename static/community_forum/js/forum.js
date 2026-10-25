@@ -25,6 +25,7 @@
     reconnectTimer: null,
     reconnectAttempt: 0,
     lastId: 0,
+    lastSyncAt: null,
     sending: false,
     reportReasons: [],
     ui: { editId: null, deleteId: null, reportId: null, reactionId: null },
@@ -248,18 +249,36 @@
     });
   }
 
+  function touchSyncClock() {
+    state.lastSyncAt = new Date().toISOString();
+  }
+
+  function syncChanges() {
+    if (!state.lastId || !state.lastSyncAt) return Promise.resolve();
+    var url = apiUrl(
+      'sync/?anchor_id=' + state.lastId + '&since=' + encodeURIComponent(state.lastSyncAt),
+    );
+    return fetchJson(url).then(function (data) {
+      (data.messages || []).forEach(function (m) { upsertFromPayload(m, false); });
+      touchSyncClock();
+    }).catch(function () {});
+  }
+
   function fetchMissed() {
-    var after = state.lastId;
-    function step() {
-      return fetchJson(messagesUrl + '?after_id=' + after).then(function (data) {
-        (data.messages || []).forEach(function (m) { upsertFromPayload(m, true); });
-        if (data.has_more_after && data.messages && data.messages.length) {
-          after = data.messages[data.messages.length - 1].id;
-          return step();
-        }
-      });
-    }
-    return step();
+    return syncChanges().then(function () {
+      var after = state.lastId;
+      function step() {
+        return fetchJson(messagesUrl + '?after_id=' + after).then(function (data) {
+          (data.messages || []).forEach(function (m) { upsertFromPayload(m, true); });
+          if (data.has_more_after && data.messages && data.messages.length) {
+            after = data.messages[data.messages.length - 1].id;
+            return step();
+          }
+          touchSyncClock();
+        });
+      }
+      return step();
+    });
   }
 
   function teardownWs() {
@@ -559,8 +578,10 @@
         fetchJson(apiUrl('profile/'), { method: 'POST', body: { welcome_ack: true } });
       }, { once: true });
     }
+    touchSyncClock();
     return loadInitial();
   }).then(function () {
+    touchSyncClock();
     connectWs();
     try {
       var draft = localStorage.getItem(draftKey());

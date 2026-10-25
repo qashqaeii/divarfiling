@@ -14,6 +14,9 @@ User = get_user_model()
 
 FORUM_SETTINGS = {
     'COMMUNITY_FORUM_ENABLED': True,
+    'DEBUG': True,
+    'FORUM_REDIS_URL': '',
+    'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS': False,
     'CHANNEL_LAYERS': {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}},
 }
 
@@ -23,6 +26,7 @@ class ForumBroadcastSerializationTests(TestCase):
     def setUp(self):
         cache.clear()
         caches['forum_rate_limit'].clear()
+        caches['forum_shared'].clear()
         self.u1 = User.objects.create_user(username='09161111111', phone='09161111111', password='x')
         self.u2 = User.objects.create_user(username='09162222222', phone='09162222222', password='x')
         self.m1 = get_or_create_member(self.u1)

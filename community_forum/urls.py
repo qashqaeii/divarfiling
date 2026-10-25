@@ -16,4 +16,5 @@ urlpatterns = [
     path('api/search/', api_views.ForumSearchAPIView.as_view(), name='api_search'),
     path('api/profile/', api_views.ForumProfileAPIView.as_view(), name='api_profile'),
     path('api/unread/', api_views.ForumUnreadAPIView.as_view(), name='api_unread'),
+    path('api/sync/', api_views.ForumSyncAPIView.as_view(), name='api_sync'),
 ]

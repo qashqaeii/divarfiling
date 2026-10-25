@@ -18,6 +18,9 @@ User = get_user_model()
 
 FORUM_SETTINGS = {
     'COMMUNITY_FORUM_ENABLED': True,
+    'DEBUG': True,
+    'FORUM_REDIS_URL': '',
+    'COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS': False,
     'CHANNEL_LAYERS': {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}},
 }
 
@@ -27,6 +30,7 @@ class ForumAccessTests(TestCase):
     def setUp(self):
         cache.clear()
         caches['forum_rate_limit'].clear()
+        caches['forum_shared'].clear()
         self.user = User.objects.create_user(
             username='u1',
             phone='09161234567',

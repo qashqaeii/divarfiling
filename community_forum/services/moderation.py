@@ -1,6 +1,7 @@
 """مدیریت محدودیت و گزارش."""
-from django.core.cache import cache
 from django.db.models import Q
+
+from community_forum.services.forum_cache import shared_cache
 from django.utils import timezone
 
 from community_forum.models import ForumBan, ForumModerationAudit
@@ -11,10 +12,11 @@ def _ban_cache_key(member_id: int) -> str:
 
 
 def invalidate_ban_cache(member_id: int) -> None:
-    cache.delete(_ban_cache_key(member_id))
+    shared_cache().delete(_ban_cache_key(member_id))
 
 
 def active_ban(member) -> ForumBan | None:
+    cache = shared_cache()
     key = _ban_cache_key(member.id)
     if cache.get(key) == 'none':
         return None
@@ -31,9 +33,9 @@ def active_ban(member) -> ForumBan | None:
         .first()
     )
     if not ban:
-        cache.set(key, 'none', timeout=60)
+        cache.set(key, 'none', timeout=15)
         return None
-    cache.set(key, 'active', timeout=60)
+    cache.set(key, 'active', timeout=15)
     return ban
 
 

@@ -1,5 +1,12 @@
 /* تالار گفتگو — فضای چت تمام‌قد، RTL، تم میزکار */
 
+/* ویژگی [hidden] باید بر display:flex نوارها و پنل‌ها اولویت داشته باشد */
+.cf-page [hidden],
+.cf-toast[hidden],
+.cf-dialog [hidden] {
+  display: none !important;
+}
+
 .ws-body--forum .ws-content {
   padding: 0;
   max-width: none;

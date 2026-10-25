@@ -37,6 +37,16 @@
 
   function $(id) { return document.getElementById(id); }
 
+  function hideEl(el) {
+    if (!el) return;
+    el.hidden = true;
+  }
+
+  function showEl(el) {
+    if (!el) return;
+    el.hidden = false;
+  }
+
   function apiUrl(path) {
     return messagesUrl.replace(/messages\/?$/, '') + String(path).replace(/^\//, '');
   }
@@ -591,23 +601,25 @@
 
   function setReply(msg) {
     state.replyToId = msg.id;
-    $('cfReplyPreview').hidden = false;
+    showEl($('cfReplyPreview'));
     $('cfReplyPreviewText').textContent = (msg.sender_label || '') + ': ' + (msg.body || '').slice(0, 120);
     $('cfComposerInput').focus();
   }
 
   function clearReply() {
     state.replyToId = null;
-    $('cfReplyPreview').hidden = true;
+    hideEl($('cfReplyPreview'));
+    var previewText = $('cfReplyPreviewText');
+    if (previewText) previewText.textContent = '';
   }
 
   function showSendFailed(err) {
-    $('cfSendFailed').hidden = false;
+    showEl($('cfSendFailed'));
     $('cfSendFailedText').textContent = (err && err.error) || 'ارسال ناموفق بود';
   }
 
   function hideSendFailed() {
-    $('cfSendFailed').hidden = true;
+    hideEl($('cfSendFailed'));
   }
 
   function sendMessage(ev) {
@@ -630,6 +642,7 @@
     fetchJson(messagesUrl, { method: 'POST', body: payload })
       .then(function (data) {
         state.pendingSend = null;
+        hideSendFailed();
         $('cfComposerInput').value = '';
         growComposer();
         updateChar();
@@ -853,6 +866,8 @@
   $('cfSendFailedDismiss').addEventListener('click', function () {
     hideSendFailed();
     state.pendingSend = null;
+    state.sending = false;
+    $('cfSendBtn').classList.remove('is-sending');
     updateChar();
   });
 

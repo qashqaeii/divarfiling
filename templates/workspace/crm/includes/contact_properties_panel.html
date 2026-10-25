@@ -201,7 +201,7 @@
             </header>
             <div class="crm-portfolio-card-body crm-pf-body">
                 <h3 class="crm-portfolio-card-title crm-pf-title">
-                    {% if l.link %}<a href="{{ l.link }}" target="_blank" rel="noopener">{{ l.title|truncatechars:56 }}</a>{% else %}<span>{{ l.title|truncatechars:56 }}</span>{% endif %}
+                    {% if l.filing_url %}<a href="{{ l.filing_url }}">{{ l.title|truncatechars:56 }}</a>{% else %}<span>{{ l.title|truncatechars:56 }}</span>{% endif %}
                 </h3>
                 <div class="crm-pf-price">
                     {% if l.price %}

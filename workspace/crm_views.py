@@ -927,7 +927,18 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             link.public_share_url = share_url
         for cl in ctx['linked_listings']:
             share_url = ''
+            filing_url = ''
             listing = listings_by_token.get(cl.token)
+            if listing is not None:
+                filing_url = reverse(
+                    'workspace:listing_detail',
+                    kwargs={'dataset_id': listing.dataset_id, 'listing_id': listing.pk},
+                )
+            elif cl.crm_property_id:
+                filing_url = reverse(
+                    'workspace:crm_property_detail',
+                    kwargs={'property_id': cl.crm_property_id},
+                )
             try:
                 if listing is not None:
                     share_url = public_share_url_for_listing(
@@ -940,6 +951,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             except Exception:
                 share_url = ''
             cl.public_share_url = share_url
+            cl.filing_url = filing_url
         ctx['reminders'] = c.reminders.filter(is_done=False).order_by('due_at')
         ctx['documents'] = c.documents.all()
         ctx['customer_form'] = CustomerForm(instance=c)

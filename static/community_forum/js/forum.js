@@ -841,7 +841,7 @@
     var ta = $('cfComposerInput');
     if (!ta) return;
     ta.style.height = 'auto';
-    ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
+    ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
   }
 
   function updateChar() {

@@ -1,14 +1,6 @@
 /* CRM Contact Detail — Mobile dossier layout (≤768px). Desktop untouched. */
 
 @media (min-width: 769px) {
-    .crm-contact-dossier .crm-contact-mgmt-fold {
-        display: contents;
-    }
-
-    .crm-contact-dossier .crm-contact-mgmt-fold__summary {
-        display: none !important;
-    }
-
     .crm-contact-dossier .crm-contact-mob-role {
         display: none;
     }
@@ -42,7 +34,8 @@
 
     .crm-contact-dossier .crm-contact-workspace__header > .crm-contact-hero,
     .crm-contact-dossier .crm-contact-workspace__header > .crm-contact-dossier-prelude,
-    .crm-contact-dossier .crm-contact-workspace__header > .crm-contact-workflow {
+    .crm-contact-dossier .crm-contact-workspace__header > .crm-contact-workflow,
+    .crm-contact-dossier .crm-contact-workspace__header > .crm-contact-hero-share-block {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
@@ -338,7 +331,8 @@
         display: none;
     }
 
-    .crm-contact-dossier .crm-contact-mob-menu--toolbar .crm-contact-mob-menu-trigger {
+    .crm-contact-dossier .crm-contact-mob-menu--toolbar .crm-contact-mob-menu-trigger,
+    .crm-contact-dossier .crm-contact-hero__toolbar-utils .crm-contact-mob-edit-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -354,7 +348,8 @@
         cursor: pointer;
     }
 
-    .crm-contact-dossier .crm-contact-mob-menu--toolbar .crm-contact-mob-menu-trigger i {
+    .crm-contact-dossier .crm-contact-mob-menu--toolbar .crm-contact-mob-menu-trigger i,
+    .crm-contact-dossier .crm-contact-hero__toolbar-utils .crm-contact-mob-edit-btn i {
         font-size: 0.9rem;
     }
 
@@ -413,57 +408,26 @@
         border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
     }
 
-    /* Management fold — same outer width as hero */
-    .crm-contact-dossier .crm-contact-mgmt-fold {
+    .crm-contact-dossier .crm-contact-hero-share-block {
         margin: 0;
         border-radius: 0;
         border: none;
         border-top: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
+        padding: 0.5rem var(--crm-dossier-pad) 0.65rem;
         background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 22%, var(--ws-surface));
-        overflow: hidden;
-        box-shadow: none;
     }
 
-    .crm-contact-dossier .crm-contact-mgmt-fold__summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        min-height: 3rem;
-        padding: 0.5rem var(--crm-dossier-pad);
-        list-style: none;
-        cursor: pointer;
-        font-size: 0.74rem;
-        font-weight: 700;
-        color: var(--ws-text-secondary);
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar--pro {
+        flex-wrap: wrap;
+        gap: 0.45rem 0.35rem;
     }
 
-    .crm-contact-dossier .crm-contact-mgmt-fold__summary::-webkit-details-marker {
-        display: none;
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar__cluster--mode {
+        flex: 1 1 100%;
     }
 
-    .crm-contact-dossier .crm-contact-mgmt-fold__title {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-    }
-
-    .crm-contact-dossier .crm-contact-mgmt-fold__hint {
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: var(--ws-text-muted);
-    }
-
-    .crm-contact-dossier .crm-contact-mgmt-fold .crm-contact-agency-strip {
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
-        background: transparent;
-    }
-
-    .crm-contact-dossier .crm-contact-agency-bar__row {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0.5rem 0.75rem 0.65rem;
-        gap: 0.5rem;
+    .crm-contact-dossier .crm-contact-hero-share-block .crm-prop-share-bar__cluster--send {
+        flex: 1 1 100%;
     }
 
     /* Workflow: compact NBA + snapshot */

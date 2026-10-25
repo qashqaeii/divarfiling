@@ -791,7 +791,8 @@
 }
 
 /* ── Archive scope tabs (جاری / بایگانی / همه) ── */
-.crm-properties-page .crm-files-archive-tabs {
+.crm-properties-page .crm-files-archive-tabs,
+.crm-contacts-pro .crm-files-archive-tabs {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.3rem;
@@ -811,7 +812,8 @@
     box-sizing: border-box;
 }
 
-.crm-properties-page .crm-files-archive-tab {
+.crm-properties-page .crm-files-archive-tab,
+.crm-contacts-pro .crm-files-archive-tab {
     position: relative;
     min-width: 0;
     display: block;
@@ -824,7 +826,8 @@
     transition: color 0.16s ease, transform 0.12s ease;
 }
 
-.crm-properties-page .crm-files-archive-tab__surface {
+.crm-properties-page .crm-files-archive-tab__surface,
+.crm-contacts-pro .crm-files-archive-tab__surface {
     position: absolute;
     inset: 0;
     border-radius: inherit;
@@ -838,7 +841,8 @@
     opacity: 0;
 }
 
-.crm-properties-page .crm-files-archive-tab__inner {
+.crm-properties-page .crm-files-archive-tab__inner,
+.crm-contacts-pro .crm-files-archive-tab__inner {
     position: relative;
     z-index: 1;
     display: flex;
@@ -849,7 +853,8 @@
     padding: 0.4rem 0.55rem;
 }
 
-.crm-properties-page .crm-files-archive-tab__ico {
+.crm-properties-page .crm-files-archive-tab__ico,
+.crm-contacts-pro .crm-files-archive-tab__ico {
     flex-shrink: 0;
     width: 1.65rem;
     height: 1.65rem;
@@ -864,7 +869,8 @@
     transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.12s ease;
 }
 
-.crm-properties-page .crm-files-archive-tab__text {
+.crm-properties-page .crm-files-archive-tab__text,
+.crm-contacts-pro .crm-files-archive-tab__text {
     display: inline-flex;
     flex-direction: column;
     align-items: flex-start;
@@ -873,7 +879,8 @@
     min-width: 0;
 }
 
-.crm-properties-page .crm-files-archive-tab__label {
+.crm-properties-page .crm-files-archive-tab__label,
+.crm-contacts-pro .crm-files-archive-tab__label {
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
@@ -884,11 +891,13 @@
     white-space: nowrap;
 }
 
-.crm-properties-page .crm-files-archive-tab__label-short {
+.crm-properties-page .crm-files-archive-tab__label-short,
+.crm-contacts-pro .crm-files-archive-tab__label-short {
     display: none;
 }
 
-.crm-properties-page .crm-files-archive-tab__count {
+.crm-properties-page .crm-files-archive-tab__count,
+.crm-contacts-pro .crm-files-archive-tab__count {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
@@ -904,24 +913,29 @@
     background: transparent;
 }
 
-.crm-properties-page .crm-files-archive-tab:hover {
+.crm-properties-page .crm-files-archive-tab:hover,
+.crm-contacts-pro .crm-files-archive-tab:hover {
     color: var(--ws-text);
 }
 
-.crm-properties-page .crm-files-archive-tab:hover .crm-files-archive-tab__ico {
+.crm-properties-page .crm-files-archive-tab:hover .crm-files-archive-tab__ico,
+.crm-contacts-pro .crm-files-archive-tab:hover .crm-files-archive-tab__ico {
     color: var(--ws-text);
     border-color: color-mix(in srgb, var(--ws-border) 80%, transparent);
 }
 
-.crm-properties-page .crm-files-archive-tab:active {
+.crm-properties-page .crm-files-archive-tab:active,
+.crm-contacts-pro .crm-files-archive-tab:active {
     transform: scale(0.98);
 }
 
-.crm-properties-page .crm-files-archive-tab.is-active {
+.crm-properties-page .crm-files-archive-tab.is-active,
+.crm-contacts-pro .crm-files-archive-tab.is-active {
     color: var(--ws-text);
 }
 
-.crm-properties-page .crm-files-archive-tab.is-active .crm-files-archive-tab__surface {
+.crm-properties-page .crm-files-archive-tab.is-active .crm-files-archive-tab__surface,
+.crm-contacts-pro .crm-files-archive-tab.is-active .crm-files-archive-tab__surface {
     opacity: 1;
     background: var(--ws-surface);
     border-color: color-mix(in srgb, var(--ws-border) 75%, transparent);
@@ -930,41 +944,48 @@
         0 4px 14px color-mix(in srgb, var(--ws-primary) 8%, transparent);
 }
 
-.crm-properties-page .crm-files-archive-tab--current.is-active .crm-files-archive-tab__surface {
+.crm-properties-page .crm-files-archive-tab--current.is-active .crm-files-archive-tab__surface,
+.crm-contacts-pro .crm-files-archive-tab--current.is-active .crm-files-archive-tab__surface {
     border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
     box-shadow:
         0 1px 3px color-mix(in srgb, var(--ws-text) 5%, transparent),
         0 6px 18px color-mix(in srgb, var(--ws-primary) 14%, transparent);
 }
 
-.crm-properties-page .crm-files-archive-tab--current.is-active .crm-files-archive-tab__ico {
+.crm-properties-page .crm-files-archive-tab--current.is-active .crm-files-archive-tab__ico,
+.crm-contacts-pro .crm-files-archive-tab--current.is-active .crm-files-archive-tab__ico {
     color: var(--ws-primary);
     background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
     border-color: color-mix(in srgb, var(--ws-primary) 20%, transparent);
 }
 
-.crm-properties-page .crm-files-archive-tab--current.is-active .crm-files-archive-tab__count {
+.crm-properties-page .crm-files-archive-tab--current.is-active .crm-files-archive-tab__count,
+.crm-contacts-pro .crm-files-archive-tab--current.is-active .crm-files-archive-tab__count {
     color: var(--ws-primary);
 }
 
-.crm-properties-page .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__surface {
+.crm-properties-page .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__surface,
+.crm-contacts-pro .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__surface {
     border-color: color-mix(in srgb, #64748b 28%, var(--ws-border));
     box-shadow:
         0 1px 3px color-mix(in srgb, var(--ws-text) 5%, transparent),
         0 6px 16px color-mix(in srgb, #64748b 12%, transparent);
 }
 
-.crm-properties-page .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__ico {
+.crm-properties-page .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__ico,
+.crm-contacts-pro .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__ico {
     color: #475569;
     background: color-mix(in srgb, #64748b 10%, var(--ws-surface));
     border-color: color-mix(in srgb, #64748b 22%, transparent);
 }
 
-.crm-properties-page .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__count {
+.crm-properties-page .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__count,
+.crm-contacts-pro .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__count {
     color: #475569;
 }
 
-.crm-properties-page .crm-files-archive-tab--all.is-active .crm-files-archive-tab__ico {
+.crm-properties-page .crm-files-archive-tab--all.is-active .crm-files-archive-tab__ico,
+.crm-contacts-pro .crm-files-archive-tab--all.is-active .crm-files-archive-tab__ico {
     color: #0f766e;
     background: color-mix(in srgb, #14b8a6 10%, var(--ws-surface));
     border-color: color-mix(in srgb, #14b8a6 22%, transparent);
@@ -984,53 +1005,62 @@
 }
 
 @media (max-width: 768px) {
-    .crm-properties-page .crm-files-archive-tabs {
+    .crm-properties-page .crm-files-archive-tabs,
+    .crm-contacts-pro .crm-files-archive-tabs {
         gap: 0.22rem;
         padding: 0.28rem;
         border-radius: 15px;
     }
 
-    .crm-properties-page .crm-files-archive-tab {
+    .crm-properties-page .crm-files-archive-tab,
+    .crm-contacts-pro .crm-files-archive-tab {
         min-height: 56px;
     }
 
-    .crm-properties-page .crm-files-archive-tab__inner {
+    .crm-properties-page .crm-files-archive-tab__inner,
+    .crm-contacts-pro .crm-files-archive-tab__inner {
         flex-direction: column;
         gap: 0.28rem;
         min-height: 56px;
         padding: 0.42rem 0.28rem 0.38rem;
     }
 
-    .crm-properties-page .crm-files-archive-tab__text {
+    .crm-properties-page .crm-files-archive-tab__text,
+    .crm-contacts-pro .crm-files-archive-tab__text {
         align-items: center;
         gap: 0.08rem;
     }
 
-    .crm-properties-page .crm-files-archive-tab__ico {
+    .crm-properties-page .crm-files-archive-tab__ico,
+    .crm-contacts-pro .crm-files-archive-tab__ico {
         width: 1.85rem;
         height: 1.85rem;
         font-size: 0.72rem;
         border-radius: 10px;
     }
 
-    .crm-properties-page .crm-files-archive-tab__label-full {
+    .crm-properties-page .crm-files-archive-tab__label-full,
+    .crm-contacts-pro .crm-files-archive-tab__label-full {
         display: none;
     }
 
-    .crm-properties-page .crm-files-archive-tab__label-short {
+    .crm-properties-page .crm-files-archive-tab__label-short,
+    .crm-contacts-pro .crm-files-archive-tab__label-short {
         display: block;
         font-weight: 800;
         font-size: 0.66rem;
         text-align: center;
     }
 
-    .crm-properties-page .crm-files-archive-tab__count {
+    .crm-properties-page .crm-files-archive-tab__count,
+    .crm-contacts-pro .crm-files-archive-tab__count {
         font-size: 0.6rem;
         font-weight: 750;
         opacity: 0.88;
     }
 
-    .crm-properties-page .crm-files-archive-tab.is-active .crm-files-archive-tab__ico {
+    .crm-properties-page .crm-files-archive-tab.is-active .crm-files-archive-tab__ico,
+    .crm-contacts-pro .crm-files-archive-tab.is-active .crm-files-archive-tab__ico {
         transform: translateY(-1px);
     }
 }

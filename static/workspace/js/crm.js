@@ -3956,10 +3956,11 @@ function initCRMContactTeam() {
         });
     });
 
-    const postMember = async (url, memberId, note = '') => {
+    const postMember = async (url, memberId, note = '', shareMode = '') => {
         const body = new FormData();
         body.append('member_id', memberId);
         if (note) body.append('note', note);
+        if (shareMode) body.append('share_mode', shareMode);
         const res = await fetch(url, {
             method: 'POST',
             headers: { 'X-CSRFToken': getCsrfToken(), 'X-Requested-With': 'XMLHttpRequest' },
@@ -3982,9 +3983,14 @@ function initCRMContactTeam() {
                 window.alert('هم‌تیمی مقصد را انتخاب کنید.');
                 return;
             }
+            const teamBar = group.closest('[data-crm-contact-team]');
+            const modeInput = teamBar
+                ? teamBar.querySelector('input[name="crm-contact-share-mode"]:checked')
+                : group.querySelector('input[name="crm-contact-share-mode"]:checked');
+            const shareMode = modeInput ? modeInput.value : '';
             shareBtn.disabled = true;
             try {
-                await postMember(shareUrl, memberId);
+                await postMember(shareUrl, memberId, '', shareMode);
                 window.location.reload();
             } catch (err) {
                 window.alert(err.message || 'اشتراک انجام نشد.');

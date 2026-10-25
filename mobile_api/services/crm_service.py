@@ -215,6 +215,8 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         return None
     if _contact_patch_has_writes(data) and not can_edit_customer(user, c):
         raise PermissionError('امکان ویرایش این مخاطب را ندارید')
+    if not _contact_patch_has_writes(data):
+        return c
 
     archive_patch = _parse_contact_archive_patch(data, c)
 

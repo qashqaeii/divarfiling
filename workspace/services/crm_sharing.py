@@ -16,7 +16,14 @@ def _agency_member(agency, user_id: int) -> CRMAgencyMember:
 
 
 @transaction.atomic
-def share_customer(actor, customer: Customer, to_member_id: int, *, note: str = '') -> CRMResourceShare:
+def share_customer(
+    actor,
+    customer: Customer,
+    to_member_id: int,
+    *,
+    note: str = '',
+    share_mode: str = CRMResourceShare.SHARE_MODE_CONFIDENTIAL,
+) -> CRMResourceShare:
     if customer.user_id != actor.id:
         raise ValueError('فقط مالک مخاطب می‌تواند آن را به اشتراک بگذارد')
     if not can_share_team_resources(actor):
@@ -27,6 +34,7 @@ def share_customer(actor, customer: Customer, to_member_id: int, *, note: str = 
     to_member = CRMAgencyMember.objects.get(pk=to_member_id, agency=m.agency, is_active=True)
     if to_member.user_id == actor.id:
         raise ValueError('نمی‌توانید با خودتان به اشتراک بگذارید')
+    mode = share_mode if share_mode in dict(CRMResourceShare.SHARE_MODE_CHOICES) else CRMResourceShare.SHARE_MODE_CONFIDENTIAL
     share, created = CRMResourceShare.objects.update_or_create(
         agency=m.agency,
         customer=customer,
@@ -35,6 +43,7 @@ def share_customer(actor, customer: Customer, to_member_id: int, *, note: str = 
             'owner': actor,
             'shared_by': actor,
             'note': (note or '').strip()[:300],
+            'share_mode': mode,
             'property': None,
             'deal': None,
         },

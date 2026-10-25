@@ -303,6 +303,9 @@ def bulk_restore_contacts(
         if not customer:
             result['skipped'] += 1
             continue
+        if not is_contact_archived(customer):
+            result['skipped'] += 1
+            continue
         try:
             with transaction.atomic():
                 restore_contact(user, customer, restore_status=restore_status)

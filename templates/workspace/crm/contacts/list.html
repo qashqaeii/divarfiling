@@ -11,7 +11,8 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=16">
 {% endblock %}
 
 {% block crm_content %}
@@ -56,32 +57,52 @@
         {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' warn=stats.due_today value=stats.due_today label='امروز' %}
     </section>
 
-    <nav class="crm-files-archive-tabs crm-contacts-archive-tabs" role="tablist" aria-label="نمای مخاطبین">
-        <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab crm-files-archive-tab--current {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab">
-            <span class="crm-files-archive-tab__inner">
-                <span class="crm-files-archive-tab__label-short">جاری</span>
-                <span class="crm-files-archive-tab__count">{{ stats.total }}</span>
-            </span>
-        </a>
-        <a href="?{{ archive_tab_qs.archived }}" class="crm-files-archive-tab crm-files-archive-tab--archived {% if archive_scope == 'archived' %}is-active{% endif %}" role="tab">
-            <span class="crm-files-archive-tab__inner">
-                <span class="crm-files-archive-tab__label-short">بایگانی</span>
-                <span class="crm-files-archive-tab__count">{{ stats.archived }}</span>
-            </span>
-        </a>
-        <a href="?{{ archive_tab_qs.all }}" class="crm-files-archive-tab crm-files-archive-tab--all {% if archive_scope == 'all' %}is-active{% endif %}" role="tab">
-            <span class="crm-files-archive-tab__inner">
-                <span class="crm-files-archive-tab__label-short">همه</span>
-                <span class="crm-files-archive-tab__count">{{ stats.all }}</span>
-            </span>
-        </a>
-    </nav>
-
     <div class="crm-contacts-smart-anchor crm-smart-command-anchor--minimal">
         {% include 'workspace/crm/includes/crm_smart_command.html' %}
     </div>
 
     <div class="crm-contacts-mob-chrome">
+    <nav class="crm-files-archive-tabs crm-contacts-archive-tabs" role="tablist" aria-label="نمای مخاطبین">
+        <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab crm-files-archive-tab--current {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab" aria-label="مخاطبین جاری" aria-selected="{% if archive_scope == 'active' or not request.GET.archive_scope %}true{% else %}false{% endif %}">
+            <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
+            <span class="crm-files-archive-tab__inner">
+                <span class="crm-files-archive-tab__ico" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                <span class="crm-files-archive-tab__text">
+                    <span class="crm-files-archive-tab__label">
+                        <span class="crm-files-archive-tab__label-full">مخاطبین جاری</span>
+                        <span class="crm-files-archive-tab__label-short">جاری</span>
+                    </span>
+                    <span class="crm-files-archive-tab__count">{{ stats.total }}</span>
+                </span>
+            </span>
+        </a>
+        <a href="?{{ archive_tab_qs.archived }}" class="crm-files-archive-tab crm-files-archive-tab--archived {% if archive_scope == 'archived' %}is-active{% endif %}" role="tab" aria-label="بایگانی‌شده" aria-selected="{% if archive_scope == 'archived' %}true{% else %}false{% endif %}">
+            <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
+            <span class="crm-files-archive-tab__inner">
+                <span class="crm-files-archive-tab__ico" aria-hidden="true"><i class="fas fa-box-archive"></i></span>
+                <span class="crm-files-archive-tab__text">
+                    <span class="crm-files-archive-tab__label">
+                        <span class="crm-files-archive-tab__label-full">بایگانی‌شده</span>
+                        <span class="crm-files-archive-tab__label-short">بایگانی</span>
+                    </span>
+                    <span class="crm-files-archive-tab__count">{{ stats.archived }}</span>
+                </span>
+            </span>
+        </a>
+        <a href="?{{ archive_tab_qs.all }}" class="crm-files-archive-tab crm-files-archive-tab--all {% if archive_scope == 'all' %}is-active{% endif %}" role="tab" aria-label="همه مخاطبین" aria-selected="{% if archive_scope == 'all' %}true{% else %}false{% endif %}">
+            <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
+            <span class="crm-files-archive-tab__inner">
+                <span class="crm-files-archive-tab__ico" aria-hidden="true"><i class="fas fa-table-cells-large"></i></span>
+                <span class="crm-files-archive-tab__text">
+                    <span class="crm-files-archive-tab__label">
+                        <span class="crm-files-archive-tab__label-full">همه مخاطبین</span>
+                        <span class="crm-files-archive-tab__label-short">همه</span>
+                    </span>
+                    <span class="crm-files-archive-tab__count">{{ stats.all }}</span>
+                </span>
+            </span>
+        </a>
+    </nav>
     <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
         <input type="hidden" name="view" value="{{ view_mode }}">
         {% if archive_scope and archive_scope != 'active' %}<input type="hidden" name="archive_scope" value="{{ archive_scope }}">{% endif %}
@@ -353,6 +374,10 @@
                 </select>
                 <select name="status" class="crm-bulk-dock-select crm-bulk-dock-extra crm-bulk-extra" data-for="status" hidden aria-label="وضعیت جدید">
                     {% for s in bulk_statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                </select>
+                <select name="restore_status" class="crm-bulk-dock-select crm-bulk-dock-extra crm-bulk-extra" data-for="restore" hidden aria-label="مرحله ارتباط پس از بازگردانی">
+                    <option value="">مرحله ارتباط (رکورد قدیمی)</option>
+                    {% for s in bulk_restore_statuses %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
                 </select>
                 <input type="text" name="tag" class="crm-bulk-dock-input crm-bulk-dock-extra crm-bulk-extra" data-for="tag" placeholder="برچسب" hidden aria-label="برچسب">
                 <button type="submit" class="crm-bulk-dock-apply">اعمال</button>

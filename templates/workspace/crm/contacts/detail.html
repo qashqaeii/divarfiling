@@ -18,7 +18,7 @@
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-premium.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-dossier.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-dossier.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-tabs.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-activities.css' %}?v=4">
 {% endblock %}
@@ -52,18 +52,17 @@
                         </span>
                         <span class="fl-header__help-label">راهنما</span>
                     </button>
+                    {% if not customer_is_shared and can_edit_customer %}
+                    <button type="button" class="crm-contact-mob-menu-trigger crm-contact-mob-edit-btn" data-drawer-open="drawer-edit" aria-label="ویرایش مخاطب" title="ویرایش مخاطب">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                    </button>
+                    {% endif %}
                     {% if not customer_is_shared %}
                     <details class="crm-contact-mob-menu crm-contact-mob-menu--inline crm-contact-mob-menu--toolbar">
                         <summary class="crm-contact-mob-menu-trigger" aria-label="گزینه‌های بیشتر">
                             <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
                         </summary>
                         <div class="crm-contact-mob-menu-panel" role="menu">
-                            <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-modal-open="modal-crm-contact-detail-help">
-                                <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنمای پرونده</span>
-                            </button>
-                            <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-drawer-open="drawer-edit">
-                                <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش مخاطب</span>
-                            </button>
                             <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-drawer-open="drawer-activity">
                                 <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت فعالیت</span>
                             </button>
@@ -179,18 +178,9 @@
                     </button>
                     {% endif %}
                 {% endif %}
-                {% if can_share_team_resources and is_customer_owner %}
-                {% if agency_space_enabled and agency_space_item %}
-                <a href="{{ agency_space_manage_url }}" class="crm-contact-hero__action crm-contact-hero__action--agency" title="مدیریت انتشار در فضای آژانس">
-                    <i class="fas fa-users" aria-hidden="true"></i><span>فضای آژانس</span>
-                </a>
-                {% elif agency_space_enabled and agency_space_can_publish %}
-                <button type="button" class="crm-contact-hero__action crm-contact-hero__action--agency" data-modal-open="modal-agency-space-publish" title="انتشار در فضای آژانس">
-                    <i class="fas fa-users" aria-hidden="true"></i><span class="crm-contact-hero__action-long">انتشار در فضای آژانس</span><span class="crm-contact-hero__action-short">فضای آژانس</span>
-                </button>
-                {% endif %}
-                <button type="button" class="crm-contact-hero__action crm-contact-hero__action--agency-soft" data-contact-team-focus title="اشتراک و انتقال با هم‌تیمی">
-                    <i class="fas fa-right-left" aria-hidden="true"></i><span>انتقال</span>
+                {% if can_edit_customer %}
+                <button type="button" class="crm-contact-hero__action" data-drawer-open="drawer-edit" title="ویرایش مخاطب">
+                    <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
                 </button>
                 {% endif %}
                 <details class="crm-contact-hero__more">
@@ -198,12 +188,6 @@
                         <i class="fas fa-ellipsis" aria-hidden="true"></i><span>بیشتر</span>
                     </summary>
                     <div class="crm-contact-hero__more-panel" role="menu">
-                        <button type="button" class="crm-contact-hero__more-item" role="menuitem" data-modal-open="modal-crm-contact-detail-help">
-                            <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنمای پرونده</span>
-                        </button>
-                        <button type="button" class="crm-contact-hero__more-item" role="menuitem" data-drawer-open="drawer-edit">
-                            <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
-                        </button>
                         <button type="button" class="crm-contact-hero__more-item" role="menuitem" data-drawer-open="drawer-activity">
                             <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت فعالیت</span>
                         </button>
@@ -233,35 +217,6 @@
                         <button type="button" class="crm-contact-hero__more-item" role="menuitem" data-drawer-open="drawer-document">
                             <i class="fas fa-upload" aria-hidden="true"></i><span>آپلود مدرک</span>
                         </button>
-                        {% if can_share_team_resources and is_customer_owner %}
-                        <div class="crm-contact-hero__more-team" data-crm-team-share>
-                            <span class="crm-contact-hero__more-label">اشتراک تیمی</span>
-                            <select class="crm-select crm-select-sm" aria-label="ارسال به هم‌تیمی">
-                                <option value="">ارسال به هم‌تیمی…</option>
-                                {% for m in agency_members %}
-                                {% if m.user_id != request.user.id %}
-                                <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
-                                {% endif %}
-                                {% endfor %}
-                            </select>
-                            <button type="button" class="crm-contact-hero__more-item" data-crm-share role="menuitem">
-                                <i class="fas fa-paper-plane" aria-hidden="true"></i><span>اشتراک</span>
-                            </button>
-                            <button type="button" class="crm-contact-hero__more-item" data-crm-transfer role="menuitem">
-                                <i class="fas fa-right-left" aria-hidden="true"></i><span>انتقال مالکیت</span>
-                            </button>
-                            {% if customer_shares %}
-                            <ul class="crm-contact-share-list">
-                                {% for s in customer_shares %}
-                                <li>
-                                    <span>{{ s.shared_with.get_full_name|default:s.shared_with.username }}</span>
-                                    <button type="button" class="crm-team-icon-btn-v2" data-revoke-share="{{ s.pk }}" title="لغو اشتراک"><i class="fas fa-xmark"></i></button>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </div>
                 </details>
             {% endif %}
@@ -283,29 +238,23 @@
             </div>
             {% endif %}
         </div>
-        {% if can_share_team_resources %}
-        <details class="crm-contact-mgmt-fold">
-            <summary class="crm-contact-mgmt-fold__summary">
-                <span class="crm-contact-mgmt-fold__title"><i class="fas fa-users-gear" aria-hidden="true"></i> مدیریت مخاطب</span>
-                <span class="crm-contact-mgmt-fold__hint">آژانس · اشتراک تیمی</span>
-            </summary>
-            <div id="crm-contact-team-bar" class="crm-contact-agency-strip" data-crm-contact-team data-customer-id="{{ customer.pk }}">
-                {% if customer_is_shared %}
-                <div class="crm-contact-agency-strip__shared-only">
-                    {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
-                </div>
-                {% elif is_customer_owner %}
-                {% include 'workspace/crm/includes/contact_detail_agency_team_strip.html' %}
-                {% endif %}
-            </div>
-        </details>
-        {% endif %}
     </section>
 
     <div class="crm-contact-dossier-prelude">
         {% include 'workspace/crm/includes/contact_followup_module.html' with mobile_slot=True %}
     </div>
     {% include 'workspace/crm/includes/contact_workflow.html' %}
+    {% if can_share_team_resources %}
+    <div id="crm-contact-team-bar" class="crm-prop-hero-share-block crm-contact-hero-share-block" data-crm-contact-team data-customer-id="{{ customer.pk }}">
+        {% if customer_is_shared %}
+        <div class="crm-contact-agency-strip__shared-only">
+            {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
+        </div>
+        {% elif is_customer_owner %}
+        {% include 'workspace/crm/includes/contact_detail_agency_team_strip.html' %}
+        {% endif %}
+    </div>
+    {% endif %}
     </header>
 
     <div class="crm-contact-workspace__body">

@@ -463,9 +463,16 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
             k: v for k, v in self.request.GET.items()
             if k not in ('view', 'page', 'open', 'partial') and v
         })
-        ctx['view_mode'] = self.request.GET.get('view', 'table')
-        ctx['pipeline'] = get_pipeline_data(self.request.user, per_column=50)
-        ctx['pipeline_interactive'] = True
+        if archive_scope in (ARCHIVE_SCOPE_ARCHIVED, ARCHIVE_SCOPE_ALL):
+            ctx['view_mode'] = 'table'
+            ctx['pipeline'] = []
+            ctx['pipeline_interactive'] = False
+        else:
+            ctx['view_mode'] = self.request.GET.get('view', 'table')
+            ctx['pipeline'] = get_pipeline_data(self.request.user, per_column=50)
+            ctx['pipeline_interactive'] = True
+        from workspace.services.crm_contact_archive import COMMUNICATION_STATUSES
+        ctx['bulk_restore_statuses'] = COMMUNICATION_STATUSES
         ctx['quick_lead_form'] = ctx.get('quick_lead_form', QuickLeadForm())
         ctx['status_update_url_template'] = reverse(
             'workspace:crm_contact_status', kwargs={'customer_id': 0},
@@ -3419,7 +3426,19 @@ class CustomerBulkActionView(LoginRequiredMixin, View):
             restore_status = (request.POST.get('restore_status') or '').strip()
             result = bulk_restore_contacts(request.user, ids, restore_status=restore_status)
             ok_count = result.get('restored', 0)
-            messages.success(request, f'{ok_count} مخاطب از بایگانی بازگردانی شد.')
+            err_count = result.get('errors', 0)
+            skip_count = result.get('skipped', 0)
+            if ok_count:
+                messages.success(request, f'{ok_count} مخاطب از بایگانی بازگردانی شد.')
+            if err_count:
+                messages.warning(
+                    request,
+                    f'{err_count} مخاطب بازگردانی نشد. برای رکوردهای قدیمی با وضعیت «بایگانی»، انتخاب مرحله ارتباط الزامی است.',
+                )
+            if skip_count and not ok_count and not err_count:
+                messages.warning(request, 'مخاطب بایگانی‌شده‌ای برای بازگردانی انتخاب نشده است.')
+            elif skip_count and ok_count:
+                messages.info(request, f'{skip_count} مورد بدون تغییر رد شد.')
         elif action == 'tag':
             tag = request.POST.get('tag', '').strip()
             if tag:
@@ -4559,7 +4578,12 @@ class CRMTeamAssignView(LoginRequiredMixin, View):
                 status=403,
             )
         try:
-            assign_customer(request.user, customer, int(request.POST.get('member_id', 0)))
+            assign_customer(
+                request.user,
+                customer,
+                int(request.POST.get('member_id', 0)),
+                share_mode=request.POST.get('share_mode', 'confidential'),
+            )
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         return JsonResponse({'ok': True})

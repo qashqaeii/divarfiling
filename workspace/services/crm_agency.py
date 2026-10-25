@@ -244,10 +244,19 @@ def remove_member(actor, member_id: int) -> None:
     )
 
 
-def assign_customer(actor, customer: Customer, advisor_id: int) -> Customer:
+def assign_customer(
+    actor,
+    customer: Customer,
+    advisor_id: int,
+    *,
+    share_mode: str = 'confidential',
+) -> Customer:
     """تخصیص = اشتراک‌گذاری مخاطب با مشاور (فقط مالک)."""
+    from workspace.models import CRMResourceShare
     from workspace.services.crm_sharing import share_customer
-    share_customer(actor, customer, advisor_id)
+
+    mode = share_mode if share_mode in dict(CRMResourceShare.SHARE_MODE_CHOICES) else CRMResourceShare.SHARE_MODE_CONFIDENTIAL
+    share_customer(actor, customer, advisor_id, share_mode=mode)
     m = get_membership(actor)
     advisor = CRMAgencyMember.objects.get(pk=advisor_id, agency=m.agency, is_active=True)
     customer.assigned_to = advisor.user

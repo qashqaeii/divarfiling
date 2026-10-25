@@ -108,6 +108,49 @@ class CRMContactArchiveServiceTests(TestCase):
         self.assertEqual(result['archived'], 2)
         self.assertEqual(result['skipped'], 1)
 
+    def test_bulk_restore_modern_keeps_status_without_restore_status(self):
+        archive_contact(self.user, self.customer)
+        result = bulk_restore_contacts(self.user, [self.customer.pk])
+        self.assertEqual(result, {'restored': 1, 'skipped': 0, 'errors': 0})
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.status, 'قرارداد')
+        self.assertFalse(is_contact_archived(self.customer))
+
+    def test_bulk_restore_legacy_requires_restore_status(self):
+        legacy = Customer.objects.create(
+            user=self.user,
+            name='لگسی گروهی',
+            status='بایگانی',
+            archived_at=timezone.now(),
+        )
+        result = bulk_restore_contacts(self.user, [legacy.pk])
+        self.assertEqual(result['restored'], 0)
+        self.assertEqual(result['errors'], 1)
+        legacy.refresh_from_db()
+        self.assertTrue(is_contact_archived(legacy))
+
+    def test_bulk_restore_mixed_legacy_and_modern(self):
+        archive_contact(self.user, self.customer)
+        legacy = Customer.objects.create(
+            user=self.user,
+            name='لگسی مخلوط',
+            status='بایگانی',
+            archived_at=timezone.now(),
+        )
+        result = bulk_restore_contacts(
+            self.user,
+            [self.customer.pk, legacy.pk],
+            restore_status='جدید',
+        )
+        self.assertEqual(result['restored'], 2)
+        self.assertEqual(result['errors'], 0)
+        self.customer.refresh_from_db()
+        legacy.refresh_from_db()
+        self.assertEqual(self.customer.status, 'قرارداد')
+        self.assertEqual(legacy.status, 'جدید')
+        self.assertFalse(is_contact_archived(self.customer))
+        self.assertFalse(is_contact_archived(legacy))
+
     def test_archive_invalid_reactivation_does_not_partially_apply(self):
         acts_before = CustomerActivity.objects.filter(customer=self.customer).count()
         with self.assertRaises(ValueError):
@@ -177,3 +220,18 @@ class CRMContactArchiveViewTests(TestCase):
         update_customer_status(self.customer, 'بایگانی', user=self.user)
         self.customer.refresh_from_db()
         self.assertTrue(is_contact_archived(self.customer))
+
+    def test_archived_scope_with_pipeline_request_shows_table(self):
+        archive_contact(self.user, self.customer)
+        url = reverse('workspace:crm_contacts')
+        res = self.client.get(f'{url}?archive_scope=archived&view=pipeline')
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'crm-contacts-table-wrap')
+        self.assertNotContains(res, 'crm-contacts-pipeline')
+
+    def test_bulk_restore_form_in_archived_tab(self):
+        archive_contact(self.user, self.customer)
+        url = reverse('workspace:crm_contacts')
+        res = self.client.get(f'{url}?archive_scope=archived')
+        self.assertContains(res, 'name="restore_status"')
+        self.assertContains(res, 'data-for="restore"')

@@ -209,3 +209,21 @@ class ContactArchivePatchApiTests(APITestCase):
         archive_contact(self.user, self.customer)
         resp = self.client.patch(self.url, {'status': 'قرارداد'}, format='json')
         self.assertEqual(resp.status_code, 400)
+
+    def test_patch_empty_body_does_not_update_timestamp(self):
+        before = self.customer.updated_at
+        resp = self.client.patch(self.url, {}, format='json')
+        self.assertEqual(resp.status_code, 200)
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.updated_at, before)
+
+    def test_patch_null_fields_only_does_not_update_timestamp(self):
+        before = self.customer.updated_at
+        resp = self.client.patch(
+            self.url,
+            {'full_name': None, 'city': None, 'is_archived': None},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.updated_at, before)

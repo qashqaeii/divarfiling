@@ -1,8 +1,10 @@
 {% extends 'workspace/base.html' %}
 {% load static %}
 
+{% block body_extra_class %} ws-body--forum{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=4">
 {% endblock %}
 
 {% block page_title %}تالار گفتگو{% endblock %}
@@ -14,71 +16,113 @@
      data-bootstrap-url="{% url 'workspace:community_forum:api_bootstrap' %}"
      data-ws-path="/ws/forum/"
      data-csrf="{{ csrf_token }}">
+
     <header class="cf-header">
-        <div class="cf-header__main">
-            <h1 class="cf-header__title">تالار گفتگو</h1>
-            <p class="cf-header__sub">گفتگوی آزاد اعضای فایلینگ دیوار</p>
-            <p class="cf-header__hint">شماره تماس اعضا نمایش داده نمی‌شود. پیام‌ها پس از ۳۰ روز حذف می‌شوند.</p>
+        <div class="cf-header__brand">
+            <span class="cf-header__icon" aria-hidden="true">
+                <i class="fas fa-comments"></i>
+            </span>
+            <div class="cf-header__titles">
+                <h1 class="cf-header__title">تالار گفتگو</h1>
+                <p class="cf-header__sub">گفتگوی آزاد اعضای فایلینگ دیوار</p>
+            </div>
         </div>
-        <div class="cf-header__actions">
-            <button type="button" class="cf-btn cf-btn--ghost" id="cfSearchToggle" aria-label="جستجو">
+        <div class="cf-header__tools">
+            <div class="cf-conn" id="cfConnBadge" role="status" aria-live="polite" hidden>
+                <span class="cf-conn__dot" id="cfConnDot" aria-hidden="true"></span>
+                <span class="cf-conn__label" id="cfConnLabel"></span>
+            </div>
+            <button type="button" class="cf-icon-btn" id="cfSearchToggle" aria-label="جستجو" aria-expanded="false" aria-controls="cfSearchPanel">
                 <i class="fas fa-search" aria-hidden="true"></i>
             </button>
-            <button type="button" class="cf-btn cf-btn--ghost" id="cfRulesBtn">قوانین</button>
-            <button type="button" class="cf-btn cf-btn--ghost" id="cfProfileBtn">نام نمایشی</button>
+            <button type="button" class="cf-text-btn" id="cfRulesBtn">قوانین</button>
+            <button type="button" class="cf-text-btn" id="cfProfileBtn">نام نمایشی</button>
         </div>
     </header>
 
     <div class="cf-pinned" id="cfPinned" hidden></div>
 
     <div class="cf-search" id="cfSearchPanel" hidden>
-        <input type="search" class="cf-search__input" id="cfSearchInput" placeholder="جستجو در ۳۰ روز اخیر…" autocomplete="off">
+        <div class="cf-search__bar">
+            <i class="fas fa-search cf-search__icon" aria-hidden="true"></i>
+            <input type="search" class="cf-search__input" id="cfSearchInput" placeholder="جستجو در ۳۰ روز اخیر…" autocomplete="off">
+            <button type="button" class="cf-icon-btn cf-icon-btn--sm" id="cfSearchClose" aria-label="بستن جستجو">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
         <div class="cf-search__results" id="cfSearchResults"></div>
     </div>
 
-    <div class="cf-layout">
-        <main class="cf-chat" aria-label="گفتگو">
-            <div class="cf-status" id="cfConnStatus" hidden></div>
-            <div class="cf-messages" id="cfMessages" role="log" aria-live="polite"></div>
-            <button type="button" class="cf-new-msgs" id="cfNewMsgsBtn" hidden>پیام‌های جدید</button>
-            <button type="button" class="cf-scroll-end" id="cfScrollEndBtn" hidden aria-label="رفتن به آخر گفتگو">
+    <section class="cf-chat" aria-label="گفتگو">
+        <div class="cf-messages-wrap">
+            <div class="cf-messages" id="cfMessages" role="log" aria-live="polite">
+                <div class="cf-empty" id="cfEmptyState" hidden>
+                    <span class="cf-empty__icon" aria-hidden="true"><i class="fas fa-message"></i></span>
+                    <h2 class="cf-empty__title">گفتگو از اینجا شروع می‌شه</h2>
+                    <p class="cf-empty__text">اولین پیام را بنویسید و با سایر مشاوران املاک در ارتباط باشید.</p>
+                    <p class="cf-empty__hint">Enter برای ارسال · Shift+Enter خط جدید</p>
+                </div>
+                <div class="cf-loading" id="cfLoadingState">
+                    <span class="cf-loading__spinner" aria-hidden="true"></span>
+                    <span>در حال بارگذاری گفتگو…</span>
+                </div>
+            </div>
+            <button type="button" class="cf-float-btn cf-new-msgs" id="cfNewMsgsBtn" hidden>پیام‌های جدید</button>
+            <button type="button" class="cf-float-btn cf-scroll-end" id="cfScrollEndBtn" hidden aria-label="رفتن به آخر گفتگو">
                 <i class="fas fa-chevron-down" aria-hidden="true"></i>
             </button>
-        </main>
-        <aside class="cf-aside" id="cfAside" aria-label="قوانین و راهنما">
-            <h2 class="cf-aside__title">قوانین تالار</h2>
-            <ul class="cf-rules">
-                <li>احترام به سایر اعضا</li>
-                <li>عدم انتشار شماره تماس و اطلاعات شخصی</li>
-                <li>عدم انتشار اطلاعات محرمانه مشتریان</li>
-                <li>ممنوعیت تبلیغات مزاحم و جعل هویت</li>
-                <li>حذف خودکار پیام‌ها پس از ۳۰ روز</li>
-            </ul>
-        </aside>
-    </div>
-
-    <div class="cf-composer-wrap">
-        <div class="cf-reply-preview" id="cfReplyPreview" hidden>
-            <span id="cfReplyPreviewText"></span>
-            <button type="button" class="cf-reply-preview__close" id="cfReplyCancel" aria-label="لغو پاسخ">&times;</button>
         </div>
-        <form class="cf-composer" id="cfComposer">
-            <textarea class="cf-composer__input" id="cfComposerInput" rows="1" maxlength="2000" placeholder="پیام خود را بنویسید…" aria-label="متن پیام"></textarea>
-            <button type="submit" class="cf-composer__send" id="cfSendBtn" disabled aria-label="ارسال">
-                <i class="fas fa-paper-plane" aria-hidden="true"></i>
-            </button>
-        </form>
-        <p class="cf-composer__meta"><span id="cfCharCount">0</span> / 2000</p>
-    </div>
+
+        <div class="cf-composer-wrap">
+            <div class="cf-reply-preview" id="cfReplyPreview" hidden>
+                <div class="cf-reply-preview__body">
+                    <span class="cf-reply-preview__label">پاسخ به</span>
+                    <span id="cfReplyPreviewText"></span>
+                </div>
+                <button type="button" class="cf-icon-btn cf-icon-btn--sm" id="cfReplyCancel" aria-label="لغو پاسخ">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="cf-send-failed" id="cfSendFailed" hidden>
+                <span id="cfSendFailedText">ارسال ناموفق بود</span>
+                <button type="button" class="cf-text-btn" id="cfSendRetry">تلاش مجدد</button>
+                <button type="button" class="cf-icon-btn cf-icon-btn--sm" id="cfSendFailedDismiss" aria-label="بستن">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <form class="cf-composer" id="cfComposer">
+                <div class="cf-composer__field">
+                    <textarea class="cf-composer__input" id="cfComposerInput" rows="1" maxlength="2000" placeholder="پیام خود را بنویسید…" aria-label="متن پیام"></textarea>
+                    <span class="cf-composer__count" aria-hidden="true"><span id="cfCharCount">0</span>/2000</span>
+                </div>
+                <button type="submit" class="cf-composer__send" id="cfSendBtn" disabled aria-label="ارسال">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                </button>
+            </form>
+        </div>
+    </section>
 </div>
 
-<dialog class="cf-dialog" id="cfWelcomeDialog">
-    <p>به تالار گفتگوی فایلینگ دیوار خوش آمدید. اینجا می‌توانید با سایر مشاوران املاک گفتگو کنید، تجربه‌هایتان را به اشتراک بگذارید و از یکدیگر کمک بگیرید.</p>
-    <form method="dialog"><button type="submit" class="cf-btn cf-btn--primary">متوجه شدم</button></form>
+<dialog class="cf-dialog" id="cfWelcomeDialog" aria-labelledby="cfWelcomeTitle">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfWelcomeTitle">به تالار گفتگو خوش آمدید</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
+    <p class="cf-dialog__body">اینجا می‌توانید با سایر مشاوران املاک گفتگو کنید، تجربه‌ها را به اشتراک بگذارید و از یکدیگر کمک بگیرید. شماره تماس اعضا نمایش داده نمی‌شود و پیام‌ها پس از ۳۰ روز حذف می‌شوند.</p>
+    <div class="cf-dialog__foot">
+        <button type="button" class="cf-btn cf-btn--primary" id="cfWelcomeAck">متوجه شدم</button>
+    </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfRulesDialog">
-    <h2>قوانین تالار</h2>
+<dialog class="cf-dialog" id="cfRulesDialog" aria-labelledby="cfRulesTitle">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfRulesTitle">قوانین تالار</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
     <ul class="cf-rules">
         <li>احترام به سایر اعضا</li>
         <li>عدم انتشار شماره تماس و اطلاعات شخصی</li>
@@ -88,58 +132,87 @@
         <li>ممنوعیت محتوای توهین‌آمیز یا غیرقانونی</li>
         <li>حذف خودکار پیام‌ها پس از ۳۰ روز</li>
     </ul>
-    <form method="dialog"><button type="submit" class="cf-btn">بستن</button></form>
+    <div class="cf-dialog__foot">
+        <button type="button" class="cf-btn" data-cf-dialog-close>بستن</button>
+    </div>
 </dialog>
 
-<div class="cf-toast" id="cfToast" role="status" aria-live="polite" hidden></div>
-
-<dialog class="cf-dialog" id="cfEditDialog">
-    <h2>ویرایش پیام</h2>
+<dialog class="cf-dialog" id="cfEditDialog" aria-labelledby="cfEditTitle">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfEditTitle">ویرایش پیام</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
     <textarea class="cf-input cf-input--area" id="cfEditInput" rows="4" maxlength="2000"></textarea>
-    <div class="cf-dialog__actions">
-        <button type="button" class="cf-btn cf-btn--primary" id="cfEditSave">ذخیره</button>
+    <div class="cf-dialog__foot cf-dialog__foot--split">
         <button type="button" class="cf-btn" id="cfEditCancel">انصراف</button>
+        <button type="button" class="cf-btn cf-btn--primary" id="cfEditSave">ذخیره</button>
     </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfDeleteDialog">
-    <h2>حذف پیام</h2>
-    <p>این پیام حذف شود؟</p>
-    <div class="cf-dialog__actions">
-        <button type="button" class="cf-btn cf-btn--primary" id="cfDeleteConfirm">حذف</button>
+<dialog class="cf-dialog" id="cfDeleteDialog" aria-labelledby="cfDeleteTitle">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfDeleteTitle">حذف پیام</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
+    <p class="cf-dialog__body">این پیام برای همه حذف شود؟</p>
+    <div class="cf-dialog__foot cf-dialog__foot--split">
         <button type="button" class="cf-btn" id="cfDeleteCancel">انصراف</button>
+        <button type="button" class="cf-btn cf-btn--danger" id="cfDeleteConfirm">حذف</button>
     </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfReportDialog">
-    <h2>گزارش تخلف</h2>
+<dialog class="cf-dialog" id="cfReportDialog" aria-labelledby="cfReportTitle">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfReportTitle">گزارش تخلف</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
     <div class="cf-report-reasons" id="cfReportReasons"></div>
     <textarea class="cf-input cf-input--area" id="cfReportNote" rows="2" placeholder="توضیح کوتاه (اختیاری)"></textarea>
-    <div class="cf-dialog__actions">
-        <button type="button" class="cf-btn cf-btn--primary" id="cfReportSubmit">ثبت گزارش</button>
+    <div class="cf-dialog__foot cf-dialog__foot--split">
         <button type="button" class="cf-btn" id="cfReportCancel">انصراف</button>
+        <button type="button" class="cf-btn cf-btn--primary" id="cfReportSubmit">ثبت گزارش</button>
     </div>
 </dialog>
 
-<dialog class="cf-dialog cf-dialog--sheet" id="cfReactionDialog">
-    <h2>واکنش</h2>
+<dialog class="cf-dialog cf-dialog--sheet" id="cfReactionDialog" aria-labelledby="cfReactionTitle">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfReactionTitle">واکنش</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
     <div class="cf-emoji-pick" id="cfEmojiPick"></div>
-    <button type="button" class="cf-btn" id="cfReactionClear">حذف واکنش</button>
+    <div class="cf-dialog__foot">
+        <button type="button" class="cf-btn cf-btn--ghost" id="cfReactionClear">حذف واکنش</button>
+    </div>
 </dialog>
 
-<dialog class="cf-dialog" id="cfProfileDialog">
-    <h2>نام نمایشی</h2>
+<dialog class="cf-dialog" id="cfProfileDialog" aria-labelledby="cfProfileTitle">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfProfileTitle">نام نمایشی</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
     <p class="cf-dialog__hint">نام مستقل از حساب شما در تالار نمایش داده می‌شود.</p>
     <label class="cf-label" for="cfDisplayNameInput">نام نمایشی</label>
     <input type="text" class="cf-input" id="cfDisplayNameInput" maxlength="64" autocomplete="nickname">
     <p class="cf-error" id="cfProfileError" hidden></p>
-    <div class="cf-dialog__actions">
-        <button type="button" class="cf-btn cf-btn--primary" id="cfProfileSave">ذخیره</button>
+    <div class="cf-dialog__foot cf-dialog__foot--split">
         <button type="button" class="cf-btn" id="cfProfileClose">انصراف</button>
+        <button type="button" class="cf-btn cf-btn--primary" id="cfProfileSave">ذخیره</button>
     </div>
 </dialog>
+
+<div class="cf-toast" id="cfToast" role="status" aria-live="polite" hidden></div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community_forum/js/forum.js' %}?v=3" defer></script>
+<script src="{% static 'community_forum/js/forum.js' %}?v=4" defer></script>
 {% endblock %}

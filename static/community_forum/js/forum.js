@@ -19,6 +19,7 @@
     myPublicId: null,
     atBottom: true,
     ws: null,
+    wsConnected: false,
     wsConnecting: false,
     pollTimer: null,
     heartbeatTimer: null,
@@ -30,6 +31,8 @@
     pendingSend: null,
     reportReasons: [],
     ui: { editId: null, deleteId: null, reportId: null, reactionId: null },
+    openMenuId: null,
+    initialLoaded: false,
   };
 
   function $(id) { return document.getElementById(id); }
@@ -129,20 +132,111 @@
     try { return new Date(iso).toLocaleDateString('fa-IR'); } catch (e) { return ''; }
   }
 
-  function renderMessage(msg) {
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+
+  function initials(label) {
+    var parts = (label || '?').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2);
+    return (parts[0][0] || '') + (parts[parts.length - 1][0] || '');
+  }
+
+  function setConnStatus(mode, label) {
+    var badge = $('cfConnBadge');
+    var dot = $('cfConnDot');
+    var lbl = $('cfConnLabel');
+    if (!badge || !lbl) return;
+    badge.hidden = false;
+    badge.classList.remove('cf-conn--live', 'cf-conn--reconnect', 'cf-conn--sync');
+    if (mode === 'live') badge.classList.add('cf-conn--live');
+    if (mode === 'reconnect') badge.classList.add('cf-conn--reconnect');
+    if (mode === 'sync') badge.classList.add('cf-conn--sync');
+    lbl.textContent = label;
+    if (dot) dot.setAttribute('aria-label', label);
+  }
+
+  function hideConnStatus() {
+    var badge = $('cfConnBadge');
+    if (badge) badge.hidden = true;
+  }
+
+  function updateEmptyState() {
+    var empty = $('cfEmptyState');
+    var loading = $('cfLoadingState');
+    if (!empty) return;
+    if (!state.initialLoaded) {
+      if (loading) loading.hidden = false;
+      empty.hidden = true;
+      return;
+    }
+    if (loading) loading.hidden = true;
+    empty.hidden = state.orderedIds.length > 0;
+  }
+
+  function closeAllMenus() {
+    document.querySelectorAll('.cf-msg__menu').forEach(function (m) { m.hidden = true; });
+    document.querySelectorAll('.cf-msg__toolbar').forEach(function (t) { t.classList.remove('is-open'); });
+    state.openMenuId = null;
+  }
+
+  document.addEventListener('click', function (ev) {
+    if (!ev.target.closest('.cf-msg__toolbar')) closeAllMenus();
+  });
+
+  function menuItems(msg) {
+    var items = [
+      { act: 'reply', label: 'پاسخ' },
+      { act: 'react', label: 'واکنش' },
+    ];
+    if (msg.is_mine) {
+      items.push({ act: 'edit', label: 'ویرایش' });
+      items.push({ act: 'del', label: 'حذف', danger: true });
+    } else {
+      items.push({ act: 'report', label: 'گزارش', danger: true });
+    }
+    return items;
+  }
+
+  function onMenuAction(msg, act) {
+    closeAllMenus();
+    if (act === 'reply') setReply(msg);
+    if (act === 'react') openReaction(msg.id);
+    if (act === 'edit') openEdit(msg);
+    if (act === 'del') openDelete(msg.id);
+    if (act === 'report') openReport(msg.id);
+  }
+
+  function buildMessageEl(msg) {
     var wrap = document.createElement('div');
-    wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '');
+    wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') + (msg.is_deleted ? ' cf-msg--deleted' : '');
     wrap.dataset.id = String(msg.id);
-    var av = document.createElement(msg.avatar_url ? 'img' : 'div');
+
+    var av;
+    if (msg.avatar_url) {
+      av = document.createElement('img');
+      av.src = msg.avatar_url;
+      av.alt = '';
+    } else {
+      av = document.createElement('div');
+      av.textContent = initials(msg.sender_label);
+    }
     av.className = 'cf-msg__avatar';
-    if (msg.avatar_url) { av.src = msg.avatar_url; av.alt = ''; }
-    var bubble = document.createElement('div');
-    bubble.className = 'cf-msg__bubble';
+
+    var stack = document.createElement('div');
+    stack.className = 'cf-msg__stack';
+
     var meta = document.createElement('div');
     meta.className = 'cf-msg__meta';
-    meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span><span>' +
+    meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span><span class="cf-msg__time">' +
       formatTime(msg.created_at) + (msg.is_edited ? ' · ویرایش‌شده' : '') + '</span>';
-    bubble.appendChild(meta);
+
+    var bubble = document.createElement('div');
+    bubble.className = 'cf-msg__bubble';
+
     if (msg.reply_to) {
       var rp = document.createElement('div');
       rp.className = 'cf-msg__reply';
@@ -150,49 +244,133 @@
         ((msg.reply_to.sender_label || '') + ': ' + (msg.reply_to.body_preview || ''));
       bubble.appendChild(rp);
     }
+
     var body = document.createElement('div');
     body.className = 'cf-msg__body';
     body.textContent = msg.is_deleted ? 'پیام حذف شده' : msg.body;
     bubble.appendChild(body);
+
+    var rx = document.createElement('div');
+    rx.className = 'cf-reactions';
     if (msg.reactions && msg.reactions.length) {
-      var rx = document.createElement('div');
-      rx.className = 'cf-reactions';
       msg.reactions.forEach(function (r) {
-        var s = document.createElement('span');
+        var s = document.createElement('button');
+        s.type = 'button';
         s.className = 'cf-reaction';
         s.textContent = r.emoji + ' ' + r.count;
+        s.addEventListener('click', function () { openReaction(msg.id); });
         rx.appendChild(s);
       });
-      bubble.appendChild(rx);
     }
+    bubble.appendChild(rx);
+
+    stack.appendChild(meta);
+    stack.appendChild(bubble);
+
     if (!msg.is_deleted) {
-      var actions = document.createElement('div');
-      actions.className = 'cf-msg__actions';
-      actions.innerHTML = '<button type="button" data-act="reply">پاسخ</button><button type="button" data-act="react">واکنش</button>';
-      if (msg.is_mine) {
-        actions.innerHTML += '<button type="button" data-act="edit">ویرایش</button><button type="button" data-act="del">حذف</button>';
-      } else {
-        actions.innerHTML += '<button type="button" data-act="report">گزارش</button>';
-      }
-      actions.addEventListener('click', onAction(msg));
-      bubble.appendChild(actions);
+      var toolbar = document.createElement('div');
+      toolbar.className = 'cf-msg__toolbar';
+      var menuBtn = document.createElement('button');
+      menuBtn.type = 'button';
+      menuBtn.className = 'cf-msg__menu-btn';
+      menuBtn.setAttribute('aria-label', 'عملیات پیام');
+      menuBtn.innerHTML = '<i class="fas fa-ellipsis-v" aria-hidden="true"></i>';
+      var menu = document.createElement('div');
+      menu.className = 'cf-msg__menu';
+      menu.hidden = true;
+      menuItems(msg).forEach(function (item) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = item.label;
+        if (item.danger) b.className = 'cf-menu-danger';
+        b.addEventListener('click', function () { onMenuAction(msg, item.act); });
+        menu.appendChild(b);
+      });
+      menuBtn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var open = state.openMenuId === msg.id;
+        closeAllMenus();
+        if (!open) {
+          menu.hidden = false;
+          toolbar.classList.add('is-open');
+          state.openMenuId = msg.id;
+        }
+      });
+      toolbar.appendChild(menuBtn);
+      toolbar.appendChild(menu);
+      bubble.style.position = 'relative';
+      toolbar.style.position = 'absolute';
+      toolbar.style.top = '4px';
+      toolbar.style.insetInlineEnd = '4px';
+      bubble.appendChild(toolbar);
     }
     wrap.appendChild(av);
-    wrap.appendChild(bubble);
+    wrap.appendChild(stack);
     return wrap;
   }
 
-  function escapeHtml(s) {
-    var d = document.createElement('div');
-    d.textContent = s || '';
-    return d.innerHTML;
+  function patchMessageEl(wrap, msg) {
+    msg = normalizeIncoming(msg);
+    wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') + (msg.is_deleted ? ' cf-msg--deleted' : '');
+    var body = wrap.querySelector('.cf-msg__body');
+    if (body) body.textContent = msg.is_deleted ? 'پیام حذف شده' : msg.body;
+    var meta = wrap.querySelector('.cf-msg__meta');
+    if (meta) {
+      meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span><span class="cf-msg__time">' +
+        formatTime(msg.created_at) + (msg.is_edited ? ' · ویرایش‌شده' : '') + '</span>';
+    }
+    var rx = wrap.querySelector('.cf-reactions');
+    if (rx) {
+      rx.innerHTML = '';
+      (msg.reactions || []).forEach(function (r) {
+        var s = document.createElement('button');
+        s.type = 'button';
+        s.className = 'cf-reaction';
+        s.textContent = r.emoji + ' ' + r.count;
+        s.addEventListener('click', function () { openReaction(msg.id); });
+        rx.appendChild(s);
+      });
+    }
+  }
+
+  function findMessageNode(id) {
+    return document.querySelector('.cf-msg[data-id="' + id + '"]');
+  }
+
+  function ensureDaySepBefore(msg, insertBeforeNode) {
+    var el = $('cfMessages');
+    var dk = dayKey(msg.created_at);
+    if (!dk) return;
+    var prevId = null;
+    var idx = state.orderedIds.indexOf(msg.id);
+    if (idx > 0) prevId = state.orderedIds[idx - 1];
+    var prevMsg = prevId ? state.messages.get(prevId) : null;
+    var prevDk = prevMsg ? dayKey(prevMsg.created_at) : '';
+    if (prevDk === dk) return;
+    var existing = el.querySelector('.cf-day-sep[data-day="' + dk + '"]');
+    if (existing) return;
+    var sep = document.createElement('div');
+    sep.className = 'cf-day-sep';
+    sep.dataset.day = dk;
+    sep.textContent = dk;
+    if (insertBeforeNode) el.insertBefore(sep, insertBeforeNode);
+    else el.appendChild(sep);
+  }
+
+  function isAppendOnly(msg) {
+    if (!state.orderedIds.length) return true;
+    return msg.id >= state.orderedIds[state.orderedIds.length - 1];
   }
 
   function renderAll() {
     var el = $('cfMessages');
     if (!el) return;
-    var prevH = el.scrollHeight, prevTop = el.scrollTop, lastDay = '';
-    el.innerHTML = '';
+    var prevH = el.scrollHeight;
+    var prevTop = el.scrollTop;
+    var loading = $('cfLoadingState');
+    var empty = $('cfEmptyState');
+    el.querySelectorAll('.cf-msg, .cf-day-sep').forEach(function (n) { n.remove(); });
+    var lastDay = '';
     state.orderedIds.forEach(function (id) {
       var msg = state.messages.get(id);
       if (!msg) return;
@@ -201,38 +379,54 @@
         lastDay = dk;
         var sep = document.createElement('div');
         sep.className = 'cf-day-sep';
+        sep.dataset.day = dk;
         sep.textContent = dk;
         el.appendChild(sep);
       }
-      el.appendChild(renderMessage(msg));
+      el.appendChild(buildMessageEl(msg));
     });
+    if (loading) el.appendChild(loading);
+    if (empty) el.appendChild(empty);
+    updateEmptyState();
     if (state.atBottom) scrollToBottom();
     else el.scrollTop = prevTop + (el.scrollHeight - prevH);
+  }
+
+  function appendMessageDom(msg) {
+    var el = $('cfMessages');
+    var node = buildMessageEl(msg);
+    var loading = $('cfLoadingState');
+    var empty = $('cfEmptyState');
+    ensureDaySepBefore(msg, loading || empty);
+    if (loading && loading.parentNode === el) el.insertBefore(node, loading);
+    else if (empty && empty.parentNode === el) el.insertBefore(node, empty);
+    else el.appendChild(node);
+    updateEmptyState();
+  }
+
+  function upsertMessageDom(msg) {
+    var existing = findMessageNode(msg.id);
+    if (existing) {
+      patchMessageEl(existing, msg);
+      return;
+    }
+    if (isAppendOnly(msg)) appendMessageDom(msg);
+    else renderAll();
   }
 
   function upsertFromPayload(msg, scrollIfBottom) {
     mergeMessage(msg);
     var near = isNearBottom();
-    renderAll();
+    upsertMessageDom(msg);
     if (scrollIfBottom && near) scrollToBottom();
     else if (!near && !msg.is_mine) $('cfNewMsgsBtn').hidden = false;
-  }
-
-  function onAction(msg) {
-    return function (ev) {
-      var act = ev.target.closest('button') && ev.target.closest('button').dataset.act;
-      if (act === 'reply') setReply(msg);
-      if (act === 'react') openReaction(msg.id);
-      if (act === 'edit') openEdit(msg);
-      if (act === 'del') openDelete(msg.id);
-      if (act === 'report') openReport(msg.id);
-    };
   }
 
   function loadInitial() {
     return fetchJson(messagesUrl).then(function (data) {
       (data.messages || []).forEach(function (m) { mergeMessage(m); });
       state.nextBefore = data.next_before_id;
+      state.initialLoaded = true;
       renderAll();
       scrollToBottom();
     });
@@ -256,6 +450,7 @@
 
   function syncChanges() {
     if (!state.lastId || !state.lastSyncAt) return Promise.resolve();
+    setConnStatus('sync', 'همگام‌سازی…');
     var cursor = 0;
     function step() {
       var url = apiUrl(
@@ -270,9 +465,14 @@
           return step();
         }
         touchSyncClock();
+        if (state.wsConnected) setConnStatus('live', 'متصل');
+        else if (state.reconnectTimer || state.wsConnecting) setConnStatus('reconnect', 'در حال اتصال مجدد…');
+        else hideConnStatus();
       });
     }
-    return step().catch(function () {});
+    return step().catch(function () {
+      if (state.wsConnected) setConnStatus('live', 'متصل');
+    });
   }
 
   function fetchMissed() {
@@ -294,22 +494,20 @@
 
   function teardownWs(opts) {
     opts = opts || {};
+    state.wsConnected = false;
     if (state.heartbeatTimer) { clearInterval(state.heartbeatTimer); state.heartbeatTimer = null; }
     if (state.ws) {
       try { state.ws.onclose = null; state.ws.close(); } catch (e) {}
       state.ws = null;
     }
-    if (!opts.preserveConnecting) {
-      state.wsConnecting = false;
-    }
+    if (!opts.preserveConnecting) state.wsConnecting = false;
   }
 
   function scheduleReconnect() {
     if (state.reconnectTimer) return;
     var delay = Math.min(30000, 1000 * Math.pow(2, state.reconnectAttempt));
     delay += Math.random() * 500;
-    $('cfConnStatus').hidden = false;
-    $('cfConnStatus').textContent = 'در حال اتصال مجدد…';
+    setConnStatus('reconnect', 'در حال اتصال مجدد…');
     state.reconnectTimer = setTimeout(function () {
       state.reconnectTimer = null;
       state.reconnectAttempt += 1;
@@ -320,7 +518,7 @@
   function startPoll() {
     if (state.pollTimer) return;
     state.pollTimer = setInterval(function () {
-      if (document.hidden || (state.ws && state.ws.readyState === 1)) return;
+      if (document.hidden || state.wsConnected) return;
       fetchMissed().catch(function () {});
     }, 10000);
   }
@@ -336,17 +534,20 @@
     state.wsConnecting = true;
     wsConnectSeq += 1;
     teardownWs({ preserveConnecting: true });
+    setConnStatus('reconnect', 'در حال اتصال…');
     var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     var url = proto + '//' + location.host + wsPath;
     try { state.ws = new WebSocket(url); } catch (e) {
       state.wsConnecting = false;
       startPoll();
+      setConnStatus('reconnect', 'حالت آفلاین — به‌روزرسانی دوره‌ای');
       return;
     }
     state.ws.onopen = function () {
       state.wsConnecting = false;
+      state.wsConnected = true;
       state.reconnectAttempt = 0;
-      $('cfConnStatus').hidden = true;
+      setConnStatus('live', 'متصل');
       stopPoll();
       fetchMissed().catch(function () {});
       state.heartbeatTimer = setInterval(function () {
@@ -356,6 +557,7 @@
       }, 25000);
     };
     state.ws.onclose = function () {
+      state.wsConnected = false;
       teardownWs();
       startPoll();
       scheduleReconnect();
@@ -376,7 +578,12 @@
           if (m) { m.is_deleted = true; m.body = ''; upsertFromPayload(m, false); }
         } else if (data.type === 'reaction.updated') {
           var msg = state.messages.get(payload.message_id);
-          if (msg) { msg.reactions = payload.reactions; renderAll(); }
+          if (msg) {
+            msg.reactions = payload.reactions;
+            var node = findMessageNode(msg.id);
+            if (node) patchMessageEl(node, msg);
+            else renderAll();
+          }
         }
       } catch (err) {}
     };
@@ -385,7 +592,7 @@
   function setReply(msg) {
     state.replyToId = msg.id;
     $('cfReplyPreview').hidden = false;
-    $('cfReplyPreviewText').textContent = (msg.sender_label || '') + ': ' + (msg.body || '').slice(0, 80);
+    $('cfReplyPreviewText').textContent = (msg.sender_label || '') + ': ' + (msg.body || '').slice(0, 120);
     $('cfComposerInput').focus();
   }
 
@@ -394,8 +601,17 @@
     $('cfReplyPreview').hidden = true;
   }
 
+  function showSendFailed(err) {
+    $('cfSendFailed').hidden = false;
+    $('cfSendFailedText').textContent = (err && err.error) || 'ارسال ناموفق بود';
+  }
+
+  function hideSendFailed() {
+    $('cfSendFailed').hidden = true;
+  }
+
   function sendMessage(ev) {
-    ev.preventDefault();
+    if (ev) ev.preventDefault();
     if (state.sending) return;
     var text = ($('cfComposerInput').value || '').trim();
     if (!state.pendingSend) {
@@ -407,26 +623,28 @@
       };
     }
     state.sending = true;
+    hideSendFailed();
     $('cfSendBtn').disabled = true;
+    $('cfSendBtn').classList.add('is-sending');
     var payload = state.pendingSend;
-    fetchJson(messagesUrl, {
-      method: 'POST',
-      body: payload,
-    }).then(function (data) {
-      state.pendingSend = null;
-      $('cfComposerInput').value = '';
-      updateChar();
-      clearReply();
-      upsertFromPayload(data.message, true);
-      try { localStorage.removeItem(draftKey()); } catch (e) {}
-      toast('پیام ارسال شد');
-    }).catch(function (err) {
-      toast((err && err.error) || 'ارسال ناموفق بود', true);
-    }).finally(function () {
-      state.sending = false;
-      $('cfSendBtn').disabled = false;
-      updateChar();
-    });
+    fetchJson(messagesUrl, { method: 'POST', body: payload })
+      .then(function (data) {
+        state.pendingSend = null;
+        $('cfComposerInput').value = '';
+        growComposer();
+        updateChar();
+        clearReply();
+        upsertFromPayload(data.message, true);
+        try { localStorage.removeItem(draftKey()); } catch (e) {}
+      })
+      .catch(function (err) {
+        showSendFailed(err);
+      })
+      .finally(function () {
+        state.sending = false;
+        $('cfSendBtn').classList.remove('is-sending');
+        updateChar();
+      });
   }
 
   function openEdit(msg) {
@@ -444,6 +662,7 @@
     state.ui.reportId = id;
     var box = $('cfReportReasons');
     box.innerHTML = '';
+    delete box.dataset.selected;
     state.reportReasons.forEach(function (r) {
       var btn = document.createElement('button');
       btn.type = 'button';
@@ -482,8 +701,19 @@
     fetchJson(apiUrl('messages/' + mid + '/reactions/'), { method: 'POST', body: { emoji: emoji } })
       .then(function (data) {
         var msg = state.messages.get(mid);
-        if (msg) { msg.reactions = data.reactions; renderAll(); }
+        if (msg) {
+          msg.reactions = data.reactions;
+          var node = findMessageNode(mid);
+          if (node) patchMessageEl(node, msg);
+        }
       }).catch(function (err) { toast(err.error || 'خطا', true); });
+  }
+
+  function growComposer() {
+    var ta = $('cfComposerInput');
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
   }
 
   function updateChar() {
@@ -511,7 +741,7 @@
           row.addEventListener('click', function () {
             if (!state.messages.has(m.id)) mergeMessage(m);
             renderAll();
-            var node = document.querySelector('.cf-msg[data-id="' + m.id + '"]');
+            var node = findMessageNode(m.id);
             if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
           });
           box.appendChild(row);
@@ -519,9 +749,37 @@
       }).catch(function (err) { toast(err.error || 'خطا', true); });
   }
 
+  function bindDialogClose() {
+    document.querySelectorAll('[data-cf-dialog-close]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var dlg = btn.closest('dialog');
+        if (dlg) dlg.close();
+      });
+    });
+    document.querySelectorAll('.cf-dialog').forEach(function (dlg) {
+      dlg.addEventListener('cancel', function (ev) {
+        ev.preventDefault();
+        dlg.close();
+      });
+      dlg.addEventListener('close', function () {
+        document.body.classList.remove('ws-modal-open');
+      });
+      dlg.addEventListener('click', function (ev) {
+        if (ev.target === dlg) dlg.close();
+      });
+    });
+  }
+
+  function openDialog(dlg) {
+    if (!dlg) return;
+    document.body.classList.add('ws-modal-open');
+    dlg.showModal();
+  }
+
   $('cfComposer').addEventListener('submit', sendMessage);
   $('cfComposerInput').addEventListener('input', function () {
     updateChar();
+    growComposer();
     try { localStorage.setItem(draftKey(), $('cfComposerInput').value); } catch (e) {}
   });
   $('cfComposerInput').addEventListener('keydown', function (ev) {
@@ -538,13 +796,20 @@
   });
   $('cfSearchToggle').addEventListener('click', function () {
     var p = $('cfSearchPanel');
-    p.hidden = !p.hidden;
+    var open = p.hidden;
+    p.hidden = !open;
+    $('cfSearchToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) $('cfSearchInput').focus();
+  });
+  $('cfSearchClose').addEventListener('click', function () {
+    $('cfSearchPanel').hidden = true;
+    $('cfSearchToggle').setAttribute('aria-expanded', 'false');
   });
   $('cfSearchInput').addEventListener('keydown', function (ev) {
     if (ev.key === 'Enter') runSearch(1);
   });
-  $('cfRulesBtn').addEventListener('click', function () { $('cfRulesDialog').showModal(); });
-  $('cfProfileBtn').addEventListener('click', function () { $('cfProfileDialog').showModal(); });
+  $('cfRulesBtn').addEventListener('click', function () { openDialog($('cfRulesDialog')); });
+  $('cfProfileBtn').addEventListener('click', function () { openDialog($('cfProfileDialog')); });
   $('cfProfileClose').addEventListener('click', function () { $('cfProfileDialog').close(); });
   $('cfProfileSave').addEventListener('click', function () {
     fetchJson(apiUrl('profile/'), { method: 'POST', body: { display_name: $('cfDisplayNameInput').value } })
@@ -584,15 +849,24 @@
     postReaction(state.ui.reactionId, null);
     $('cfReactionDialog').close();
   });
+  $('cfSendRetry').addEventListener('click', function () { sendMessage(); });
+  $('cfSendFailedDismiss').addEventListener('click', function () {
+    hideSendFailed();
+    state.pendingSend = null;
+    updateChar();
+  });
+
+  bindDialogClose();
 
   window.addEventListener('pagehide', teardownWs);
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden && (!state.ws || state.ws.readyState !== 1)) connectWs();
+    if (!document.hidden && !state.wsConnected) connectWs();
   });
 
   window.cfForumWsDiag = function () {
     return {
       wsConnecting: state.wsConnecting,
+      wsConnected: state.wsConnected,
       readyState: state.ws ? state.ws.readyState : null,
       connectSeq: wsConnectSeq,
     };
@@ -601,6 +875,9 @@
   fetchJson(bootstrapUrl).then(function (data) {
     state.myPublicId = data.member && data.member.public_id;
     state.reportReasons = data.report_reasons || [];
+    if (data.member && data.member.display_name) {
+      $('cfDisplayNameInput').value = data.member.display_name;
+    }
     $('cfComposerInput').maxLength = (data.limits && data.limits.max_body) || 2000;
     if (data.pinned_notices && data.pinned_notices.length) {
       $('cfPinned').hidden = false;
@@ -608,8 +885,9 @@
     }
     if (!data.member.welcome_seen) {
       var dlg = $('cfWelcomeDialog');
-      dlg.showModal();
-      dlg.addEventListener('close', function () {
+      openDialog(dlg);
+      $('cfWelcomeAck').addEventListener('click', function () {
+        dlg.close();
         fetchJson(apiUrl('profile/'), { method: 'POST', body: { welcome_ack: true } });
       }, { once: true });
     }
@@ -620,10 +898,17 @@
     connectWs();
     try {
       var draft = localStorage.getItem(draftKey());
-      if (draft) $('cfComposerInput').value = draft;
+      if (draft) {
+        $('cfComposerInput').value = draft;
+        growComposer();
+      }
       updateChar();
     } catch (e) {}
   }).catch(function () {
-    $('cfMessages').innerHTML = '<p class="cf-status">بارگذاری گفتگو ناموفق بود.</p>';
+    state.initialLoaded = true;
+    updateEmptyState();
+    var loading = $('cfLoadingState');
+    if (loading) loading.hidden = true;
+    toast('بارگذاری گفتگو ناموفق بود', true);
   });
 })();

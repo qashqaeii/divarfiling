@@ -20980,17 +20980,17 @@ button.crm-prop-hero-cover {
     isolation: isolate;
 }
 .crm-portfolio-card--divar {
-    --pf-accent: #0e7490;
-    --pf-accent-deep: #155e75;
-    --pf-accent-soft: rgba(14, 116, 144, 0.12);
-    --pf-accent-glow: rgba(6, 182, 212, 0.22);
-    --pf-head-a: rgba(8, 51, 68, 0.92);
-    --pf-head-b: rgba(14, 116, 144, 0.88);
-    --pf-head-c: rgba(6, 182, 212, 0.75);
-    --pf-wash: #ecfeff;
-    --pf-feat: #0f766e;
-    --pf-feat-bg: color-mix(in srgb, #14b8a6 12%, var(--ws-surface));
-    --pf-feat-border: color-mix(in srgb, #14b8a6 18%, transparent);
+    --pf-accent: var(--ws-divar-brand, #a62626);
+    --pf-accent-deep: var(--ws-divar-brand-hover, #8f2121);
+    --pf-accent-soft: var(--ws-divar-brand-soft, rgba(166, 38, 38, 0.12));
+    --pf-accent-glow: rgba(166, 38, 38, 0.28);
+    --pf-head-a: rgba(74, 14, 14, 0.94);
+    --pf-head-b: rgba(166, 38, 38, 0.92);
+    --pf-head-c: rgba(212, 72, 72, 0.78);
+    --pf-wash: #fef2f2;
+    --pf-feat: #991b1b;
+    --pf-feat-bg: color-mix(in srgb, var(--ws-divar-brand, #a62626) 12%, var(--ws-surface));
+    --pf-feat-border: color-mix(in srgb, var(--ws-divar-brand, #a62626) 18%, transparent);
 }
 .crm-portfolio-card--crm::before,
 .crm-portfolio-card--divar::before {
@@ -21018,9 +21018,15 @@ button.crm-prop-hero-cover {
         0 0 0 2px color-mix(in srgb, var(--pf-accent) 18%, transparent),
         0 14px 30px color-mix(in srgb, var(--pf-accent) 14%, transparent);
 }
-.crm-portfolio-card--crm.crm-portfolio-card--suggested,
-.crm-portfolio-card--divar.crm-portfolio-card--suggested {
+.crm-portfolio-card--crm.crm-portfolio-card--suggested {
     border-color: color-mix(in srgb, #8b5cf6 28%, color-mix(in srgb, var(--pf-accent) 20%, var(--ws-border)));
+}
+.crm-portfolio-card--divar.crm-portfolio-card--suggested {
+    border-color: color-mix(in srgb, var(--ws-divar-brand, #a62626) 38%, var(--ws-border));
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 0 0 1px color-mix(in srgb, var(--ws-divar-brand, #a62626) 14%, transparent),
+        0 8px 22px rgba(15, 23, 42, 0.04);
 }
 
 .crm-pf-rail {

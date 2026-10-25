@@ -26,7 +26,7 @@ from community_forum.services.messages import (
     update_read_cursor,
 )
 from community_forum.services.moderation import member_can_read
-from community_forum.services.serialization import serialize_message
+from community_forum.services.serialization import build_reactions_map, serialize_message
 from community_forum.services.identity import member_display_label
 
 
@@ -49,10 +49,33 @@ class ForumAPIBase(LoginRequiredMixin, View):
                 return {}
         return {}
 
-    def _err(self, exc: ValidationError, status=400):
+    def _err(self, exc: ValidationError, status=None):
         msgs = exc.messages if hasattr(exc, 'messages') else [str(exc)]
-        code = getattr(exc, 'code', None) or (exc.error_list[0].code if getattr(exc, 'error_list', None) else 'error')
+        code = getattr(exc, 'code', None)
+        if not code and getattr(exc, 'error_list', None):
+            code = exc.error_list[0].code
+        code = code or 'error'
+        if status is None:
+            if str(code).startswith('rate_'):
+                status = 429
+            elif code in ('forbidden', 'banned', 'banned_read'):
+                status = 403
+            elif code in ('not_found', 'reply_invalid'):
+                status = 404
+            elif code == 'duplicate':
+                status = 409
+            else:
+                status = 400
         return JsonResponse({'ok': False, 'error': msgs[0], 'code': code}, status=status)
+
+    def _active_member(self, request):
+        try:
+            member = self._member(request)
+        except PermissionError:
+            return None, JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست.'}, status=403)
+        if not member_can_read(member):
+            return None, JsonResponse({'ok': False, 'error': 'دسترسی محدود شده است.'}, status=403)
+        return member, None
 
 
 @method_decorator(csrf_protect, name='dispatch')
@@ -89,10 +112,9 @@ class ForumBootstrapAPIView(ForumAPIBase):
 @method_decorator(csrf_protect, name='dispatch')
 class ForumMessagesAPIView(ForumAPIBase):
     def get(self, request):
-        try:
-            member = self._member(request)
-        except PermissionError:
-            return JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست.'}, status=403)
+        member, err = self._active_member(request)
+        if err:
+            return err
         before_id = request.GET.get('before_id')
         after_id = request.GET.get('after_id')
         try:
@@ -100,15 +122,20 @@ class ForumMessagesAPIView(ForumAPIBase):
             after_id = int(after_id) if after_id else None
         except ValueError:
             return JsonResponse({'ok': False, 'error': 'پارامتر نامعتبر'}, status=400)
-        items, next_before = list_messages(member, before_id=before_id, after_id=after_id)
+        items, next_before, has_more_after = list_messages(
+            member, before_id=before_id, after_id=after_id,
+        )
         return JsonResponse({
             'ok': True,
             'messages': serialize_many(items, member),
             'next_before_id': next_before,
+            'has_more_after': has_more_after,
         })
 
     def post(self, request):
-        member = self._member(request)
+        member, err = self._active_member(request)
+        if err:
+            return err
         data = self._json_body(request)
         try:
             msg = send_message(
@@ -119,16 +146,21 @@ class ForumMessagesAPIView(ForumAPIBase):
             )
         except ValidationError as exc:
             return self._err(exc)
+        rx, mine = build_reactions_map([msg.pk], member)
         return JsonResponse({
             'ok': True,
-            'message': serialize_message(msg, viewer_member=member, reactions_map={}),
+            'message': serialize_message(
+                msg, viewer_member=member, reactions_map=rx, my_reactions=mine,
+            ),
         })
 
 
 @method_decorator(csrf_protect, name='dispatch')
 class ForumMessageDetailAPIView(ForumAPIBase):
     def patch(self, request, message_id):
-        member = self._member(request)
+        member, err = self._active_member(request)
+        if err:
+            return err
         data = self._json_body(request)
         try:
             msg = edit_message(member, message_id, data.get('body', ''))
@@ -137,7 +169,9 @@ class ForumMessageDetailAPIView(ForumAPIBase):
         return JsonResponse({'ok': True, 'message': serialize_message(msg, viewer_member=member)})
 
     def delete(self, request, message_id):
-        member = self._member(request)
+        member, err = self._active_member(request)
+        if err:
+            return err
         try:
             delete_message(member, message_id, moderator_user=request.user)
         except ValidationError as exc:
@@ -148,7 +182,9 @@ class ForumMessageDetailAPIView(ForumAPIBase):
 @method_decorator(csrf_protect, name='dispatch')
 class ForumReactionAPIView(ForumAPIBase):
     def post(self, request, message_id):
-        member = self._member(request)
+        member, err = self._active_member(request)
+        if err:
+            return err
         data = self._json_body(request)
         try:
             payload = set_reaction(member, message_id, data.get('emoji'))
@@ -160,7 +196,9 @@ class ForumReactionAPIView(ForumAPIBase):
 @method_decorator(csrf_protect, name='dispatch')
 class ForumReportAPIView(ForumAPIBase):
     def post(self, request, message_id):
-        member = self._member(request)
+        member, err = self._active_member(request)
+        if err:
+            return err
         data = self._json_body(request)
         try:
             report_message(member, message_id, data.get('reason', ''), data.get('note', ''))
@@ -172,7 +210,9 @@ class ForumReportAPIView(ForumAPIBase):
 @method_decorator(csrf_protect, name='dispatch')
 class ForumReadAPIView(ForumAPIBase):
     def post(self, request):
-        member = self._member(request)
+        member, err = self._active_member(request)
+        if err:
+            return err
         data = self._json_body(request)
         try:
             mid = int(data.get('message_id', 0))
@@ -188,12 +228,14 @@ class ForumReadAPIView(ForumAPIBase):
 @method_decorator(csrf_protect, name='dispatch')
 class ForumSearchAPIView(ForumAPIBase):
     def get(self, request):
-        try:
-            member = self._member(request)
-        except PermissionError:
-            return JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست.'}, status=403)
+        member, err = self._active_member(request)
+        if err:
+            return err
         q = request.GET.get('q', '')
-        page = int(request.GET.get('page', 1) or 1)
+        try:
+            page = int(request.GET.get('page', 1) or 1)
+        except ValueError:
+            return JsonResponse({'ok': False, 'error': 'صفحه نامعتبر'}, status=400)
         try:
             items, total = search_messages(member, q, page=page)
         except ValidationError as exc:
@@ -204,7 +246,9 @@ class ForumSearchAPIView(ForumAPIBase):
 @method_decorator(csrf_protect, name='dispatch')
 class ForumProfileAPIView(ForumAPIBase):
     def post(self, request):
-        member = self._member(request)
+        member, err = self._active_member(request)
+        if err:
+            return err
         data = self._json_body(request)
         if data.get('welcome_ack'):
             from django.utils import timezone

@@ -14,7 +14,7 @@ from community_forum.models import ForumBan, ForumMessage, ForumReport
 from community_forum.services.access import user_can_moderate_forum
 from community_forum.services.messages import delete_message
 from community_forum.services.members import get_or_create_member
-from community_forum.services.moderation import log_audit
+from community_forum.services.moderation import log_audit, on_ban_applied
 from community_forum.services.retention import visible_messages_qs
 
 
@@ -74,10 +74,12 @@ class AdminForumBanView(ForumModerateRequiredMixin, View):
         ban = ForumBan.objects.create(
             member=member,
             reason=(payload.get('reason') or '')[:500],
+            can_read=bool(payload.get('can_read', True)),
             expires_at=timezone.now() + timedelta(hours=hours),
             created_by=request.user,
         )
         log_audit('ban_member', request.user, member_id=member.pk, meta={'ban_id': ban.pk})
+        on_ban_applied(ban)
         return JsonResponse({'ok': True})
 
 

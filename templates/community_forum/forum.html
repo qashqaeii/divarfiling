@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=2">
 {% endblock %}
 
 {% block page_title %}تالار گفتگو{% endblock %}
@@ -91,6 +91,42 @@
     <form method="dialog"><button type="submit" class="cf-btn">بستن</button></form>
 </dialog>
 
+<div class="cf-toast" id="cfToast" role="status" aria-live="polite" hidden></div>
+
+<dialog class="cf-dialog" id="cfEditDialog">
+    <h2>ویرایش پیام</h2>
+    <textarea class="cf-input cf-input--area" id="cfEditInput" rows="4" maxlength="2000"></textarea>
+    <div class="cf-dialog__actions">
+        <button type="button" class="cf-btn cf-btn--primary" id="cfEditSave">ذخیره</button>
+        <button type="button" class="cf-btn" id="cfEditCancel">انصراف</button>
+    </div>
+</dialog>
+
+<dialog class="cf-dialog" id="cfDeleteDialog">
+    <h2>حذف پیام</h2>
+    <p>این پیام حذف شود؟</p>
+    <div class="cf-dialog__actions">
+        <button type="button" class="cf-btn cf-btn--primary" id="cfDeleteConfirm">حذف</button>
+        <button type="button" class="cf-btn" id="cfDeleteCancel">انصراف</button>
+    </div>
+</dialog>
+
+<dialog class="cf-dialog" id="cfReportDialog">
+    <h2>گزارش تخلف</h2>
+    <div class="cf-report-reasons" id="cfReportReasons"></div>
+    <textarea class="cf-input cf-input--area" id="cfReportNote" rows="2" placeholder="توضیح کوتاه (اختیاری)"></textarea>
+    <div class="cf-dialog__actions">
+        <button type="button" class="cf-btn cf-btn--primary" id="cfReportSubmit">ثبت گزارش</button>
+        <button type="button" class="cf-btn" id="cfReportCancel">انصراف</button>
+    </div>
+</dialog>
+
+<dialog class="cf-dialog cf-dialog--sheet" id="cfReactionDialog">
+    <h2>واکنش</h2>
+    <div class="cf-emoji-pick" id="cfEmojiPick"></div>
+    <button type="button" class="cf-btn" id="cfReactionClear">حذف واکنش</button>
+</dialog>
+
 <dialog class="cf-dialog" id="cfProfileDialog">
     <h2>نام نمایشی</h2>
     <p class="cf-dialog__hint">نام مستقل از حساب شما در تالار نمایش داده می‌شود.</p>
@@ -105,5 +141,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community_forum/js/forum.js' %}?v=1" defer></script>
+<script src="{% static 'community_forum/js/forum.js' %}?v=2" defer></script>
 {% endblock %}

@@ -22,7 +22,12 @@ from community_forum.services.pii import check_message_pii, normalize_message_bo
 from community_forum.services.rate_limit import enforce_send_rate_limit
 from community_forum.services.realtime import broadcast_event
 from community_forum.services.retention import retention_cutoff, visible_messages_qs
-from community_forum.services.serialization import build_reactions_map, serialize_message
+from community_forum.models import ForumMember
+from community_forum.services.serialization import (
+    build_reactions_map,
+    serialize_message,
+    serialize_message_public,
+)
 
 
 def _validate_body(body: str) -> str:
@@ -51,23 +56,33 @@ def list_messages(
     if before_id:
         qs = qs.filter(id__lt=before_id)
     if after_id:
-        qs = qs.filter(id__gt=after_id).order_by('id')
-        items = list(qs[:limit])
-        items.reverse()
-        return items, None
+        qs = _base_qs().filter(id__gt=after_id).order_by('id')
+        chunk = list(qs[: limit + 1])
+        has_more_after = len(chunk) > limit
+        if has_more_after:
+            chunk = chunk[:limit]
+        return chunk, None, has_more_after
     items = list(qs[: limit + 1])
     has_more = len(items) > limit
     if has_more:
         items = items[:limit]
     items.reverse()
     next_before = items[0].pk if items and has_more else None
-    return items, next_before
+    return items, next_before, False
 
 
 def serialize_many(messages, viewer_member):
     ids = [m.pk for m in messages]
-    reactions = build_reactions_map(ids)
-    return [serialize_message(m, viewer_member=viewer_member, reactions_map=reactions) for m in messages]
+    reactions, mine = build_reactions_map(ids, viewer_member)
+    return [
+        serialize_message(
+            m,
+            viewer_member=viewer_member,
+            reactions_map=reactions,
+            my_reactions=mine,
+        )
+        for m in messages
+    ]
 
 
 @transaction.atomic
@@ -118,8 +133,8 @@ def send_message(
                 return existing
         raise
 
-    payload = serialize_message(msg, viewer_member=member, reactions_map={})
-    transaction.on_commit(lambda: broadcast_event('message.new', {'message': payload}))
+    pub = serialize_message_public(msg, reactions_map={})
+    transaction.on_commit(lambda p=pub: broadcast_event('message.new', {'message': p}))
     return msg
 
 
@@ -137,8 +152,9 @@ def edit_message(member, message_id: int, body: str) -> ForumMessage:
     msg.body = text
     msg.edited_at = timezone.now()
     msg.save(update_fields=['body', 'edited_at'])
-    payload = serialize_message(msg, viewer_member=member, reactions_map=build_reactions_map([msg.pk]))
-    transaction.on_commit(lambda: broadcast_event('message.updated', {'message': payload}))
+    rx, _mine = build_reactions_map([msg.pk])
+    pub = serialize_message_public(msg, reactions_map=rx)
+    transaction.on_commit(lambda p=pub: broadcast_event('message.updated', {'message': p}))
     return msg
 
 
@@ -181,7 +197,7 @@ def set_reaction(member, message_id: int, emoji: str | None) -> dict:
     else:
         ForumReaction.objects.create(message=msg, member=member, emoji=emoji)
 
-    counts = build_reactions_map([msg.pk])
+    counts, _ = build_reactions_map([msg.pk])
     payload = {'message_id': msg.pk, 'reactions': counts.get(msg.pk, [])}
     transaction.on_commit(lambda: broadcast_event('reaction.updated', payload))
     return payload
@@ -211,10 +227,9 @@ def update_read_cursor(member, message_id: int) -> None:
     msg = ForumMessage.objects.filter(pk=message_id).first()
     if not msg:
         return
-    if member.last_read_message_id and member.last_read_message_id >= message_id:
-        return
-    member.last_read_message_id = message_id
-    member.save(update_fields=['last_read_message_id', 'updated_at'])
+    ForumMember.objects.filter(pk=member.pk).filter(
+        Q(last_read_message_id__isnull=True) | Q(last_read_message_id__lt=message_id),
+    ).update(last_read_message_id=message_id, updated_at=timezone.now())
 
 
 def unread_count(member) -> int:

@@ -22,34 +22,48 @@ def _reply_preview(msg: ForumMessage | None) -> dict | None:
     }
 
 
-def serialize_message(
-    msg: ForumMessage,
-    *,
-    viewer_member,
-    reactions_map: dict | None = None,
-) -> dict:
+def _message_core(msg: ForumMessage, *, reactions_map: dict | None) -> dict:
     sender = msg.sender
     deleted = bool(msg.deleted_at)
-    data = {
+    return {
         'id': msg.pk,
-        'public_id': str(msg.sender.public_id),
+        'sender_public_id': str(sender.public_id),
         'sender_label': member_display_label(sender),
         'avatar_url': member_avatar_url(sender),
         'body': '' if deleted else msg.body,
         'is_deleted': deleted,
-        'is_mine': viewer_member and msg.sender_id == viewer_member.id,
         'is_edited': bool(msg.edited_at),
         'created_at': msg.created_at.isoformat(),
         'edited_at': msg.edited_at.isoformat() if msg.edited_at else None,
         'reply_to': _reply_preview(msg.reply_to) if msg.reply_to_id else None,
         'reactions': reactions_map.get(msg.pk, []) if reactions_map else [],
     }
+
+
+def serialize_message_public(msg: ForumMessage, *, reactions_map: dict | None = None) -> dict:
+    """برای WebSocket broadcast — بدون فیلد وابسته به viewer."""
+    return _message_core(msg, reactions_map=reactions_map)
+
+
+def serialize_message(
+    msg: ForumMessage,
+    *,
+    viewer_member,
+    reactions_map: dict | None = None,
+    my_reactions: dict | None = None,
+) -> dict:
+    """خروجی REST — شامل is_mine و my_reaction."""
+    data = _message_core(msg, reactions_map=reactions_map)
+    data['is_mine'] = bool(viewer_member and msg.sender_id == viewer_member.id)
+    if my_reactions is not None:
+        data['my_reaction'] = my_reactions.get(msg.pk) or ''
     return data
 
 
-def build_reactions_map(message_ids: list[int]) -> dict:
+def build_reactions_map(message_ids: list[int], viewer_member=None) -> tuple[dict, dict]:
+    """برگرداند (counts_map, my_reaction_map)."""
     if not message_ids:
-        return {}
+        return {}, {}
     rows = ForumReaction.objects.filter(message_id__in=message_ids).select_related('member')
     grouped: dict[int, dict] = defaultdict(lambda: defaultdict(int))
     mine: dict[int, str] = {}
@@ -57,8 +71,7 @@ def build_reactions_map(message_ids: list[int]) -> dict:
         if r.emoji not in ALLOWED_REACTIONS:
             continue
         grouped[r.message_id][r.emoji] += 1
-    for r in rows:
-        if r.emoji in ALLOWED_REACTIONS:
+        if viewer_member and r.member_id == viewer_member.id:
             mine[r.message_id] = r.emoji
     out = {}
     for mid in message_ids:
@@ -67,4 +80,4 @@ def build_reactions_map(message_ids: list[int]) -> dict:
             {'emoji': emoji, 'count': counts[emoji]}
             for emoji in sorted(counts.keys())
         ]
-    return out
+    return out, mine

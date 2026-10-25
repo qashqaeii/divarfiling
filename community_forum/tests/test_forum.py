@@ -3,7 +3,7 @@ import uuid
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.core.cache import caches
+from django.core.cache import cache, caches
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -25,6 +25,7 @@ FORUM_SETTINGS = {
 @override_settings(**FORUM_SETTINGS)
 class ForumAccessTests(TestCase):
     def setUp(self):
+        cache.clear()
         caches['forum_rate_limit'].clear()
         self.user = User.objects.create_user(
             username='u1',

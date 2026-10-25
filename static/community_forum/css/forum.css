@@ -300,3 +300,26 @@
 html[data-theme="dark"] .cf-msg__bubble {
   background: rgba(255,255,255,.06);
 }
+
+.cf-toast {
+  position: fixed;
+  bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--ws-primary, #2563eb);
+  color: #fff;
+  font-size: .85rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+}
+.cf-toast--err { background: #b91c1c; }
+
+.cf-input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--ws-border, #e2e8f0); font: inherit; }
+.cf-input--area { resize: vertical; min-height: 80px; }
+.cf-emoji-pick { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.cf-emoji-btn { font-size: 1.5rem; border: none; background: var(--ws-surface-2, #f1f5f9); border-radius: 12px; padding: 8px 12px; cursor: pointer; }
+.cf-search-hit { display: block; width: 100%; text-align: right; padding: 10px; border: none; border-bottom: 1px solid var(--ws-border, #e2e8f0); background: transparent; cursor: pointer; font: inherit; }
+.cf-report-opt.is-selected { outline: 2px solid var(--ws-primary, #2563eb); }
+.cf-dialog--sheet { max-width: 360px; }

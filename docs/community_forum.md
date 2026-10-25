@@ -50,6 +50,14 @@ HTTP اصلی سایت همچنان از Gunicorn + `divar_shop.asgi` / WSGI ا�
 - احراز هویت: Session Django
 - رویدادها: `message.new`, `message.updated`, `message.deleted`, `reaction.updated`
 - Heartbeat: `{ "type": "ping" }` → `pong`
+- Payload broadcast **بدون** `is_mine` — کلاینت با `sender_public_id` مالکیت را تشخیص می‌دهد.
+- اتصال در صورت ban خواندن (`can_read=false`) رد می‌شود؛ رویداد `session.revoked` اتصال را می‌بندد.
+
+## Rate limit
+
+- در production `FORUM_REDIS_URL` را تنظیم کنید (Lua اتمیک).
+- کش جدا: `forum_rate_limit` — LocMem فقط dev/test.
+- اختیاری: `COMMUNITY_FORUM_RATE_LIMIT_REQUIRE_REDIS=true` برای fail-closed بدون Redis.
 
 ## نگهداری
 

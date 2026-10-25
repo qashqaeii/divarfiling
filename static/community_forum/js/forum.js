@@ -310,17 +310,47 @@
     empty.hidden = state.orderedIds.length > 0;
   }
 
+  function overlayRoot(id) {
+    return $(id);
+  }
+
+  function isOverlayEl(el) {
+    return !!(el && el.closest && el.closest('#cfQuickBar, #cfReactStrip, #cfMoreMenu'));
+  }
+
+  function overlayHovered() {
+    return ['cfQuickBar', 'cfReactStrip', 'cfMoreMenu'].some(function (id) {
+      var el = overlayRoot(id);
+      return el && !el.hidden && el.matches(':hover');
+    });
+  }
+
+  function scheduleOverlayHide() {
+    clearTimeout(overlay.hideTimer);
+    overlay.hideTimer = setTimeout(function () {
+      if (overlayHovered()) return;
+      closeOverlays();
+    }, 320);
+  }
+
   function closeOverlays() {
     clearTimeout(overlay.hideTimer);
     overlay.stripOpen = false;
     state.ui.activeMsgId = null;
     ['cfQuickBar', 'cfReactStrip', 'cfMoreMenu'].forEach(function (id) {
-      var el = $(id);
+      var el = overlayRoot(id);
       if (el) {
         el.classList.remove('is-visible');
         el.hidden = true;
       }
     });
+  }
+
+  function bindOverlayHover(el) {
+    if (!el || el._cfHoverBound) return;
+    el._cfHoverBound = true;
+    el.addEventListener('mouseenter', function () { clearTimeout(overlay.hideTimer); });
+    el.addEventListener('mouseleave', function () { scheduleOverlayHide(); });
   }
 
   function secondaryMenuItems(msg) {
@@ -885,14 +915,14 @@
     return msgEl ? msgEl.querySelector('.cf-msg__bubble') : null;
   }
 
-  function placeFloating(el, anchorRect, offsetY) {
+  function placeFloating(el, anchorRect, offsetY, gapPx) {
     if (!el || !anchorRect) return;
     el.hidden = false;
     el.style.visibility = 'hidden';
     el.classList.add('is-visible');
     var w = el.offsetWidth;
     var h = el.offsetHeight;
-    var gap = 6;
+    var gap = gapPx != null ? gapPx : 4;
     var top = anchorRect.top - h - gap + (offsetY || 0);
     if (top < 8) top = anchorRect.bottom + gap;
     var left = anchorRect.left + (anchorRect.width / 2) - (w / 2);
@@ -909,20 +939,48 @@
     if (!bar) return;
     var bubble = anchorBubble(msgEl);
     if (!bubble) return;
-    state.ui.activeMsgId = Number(msgEl.dataset.id);
+    var mid = Number(msgEl.dataset.id);
+    if (state.ui.activeMsgId === mid && bar.classList.contains('is-visible') && !overlay.stripOpen) {
+      clearTimeout(overlay.hideTimer);
+      return;
+    }
     closeOverlays();
-    state.ui.activeMsgId = Number(msgEl.dataset.id);
-    placeFloating(bar, bubble.getBoundingClientRect());
+    state.ui.activeMsgId = mid;
+    placeFloating(bar, bubble.getBoundingClientRect(), 0, 2);
     bar.classList.add('is-visible');
     bar.hidden = false;
   }
 
+  function placeStripOnQuickBar(strip, bar) {
+    if (!strip || !bar) return;
+    strip.hidden = false;
+    strip.style.visibility = 'hidden';
+    strip.classList.add('is-visible');
+    var barRect = bar.getBoundingClientRect();
+    var w = strip.offsetWidth;
+    var h = strip.offsetHeight;
+    var gap = 2;
+    var top = barRect.top - h - gap;
+    var left = barRect.left + (barRect.width / 2) - (w / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+    if (top < 8) top = barRect.bottom + gap;
+    strip.style.top = top + 'px';
+    strip.style.left = left + 'px';
+    strip.style.visibility = '';
+  }
+
   function showReactStrip(msgEl) {
     var strip = $('cfReactStrip');
-    if (!strip || !msgEl) return;
+    var bar = $('cfQuickBar');
+    if (!strip || !bar || !msgEl) return;
     var mid = Number(msgEl.dataset.id);
     var msg = msgById(mid);
     if (!msg) return;
+    clearTimeout(overlay.hideTimer);
+    state.ui.activeMsgId = mid;
+    if (!bar.classList.contains('is-visible')) {
+      showQuickBar(msgEl);
+    }
     strip.innerHTML = '';
     EMOJIS.forEach(function (em) {
       var b = document.createElement('button');
@@ -947,10 +1005,7 @@
     });
     strip.appendChild(more);
     overlay.stripOpen = true;
-    var bubble = anchorBubble(msgEl);
-    placeFloating(strip, bubble.getBoundingClientRect(), -44);
-    strip.hidden = false;
-    strip.classList.add('is-visible');
+    placeStripOnQuickBar(strip, bar);
   }
 
   function showMoreMenu(msgEl) {
@@ -1086,17 +1141,16 @@
       var row = ev.target.closest('.cf-msg');
       if (!row) return;
       var related = ev.relatedTarget;
-      if (related && (row.contains(related) || related.closest &&
-        related.closest('#cfQuickBar, #cfReactStrip, #cfMoreMenu'))) return;
-      overlay.hideTimer = setTimeout(closeOverlays, 180);
+      if (related && (row.contains(related) || isOverlayEl(related))) return;
+      scheduleOverlayHide();
     });
 
     var bar = $('cfQuickBar');
+    var strip = $('cfReactStrip');
+    var more = $('cfMoreMenu');
+    [bar, strip, more].forEach(bindOverlayHover);
+
     if (bar) {
-      bar.addEventListener('mouseenter', function () { clearTimeout(overlay.hideTimer); });
-      bar.addEventListener('mouseleave', function () {
-        overlay.hideTimer = setTimeout(closeOverlays, 160);
-      });
       bar.addEventListener('click', function (ev) {
         var btn = ev.target.closest('.cf-qb');
         if (!btn) return;
@@ -1107,7 +1161,10 @@
         var act = btn.dataset.act;
         if (act === 'reply') setReply(m);
         if (act === 'copy') copyMessageText(m);
-        if (act === 'react') showReactStrip(row);
+        if (act === 'react') {
+          ev.preventDefault();
+          showReactStrip(row);
+        }
         if (act === 'more') showMoreMenu(row);
       });
     }

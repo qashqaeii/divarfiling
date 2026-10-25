@@ -810,6 +810,18 @@
   background: var(--ws-surface, #fff);
   border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 90%, transparent);
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+  position: fixed;
+}
+
+/* پل نامرئی برای حرکت موس از حباب به نوار */
+.cf-quick-bar::after,
+.cf-react-strip::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  bottom: -12px;
+  height: 12px;
 }
 
 .cf-qb {
@@ -838,6 +850,7 @@
   gap: 4px;
   padding: 5px 6px;
   border-radius: 12px;
+  position: fixed;
   background: var(--ws-surface, #fff);
   border: 1px solid var(--ws-border, #e2e8f0);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);

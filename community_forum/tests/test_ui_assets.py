@@ -33,12 +33,13 @@ class ForumTemplateAssetVersionTests(SimpleTestCase):
     def test_forum_static_versions_bumped(self):
         path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'
         html = path.read_text(encoding='utf-8')
-        self.assertIn("community_forum/css/forum.css' %}?v=8", html)
-        self.assertIn("community_forum/js/forum-emoji.js' %}?v=8", html)
-        self.assertIn("community_forum/js/forum.js' %}?v=8", html)
+        self.assertIn("community_forum/css/forum.css' %}?v=9", html)
+        self.assertIn("community_forum/js/forum-emoji.js' %}?v=9", html)
+        self.assertIn("community_forum/js/forum.js' %}?v=9", html)
 
     def test_composer_emoji_controls_present(self):
         path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'
         html = path.read_text(encoding='utf-8')
         self.assertIn('id="cfEmojiToggle"', html)
         self.assertIn('id="cfEmojiPopover"', html)
+        self.assertIn('id="cfQuickBar"', html)

@@ -4,7 +4,7 @@
 {% block body_extra_class %} ws-body--forum{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=9">
 {% endblock %}
 
 {% block page_title %}تالار گفتگو{% endblock %}
@@ -112,7 +112,34 @@
             <div class="cf-emoji-popover" id="cfEmojiPopover" hidden role="dialog" aria-label="انتخاب ایموجی"></div>
         </div>
     </section>
+
+    <div class="cf-quick-bar" id="cfQuickBar" hidden role="toolbar" aria-label="عملیات سریع پیام">
+        <button type="button" class="cf-qb" data-act="react" aria-label="واکنش" aria-haspopup="listbox">
+            <i class="far fa-smile" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="cf-qb" data-act="reply" aria-label="پاسخ">
+            <i class="fas fa-reply" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="cf-qb" data-act="copy" aria-label="کپی متن">
+            <i class="far fa-copy" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="cf-qb" data-act="more" aria-label="گزینه‌های بیشتر" aria-haspopup="menu">
+            <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="cf-react-strip" id="cfReactStrip" hidden role="listbox" aria-label="واکنش سریع"></div>
+    <div class="cf-more-menu" id="cfMoreMenu" hidden role="menu" aria-label="منوی پیام"></div>
 </div>
+
+<dialog class="cf-dialog cf-dialog--sheet cf-msg-sheet" id="cfMsgSheet" aria-labelledby="cfMsgSheetTitle" dir="rtl">
+    <div class="cf-dialog__head">
+        <h2 class="cf-dialog__title" id="cfMsgSheetTitle">عملیات پیام</h2>
+        <button type="button" class="cf-dialog__close" data-cf-dialog-close aria-label="بستن">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="cf-msg-sheet__list" id="cfMsgSheetList" role="menu"></div>
+</dialog>
 
 <dialog class="cf-dialog cf-dialog--welcome" id="cfWelcomeDialog" aria-labelledby="cfWelcomeTitle" dir="rtl">
     <div class="cf-dialog__hero" aria-hidden="true">
@@ -228,6 +255,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community_forum/js/forum-emoji.js' %}?v=8" defer></script>
-<script src="{% static 'community_forum/js/forum.js' %}?v=8" defer></script>
+<script src="{% static 'community_forum/js/forum-emoji.js' %}?v=9" defer></script>
+<script src="{% static 'community_forum/js/forum.js' %}?v=9" defer></script>
 {% endblock %}

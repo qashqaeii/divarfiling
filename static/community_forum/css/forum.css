@@ -690,86 +690,277 @@
   background: color-mix(in srgb, var(--cf-accent) 10%, var(--ws-surface, #fff));
 }
 
-.cf-msg__toolbar {
+/* ─── Swipe reply (mobile) ─── */
+.cf-msg__swipe {
+  position: relative;
+  max-width: 100%;
+  touch-action: pan-y;
+}
+
+.cf-msg__swipe-hint {
+  position: absolute;
+  inset-inline-end: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cf-accent) 12%, var(--ws-surface, #fff));
+  color: var(--cf-accent);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s ease;
-  margin-top: 2px;
-  padding: 0 2px;
+  transition: opacity 0.12s ease;
+  font-size: 0.85rem;
+}
+
+.cf-msg__swipe.is-dragging .cf-msg__bubble {
+  transition: none;
+}
+
+.cf-msg__swipe.is-threshold .cf-msg__swipe-hint {
+  opacity: 1;
+}
+
+.cf-msg__meta {
   position: relative;
 }
 
-.cf-msg:hover .cf-msg__toolbar,
-.cf-msg:focus-within .cf-msg__toolbar,
-.cf-msg__toolbar.is-open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-@media (max-width: 768px) {
-  .cf-msg__toolbar {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-.cf-msg__menu-btn {
-  width: 28px;
-  height: 28px;
+.cf-msg__act {
+  display: none;
+  width: 32px;
+  height: 32px;
+  margin-inline-start: auto;
   border: none;
   border-radius: 8px;
   background: transparent;
   color: var(--ws-text-muted, #94a3b8);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.cf-msg__menu-btn:hover {
-  background: var(--ws-surface-2, #f4f4f5);
+@media (max-width: 768px) {
+  .cf-msg__act {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cf-msg__meta {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: var(--cf-bubble-max);
+  }
+}
+
+.cf-msg__act:hover,
+.cf-msg__act:focus-visible {
+  background: var(--ws-surface-2, #f1f5f9);
   color: var(--ws-text, #0f172a);
 }
 
-.cf-msg__menu {
-  position: absolute;
-  z-index: 5;
-  min-width: 140px;
+.cf-msg:focus-visible {
+  outline: none;
+}
+
+.cf-msg:focus-visible .cf-msg__bubble {
+  outline: 2px solid color-mix(in srgb, var(--cf-accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+/* ─── Floating quick bar (desktop) ─── */
+.cf-quick-bar,
+.cf-react-strip,
+.cf-more-menu {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.cf-quick-bar.is-visible,
+.cf-react-strip.is-visible,
+.cf-more-menu.is-visible {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-quick-bar,
+  .cf-react-strip,
+  .cf-more-menu {
+    transition: opacity 0.08s ease;
+    transform: none;
+  }
+}
+
+.cf-quick-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--ws-surface, #fff);
+  border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 90%, transparent);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+}
+
+.cf-qb {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ws-text-secondary, #475569);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.cf-qb:hover,
+.cf-qb:focus-visible {
+  background: var(--ws-surface-2, #f1f5f9);
+  color: var(--cf-accent);
+}
+
+.cf-react-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px;
+  border-radius: 12px;
+  background: var(--ws-surface, #fff);
+  border: 1px solid var(--ws-border, #e2e8f0);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.cf-react-strip__btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cf-react-strip__btn:hover,
+.cf-react-strip__btn:focus-visible {
+  background: var(--ws-surface-2, #f1f5f9);
+}
+
+.cf-react-strip__btn.is-mine {
+  background: color-mix(in srgb, var(--cf-accent) 12%, transparent);
+}
+
+.cf-react-strip__more {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ws-surface-2, #f1f5f9);
+  color: var(--ws-text-muted, #64748b);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cf-more-menu {
+  min-width: 168px;
   padding: 4px;
   border-radius: var(--cf-radius-sm);
   background: var(--ws-surface, #fff);
-  border: 1px solid var(--ws-border, rgba(15, 23, 42, 0.1));
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-  top: 100%;
-  inset-inline-end: 0;
-  margin-top: 4px;
+  border: 1px solid var(--ws-border, #e2e8f0);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
 }
 
-.cf-msg__menu[hidden] {
-  display: none;
-}
-
-.cf-msg__menu button {
-  display: block;
+.cf-more-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
   text-align: right;
   border: none;
   background: transparent;
-  padding: 8px 10px;
+  padding: 9px 10px;
   font: inherit;
   font-size: 0.8rem;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--ws-text, #0f172a);
 }
 
-.cf-msg__menu button:hover {
-  background: var(--ws-surface-2, #f4f4f5);
+.cf-more-menu button i {
+  width: 16px;
+  text-align: center;
+  opacity: 0.75;
 }
 
-.cf-msg__menu button.cf-menu-danger {
+.cf-more-menu button:hover,
+.cf-more-menu button:focus-visible {
+  background: var(--ws-surface-2, #f1f5f9);
+}
+
+.cf-more-menu button.cf-menu-danger {
   color: #dc2626;
+}
+
+.cf-more-menu__sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--ws-border, #e2e8f0);
+}
+
+.cf-msg-sheet__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px 16px;
+}
+
+.cf-msg-sheet__list button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: var(--ws-surface-2, #f8fafc);
+  border-radius: var(--cf-radius-sm);
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: right;
+  cursor: pointer;
+  color: var(--ws-text, #0f172a);
+}
+
+.cf-msg-sheet__list button i {
+  width: 20px;
+  color: var(--cf-accent);
+}
+
+.cf-msg-sheet__list button.cf-menu-danger {
+  color: #dc2626;
+}
+
+.cf-msg-sheet__list button.cf-menu-danger i {
+  color: #dc2626;
+}
+
+html[data-theme="dark"] .cf-quick-bar,
+html[data-theme="dark"] .cf-react-strip,
+html[data-theme="dark"] .cf-more-menu {
+  background: var(--ws-surface, #0f172a);
 }
 
 /* ─── Float buttons ─── */

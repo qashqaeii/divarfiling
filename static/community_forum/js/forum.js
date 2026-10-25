@@ -33,10 +33,12 @@
     sending: false,
     pendingSend: null,
     reportReasons: [],
-    ui: { editId: null, deleteId: null, reportId: null, reactionId: null },
-    openMenuId: null,
+    ui: { editId: null, deleteId: null, reportId: null, reactionId: null, activeMsgId: null },
     initialLoaded: false,
   };
+
+  var overlay = { hideTimer: null, stripOpen: false };
+  var DEFAULT_DBL_REACTION = '❤️';
 
   function $(id) { return document.getElementById(id); }
 
@@ -188,12 +190,62 @@
     if (last < s.length) el.appendChild(document.createTextNode(s.slice(last)));
   }
 
-  function bindReactionChip(btn, msg, reaction) {
-    if (msg.my_reaction === reaction.emoji) btn.classList.add('cf-reaction--mine');
-    btn.addEventListener('click', function () {
-      if (msg.my_reaction === reaction.emoji) postReaction(msg.id, null);
-      else postReaction(msg.id, reaction.emoji);
+  function isMobileUi() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  }
+
+  function isDesktopUi() {
+    return !isMobileUi() && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  }
+
+  function msgById(id) {
+    return state.messages.get(Number(id));
+  }
+
+  function fillReactions(rx, msg) {
+    if (!rx) return;
+    rx.innerHTML = '';
+    (msg.reactions || []).forEach(function (r) {
+      var s = document.createElement('button');
+      s.type = 'button';
+      s.className = 'cf-reaction';
+      if (msg.my_reaction === r.emoji) s.classList.add('cf-reaction--mine');
+      s.dataset.mid = String(msg.id);
+      s.dataset.emoji = r.emoji;
+      s.textContent = r.emoji + ' ' + r.count;
+      rx.appendChild(s);
     });
+  }
+
+  function optimisticReaction(msg, emoji) {
+    var mine = msg.my_reaction || '';
+    var list = (msg.reactions || []).map(function (r) { return { emoji: r.emoji, count: r.count }; });
+    function dec(e) {
+      list = list.map(function (r) {
+        if (r.emoji !== e) return r;
+        var c = r.count - 1;
+        return c > 0 ? { emoji: r.emoji, count: c } : null;
+      }).filter(Boolean);
+    }
+    function inc(e) {
+      var f = list.filter(function (r) { return r.emoji === e; })[0];
+      if (f) f.count += 1;
+      else list.push({ emoji: e, count: 1 });
+    }
+    if (!emoji) {
+      if (mine) dec(mine);
+      msg.my_reaction = '';
+    } else {
+      if (mine && mine !== emoji) dec(mine);
+      if (mine === emoji) {
+        dec(emoji);
+        msg.my_reaction = '';
+      } else {
+        inc(emoji);
+        msg.my_reaction = emoji;
+      }
+    }
+    msg.reactions = list;
   }
 
   function scrollToMessageId(id, highlight) {
@@ -258,35 +310,42 @@
     empty.hidden = state.orderedIds.length > 0;
   }
 
-  function closeAllMenus() {
-    document.querySelectorAll('.cf-msg__menu').forEach(function (m) { m.hidden = true; });
-    document.querySelectorAll('.cf-msg__toolbar').forEach(function (t) { t.classList.remove('is-open'); });
-    state.openMenuId = null;
+  function closeOverlays() {
+    clearTimeout(overlay.hideTimer);
+    overlay.stripOpen = false;
+    state.ui.activeMsgId = null;
+    ['cfQuickBar', 'cfReactStrip', 'cfMoreMenu'].forEach(function (id) {
+      var el = $(id);
+      if (el) {
+        el.classList.remove('is-visible');
+        el.hidden = true;
+      }
+    });
   }
 
-  document.addEventListener('click', function (ev) {
-    if (!ev.target.closest('.cf-msg__toolbar')) closeAllMenus();
-  });
-
-  function menuItems(msg) {
-    var items = [
-      { act: 'reply', label: 'پاسخ' },
-      { act: 'react', label: 'واکنش' },
-      { act: 'copy', label: 'کپی متن' },
-    ];
+  function secondaryMenuItems(msg) {
+    var items = [];
     if (msg.is_mine) {
-      items.push({ act: 'edit', label: 'ویرایش' });
-      items.push({ act: 'del', label: 'حذف', danger: true });
+      items.push({ act: 'edit', label: 'ویرایش', icon: 'fa-pen' });
+      items.push({ act: 'del', label: 'حذف', danger: true, icon: 'fa-trash' });
     } else {
-      items.push({ act: 'report', label: 'گزارش', danger: true });
+      items.push({ act: 'report', label: 'گزارش', danger: true, icon: 'fa-flag' });
     }
     return items;
   }
 
+  function a11yMenuItems(msg) {
+    return [
+      { act: 'reply', label: 'پاسخ', icon: 'fa-reply' },
+      { act: 'react', label: 'واکنش', icon: 'fa-smile' },
+      { act: 'copy', label: 'کپی متن', icon: 'fa-copy' },
+    ];
+  }
+
   function onMenuAction(msg, act) {
-    closeAllMenus();
+    closeOverlays();
     if (act === 'reply') setReply(msg);
-    if (act === 'react') openReaction(msg.id);
+    if (act === 'react') openReactionPicker(msg.id);
     if (act === 'edit') openEdit(msg);
     if (act === 'del') openDelete(msg.id);
     if (act === 'report') openReport(msg.id);
@@ -324,6 +383,7 @@
     if (opts.grouped) wrap.classList.add('cf-msg--grouped');
     if (isNoticeMessage(msg)) wrap.classList.add('cf-msg--notice');
     wrap.dataset.id = String(msg.id);
+    if (!msg.is_deleted) wrap.tabIndex = 0;
 
     var av;
     if (msg.avatar_url) {
@@ -344,6 +404,21 @@
     meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>' +
       '<span class="cf-msg__time">' + formatTime(msg.created_at) +
       (msg.is_edited ? ' <span class="cf-msg__edited">· ویرایش‌شده</span>' : '') + '</span>';
+    if (!msg.is_deleted) {
+      var actBtn = document.createElement('button');
+      actBtn.type = 'button';
+      actBtn.className = 'cf-msg__act';
+      actBtn.setAttribute('aria-label', 'عملیات پیام');
+      actBtn.innerHTML = '<i class="fas fa-ellipsis-v" aria-hidden="true"></i>';
+      meta.appendChild(actBtn);
+    }
+
+    var swipeWrap = document.createElement('div');
+    swipeWrap.className = 'cf-msg__swipe';
+    var swipeHint = document.createElement('div');
+    swipeHint.className = 'cf-msg__swipe-hint';
+    swipeHint.innerHTML = '<i class="fas fa-reply" aria-hidden="true"></i>';
+    swipeWrap.appendChild(swipeHint);
 
     var bubble = document.createElement('div');
     bubble.className = 'cf-msg__bubble';
@@ -355,7 +430,7 @@
       rp.textContent = msg.reply_to.unavailable ? 'پیام در دسترس نیست' :
         ((msg.reply_to.sender_label || '') + ': ' + (msg.reply_to.body_preview || ''));
       if (!msg.reply_to.unavailable && msg.reply_to.id) {
-        rp.addEventListener('click', function () { scrollToMessageId(msg.reply_to.id, true); });
+        rp.dataset.replyTo = String(msg.reply_to.id);
       } else {
         rp.disabled = true;
       }
@@ -371,54 +446,12 @@
 
     var rx = document.createElement('div');
     rx.className = 'cf-reactions';
-    if (msg.reactions && msg.reactions.length) {
-      msg.reactions.forEach(function (r) {
-        var s = document.createElement('button');
-        s.type = 'button';
-        s.className = 'cf-reaction';
-        s.textContent = r.emoji + ' ' + r.count;
-        bindReactionChip(s, msg, r);
-        rx.appendChild(s);
-      });
-    }
+    fillReactions(rx, msg);
     bubble.appendChild(rx);
 
+    swipeWrap.appendChild(bubble);
     stack.appendChild(meta);
-    stack.appendChild(bubble);
-
-    if (!msg.is_deleted) {
-      var toolbar = document.createElement('div');
-      toolbar.className = 'cf-msg__toolbar';
-      var menuBtn = document.createElement('button');
-      menuBtn.type = 'button';
-      menuBtn.className = 'cf-msg__menu-btn';
-      menuBtn.setAttribute('aria-label', 'عملیات پیام');
-      menuBtn.innerHTML = '<i class="fas fa-ellipsis-v" aria-hidden="true"></i>';
-      var menu = document.createElement('div');
-      menu.className = 'cf-msg__menu';
-      menu.hidden = true;
-      menuItems(msg).forEach(function (item) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = item.label;
-        if (item.danger) b.className = 'cf-menu-danger';
-        b.addEventListener('click', function () { onMenuAction(msg, item.act); });
-        menu.appendChild(b);
-      });
-      menuBtn.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        var open = state.openMenuId === msg.id;
-        closeAllMenus();
-        if (!open) {
-          menu.hidden = false;
-          toolbar.classList.add('is-open');
-          state.openMenuId = msg.id;
-        }
-      });
-      toolbar.appendChild(menuBtn);
-      toolbar.appendChild(menu);
-      stack.appendChild(toolbar);
-    }
+    stack.appendChild(swipeWrap);
     wrap.appendChild(av);
     wrap.appendChild(stack);
     return wrap;
@@ -438,18 +471,7 @@
         '<span class="cf-msg__time">' + formatTime(msg.created_at) +
         (msg.is_edited ? ' <span class="cf-msg__edited">· ویرایش‌شده</span>' : '') + '</span>';
     }
-    var rx = wrap.querySelector('.cf-reactions');
-    if (rx) {
-      rx.innerHTML = '';
-      (msg.reactions || []).forEach(function (r) {
-        var s = document.createElement('button');
-        s.type = 'button';
-        s.className = 'cf-reaction';
-        s.textContent = r.emoji + ' ' + r.count;
-        bindReactionChip(s, msg, r);
-        rx.appendChild(s);
-      });
-    }
+    fillReactions(wrap.querySelector('.cf-reactions'), msg);
   }
 
   function findMessageNode(id) {
@@ -714,10 +736,16 @@
   }
 
   function setReply(msg) {
+    if (!msg || msg.is_deleted) return;
+    closeOverlays();
     state.replyToId = msg.id;
     showEl($('cfReplyPreview'));
     $('cfReplyPreviewText').textContent = (msg.sender_label || '') + ': ' + (msg.body || '').slice(0, 120);
-    $('cfComposerInput').focus();
+    var input = $('cfComposerInput');
+    if (input) {
+      input.focus();
+      try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
+    }
   }
 
   function clearReply() {
@@ -806,9 +834,11 @@
     $('cfReportDialog').showModal();
   }
 
-  function openReaction(id) {
+  function openReactionPicker(id) {
     state.ui.reactionId = id;
+    closeOverlays();
     var pick = $('cfEmojiPick');
+    if (!pick) return;
     pick.innerHTML = '';
     EMOJIS.forEach(function (em) {
       var b = document.createElement('button');
@@ -821,20 +851,337 @@
       });
       pick.appendChild(b);
     });
-    $('cfReactionDialog').showModal();
+    openDialog($('cfReactionDialog'));
   }
 
   function postReaction(mid, emoji) {
-    fetchJson(apiUrl('messages/' + mid + '/reactions/'), { method: 'POST', body: { emoji: emoji } })
+    var msg = state.messages.get(mid);
+    if (!msg || msg.is_deleted) return;
+    if (emoji && EMOJIS.indexOf(emoji) < 0) return;
+    var snapshot = {
+      reactions: (msg.reactions || []).map(function (r) { return { emoji: r.emoji, count: r.count }; }),
+      my_reaction: msg.my_reaction || '',
+    };
+    var nextEmoji = emoji;
+    if (emoji && msg.my_reaction === emoji) nextEmoji = null;
+    optimisticReaction(msg, nextEmoji);
+    var node = findMessageNode(mid);
+    if (node) patchMessageEl(node, msg);
+    return fetchJson(apiUrl('messages/' + mid + '/reactions/'), { method: 'POST', body: { emoji: nextEmoji } })
       .then(function (data) {
-        var msg = state.messages.get(mid);
-        if (msg) {
-          msg.reactions = data.reactions;
-          msg.my_reaction = emoji || '';
-          var node = findMessageNode(mid);
-          if (node) patchMessageEl(node, msg);
-        }
-      }).catch(function (err) { toast(err.error || 'خطا', true); });
+        msg.reactions = data.reactions;
+        msg.my_reaction = nextEmoji || '';
+        if (node) patchMessageEl(node, msg);
+      })
+      .catch(function (err) {
+        msg.reactions = snapshot.reactions;
+        msg.my_reaction = snapshot.my_reaction;
+        if (node) patchMessageEl(node, msg);
+        toast(err.error || 'خطا', true);
+      });
+  }
+
+  function anchorBubble(msgEl) {
+    return msgEl ? msgEl.querySelector('.cf-msg__bubble') : null;
+  }
+
+  function placeFloating(el, anchorRect, offsetY) {
+    if (!el || !anchorRect) return;
+    el.hidden = false;
+    el.style.visibility = 'hidden';
+    el.classList.add('is-visible');
+    var w = el.offsetWidth;
+    var h = el.offsetHeight;
+    var gap = 6;
+    var top = anchorRect.top - h - gap + (offsetY || 0);
+    if (top < 8) top = anchorRect.bottom + gap;
+    var left = anchorRect.left + (anchorRect.width / 2) - (w / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - h - 8));
+    el.style.top = top + 'px';
+    el.style.left = left + 'px';
+    el.style.visibility = '';
+  }
+
+  function showQuickBar(msgEl) {
+    if (!isDesktopUi() || !msgEl || msgEl.classList.contains('cf-msg--deleted')) return;
+    var bar = $('cfQuickBar');
+    if (!bar) return;
+    var bubble = anchorBubble(msgEl);
+    if (!bubble) return;
+    state.ui.activeMsgId = Number(msgEl.dataset.id);
+    closeOverlays();
+    state.ui.activeMsgId = Number(msgEl.dataset.id);
+    placeFloating(bar, bubble.getBoundingClientRect());
+    bar.classList.add('is-visible');
+    bar.hidden = false;
+  }
+
+  function showReactStrip(msgEl) {
+    var strip = $('cfReactStrip');
+    if (!strip || !msgEl) return;
+    var mid = Number(msgEl.dataset.id);
+    var msg = msgById(mid);
+    if (!msg) return;
+    strip.innerHTML = '';
+    EMOJIS.forEach(function (em) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cf-react-strip__btn';
+      b.textContent = em;
+      b.setAttribute('role', 'option');
+      if (msg.my_reaction === em) b.classList.add('is-mine');
+      b.addEventListener('click', function () {
+        postReaction(mid, em);
+        closeOverlays();
+      });
+      strip.appendChild(b);
+    });
+    var more = document.createElement('button');
+    more.type = 'button';
+    more.className = 'cf-react-strip__more';
+    more.textContent = '+';
+    more.setAttribute('aria-label', 'واکنش‌های بیشتر');
+    more.addEventListener('click', function () {
+      openReactionPicker(mid);
+    });
+    strip.appendChild(more);
+    overlay.stripOpen = true;
+    var bubble = anchorBubble(msgEl);
+    placeFloating(strip, bubble.getBoundingClientRect(), -44);
+    strip.hidden = false;
+    strip.classList.add('is-visible');
+  }
+
+  function showMoreMenu(msgEl) {
+    var menu = $('cfMoreMenu');
+    if (!menu || !msgEl) return;
+    var msg = msgById(Number(msgEl.dataset.id));
+    if (!msg) return;
+    menu.innerHTML = '';
+    secondaryMenuItems(msg).forEach(function (item) {
+      menu.appendChild(menuButton(item, msg));
+    });
+    var sep = document.createElement('div');
+    sep.className = 'cf-more-menu__sep';
+    sep.setAttribute('role', 'separator');
+    menu.appendChild(sep);
+    a11yMenuItems(msg).forEach(function (item) {
+      menu.appendChild(menuButton(item, msg));
+    });
+    placeFloating(menu, anchorBubble(msgEl).getBoundingClientRect());
+    menu.hidden = false;
+    menu.classList.add('is-visible');
+  }
+
+  function menuButton(item, msg) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'menuitem');
+    if (item.danger) b.className = 'cf-menu-danger';
+    b.innerHTML = '<i class="fas ' + item.icon + '" aria-hidden="true"></i><span>' + item.label + '</span>';
+    b.addEventListener('click', function () { onMenuAction(msg, item.act); });
+    return b;
+  }
+
+  function openMobileSheet(mid) {
+    var msg = msgById(mid);
+    if (!msg) return;
+    closeOverlays();
+    var list = $('cfMsgSheetList');
+    var dlg = $('cfMsgSheet');
+    if (!list || !dlg) return;
+    list.innerHTML = '';
+    var quick = [
+      { act: 'reply', label: 'پاسخ', icon: 'fa-reply' },
+      { act: 'react', label: 'واکنش', icon: 'fa-smile' },
+      { act: 'copy', label: 'کپی متن', icon: 'fa-copy' },
+    ].concat(secondaryMenuItems(msg));
+    quick.forEach(function (item) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      if (item.danger) b.className = 'cf-menu-danger';
+      b.innerHTML = '<i class="fas ' + item.icon + '" aria-hidden="true"></i><span>' + item.label + '</span>';
+      b.addEventListener('click', function () {
+        dlg.close();
+        onMenuAction(msg, item.act);
+      });
+      list.appendChild(b);
+    });
+    openDialog(dlg);
+  }
+
+  function initMessageInteractions() {
+    var list = $('cfMessages');
+    if (!list) return;
+
+    list.addEventListener('click', function (ev) {
+      var reactBtn = ev.target.closest('.cf-reaction');
+      if (reactBtn) {
+        ev.preventDefault();
+        var mid = Number(reactBtn.dataset.mid);
+        var emoji = reactBtn.dataset.emoji;
+        var m = msgById(mid);
+        if (m) postReaction(mid, m.my_reaction === emoji ? null : emoji);
+        return;
+      }
+      var replyLink = ev.target.closest('.cf-msg__reply[data-reply-to]');
+      if (replyLink) {
+        ev.preventDefault();
+        scrollToMessageId(Number(replyLink.dataset.replyTo), true);
+        return;
+      }
+      var act = ev.target.closest('.cf-msg__act');
+      if (act) {
+        ev.stopPropagation();
+        var row = act.closest('.cf-msg');
+        if (row) openMobileSheet(Number(row.dataset.id));
+        return;
+      }
+      if (!ev.target.closest('#cfQuickBar, #cfReactStrip, #cfMoreMenu')) {
+        if (!ev.target.closest('.cf-msg__bubble, .cf-msg__meta')) closeOverlays();
+      }
+    });
+
+    list.addEventListener('dblclick', function (ev) {
+      if (!isDesktopUi()) return;
+      if (ev.target.closest('button, a, .cf-reaction')) return;
+      var sel = window.getSelection && window.getSelection();
+      if (sel && sel.toString().trim()) return;
+      var bubble = ev.target.closest('.cf-msg__bubble');
+      if (!bubble) return;
+      var row = bubble.closest('.cf-msg');
+      if (!row || row.classList.contains('cf-msg--deleted')) return;
+      var mid = Number(row.dataset.id);
+      var m = msgById(mid);
+      if (!m) return;
+      postReaction(mid, m.my_reaction === DEFAULT_DBL_REACTION ? null : DEFAULT_DBL_REACTION);
+    });
+
+    list.addEventListener('keydown', function (ev) {
+      var row = ev.target.closest('.cf-msg');
+      if (!row) return;
+      var m = msgById(Number(row.dataset.id));
+      if (!m) return;
+      if (ev.key === 'r' || ev.key === 'R') {
+        if (ev.ctrlKey || ev.metaKey) return;
+        ev.preventDefault();
+        setReply(m);
+      }
+      if (ev.key === 'c' && (ev.ctrlKey || ev.metaKey)) return;
+    });
+
+    list.addEventListener('mouseover', function (ev) {
+      if (!isDesktopUi()) return;
+      var row = ev.target.closest('.cf-msg');
+      if (!row || row.classList.contains('cf-msg--deleted')) return;
+      if (ev.target.closest('#cfQuickBar, #cfReactStrip, #cfMoreMenu')) return;
+      if (row.contains(ev.relatedTarget)) return;
+      clearTimeout(overlay.hideTimer);
+      showQuickBar(row);
+    });
+
+    list.addEventListener('mouseout', function (ev) {
+      if (!isDesktopUi()) return;
+      var row = ev.target.closest('.cf-msg');
+      if (!row) return;
+      var related = ev.relatedTarget;
+      if (related && (row.contains(related) || related.closest &&
+        related.closest('#cfQuickBar, #cfReactStrip, #cfMoreMenu'))) return;
+      overlay.hideTimer = setTimeout(closeOverlays, 180);
+    });
+
+    var bar = $('cfQuickBar');
+    if (bar) {
+      bar.addEventListener('mouseenter', function () { clearTimeout(overlay.hideTimer); });
+      bar.addEventListener('mouseleave', function () {
+        overlay.hideTimer = setTimeout(closeOverlays, 160);
+      });
+      bar.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('.cf-qb');
+        if (!btn) return;
+        var mid = state.ui.activeMsgId;
+        var m = msgById(mid);
+        var row = findMessageNode(mid);
+        if (!m || !row) return;
+        var act = btn.dataset.act;
+        if (act === 'reply') setReply(m);
+        if (act === 'copy') copyMessageText(m);
+        if (act === 'react') showReactStrip(row);
+        if (act === 'more') showMoreMenu(row);
+      });
+    }
+
+    list.addEventListener('scroll', function () { closeOverlays(); }, { passive: true });
+    window.addEventListener('resize', closeOverlays);
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') closeOverlays();
+    });
+
+    var swipeState = null;
+    var SWIPE_THRESH = 52;
+
+    list.addEventListener('pointerdown', function (ev) {
+      if (!isMobileUi() || ev.pointerType === 'mouse') return;
+      var bubble = ev.target.closest('.cf-msg__bubble');
+      if (!bubble || ev.target.closest('button, a, .cf-reaction')) return;
+      var wrap = bubble.closest('.cf-msg__swipe');
+      var row = bubble.closest('.cf-msg');
+      if (!wrap || !row || row.classList.contains('cf-msg--deleted')) return;
+      swipeState = {
+        id: Number(row.dataset.id),
+        wrap: wrap,
+        bubble: bubble,
+        startX: ev.clientX,
+        active: true,
+        pointerId: ev.pointerId,
+      };
+      try { bubble.setPointerCapture(ev.pointerId); } catch (e) {}
+    });
+
+    list.addEventListener('pointermove', function (ev) {
+      if (!swipeState || !swipeState.active || ev.pointerId !== swipeState.pointerId) return;
+      var dx = ev.clientX - swipeState.startX;
+      var dir = dx > 0 ? 1 : -1;
+      var mag = Math.min(Math.abs(dx), 72);
+      var tx = dir * mag;
+      swipeState.bubble.style.transform = 'translateX(' + tx + 'px)';
+      swipeState.wrap.classList.toggle('is-dragging', true);
+      swipeState.wrap.classList.toggle('is-threshold', mag >= SWIPE_THRESH);
+    });
+
+    list.addEventListener('pointerup', function (ev) {
+      if (!swipeState || ev.pointerId !== swipeState.pointerId) return;
+      var dx = ev.clientX - swipeState.startX;
+      var m = msgById(swipeState.id);
+      if (Math.abs(dx) >= SWIPE_THRESH && m) setReply(m);
+      swipeState.bubble.style.transform = '';
+      swipeState.wrap.classList.remove('is-dragging', 'is-threshold');
+      try { swipeState.bubble.releasePointerCapture(ev.pointerId); } catch (e) {}
+      swipeState = null;
+    });
+
+    list.addEventListener('pointercancel', function (ev) {
+      if (!swipeState || ev.pointerId !== swipeState.pointerId) return;
+      swipeState.bubble.style.transform = '';
+      swipeState.wrap.classList.remove('is-dragging', 'is-threshold');
+      swipeState = null;
+    });
+
+    var longPress = null;
+    list.addEventListener('pointerdown', function (ev) {
+      if (!isMobileUi()) return;
+      var row = ev.target.closest('.cf-msg');
+      if (!row || row.classList.contains('cf-msg--deleted')) return;
+      if (ev.target.closest('.cf-msg__act, button, a')) return;
+      clearTimeout(longPress);
+      longPress = setTimeout(function () {
+        openMobileSheet(Number(row.dataset.id));
+      }, 480);
+    });
+    ['pointerup', 'pointermove', 'pointercancel'].forEach(function (evt) {
+      list.addEventListener(evt, function () { clearTimeout(longPress); });
+    });
   }
 
   function growComposer() {
@@ -1020,6 +1367,7 @@
     updateChar();
   });
 
+  initMessageInteractions();
   bindDialogClose();
 
   window.addEventListener('pagehide', teardownWs);

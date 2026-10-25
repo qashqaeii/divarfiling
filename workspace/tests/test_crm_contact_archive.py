@@ -15,7 +15,8 @@ from workspace.services.crm_contact_archive import (
     is_contact_archived,
     restore_contact,
 )
-from workspace.services.crm_matching import _score_customer_for_property
+from workspace.models import CustomerActivity
+from workspace.services.crm_matching import _score_customer_for_property, get_customer_matches
 from workspace.services.crm_sharing import share_customer
 
 User = get_user_model()
@@ -106,6 +107,25 @@ class CRMContactArchiveServiceTests(TestCase):
         result = bulk_archive_contacts(self.user, [self.customer.pk, other.pk, 99999])
         self.assertEqual(result['archived'], 2)
         self.assertEqual(result['skipped'], 1)
+
+    def test_archive_invalid_reactivation_does_not_partially_apply(self):
+        acts_before = CustomerActivity.objects.filter(customer=self.customer).count()
+        with self.assertRaises(ValueError):
+            archive_contact(
+                self.user,
+                self.customer,
+                reactivation_due_jalali='not-a-date',
+            )
+        self.customer.refresh_from_db()
+        self.assertFalse(is_contact_archived(self.customer))
+        self.assertEqual(CustomerActivity.objects.filter(customer=self.customer).count(), acts_before)
+
+    def test_get_customer_matches_returns_empty_for_archived(self):
+        archive_contact(self.user, self.customer)
+        payload = get_customer_matches(self.customer, self.user, divar_enabled=False)
+        self.assertFalse(payload['eligible'])
+        self.assertEqual(payload['crm_matches'], [])
+        self.assertEqual(payload['divar_matches'], [])
 
 
 class CRMContactArchiveFilterTests(TestCase):

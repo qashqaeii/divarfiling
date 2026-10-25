@@ -1291,6 +1291,20 @@ def _finalize_match_payload_for_user(user, payload: Dict[str, Any]) -> Dict[str,
 
 
 def get_customer_matches(customer: Customer, user, *, divar_enabled: bool, dataset_id=None) -> Dict[str, Any]:
+    from workspace.services.crm_contact_archive import is_contact_archived
+
+    if is_contact_archived(customer):
+        return _match_payload_with_tolerance({
+            'eligible': False,
+            'is_builder': False,
+            'match_groups': [],
+            'crm_matches': [],
+            'divar_matches': [],
+            'divar_locked': not divar_enabled,
+            'total_count': 0,
+            'message': 'مخاطب بایگانی است؛ پیشنهاد جدید غیرفعال است.',
+        }, customer)
+
     if customer.customer_type not in MATCH_TYPES and customer.customer_type not in LEAD_TYPES:
         return _match_payload_with_tolerance({
             'eligible': False,

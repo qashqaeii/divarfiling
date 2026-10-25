@@ -39,8 +39,10 @@ def _customer_last_touch(customer: Customer):
 
 
 def _inactive_customers(user, days: int, statuses: List[str]):
+    from workspace.services.crm_contact_archive import archived_contacts_q
+
     cutoff = timezone.now() - timedelta(days=days)
-    qs = Customer.objects.filter(user=user, status__in=statuses)
+    qs = Customer.objects.filter(user=user, status__in=statuses).exclude(archived_contacts_q())
     for c in qs.iterator():
         if _customer_last_touch(c) < cutoff:
             yield c
@@ -58,14 +60,33 @@ def apply_rule(rule: CRMAutomationRule, customer: Customer) -> bool:
         return False
 
     if rule.action == 'set_status' and rule.action_status in CRM_STATUSES:
-        old = customer.status
+        from workspace.services.crm_contact_archive import is_contact_archived
+
+        if rule.action_status == 'بایگانی':
+            if is_contact_archived(customer):
+                return False
+            update_customer_status(customer, rule.action_status, user=rule.user)
+            customer.refresh_from_db()
+            if is_contact_archived(customer):
+                log_activity(
+                    customer, 'وظیفه',
+                    content=f'قانون «{rule.name}»: مخاطب بایگانی شد.',
+                    title='اتوماسیون',
+                )
+                return True
+            return False
+
+        old_status = customer.status
         update_customer_status(customer, rule.action_status, user=rule.user)
-        log_activity(
-            customer, 'وظیفه',
-            content=f'قانون «{rule.name}»: وضعیت به «{rule.action_status}» تغییر کرد.',
-            title='اتوماسیون',
-        )
-        return old != customer.status
+        customer.refresh_from_db()
+        if old_status != customer.status:
+            log_activity(
+                customer, 'وظیفه',
+                content=f'قانون «{rule.name}»: وضعیت به «{rule.action_status}» تغییر کرد.',
+                title='اتوماسیون',
+            )
+            return True
+        return False
 
     if rule.action == 'create_reminder':
         title = rule.action_reminder_title or 'پیگیری خودکار'

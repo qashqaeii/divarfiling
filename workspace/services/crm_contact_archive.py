@@ -138,13 +138,7 @@ def _log_archive_event(
     )
 
 
-def _maybe_create_reactivation_reminder(
-    user,
-    customer: Customer,
-    *,
-    due_jalali: str = '',
-    note: str = '',
-) -> Optional[Reminder]:
+def _parse_reactivation_due_jalali(due_jalali: str):
     raw = (due_jalali or '').strip()
     if not raw:
         return None
@@ -153,6 +147,22 @@ def _maybe_create_reactivation_reminder(
     due_date = parse_jalali_date_string(raw)
     if not due_date:
         raise ValueError('تاریخ پیگیری مجدد نامعتبر است.')
+    return due_date
+
+
+def _maybe_create_reactivation_reminder(
+    user,
+    customer: Customer,
+    *,
+    due_jalali: str = '',
+    note: str = '',
+    due_date=None,
+) -> Optional[Reminder]:
+    if due_date is None:
+        due_date = _parse_reactivation_due_jalali(due_jalali)
+    if not due_date:
+        return None
+    raw = (due_jalali or '').strip()
     exists = Reminder.objects.filter(
         user=user,
         customer=customer,
@@ -196,31 +206,35 @@ def archive_contact(
     if is_contact_archived(customer):
         return customer
 
-    customer.archived_at = timezone.now()
-    customer.archive_reason = (reason or '').strip()[:500]
-    customer.save(update_fields=['archived_at', 'archive_reason', 'updated_at'])
+    reactivation_due = _parse_reactivation_due_jalali(reactivation_due_jalali)
 
-    meta = {
-        'action': 'archive',
-        'via_legacy_status': via_legacy_status,
-        'reason': customer.archive_reason,
-    }
-    if archive_note:
-        meta['archive_note'] = archive_note.strip()[:500]
-    content = 'مخاطب به بایگانی منتقل شد.'
-    if customer.archive_reason:
-        content += f' دلیل: {customer.archive_reason}.'
-    if archive_note:
-        content += f' یادداشت: {archive_note.strip()[:200]}'
-    _log_archive_event(customer, content, metadata=meta)
+    with transaction.atomic():
+        customer.archived_at = timezone.now()
+        customer.archive_reason = (reason or '').strip()[:500]
+        customer.save(update_fields=['archived_at', 'archive_reason', 'updated_at'])
 
-    if reactivation_due_jalali:
-        _maybe_create_reactivation_reminder(
-            user,
-            customer,
-            due_jalali=reactivation_due_jalali,
-            note=archive_note,
-        )
+        meta = {
+            'action': 'archive',
+            'via_legacy_status': via_legacy_status,
+            'reason': customer.archive_reason,
+        }
+        if archive_note:
+            meta['archive_note'] = archive_note.strip()[:500]
+        content = 'مخاطب به بایگانی منتقل شد.'
+        if customer.archive_reason:
+            content += f' دلیل: {customer.archive_reason}.'
+        if archive_note:
+            content += f' یادداشت: {archive_note.strip()[:200]}'
+        _log_archive_event(customer, content, metadata=meta)
+
+        if reactivation_due:
+            _maybe_create_reactivation_reminder(
+                user,
+                customer,
+                due_jalali=reactivation_due_jalali,
+                note=archive_note,
+                due_date=reactivation_due,
+            )
     return customer
 
 

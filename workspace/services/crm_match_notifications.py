@@ -23,6 +23,10 @@ POST_EXTRACT_MAX_CUSTOMERS = 60
 
 
 def is_match_eligible(customer: Customer) -> bool:
+    from workspace.services.crm_contact_archive import is_contact_archived
+
+    if is_contact_archived(customer):
+        return False
     return customer.customer_type in MATCH_ELIGIBLE_TYPES
 
 

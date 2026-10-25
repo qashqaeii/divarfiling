@@ -345,6 +345,9 @@
                     <option value="">عملیات</option>
                     <option value="status">تغییر وضعیت</option>
                     <option value="archive">بایگانی</option>
+                    {% if archive_scope == 'archived' %}
+                    <option value="restore">بازگردانی از بایگانی</option>
+                    {% endif %}
                     <option value="tag">افزودن برچسب</option>
                     <option value="delete">حذف</option>
                 </select>

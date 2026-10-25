@@ -1208,10 +1208,10 @@ def get_dashboard_stats(user) -> Dict[str, Any]:
     return {
         'total_contacts': active_customers.count(),
         'total_properties': properties.count(),
-        'owners': customers.filter(customer_type='مالک').count(),
-        'buyers': customers.filter(customer_type='خریدار').count(),
-        'tenants': customers.filter(customer_type='مستاجر').count(),
-        'leads': customers.filter(customer_type__in=LEAD_TYPES).count(),
+        'owners': active_customers.filter(customer_type='مالک').count(),
+        'buyers': active_customers.filter(customer_type='خریدار').count(),
+        'tenants': active_customers.filter(customer_type='مستاجر').count(),
+        'leads': active_customers.filter(customer_type__in=LEAD_TYPES).count(),
         'sale_files': properties.filter(deal_mode='فروش').count(),
         'rent_files': properties.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).count(),
         'new_contacts': active_customers.filter(status='جدید').count(),
@@ -1356,8 +1356,10 @@ def reorder_property_pipeline(user, transaction_status: str, ordered_ids: list[i
 
 
 def get_overdue_contacts(user, limit: int = 8):
+    from workspace.services.crm_contact_archive import archived_contacts_q
+
     today = timezone.now().date()
-    return customers_qs(user).filter(
+    return customers_qs(user).exclude(archived_contacts_q()).filter(
         next_follow_up__lt=today,
         status__in=['جدید', 'در حال پیگیری'],
     ).order_by('next_follow_up')[:limit]
@@ -1377,7 +1379,9 @@ def get_recent_properties(user, limit: int = 6):
 
 
 def get_recent_contacts(user, limit: int = 5):
-    return customers_qs(user).order_by('-created_at')[:limit]
+    from workspace.services.crm_contact_archive import archived_contacts_q
+
+    return customers_qs(user).exclude(archived_contacts_q()).order_by('-created_at')[:limit]
 
 
 _PERSIAN_DAYS = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه']

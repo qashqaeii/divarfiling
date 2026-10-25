@@ -105,23 +105,119 @@ def _field_present(data: Dict[str, Any], key: str) -> bool:
     return key in data and data.get(key) is not None
 
 
+def _contact_patch_has_writes(data: Dict[str, Any]) -> bool:
+    if not data:
+        return False
+    scalar_fields = (
+        'full_name', 'name', 'phone', 'email', 'status', 'customer_type', 'priority', 'notes',
+        'property_type', 'property_types', 'rooms', 'areas', 'budget', 'budget_min', 'budget_max',
+        'deposit_min', 'deposit_max', 'rent_min', 'rent_max', 'builder_buy_property_types',
+        'builder_buy_types', 'builder_buy_areas', 'builder_buy_budget_min', 'builder_buy_budget_max',
+        'builder_buy_min_area', 'builder_buy_max_area', 'min_area', 'max_area', 'lease_deadline',
+        'matching_tolerance_percent', 'restore_status', 'reactivation_due_jalali',
+    )
+    for key in scalar_fields:
+        if _field_present(data, key):
+            return True
+    for key in ('rooms_min', 'rooms_max', 'year_min', 'year_max', 'floor_min', 'floor_max'):
+        if key in data and data[key] is not None:
+            return True
+    for key in ('want_parking', 'want_storage', 'want_elevator'):
+        if key in data and data[key] is not None:
+            return True
+    if 'is_archived' in data and data['is_archived'] is not None:
+        return True
+    if 'source' in data and data['source'] is not None:
+        return True
+    if 'city' in data and data['city'] is not None:
+        return True
+    if 'district' in data and data['district'] is not None:
+        return True
+    if 'phone_alt' in data and data['phone_alt'] is not None:
+        return True
+    if 'job' in data and data['job'] is not None:
+        return True
+    if 'company_name' in data and data['company_name'] is not None:
+        return True
+    if 'national_id' in data and data['national_id'] is not None:
+        return True
+    if 'gender' in data:
+        return True
+    if 'social_links' in data and isinstance(data['social_links'], dict):
+        return True
+    if 'active_channels' in data and isinstance(data['active_channels'], list):
+        return True
+    return False
+
+
+def _parse_contact_archive_patch(data: Dict[str, Any], customer: Customer) -> Dict[str, Any]:
+    from workspace.constants import CRM_STATUSES
+    from workspace.services.crm_contact_archive import COMMUNICATION_STATUSES, is_contact_archived
+
+    has_archived_flag = 'is_archived' in data and data['is_archived'] is not None
+    is_archived_flag = data.get('is_archived') if has_archived_flag else None
+    status_present = _field_present(data, 'status')
+    status_val = (data.get('status') or '').strip() if status_present else ''
+    restore_status = (data.get('restore_status') or '').strip()
+
+    wants_archive = is_archived_flag is True or status_val == 'بایگانی'
+    wants_restore = is_archived_flag is False and is_contact_archived(customer)
+
+    if wants_archive and wants_restore:
+        raise ValueError('درخواست بایگانی و بازگردانی همزمان معتبر نیست.')
+    if is_archived_flag is False and status_val == 'بایگانی':
+        raise ValueError('برای بازگردانی، وضعیت «بایگانی» قابل استفاده نیست.')
+    if wants_restore and status_present and status_val and status_val not in COMMUNICATION_STATUSES:
+        raise ValueError('وضعیت بازگردانی نامعتبر است.')
+    if (
+        status_present
+        and status_val
+        and status_val != 'بایگانی'
+        and is_contact_archived(customer)
+        and not wants_restore
+    ):
+        raise ValueError('برای تغییر وضعیت، ابتدا مخاطب را از بایگانی بازگردانید.')
+
+    effective_restore_status = restore_status
+    if wants_restore and not effective_restore_status and status_val and status_val != 'بایگانی':
+        effective_restore_status = status_val
+
+    new_status = ''
+    if status_present and status_val and status_val != 'بایگانی' and not wants_archive and not wants_restore:
+        if status_val not in CRM_STATUSES:
+            raise ValueError('وضعیت نامعتبر')
+        new_status = status_val
+
+    if wants_archive and is_contact_archived(customer):
+        wants_archive = False
+
+    return {
+        'archive': wants_archive,
+        'restore': wants_restore,
+        'restore_status': effective_restore_status,
+        'new_status': new_status,
+        'via_legacy_status': status_val == 'بایگانی',
+        'reactivation_due_jalali': (data.get('reactivation_due_jalali') or '').strip(),
+        'archive_reason': (data.get('archive_reason') or '').strip(),
+        'archive_note': (data.get('archive_note') or '').strip(),
+    }
+
+
 def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Customer]:
+    from django.db import transaction
+
     from workspace.services.crm import update_customer_status
-    from workspace.services.crm_contact_archive import is_contact_archived, restore_contact
+    from workspace.services.crm_contact_archive import archive_contact, is_contact_archived, restore_contact
     from workspace.services.crm_scope import can_edit_customer
 
     c = get_contact(user, contact_id)
     if not c:
         return None
-    writes = any(
-        _field_present(data, k) or k in data
-        for k in (
-            'full_name', 'name', 'phone', 'email', 'source', 'status', 'customer_type',
-            'priority', 'notes', 'property_type', 'property_types', 'lease_deadline',
-        )
-    )
-    if writes and not can_edit_customer(user, c):
-        raise ValueError('امکان ویرایش این مخاطب را ندارید')
+    if _contact_patch_has_writes(data) and not can_edit_customer(user, c):
+        raise PermissionError('امکان ویرایش این مخاطب را ندارید')
+
+    archive_patch = _parse_contact_archive_patch(data, c)
+
     if _field_present(data, 'full_name') or _field_present(data, 'name'):
         c.name = (data.get('full_name') or data.get('name') or c.name).strip()
     if _field_present(data, 'phone'):
@@ -132,18 +228,6 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         c.email = (data.get('email') or '').strip()
     if 'source' in data and data['source'] is not None:
         c.source = (data.get('source') or '').strip()[:30]
-    if _field_present(data, 'status') and data['status']:
-        new_status = (data['status'] or '').strip()
-        if new_status == 'بایگانی' or data.get('is_archived') is True:
-            from workspace.services.crm_contact_archive import archive_contact
-            archive_contact(user, c, via_legacy_status=True)
-            c.refresh_from_db()
-        elif data.get('is_archived') is False and is_contact_archived(c):
-            restore_contact(user, c, restore_status=new_status if new_status != 'بایگانی' else '')
-            c.refresh_from_db()
-        elif new_status:
-            update_customer_status(c, new_status, user=user)
-            c.refresh_from_db()
     if _field_present(data, 'customer_type') and data['customer_type']:
         c.customer_type = data['customer_type']
     if _field_present(data, 'priority') and data['priority']:
@@ -267,7 +351,23 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
     duplicate = find_duplicate_contact(user, c.name, c.phone, exclude_pk=c.pk)
     if duplicate:
         raise ValueError(duplicate_contact_message(duplicate))
-    c.save()
+
+    with transaction.atomic():
+        c.save()
+        if archive_patch['archive']:
+            archive_contact(
+                user,
+                c,
+                reason=archive_patch['archive_reason'],
+                archive_note=archive_patch['archive_note'],
+                reactivation_due_jalali=archive_patch['reactivation_due_jalali'],
+                via_legacy_status=archive_patch['via_legacy_status'],
+            )
+        elif archive_patch['restore']:
+            restore_contact(user, c, restore_status=archive_patch['restore_status'])
+        elif archive_patch['new_status']:
+            update_customer_status(c, archive_patch['new_status'], user=user)
+    c.refresh_from_db()
     return c
 
 

@@ -365,6 +365,8 @@ class ContactDetailView(APIView):
         data = _parse_body(request)
         try:
             c = update_contact(request.user, contact_id, data)
+        except PermissionError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
         if not c:

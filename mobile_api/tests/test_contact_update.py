@@ -1,9 +1,12 @@
 """تست به‌روزرسانی مخاطب با فیلدهای مالی پویا."""
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from workspace.models import Customer
+from workspace.models import CRMAgency, CRMAgencyMember, Customer
+from workspace.services.crm_contact_archive import archive_contact, is_contact_archived
+from workspace.services.crm_sharing import share_customer
 
 User = get_user_model()
 
@@ -104,3 +107,105 @@ class ContactUpdateApiTests(APITestCase):
         self.assertIsNone(resp.json()['data']['lease_deadline'])
         self.customer.refresh_from_db()
         self.assertIsNone(self.customer.lease_deadline)
+
+
+class ContactPatchPermissionTests(APITestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='09121110001', password='test', phone='09121110001')
+        self.viewer = User.objects.create_user(username='09121110002', password='test', phone='09121110002')
+        agency = CRMAgency.objects.create(name='آژانس تست', owner=self.owner)
+        CRMAgencyMember.objects.create(agency=agency, user=self.owner, role='owner', is_active=True)
+        member = CRMAgencyMember.objects.create(agency=agency, user=self.viewer, role='advisor', is_active=True)
+        self.customer = Customer.objects.create(
+            user=self.owner,
+            agency=agency,
+            name='مشترک',
+            phone='09129998877',
+            customer_type='خریدار',
+            status='جدید',
+        )
+        share_customer(self.owner, self.customer, member.pk)
+        token = RefreshToken.for_user(self.viewer)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        self.url = f'/api/mobile/v1/crm/contacts/{self.customer.pk}'
+
+    def _assert_forbidden(self, payload):
+        resp = self.client.patch(self.url, payload, format='json')
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(resp.json()['code'], 'FORBIDDEN')
+
+    def test_non_owner_cannot_patch_city(self):
+        self._assert_forbidden({'city': 'تهران'})
+
+    def test_non_owner_cannot_patch_phone_alt(self):
+        self._assert_forbidden({'phone_alt': '09123334444'})
+
+    def test_non_owner_cannot_patch_budget_max(self):
+        self._assert_forbidden({'budget_max': 9_000_000_000})
+
+    def test_non_owner_cannot_patch_matching_tolerance(self):
+        self._assert_forbidden({'matching_tolerance_percent': 15})
+
+    def test_non_owner_cannot_patch_social_links(self):
+        self._assert_forbidden({'social_links': {'telegram': '@x'}})
+
+
+class ContactArchivePatchApiTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09124445555', password='test', phone='09124445555')
+        token = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        self.customer = Customer.objects.create(
+            user=self.user,
+            name='بایگانی API',
+            phone='09124445555',
+            customer_type='خریدار',
+            status='در حال پیگیری',
+        )
+        self.url = f'/api/mobile/v1/crm/contacts/{self.customer.pk}'
+
+    def test_is_archived_true_without_status(self):
+        resp = self.client.patch(self.url, {'is_archived': True}, format='json')
+        self.assertEqual(resp.status_code, 200)
+        self.customer.refresh_from_db()
+        self.assertTrue(is_contact_archived(self.customer))
+        self.assertEqual(self.customer.status, 'در حال پیگیری')
+
+    def test_patch_fields_with_archive_preserved(self):
+        resp = self.client.patch(
+            self.url,
+            {'city': 'اصفهان', 'is_archived': True},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.city, 'اصفهان')
+        self.assertTrue(is_contact_archived(self.customer))
+
+    def test_restore_legacy_with_restore_status(self):
+        self.customer.status = 'بایگانی'
+        self.customer.archived_at = timezone.now()
+        self.customer.save(update_fields=['status', 'archived_at'])
+        resp = self.client.patch(
+            self.url,
+            {'is_archived': False, 'restore_status': 'جدید'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.customer.refresh_from_db()
+        self.assertFalse(is_contact_archived(self.customer))
+        self.assertEqual(self.customer.status, 'جدید')
+
+    def test_conflicting_archive_restore_rejected(self):
+        archive_contact(self.user, self.customer)
+        resp = self.client.patch(
+            self.url,
+            {'is_archived': False, 'status': 'بایگانی'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 400)
+
+    def test_status_change_on_archived_without_restore_rejected(self):
+        archive_contact(self.user, self.customer)
+        resp = self.client.patch(self.url, {'status': 'قرارداد'}, format='json')
+        self.assertEqual(resp.status_code, 400)

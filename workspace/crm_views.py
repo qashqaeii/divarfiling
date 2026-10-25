@@ -1178,7 +1178,7 @@ class CRMReminderListView(CRMContextMixin, LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         show = self.request.GET.get('show', 'active')
-        qs = reminders_qs(self.request.user).select_related('customer')
+        qs = reminders_qs(self.request.user).select_related('customer', 'property')
         if show == 'done':
             return qs.filter(is_done=True).order_by('-due_at')
         if show == 'all':
@@ -1518,17 +1518,24 @@ class CRMPropertyArchiveView(LoginRequiredMixin, View):
 
         tracking_warning = ''
         reminder_id = None
+        skip_date = bool(payload.get('skip_contract_end'))
+        create_reminder = bool(payload.get('create_reminder', True))
+        contract_raw = (payload.get('contract_end_jalali') or '').strip()
         try:
-            archive_property(request.user, prop, reason=(payload.get('reason') or ''))
-            prop.refresh_from_db()
-            if property_is_rental(prop):
-                skip_date = bool(payload.get('skip_contract_end'))
-                create_reminder = bool(payload.get('create_reminder', True))
-                contract_raw = (payload.get('contract_end_jalali') or '').strip()
-                if skip_date or not contract_raw:
-                    tracking_warning = 'پیگیری تمدید اجاره برای سال بعد تنظیم نشده است.'
-                else:
-                    contract_end = parse_contract_end_jalali(contract_raw)
+            from django.db import transaction
+
+            with transaction.atomic():
+                prop = property_for_user(request.user, property_id)
+                if not prop:
+                    return JsonResponse({'ok': False, 'error': 'ملک یافت نشد'}, status=404)
+                contract_end = None
+                if property_is_rental(prop):
+                    if skip_date or not contract_raw:
+                        tracking_warning = 'پیگیری تمدید اجاره برای سال بعد تنظیم نشده است.'
+                    else:
+                        contract_end = parse_contract_end_jalali(contract_raw)
+                archive_property(request.user, prop, reason=(payload.get('reason') or ''))
+                if property_is_rental(prop) and contract_end is not None:
                     reminder = upsert_renewal_schedule(
                         request.user, prop, contract_end, create_reminder=create_reminder,
                     )

@@ -21,7 +21,9 @@
 
     <ul class="wsh-reminders__list wsh-reminders__list--dense" id="wshRemindersList">
         {% for r in upcoming_reminders %}
-        {% if r.customer %}
+        {% if r.property_id %}
+        {% url 'workspace:crm_property_detail' r.property_id as reminder_target_url %}
+        {% elif r.customer %}
         {% url 'workspace:crm_detail' r.customer.id as reminder_target_url %}
         {% else %}
         {% url 'workspace:crm_reminders' as reminder_target_url %}
@@ -30,7 +32,7 @@
             <span class="wsh-reminders__time">{{ r.due_at|ws_time }}</span>
             <a href="{{ reminder_target_url }}" class="wsh-reminders__main">
                 <span class="wsh-reminders__title">{{ r.title }}</span>
-                {% if r.customer %}<span class="wsh-reminders__contact">{{ r.customer.name }}</span>{% endif %}
+                {% if r.property_id %}<span class="wsh-reminders__contact">{{ r.property.title|truncatechars:24 }}</span>{% elif r.customer %}<span class="wsh-reminders__contact">{{ r.customer.name }}</span>{% endif %}
             </a>
             {% if r.customer and r.customer.phone %}
             <a href="tel:{{ r.customer.phone }}" class="wsh-reminders__act wsh-reminders__act--call" aria-label="تماس با {{ r.customer.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>

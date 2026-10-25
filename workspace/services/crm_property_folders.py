@@ -12,14 +12,19 @@ from workspace.services.crm_property_archive import folder_item_active_property_
 
 CABINET_NONE = 'none'
 
+# ۱۶ رنگ — دو ردیف ۸تایی در مودال (رنگ‌های خنثی + طیف اصلی)
 FOLDER_COLORS = (
     '#6366f1', '#0ea5e9', '#10b981', '#f59e0b',
     '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6',
+    '#f97316', '#84cc16', '#06b6d4', '#a855f7',
+    '#334155', '#64748b', '#94a3b8', '#78716c',
 )
 FOLDER_ICONS = (
     'fa-folder', 'fa-folder-open', 'fa-building', 'fa-city',
     'fa-key', 'fa-star', 'fa-briefcase', 'fa-layer-group',
-    'fa-house-chimney', 'fa-landmark',
+    'fa-house-chimney', 'fa-landmark', 'fa-map-marker-alt', 'fa-store',
+    'fa-warehouse', 'fa-chart-line', 'fa-gem', 'fa-users',
+    'fa-file-contract', 'fa-tree',
 )
 _HEX_COLOR_RE = re.compile(r'^#[0-9a-fA-F]{6}$')
 

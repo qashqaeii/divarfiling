@@ -70,7 +70,7 @@ def _reminder_items(user, today, now) -> List[Dict[str, Any]]:
     qs = (
         reminders_qs(user).filter(is_done=False)
         .filter(due_at__date__lte=today)
-        .select_related('customer')
+        .select_related('customer', 'property')
         .order_by('due_at')
     )
     for r in qs:
@@ -85,12 +85,23 @@ def _reminder_items(user, today, now) -> List[Dict[str, Any]]:
             urgency = 'overdue'
             subtitle = format_jalali_date(due_date)
 
+        property_id = r.property_id
+        property_title = (r.property.title if r.property_id and r.property else '') or ''
+        if property_id:
+            detail_url_name = 'workspace:crm_property_detail'
+        elif r.customer_id:
+            detail_url_name = 'workspace:crm_detail'
+        else:
+            detail_url_name = 'workspace:crm_reminders'
+
         items.append({
             'kind': 'reminder',
             'urgency': urgency,
             'id': f'reminder-{r.pk}',
             'reminder_id': r.pk,
             'customer_id': r.customer_id,
+            'property_id': property_id,
+            'property_title': property_title,
             'customer_name': r.customer.name if r.customer else '',
             'customer_phone': r.customer.phone if r.customer else '',
             'customer_type': r.customer.customer_type if r.customer else '',
@@ -99,7 +110,7 @@ def _reminder_items(user, today, now) -> List[Dict[str, Any]]:
             'subtitle': subtitle,
             'note': sanitize_reminder_note_for_display(r.note or '')[:120],
             'due_at': r.due_at.isoformat(),
-            'detail_url_name': 'workspace:crm_detail' if r.customer_id else 'workspace:crm_reminders',
+            'detail_url_name': detail_url_name,
         })
     return items
 

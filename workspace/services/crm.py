@@ -1362,7 +1362,7 @@ def get_upcoming_reminders(user, limit: int = 8):
     return (
         Reminder.objects
         .filter(user=user, is_done=False)
-        .select_related('customer')
+        .select_related('customer', 'property')
         .order_by('due_at')[:limit]
     )
 
@@ -1596,8 +1596,12 @@ def filter_properties(user, params: dict):
         )
     for field in ('deal_mode', 'transaction_status', 'property_type', 'publish_status'):
         val = params.get(field, '').strip()
-        if val:
-            qs = qs.filter(**{field: val})
+        if not val:
+            continue
+        # «بایگانی» وضعیت معامله نیست — فقط در apply_archive_scope با archived_at تفسیر می‌شود.
+        if field == 'transaction_status' and val == 'بایگانی':
+            continue
+        qs = qs.filter(**{field: val})
     city = params.get('city', '').strip()
     if city:
         qs = qs.filter(city__icontains=city)

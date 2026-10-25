@@ -1,14 +1,17 @@
 <dialog class="crm-zonkan-modal crm-kabinet-modal" id="crmKabinetModal" data-kabinet-modal>
     <form method="dialog" class="crm-zonkan-modal__box" data-kabinet-form>
-        <header class="crm-zonkan-modal__head">
-            <h3 class="crm-zonkan-modal__title"><i class="fas fa-archive"></i> <span data-kabinet-modal-title>کمد جدید</span></h3>
+        <header class="crm-zonkan-modal__head crm-zonkan-modal__head--cabinet">
+            <div class="crm-zonkan-modal__head-main">
+                <span class="crm-zonkan-modal__head-ico" aria-hidden="true"><i class="fas fa-box-archive"></i></span>
+                <h3 class="crm-zonkan-modal__title"><span data-kabinet-modal-title>کمد جدید</span></h3>
+            </div>
             <button type="button" class="crm-zonkan-modal__close" data-kabinet-close aria-label="بستن">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </header>
         <div class="crm-zonkan-modal__body">
             <input type="hidden" data-kabinet-edit-id value="">
-            <label class="crm-label" for="crmKabinetName">نام کمد</label>
+            <label class="crm-label" for="crmKabinetName"><i class="fas fa-tag" aria-hidden="true"></i> نام کمد</label>
             <input type="text" id="crmKabinetName" class="crm-input" maxlength="80" placeholder="مثلاً فروش، اجاره، پروژه‌ها…" required data-kabinet-name data-voice-input="off">
             <label class="crm-label" for="crmKabinetDesc">توضیح <span class="crm-label-optional">(اختیاری)</span></label>
             <input type="text" id="crmKabinetDesc" class="crm-input" maxlength="240" placeholder="توضیح کوتاه" data-kabinet-desc>
@@ -16,14 +19,14 @@
                 <input type="checkbox" data-kabinet-pin>
                 <span><i class="fas fa-thumbtack" aria-hidden="true"></i> سنجاق در ابتدای لیست</span>
             </label>
-            <span class="crm-label">رنگ</span>
-            <div class="crm-zonkan-colors" role="group" aria-label="رنگ کمد">
+            <span class="crm-label crm-zonkan-modal__section-label"><i class="fas fa-palette" aria-hidden="true"></i> رنگ</span>
+            <div class="crm-zonkan-colors crm-zonkan-colors--rich" role="group" aria-label="رنگ کمد">
                 {% for c in cabinet_colors %}
                 <button type="button" class="crm-zonkan-color{% if forloop.first %} is-active{% endif %}" data-kabinet-color="{{ c }}" style="--swatch:{{ c }}" aria-label="رنگ {{ forloop.counter }}"></button>
                 {% endfor %}
             </div>
-            <span class="crm-label">آیکن</span>
-            <div class="crm-zonkan-icons" role="group" aria-label="آیکن کمد">
+            <span class="crm-label crm-zonkan-modal__section-label"><i class="fas fa-shapes" aria-hidden="true"></i> آیکن</span>
+            <div class="crm-zonkan-icons crm-zonkan-icons--rich" role="group" aria-label="آیکن کمد">
                 {% for ic in cabinet_icons %}
                 <button type="button" class="crm-zonkan-icon{% if forloop.first %} is-active{% endif %}" data-kabinet-icon="{{ ic }}" aria-label="{{ ic }}">
                     <i class="fas {{ ic }}" aria-hidden="true"></i>

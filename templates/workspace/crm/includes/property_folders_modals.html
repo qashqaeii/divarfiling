@@ -1,15 +1,18 @@
 {% load workspace_tags static %}
 <dialog class="crm-zonkan-modal" id="crmZonkanModal" data-zonkan-modal>
     <form method="dialog" class="crm-zonkan-modal__box" data-zonkan-form>
-        <header class="crm-zonkan-modal__head">
-            <h3 class="crm-zonkan-modal__title">{% include "workspace/crm/includes/zonkan_brand_icon.html" %} <span data-zonkan-modal-title>زونکن جدید</span></h3>
+        <header class="crm-zonkan-modal__head crm-zonkan-modal__head--folder">
+            <div class="crm-zonkan-modal__head-main">
+                <span class="crm-zonkan-modal__head-ico" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+                <h3 class="crm-zonkan-modal__title"><span data-zonkan-modal-title>زونکن جدید</span></h3>
+            </div>
             <button type="button" class="crm-zonkan-modal__close" data-zonkan-close aria-label="بستن">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </header>
         <div class="crm-zonkan-modal__body">
             <input type="hidden" data-zonkan-edit-id value="">
-            <label class="crm-label" for="crmZonkanName">نام زونکن</label>
+            <label class="crm-label" for="crmZonkanName"><i class="fas fa-tag" aria-hidden="true"></i> نام زونکن</label>
             <input type="text" id="crmZonkanName" class="crm-input" maxlength="80" placeholder="مثلاً برج سپهر، اجاره شمال تهران…" required data-zonkan-name data-voice-input="off">
             <label class="crm-label" for="crmZonkanDesc">توضیح <span class="crm-label-optional">(اختیاری)</span></label>
             <input type="text" id="crmZonkanDesc" class="crm-input" maxlength="240" placeholder="توضیح کوتاه برای یادآوری" data-zonkan-desc>
@@ -24,14 +27,14 @@
                 <option value="{{ cab.id }}">{{ cab.name }}</option>
                 {% endfor %}
             </select>
-            <span class="crm-label">رنگ</span>
-            <div class="crm-zonkan-colors" role="group" aria-label="رنگ زونکن">
+            <span class="crm-label crm-zonkan-modal__section-label"><i class="fas fa-palette" aria-hidden="true"></i> رنگ</span>
+            <div class="crm-zonkan-colors crm-zonkan-colors--rich" role="group" aria-label="رنگ زونکن">
                 {% for c in folder_colors %}
                 <button type="button" class="crm-zonkan-color{% if forloop.first %} is-active{% endif %}" data-zonkan-color="{{ c }}" style="--swatch:{{ c }}" aria-label="رنگ {{ forloop.counter }}"></button>
                 {% endfor %}
             </div>
-            <span class="crm-label">آیکن</span>
-            <div class="crm-zonkan-icons" role="group" aria-label="آیکن زونکن">
+            <span class="crm-label crm-zonkan-modal__section-label"><i class="fas fa-shapes" aria-hidden="true"></i> آیکن</span>
+            <div class="crm-zonkan-icons crm-zonkan-icons--rich" role="group" aria-label="آیکن زونکن">
                 {% for ic in folder_icons %}
                 <button type="button" class="crm-zonkan-icon{% if forloop.first %} is-active{% endif %}" data-zonkan-icon="{{ ic }}" aria-label="{{ ic }}">
                     <i class="fas {{ ic }}" aria-hidden="true"></i>

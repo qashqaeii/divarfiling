@@ -10,8 +10,8 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=7">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=7">
 {% endblock %}
 
 {% block ws_surface_css %}
@@ -138,24 +138,42 @@
     <div class="crm-shell-body">
         {% include 'workspace/crm/includes/property_filing_nav.html' %}
         <nav class="crm-files-archive-tabs" role="tablist" aria-label="نمای فایل‌ها">
-            <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab" aria-label="فایل‌های جاری" aria-selected="{% if archive_scope == 'active' or not request.GET.archive_scope %}true{% else %}false{% endif %}">
-                <span class="crm-files-archive-tab__label">
-                    <span class="crm-files-archive-tab__label-full">فایل‌های جاری</span>
-                    <span class="crm-files-archive-tab__label-short">جاری</span>
+            <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab crm-files-archive-tab--current {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab" aria-label="فایل‌های جاری" aria-selected="{% if archive_scope == 'active' or not request.GET.archive_scope %}true{% else %}false{% endif %}">
+                <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
+                <span class="crm-files-archive-tab__inner">
+                    <span class="crm-files-archive-tab__ico" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                    <span class="crm-files-archive-tab__text">
+                        <span class="crm-files-archive-tab__label">
+                            <span class="crm-files-archive-tab__label-full">فایل‌های جاری</span>
+                            <span class="crm-files-archive-tab__label-short">جاری</span>
+                        </span>
+                        <span class="crm-files-archive-tab__count">{{ stats.total }}</span>
+                    </span>
                 </span>
-                <span class="crm-files-archive-tab__count">{{ stats.total }}</span>
             </a>
-            <a href="?{{ archive_tab_qs.archived }}" class="crm-files-archive-tab {% if archive_scope == 'archived' %}is-active{% endif %}" role="tab" aria-label="بایگانی‌شده" aria-selected="{% if archive_scope == 'archived' %}true{% else %}false{% endif %}">
-                <span class="crm-files-archive-tab__label">
-                    <span class="crm-files-archive-tab__label-full">بایگانی‌شده</span>
-                    <span class="crm-files-archive-tab__label-short">بایگانی</span>
+            <a href="?{{ archive_tab_qs.archived }}" class="crm-files-archive-tab crm-files-archive-tab--archived {% if archive_scope == 'archived' %}is-active{% endif %}" role="tab" aria-label="بایگانی‌شده" aria-selected="{% if archive_scope == 'archived' %}true{% else %}false{% endif %}">
+                <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
+                <span class="crm-files-archive-tab__inner">
+                    <span class="crm-files-archive-tab__ico" aria-hidden="true"><i class="fas fa-box-archive"></i></span>
+                    <span class="crm-files-archive-tab__text">
+                        <span class="crm-files-archive-tab__label">
+                            <span class="crm-files-archive-tab__label-full">بایگانی‌شده</span>
+                            <span class="crm-files-archive-tab__label-short">بایگانی</span>
+                        </span>
+                        <span class="crm-files-archive-tab__count">{{ stats.archived }}</span>
+                    </span>
                 </span>
-                <span class="crm-files-archive-tab__count">{{ stats.archived }}</span>
             </a>
-            <a href="?{{ archive_tab_qs.all }}" class="crm-files-archive-tab {% if archive_scope == 'all' %}is-active{% endif %}" role="tab" aria-label="همه فایل‌ها" aria-selected="{% if archive_scope == 'all' %}true{% else %}false{% endif %}">
-                <span class="crm-files-archive-tab__label">
-                    <span class="crm-files-archive-tab__label-full">همه فایل‌ها</span>
-                    <span class="crm-files-archive-tab__label-short">همه</span>
+            <a href="?{{ archive_tab_qs.all }}" class="crm-files-archive-tab crm-files-archive-tab--all {% if archive_scope == 'all' %}is-active{% endif %}" role="tab" aria-label="همه فایل‌ها" aria-selected="{% if archive_scope == 'all' %}true{% else %}false{% endif %}">
+                <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
+                <span class="crm-files-archive-tab__inner">
+                    <span class="crm-files-archive-tab__ico" aria-hidden="true"><i class="fas fa-table-cells-large"></i></span>
+                    <span class="crm-files-archive-tab__text">
+                        <span class="crm-files-archive-tab__label">
+                            <span class="crm-files-archive-tab__label-full">همه فایل‌ها</span>
+                            <span class="crm-files-archive-tab__label-short">همه</span>
+                        </span>
+                    </span>
                 </span>
             </a>
         </nav>

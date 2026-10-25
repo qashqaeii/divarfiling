@@ -61,14 +61,13 @@ def renewal_followup_date(contract_end: dt.date) -> dt.date:
 
 
 def suggest_contract_end_one_year_after(reference: Optional[dt.date] = None) -> dt.date:
-    """پیشنهاد قابل ویرایش: یازده ماه بعد (یک سال جلالی منهای یک ماه)."""
+    """پیشنهاد قابل ویرایش: یک سال تقویم جلالی بعد از تاریخ مرجع."""
     ref = reference or timezone.now().date()
     j = jdatetime.date.fromgregorian(date=ref)
     y = j.year + 1
     m = j.month
     d = min(j.day, max_jalali_day(y, m))
-    one_year_out = jdatetime.date(y, m, d).togregorian()
-    return subtract_one_jalali_month(one_year_out)
+    return jdatetime.date(y, m, d).togregorian()
 
 
 def get_renewal_reminder(user, prop: CRMProperty) -> Optional[Reminder]:

@@ -42,11 +42,11 @@ class JalaliMonthSubtractTests(TestCase):
         self.assertEqual(j.month, 11)
         self.assertLessEqual(j.day, 30)
 
-    def test_suggest_contract_end_is_eleven_jalali_months_ahead(self):
+    def test_suggest_contract_end_is_one_jalali_year_ahead(self):
         ref = jdatetime.date(1405, 8, 3).togregorian()
         suggested = suggest_contract_end_one_year_after(ref)
         j = jdatetime.date.fromgregorian(date=suggested)
-        self.assertEqual((j.year, j.month, j.day), (1406, 7, 3))
+        self.assertEqual((j.year, j.month, j.day), (1406, 8, 3))
 
 
 class RentalRenewalReminderTests(TestCase):
@@ -105,6 +105,20 @@ class PropertyDetailArchiveUxTests(TestCase):
         self.assertContains(res, 'بایگانی‌شده')
         self.assertContains(res, 'بازگردانی از بایگانی')
         self.assertContains(res, 'معامله: فعال')
+
+    def test_archive_invalid_contract_date_does_not_archive(self):
+        rental = CRMProperty.objects.create(
+            user=self.user, title='ر۲', deal_mode='اجاره', transaction_status='فعال',
+        )
+        url = reverse('workspace:crm_property_archive', kwargs={'property_id': rental.pk})
+        res = self.client.post(
+            url,
+            data=json.dumps({'contract_end_jalali': 'not-a-date'}),
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, 400)
+        rental.refresh_from_db()
+        self.assertIsNone(rental.archived_at)
 
     def test_archive_endpoint_preserves_transaction_status(self):
         rental = CRMProperty.objects.create(

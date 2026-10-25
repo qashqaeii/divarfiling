@@ -113,6 +113,21 @@ class CRMPropertyArchiveFilterTests(TestCase):
         ids = list(filter_properties(self.user, {'archive_scope': 'archived'}).values_list('pk', flat=True))
         self.assertEqual(ids, [self.archived.pk])
 
+    def test_transaction_status_baygani_filter_includes_archived_at_only(self):
+        """فیلتر legacy transaction_status=بایگانی نباید فقط رکوردهای با همان متن وضعیت را بگیرد."""
+        modern = CRMProperty.objects.create(
+            user=self.user,
+            title='بایگانی جدید',
+            deal_mode='فروش',
+            transaction_status='در مذاکره',
+            archived_at=timezone.now(),
+        )
+        ids = list(
+            filter_properties(self.user, {'transaction_status': 'بایگانی'}).values_list('pk', flat=True),
+        )
+        self.assertIn(self.archived.pk, ids)
+        self.assertIn(modern.pk, ids)
+
     def test_archived_not_in_matching_suggestions(self):
         buyer = Customer.objects.create(
             user=self.user, name='خریدار', phone='09120002002', customer_type='خریدار',

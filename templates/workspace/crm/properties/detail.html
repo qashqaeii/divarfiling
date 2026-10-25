@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=6">
 {% if show_nearby_pois %}
@@ -31,7 +31,7 @@
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=19">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=22">
 {% endblock %}
 
 {% block crm_content %}
@@ -144,11 +144,11 @@
                     {% endif %}
                     {# بایگانی — جدا از خوشهٔ اصلی #}
                     {% if property_is_archived %}
-                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--archive" id="crmPropRestoreBtn" {% if not can_edit_property %}disabled title="فقط مشاهده"{% endif %}>
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--archive" id="crmPropRestoreBtn" data-crm-property-restore {% if not can_edit_property %}disabled title="فقط مشاهده"{% endif %}>
                         <i class="fas fa-rotate-left"></i><span>بازگردانی از بایگانی</span>
                     </button>
                     {% elif can_edit_property %}
-                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--archive" id="crmPropArchiveBtn">
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--archive" id="crmPropArchiveBtn" data-crm-property-archive>
                         <i class="fas fa-box-archive"></i><span>بایگانی</span>
                     </button>
                     {% else %}
@@ -403,8 +403,6 @@
                 {% endif %}
             </div>
 
-            {% include 'workspace/crm/includes/property_rental_renewal_panel.html' %}
-
             {% if property_is_shared and not can_edit_property and property_share %}
             <div class="crm-prop-hero-share-view">
                 {% include 'workspace/crm/includes/shared_view_badge.html' with share=property_share %}
@@ -553,6 +551,8 @@
             </p>
             {% endif %}
         </div>
+
+            {% include 'workspace/crm/includes/property_rental_renewal_panel.html' %}
         </div>
     </header>
 
@@ -1223,6 +1223,15 @@
                     <i class="fas fa-paperclip" aria-hidden="true"></i><span>مدرک</span>
                 </button>
                 {% endif %}
+                {% if property_is_archived %}
+                <button type="button" class="ws-crm-pd-mob-more__act ws-crm-pd-mob-more__act--archive" data-crm-property-restore data-crm-pd-more-close {% if not can_edit_property %}disabled title="فقط مشاهده"{% endif %}>
+                    <i class="fas fa-rotate-left" aria-hidden="true"></i><span>بازگردانی</span>
+                </button>
+                {% elif can_edit_property %}
+                <button type="button" class="ws-crm-pd-mob-more__act ws-crm-pd-mob-more__act--archive" data-crm-property-archive data-crm-pd-more-close>
+                    <i class="fas fa-box-archive" aria-hidden="true"></i><span>بایگانی</span>
+                </button>
+                {% endif %}
                 {% if owner_phone and not mask_sensitive %}
                 <a href="{{ owner_phone|phone_wa_href }}" target="_blank" rel="noopener" class="ws-crm-pd-mob-more__act" data-crm-pd-more-close>
                     <i class="fab fa-whatsapp" aria-hidden="true"></i><span>واتساپ مالک</span>
@@ -1853,8 +1862,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).catch(function () { alert('خطا در ارتباط با سرور'); });
     }
 
-    var archiveBtn = document.getElementById('crmPropArchiveBtn');
-    if (archiveBtn) {
+    document.querySelectorAll('[data-crm-property-archive]').forEach(function (archiveBtn) {
         archiveBtn.addEventListener('click', function () {
             if (!IS_RENTAL) {
                 if (!window.confirm('ملک بایگانی شود؟')) return;
@@ -1867,10 +1875,10 @@ document.addEventListener('DOMContentLoaded', function () {
             setArchiveModalMode('archive');
             toggleArchiveModal(true);
         });
-    }
-    var restoreBtn = document.getElementById('crmPropRestoreBtn');
-    if (restoreBtn) {
+    });
+    document.querySelectorAll('[data-crm-property-restore]').forEach(function (restoreBtn) {
         restoreBtn.addEventListener('click', function () {
+            if (restoreBtn.disabled) return;
             if (!window.confirm('ملک از بایگانی بازگردانده شود؟')) return;
             fetch(RESTORE_URL, {
                 method: 'POST',
@@ -1880,7 +1888,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.reload();
             }).catch(function () { alert('خطا در ارتباط با سرور'); });
         });
-    }
+    });
     var renewalEdit = document.getElementById('crmPropRenewalEditBtn');
     if (renewalEdit) {
         renewalEdit.addEventListener('click', function () {

@@ -5172,6 +5172,18 @@ function initCRMPropertyFolders(root) {
         popFolderId = null;
     }
 
+    const previewEl = modal.querySelector('[data-zonkan-preview]');
+    const previewIcon = modal.querySelector('[data-zonkan-preview-icon]');
+    const previewName = modal.querySelector('[data-zonkan-preview-name]');
+
+    function syncZonkanPreview() {
+        if (previewEl) previewEl.style.setProperty('--zonkan-color', selectedColor);
+        if (previewIcon) previewIcon.className = `fas ${selectedIcon}`;
+        const fallback = titleEl?.textContent?.trim() || 'زونکن جدید';
+        const name = nameInput?.value?.trim() || fallback;
+        if (previewName) previewName.textContent = name;
+    }
+
     function setModalSelections(color, icon) {
         selectedColor = color || selectedColor;
         selectedIcon = icon || selectedIcon;
@@ -5181,6 +5193,7 @@ function initCRMPropertyFolders(root) {
         modal.querySelectorAll('[data-zonkan-icon]').forEach((el) => {
             el.classList.toggle('is-active', el.getAttribute('data-zonkan-icon') === selectedIcon);
         });
+        syncZonkanPreview();
     }
 
     function openCreateModal() {
@@ -5272,6 +5285,7 @@ function initCRMPropertyFolders(root) {
             modal.querySelectorAll('[data-zonkan-color]').forEach((el) => el.classList.remove('is-active'));
             btn.classList.add('is-active');
             selectedColor = btn.getAttribute('data-zonkan-color') || selectedColor;
+            syncZonkanPreview();
         });
     });
     modal.querySelectorAll('[data-zonkan-icon]').forEach((btn) => {
@@ -5279,8 +5293,10 @@ function initCRMPropertyFolders(root) {
             modal.querySelectorAll('[data-zonkan-icon]').forEach((el) => el.classList.remove('is-active'));
             btn.classList.add('is-active');
             selectedIcon = btn.getAttribute('data-zonkan-icon') || selectedIcon;
+            syncZonkanPreview();
         });
     });
+    nameInput?.addEventListener('input', syncZonkanPreview);
     section.querySelectorAll('[data-zonkan-create]').forEach((btn) => {
         btn.addEventListener('click', openCreateModal);
     });
@@ -5582,6 +5598,18 @@ function initCRMPropertyCabinets(root) {
         popCabinetId = null;
     }
 
+    const previewEl = modal.querySelector('[data-kabinet-preview]');
+    const previewIcon = modal.querySelector('[data-kabinet-preview-icon]');
+    const previewName = modal.querySelector('[data-kabinet-preview-name]');
+
+    function syncKabinetPreview() {
+        if (previewEl) previewEl.style.setProperty('--zonkan-color', selectedColor);
+        if (previewIcon) previewIcon.className = `fas ${selectedIcon}`;
+        const fallback = titleEl?.textContent?.trim() || 'کمد جدید';
+        const name = nameInput?.value?.trim() || fallback;
+        if (previewName) previewName.textContent = name;
+    }
+
     function setModalSelections(color, icon) {
         selectedColor = color || selectedColor;
         selectedIcon = icon || selectedIcon;
@@ -5591,6 +5619,7 @@ function initCRMPropertyCabinets(root) {
         modal.querySelectorAll('[data-kabinet-icon]').forEach((el) => {
             el.classList.toggle('is-active', el.getAttribute('data-kabinet-icon') === selectedIcon);
         });
+        syncKabinetPreview();
     }
 
     function openCreateModal() {
@@ -5675,6 +5704,7 @@ function initCRMPropertyCabinets(root) {
             modal.querySelectorAll('[data-kabinet-color]').forEach((el) => el.classList.remove('is-active'));
             btn.classList.add('is-active');
             selectedColor = btn.getAttribute('data-kabinet-color') || selectedColor;
+            syncKabinetPreview();
         });
     });
     modal.querySelectorAll('[data-kabinet-icon]').forEach((btn) => {
@@ -5682,8 +5712,10 @@ function initCRMPropertyCabinets(root) {
             modal.querySelectorAll('[data-kabinet-icon]').forEach((el) => el.classList.remove('is-active'));
             btn.classList.add('is-active');
             selectedIcon = btn.getAttribute('data-kabinet-icon') || selectedIcon;
+            syncKabinetPreview();
         });
     });
+    nameInput?.addEventListener('input', syncKabinetPreview);
     section.querySelectorAll('[data-kabinet-create]').forEach((btn) => {
         btn.addEventListener('click', openCreateModal);
     });

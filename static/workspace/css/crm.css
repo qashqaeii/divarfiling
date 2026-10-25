@@ -19077,12 +19077,20 @@ button.crm-prop-hero-cover {
         padding: 0.5rem 0.55rem 0.55rem;
     }
     .crm-prop-renewal-panel__head {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.35rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.35rem 0.5rem;
+    }
+    .crm-prop-renewal-panel__lead {
+        flex: 0 1 auto;
+        min-height: 0;
+        align-items: center;
     }
     .crm-prop-renewal-panel__badge {
-        align-self: flex-start;
+        align-self: center;
+        flex: 0 0 auto;
     }
     .crm-prop-renewal-panel__acts {
         flex-direction: column;

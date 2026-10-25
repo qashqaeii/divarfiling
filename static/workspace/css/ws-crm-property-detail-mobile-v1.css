@@ -12,7 +12,7 @@
 
 @media (max-width: 767px) {
     .crm-prop-detail-mobile.ws-crm-pd-mob.crm-page-chrome {
-        padding-bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
         overflow-x: clip;
         min-width: 0;
     }
@@ -107,7 +107,50 @@
     }
 
     .ws-crm-pd-mob .crm-prop-hero-main {
+        display: block;
         border-bottom: none;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-main .crm-prop-hero-content {
+        display: none !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-renewal-panel {
+        margin: 0;
+        padding: 0.4rem 0.65rem 0.5rem;
+        border: none;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+        background: transparent;
+    }
+
+    .ws-crm-pd-mob .crm-prop-renewal-panel__inner {
+        gap: 0.4rem;
+        padding: 0.5rem 0.55rem 0.55rem;
+        box-shadow: none;
+    }
+
+    .ws-crm-pd-mob .crm-prop-renewal-panel__head {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.35rem 0.5rem;
+    }
+
+    .ws-crm-pd-mob .crm-prop-renewal-panel__lead {
+        flex: 0 1 auto;
+        min-height: 0;
+        align-items: center;
+    }
+
+    .ws-crm-pd-mob .crm-prop-renewal-panel__badge {
+        flex: 0 0 auto;
+        align-self: center;
+    }
+
+    .ws-crm-pd-mob .crm-prop-renewal-panel__acts {
+        padding-top: 0.35rem;
+        margin-top: 0;
     }
 
     .ws-crm-pd-mob .crm-prop-hero-visual {
@@ -1105,18 +1148,20 @@
     }
 
     .ws-crm-pd-mob-more {
-        display: none;
+        display: none !important;
         position: fixed;
         inset: 0;
         z-index: 220;
         align-items: flex-end;
         justify-content: center;
-        padding: 0.75rem;
-        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+        padding: 0.65rem 0.65rem 0;
+        padding-bottom: calc(4.85rem + env(safe-area-inset-bottom, 0px));
+        pointer-events: none;
     }
 
     .ws-crm-pd-mob-more.is-open {
-        display: flex;
+        display: flex !important;
+        pointer-events: auto;
     }
 
     .ws-crm-pd-mob-more__backdrop {
@@ -1175,6 +1220,17 @@
         border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
         background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
         color: var(--ws-primary);
+    }
+
+    .ws-crm-pd-mob-more__act--archive {
+        border-color: color-mix(in srgb, #64748b 22%, var(--ws-border));
+        background: color-mix(in srgb, #64748b 6%, var(--ws-surface));
+        color: var(--ws-text-secondary);
+    }
+
+    .ws-crm-pd-mob-more__act--archive:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
     }
 }
 

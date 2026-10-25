@@ -15,7 +15,11 @@ from workspace.services.formatting import format_toman
 
 
 def _property_suggestion_eligible(prop: CRMProperty) -> bool:
+    from workspace.services.crm_property_archive import is_property_archived
+
     if prop.deleted_at:
+        return False
+    if is_property_archived(prop):
         return False
     if prop.publish_status == 'بایگانی':
         return False

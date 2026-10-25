@@ -5,9 +5,10 @@ import re
 from typing import Any, Dict, List, Optional, Union
 
 from django.db import IntegrityError
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Q
 
 from workspace.models import CRMProperty, CRMPropertyCabinet, CRMPropertyFolder, CRMPropertyFolderItem
+from workspace.services.crm_property_archive import folder_item_active_property_filter
 
 CABINET_NONE = 'none'
 
@@ -88,8 +89,16 @@ def list_property_folders(user, cabinet_id: CabinetFilter = None) -> List[CRMPro
                 qs = qs.filter(cabinet_id=int(cabinet_id))
             except (TypeError, ValueError):
                 pass
+    active_filter = folder_item_active_property_filter('items__property__')
+    archived_filter = Q(items__property__deleted_at__isnull=True) & (
+        Q(items__property__archived_at__isnull=False)
+        | Q(items__property__transaction_status='بایگانی')
+    )
     return list(
-        qs.annotate(property_count=Count('items', distinct=True))
+        qs.annotate(
+            property_count=Count('items__property', distinct=True, filter=active_filter),
+            archived_property_count=Count('items__property', distinct=True, filter=archived_filter),
+        )
         .order_by('-is_pinned', 'sort_order', 'name')
     )
 

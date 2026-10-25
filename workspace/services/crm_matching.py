@@ -972,6 +972,7 @@ def _crm_properties_qs(user):
     from workspace.services.crm_scope import properties_qs
     return properties_qs(user).filter(
         transaction_status__in=['فعال', 'در مذاکره'],
+        archived_at__isnull=True,
     ).exclude(publish_status='بایگانی')
 
 
@@ -1358,7 +1359,11 @@ _REVERSE_SQL_TOLERANCE = MATCHING_TOLERANCE_MAX_PERCENT / 100.0
 
 
 def _property_is_contact_match_eligible(prop: CRMProperty) -> bool:
+    from workspace.services.crm_property_archive import is_property_archived
+
     if getattr(prop, 'deleted_at', None):
+        return False
+    if is_property_archived(prop):
         return False
     if prop.publish_status == 'بایگانی':
         return False

@@ -64,7 +64,7 @@
         {% endif %}
 
         {% if item.note %}
-        <p class="crm-today-task-note">{{ item.note }}</p>
+        <p class="crm-today-task-note">{{ item.note|crm_reminder_note_display }}</p>
         {% endif %}
 
         {% if item.customer_status %}

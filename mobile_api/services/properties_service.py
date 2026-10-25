@@ -416,6 +416,8 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
     prop = property_for_user(user, property_id)
     if not prop:
         return None
+    if not can_edit_property(user, prop):
+        raise PermissionError('امکان ویرایش این ملک را ندارید.')
 
     simple_fields = {
         'title': 'title',
@@ -563,13 +565,18 @@ def change_property_status(user, property_id: int, status: str) -> Optional[CRMP
     prop = property_for_user(user, property_id)
     if not prop:
         return None
+    if not can_edit_property(user, prop):
+        raise PermissionError('امکان ویرایش این ملک را ندارید.')
     update_property_transaction_status(prop, status, user=user)
+    prop.refresh_from_db()
     return prop
 
 
 def soft_delete_property(user, property_id: int) -> bool:
     prop = property_for_user(user, property_id)
     if not prop:
+        return False
+    if not can_edit_property(user, prop):
         return False
     prop.deleted_at = timezone.now()
     prop.save(update_fields=['deleted_at', 'updated_at'])

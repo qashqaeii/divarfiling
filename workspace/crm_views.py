@@ -1347,31 +1347,59 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
             prop.folder_badges = folders_for_property(prop)
         if self.request.GET.get('partial') == '1':
             return ctx
+        from workspace.services.crm_property_archive import (
+            ARCHIVE_SCOPE_ACTIVE,
+            ARCHIVE_SCOPE_ALL,
+            ARCHIVE_SCOPE_ARCHIVED,
+            archived_properties_q,
+        )
+
         props = properties_qs(user)
         filtered = filter_properties(user, self.request.GET)
+        active_props = props.exclude(archived_properties_q())
+        archived_props = props.filter(archived_properties_q())
+        archive_scope = (self.request.GET.get('archive_scope') or ARCHIVE_SCOPE_ACTIVE).strip().lower()
+        ctx['archive_scope'] = archive_scope
+
+        def _tab_qs(scope: str) -> str:
+            pairs = {
+                k: v for k, v in self.request.GET.items()
+                if k not in ('page', 'partial', 'archive_scope') and v
+            }
+            if scope != ARCHIVE_SCOPE_ACTIVE:
+                pairs['archive_scope'] = scope
+            return urlencode(pairs)
+
+        ctx['archive_tab_qs'] = {
+            ARCHIVE_SCOPE_ACTIVE: _tab_qs(ARCHIVE_SCOPE_ACTIVE),
+            ARCHIVE_SCOPE_ARCHIVED: _tab_qs(ARCHIVE_SCOPE_ARCHIVED),
+            ARCHIVE_SCOPE_ALL: _tab_qs(ARCHIVE_SCOPE_ALL),
+        }
         ctx['stats'] = {
-            'total': props.count(),
-            'sale': props.filter(deal_mode='فروش').count(),
-            'rent': props.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).count(),
-            'active': props.filter(transaction_status='فعال').count(),
-            'published': props.filter(publish_status='منتشرشده').count(),
+            'total': active_props.count(),
+            'archived': archived_props.count(),
+            'sale': active_props.filter(deal_mode='فروش').count(),
+            'rent': active_props.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).count(),
+            'active': active_props.filter(transaction_status='فعال').count(),
+            'published': active_props.filter(publish_status='منتشرشده').count(),
         }
         ctx['filtered_count'] = filtered.count()
         ctx['property_form'] = ctx.get('property_form', CRMPropertyForm())
         ctx['open_drawer'] = ctx.get('open_drawer', '')
         ctx['deal_modes'] = PROPERTY_DEAL_MODES
-        ctx['tx_statuses'] = PROPERTY_TX_STATUSES
+        from workspace.constants import PROPERTY_TX_STATUSES_UI
+        ctx['tx_statuses'] = PROPERTY_TX_STATUSES_UI
         ctx['property_types'] = CRM_PROPERTIES
         ctx['publish_statuses'] = PROPERTY_PUBLISH_STATUSES
         ctx['crm_section'] = 'properties'
         ctx['sort'] = self.request.GET.get('sort', '-updated_at')
         ctx['filter_qs'] = urlencode({
             k: v for k, v in self.request.GET.items()
-            if k not in ('view', 'page', 'drawer', 'folder_id', 'cabinet_id', 'partial') and v
+            if k not in ('view', 'page', 'drawer', 'partial') and v
         })
         ctx['has_filters'] = any(self.request.GET.get(k) for k in (
             'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
-            'folder_id', 'cabinet_id',
+            'folder_id', 'cabinet_id', 'archive_scope',
             'parking', 'storage', 'elevator', 'rooms',
             'area_min', 'area_max', 'price_min', 'price_max',
             'year_min', 'year_max', 'age_max',
@@ -1452,76 +1480,188 @@ class CRMPropertyStatusUpdateView(LoginRequiredMixin, View):
             update_property_transaction_status(prop, new_status, user=request.user)
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        except PermissionError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
 
-        # پیشنهاد یادآور سررسید برای فایل‌های رهن/اجاره که به بایگانی منتقل شدند
-        suggest_reminder = False
-        suggested_due_jalali = ''
-        if new_status == 'بایگانی' and prop.deal_mode in ('رهن و اجاره', 'اجاره'):
-            import jdatetime
-            from django.utils import timezone
-            today = timezone.now().date()
-            j = jdatetime.date.fromgregorian(date=today)
-            # یک سال بعد، یک ماه زودتر
-            remind_month = j.month - 1 if j.month > 1 else 12
-            remind_year = j.year + 1 if j.month > 1 else j.year
-            if remind_month <= 6:
-                max_day = 31
-            elif remind_month <= 11:
-                max_day = 30
-            else:
-                max_day = 30 if jdatetime.date(remind_year, 1, 1).isleap() else 29
-            remind_day = min(j.day, max_day)
-            remind_j = jdatetime.date(remind_year, remind_month, remind_day)
-            suggested_due_jalali = f'{remind_j.year}/{remind_j.month:02d}/{remind_j.day:02d}'
-            suggest_reminder = True
-
+        prop.refresh_from_db()
+        from workspace.services.crm_property_archive import is_property_archived
         return JsonResponse({
             'ok': True,
-            'transaction_status': new_status,
+            'transaction_status': prop.transaction_status,
+            'archived': is_property_archived(prop),
             'property_id': prop.pk,
-            'suggest_rental_reminder': suggest_reminder,
-            'suggested_due_jalali': suggested_due_jalali,
+            'suggest_rental_reminder': False,
+            'suggested_due_jalali': '',
         })
 
 
-class CRMPropertyRentalReminderView(LoginRequiredMixin, View):
-    """ایجاد یادآور سررسید اجاره برای فایل‌های رهن/اجاره بایگانی‌شده."""
+class CRMPropertyArchiveView(LoginRequiredMixin, View):
+    """بایگانی تک‌فایل — با گزینه‌های تمدید اجاره."""
 
     def post(self, request, property_id):
-        import jdatetime
-        from workspace.services.jalali_input import parse_jalali_date_string as parse_jalali_date
+        from workspace.services.crm_property_archive import archive_property, is_property_archived
+        from workspace.services.crm_property_rental_renewal import (
+            parse_contract_end_jalali,
+            property_is_rental,
+            upsert_renewal_schedule,
+            renewal_followup_date,
+        )
+        from workspace.services.jalali_input import format_jalali_date
 
         prop = property_for_user(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'ملک یافت نشد'}, status=404)
-        if prop.deal_mode not in ('رهن و اجاره', 'اجاره'):
-            return JsonResponse({'ok': False, 'error': 'فقط برای فایل‌های رهن/اجاره'}, status=400)
+        try:
+            payload = json.loads(request.body.decode('utf-8') or '{}')
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+
+        tracking_warning = ''
+        reminder_id = None
+        try:
+            archive_property(request.user, prop, reason=(payload.get('reason') or ''))
+            prop.refresh_from_db()
+            if property_is_rental(prop):
+                skip_date = bool(payload.get('skip_contract_end'))
+                create_reminder = bool(payload.get('create_reminder', True))
+                contract_raw = (payload.get('contract_end_jalali') or '').strip()
+                if skip_date or not contract_raw:
+                    tracking_warning = 'پیگیری تمدید اجاره برای سال بعد تنظیم نشده است.'
+                else:
+                    contract_end = parse_contract_end_jalali(contract_raw)
+                    reminder = upsert_renewal_schedule(
+                        request.user, prop, contract_end, create_reminder=create_reminder,
+                    )
+                    reminder_id = reminder.pk if reminder else None
+        except PermissionError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+
+        prop.refresh_from_db()
+        follow_jalali = ''
+        if prop.rental_contract_end_date:
+            follow_jalali = format_jalali_date(renewal_followup_date(prop.rental_contract_end_date))
+        return JsonResponse({
+            'ok': True,
+            'archived': is_property_archived(prop),
+            'property_id': prop.pk,
+            'tracking_warning': tracking_warning,
+            'reminder_id': reminder_id,
+            'followup_jalali': follow_jalali,
+        })
+
+
+class CRMPropertyRentalReminderView(LoginRequiredMixin, View):
+    """ثبت/به‌روزرسانی سررسید تمدید اجاره و یادآور مرتبط."""
+
+    def post(self, request, property_id):
+        from workspace.services.crm_property_archive import is_property_archived
+        from workspace.services.crm_property_rental_renewal import (
+            parse_contract_end_jalali,
+            property_is_rental,
+            upsert_renewal_schedule,
+            renewal_followup_date,
+        )
+        from workspace.services.jalali_input import format_jalali_date
+
+        prop = property_for_user(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'ملک یافت نشد'}, status=404)
+        if not can_edit_property(request.user, prop):
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید'}, status=403)
+        if not property_is_rental(prop):
+            return JsonResponse({'ok': False, 'error': 'فقط برای فایل‌های اجاره‌ای'}, status=400)
 
         try:
             payload = json.loads(request.body.decode('utf-8'))
         except (json.JSONDecodeError, UnicodeDecodeError):
             return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
 
-        due_jalali = (payload.get('due_jalali') or '').strip()
-        if not due_jalali:
-            return JsonResponse({'ok': False, 'error': 'تاریخ سررسید الزامی است'}, status=400)
+        contract_raw = (payload.get('contract_end_jalali') or payload.get('due_jalali') or '').strip()
+        create_reminder = bool(payload.get('create_reminder', True))
+        if not contract_raw:
+            return JsonResponse({'ok': False, 'error': 'تاریخ پایان قرارداد الزامی است'}, status=400)
 
-        due_date = parse_jalali_date(due_jalali)
-        if not due_date:
-            return JsonResponse({'ok': False, 'error': 'تاریخ نامعتبر است'}, status=400)
+        try:
+            contract_end = parse_contract_end_jalali(contract_raw)
+            reminder = upsert_renewal_schedule(
+                request.user, prop, contract_end, create_reminder=create_reminder,
+            )
+        except PermissionError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
 
-        from django.utils import timezone
-        import datetime
-        due_dt = timezone.make_aware(datetime.datetime.combine(due_date, datetime.time(9, 0)))
+        follow = renewal_followup_date(contract_end)
+        return JsonResponse({
+            'ok': True,
+            'reminder_id': reminder.pk if reminder else None,
+            'contract_end_jalali': format_jalali_date(contract_end),
+            'followup_jalali': format_jalali_date(follow),
+            'archived': is_property_archived(prop),
+        })
 
-        reminder = Reminder(
-            user=request.user,
-            title=f'سررسید اجاره: {prop.title}',
-            note=f'یک ماه به سررسید اجاره ملک «{prop.title}» مانده است.',
-            due_at=due_dt,
+
+class CRMPropertyBulkArchiveView(LoginRequiredMixin, View):
+    """بایگانی / بازگردانی گروهی فایل‌های شخصی."""
+
+    def post(self, request):
+        from workspace.services.crm_property_archive import (
+            bulk_archive_properties,
+            bulk_restore_properties,
         )
-        reminder.save()
-        return JsonResponse({'ok': True, 'reminder_id': reminder.pk})
+
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+            ids = payload.get('property_ids') or payload.get('ids') or []
+            action = (payload.get('action') or 'archive').strip().lower()
+            reason = (payload.get('reason') or '').strip()
+        else:
+            ids = request.POST.getlist('property_ids') or request.POST.get('ids', '').split(',')
+            action = (request.POST.get('action') or 'archive').strip().lower()
+            reason = (request.POST.get('reason') or '').strip()
+
+        if action == 'restore':
+            result = bulk_restore_properties(request.user, ids)
+            ok_count = result.get('restored', 0)
+            label = 'بازگردانی'
+        else:
+            result = bulk_archive_properties(request.user, ids, reason=reason)
+            ok_count = result.get('archived', 0)
+            label = 'بایگانی'
+
+        if ok_count == 0:
+            return JsonResponse({
+                'ok': False,
+                'error': f'فایلی برای {label} انتخاب نشده یا دسترسی ندارید.',
+                **result,
+            }, status=400)
+        return JsonResponse({
+            'ok': True,
+            'message': f'{ok_count} فایل {label} شد.',
+            **result,
+        })
+
+
+class CRMPropertyRestoreView(LoginRequiredMixin, View):
+    def post(self, request, property_id):
+        from workspace.services.crm_property_archive import restore_property
+
+        prop = property_for_user(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'ملک یافت نشد'}, status=404)
+        try:
+            restore_property(request.user, prop)
+        except PermissionError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        prop.refresh_from_db()
+        return JsonResponse({'ok': True, 'property_id': prop.pk, 'transaction_status': prop.transaction_status})
 
 
 class CRMPropertyPipelineOrderView(LoginRequiredMixin, View):
@@ -1652,7 +1792,8 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['location_accuracy'] = None
             ctx['property_map_has_coords'] = False
             ctx['default_map_center'] = None
-            ctx['property_tx_statuses'] = PROPERTY_TX_STATUSES
+            from workspace.constants import PROPERTY_TX_STATUSES_UI
+            ctx['property_tx_statuses'] = PROPERTY_TX_STATUSES_UI
             return ctx
         ctx['contact_links'] = p.contact_links.select_related('customer').all()
         ctx['activities'] = CustomerActivity.objects.filter(property=p).select_related('customer')[:30]
@@ -1739,7 +1880,8 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['contact_suggestion_text'] = ''
         ctx['contact_suggestion_items'] = []
         ctx['contact_suggested'] = self.request.GET.get('suggested') == '1'
-        ctx['property_tx_statuses'] = PROPERTY_TX_STATUSES
+        from workspace.constants import PROPERTY_TX_STATUSES_UI
+        ctx['property_tx_statuses'] = PROPERTY_TX_STATUSES_UI
         can_suggest_contacts = (
             bool(ctx.get('can_edit_property'))
             and not ctx.get('property_is_deleted')
@@ -1757,24 +1899,27 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 ctx['contact_suggestion_text'] = self.request.session.pop(
                     'crm_last_contact_suggestion_text', '',
                 )
-        if (
-            ctx.get('is_property_owner')
-            and not ctx.get('property_is_deleted')
-            and not ctx.get('mask_sensitive')
-        ):
+        ctx['public_property_share'] = None
+        ctx['public_property_share_url'] = ''
+        ctx['can_show_property_public_share'] = False
+        ctx['public_share_nearby_meta'] = {
+            'has_coords': False,
+            'has_data': False,
+            'can_enable': False,
+        }
+        if not ctx.get('property_is_deleted') and not ctx.get('mask_sensitive'):
             from workspace.services.crm_matching_access import can_create_property_public_link
             from workspace.services.property_public_share import (
                 get_or_create_property_share,
                 property_public_share_url,
             )
-            if not can_create_property_public_link(self.request.user, p):
-                pub_share = None
-            else:
-                pub_share = get_or_create_property_share(self.request.user, p)
-            if not pub_share:
-                ctx['public_property_share'] = None
-                ctx['public_property_share_url'] = ''
-            else:
+            pub_share = None
+            if can_create_property_public_link(self.request.user, p):
+                try:
+                    pub_share = get_or_create_property_share(self.request.user, p)
+                except Exception:
+                    logger.exception('property_public_share_create_failed property_id=%s', p.pk)
+            if pub_share:
                 ctx['public_property_share'] = pub_share
                 ctx['public_property_share_url'] = property_public_share_url(self.request, pub_share)
                 from workspace.services.public_share_common import share_profile_context
@@ -1788,6 +1933,7 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 ctx['share_profile'] = profile
                 from workspace.services.nearby_pois import property_share_nearby_meta
                 ctx['public_share_nearby_meta'] = property_share_nearby_meta(p)
+                ctx['can_show_property_public_share'] = True
 
         from workspace.services.crm_property_folders import FOLDER_COLORS, FOLDER_ICONS, list_property_folders
         ctx['property_folders'] = list_property_folders(self.request.user)
@@ -1894,6 +2040,26 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 ctx['property_deals'] = []
                 ctx['property_deals_total'] = 0
                 ctx['property_active_deals'] = []
+        from workspace.services.crm_property_archive import is_property_archived
+        from workspace.services.crm_property_rental_renewal import (
+            build_renewal_panel,
+            property_is_rental,
+            suggest_contract_end_one_year_after,
+        )
+        from workspace.services.jalali_input import format_jalali_date
+
+        ctx['property_is_archived'] = is_property_archived(p)
+        ctx['property_is_rental'] = property_is_rental(p)
+        ctx['rental_renewal'] = build_renewal_panel(self.request.user, p)
+        if property_is_rental(p):
+            if p.rental_contract_end_date:
+                ctx['rental_contract_end_suggested_jalali'] = format_jalali_date(p.rental_contract_end_date)
+            else:
+                ctx['rental_contract_end_suggested_jalali'] = format_jalali_date(
+                    suggest_contract_end_one_year_after(),
+                )
+        else:
+            ctx['rental_contract_end_suggested_jalali'] = ''
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):

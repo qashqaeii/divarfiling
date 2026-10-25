@@ -1265,6 +1265,8 @@ def get_property_pipeline(user, params: dict | None = None, per_column: int = 50
     )
     rows = []
     for status in PROPERTY_TX_STATUSES:
+        if status == 'بایگانی':
+            continue
         qs = base.filter(transaction_status=status)
         rows.append({
             'status': status,
@@ -1281,10 +1283,16 @@ def update_property_transaction_status(prop: CRMProperty, new_status: str, *, us
 
     from workspace.constants import PROPERTY_TX_STATUSES
     from workspace.models import PropertyContact
+    from workspace.services.crm_property_archive import archive_property
     from workspace.services.crm_scope import properties_qs
 
     if new_status not in PROPERTY_TX_STATUSES:
         raise ValueError('وضعیت نامعتبر')
+    if new_status == 'بایگانی':
+        if user is None:
+            raise ValueError('کاربر الزامی است')
+        archive_property(user, prop, via_legacy_status=True)
+        return
     old_status = prop.transaction_status
     if old_status == new_status:
         return
@@ -1575,9 +1583,11 @@ def filter_contacts(user, params: dict):
 def filter_properties(user, params: dict):
     from datetime import date
 
+    from workspace.services.crm_property_archive import apply_archive_scope
     from workspace.services.filters import _float_param, _int_param
 
     qs = properties_qs(user)
+    qs = apply_archive_scope(qs, params)
     q = params.get('q', '').strip()
     if q:
         qs = qs.filter(
@@ -1598,7 +1608,7 @@ def filter_properties(user, params: dict):
             qs = qs.filter(
                 folder_items__folder_id=int(folder_id),
                 folder_items__folder__user=user,
-            )
+            ).distinct()
         except (TypeError, ValueError):
             pass
     else:

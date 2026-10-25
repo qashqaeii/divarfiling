@@ -1,14 +1,17 @@
 {% load workspace_tags crm_tags %}
-<section class="crm-detail-action-center crm-detail-action-center--property" aria-label="مرکز عملیات">
+<section class="crm-detail-action-center crm-detail-action-center--property" aria-label="پیگیری و کارهای بعدی">
     <header class="crm-detail-action-center__head">
         <div class="crm-detail-action-center__head-main">
-            <span class="crm-detail-action-center__kicker">مرکز عملیات</span>
-            <h2 class="crm-detail-action-center__title">پیگیری و کارهای بعدی</h2>
+            <span class="crm-detail-action-center__title-icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+            <div class="crm-detail-action-center__head-text">
+                <h2 class="crm-detail-action-center__title">پیگیری و کارهای بعدی</h2>
+                <p class="crm-detail-action-center__lede">پیگیری فایل، مخاطبین و اقدام‌های مهم در یک نگاه</p>
+            </div>
         </div>
         {% if follow_up_state == 'overdue' %}
-        <span class="crm-detail-action-center__flag is-warn">پیگیری معوق</span>
+        <span class="crm-detail-action-center__flag is-warn">معوق</span>
         {% elif follow_up_state == 'today' %}
-        <span class="crm-detail-action-center__flag is-accent">اقدام امروز</span>
+        <span class="crm-detail-action-center__flag is-accent">امروز</span>
         {% endif %}
     </header>
 

@@ -31,7 +31,7 @@
                 {% endif %}
             </div>
             {% if r|crm_reminder_show_note %}
-            <p class="crm-rm-note">{{ r.note|truncatechars:120 }}</p>
+            <p class="crm-rm-note">{{ r.note|crm_reminder_note_display|truncatechars:120 }}</p>
             {% endif %}
             {% if r.customer_id or r.token %}
             <div class="crm-rm-chips">

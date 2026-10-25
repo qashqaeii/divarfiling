@@ -1619,13 +1619,21 @@ class PropertyDetailView(APIView):
 
     def patch(self, request, property_id):
         data = _parse_body(request)
-        prop = update_property_from_mobile(request.user, property_id, data)
+        try:
+            prop = update_property_from_mobile(request.user, property_id, data)
+        except PermissionError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
         if not prop:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(property_to_dict(prop, detailed=True, request=request))
 
     def delete(self, request, property_id):
+        from workspace.services.crm_scope import can_edit_property, property_for_user
+
         if not soft_delete_property(request.user, property_id):
+            prop = property_for_user(request.user, property_id)
+            if prop and not can_edit_property(request.user, prop):
+                return api_error('امکان حذف این ملک را ندارید.', code='FORBIDDEN', status=403)
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({})
 
@@ -1867,6 +1875,8 @@ class PropertyStatusView(APIView):
             prop = change_property_status(request.user, property_id, status)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
+        except PermissionError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
         if not prop:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(property_to_dict(prop, detailed=True, request=request))

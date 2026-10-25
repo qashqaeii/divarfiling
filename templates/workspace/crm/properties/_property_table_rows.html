@@ -1,6 +1,6 @@
 {% load workspace_tags crm_tags %}
 {% for p in properties %}
-<tr class="crm-ft-row crm-properties-table__row" style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }};" data-href="{% url 'workspace:crm_property_detail' p.id %}" data-property-id="{{ p.id }}" data-prop-folder-ids="{% for item in p.folder_items.all %}{{ item.folder_id }}{% if not forloop.last %},{% endif %}{% endfor %}">
+<tr class="crm-ft-row crm-properties-table__row" style="--tx-accent: {{ p|property_display_status|crm_tx_status_dot }};" data-href="{% url 'workspace:crm_property_detail' p.id %}" data-property-id="{{ p.id }}" data-prop-folder-ids="{% for item in p.folder_items.all %}{{ item.folder_id }}{% if not forloop.last %},{% endif %}{% endfor %}">
     <td class="crm-ft-td-check" data-label="انتخاب">
         <input type="checkbox" class="crm-checkbox crm-prop-row-check" value="{{ p.id }}" aria-label="انتخاب {{ p.title }}">
     </td>
@@ -29,7 +29,7 @@
         </div>
     </td>
     <td class="crm-properties-table__cell--stage" data-label="مرحله">
-        <span class="crm-ft-stage crm-properties-table__stage-badge"><span class="crm-ft-stage-dot" aria-hidden="true"></span>{{ p.transaction_status }}</span>
+        <span class="crm-ft-stage crm-properties-table__stage-badge{% if p|property_is_archived_flag %} crm-ft-stage--archived{% endif %}"><span class="crm-ft-stage-dot" aria-hidden="true"></span>{{ p|property_display_status }}</span>
     </td>
     <td class="crm-ft-td-specs crm-properties-table__cell--specs" data-label="مشخصات">
         <div class="crm-properties-table__specs">

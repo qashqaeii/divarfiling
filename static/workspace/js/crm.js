@@ -5921,6 +5921,9 @@ function initCRMPropertyFolderAssign(root) {
     const confirmText = scope.getElementById('crmPropBulkDeleteText');
     const confirmCancel = scope.getElementById('crmPropBulkDeleteCancel');
     const confirmBtn = scope.getElementById('crmPropBulkDeleteConfirmBtn');
+    const archiveBtn = scope.getElementById('crmPropBulkArchive');
+    const restoreBtn = scope.getElementById('crmPropBulkRestore');
+    const archiveScope = window.crmPropertyArchiveScope || 'active';
     const checks = () => [...scope.querySelectorAll('.crm-prop-row-check')];
 
     let assignMode = 'single';
@@ -5943,6 +5946,12 @@ function initCRMPropertyFolderAssign(root) {
                 : `این ${n} فایل از لیست شما حذف می‌شوند. این کار قابل بازگشت نیست.`;
         }
     }
+
+    function syncArchiveBulkButtons() {
+        if (archiveBtn) archiveBtn.hidden = archiveScope === 'archived';
+        if (restoreBtn) restoreBtn.hidden = archiveScope !== 'archived';
+    }
+    syncArchiveBulkButtons();
 
     function updateBulkBar() {
         const n = selectedIds().length;
@@ -6124,6 +6133,43 @@ function initCRMPropertyFolderAssign(root) {
     confirmCancel?.addEventListener('click', () => {
         if (deleteBusy) return;
         setDeleteConfirm(false);
+    });
+
+    async function postBulkArchiveAction(action) {
+        const ids = selectedIds();
+        if (!ids.length) return;
+        const url = window.crmPropertyBulkArchiveUrl || '/workspace/crm/properties/bulk-archive/';
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({ property_ids: ids.map(Number), action }),
+        });
+        const data = await crmParseJsonResponse(resp);
+        if (!data.ok) throw new Error(data.error || 'عملیات انجام نشد');
+        window.location.reload();
+    }
+
+    archiveBtn?.addEventListener('click', async () => {
+        if (!selectedIds().length) return;
+        if (!window.confirm('فایل‌های انتخاب‌شده بایگانی شوند؟')) return;
+        try {
+            await postBulkArchiveAction('archive');
+        } catch (err) {
+            window.alert(err.message || 'بایگانی انجام نشد');
+        }
+    });
+
+    restoreBtn?.addEventListener('click', async () => {
+        if (!selectedIds().length) return;
+        if (!window.confirm('فایل‌های انتخاب‌شده از بایگانی بازگردانده شوند؟')) return;
+        try {
+            await postBulkArchiveAction('restore');
+        } catch (err) {
+            window.alert(err.message || 'بازگردانی انجام نشد');
+        }
     });
 
     confirmBtn?.addEventListener('click', async () => {

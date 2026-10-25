@@ -834,6 +834,10 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
         'created_at': p.created_at.isoformat() if p.created_at else None,
         'updated_at': p.updated_at.isoformat() if p.updated_at else None,
     }
+    from workspace.services.crm_property_archive import is_property_archived
+
+    data['is_archived'] = is_property_archived(p)
+    data['archived_at'] = p.archived_at.isoformat() if p.archived_at else None
     from workspace.services.crm_property_folders import folders_for_property
     data['folders'] = folders_for_property(p)
     if detailed:

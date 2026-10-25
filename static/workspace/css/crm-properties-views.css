@@ -789,3 +789,138 @@
         border-radius: 12px;
     }
 }
+
+/* ── Archive scope tabs (جاری / بایگانی / همه) ── */
+.crm-properties-page .crm-files-archive-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.35rem;
+    width: 100%;
+    margin: 0 0 0.65rem;
+    padding: 0.2rem;
+    border-radius: 12px;
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border-light);
+    box-sizing: border-box;
+}
+
+.crm-properties-page .crm-files-archive-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 38px;
+    padding: 0.45rem 0.65rem;
+    border-radius: 9px;
+    text-decoration: none;
+    color: var(--ws-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+    white-space: nowrap;
+    transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+.crm-properties-page .crm-files-archive-tab:hover {
+    color: var(--ws-text);
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.crm-properties-page .crm-files-archive-tab.is-active {
+    color: var(--ws-primary);
+    background: var(--ws-surface);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+.crm-properties-page .crm-files-archive-tab__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.crm-properties-page .crm-files-archive-tab__label-short {
+    display: none;
+}
+
+.crm-properties-page .crm-files-archive-tab__count {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    padding: 0.08rem 0.38rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    background: rgba(15, 23, 42, 0.06);
+    color: var(--ws-text-muted);
+}
+
+.crm-properties-page .crm-files-archive-tab.is-active .crm-files-archive-tab__count {
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--ws-primary);
+}
+
+.crm-properties-page .crm-files-pill--archived {
+    background: #f8fafc;
+    color: #64748b;
+    border-color: #cbd5e1;
+}
+
+.crm-properties-page .crm-files-pill--meta {
+    background: transparent;
+    color: var(--ws-text-muted);
+    border-color: var(--ws-border-light);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .crm-properties-page .crm-files-archive-tabs {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.28rem;
+        padding: 0.28rem;
+        border-radius: 14px;
+    }
+
+    .crm-properties-page .crm-files-archive-tab {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        min-height: 52px;
+        padding: 0.45rem 0.35rem;
+        font-size: 0.68rem;
+        line-height: 1.2;
+        white-space: normal;
+    }
+
+    .crm-properties-page .crm-files-archive-tab__label-full {
+        display: none;
+    }
+
+    .crm-properties-page .crm-files-archive-tab__label-short {
+        display: block;
+        font-weight: 800;
+        font-size: 0.68rem;
+        text-align: center;
+    }
+
+    .crm-properties-page .crm-files-archive-tab__count {
+        min-width: 1.55rem;
+        padding: 0.12rem 0.42rem;
+        font-size: 0.72rem;
+    }
+
+    .crm-properties-page .crm-files-archive-tab.is-active {
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+    }
+}

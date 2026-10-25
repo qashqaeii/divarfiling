@@ -1,7 +1,7 @@
 {% load workspace_tags crm_tags %}
 {% for p in properties %}
 <article class="crm-files-card crm-files-mcard crm-properties-card {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}"
-         style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }}; --deal-mode-accent: {% if p.deal_mode == 'فروش' %}#2563eb{% else %}#0f766e{% endif %};"
+         style="--tx-accent: {{ p|property_display_status|crm_tx_status_dot }}; --deal-mode-accent: {% if p.deal_mode == 'فروش' %}#2563eb{% else %}#0f766e{% endif %};"
          aria-label="{{ p.title }}"
          data-property-id="{{ p.id }}"
          data-prop-folder-ids="{% for item in p.folder_items.all %}{{ item.folder_id }}{% if not forloop.last %},{% endif %}{% endfor %}">
@@ -34,7 +34,13 @@
 
     <div class="crm-files-card-tags crm-properties-card__meta">
         <span class="crm-files-pill crm-files-pill--deal">{{ p.deal_mode }}</span>
-        <span class="crm-files-pill crm-files-pill--status">{{ p.transaction_status }}</span>
+        <span class="crm-files-pill crm-files-pill--status{% if p|property_is_archived_flag %} crm-files-pill--archived{% endif %}">{{ p|property_display_status }}</span>
+        {% if p|property_is_archived_flag %}
+        <span class="crm-files-pill crm-files-pill--meta" title="وضعیت معامله">معامله: {{ p.transaction_status }}</span>
+        {% if p.rental_contract_end_date and p.deal_mode != 'فروش' and p.deal_mode != 'پیش‌فروش' %}
+        <span class="crm-files-pill crm-files-pill--meta" title="پایان قرارداد اجاره">{{ p.rental_contract_end_date|ws_jalali_date }}</span>
+        {% endif %}
+        {% endif %}
         {% if p.is_vacant %}
         <span class="crm-files-pill crm-files-pill--vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>
         {% endif %}

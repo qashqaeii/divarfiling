@@ -5,9 +5,10 @@ import re
 from typing import Any, Dict, List, Optional, Union
 
 from django.db import IntegrityError
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Q
 
 from workspace.models import CRMPropertyCabinet, CRMPropertyFolder
+from workspace.services.crm_property_archive import folder_item_active_property_filter
 
 FOLDER_COLORS = (
     '#6366f1', '#0ea5e9', '#10b981', '#f59e0b',
@@ -59,11 +60,19 @@ def _validate_folder_cabinet_user(folder: CRMPropertyFolder, cabinet: CRMPropert
 
 
 def list_property_cabinets(user) -> List[CRMPropertyCabinet]:
+    active_filter = folder_item_active_property_filter('folders__items__property__')
+    archived_filter = Q(folders__items__property__deleted_at__isnull=True) & (
+        Q(folders__items__property__archived_at__isnull=False)
+        | Q(folders__items__property__transaction_status='بایگانی')
+    )
     return list(
         CRMPropertyCabinet.objects.filter(user=user)
         .annotate(
             folder_count=Count('folders', distinct=True),
-            property_count=Count('folders__items__property', distinct=True),
+            property_count=Count('folders__items__property', distinct=True, filter=active_filter),
+            archived_property_count=Count(
+                'folders__items__property', distinct=True, filter=archived_filter,
+            ),
         )
         .order_by('-is_pinned', 'sort_order', 'name')
     )

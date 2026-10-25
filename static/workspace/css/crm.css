@@ -18142,19 +18142,26 @@ html.mk-theme-dark .crm-lease-date-input {
     display: grid;
     grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
     gap: 0;
+    align-items: stretch;
     border-bottom: 1px solid var(--ws-border-light);
 }
 .crm-prop-hero-visual {
     position: relative;
     min-height: 168px;
+    overflow: hidden;
     background: linear-gradient(160deg, var(--crm-hero-accent-soft), var(--ws-surface-2));
     border-inline-end: 1px solid var(--ws-border-light);
+}
+.crm-prop-hero-visual .crm-prop-hero-cover:not(.crm-prop-hero-cover--empty) {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
 }
 .crm-prop-hero-cover {
     display: block;
     width: 100%;
     height: 100%;
-    min-height: 168px;
+    min-height: 0;
     overflow: hidden;
     padding: 0;
     border: 0;
@@ -18180,8 +18187,9 @@ button.crm-prop-hero-cover {
 .crm-prop-hero-cover img {
     width: 100%;
     height: 100%;
-    min-height: 168px;
+    min-height: 0;
     object-fit: cover;
+    object-position: center;
     transition: transform 0.35s ease;
 }
 .crm-prop-hero-cover:hover img { transform: scale(1.04); }
@@ -18189,6 +18197,7 @@ button.crm-prop-hero-cover {
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 168px;
     color: var(--crm-hero-accent);
     font-size: 2rem;
     opacity: 0.45;
@@ -18197,6 +18206,7 @@ button.crm-prop-hero-cover {
     position: absolute;
     top: 0.5rem;
     inset-inline-start: 0.5rem;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
@@ -18212,6 +18222,7 @@ button.crm-prop-hero-cover {
     position: absolute;
     bottom: 0.5rem;
     inset-inline-end: 0.5rem;
+    z-index: 1;
     padding: 0.22rem 0.55rem;
     border-radius: 999px;
     font-size: 0.6rem;
@@ -18491,6 +18502,600 @@ button.crm-prop-hero-cover {
     color: #92400e;
 }
 
+/* Rental renewal (archived rent files) */
+.crm-prop-renewal-panel {
+    position: relative;
+    margin: 0;
+    padding: 0.5rem 0.75rem 0.6rem;
+    border-bottom: 1px solid var(--ws-border-light);
+    background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
+    font-family: 'Vazirmatn', var(--ws-font-family, system-ui), sans-serif;
+}
+.crm-prop-renewal-panel :is(button, a) {
+    font-family: inherit;
+    font-feature-settings: inherit;
+}
+.crm-prop-renewal-panel__glow {
+    display: none;
+}
+.crm-prop-renewal-panel__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.55rem 0.65rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background: var(--ws-surface);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ws-text) 3%, transparent);
+}
+.crm-prop-renewal-panel__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem 0.75rem;
+}
+.crm-prop-renewal-panel__lead {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    min-width: 0;
+    flex: 1 1 12rem;
+}
+.crm-prop-renewal-panel__icon {
+    flex-shrink: 0;
+    width: 1.85rem;
+    height: 1.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    font-size: 0.75rem;
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border-light));
+    box-shadow: none;
+}
+.crm-prop-renewal-panel__titles h2 {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 750;
+    color: var(--ws-text);
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+}
+.crm-prop-renewal-panel__hint {
+    margin: 0.15rem 0 0;
+    font-size: 0.62rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--ws-text-secondary);
+    max-width: 28rem;
+}
+.crm-prop-renewal-panel__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.2rem 0.48rem;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: #1d4ed8;
+    background: color-mix(in srgb, #3b82f6 10%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, #3b82f6 22%, var(--ws-border-light));
+}
+.crm-prop-renewal-panel__badge--warn {
+    color: #b45309;
+    background: color-mix(in srgb, #f59e0b 12%, var(--ws-surface));
+    border-color: color-mix(in srgb, #f59e0b 28%, var(--ws-border-light));
+}
+.crm-prop-renewal-panel--overdue .crm-prop-renewal-panel__badge {
+    color: #b91c1c;
+    background: color-mix(in srgb, #ef4444 10%, var(--ws-surface));
+    border-color: color-mix(in srgb, #ef4444 25%, var(--ws-border-light));
+}
+.crm-prop-renewal-panel--today .crm-prop-renewal-panel__badge {
+    color: #b45309;
+    background: color-mix(in srgb, #f59e0b 14%, var(--ws-surface));
+    border-color: color-mix(in srgb, #f59e0b 30%, var(--ws-border-light));
+}
+.crm-prop-renewal-panel__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+    overflow: hidden;
+}
+.crm-prop-renewal-panel__connector {
+    display: none;
+}
+.crm-prop-renewal-step {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    padding: 0.38rem 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+}
+.crm-prop-renewal-step:last-child {
+    border-bottom: none;
+}
+.crm-prop-renewal-step__dot {
+    width: 1.45rem;
+    height: 1.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    background: var(--ws-surface);
+    border: 1px solid var(--ws-border-light);
+}
+.crm-prop-renewal-step.is-done .crm-prop-renewal-step__dot {
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border-light));
+}
+.crm-prop-renewal-step.is-complete .crm-prop-renewal-step__dot {
+    color: #047857;
+    background: color-mix(in srgb, #10b981 10%, var(--ws-surface));
+    border-color: color-mix(in srgb, #10b981 22%, var(--ws-border-light));
+}
+.crm-prop-renewal-step.is-pending .crm-prop-renewal-step__dot {
+    opacity: 0.7;
+}
+.crm-prop-renewal-step__lbl {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    text-align: start;
+}
+.crm-prop-renewal-step__val {
+    font-size: 0.7rem;
+    font-weight: 750;
+    color: var(--ws-text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    text-align: end;
+}
+.crm-prop-renewal-panel__empty {
+    margin: 0;
+}
+.crm-prop-renewal-panel__empty-msg {
+    margin: 0;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.64rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--ws-text-secondary);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-surface));
+}
+.crm-prop-renewal-panel__acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem 0.5rem;
+    margin-top: 0.05rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+}
+.crm-prop-renewal-panel__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.32rem;
+    padding: 0.38rem 0.75rem;
+    border: none;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    color: #fff;
+    background: var(--ws-primary);
+    box-shadow: none;
+    transition: background 0.12s, transform 0.12s;
+}
+.crm-prop-renewal-panel__cta:hover {
+    filter: brightness(1.06);
+    transform: none;
+}
+.crm-prop-renewal-panel__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ws-primary);
+    text-decoration: none;
+}
+.crm-prop-renewal-panel__link:hover {
+    text-decoration: underline;
+}
+/* Archive / rental renewal modal */
+.rrd-backdrop,
+.crm-prop-archive-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--ws-modal-z, 1000) + 40);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: crmArchiveBackdropIn 0.2s ease;
+}
+.rrd-backdrop[hidden],
+.crm-prop-archive-backdrop[hidden] {
+    display: none;
+}
+@keyframes crmArchiveBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.crm-prop-archive-modal.rrd-card {
+    position: relative;
+    width: min(100%, 26.5rem);
+    max-height: min(92dvh, 40rem);
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, #7c3aed 14%, var(--ws-border-light));
+    background: var(--ws-surface);
+    box-shadow:
+        0 24px 64px rgba(15, 23, 42, 0.22),
+        0 8px 24px rgba(15, 23, 42, 0.08);
+    direction: rtl;
+    text-align: right;
+    font-family: 'Vazirmatn', var(--ws-font-family, system-ui), sans-serif;
+    font-feature-settings: 'ss01';
+    animation: crmArchiveModalIn 0.24s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.crm-prop-archive-modal.rrd-card :is(
+    button,
+    input,
+    textarea,
+    select,
+    label
+) {
+    font-family: inherit;
+    font-feature-settings: inherit;
+}
+.crm-prop-archive-modal__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.55rem 0.65rem 0;
+}
+@keyframes crmArchiveModalIn {
+    from { transform: translateY(18px) scale(0.98); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.crm-prop-archive-modal__glow {
+    position: absolute;
+    inset-inline-start: -3rem;
+    top: -3rem;
+    width: 10rem;
+    height: 10rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, #7c3aed 22%, transparent) 0%, transparent 72%);
+    pointer-events: none;
+}
+.crm-prop-archive-modal.is-renewal-only .crm-prop-archive-modal__glow {
+    background: radial-gradient(circle, color-mix(in srgb, #059669 20%, transparent) 0%, transparent 72%);
+}
+.crm-prop-archive-modal__close {
+    position: static;
+    flex-shrink: 0;
+    width: 2.1rem;
+    height: 2.1rem;
+    margin: 0;
+    border: none;
+    border-radius: 10px;
+    background: var(--ws-surface-2);
+    color: var(--ws-text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: background 0.12s, color 0.12s, transform 0.12s;
+}
+.crm-prop-archive-modal__close:hover {
+    background: var(--ws-border-light);
+    color: var(--ws-text);
+}
+.crm-prop-archive-modal__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.35rem 1.15rem 0.85rem;
+    border-bottom: 1px solid var(--ws-border-light);
+    background: linear-gradient(
+        160deg,
+        color-mix(in srgb, #7c3aed 7%, var(--ws-surface)) 0%,
+        var(--ws-surface) 55%
+    );
+}
+.crm-prop-archive-modal.is-renewal-only .crm-prop-archive-modal__head {
+    background: linear-gradient(
+        160deg,
+        color-mix(in srgb, #059669 7%, var(--ws-surface)) 0%,
+        var(--ws-surface) 55%
+    );
+}
+.crm-prop-archive-modal__icon {
+    flex-shrink: 0;
+    width: 2.65rem;
+    height: 2.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    color: #6d28d9;
+    background: color-mix(in srgb, #7c3aed 12%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, #7c3aed 22%, var(--ws-border-light));
+    box-shadow: 0 4px 14px color-mix(in srgb, #7c3aed 18%, transparent);
+}
+.crm-prop-archive-modal.is-renewal-only .crm-prop-archive-modal__icon {
+    color: #047857;
+    background: color-mix(in srgb, #10b981 12%, var(--ws-surface));
+    border-color: color-mix(in srgb, #10b981 25%, var(--ws-border-light));
+    box-shadow: 0 4px 14px color-mix(in srgb, #10b981 16%, transparent);
+}
+.crm-prop-archive-modal__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--ws-text);
+}
+.crm-prop-archive-modal__subtitle {
+    margin: 0.35rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--ws-text-muted);
+}
+.crm-prop-archive-modal__body {
+    padding: 0.9rem 1.15rem 0.25rem;
+}
+.crm-prop-archive-flow {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-bottom: 0.85rem;
+    padding: 0.45rem 0.5rem;
+    border-radius: 12px;
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border-light);
+}
+.crm-prop-archive-flow__step {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.12rem;
+    font-size: 0.52rem;
+    font-weight: 800;
+    color: var(--ws-text-muted);
+    text-align: center;
+    line-height: 1.25;
+}
+.crm-prop-archive-flow__step i {
+    font-size: 0.62rem;
+    opacity: 0.85;
+}
+.crm-prop-archive-flow__step.is-on {
+    color: #6d28d9;
+}
+.crm-prop-archive-flow__line {
+    flex: 0 0 0.45rem;
+    height: 2px;
+    border-radius: 1px;
+    background: linear-gradient(90deg, var(--ws-border), color-mix(in srgb, #7c3aed 35%, var(--ws-border)));
+}
+.crm-prop-archive-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+.crm-prop-archive-field__label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--ws-text);
+}
+.crm-prop-archive-field__input.crm-input {
+    width: 100%;
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    border-radius: 12px;
+}
+.crm-prop-archive-modal .crm-prop-archive-field__input[data-jdp] {
+    cursor: pointer;
+}
+.crm-prop-archive-field__hint {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+.crm-prop-archive-reminder {
+    margin-bottom: 0.55rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, #7c3aed 18%, var(--ws-border-light));
+    background: color-mix(in srgb, #7c3aed 4%, var(--ws-surface));
+}
+.crm-prop-archive-reminder__toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    cursor: pointer;
+    margin: 0;
+}
+.crm-prop-archive-reminder__input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+.crm-prop-archive-reminder__box {
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.1rem;
+    border-radius: 6px;
+    border: 2px solid color-mix(in srgb, #7c3aed 35%, var(--ws-border));
+    background: var(--ws-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    color: transparent;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.crm-prop-archive-reminder__input:checked + .crm-prop-archive-reminder__box {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    border-color: #6d28d9;
+    color: #fff;
+}
+.crm-prop-archive-reminder__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+.crm-prop-archive-reminder__text strong {
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--ws-text);
+}
+.crm-prop-archive-reminder__text small {
+    font-size: 0.62rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--ws-text-muted);
+}
+.crm-prop-archive-skip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.15rem 0 0;
+    padding: 0.25rem 0.15rem;
+    border: none;
+    background: transparent;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.crm-prop-archive-skip:hover {
+    color: #b45309;
+}
+.crm-prop-archive-modal.is-renewal-only .crm-prop-archive-skip {
+    display: none;
+}
+.crm-prop-archive-modal__foot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1.15rem 1.1rem;
+    border-top: 1px solid var(--ws-border-light);
+    background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+}
+.crm-prop-archive-btn {
+    width: 100%;
+    min-height: 2.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 12px;
+    border: none;
+    font-family: inherit;
+    font-feature-settings: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s, filter 0.12s;
+}
+.crm-prop-archive-btn:active {
+    transform: scale(0.98);
+}
+.crm-prop-archive-btn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    box-shadow: 0 4px 16px color-mix(in srgb, #7c3aed 38%, transparent);
+}
+.crm-prop-archive-modal.is-renewal-only .crm-prop-archive-btn--primary {
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 16px color-mix(in srgb, #059669 35%, transparent);
+}
+.crm-prop-archive-btn--primary:hover {
+    filter: brightness(1.04);
+}
+.crm-prop-archive-btn--ghost {
+    color: var(--ws-text-muted);
+    background: transparent;
+    border: 1px solid var(--ws-border-light);
+}
+.crm-prop-archive-btn--ghost:hover {
+    background: var(--ws-surface-2);
+    color: var(--ws-text);
+}
+
+#modal-property-share.ws-modal {
+    z-index: calc(var(--ws-modal-z, 1000) + 130);
+}
+
+@media (max-width: 640px) {
+    .crm-prop-renewal-panel {
+        padding: 0.45rem 0.55rem 0.55rem;
+    }
+    .crm-prop-renewal-panel__inner {
+        padding: 0.5rem 0.55rem 0.55rem;
+    }
+    .crm-prop-renewal-panel__head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+    }
+    .crm-prop-renewal-panel__badge {
+        align-self: flex-start;
+    }
+    .crm-prop-renewal-panel__acts {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .crm-prop-renewal-panel__cta {
+        width: 100%;
+    }
+    .crm-prop-renewal-panel__link {
+        justify-content: center;
+    }
+}
+
 .crm-prop-hero-gallery {
     display: flex;
     gap: 0.4rem;
@@ -18704,13 +19309,17 @@ button.crm-prop-hero-cover {
     }
     .crm-prop-hero-visual {
         min-height: 140px;
+        height: clamp(140px, 42vw, 200px);
+        max-height: 200px;
         border-inline-end: none;
         border-bottom: 1px solid var(--ws-border-light);
     }
-    .crm-prop-hero-cover,
-    .crm-prop-hero-cover img {
+    .crm-prop-hero-visual .crm-prop-hero-cover:not(.crm-prop-hero-cover--empty) {
+        position: absolute;
+        inset: 0;
+    }
+    .crm-prop-hero-cover--empty {
         min-height: 140px;
-        max-height: 180px;
     }
     .crm-prop-hero-kpis {
         grid-template-columns: repeat(2, minmax(0, 1fr));

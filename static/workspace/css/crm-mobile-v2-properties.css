@@ -848,12 +848,25 @@
         padding: 0;
     }
 
-    .rrd-card {
+    .rrd-card.crm-prop-archive-modal {
         width: 100%;
         max-width: 100%;
+        max-height: min(88dvh, 40rem);
         border-radius: 20px 20px 0 0;
-        padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
         animation: none;
+    }
+
+    .crm-prop-archive-modal__foot {
+        padding-bottom: max(1.1rem, env(safe-area-inset-bottom, 1.1rem));
+    }
+
+    .crm-prop-archive-flow {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .crm-prop-archive-flow__line {
+        display: none;
     }
 
     .rrd-btn {

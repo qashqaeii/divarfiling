@@ -614,6 +614,16 @@ class CRMProperty(models.Model):
     tenant_name = models.CharField(max_length=200, blank=True, verbose_name='نام مستاجر')
     notes = models.TextField(blank=True, verbose_name='یادداشت')
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان حذف')
+    archived_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان بایگانی')
+    archive_reason = models.CharField(
+        max_length=500, blank=True, default='', verbose_name='دلیل بایگانی',
+    )
+    pre_archive_transaction_status = models.CharField(
+        max_length=30, blank=True, default='', verbose_name='وضعیت معامله قبل از بایگانی',
+    )
+    rental_contract_end_date = models.DateField(
+        null=True, blank=True, verbose_name='تاریخ پایان قرارداد اجاره',
+    )
     pipeline_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب کانبان')
     next_follow_up = models.DateField(null=True, blank=True, verbose_name='پیگیری بعدی')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -833,6 +843,13 @@ class Reminder(models.Model):
     note = models.TextField(blank=True, verbose_name='یادداشت')
     due_at = models.DateTimeField(verbose_name='سررسید')
     token = models.CharField(max_length=100, blank=True, verbose_name='شناسه آگهی')
+    property = models.ForeignKey(
+        'CRMProperty', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='reminders', verbose_name='ملک',
+    )
+    reminder_kind = models.CharField(
+        max_length=40, blank=True, default='', verbose_name='نوع یادآور',
+    )
     is_done = models.BooleanField(default=False, verbose_name='انجام شده')
     recurrence = models.CharField(
         max_length=20, choices=REMINDER_RECURRENCE,

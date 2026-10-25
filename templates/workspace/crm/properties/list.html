@@ -11,7 +11,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=7">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=6">
 {% endblock %}
 
 {% block ws_surface_css %}
@@ -137,8 +137,31 @@
 
     <div class="crm-shell-body">
         {% include 'workspace/crm/includes/property_filing_nav.html' %}
+        <nav class="crm-files-archive-tabs" role="tablist" aria-label="نمای فایل‌ها">
+            <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab" aria-label="فایل‌های جاری" aria-selected="{% if archive_scope == 'active' or not request.GET.archive_scope %}true{% else %}false{% endif %}">
+                <span class="crm-files-archive-tab__label">
+                    <span class="crm-files-archive-tab__label-full">فایل‌های جاری</span>
+                    <span class="crm-files-archive-tab__label-short">جاری</span>
+                </span>
+                <span class="crm-files-archive-tab__count">{{ stats.total }}</span>
+            </a>
+            <a href="?{{ archive_tab_qs.archived }}" class="crm-files-archive-tab {% if archive_scope == 'archived' %}is-active{% endif %}" role="tab" aria-label="بایگانی‌شده" aria-selected="{% if archive_scope == 'archived' %}true{% else %}false{% endif %}">
+                <span class="crm-files-archive-tab__label">
+                    <span class="crm-files-archive-tab__label-full">بایگانی‌شده</span>
+                    <span class="crm-files-archive-tab__label-short">بایگانی</span>
+                </span>
+                <span class="crm-files-archive-tab__count">{{ stats.archived }}</span>
+            </a>
+            <a href="?{{ archive_tab_qs.all }}" class="crm-files-archive-tab {% if archive_scope == 'all' %}is-active{% endif %}" role="tab" aria-label="همه فایل‌ها" aria-selected="{% if archive_scope == 'all' %}true{% else %}false{% endif %}">
+                <span class="crm-files-archive-tab__label">
+                    <span class="crm-files-archive-tab__label-full">همه فایل‌ها</span>
+                    <span class="crm-files-archive-tab__label-short">همه</span>
+                </span>
+            </a>
+        </nav>
         <form method="get" class="crm-files-filters crm-page-filters" id="crmPropertyFilters">
             <input type="hidden" name="view" value="{{ view_mode }}">
+            {% if archive_scope and archive_scope != 'active' %}<input type="hidden" name="archive_scope" value="{{ archive_scope }}">{% endif %}
             {% if active_cabinet_id %}<input type="hidden" name="cabinet_id" value="{{ active_cabinet_id }}" id="crmPropCabinetId">{% endif %}
             {% if active_folder_id %}<input type="hidden" name="folder_id" value="{{ active_folder_id }}" id="crmPropFolderId">{% endif %}
 
@@ -461,6 +484,14 @@
                     <span>افزودن به زونکن</span>
                 </button>
                 {% endif %}
+                <button type="button" class="crm-bulk-dock-apply" id="crmPropBulkArchive" hidden>
+                    <i class="fas fa-box-archive" aria-hidden="true"></i>
+                    <span>بایگانی</span>
+                </button>
+                <button type="button" class="crm-bulk-dock-apply" id="crmPropBulkRestore" hidden>
+                    <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                    <span>بازگردانی</span>
+                </button>
                 <button type="button" class="crm-bulk-dock-delete" id="crmPropBulkDelete" aria-expanded="false">
                     <i class="fas fa-trash-can" aria-hidden="true"></i>
                     <span>حذف فایل‌ها</span>
@@ -515,6 +546,8 @@
 <script>
 window.crmPropertyFolders = {{ property_folders_json|default:'[]'|safe }};
 window.crmPropertyBulkDeleteUrl = '{% url "workspace:crm_properties_bulk_delete" %}';
+window.crmPropertyBulkArchiveUrl = '{% url "workspace:crm_properties_bulk_archive" %}';
+window.crmPropertyArchiveScope = '{{ archive_scope|default:"active" }}';
 </script>
 {% if view_mode != 'pipeline' %}
 <script src="{% static 'workspace/js/crm-properties-list.js' %}?v=1"></script>

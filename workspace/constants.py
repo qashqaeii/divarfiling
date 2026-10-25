@@ -23,6 +23,7 @@ DEAL_TYPES = ['فروش', 'خرید', 'رهن و اجاره', 'رهن کامل',
 
 PROPERTY_DEAL_MODES = ['فروش', 'رهن و اجاره', 'اجاره', 'پیش‌فروش']
 PROPERTY_TX_STATUSES = ['فعال', 'در مذاکره', 'قرارداد', 'فروخته‌شده', 'اجاره‌رفته', 'بایگانی']
+PROPERTY_TX_STATUSES_UI = [s for s in PROPERTY_TX_STATUSES if s != 'بایگانی']
 
 PROPERTY_TX_COLORS = {
     'فعال': ('#ecfdf5', '#047857', '#10b981'),
@@ -31,6 +32,7 @@ PROPERTY_TX_COLORS = {
     'فروخته‌شده': ('#eff6ff', '#1d4ed8', '#2563eb'),
     'اجاره‌رفته': ('#ecfeff', '#0e7490', '#06b6d4'),
     'بایگانی': ('#f8fafc', '#64748b', '#94a3b8'),
+    'بایگانی‌شده': ('#f8fafc', '#64748b', '#94a3b8'),
 }
 
 CRM_FILTER_SCOPES = ['contacts', 'properties', 'deals', 'listings']
@@ -39,7 +41,7 @@ CRM_FILTER_PARAMS = {
     'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag', 'match_alerts'},
     'properties': {
         'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
-        'folder_id',
+        'folder_id', 'cabinet_id', 'archive_scope',
         'parking', 'storage', 'elevator', 'rooms',
         'area_min', 'area_max', 'price_min', 'price_max',
         'year_min', 'year_max', 'age_max',

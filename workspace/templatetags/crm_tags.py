@@ -177,7 +177,22 @@ PROPERTY_TX_ICONS = {
     'فروخته‌شده': 'fa-hand-holding-dollar',
     'اجاره‌رفته': 'fa-key',
     'بایگانی': 'fa-box-archive',
+    'بایگانی‌شده': 'fa-box-archive',
 }
+
+
+@register.filter
+def property_display_status(prop):
+    from workspace.services.crm_property_archive import is_property_archived
+    if prop and is_property_archived(prop):
+        return 'بایگانی‌شده'
+    return getattr(prop, 'transaction_status', '') or ''
+
+
+@register.filter
+def property_is_archived_flag(prop):
+    from workspace.services.crm_property_archive import is_property_archived
+    return bool(prop and is_property_archived(prop))
 
 
 @register.filter
@@ -465,9 +480,18 @@ def crm_reminder_rel_label(reminder):
 
 
 @register.filter
+def crm_reminder_note_display(note):
+    from workspace.services.crm_property_rental_renewal import sanitize_reminder_note_for_display
+
+    return sanitize_reminder_note_for_display(note)
+
+
+@register.filter
 def crm_reminder_show_note(reminder):
     """یادداشت تکراری با عنوان یا چیپ مخاطب را در لیست نشان نده."""
-    note = (getattr(reminder, 'note', None) or '').strip()
+    from workspace.services.crm_property_rental_renewal import sanitize_reminder_note_for_display
+
+    note = sanitize_reminder_note_for_display(getattr(reminder, 'note', None) or '')
     if not note:
         return False
     title = (getattr(reminder, 'title', None) or '').strip()

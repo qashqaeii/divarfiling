@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from workspace.models import Customer, Reminder
 from workspace.services.crm_scope import customers_qs, reminders_qs
+from workspace.services.crm_property_rental_renewal import sanitize_reminder_note_for_display
 from workspace.services.jalali_input import format_jalali_date
 
 
@@ -96,7 +97,7 @@ def _reminder_items(user, today, now) -> List[Dict[str, Any]]:
             'customer_status': r.customer.status if r.customer else '',
             'title': r.title,
             'subtitle': subtitle,
-            'note': (r.note or '')[:120],
+            'note': sanitize_reminder_note_for_display(r.note or '')[:120],
             'due_at': r.due_at.isoformat(),
             'detail_url_name': 'workspace:crm_detail' if r.customer_id else 'workspace:crm_reminders',
         })

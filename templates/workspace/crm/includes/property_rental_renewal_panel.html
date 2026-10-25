@@ -1,0 +1,76 @@
+{% load workspace_tags %}
+{% if property_is_rental and property_is_archived and not mask_sensitive %}
+<section class="crm-prop-renewal-panel{% if rental_renewal.has_contract_end %} crm-prop-renewal-panel--scheduled{% else %} crm-prop-renewal-panel--empty{% endif %}{% if rental_renewal.days_until_followup is not None %}{% if rental_renewal.days_until_followup < 0 %} crm-prop-renewal-panel--overdue{% elif rental_renewal.days_until_followup == 0 %} crm-prop-renewal-panel--today{% endif %}{% endif %}"
+         aria-labelledby="crmPropRenewalTitle">
+    <div class="crm-prop-renewal-panel__inner">
+        <header class="crm-prop-renewal-panel__head">
+            <div class="crm-prop-renewal-panel__lead">
+                <span class="crm-prop-renewal-panel__icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+                <div class="crm-prop-renewal-panel__titles">
+                    <h2 id="crmPropRenewalTitle">تمدید اجاره</h2>
+                    {% if not rental_renewal.has_contract_end %}
+                    <p class="crm-prop-renewal-panel__hint">تاریخ پایان قرارداد را ثبت کنید؛ پیگیری و یادآور یک ماه قبل تنظیم می‌شود.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% if rental_renewal.has_contract_end and rental_renewal.days_until_followup is not None %}
+            <span class="crm-prop-renewal-panel__badge" role="status">
+                {% if rental_renewal.days_until_followup > 0 %}
+                <i class="fas fa-hourglass-half" aria-hidden="true"></i>{{ rental_renewal.days_until_followup }} روز تا پیگیری
+                {% elif rental_renewal.days_until_followup == 0 %}
+                <i class="fas fa-bell" aria-hidden="true"></i>پیگیری امروز
+                {% else %}
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>زمان پیگیری رسیده
+                {% endif %}
+            </span>
+            {% elif rental_renewal.tracking_missing %}
+            <span class="crm-prop-renewal-panel__badge crm-prop-renewal-panel__badge--warn" role="status">
+                <i class="fas fa-pen-to-square" aria-hidden="true"></i>نیاز به ثبت تاریخ
+            </span>
+            {% endif %}
+        </header>
+
+        {% if rental_renewal.has_contract_end %}
+        <div class="crm-prop-renewal-panel__steps" role="list" aria-label="زمان‌بندی تمدید اجاره">
+            <article class="crm-prop-renewal-step is-done" role="listitem">
+                <span class="crm-prop-renewal-step__dot" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+                <span class="crm-prop-renewal-step__lbl">پایان قرارداد</span>
+                <strong class="crm-prop-renewal-step__val">{{ rental_renewal.contract_end_jalali }}</strong>
+            </article>
+            <span class="crm-prop-renewal-panel__connector" aria-hidden="true"></span>
+            <article class="crm-prop-renewal-step is-done" role="listitem">
+                <span class="crm-prop-renewal-step__dot" aria-hidden="true"><i class="fas fa-phone-volume"></i></span>
+                <span class="crm-prop-renewal-step__lbl">شروع پیگیری</span>
+                <strong class="crm-prop-renewal-step__val">{{ rental_renewal.followup_jalali }}</strong>
+            </article>
+            <span class="crm-prop-renewal-panel__connector" aria-hidden="true"></span>
+            <article class="crm-prop-renewal-step{% if rental_renewal.reminder_state == 'scheduled' %} is-done{% elif rental_renewal.reminder_state == 'done' %} is-complete{% else %} is-pending{% endif %}" role="listitem">
+                <span class="crm-prop-renewal-step__dot" aria-hidden="true"><i class="fas fa-bell"></i></span>
+                <span class="crm-prop-renewal-step__lbl">یادآور</span>
+                <strong class="crm-prop-renewal-step__val">
+                    {% if rental_renewal.reminder_state == 'scheduled' %}ثبت‌شده{% elif rental_renewal.reminder_state == 'done' %}انجام‌شده{% else %}در انتظار{% endif %}
+                </strong>
+            </article>
+        </div>
+        {% else %}
+        <div class="crm-prop-renewal-panel__empty" role="status">
+            <p class="crm-prop-renewal-panel__empty-msg">هنوز سررسیدی ثبت نشده — با دکمه پایین تاریخ را وارد کنید.</p>
+        </div>
+        {% endif %}
+
+        <footer class="crm-prop-renewal-panel__acts">
+            {% if can_edit_property %}
+            <button type="button" class="crm-prop-renewal-panel__cta" id="crmPropRenewalEditBtn">
+                <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                {% if rental_renewal.has_contract_end %}ویرایش سررسید{% else %}ثبت سررسید اجاره{% endif %}
+            </button>
+            {% endif %}
+            {% if rental_renewal.reminder_id %}
+            <a href="{% url 'workspace:crm_reminders' %}" class="crm-prop-renewal-panel__link">
+                <i class="fas fa-list-check" aria-hidden="true"></i>مشاهده یادآور
+            </a>
+            {% endif %}
+        </footer>
+    </div>
+</section>
+{% endif %}

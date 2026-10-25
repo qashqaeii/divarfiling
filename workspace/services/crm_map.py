@@ -24,7 +24,7 @@ MAP_MARKER_LIMIT = 2500
 
 CRM_MAP_FILTER_KEYS = (
     'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city',
-    'folder_id', 'cabinet_id',
+    'folder_id', 'cabinet_id', 'archive_scope',
     'parking', 'storage', 'elevator', 'rooms',
     'area_min', 'area_max', 'price_min', 'price_max',
     'year_min', 'year_max', 'age_max',

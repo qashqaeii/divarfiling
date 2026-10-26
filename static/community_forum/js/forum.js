@@ -33,8 +33,14 @@
     sending: false,
     pendingSend: null,
     reportReasons: [],
+    canModerate: false,
+    pinnedMessage: null,
     ui: { editId: null, deleteId: null, reportId: null, reactionId: null, activeMsgId: null },
     initialLoaded: false,
+    viewPending: new Set(),
+    viewRecorded: new Set(),
+    viewObserver: null,
+    viewFlushTimer: null,
   };
 
   var overlay = { hideTimer: null, stripOpen: false };
@@ -101,6 +107,7 @@
   function normalizeIncoming(msg) {
     if (!msg) return msg;
     if (!msg.sender_public_id && msg.public_id) msg.sender_public_id = msg.public_id;
+    if (msg.view_count == null) msg.view_count = 0;
     msg.is_mine = isMine(msg);
     return msg;
   }
@@ -141,6 +148,101 @@
     try {
       return new Date(iso).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
     } catch (e) { return ''; }
+  }
+
+  function formatViewCount(n) {
+    var num = Number(n) || 0;
+    if (num < 1) return '';
+    try {
+      return num.toLocaleString('fa-IR');
+    } catch (e) {
+      return String(num);
+    }
+  }
+
+  function updateBubbleFoot(bubble, msg) {
+    if (!bubble || !msg || msg.is_deleted) return;
+    var foot = bubble.querySelector('.cf-msg__bubble-foot');
+    if (!foot) {
+      foot = document.createElement('div');
+      foot.className = 'cf-msg__bubble-foot';
+      bubble.appendChild(foot);
+    }
+    var vc = msg.view_count || 0;
+    var html = '';
+    if (vc > 0) {
+      html += '<span class="cf-msg__views" title="تعداد بازدید">' +
+        '<i class="fas fa-eye" aria-hidden="true"></i>' +
+        '<span class="cf-msg__views-num">' + formatViewCount(vc) + '</span></span>';
+    }
+    html += '<span class="cf-msg__time-inline">' + formatTime(msg.created_at) +
+      (msg.is_edited ? ' <span class="cf-msg__edited">· ویرایش‌شده</span>' : '') + '</span>';
+    foot.innerHTML = html;
+  }
+
+  function applyViewCounts(map) {
+    if (!map) return;
+    Object.keys(map).forEach(function (key) {
+      var id = Number(key);
+      var m = state.messages.get(id);
+      if (!m) return;
+      m.view_count = map[key];
+      var node = findMessageNode(id);
+      if (!node) return;
+      var bubble = node.querySelector('.cf-msg__bubble');
+      updateBubbleFoot(bubble, m);
+    });
+  }
+
+  function queueMessageView(mid) {
+    if (!mid || state.viewRecorded.has(mid) || state.viewPending.has(mid)) return;
+    var m = state.messages.get(mid);
+    if (!m || m.is_deleted) return;
+    state.viewPending.add(mid);
+    clearTimeout(state.viewFlushTimer);
+    state.viewFlushTimer = setTimeout(flushMessageViews, 420);
+  }
+
+  function flushMessageViews() {
+    var ids = [];
+    state.viewPending.forEach(function (id) {
+      if (ids.length < 40) ids.push(id);
+    });
+    if (!ids.length) return;
+    ids.forEach(function (id) { state.viewPending.delete(id); });
+    fetchJson(apiUrl('views/'), { method: 'POST', body: { message_ids: ids } })
+      .then(function (data) {
+        ids.forEach(function (id) { state.viewRecorded.add(id); });
+        applyViewCounts(data.views || {});
+      })
+      .catch(function () {
+        ids.forEach(function (id) { state.viewPending.add(id); });
+      });
+  }
+
+  function rescanViewObservers() {
+    if (!state.viewObserver) return;
+    state.viewObserver.disconnect();
+    var list = $('cfMessages');
+    if (!list) return;
+    list.querySelectorAll('.cf-msg:not(.cf-msg--deleted)').forEach(function (row) {
+      state.viewObserver.observe(row);
+    });
+  }
+
+  function initViewObservers() {
+    var list = $('cfMessages');
+    if (!list || !window.IntersectionObserver) return;
+    if (state.viewObserver) state.viewObserver.disconnect();
+    state.viewObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (ent) {
+        if (!ent.isIntersecting || ent.intersectionRatio < 0.42) return;
+        var row = ent.target;
+        if (!row || !row.dataset.id) return;
+        queueMessageView(Number(row.dataset.id));
+      });
+    }, { root: list, threshold: [0.42, 0.65, 0.9] });
+    rescanViewObservers();
   }
 
   function dayKey(iso) {
@@ -355,6 +457,13 @@
 
   function secondaryMenuItems(msg) {
     var items = [];
+    if (state.canModerate && !msg.is_deleted) {
+      items.push({
+        act: msg.is_pinned ? 'unpin' : 'pin',
+        label: msg.is_pinned ? 'برداشتن سنجاق' : 'سنجاق پیام',
+        icon: 'fa-thumbtack',
+      });
+    }
     if (msg.is_mine) {
       items.push({ act: 'edit', label: 'ویرایش', icon: 'fa-pen' });
       items.push({ act: 'del', label: 'حذف', danger: true, icon: 'fa-trash' });
@@ -380,6 +489,94 @@
     if (act === 'del') openDelete(msg.id);
     if (act === 'report') openReport(msg.id);
     if (act === 'copy') copyMessageText(msg);
+    if (act === 'pin') togglePin(msg.id, true);
+    if (act === 'unpin') togglePin(msg.id, false);
+  }
+
+  function pinnedPreview(body) {
+    var t = (body || '').replace(/\s+/g, ' ').trim();
+    if (t.length > 72) return t.slice(0, 72) + '…';
+    return t;
+  }
+
+  function applyPinnedMessage(pinnedMsg) {
+    state.pinnedMessage = pinnedMsg || null;
+    state.messages.forEach(function (m) {
+      if (m.is_pinned) m.is_pinned = false;
+    });
+    if (pinnedMsg) {
+      mergeMessage(pinnedMsg);
+      var stored = state.messages.get(pinnedMsg.id);
+      if (stored) stored.is_pinned = true;
+    }
+    renderPinnedBar();
+    state.orderedIds.forEach(function (id) {
+      var node = findMessageNode(id);
+      var m = state.messages.get(id);
+      if (node && m) node.classList.toggle('cf-msg--pinned', !!m.is_pinned);
+    });
+  }
+
+  function renderPinnedBar() {
+    var root = $('cfPinnedMsg');
+    if (!root) return;
+    var pm = state.pinnedMessage;
+    if (!pm || pm.is_deleted) {
+      root.hidden = true;
+      var unpin = $('cfPinnedMsgUnpin');
+      if (unpin) unpin.hidden = true;
+      return;
+    }
+    root.hidden = false;
+    var who = $('cfPinnedMsgWho');
+    var prev = $('cfPinnedMsgPreview');
+    if (who) who.textContent = pm.sender_label || '';
+    if (prev) prev.textContent = pinnedPreview(pm.body);
+    var unpinBtn = $('cfPinnedMsgUnpin');
+    if (unpinBtn) unpinBtn.hidden = !state.canModerate;
+  }
+
+  function scrollToMessage(id, flash) {
+    var node = findMessageNode(id);
+    if (!node) return;
+    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (flash) {
+      node.classList.add('cf-msg--flash');
+      setTimeout(function () { node.classList.remove('cf-msg--flash'); }, 1200);
+    }
+  }
+
+  function togglePin(id, pin) {
+    return fetchJson(apiUrl('messages/' + id + '/pin/'), { method: 'POST', body: { pin: pin } })
+      .then(function (data) {
+        applyPinnedMessage(data.pinned_message);
+        toast(pin ? 'پیام سنجاق شد' : 'سنجاق برداشته شد');
+      })
+      .catch(function (err) { toast(err.error || 'خطا', true); });
+  }
+
+  function appendAvatar(wrap, msg) {
+    var shell = document.createElement('div');
+    shell.className = 'cf-msg__avatar-wrap';
+    var av;
+    if (msg.avatar_url) {
+      av = document.createElement('img');
+      av.src = msg.avatar_url;
+      av.alt = '';
+    } else {
+      av = document.createElement('div');
+      av.textContent = initials(msg.sender_label);
+    }
+    av.className = 'cf-msg__avatar';
+    if (msg.sender_is_moderator) {
+      var crown = document.createElement('span');
+      crown.className = 'cf-msg__crown';
+      crown.setAttribute('aria-hidden', 'true');
+      crown.innerHTML = '<i class="fas fa-crown"></i>';
+      shell.appendChild(crown);
+    }
+    shell.appendChild(av);
+    wrap.appendChild(shell);
   }
 
   function copyMessageText(msg) {
@@ -412,28 +609,16 @@
     wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') + (msg.is_deleted ? ' cf-msg--deleted' : '');
     if (opts.grouped) wrap.classList.add('cf-msg--grouped');
     if (isNoticeMessage(msg)) wrap.classList.add('cf-msg--notice');
+    if (msg.is_pinned) wrap.classList.add('cf-msg--pinned');
     wrap.dataset.id = String(msg.id);
     if (!msg.is_deleted) wrap.tabIndex = 0;
-
-    var av;
-    if (msg.avatar_url) {
-      av = document.createElement('img');
-      av.src = msg.avatar_url;
-      av.alt = '';
-    } else {
-      av = document.createElement('div');
-      av.textContent = initials(msg.sender_label);
-    }
-    av.className = 'cf-msg__avatar';
 
     var stack = document.createElement('div');
     stack.className = 'cf-msg__stack';
 
     var meta = document.createElement('div');
     meta.className = 'cf-msg__meta';
-    meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>' +
-      '<span class="cf-msg__time">' + formatTime(msg.created_at) +
-      (msg.is_edited ? ' <span class="cf-msg__edited">· ویرایش‌شده</span>' : '') + '</span>';
+    meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>';
     if (!msg.is_deleted) {
       var actBtn = document.createElement('button');
       actBtn.type = 'button';
@@ -478,18 +663,21 @@
     rx.className = 'cf-reactions';
     fillReactions(rx, msg);
     bubble.appendChild(rx);
+    updateBubbleFoot(bubble, msg);
 
     swipeWrap.appendChild(bubble);
     stack.appendChild(meta);
     stack.appendChild(swipeWrap);
-    wrap.appendChild(av);
+    appendAvatar(wrap, msg);
     wrap.appendChild(stack);
     return wrap;
   }
 
   function patchMessageEl(wrap, msg) {
     msg = normalizeIncoming(msg);
-    wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') + (msg.is_deleted ? ' cf-msg--deleted' : '');
+    wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') +
+      (msg.is_deleted ? ' cf-msg--deleted' : '') +
+      (msg.is_pinned ? ' cf-msg--pinned' : '');
     var body = wrap.querySelector('.cf-msg__body');
     if (body) {
       if (msg.is_deleted) body.textContent = 'پیام حذف شده';
@@ -497,11 +685,12 @@
     }
     var meta = wrap.querySelector('.cf-msg__meta');
     if (meta) {
-      meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>' +
-        '<span class="cf-msg__time">' + formatTime(msg.created_at) +
-        (msg.is_edited ? ' <span class="cf-msg__edited">· ویرایش‌شده</span>' : '') + '</span>';
+      var act = meta.querySelector('.cf-msg__act');
+      meta.innerHTML = '<span class="cf-msg__name">' + escapeHtml(msg.sender_label) + '</span>';
+      if (!msg.is_deleted && act) meta.appendChild(act);
     }
     fillReactions(wrap.querySelector('.cf-reactions'), msg);
+    updateBubbleFoot(wrap.querySelector('.cf-msg__bubble'), msg);
   }
 
   function findMessageNode(id) {
@@ -564,6 +753,7 @@
     updateEmptyState();
     if (state.atBottom) scrollToBottom();
     else el.scrollTop = prevTop + (el.scrollHeight - prevH);
+    rescanViewObservers();
   }
 
   function appendMessageDom(msg) {
@@ -578,6 +768,7 @@
     else if (empty && empty.parentNode === el) el.insertBefore(node, empty);
     else el.appendChild(node);
     updateEmptyState();
+    if (state.viewObserver) state.viewObserver.observe(node);
   }
 
   function upsertMessageDom(msg) {
@@ -751,7 +942,14 @@
           upsertFromPayload(payload.message, true);
         } else if (data.type === 'message.deleted') {
           var m = state.messages.get(payload.id);
-          if (m) { m.is_deleted = true; m.body = ''; upsertFromPayload(m, false); }
+          if (m) {
+            m.is_deleted = true;
+            m.body = '';
+            if (state.pinnedMessage && state.pinnedMessage.id === m.id) applyPinnedMessage(null);
+            upsertFromPayload(m, false);
+          }
+        } else if (data.type === 'message.pinned') {
+          applyPinnedMessage(payload.pinned_message || null);
         } else if (data.type === 'reaction.updated') {
           var msg = state.messages.get(payload.message_id);
           if (msg) {
@@ -1136,6 +1334,8 @@
       showQuickBar(row);
     });
 
+    initViewObservers();
+
     list.addEventListener('mouseout', function (ev) {
       if (!isDesktopUi()) return;
       var row = ev.target.closest('.cf-msg');
@@ -1399,7 +1599,12 @@
       .then(function () {
         $('cfDeleteDialog').close();
         var m = state.messages.get(id);
-        if (m) { m.is_deleted = true; m.body = ''; upsertFromPayload(m, false); }
+        if (m) {
+          m.is_deleted = true;
+          m.body = '';
+          if (state.pinnedMessage && state.pinnedMessage.id === id) applyPinnedMessage(null);
+          upsertFromPayload(m, false);
+        }
       }).catch(function (err) { toast(err.error || 'خطا', true); });
   });
   $('cfReportCancel').addEventListener('click', function () { $('cfReportDialog').close(); });
@@ -1424,6 +1629,21 @@
     updateChar();
   });
 
+  var pinnedHit = $('cfPinnedMsgHit');
+  if (pinnedHit) {
+    pinnedHit.addEventListener('click', function () {
+      if (state.pinnedMessage && state.pinnedMessage.id) {
+        scrollToMessage(state.pinnedMessage.id, true);
+      }
+    });
+  }
+  var pinnedUnpin = $('cfPinnedMsgUnpin');
+  if (pinnedUnpin) {
+    pinnedUnpin.addEventListener('click', function () {
+      if (state.pinnedMessage && state.pinnedMessage.id) togglePin(state.pinnedMessage.id, false);
+    });
+  }
+
   initMessageInteractions();
   bindDialogClose();
 
@@ -1443,6 +1663,7 @@
 
   fetchJson(bootstrapUrl).then(function (data) {
     state.myPublicId = data.member && data.member.public_id;
+    state.canModerate = !!data.can_moderate;
     state.reportReasons = data.report_reasons || [];
     if (data.member && data.member.display_name) {
       $('cfDisplayNameInput').value = data.member.display_name;
@@ -1456,6 +1677,8 @@
         bodyEl.textContent = data.pinned_notices.map(function (n) { return n.body; }).join('\n');
       }
     }
+    if (data.pinned_message) applyPinnedMessage(normalizeIncoming(data.pinned_message));
+    else renderPinnedBar();
     if (!data.member.welcome_seen) {
       var dlg = $('cfWelcomeDialog');
       openDialog(dlg);

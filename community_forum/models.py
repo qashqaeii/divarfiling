@@ -58,6 +58,16 @@ class ForumMessage(models.Model):
     edited_at = models.DateTimeField(null=True, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     reactions_updated_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    pinned_at = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name='زمان سنجاق')
+    pinned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='forum_messages_pinned',
+        verbose_name='سنجاق‌کننده',
+    )
+    view_count = models.PositiveIntegerField(default=0, verbose_name='تعداد بازدید')
 
     class Meta:
         verbose_name = 'پیام تالار'
@@ -83,6 +93,34 @@ class ForumMessage(models.Model):
 
     def __str__(self):
         return f'ForumMessage<{self.pk}>'
+
+
+class ForumMessageView(models.Model):
+    """بازدید یکتا هر عضو برای هر پیام."""
+
+    message = models.ForeignKey(
+        ForumMessage,
+        on_delete=models.CASCADE,
+        related_name='viewer_rows',
+        verbose_name='پیام',
+    )
+    member = models.ForeignKey(
+        ForumMember,
+        on_delete=models.CASCADE,
+        related_name='message_views',
+        verbose_name='عضو',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'بازدید پیام'
+        verbose_name_plural = 'بازدیدهای پیام'
+        constraints = [
+            models.UniqueConstraint(fields=['message', 'member'], name='uniq_forum_msg_view'),
+        ]
+        indexes = [
+            models.Index(fields=['message']),
+        ]
 
 
 class ForumReaction(models.Model):

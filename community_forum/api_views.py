@@ -17,15 +17,18 @@ from community_forum.services.access import (
     user_can_moderate_forum,
 )
 from community_forum.services.members import get_or_create_member, update_display_name
+from community_forum.services.message_views import MAX_VIEW_BATCH, record_message_views
 from community_forum.services.messages import (
     delete_message,
     edit_message,
     list_messages,
     list_sync_changes,
     report_message,
+    get_pinned_message,
     search_messages,
     send_message,
     serialize_many,
+    set_message_pinned,
     set_reaction,
     unread_count,
     update_read_cursor,
@@ -100,6 +103,10 @@ class ForumBootstrapAPIView(ForumAPIBase):
             if n.expires_at and n.expires_at < now:
                 continue
             notices.append({'body': n.body, 'created_at': n.created_at.isoformat()})
+        pinned = get_pinned_message()
+        pinned_payload = None
+        if pinned:
+            pinned_payload = serialize_message(pinned, viewer_member=member)
         return JsonResponse({
             'ok': True,
             'member': {
@@ -111,6 +118,7 @@ class ForumBootstrapAPIView(ForumAPIBase):
             'limits': {'max_body': MAX_BODY_LENGTH},
             'report_reasons': [{'id': r[0], 'label': r[1]} for r in REPORT_REASONS],
             'pinned_notices': notices,
+            'pinned_message': pinned_payload,
             'unread': unread_count(member),
             'can_moderate': user_can_moderate_forum(request.user),
         })
@@ -187,6 +195,30 @@ class ForumMessageDetailAPIView(ForumAPIBase):
 
 
 @method_decorator(csrf_protect, name='dispatch')
+@method_decorator(csrf_protect, name='dispatch')
+class ForumMessagePinAPIView(ForumAPIBase):
+    def post(self, request, message_id):
+        if not user_can_moderate_forum(request.user):
+            return JsonResponse({'ok': False, 'error': 'اجازه سنجاق پیام را ندارید.'}, status=403)
+        member, err = self._active_member(request)
+        if err:
+            return err
+        data = self._json_body(request)
+        pinned = data.get('pin', True)
+        if isinstance(pinned, str):
+            pinned = pinned.lower() not in ('0', 'false', 'no')
+        try:
+            set_message_pinned(request.user, message_id, pinned=bool(pinned))
+        except ValidationError as exc:
+            return self._err(exc)
+        current = get_pinned_message()
+        return JsonResponse({
+            'ok': True,
+            'pinned_message': serialize_message(current, viewer_member=member) if current else None,
+        })
+
+
+@method_decorator(csrf_protect, name='dispatch')
 class ForumReactionAPIView(ForumAPIBase):
     def post(self, request, message_id):
         member, err = self._active_member(request)
@@ -212,6 +244,23 @@ class ForumReportAPIView(ForumAPIBase):
         except ValidationError as exc:
             return self._err(exc)
         return JsonResponse({'ok': True})
+
+
+@method_decorator(csrf_protect, name='dispatch')
+@method_decorator(csrf_protect, name='dispatch')
+class ForumMessageViewsAPIView(ForumAPIBase):
+    def post(self, request):
+        member, err = self._active_member(request)
+        if err:
+            return err
+        data = self._json_body(request)
+        raw_ids = data.get('message_ids') or data.get('ids') or []
+        if not isinstance(raw_ids, list):
+            return JsonResponse({'ok': False, 'error': 'فرمت نامعتبر'}, status=400)
+        if len(raw_ids) > MAX_VIEW_BATCH:
+            return JsonResponse({'ok': False, 'error': 'حداکثر ۴۰ پیام در هر درخواست'}, status=400)
+        counts = record_message_views(member, raw_ids)
+        return JsonResponse({'ok': True, 'views': counts})
 
 
 @method_decorator(csrf_protect, name='dispatch')

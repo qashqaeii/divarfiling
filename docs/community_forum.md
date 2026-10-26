@@ -40,13 +40,19 @@ HTTP اصلی سایت همچنان از Gunicorn + `divar_shop.asgi` / WSGI ا�
 | `bootstrap/` | تنظیمات اولیه، اطلاعیه، unread |
 | `messages/` | GET تاریخچه؛ POST ارسال |
 | `messages/<id>/` | PATCH ویرایش؛ DELETE حذف |
+| `messages/<id>/pin/` | POST سنجاق/برداشتن سنجاق (فقط مدیر تالار) |
 | `messages/<id>/reactions/` | POST واکنش |
 | `messages/<id>/report/` | POST گزارش |
 | `read/` | POST به‌روزرسانی cursor خواندن |
+| `views/` | POST ثبت بازدید یکتا (`message_ids`) و برگرداندن `view_count` |
 | `search/?q=` | جستجو |
 | `profile/` | نام نمایشی / خوش‌آمد |
 | `unread/` | شمارنده |
 | `sync/?anchor_id=&since=` | ویرایش/حذف پیام‌های با `id ≤ anchor` پس از قطع WS |
+
+`bootstrap/` علاوه بر `pinned_notices` فیلد `pinned_message` (یک پیام سنجاق‌شده توسط مدیر) را برمی‌گرداند. رویداد WebSocket: `message.pinned`.
+
+مدیر تالار: سوپرکاربر یا مجوز Django `community_forum.can_moderate_forum`. پیام‌های مدیران در UI با تاج روی آواتار نمایش داده می‌شوند.
 
 ## WebSocket
 

@@ -17,8 +17,10 @@ from community_forum.constants import (
     REPORT_REASONS,
 )
 from community_forum.models import ForumMessage, ForumReaction, ForumReport
-from community_forum.services.moderation import member_can_read, member_can_send
+from community_forum.services.access import user_can_moderate_forum
+from community_forum.services.moderation import log_audit, member_can_read, member_can_send
 from community_forum.services.pii import check_message_pii, normalize_message_body
+from community_forum.services.message_views import record_message_views
 from community_forum.services.rate_limit import enforce_send_rate_limit
 from community_forum.services.realtime import broadcast_event
 from community_forum.services.retention import retention_cutoff, visible_messages_qs
@@ -42,6 +44,53 @@ def _validate_body(body: str) -> str:
 
 def _base_qs():
     return visible_messages_qs().select_related('sender__user', 'reply_to__sender__user')
+
+
+def get_pinned_message() -> ForumMessage | None:
+    return (
+        _base_qs()
+        .filter(pinned_at__isnull=False)
+        .order_by('-pinned_at', '-id')
+        .first()
+    )
+
+
+def _broadcast_pinned_change(pinned: ForumMessage | None) -> None:
+    payload = {'pinned_message': None}
+    if pinned:
+        rx, _ = build_reactions_map([pinned.pk])
+        payload['pinned_message'] = serialize_message_public(pinned, reactions_map=rx)
+    transaction.on_commit(lambda p=payload: broadcast_event('message.pinned', p))
+
+
+def set_message_pinned(actor, message_id: int, *, pinned: bool) -> ForumMessage | None:
+    if not user_can_moderate_forum(actor):
+        raise ValidationError('اجازه سنجاق پیام را ندارید.', code='forbidden')
+    msg = ForumMessage.objects.select_related('sender__user', 'reply_to__sender__user').filter(pk=message_id).first()
+    if not msg or msg.deleted_at or msg.created_at < retention_cutoff():
+        raise ValidationError('پیام یافت نشد.', code='not_found')
+
+    with transaction.atomic():
+        if pinned:
+            now = timezone.now()
+            ForumMessage.objects.filter(pinned_at__isnull=False).exclude(pk=msg.pk).update(
+                pinned_at=None,
+                pinned_by=None,
+            )
+            msg.pinned_at = now
+            msg.pinned_by = actor
+            msg.save(update_fields=['pinned_at', 'pinned_by'])
+            log_audit('pin_message', actor, message_id=msg.pk, member_id=msg.sender_id)
+            _broadcast_pinned_change(msg)
+            return msg
+        if not msg.pinned_at:
+            return msg
+        msg.pinned_at = None
+        msg.pinned_by = None
+        msg.save(update_fields=['pinned_at', 'pinned_by'])
+        log_audit('unpin_message', actor, message_id=msg.pk, member_id=msg.sender_id)
+        _broadcast_pinned_change(None)
+        return msg
 
 
 def list_messages(
@@ -133,6 +182,8 @@ def send_message(
                 return existing
         raise
 
+    record_message_views(member, [msg.pk])
+    msg.refresh_from_db(fields=['view_count'])
     pub = serialize_message_public(msg, reactions_map={})
     transaction.on_commit(lambda p=pub: broadcast_event('message.new', {'message': p}))
     return msg
@@ -219,15 +270,20 @@ def delete_message(member, message_id: int, *, moderator_user=None) -> ForumMess
     if msg.sender_id != member.id and not is_mod:
         raise ValidationError('اجازه حذف این پیام را ندارید.', code='forbidden')
 
+    was_pinned = bool(msg.pinned_at)
     msg.deleted_at = timezone.now()
     msg.body = ''
-    msg.save(update_fields=['deleted_at', 'body'])
+    msg.pinned_at = None
+    msg.pinned_by = None
+    msg.save(update_fields=['deleted_at', 'body', 'pinned_at', 'pinned_by'])
     if is_mod:
         from community_forum.services.moderation import log_audit
 
         log_audit('delete_message', moderator_user, message_id=msg.pk, member_id=msg.sender_id)
     payload = {'id': msg.pk}
     transaction.on_commit(lambda: broadcast_event('message.deleted', payload))
+    if was_pinned:
+        _broadcast_pinned_change(None)
     return msg
 
 

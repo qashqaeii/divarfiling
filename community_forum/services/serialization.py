@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from community_forum.constants import ALLOWED_REACTIONS
 from community_forum.models import ForumMessage, ForumReaction
+from community_forum.services.access import user_can_moderate_forum
 from community_forum.services.identity import member_avatar_url, member_display_label
 from community_forum.services.retention import is_message_visible
 
@@ -30,8 +31,11 @@ def _message_core(msg: ForumMessage, *, reactions_map: dict | None) -> dict:
         'sender_public_id': str(sender.public_id),
         'sender_label': member_display_label(sender),
         'avatar_url': member_avatar_url(sender),
+        'sender_is_moderator': user_can_moderate_forum(sender.user),
         'body': '' if deleted else msg.body,
         'is_deleted': deleted,
+        'is_pinned': bool(msg.pinned_at) and not deleted,
+        'view_count': int(msg.view_count or 0) if not deleted else 0,
         'is_edited': bool(msg.edited_at),
         'created_at': msg.created_at.isoformat(),
         'edited_at': msg.edited_at.isoformat() if msg.edited_at else None,

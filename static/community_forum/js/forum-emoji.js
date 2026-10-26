@@ -328,8 +328,13 @@
 
   EmojiPicker.prototype._renderShell = function () {
     this.popover.innerHTML =
+      '<div class="cf-emoji-popover__handle" aria-hidden="true"></div>' +
       '<div class="cf-emoji-popover__head">' +
+      '<span class="cf-emoji-popover__title">ایموجی</span>' +
+      '<div class="cf-emoji-popover__search-wrap">' +
+      '<i class="fas fa-search" aria-hidden="true"></i>' +
       '<input type="search" class="cf-emoji-popover__search" placeholder="جستجو…" autocomplete="off" aria-label="جستجوی ایموجی">' +
+      '</div>' +
       '<button type="button" class="cf-icon-btn cf-icon-btn--sm cf-emoji-popover__close" aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>' +
       '</div>' +
       '<div class="cf-emoji-popover__tabs" role="tablist"></div>' +

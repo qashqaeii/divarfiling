@@ -1,6 +1,9 @@
 {% load workspace_tags crm_tags %}
 
-<section class="crm-matches crm-matches-v3" id="crmMatches" data-crm-matches-panel>
+<section class="crm-matches crm-matches-v3" id="crmMatches" data-crm-matches-panel
+         data-matches-more-url="{% url 'workspace:crm_contact_matches_more' customer.pk %}"
+         data-crm-total="{{ match_data.crm_total_count|default:0 }}"
+         data-divar-total="{{ match_data.divar_total_count|default:0 }}">
     <header class="crm-matches-head">
         {% if match_data.eligible and match_data.total_count %}
         <div class="crm-matches-head-copy">
@@ -80,16 +83,16 @@
                 <span class="crm-matches-count crm-matches-count-v3">{{ group.total_count }}</span>
             </header>
             <div class="crm-matches-feed" data-match-feed>
-                {% include 'workspace/crm/includes/matches_column.html' with matches=group.crm_matches title='فایل‌های شخصی' source='crm' has_bot_license=has_bot_license %}
-                {% include 'workspace/crm/includes/matches_column.html' with matches=group.divar_matches title='فایلینگ دیوار' source='divar' divar_locked=match_data.divar_locked has_bot_license=has_bot_license %}
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.crm_matches title='فایل‌های شخصی' source='crm' match_data=group customer=customer builder_group=group.id has_bot_license=has_bot_license %}
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.divar_matches title='فایلینگ دیوار' source='divar' divar_locked=match_data.divar_locked match_data=group customer=customer builder_group=group.id has_bot_license=has_bot_license %}
             </div>
         </section>
         {% endfor %}
     </div>
     {% else %}
     <div class="crm-matches-feed" data-match-feed>
-        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.crm_matches title='فایل‌های شخصی' source='crm' %}
-        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.divar_matches title='فایلینگ دیوار' source='divar' divar_locked=match_data.divar_locked %}
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.crm_matches title='فایل‌های شخصی' source='crm' match_data=match_data customer=customer %}
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.divar_matches title='فایلینگ دیوار' source='divar' divar_locked=match_data.divar_locked match_data=match_data customer=customer %}
     </div>
     {% endif %}
 

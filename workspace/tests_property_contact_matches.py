@@ -2,7 +2,8 @@
 import json
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.core.cache import cache
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from workspace.models import CRMProperty, Customer, CustomerActivity, PropertyContact
@@ -64,6 +65,22 @@ class PropertyContactMatchEngineTests(TestCase):
             customer_type='فروشنده',
             status='در حال پیگیری',
         )
+
+    @override_settings(CACHES={
+        'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+    })
+    def test_index_not_stale_after_contacts_catalog_changes(self):
+        cache.clear()
+        buyer = Customer.objects.get(pk=self.buyer.pk)
+        buyer.customer_type = 'فروشنده'
+        buyer.save(update_fields=['customer_type', 'updated_at'])
+        empty = get_property_contact_matches(self.prop, self.user)
+        self.assertEqual(empty['total_count'], 0)
+        buyer.customer_type = 'خریدار'
+        buyer.save(update_fields=['customer_type', 'updated_at'])
+        again = get_property_contact_matches(self.prop, self.user)
+        buyer_pk = buyer.pk
+        self.assertIn(buyer_pk, {m['customer_id'] for m in again['matches']})
 
     def test_buyer_matches_sale_property(self):
         data = get_property_contact_matches(self.prop, self.user)

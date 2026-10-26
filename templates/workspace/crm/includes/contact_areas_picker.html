@@ -2,7 +2,8 @@
 <div class="crm-field crm-areas-field{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.errors %} crm-field-has-error{% endif %}"
      data-field="{{ field_name }}"
      data-crm-areas-picker
-     data-field-name="{{ field_name }}">
+     data-field-name="{{ field_name }}"
+     data-areas-search-url="{% url 'workspace:crm_contact_areas_search' %}">
     <div class="crm-areas-head">
         <label class="crm-label" id="crm-areas-label-{{ field_name }}">{{ label }}</label>
         <span class="crm-areas-count" data-crm-areas-count aria-live="polite">۰ محله</span>

@@ -26,15 +26,16 @@ def _profile_incomplete(customer: Customer) -> bool:
         return not any([
             customer.deposit_min, customer.deposit_max,
             customer.rent_min, customer.rent_max,
-            customer.areas, customer.district, customer.city,
+            customer.areas,
         ])
     if _is_sale_customer(customer):
         return not any([
             customer.budget_min, customer.budget_max,
-            customer.areas, customer.district, customer.city,
+            customer.areas,
             customer.property_type,
+            customer.property_types,
         ])
-    return not (customer.areas or customer.district or customer.city)
+    return not customer.areas
 
 
 def build_empty_match_message(
@@ -51,7 +52,7 @@ def build_empty_match_message(
         return 'مخاطب بایگانی است؛ تطبیق خودکار غیرفعال است.'
     if _profile_incomplete(customer):
         return (
-            'پروفایل نیاز مشتری ناقص است. بودجه، محله یا شهر را تکمیل کنید '
+            'پروفایل نیاز مشتری ناقص است. بودجه یا محله‌های مورد نظر را تکمیل کنید '
             'تا پیشنهادهای دقیق‌تری دریافت کنید.'
         )
     if not divar_enabled and divar_sql_count == 0 and crm_sql_count == 0:
@@ -67,8 +68,8 @@ def build_empty_match_message(
     if crm_sql_count == 0:
         return 'در املاک شخصی فایل سازگار نیست؛ فقط نتایج فایلینگ دیوار ممکن است موجود باشد.'
     return (
-        'فایل‌هایی با معیارهای شما وجود دارد اما امتیاز نهایی آن‌ها از حد کیفیت '
-        'پایین‌تر بود یا به‌دلیل سقف اسکن همهٔ موارد امتیازدهی نشدند.'
+        'فایل‌هایی با معیارهای شما در پایگاه داده وجود دارد اما امتیاز نهایی آن‌ها '
+        'از حد کیفیت پیشنهاد پایین‌تر بود. انعطاف‌پذیری یا معیارها را بازبینی کنید.'
     )
 
 

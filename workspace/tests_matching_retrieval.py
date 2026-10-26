@@ -161,7 +161,9 @@ class MatchingAreasRegressionTests(TestCase):
                 city='شیراز',
                 area=100,
             )
-        data = get_customer_matches(buyer, self.user, divar_enabled=False, paginate=True, page_size=10)
+        data = get_customer_matches(
+            buyer, self.user, divar_enabled=False, paginate=True, page_size=10, crm_page=1,
+        )
         self.assertGreaterEqual(data['total_count'], 30)
         self.assertEqual(len(data['crm_matches']), 10)
         self.assertTrue(data['crm_has_more'])

@@ -1,6 +1,9 @@
 {% load workspace_tags crm_tags %}
 
-<section class="crm-pcm crm-pcm-v3" id="crmPropContactMatches">
+<section class="crm-pcm crm-pcm-v3" id="crmPropContactMatches"
+         data-prop-matches-more-url="{% url 'workspace:crm_property_contact_matches_more' contact_match_data.property_id %}"
+         data-prop-id="{{ contact_match_data.property_id }}"
+         data-prop-total="{{ contact_match_data.total_count|default:0 }}">
     <header class="crm-pcm-head crm-pcm-head-v3">
         <div class="crm-pcm-head-copy">
             {% if contact_match_data.eligible and contact_match_data.total_count %}
@@ -33,11 +36,17 @@
         </div>
     </div>
 
-    <ul class="crm-pcm-list crm-pcm-grid">
+    <ul class="crm-pcm-list crm-pcm-grid" data-prop-match-list>
         {% for m in contact_match_data.matches %}
         {% include 'workspace/crm/includes/contact_match_card.html' %}
         {% endfor %}
     </ul>
+    {% if contact_match_data.has_more %}
+    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-pcm-load-more"
+            data-prop-match-load-more
+            data-next-page="{{ contact_match_data.match_page|add:1 }}"
+            data-property-id="{{ contact_match_data.property_id }}">نمایش بیشتر</button>
+    {% endif %}
     <p class="crm-pcm-filter-empty" data-prop-match-filter-empty hidden>مخاطبی با این نوع در فهرست نیست.</p>
     {% else %}
     <div class="crm-pcm-empty crm-pcm-empty-v3">

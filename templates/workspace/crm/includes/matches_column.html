@@ -7,11 +7,24 @@
         </li>
     </ul>
     {% elif matches %}
-    <ul class="crm-match-list crm-match-list-v3">
+    <ul class="crm-match-list crm-match-list-v3" data-match-list="{{ source }}">
         {% for m in matches %}
         {% include 'workspace/crm/includes/match_card.html' with m=m source=source %}
         {% endfor %}
     </ul>
+    {% if source == 'crm' and match_data.crm_has_more %}
+    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-match-load-more"
+            data-match-load-more data-source="crm"
+            data-next-page="{{ match_data.crm_page|add:1 }}"
+            data-customer-id="{{ customer.pk }}"
+            {% if builder_group %}data-builder-group="{{ builder_group }}"{% endif %}>نمایش بیشتر</button>
+    {% elif source == 'divar' and match_data.divar_has_more %}
+    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-match-load-more"
+            data-match-load-more data-source="divar"
+            data-next-page="{{ match_data.divar_page|add:1 }}"
+            data-customer-id="{{ customer.pk }}"
+            {% if builder_group %}data-builder-group="{{ builder_group }}"{% endif %}>نمایش بیشتر</button>
+    {% endif %}
     {% else %}
     <div class="crm-match-empty crm-match-empty-v3" data-match-empty-source="{{ source }}" hidden>
         <p>{% if source == 'divar' %}آگهی دیوار مناسبی در این فهرست نیست.{% else %}فایل شخصی مناسبی در این فهرست نیست.{% endif %}</p>

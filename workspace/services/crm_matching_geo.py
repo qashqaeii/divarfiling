@@ -9,8 +9,6 @@ _NEIGHBORHOOD_ALIASES = {
     'سعادت آباد': 'سعادت‌آباد',
     'سعادت اباد': 'سعادت‌آباد',
     'پونک': 'پونک',
-    'پونک جنوبی': 'پونک',
-    'پونک شمالی': 'پونک',
     'ولنجک': 'ولنجک',
     'زعفرانیه': 'زعفرانیه',
     'نیاوران': 'نیاوران',
@@ -106,20 +104,18 @@ def cities_equivalent(want: str, got: str) -> bool:
 
 
 def _token_pair_equivalent(token: str, loc: str) -> bool:
+    """تطبیق محله — عمدتاً برابری قطعی پس از نرمال‌سازی."""
     if not token or not loc:
         return False
     if token == loc:
         return True
     if len(token) < 3 or len(loc) < 3:
         return False
-    if token in loc:
-        if len(loc) <= len(token) + 10:
-            return True
-        return len(token) >= max(3, int(len(loc) * 0.35))
-    if loc in token:
-        if len(token) <= len(loc) + 10:
-            return True
-        return len(loc) >= max(3, int(len(token) * 0.35))
+    # پسوند/پیشوند شناخته‌شده همان محله (مثلاً پونک شمالی در جدول alias)
+    if loc.startswith(token + ' ') or loc.startswith(token + '-'):
+        return False
+    if token.startswith(loc + ' ') or token.startswith(loc + '-'):
+        return False
     return False
 
 

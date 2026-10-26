@@ -129,19 +129,22 @@ def discover_customer_matches(
 
     if is_contact_archived(customer):
         return []
-    data = get_customer_matches(
+    from workspace.services.crm_matching import _match_tuning
+    from workspace.services.crm_matching_index import collect_notify_candidates
+
+    tuning = _match_tuning(customer)
+    skip = _existing_keys(user, customer) | _already_suggested_keys(customer)
+    held = collect_notify_candidates(
         customer,
         user,
         divar_enabled=divar_enabled,
+        min_score=min_score,
+        crm_engine_min=tuning['crm_min_score'],
+        divar_engine_min=tuning['divar_min_score'],
+        skip_keys=skip,
         dataset_id=dataset_id or None,
-        paginate=False,
     )
-    if not data.get('eligible'):
-        return []
-    all_matches = list(data.get('crm_matches', [])) + list(data.get('divar_matches', []))
-    strong = [m for m in all_matches if int(m.get('score') or 0) >= min_score]
-    strong.sort(key=lambda x: int(x.get('score') or 0), reverse=True)
-    return filter_new_matches(customer, user, strong)
+    return filter_new_matches(customer, user, held)
 
 
 def _notify_customer_matches(
@@ -373,13 +376,22 @@ def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dic
     if not customer:
         return None
     divar_enabled = has_active_bot_license(user)
-    page = 1
+    crm_page = 1
+    divar_page = 1
     page_size = None
     if request is not None:
         try:
-            page = max(1, int(request.GET.get('page', 1) or 1))
+            base = max(1, int(request.GET.get('page', 1) or 1))
         except (TypeError, ValueError):
-            page = 1
+            base = 1
+        try:
+            crm_page = max(1, int(request.GET.get('crm_page', base) or base))
+        except (TypeError, ValueError):
+            crm_page = base
+        try:
+            divar_page = max(1, int(request.GET.get('divar_page', base) or base))
+        except (TypeError, ValueError):
+            divar_page = base
         raw_size = request.GET.get('page_size')
         if raw_size:
             try:
@@ -390,7 +402,8 @@ def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dic
         customer,
         user,
         divar_enabled=divar_enabled,
-        page=page,
+        crm_page=crm_page,
+        divar_page=divar_page,
         page_size=page_size,
     )
     data = enrich_match_data_links(user, request, data)
@@ -415,7 +428,8 @@ def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dic
         'total_count': total_count,
         'crm_total_count': int(data.get('crm_total_count') or len(crm_matches)),
         'divar_total_count': int(data.get('divar_total_count') or len(divar_matches)),
-        'match_page': int(data.get('match_page') or 1),
+        'crm_page': int(data.get('crm_page') or 1),
+        'divar_page': int(data.get('divar_page') or 1),
         'match_page_size': int(data.get('match_page_size') or 0),
         'crm_has_more': bool(data.get('crm_has_more')),
         'divar_has_more': bool(data.get('divar_has_more')),
@@ -500,7 +514,20 @@ def property_contact_matches_payload(user, property_id: int, request=None) -> Op
                 'deal_mode': prop.deal_mode or '',
             },
         }
-    data = get_property_contact_matches(prop, user)
+    page = 1
+    page_size = None
+    if request is not None:
+        try:
+            page = max(1, int(request.GET.get('page', 1) or 1))
+        except (TypeError, ValueError):
+            page = 1
+        raw_size = request.GET.get('page_size')
+        if raw_size:
+            try:
+                page_size = max(1, min(100, int(raw_size)))
+            except (TypeError, ValueError):
+                page_size = None
+    data = get_property_contact_matches(prop, user, page=page, page_size=page_size)
     matches = []
     for m in data.get('matches') or []:
         item = dict(m)
@@ -517,6 +544,9 @@ def property_contact_matches_payload(user, property_id: int, request=None) -> Op
         'message': data.get('message', ''),
         'matches': matches,
         'total_count': int(data.get('total_count') or 0),
+        'match_page': int(data.get('match_page') or page),
+        'match_page_size': data.get('match_page_size'),
+        'has_more': bool(data.get('has_more')),
         'deal_mode': data.get('deal_mode', ''),
         'deal_label': data.get('deal_label', ''),
         'is_sale': bool(data.get('is_sale')),

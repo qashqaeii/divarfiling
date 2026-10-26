@@ -695,10 +695,30 @@ class CRMContactBulkArchiveView(LoginRequiredMixin, View):
         })
 
 
-def _contact_matches_panel_context(user, customer, request):
+def _parse_match_page_params(request) -> dict:
+    def _page(name: str, fallback: int = 1) -> int:
+        try:
+            return max(1, int(request.GET.get(name, fallback) or fallback))
+        except (TypeError, ValueError):
+            return fallback
+
+    base = _page('page', 1)
+    return {
+        'crm_page': _page('crm_page', base),
+        'divar_page': _page('divar_page', base),
+    }
+
+
+def _contact_matches_panel_context(user, customer, request, *, rebuild_index: bool = False):
     """Context برای رندر پنل پیشنهاد ملک."""
     divar_enabled = has_active_bot_license(user)
-    match_data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
+    page_kw = _parse_match_page_params(request) if request is not None else {'crm_page': 1, 'divar_page': 1}
+    match_data = get_customer_matches(
+        customer, user,
+        divar_enabled=divar_enabled,
+        rebuild_index=rebuild_index,
+        **page_kw,
+    )
     from workspace.services.property_suggestion_share import enrich_match_data_links
     match_data = enrich_match_data_links(user, request, match_data)
     return {
@@ -710,6 +730,129 @@ def _contact_matches_panel_context(user, customer, request):
         'match_eligible': is_match_eligible(customer),
         'can_edit_customer': can_edit_customer(user, customer),
     }
+
+
+class CustomerMatchesMoreView(LoginRequiredMixin, View):
+    """بارگذاری صفحه بعدی پیشنهادها — CRM یا Divar."""
+
+    def get(self, request, customer_id):
+        customer = customer_for_user(request.user, customer_id)
+        if not customer:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        source = (request.GET.get('source') or '').strip()
+        if source not in ('crm', 'divar'):
+            return JsonResponse({'ok': False, 'error': 'منبع نامعتبر'}, status=400)
+        try:
+            page = max(1, int(request.GET.get('page', 2) or 2))
+        except (TypeError, ValueError):
+            page = 2
+        divar_enabled = has_active_bot_license(request.user)
+        if source == 'divar' and not divar_enabled:
+            return JsonResponse({'ok': False, 'error': 'لایسنس فایلینگ دیوار فعال نیست'}, status=403)
+
+        kw = {'crm_page': 1, 'divar_page': 1}
+        if source == 'crm':
+            kw['crm_page'] = page
+        else:
+            kw['divar_page'] = page
+        data = get_customer_matches(
+            customer, request.user,
+            divar_enabled=divar_enabled,
+            **kw,
+        )
+        group_id = (request.GET.get('group') or '').strip()
+        if group_id in ('acquisition', 'supply') and data.get('is_builder'):
+            group = next(
+                (g for g in (data.get('match_groups') or []) if g.get('id') == group_id),
+                None,
+            )
+            if not group:
+                return JsonResponse({'ok': False, 'error': 'گروه نامعتبر'}, status=400)
+            matches = group.get('crm_matches') if source == 'crm' else group.get('divar_matches')
+            has_more = bool(
+                group.get('crm_has_more') if source == 'crm' else group.get('divar_has_more')
+            )
+            total_count = int(
+                group.get('crm_total_count') if source == 'crm' else group.get('divar_total_count') or 0
+            )
+        else:
+            matches = data.get('crm_matches') if source == 'crm' else data.get('divar_matches')
+            has_more = bool(data.get('crm_has_more') if source == 'crm' else data.get('divar_has_more'))
+            total_count = int(
+                data.get('crm_total_count' if source == 'crm' else 'divar_total_count') or 0
+            )
+        cards_html = ''.join(
+            render_to_string(
+                'workspace/crm/includes/match_card.html',
+                {'m': m, 'source': source},
+                request=request,
+            )
+            for m in (matches or [])
+        )
+        return JsonResponse({
+            'ok': True,
+            'source': source,
+            'html': cards_html,
+            'has_more': has_more,
+            'next_page': page + 1,
+            'total_count': total_count,
+        })
+
+
+class PropertyContactMatchesMoreView(LoginRequiredMixin, View):
+    """صفحه بعدی پیشنهاد مخاطب برای فایل شخصی."""
+
+    def get(self, request, property_id):
+        from workspace.services.crm_scope import can_edit_property, property_for_user
+
+        prop = property_for_user(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'فایل یافت نشد'}, status=404)
+        if not can_edit_property(request.user, prop):
+            return JsonResponse({'ok': False, 'error': 'دسترسی مجاز نیست'}, status=403)
+        try:
+            page = max(1, int(request.GET.get('page', 2) or 2))
+        except (TypeError, ValueError):
+            page = 2
+        data = get_property_contact_matches(prop, request.user, page=page)
+        cards_html = ''.join(
+            render_to_string(
+                'workspace/crm/includes/contact_match_card.html',
+                {'m': m},
+                request=request,
+            )
+            for m in (data.get('matches') or [])
+        )
+        return JsonResponse({
+            'ok': True,
+            'html': cards_html,
+            'has_more': bool(data.get('has_more')),
+            'next_page': page + 1,
+            'total_count': int(data.get('total_count') or 0),
+        })
+
+
+class ContactAreasSearchView(LoginRequiredMixin, View):
+    """جست‌وجوی محله‌های فایلینگ برای انتخابگر مخاطب."""
+
+    def get(self, request):
+        from workspace.services.filters import get_user_dataset_neighborhoods
+
+        q = (request.GET.get('q') or '').strip()
+        try:
+            offset = max(0, int(request.GET.get('offset', 0) or 0))
+        except (TypeError, ValueError):
+            offset = 0
+        limit = 80
+        items = get_user_dataset_neighborhoods(
+            request.user, search=q, offset=offset, limit=limit,
+        )
+        return JsonResponse({
+            'ok': True,
+            'items': items,
+            'offset': offset,
+            'has_more': len(items) >= limit,
+        })
 
 
 class CustomerMatchingToleranceView(LoginRequiredMixin, View):
@@ -737,7 +880,9 @@ class CustomerMatchingToleranceView(LoginRequiredMixin, View):
         customer.matching_tolerance_percent = pct
         customer.save(update_fields=['matching_tolerance_percent', 'updated_at'])
 
-        panel_ctx = _contact_matches_panel_context(request.user, customer, request)
+        panel_ctx = _contact_matches_panel_context(
+            request.user, customer, request, rebuild_index=True,
+        )
         match_data = panel_ctx['match_data']
         from workspace.templatetags.crm_tags import crm_match_tab_count
         matches_html = render_to_string(

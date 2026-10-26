@@ -951,6 +951,19 @@ def _score_listing_with_profile(
     )
     reasons = [n for n in (price_label, area_note, hood_note, type_note, room_note) if n]
 
+    display_neighborhood = listing.neighborhood or ''
+    areas_pref = preferred_areas_from_profile(profile)
+    if areas_pref:
+        matched, label = match_preferred_locations(
+            areas_pref,
+            listing.neighborhood or '',
+            listing.city or '',
+            '',
+            extra_values=listing_extras,
+        )
+        if matched and label:
+            display_neighborhood = label
+
     result = {
         'source': 'divar',
         'id': listing.pk,
@@ -961,7 +974,7 @@ def _score_listing_with_profile(
         'score': score,
         'reasons': reasons[:4],
         'deal_mode': 'رهن و اجاره' if listing.deposit else ('اجاره' if listing.rent else 'فروش'),
-        'neighborhood': listing.neighborhood or '',
+        'neighborhood': display_neighborhood,
         'city': listing.city or '',
         'area': listing.area,
         'rooms': listing.rooms or '',
@@ -1145,106 +1158,211 @@ def _match_builder_group(
     intent: str,
     profile,
     allowed_types: Set[str],
-    limit: int = 8,
     min_score: int = 25,
+    divar_enabled: bool = True,
+    crm_page: int = 1,
+    divar_page: int = 1,
+    page_size: int = MATCH_PAGE_SIZE_DEFAULT,
+    rebuild_index: bool = False,
 ) -> Dict[str, Any]:
+    from workspace.services.crm_matching_index import (
+        MATCH_ITERATOR_CHUNK_SIZE,
+        ScoredRef,
+        get_or_build_index,
+        page_has_more,
+        slice_refs,
+        user_crm_properties_catalog_extra,
+        user_divar_listings_catalog_extra,
+        _index_cache_key,
+        customer_match_fingerprint,
+    )
+
     meta = BUILDER_MATCH_INTENTS[intent]
-    builder_qs = _crm_properties_qs(user).filter(deal_mode__in=['فروش', 'پیش‌فروش'])
-    expanded_types: Set[str] = set()
-    for item in allowed_types:
-        expanded_types |= _PROPERTY_TYPE_MAP.get(item, {item})
-    if expanded_types:
-        builder_qs = builder_qs.filter(property_type__in=sorted(expanded_types))
-    crm_props = list(builder_qs.order_by('-updated_at').iterator(chunk_size=500))
-    crm_scored = [
-        item for item in (
-            _score_crm_property_with_profile(
+    fp = f'{customer_match_fingerprint(customer)}:{intent}'
+    user_id = int(user.pk)
+    customer_id = int(customer.pk)
+    divar_min = max(min_score, 30)
+
+    def _build_crm_refs() -> List[ScoredRef]:
+        builder_qs = _crm_properties_qs(user).filter(deal_mode__in=['فروش', 'پیش‌فروش'])
+        expanded_types: Set[str] = set()
+        for item in allowed_types:
+            expanded_types |= _PROPERTY_TYPE_MAP.get(item, {item})
+        if expanded_types:
+            builder_qs = builder_qs.filter(property_type__in=sorted(expanded_types))
+        refs: List[ScoredRef] = []
+        for prop in builder_qs.order_by('pk').iterator(chunk_size=MATCH_ITERATOR_CHUNK_SIZE):
+            item = _score_crm_property_with_profile(
                 profile, prop,
                 match_intent=intent,
                 intent_label=meta['intent_label'],
             )
-            for prop in crm_props
-        )
-        if item
-    ]
-    crm_scored.sort(key=lambda x: x['score'], reverse=True)
-    crm_matches = [m for m in crm_scored if m['score'] >= min_score][:limit]
+            if item and int(item.get('score') or 0) >= min_score:
+                refs.append(ScoredRef(int(item['score']), int(prop.pk)))
+        return refs
 
-    divar_scored = []
-    for listing, inferred in _filter_builder_listings(_divar_listings_qs(user), allowed_types):
-        if not _listing_is_genuine_owner(listing):
+    crm_key = _index_cache_key(
+        user_id=user_id, scope='bldr', scope_id=customer_id,
+        source='crm', fingerprint=fp,
+        extra=user_crm_properties_catalog_extra(user),
+    )
+    crm_refs, _ = get_or_build_index(crm_key, _build_crm_refs, rebuild=rebuild_index)
+    crm_total = len(crm_refs)
+    crm_matches = []
+    for ref in slice_refs(crm_refs, crm_page, page_size):
+        prop = _crm_properties_qs(user).filter(pk=ref.item_id).first()
+        if not prop:
             continue
-        item = _score_listing_with_profile(
-            profile, listing, prop_type=inferred,
+        item = _score_crm_property_with_profile(
+            profile, prop,
             match_intent=intent,
             intent_label=meta['intent_label'],
         )
         if item:
-            divar_scored.append(item)
-    divar_scored.sort(key=lambda x: x['score'], reverse=True)
-    divar_matches = [m for m in divar_scored if m['score'] >= max(min_score, 30)][:limit]
+            crm_matches.append(item)
+
+    divar_matches: List[Dict[str, Any]] = []
+    divar_total = 0
+    divar_has_more = False
+    if divar_enabled:
+        def _build_divar_refs() -> List[ScoredRef]:
+            refs: List[ScoredRef] = []
+            for listing, inferred in _filter_builder_listings(_divar_listings_qs(user), allowed_types):
+                if not _listing_is_genuine_owner(listing):
+                    continue
+                item = _score_listing_with_profile(
+                    profile, listing, prop_type=inferred,
+                    match_intent=intent,
+                    intent_label=meta['intent_label'],
+                )
+                if item and int(item.get('score') or 0) >= divar_min:
+                    refs.append(ScoredRef(int(item['score']), int(listing.pk)))
+            return refs
+
+        divar_key = _index_cache_key(
+            user_id=user_id, scope='bldr', scope_id=customer_id,
+            source='divar', fingerprint=fp,
+            extra=user_divar_listings_catalog_extra(user),
+        )
+        divar_refs, _ = get_or_build_index(divar_key, _build_divar_refs, rebuild=rebuild_index)
+        divar_total = len(divar_refs)
+        divar_slice = slice_refs(divar_refs, divar_page, page_size)
+        from workspace.models import Listing
+
+        by_pk = {
+            lst.pk: lst
+            for lst in Listing.objects.filter(pk__in=[r.item_id for r in divar_slice]).select_related('dataset')
+        }
+        for ref in divar_slice:
+            listing = by_pk.get(ref.item_id)
+            if not listing:
+                continue
+            inferred = _infer_listing_property_type(listing)
+            item = _score_listing_with_profile(
+                profile, listing, prop_type=inferred,
+                match_intent=intent,
+                intent_label=meta['intent_label'],
+            )
+            if item:
+                divar_matches.append(item)
+        divar_has_more = page_has_more(divar_total, divar_page, page_size)
 
     return {
         **meta,
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
-        'total_count': len(crm_matches) + len(divar_matches),
+        'crm_total_count': crm_total,
+        'divar_total_count': divar_total,
+        'crm_page': crm_page,
+        'divar_page': divar_page,
+        'crm_has_more': page_has_more(crm_total, crm_page, page_size),
+        'divar_has_more': divar_has_more,
+        'total_count': crm_total + divar_total,
     }
 
 
 def compute_match_total_count(data: Dict[str, Any]) -> int:
-    """تعداد واقعی آیتم‌های برگشتی — نه مجموع قبل از slice."""
+    """تعداد واقعی نتایج واجد شرایط."""
+    if 'total_count' in data and data['total_count'] is not None:
+        return int(data['total_count'])
     groups = data.get('match_groups') or []
     if groups:
         total = 0
         for g in groups:
-            total += len(g.get('crm_matches') or [])
-            total += len(g.get('divar_matches') or [])
+            total += int(g.get('crm_total_count') or len(g.get('crm_matches') or []))
+            total += int(g.get('divar_total_count') or len(g.get('divar_matches') or []))
         return total
+    crm_t = data.get('crm_total_count')
+    divar_t = data.get('divar_total_count')
+    if crm_t is not None or divar_t is not None:
+        return int(crm_t or 0) + int(divar_t or 0)
     return len(data.get('crm_matches') or []) + len(data.get('divar_matches') or [])
 
 
-def get_builder_customer_matches(customer: Customer, user, *, divar_enabled: bool) -> Dict[str, Any]:
+def get_builder_customer_matches(
+    customer: Customer,
+    user,
+    *,
+    divar_enabled: bool,
+    crm_page: int = 1,
+    divar_page: int = 1,
+    page_size: int | None = None,
+    rebuild_index: bool = False,
+) -> Dict[str, Any]:
     acquisition_types = set(parse_builder_buy_types(customer.builder_buy_property_types))
     supply_types = set(BUILDER_SELL_PROPERTY_TYPES)
+    effective_size = page_size or MATCH_PAGE_SIZE_DEFAULT
 
     acquisition = _match_builder_group(
         customer, user,
         intent='acquisition',
         profile=_builder_acquisition_profile(customer),
         allowed_types=acquisition_types,
+        divar_enabled=divar_enabled,
+        crm_page=crm_page,
+        divar_page=divar_page,
+        page_size=effective_size,
+        rebuild_index=rebuild_index,
     )
     supply = _match_builder_group(
         customer, user,
         intent='supply',
         profile=_builder_supply_profile(customer),
         allowed_types=supply_types,
+        divar_enabled=divar_enabled,
+        crm_page=crm_page,
+        divar_page=divar_page,
+        page_size=effective_size,
+        rebuild_index=rebuild_index,
     )
 
     if not divar_enabled:
         acquisition['divar_matches'] = []
         supply['divar_matches'] = []
-        acquisition['total_count'] = len(acquisition['crm_matches'])
-        supply['total_count'] = len(supply['crm_matches'])
+        acquisition['divar_total_count'] = 0
+        supply['divar_total_count'] = 0
+        acquisition['divar_has_more'] = False
+        supply['divar_has_more'] = False
+        acquisition['total_count'] = int(acquisition['crm_total_count'])
+        supply['total_count'] = int(supply['crm_total_count'])
 
     groups = [acquisition, supply]
-    combined = []
-    for group in groups:
-        combined.extend(group['crm_matches'])
-        combined.extend(group['divar_matches'])
-    combined.sort(key=lambda x: x['score'], reverse=True)
-
-    crm_matches = [m for m in combined if m['source'] == 'crm'][:12]
-    divar_matches = [m for m in combined if m['source'] == 'divar'][:12]
+    crm_total = int(acquisition.get('crm_total_count') or 0) + int(supply.get('crm_total_count') or 0)
+    divar_total = int(acquisition.get('divar_total_count') or 0) + int(supply.get('divar_total_count') or 0)
 
     return {
         'eligible': True,
         'is_builder': True,
         'match_groups': groups,
-        'crm_matches': crm_matches,
-        'divar_matches': divar_matches,
+        'crm_matches': acquisition['crm_matches'] + supply['crm_matches'],
+        'divar_matches': acquisition['divar_matches'] + supply['divar_matches'],
+        'crm_total_count': crm_total,
+        'divar_total_count': divar_total,
         'divar_locked': not divar_enabled,
-        'total_count': compute_match_total_count({'match_groups': groups}),
+        'total_count': crm_total + divar_total,
+        'crm_page': crm_page,
+        'divar_page': divar_page,
+        'match_page_size': effective_size,
         'matching_tolerance_percent': customer_matching_tolerance_percent(customer),
         'message': '',
     }
@@ -1267,9 +1385,11 @@ def get_customer_matches(
     *,
     divar_enabled: bool,
     dataset_id=None,
-    page: int = 1,
+    crm_page: int = 1,
+    divar_page: int = 1,
     page_size: int | None = None,
     paginate: bool = True,
+    rebuild_index: bool = False,
 ) -> Dict[str, Any]:
     from workspace.services.crm_contact_archive import is_contact_archived
 
@@ -1300,7 +1420,14 @@ def get_customer_matches(
     from workspace.services.crm_matching_diagnostics import attach_match_guidance
 
     if is_builder_customer(customer):
-        payload = get_builder_customer_matches(customer, user, divar_enabled=divar_enabled)
+        payload = get_builder_customer_matches(
+            customer, user,
+            divar_enabled=divar_enabled,
+            crm_page=crm_page,
+            divar_page=divar_page,
+            page_size=page_size,
+            rebuild_index=rebuild_index,
+        )
         payload = _finalize_match_payload_for_user(user, payload)
         payload = attach_match_guidance(
             payload, customer, user,
@@ -1316,6 +1443,8 @@ def get_customer_matches(
 
     tuning = _match_tuning(customer)
     effective_page_size = page_size or tuning['page_size']
+    if not paginate:
+        effective_page_size = max(effective_page_size, 1_000_000)
     retrieval = collect_customer_match_results(
         customer,
         user,
@@ -1323,9 +1452,10 @@ def get_customer_matches(
         dataset_id=dataset_id,
         crm_min_score=tuning['crm_min_score'],
         divar_min_score=tuning['divar_min_score'],
-        page=page,
+        crm_page=crm_page,
+        divar_page=divar_page,
         page_size=effective_page_size,
-        paginate=paginate,
+        rebuild_index=rebuild_index,
     )
     divar_locked = not divar_enabled
     payload = {
@@ -1337,7 +1467,8 @@ def get_customer_matches(
         'crm_total_count': retrieval['crm_total_count'],
         'divar_total_count': retrieval['divar_total_count'],
         'divar_locked': divar_locked,
-        'match_page': retrieval['match_page'],
+        'crm_page': retrieval['crm_page'],
+        'divar_page': retrieval['divar_page'],
         'match_page_size': retrieval['match_page_size'],
         'crm_has_more': retrieval['crm_has_more'],
         'divar_has_more': retrieval['divar_has_more'],
@@ -1644,6 +1775,7 @@ def get_property_contact_matches(
             'eligible': False,
             'matches': [],
             'total_count': 0,
+            'property_id': prop.pk,
             'deal_mode': prop.deal_mode or '',
             'deal_label': _property_deal_label(prop),
             'message': 'تطبیق مخاطب فقط برای فایل‌های فعال فروش یا اجاره در دسترس است.',
@@ -1671,6 +1803,7 @@ def get_property_contact_matches(
         'match_page': retrieval['match_page'],
         'match_page_size': retrieval['match_page_size'],
         'has_more': retrieval['has_more'],
+        'property_id': prop.pk,
         'deal_mode': prop.deal_mode or '',
         'deal_label': _property_deal_label(prop),
         'is_sale': _crm_property_is_sale_listing(prop),

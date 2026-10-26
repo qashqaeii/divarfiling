@@ -2151,7 +2151,11 @@ function initCRMMatches() {
     const filterEmpty = panel.querySelector('[data-match-filter-empty]');
 
     function flattenFeeds() {
-        panel.querySelectorAll('[data-match-feed]').forEach(feed => {
+        panel.querySelectorAll('[data-match-feed]').forEach((feed) => {
+            // صفحه‌بندی: ستون‌ها، data-match-list و دکمه «نمایش بیشتر» را نگه دار
+            if (feed.querySelector('[data-match-list], [data-match-load-more]')) {
+                return;
+            }
             const cards = [...feed.querySelectorAll('[data-match-card], [data-match-locked]')];
             if (!cards.length) return;
             cards.sort((a, b) => (Number(b.dataset.score) || 0) - (Number(a.dataset.score) || 0));
@@ -2279,7 +2283,10 @@ function initCRMMatches() {
             const res = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
             const data = await res.json();
             if (!data.ok) throw new Error(data.error || 'خطا');
-            const list = panel.querySelector(`[data-match-list="${source}"]`);
+            const col = btn.closest('.crm-matches-col-v3');
+            const list = col
+                ? col.querySelector(`[data-match-list="${source}"]`)
+                : panel.querySelector(`[data-match-list="${source}"]`);
             if (list && data.html) {
                 list.insertAdjacentHTML('beforeend', data.html);
             }

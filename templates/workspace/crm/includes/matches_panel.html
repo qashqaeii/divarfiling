@@ -59,10 +59,10 @@
                 همه <em>{% crm_match_tab_count match_data %}</em>
             </button>
             <button type="button" class="crm-matches-source" role="tab" aria-selected="false" data-match-filter="crm">
-                فایل‌های شخصی <em>{{ match_data.crm_matches|length }}</em>
+                فایل‌های شخصی <em>{{ match_data.crm_total_count|default:match_data.crm_matches|length }}</em>
             </button>
             <button type="button" class="crm-matches-source" role="tab" aria-selected="false" data-match-filter="divar">
-                آگهی‌های دیوار <em>{{ match_data.divar_matches|length }}</em>
+                آگهی‌های دیوار <em>{{ match_data.divar_total_count|default:match_data.divar_matches|length }}</em>
             </button>
         </div>
         <div class="crm-matches-sort" aria-label="مرتب‌سازی">

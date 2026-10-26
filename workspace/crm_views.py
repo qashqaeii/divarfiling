@@ -776,7 +776,7 @@ class CustomerPanelView(LoginRequiredMixin, View):
             customer, request.user,
             divar_enabled=has_active_bot_license(request.user),
         )
-        match_count = len(matches.get('crm_matches', [])) + len(matches.get('divar_matches', []))
+        match_count = int(matches.get('total_count') or 0)
 
         activities = [
             {

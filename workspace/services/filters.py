@@ -333,21 +333,29 @@ def get_neighborhoods_qs(listings_qs: QuerySet) -> List[str]:
     )
 
 
-def get_user_dataset_neighborhoods(user, *, limit: int = 300) -> List[str]:
-    """محله‌های م distinct از همه فایلینگ‌های فعال کاربر."""
+def get_user_dataset_neighborhoods(
+    user,
+    *,
+    search: str = '',
+    limit: int = 500,
+    offset: int = 0,
+) -> List[str]:
+    """محله‌های distinct از فایلینگ‌های فعال — با جست‌وجو و صفحه‌بندی."""
     from workspace.models import Listing
 
     if not user or not getattr(user, 'pk', None):
         return []
+    qs = Listing.objects.filter(
+        dataset__user=user,
+        dataset__is_active=True,
+    ).exclude(neighborhood='')
+    term = (search or '').strip()
+    if term:
+        qs = qs.filter(neighborhood__icontains=term)
     return list(
-        Listing.objects.filter(
-            dataset__user=user,
-            dataset__is_active=True,
-        )
-        .exclude(neighborhood='')
-        .values_list('neighborhood', flat=True)
+        qs.values_list('neighborhood', flat=True)
         .distinct()
-        .order_by('neighborhood')[:limit]
+        .order_by('neighborhood')[offset: offset + limit]
     )
 
 

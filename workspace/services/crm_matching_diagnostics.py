@@ -11,7 +11,6 @@ from workspace.services.crm_matching import (
     _is_broad_seeker_profile,
     _is_rent_customer,
     _is_sale_customer,
-    _match_tuning,
     is_builder_customer,
 )
 
@@ -81,13 +80,14 @@ def compute_match_diagnostics(
     dataset_id=None,
 ) -> Dict[str, Any]:
     """آمار سبک برای مدیر — بدون شماره تماس یا آدرس."""
-    tuning = _match_tuning(customer)
     crm_qs = _crm_match_candidates_filtered_qs(customer, user)
     crm_sql = crm_qs.count()
     compatible = 0
-    for prop in crm_qs.order_by('-updated_at')[: min(400, tuning['crm_scan_limit'])]:
+    for prop in crm_qs.order_by('-updated_at').iterator(chunk_size=500):
         if _crm_match_compatible(customer, prop):
             compatible += 1
+        if compatible >= 500:
+            break
 
     divar_sql = 0
     if divar_enabled:
@@ -101,8 +101,6 @@ def compute_match_diagnostics(
         'crm_sql_candidates': crm_sql,
         'crm_compatible_deal': compatible,
         'divar_sql_candidates': divar_sql,
-        'scan_limit_crm': tuning['crm_scan_limit'],
-        'scan_limit_divar': tuning['divar_scan_limit'],
         'broad_profile': _is_broad_seeker_profile(customer),
         'divar_enabled': divar_enabled,
     }

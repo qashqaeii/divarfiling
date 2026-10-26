@@ -1,4 +1,4 @@
-"""جمع‌آوری کاندیدا برای امتیازدهی — کاهش bias صرفاً زمانی."""
+"""Legacy — جمع‌آوری محدود کاندیدا (جایگزین: crm_matching_retrieval با اسکن کامل)."""
 from __future__ import annotations
 
 from typing import Iterable, List, Optional, Sequence

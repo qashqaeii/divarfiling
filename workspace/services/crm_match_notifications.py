@@ -134,6 +134,7 @@ def discover_customer_matches(
         user,
         divar_enabled=divar_enabled,
         dataset_id=dataset_id or None,
+        paginate=False,
     )
     if not data.get('eligible'):
         return []
@@ -372,7 +373,26 @@ def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dic
     if not customer:
         return None
     divar_enabled = has_active_bot_license(user)
-    data = get_customer_matches(customer, user, divar_enabled=divar_enabled)
+    page = 1
+    page_size = None
+    if request is not None:
+        try:
+            page = max(1, int(request.GET.get('page', 1) or 1))
+        except (TypeError, ValueError):
+            page = 1
+        raw_size = request.GET.get('page_size')
+        if raw_size:
+            try:
+                page_size = max(1, min(100, int(raw_size)))
+            except (TypeError, ValueError):
+                page_size = None
+    data = get_customer_matches(
+        customer,
+        user,
+        divar_enabled=divar_enabled,
+        page=page,
+        page_size=page_size,
+    )
     data = enrich_match_data_links(user, request, data)
     crm_matches = data.get('crm_matches', [])
     divar_matches = data.get('divar_matches', [])
@@ -393,6 +413,12 @@ def contact_matches_payload(user, contact_id: int, request=None) -> Optional[Dic
         'crm_matches': crm_matches,
         'divar_matches': divar_matches,
         'total_count': total_count,
+        'crm_total_count': int(data.get('crm_total_count') or len(crm_matches)),
+        'divar_total_count': int(data.get('divar_total_count') or len(divar_matches)),
+        'match_page': int(data.get('match_page') or 1),
+        'match_page_size': int(data.get('match_page_size') or 0),
+        'crm_has_more': bool(data.get('crm_has_more')),
+        'divar_has_more': bool(data.get('divar_has_more')),
         'matching_tolerance_percent': data.get('matching_tolerance_percent', 20),
         'customer': {
             'id': customer.pk,

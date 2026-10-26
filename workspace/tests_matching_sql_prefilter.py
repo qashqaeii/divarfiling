@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from workspace.models import CRMProperty, Customer
 from workspace.services.crm_matching import (
-    _crm_match_candidates_qs,
+    _crm_match_candidates_filtered_qs,
     _profile_criteria_eligible,
     match_crm_properties,
 )
@@ -56,7 +56,7 @@ class MatchingSqlPrefilterAreaTests(TestCase):
         )
         self.assertTrue(self._eligible(prop))
         candidate_ids = {
-            p.pk for p in _crm_match_candidates_qs(self.buyer, self.user, scan_limit=50)
+            p.pk for p in _crm_match_candidates_filtered_qs(self.buyer, self.user)
         }
         self.assertIn(prop.pk, candidate_ids)
 
@@ -108,6 +108,6 @@ class MatchingSqlPrefilterRentUnknownTests(TestCase):
             area=90,
         )
         candidate_ids = {
-            p.pk for p in _crm_match_candidates_qs(self.tenant, self.user, scan_limit=50)
+            p.pk for p in _crm_match_candidates_filtered_qs(self.tenant, self.user)
         }
         self.assertIn(prop.pk, candidate_ids)

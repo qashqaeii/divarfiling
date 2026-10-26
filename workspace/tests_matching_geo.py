@@ -38,20 +38,38 @@ class MatchingGeoCityTests(TestCase):
             areas='ونک',
         )
 
-    def test_city_mismatch_excludes_property(self):
+    def test_wrong_neighborhood_excluded_when_area_preference_set(self):
         CRMProperty.objects.create(
+            user=self.user,
+            title='زعفرانیه',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=10_000_000_000,
+            neighborhood='زعفرانیه',
+            city='تهران',
+            area=100,
+        )
+        matches = match_crm_properties(self.buyer, self.user)
+        self.assertEqual(matches, [])
+
+    def test_identity_city_does_not_block_when_areas_empty(self):
+        self.buyer.areas = ''
+        self.buyer.save(update_fields=['areas'])
+        prop = CRMProperty.objects.create(
             user=self.user,
             title='شیراز',
             property_type='آپارتمان',
             deal_mode='فروش',
             transaction_status='فعال',
             sale_price=10_000_000_000,
-            neighborhood='ونک',
+            neighborhood='',
             city='شیراز',
             area=100,
         )
         matches = match_crm_properties(self.buyer, self.user)
-        self.assertEqual(matches, [])
+        ids = {m['property_id'] for m in matches}
+        self.assertIn(prop.pk, ids)
 
     def test_arabic_neighborhood_still_matches(self):
         prop = CRMProperty.objects.create(

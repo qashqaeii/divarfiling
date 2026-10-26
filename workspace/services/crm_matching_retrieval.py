@@ -75,7 +75,10 @@ def collect_customer_match_results(
         )
         divar_total = len(divar_refs)
         divar_slice = slice_refs(divar_refs, divar_page, page_size)
-        divar_out = hydrate_divar_matches(customer, user, divar_slice)
+        divar_out = hydrate_divar_matches(
+            customer, user, divar_slice,
+            min_score=divar_min_score, dataset_id=dataset_id,
+        )
 
     return {
         'crm_matches': crm_out,
@@ -170,7 +173,9 @@ def collect_divar_listing_matches(
     refs = build_divar_index(
         customer, user, min_score=min_score, dataset_id=dataset_id,
     )
-    return hydrate_divar_matches(customer, user, refs)
+    return hydrate_divar_matches(
+        customer, user, refs, min_score=min_score, dataset_id=dataset_id,
+    )
 
 
 def paginate_match_list(items, *, page: int, page_size: int):

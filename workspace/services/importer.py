@@ -795,6 +795,10 @@ def import_dataset(
             dataset.name = build_dataset_name(effective_path_info, basename)
         dataset.save()
 
+    from workspace.services.crm_matching_index import bump_user_divar_listings_match_catalog
+
+    bump_user_divar_listings_match_catalog(dataset.user_id)
+
     return ImportResult(
         dataset=dataset,
         added_count=added_count,

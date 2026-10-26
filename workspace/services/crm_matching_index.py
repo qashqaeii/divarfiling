@@ -12,6 +12,8 @@ from workspace.models import Customer
 
 MATCH_INDEX_CACHE_TTL = 600
 MATCH_ITERATOR_CHUNK_SIZE = 500
+DIVAR_LISTINGS_CATALOG_REV_PREFIX = 'crm_match_divar_rev:'
+DIVAR_LISTINGS_CATALOG_REV_TTL = 86400 * 30
 
 
 @dataclass(frozen=True)
@@ -118,9 +120,18 @@ def user_crm_properties_catalog_extra(user) -> str:
     )
 
 
+def bump_user_divar_listings_match_catalog(user_id: int) -> None:
+    """پس از import/به‌روزرسانی گسترده آگهی — ابطال کلید کاتالوگ تطبیق."""
+    key = f'{DIVAR_LISTINGS_CATALOG_REV_PREFIX}{int(user_id)}'
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, DIVAR_LISTINGS_CATALOG_REV_TTL)
+
+
 def user_divar_listings_catalog_extra(user, dataset_id=None) -> str:
-    """برای ایندکس مخاطب→دیوار."""
-    from django.db.models import Count, Max
+    """برای ایندکس مخاطب→دیوار — تغییر قیمت/محله بدون تغییر count را هم پوشش می‌دهد."""
+    from django.db.models import Count, Max, Sum
 
     from workspace.services.crm_matching import _divar_listings_base_qs
 
@@ -130,10 +141,17 @@ def user_divar_listings_catalog_extra(user, dataset_id=None) -> str:
         mp=Max('pk'),
         mx_created=Max('created_at'),
         mx_published=Max('published_at'),
+        mx_dataset=Max('dataset__updated_at'),
+        sum_price=Sum('price'),
+        sum_deposit=Sum('deposit'),
+        sum_rent=Sum('rent'),
     )
+    rev = int(cache.get(f'{DIVAR_LISTINGS_CATALOG_REV_PREFIX}{user.pk}', 0) or 0)
     return _catalog_token(
-        f"dv:{dataset_id or ''}:{row['n'] or 0}:{row['mp'] or 0}:"
-        f"{row['mx_created'] or ''}:{row['mx_published'] or ''}",
+        f"dv:{dataset_id or ''}:{rev}:{row['n'] or 0}:{row['mp'] or 0}:"
+        f"{row['mx_created'] or ''}:{row['mx_published'] or ''}:"
+        f"{row['mx_dataset'] or ''}:"
+        f"{row['sum_price'] or 0}:{row['sum_deposit'] or 0}:{row['sum_rent'] or 0}",
     )
 
 
@@ -289,25 +307,42 @@ def hydrate_divar_matches(
     customer: Customer,
     user,
     refs: Sequence[ScoredRef],
+    *,
+    min_score: int = 25,
+    dataset_id=None,
 ) -> List[Dict[str, Any]]:
-    from workspace.models import Listing
-    from workspace.services.crm_matching import _score_listing
+    from workspace.services.crm_matching import (
+        _divar_match_candidates_filtered_qs,
+        _listing_is_genuine_owner,
+        _listing_match_compatible,
+        _score_listing,
+    )
 
     if not refs:
         return []
     ids = [r.item_id for r in refs]
     listings = {
         lst.pk: lst
-        for lst in Listing.objects.filter(pk__in=ids).select_related('dataset')
+        for lst in _divar_match_candidates_filtered_qs(
+            customer, user, dataset_id=dataset_id,
+        ).filter(pk__in=ids).select_related('dataset')
     }
     out: List[Dict[str, Any]] = []
     for ref in refs:
         listing = listings.get(ref.item_id)
         if not listing:
             continue
+        if not _listing_is_genuine_owner(listing):
+            continue
+        if not _listing_match_compatible(customer, listing):
+            continue
         item = _score_listing(customer, listing)
-        if item and int(item.get('score') or 0) >= ref.score:
-            out.append(item)
+        if not item:
+            continue
+        score = int(item.get('score') or 0)
+        if score < min_score:
+            continue
+        out.append(item)
     return out
 
 

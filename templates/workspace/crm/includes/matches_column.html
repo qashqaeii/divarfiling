@@ -1,4 +1,7 @@
-<div class="crm-matches-col crm-matches-col-v3{% if divar_locked %} crm-matches-col--locked{% endif %}" data-match-source="{{ source }}">
+<div class="crm-matches-col crm-matches-col-v3{% if divar_locked %} crm-matches-col--locked{% endif %}"
+     data-match-source="{{ source }}"
+     data-match-total="{% if source == 'crm' %}{{ match_data.crm_total_count|default:0 }}{% else %}{{ match_data.divar_total_count|default:0 }}{% endif %}"
+     data-match-loaded="{{ matches|length }}">
     {% if divar_locked %}
     <ul class="crm-match-list crm-match-list-v3">
         <li class="crm-match-locked-card crm-match-locked-card-v3" data-match-locked>
@@ -6,25 +9,30 @@
             <a href="{% url 'workspace:upgrade' %}?feature=crm_divar" class="crm-btn crm-btn-primary crm-btn-sm">فعال‌سازی</a>
         </li>
     </ul>
-    {% elif matches %}
+    {% elif matches or source == 'crm' and match_data.crm_total_count or source == 'divar' and match_data.divar_total_count %}
+    <div class="crm-match-pager-v3" data-match-pager="{{ source }}"
+         {% if source == 'crm' and not match_data.crm_has_more and match_data.crm_total_count %}data-complete="1"{% endif %}
+         {% if source == 'divar' and not match_data.divar_has_more and match_data.divar_total_count %}data-complete="1"{% endif %}>
+        <span class="crm-match-pager-status" data-match-pager-status aria-live="polite"></span>
+        {% if source == 'crm' and match_data.crm_has_more %}
+        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-match-load-more"
+                data-match-load-more data-source="crm"
+                data-next-page="{{ match_data.crm_page|add:1 }}"
+                data-customer-id="{{ customer.pk }}"
+                {% if builder_group %}data-builder-group="{{ builder_group }}"{% endif %}>بارگذاری بیشتر</button>
+        {% elif source == 'divar' and match_data.divar_has_more %}
+        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-match-load-more"
+                data-match-load-more data-source="divar"
+                data-next-page="{{ match_data.divar_page|add:1 }}"
+                data-customer-id="{{ customer.pk }}"
+                {% if builder_group %}data-builder-group="{{ builder_group }}"{% endif %}>بارگذاری بیشتر</button>
+        {% endif %}
+    </div>
     <ul class="crm-match-list crm-match-list-v3" data-match-list="{{ source }}">
         {% for m in matches %}
         {% include 'workspace/crm/includes/match_card.html' with m=m source=source %}
         {% endfor %}
     </ul>
-    {% if source == 'crm' and match_data.crm_has_more %}
-    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-match-load-more"
-            data-match-load-more data-source="crm"
-            data-next-page="{{ match_data.crm_page|add:1 }}"
-            data-customer-id="{{ customer.pk }}"
-            {% if builder_group %}data-builder-group="{{ builder_group }}"{% endif %}>نمایش بیشتر</button>
-    {% elif source == 'divar' and match_data.divar_has_more %}
-    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-match-load-more"
-            data-match-load-more data-source="divar"
-            data-next-page="{{ match_data.divar_page|add:1 }}"
-            data-customer-id="{{ customer.pk }}"
-            {% if builder_group %}data-builder-group="{{ builder_group }}"{% endif %}>نمایش بیشتر</button>
-    {% endif %}
     {% else %}
     <div class="crm-match-empty crm-match-empty-v3" data-match-empty-source="{{ source }}" hidden>
         <p>{% if source == 'divar' %}آگهی دیوار مناسبی در این فهرست نیست.{% else %}فایل شخصی مناسبی در این فهرست نیست.{% endif %}</p>

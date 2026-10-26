@@ -2081,6 +2081,8 @@ function bindCRMMatchingToleranceRoot(root) {
             if (tabCount && data.match_tab_count != null) {
                 tabCount.textContent = crmToPersianDigits(String(data.match_tab_count));
             }
+            const refreshed = document.getElementById('crmMatches');
+            if (refreshed) crmSyncMatchPanelTabCounts(refreshed);
 
             showToast('انعطاف‌پذیری ذخیره شد — پیشنهادها به‌روز شد.');
         } catch (err) {
@@ -2125,6 +2127,78 @@ function bindCRMMatchingToleranceRoot(root) {
 
 function crmMatchCardSource(card) {
     return (card.getAttribute('data-source') || card.dataset.source || '').trim();
+}
+
+function crmParseDataInt(value, fallback = 0) {
+    const n = parseInt(String(value ?? ''), 10);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function crmMatchPagerStatusText(loaded, total) {
+    const fmt = (n) => (typeof crmToPersianDigits === 'function' ? crmToPersianDigits(String(n)) : String(n));
+    if (!total || total <= 0) return 'بدون نتیجه';
+    if (loaded >= total) return `${fmt(total)} مورد — همه بارگذاری شد`;
+    return `${fmt(loaded)} از ${fmt(total)} مورد نمایش داده شده`;
+}
+
+function crmUpdateMatchColumnPager(col) {
+    if (!col) return;
+    const pager = col.querySelector('[data-match-pager]');
+    if (!pager) return;
+    const total = crmParseDataInt(col.dataset.matchTotal, 0);
+    const list = col.querySelector('[data-match-list]');
+    const loaded = list ? list.querySelectorAll('[data-match-card]').length : crmParseDataInt(col.dataset.matchLoaded, 0);
+    col.dataset.matchLoaded = String(loaded);
+    const status = pager.querySelector('[data-match-pager-status]');
+    if (status) status.textContent = crmMatchPagerStatusText(loaded, total);
+    const btn = pager.querySelector('[data-match-load-more]');
+    const complete = total > 0 && loaded >= total;
+    if (complete) pager.setAttribute('data-complete', '1');
+    else pager.removeAttribute('data-complete');
+    if (btn) {
+        btn.hidden = complete;
+        if (complete) btn.disabled = true;
+        else if (!btn.classList.contains('is-loading')) btn.disabled = false;
+    }
+}
+
+function crmSyncMatchPanelTabCounts(panel) {
+    if (!panel) return;
+    const totalCrm = crmParseDataInt(panel.dataset.crmTotal, 0);
+    const totalDivar = crmParseDataInt(panel.dataset.divarTotal, 0);
+    const allTotal = totalCrm + totalDivar;
+    const setEm = (key, value) => {
+        const el = panel.querySelector(`[data-match-tab-count="${key}"]`);
+        if (el) {
+            el.textContent = typeof crmToPersianDigits === 'function'
+                ? crmToPersianDigits(String(value))
+                : String(value);
+        }
+    };
+    setEm('all', allTotal);
+    setEm('crm', totalCrm);
+    setEm('divar', totalDivar);
+}
+
+function crmUpdatePropContactPager(root) {
+    if (!root) return;
+    const pager = root.querySelector('[data-prop-match-pager]');
+    if (!pager) return;
+    const total = crmParseDataInt(pager.dataset.propMatchTotal || root.dataset.propTotal, 0);
+    const list = root.querySelector('[data-prop-match-list]');
+    const loaded = list ? list.querySelectorAll('[data-prop-match-card]').length : crmParseDataInt(pager.dataset.propMatchLoaded, 0);
+    pager.dataset.propMatchLoaded = String(loaded);
+    const status = pager.querySelector('[data-prop-match-pager-status]');
+    if (status) status.textContent = crmMatchPagerStatusText(loaded, total);
+    const btn = pager.querySelector('[data-prop-match-load-more]');
+    const complete = total > 0 && loaded >= total;
+    if (complete) pager.setAttribute('data-complete', '1');
+    else pager.removeAttribute('data-complete');
+    if (btn) {
+        btn.hidden = complete;
+        if (complete) btn.disabled = true;
+        else if (!btn.classList.contains('is-loading')) btn.disabled = false;
+    }
 }
 
 function initCRMMatchesFilterDelegation() {
@@ -2254,15 +2328,8 @@ function initCRMMatches() {
         console.error('initCRMMatches flattenFeeds', err);
     }
 
-    const totalCrm = parseInt(panel.dataset.crmTotal || '0', 10);
-    const totalDivar = parseInt(panel.dataset.divarTotal || '0', 10);
-    const setCount = (filter, value) => {
-        const el = panel.querySelector(`[data-match-filter="${filter}"] em`);
-        if (el) el.textContent = typeof crmToPersianDigits === 'function' ? crmToPersianDigits(String(value)) : String(value);
-    };
-    setCount('all', (totalCrm || 0) + (totalDivar || 0));
-    setCount('crm', totalCrm || panel.querySelectorAll('[data-match-card][data-source="crm"]').length);
-    setCount('divar', totalDivar || panel.querySelectorAll('[data-match-card][data-source="divar"]').length);
+    crmSyncMatchPanelTabCounts(panel);
+    panel.querySelectorAll('.crm-matches-col-v3').forEach((col) => crmUpdateMatchColumnPager(col));
 
     let loadMoreBusy = false;
     panel.addEventListener('click', async (ev) => {
@@ -2276,6 +2343,12 @@ function initCRMMatches() {
         loadMoreBusy = true;
         btn.disabled = true;
         btn.classList.add('is-loading');
+        const col = btn.closest('.crm-matches-col-v3');
+        const pager = btn.closest('[data-match-pager]');
+        if (pager) {
+            const status = pager.querySelector('[data-match-pager-status]');
+            if (status) status.textContent = 'در حال بارگذاری…';
+        }
         try {
             const group = btn.getAttribute('data-builder-group') || '';
             let url = `${baseUrl}?source=${encodeURIComponent(source)}&page=${nextPage}`;
@@ -2283,20 +2356,21 @@ function initCRMMatches() {
             const res = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
             const data = await res.json();
             if (!data.ok) throw new Error(data.error || 'خطا');
-            const col = btn.closest('.crm-matches-col-v3');
             const list = col
                 ? col.querySelector(`[data-match-list="${source}"]`)
                 : panel.querySelector(`[data-match-list="${source}"]`);
             if (list && data.html) {
                 list.insertAdjacentHTML('beforeend', data.html);
             }
+            if (data.total_count != null && col) {
+                col.dataset.matchTotal = String(data.total_count);
+            }
             if (data.has_more) {
                 btn.setAttribute('data-next-page', String(data.next_page || (nextPage + 1)));
-                btn.disabled = false;
-            } else {
+            } else if (btn.parentNode) {
                 btn.remove();
             }
-            flattenFeeds();
+            if (col) crmUpdateMatchColumnPager(col);
             applySourceFilter(panel.dataset.matchSourceFilter || 'all');
             updateSelection();
         } catch (err) {
@@ -2422,12 +2496,15 @@ function initCRMPropContactMatches() {
                 rows().forEach((row) => {
                     const match = type === 'all' || row.dataset.customerType === type;
                     row.hidden = !match;
+                    row.classList.toggle('is-type-filter-hidden', !match);
                     if (match) shown += 1;
                 });
                 if (emptyEl) emptyEl.hidden = shown > 0;
             });
         }
     }
+
+    crmUpdatePropContactPager(root);
 
     let propLoadMoreBusy = false;
     root.addEventListener('click', async (ev) => {
@@ -2439,6 +2516,9 @@ function initCRMPropContactMatches() {
         propLoadMoreBusy = true;
         btn.disabled = true;
         btn.classList.add('is-loading');
+        const pager = root.querySelector('[data-prop-match-pager]');
+        const status = pager ? pager.querySelector('[data-prop-match-pager-status]') : null;
+        if (status) status.textContent = 'در حال بارگذاری…';
         try {
             const url = `${baseUrl}?page=${nextPage}`;
             const res = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
@@ -2451,19 +2531,15 @@ function initCRMPropContactMatches() {
                     cb.addEventListener('change', updateSelection);
                 });
             }
+            if (data.total_count != null && pager) {
+                pager.dataset.propMatchTotal = String(data.total_count);
+            }
             if (data.has_more) {
                 btn.setAttribute('data-next-page', String(data.next_page || (nextPage + 1)));
-                btn.disabled = false;
-            } else {
+            } else if (btn.parentNode) {
                 btn.remove();
             }
-            if (chipHost && !chipHost.hidden) {
-                const types = [...new Set(rows().map(r => (r.dataset.customerType || '').trim()).filter(Boolean))];
-                if (types.length > 1) {
-                    chipHost.replaceChildren();
-                    chipHost.dispatchEvent(new Event('click'));
-                }
-            }
+            crmUpdatePropContactPager(root);
             updateSelection();
         } catch (err) {
             console.error('prop match load more', err);

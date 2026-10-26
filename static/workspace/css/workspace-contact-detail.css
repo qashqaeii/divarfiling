@@ -2358,6 +2358,55 @@
     display: none !important;
 }
 
+#crmMatches.crm-matches-v3 .crm-match-pager-v3,
+#crmPropContactMatches.crm-pcm-v3 .crm-pcm-pager-v3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 8px 0 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--ws-surface);
+}
+
+#crmMatches.crm-matches-v3 .crm-match-pager-status,
+#crmPropContactMatches.crm-pcm-v3 .crm-pcm-pager-status {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    min-width: 0;
+}
+
+#crmMatches.crm-matches-v3 .crm-match-load-more.is-loading,
+#crmPropContactMatches.crm-pcm-v3 .crm-pcm-load-more.is-loading {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+#crmMatches.crm-matches-v3 .crm-match-pager-v3[data-complete="1"] .crm-match-load-more,
+#crmPropContactMatches.crm-pcm-v3 .crm-pcm-pager-v3[data-complete="1"] .crm-pcm-load-more {
+    display: none !important;
+}
+
+@media (max-width: 640px) {
+    #crmMatches.crm-matches-v3 .crm-match-pager-v3,
+    #crmPropContactMatches.crm-pcm-v3 .crm-pcm-pager-v3 {
+        top: 0;
+        padding: 10px 0;
+    }
+
+    #crmMatches.crm-matches-v3 .crm-match-pager-v3 .crm-match-load-more,
+    #crmPropContactMatches.crm-pcm-v3 .crm-pcm-pager-v3 .crm-pcm-load-more {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 #crmMatches.crm-matches-v3 .crm-match-card-v3 {
     position: relative;
     display: flex;
@@ -2981,7 +3030,9 @@
 
 .crm-pcm-row[hidden],
 .crm-pcm-chips[hidden],
-.crm-pcm-filter-empty[hidden] {
+.crm-pcm-filter-empty[hidden],
+#crmPropContactMatches.crm-pcm-v3 .crm-pcm-card-v3[hidden],
+#crmPropContactMatches.crm-pcm-v3 .crm-pcm-card-v3.is-type-filter-hidden {
     display: none !important;
 }
 

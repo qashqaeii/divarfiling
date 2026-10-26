@@ -30,6 +30,18 @@
     {% if contact_match_data.matches %}
     <div class="crm-pcm-toolbar">
         <div class="crm-pcm-chips crm-pcm-chips-v3" data-prop-match-type-chips hidden role="tablist" aria-label="نوع مخاطب"></div>
+        <div class="crm-pcm-pager-v3" data-prop-match-pager
+             data-prop-match-total="{{ contact_match_data.total_count|default:0 }}"
+             data-prop-match-loaded="{{ contact_match_data.matches|length }}"
+             {% if not contact_match_data.has_more and contact_match_data.total_count %}data-complete="1"{% endif %}>
+            <span class="crm-pcm-pager-status" data-prop-match-pager-status aria-live="polite"></span>
+            {% if contact_match_data.has_more %}
+            <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-pcm-load-more"
+                    data-prop-match-load-more
+                    data-next-page="{{ contact_match_data.match_page|add:1 }}"
+                    data-property-id="{{ contact_match_data.property_id }}">بارگذاری بیشتر</button>
+            {% endif %}
+        </div>
         <div class="crm-pcm-sort" aria-hidden="true">
             <i class="fas fa-arrow-trend-up" aria-hidden="true"></i>
             <span>بهترین تطابق</span>
@@ -41,12 +53,6 @@
         {% include 'workspace/crm/includes/contact_match_card.html' %}
         {% endfor %}
     </ul>
-    {% if contact_match_data.has_more %}
-    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-pcm-load-more"
-            data-prop-match-load-more
-            data-next-page="{{ contact_match_data.match_page|add:1 }}"
-            data-property-id="{{ contact_match_data.property_id }}">نمایش بیشتر</button>
-    {% endif %}
     <p class="crm-pcm-filter-empty" data-prop-match-filter-empty hidden>مخاطبی با این نوع در فهرست نیست.</p>
     {% else %}
     <div class="crm-pcm-empty crm-pcm-empty-v3">

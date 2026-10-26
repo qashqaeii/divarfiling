@@ -251,10 +251,15 @@ def crm_match_tab_count(match_data):
         return int(match_data['total_count'])
     groups = match_data.get('match_groups') or []
     if groups:
-        return sum(
-            len(g.get('crm_matches') or []) + len(g.get('divar_matches') or [])
-            for g in groups
-        )
+        total = 0
+        for g in groups:
+            crm_t = g.get('crm_total_count')
+            divar_t = g.get('divar_total_count')
+            if crm_t is not None or divar_t is not None:
+                total += int(crm_t or 0) + int(divar_t or 0)
+            else:
+                total += len(g.get('crm_matches') or []) + len(g.get('divar_matches') or [])
+        return total
     return len(match_data.get('crm_matches') or []) + len(match_data.get('divar_matches') or [])
 
 

@@ -859,6 +859,8 @@ DEFAULT_DEAL_CHECKLIST = [
 VISIT_OUTCOMES = ['پسندید', 'رد', 'در انتظار', 'بازدید مجدد']
 VISIT_REJECT_REASONS = ['قیمت', 'موقعیت', 'متراژ', 'نور و تهویه', 'طبقه', 'سایر']
 
+CRM_CONTACT_EXPORT_SCHEMA_VERSION = 1
+
 IMPORT_CONTACT_COLUMNS = {
     'نام': 'name',
     'تلفن': 'phone',

@@ -248,7 +248,47 @@
             return;
         }
 
+        if (pending.type === 'form-post') {
+            const ok = await downloadFormPostExport(pending);
+            if (!ok) openModal(pending);
+            return;
+        }
+
         window.location.href = pending.url;
+    }
+
+    async function downloadFormPostExport(pending) {
+        try {
+            const res = await fetch(pending.url, {
+                method: 'POST',
+                body: pending.formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+            });
+            if (res.status === 403) {
+                return false;
+            }
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'خروجی گرفته نشد.');
+            }
+            const blob = await res.blob();
+            const disposition = res.headers.get('Content-Disposition') || '';
+            const match = disposition.match(/filename="([^"]+)"/);
+            const filename = match?.[1] || pending.filename || 'export';
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            return true;
+        } catch (err) {
+            window.alert(err.message || 'خروجی گرفته نشد.');
+            return true;
+        }
     }
 
     async function downloadBlobExport(pending) {
@@ -310,10 +350,21 @@
             filename: options?.filename,
             label: options?.label,
             button: options?.button || null,
+            formData: options?.formData || null,
         };
         if (pending.type === 'fetch-blob') {
             state.pending = pending;
             const ok = await downloadBlobExport(pending);
+            if (!ok) {
+                openModal(pending);
+            } else {
+                state.pending = null;
+            }
+            return;
+        }
+        if (pending.type === 'form-post') {
+            state.pending = pending;
+            const ok = await downloadFormPostExport(pending);
             if (!ok) {
                 openModal(pending);
             } else {
@@ -353,6 +404,21 @@
         });
 
         document.addEventListener('click', onSecureExportClick, true);
+        document.addEventListener('submit', onSecureExportFormSubmit, true);
+    }
+
+    function onSecureExportFormSubmit(e) {
+        const form = e.target.closest('.js-secure-export-form');
+        if (!form) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const label = form.dataset.exportLabel || 'خروجی تیمی';
+        const formData = new FormData(form);
+        requestExport(form.action, {
+            type: 'form-post',
+            label,
+            formData,
+        });
     }
 
     function onSecureExportClick(e) {

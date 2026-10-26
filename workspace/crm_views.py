@@ -424,12 +424,18 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         return super().render_to_response(context, **response_kwargs)
 
     def get_queryset(self):
-        qs = filter_contacts(self.request.user, self.request.GET)
-        if self.request.GET.get('import_batch') == 'last':
-            ids = self.request.session.get('crm_import_created_ids') or []
-            if ids:
-                qs = qs.filter(pk__in=ids)
-        return qs
+        batch_param = (self.request.GET.get('import_batch') or '').strip()
+        if batch_param:
+            from workspace.services.crm_import_batch import resolve_import_batch_qs_ids
+
+            ids, _meta = resolve_import_batch_qs_ids(self.request.user.id, batch_param)
+            if ids is not None:
+                return (
+                    customers_qs(self.request.user)
+                    .filter(pk__in=ids)
+                    .order_by('-created_at')
+                )
+        return filter_contacts(self.request.user, self.request.GET)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -486,8 +492,16 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['crm_section'] = 'contacts'
         ctx['filter_qs'] = urlencode({
             k: v for k, v in self.request.GET.items()
-            if k not in ('view', 'page', 'open', 'partial') and v
+            if k not in ('view', 'page', 'open', 'partial', 'import_batch') and v
         })
+        batch_param = (self.request.GET.get('import_batch') or '').strip()
+        if batch_param:
+            from workspace.services.crm_import_batch import get_import_batch
+            batch = get_import_batch(user.id, batch_param)
+            if batch:
+                ctx['import_batch_meta'] = batch
+                ctx['import_batch_id'] = batch_param
+        ctx['show_import_errors_download'] = bool(self.request.session.get('crm_import_error_report'))
         if archive_scope in (ARCHIVE_SCOPE_ARCHIVED, ARCHIVE_SCOPE_ALL):
             ctx['view_mode'] = 'table'
             ctx['pipeline'] = []
@@ -3683,7 +3697,19 @@ class CustomerImportView(LoginRequiredMixin, View):
                 messages.warning(request, err)
             visible = result.visible_created_count(request.user)
             if result.created:
-                request.session['crm_import_created_ids'] = result.created_ids[:500]
+                from workspace.services.crm_import_batch import create_import_batch
+
+                batch_id = create_import_batch(
+                    request.user.id,
+                    result.created_ids,
+                    stats={
+                        'created': result.created,
+                        'duplicates': result.duplicates,
+                        'invalid_rows': result.invalid_rows,
+                        'skipped_empty_name': result.skipped_empty_name,
+                    },
+                )
+                request.session['crm_last_import_batch_id'] = batch_id
                 summary = (
                     f'{result.created} مخاطب ثبت شد'
                     f' ({result.duplicates} تکراری، {result.skipped_empty_name} بدون نام، '
@@ -3692,7 +3718,7 @@ class CustomerImportView(LoginRequiredMixin, View):
                 if visible < result.created:
                     summary += f' {visible} مورد در فهرست شما قابل مشاهده است.'
                 messages.success(request, summary)
-                nxt = append_query_param(nxt, 'import_batch', 'last')
+                nxt = append_query_param(nxt, 'import_batch', batch_id)
             elif not result.error_messages():
                 messages.info(
                     request,

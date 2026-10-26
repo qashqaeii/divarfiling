@@ -19,6 +19,24 @@
 {% include 'workspace/academy/includes/contextual_banner.html' %}
 <div class="crm-contacts-pro crm-page-chrome crm-contacts-mobile mk-filing-datasets">
 
+    {% if import_batch_meta %}
+    <div class="crm-import-alert crm-import-alert--success" role="status">
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
+        <span>
+            نمایش {{ import_batch_meta.ids|length }} مخاطب از آخرین Import
+            {% if import_batch_meta.truncated %} (لیست کوتاه‌شده — برای همه از خروجی Excel استفاده کنید){% endif %}
+        </span>
+        <a href="{% url 'workspace:crm_contacts' %}" class="crm-btn crm-btn-ghost crm-btn-sm">بازگشت به فهرست کامل</a>
+    </div>
+    {% endif %}
+    {% if show_import_errors_download %}
+    <div class="crm-import-alert" role="note">
+        <i class="fas fa-file-circle-exclamation" aria-hidden="true"></i>
+        <span>برخی ردیف‌ها خطا داشتند.</span>
+        <a href="{% url 'workspace:crm_import_errors' %}" class="crm-btn crm-btn-ghost crm-btn-sm">دانلود گزارش خطاها (CSV)</a>
+    </div>
+    {% endif %}
+
     <header class="crm-dash-bar crm-contacts-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">مخاطبین</h1>

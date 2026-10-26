@@ -12,13 +12,18 @@ from workspace.constants import (
     CRM_STATUSES,
     CRM_TYPES,
     IMPORT_CONTACT_COLUMNS,
-    IMPORT_CONTACT_HEADER_ALIASES,
 )
 from workspace.models import Customer
 from workspace.services.crm import log_activity, normalize_phone
+from workspace.services.crm_import_phone import parse_import_phone_fields
 from workspace.services.crm_merge import find_duplicate_contact, normalize_contact_name
 from workspace.services.crm_scope import customers_qs, get_agency
 from workspace.services.contact_gender import normalize_contact_gender_import
+from workspace.services.import_header_map import (
+    build_contact_header_map,
+    contact_name_field_mapped,
+    map_row_by_headers,
+)
 from workspace.services.spreadsheet_io import SpreadsheetReadError, read_uploaded_spreadsheet
 
 
@@ -72,32 +77,6 @@ class ContactImportResult:
         return customers_qs(user).filter(pk__in=self.created_ids).count()
 
 
-def _build_header_map(columns: List[str]) -> Dict[str, str]:
-    """نگاشت ستون فایل → فیلد مدل (بدون نگاشت مبهم دو ستون به یک مقصد)."""
-    canonical = {**IMPORT_CONTACT_COLUMNS, **IMPORT_CONTACT_HEADER_ALIASES}
-    mapping: Dict[str, str] = {}
-    for col in columns:
-        norm = str(col or '').strip().replace('\ufeff', '').replace('\u200c', '')
-        if not norm:
-            continue
-        field_name = canonical.get(norm)
-        if not field_name:
-            continue
-        if field_name in mapping.values():
-            continue
-        mapping[norm] = field_name
-    return mapping
-
-
-def _map_row(row: dict, header_to_field: Dict[str, str]) -> Dict[str, Any]:
-    mapped: Dict[str, Any] = {}
-    for key, val in row.items():
-        field_name = header_to_field.get(str(key).strip())
-        if field_name and field_name not in mapped:
-            mapped[field_name] = val
-    return mapped
-
-
 def _clean_str(val) -> str:
     if val is None:
         return ''
@@ -105,16 +84,6 @@ def _clean_str(val) -> str:
         return ''
     s = str(val).strip()
     return '' if s.lower() in ('nan', 'none', 'null') else s
-
-
-def _format_phone_display(raw: str) -> str:
-    cleaned = _clean_str(raw)
-    if not cleaned:
-        return ''
-    key = normalize_phone(cleaned)
-    if len(key) < 10:
-        return cleaned
-    return key
 
 
 def import_contacts_from_file_result(user, uploaded_file) -> ContactImportResult:
@@ -126,8 +95,8 @@ def import_contacts_from_file_result(user, uploaded_file) -> ContactImportResult
         result.abort_reason = str(exc)
         return result
 
-    header_to_field = _build_header_map(list(df.columns))
-    if 'name' not in header_to_field.values():
+    header_to_field = build_contact_header_map(list(df.columns))
+    if not contact_name_field_mapped(header_to_field):
         result.aborted = True
         result.abort_reason = (
             'ستون «نام» شناسایی نشد. عنوان ستون را مطابق نمونه تنظیم کنید '
@@ -141,7 +110,7 @@ def import_contacts_from_file_result(user, uploaded_file) -> ContactImportResult
     for c in customers_qs(user).only('name', 'phone', 'phone_alt'):
         phone_key = normalize_phone(c.phone)
         name_key = normalize_contact_name(c.name).casefold()
-        if len(phone_key) >= 10 and name_key:
+        if phone_key and name_key:
             existing_keys.add((name_key, phone_key))
 
     in_file_keys = set()
@@ -150,7 +119,7 @@ def import_contacts_from_file_result(user, uploaded_file) -> ContactImportResult
     for idx, row in df.iterrows():
         row_num = int(idx) + 2
         row_dict = {str(k): row[k] for k in df.columns}
-        data = _map_row(row_dict, header_to_field)
+        data = map_row_by_headers(row_dict, header_to_field)
         name_val = _clean_str(data.get('name'))
         if not name_val:
             result.skipped_empty_name += 1
@@ -158,21 +127,23 @@ def import_contacts_from_file_result(user, uploaded_file) -> ContactImportResult
 
         result.processed_rows += 1
 
-        phone_raw = data.get('phone')
-        phone = _format_phone_display(phone_raw)
-        phone_key = normalize_phone(phone)
-        if phone_raw and _clean_str(phone_raw) and len(phone_key) < 10:
+        phone, phone_alt, phone_err = parse_import_phone_fields(
+            data.get('phone'),
+            data.get('phone_alt'),
+        )
+        if phone_err:
             result.invalid_rows += 1
             result.row_errors.append(ImportRowError(
                 row_number=row_num,
                 column='تلفن',
-                reason='شماره تماس نامعتبر است',
-                hint='مثال: 09121234567',
+                reason=phone_err,
+                hint='مثال: 09121234567 یا 02188776655',
             ))
             continue
+        phone_key = normalize_phone(phone)
 
         name_key = normalize_contact_name(name_val).casefold()
-        dup_key = (name_key, phone_key) if len(phone_key) >= 10 and name_key else None
+        dup_key = (name_key, phone_key) if phone and name_key else None
 
         if dup_key:
             if dup_key in existing_keys or dup_key in in_file_keys:
@@ -207,7 +178,7 @@ def import_contacts_from_file_result(user, uploaded_file) -> ContactImportResult
             agency=agency,
             name=name_val,
             phone=phone,
-            phone_alt=_format_phone_display(_clean_str(data.get('phone_alt'))),
+            phone_alt=phone_alt,
             email=_clean_str(data.get('email')),
             gender=gender,
             customer_type=customer_type,

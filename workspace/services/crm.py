@@ -2179,26 +2179,34 @@ def _excel_safe_value(value: Any) -> Any:
     return value
 
 
+def _export_scalar(value: Any) -> Any:
+    from workspace.services.spreadsheet_io import spreadsheet_safe_cell
+
+    if isinstance(value, (int, float, bool)) or value is None:
+        return value
+    return spreadsheet_safe_cell(_excel_safe_value(value))
+
+
 def customers_to_export_rows(customers) -> List[Dict[str, Any]]:
     from workspace.services.contact_gender import contact_gender_export_label
 
     rows = []
     for c in customers:
         rows.append({
-            'نام': c.name,
-            'تلفن': c.phone,
-            'تلفن دوم': c.phone_alt,
-            'ایمیل': c.email,
-            'جنسیت': contact_gender_export_label(c.gender),
-            'نوع': c.customer_type,
-            'وضعیت': c.status,
-            'اولویت': c.priority,
-            'منبع': c.source,
-            'شهر': c.city,
-            'منطقه': c.district,
-            'شغل': c.job,
-            'نام شرکت': c.company_name,
-            'کد ملی': c.national_id,
+            'نام': _export_scalar(c.name),
+            'تلفن': _export_scalar(c.phone),
+            'تلفن دوم': _export_scalar(c.phone_alt),
+            'ایمیل': _export_scalar(c.email),
+            'جنسیت': _export_scalar(contact_gender_export_label(c.gender)),
+            'نوع': _export_scalar(c.customer_type),
+            'وضعیت': _export_scalar(c.status),
+            'اولویت': _export_scalar(c.priority),
+            'منبع': _export_scalar(c.source),
+            'شهر': _export_scalar(c.city),
+            'منطقه': _export_scalar(c.district),
+            'شغل': _export_scalar(c.job),
+            'نام شرکت': _export_scalar(c.company_name),
+            'کد ملی': _export_scalar(c.national_id),
             'مهلت اجاره': _excel_safe_value(c.lease_deadline),
             'بودجه از': c.budget_min,
             'بودجه تا': c.budget_max,
@@ -2208,10 +2216,10 @@ def customers_to_export_rows(customers) -> List[Dict[str, Any]]:
             'اجاره تا': c.rent_max,
             'متراژ از': c.min_area,
             'متراژ تا': c.max_area,
-            'محله‌ها': c.areas,
-            'برچسب‌ها': c.tags,
+            'محله‌ها': _export_scalar(c.areas),
+            'برچسب‌ها': _export_scalar(c.tags),
             'پیگیری بعدی': _excel_safe_value(c.next_follow_up),
-            'یادداشت': c.notes,
+            'یادداشت': _export_scalar(c.notes),
             'تاریخ ثبت': _excel_safe_value(c.created_at),
         })
     return rows
@@ -2235,7 +2243,7 @@ def export_customers_excel_response(user, params: Optional[dict] = None):
             if tz is not None:
                 df[col] = df[col].dt.tz_localize(None)
         elif df[col].dtype == object:
-            df[col] = df[col].map(_excel_safe_value)
+            df[col] = df[col].map(_export_scalar)
     buf = io.BytesIO()
     df.to_excel(buf, index=False, engine='openpyxl')
     buf.seek(0)
@@ -2254,11 +2262,14 @@ def export_customers_csv_response(user, params: Optional[dict] = None):
 
     from django.http import HttpResponse
 
+    from workspace.services.spreadsheet_io import stable_union_fieldnames
+
     rows = customers_to_export_rows(export_customers_queryset(user, params))
     if not rows:
         rows = [{'نام': ''}]
+    fieldnames = stable_union_fieldnames(rows)
     buf = io.StringIO()
-    writer = csv.DictWriter(buf, fieldnames=rows[0].keys())
+    writer = csv.DictWriter(buf, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
     writer.writerows(rows)
     filename = f'crm_contacts_{datetime.now().strftime("%Y%m%d")}.csv'
@@ -2353,7 +2364,7 @@ def export_properties_excel_response(user, params: Optional[dict] = None):
     df = pd.DataFrame(rows)
     for col in df.columns:
         if df[col].dtype == object:
-            df[col] = df[col].map(_excel_safe_value)
+            df[col] = df[col].map(_export_scalar)
     buf = io.BytesIO()
     df.to_excel(buf, index=False, engine='openpyxl')
     buf.seek(0)

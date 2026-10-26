@@ -3,8 +3,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from django.db import transaction
+
 from workspace.models import CRMDeal, CRMProperty, CRMSyncLog, Customer
 from workspace.services.crm_audit import log_agency_audit
+from workspace.services.crm_import_phone import parse_import_phone_fields
 from workspace.services.crm_scope import (
     agency_customers_qs, agency_deals_qs, agency_properties_qs,
     can_manage_team, customers_qs, deals_qs, get_agency, properties_qs,
@@ -55,36 +58,61 @@ def export_crm_payload(user, *, agency_scope: bool = False) -> Dict[str, Any]:
     }
 
 
-def _import_contacts(user, agency, rows: List[dict], *, merge: bool, dry_run: bool) -> Dict[str, int]:
+def _import_contacts(
+    user,
+    agency,
+    rows: List[dict],
+    *,
+    merge: bool,
+    dry_run: bool,
+    contact_id_map: Dict[int, int],
+) -> Dict[str, int]:
     stats = {'contacts': 0, 'skipped': 0, 'conflicts': 0}
     for row in rows or []:
-        phone = (row.get('phone') or '').strip()
         name = (row.get('name') or '').strip()
         if not name:
             stats['skipped'] += 1
             continue
+        phone, phone_alt, phone_err = parse_import_phone_fields(
+            row.get('phone'),
+            row.get('phone_alt'),
+        )
+        if phone_err:
+            stats['skipped'] += 1
+            continue
+
+        source_id = row.get('id')
+        try:
+            source_id_int = int(source_id) if source_id is not None else None
+        except (TypeError, ValueError):
+            source_id_int = None
+
         existing = None
         if phone:
             from workspace.services.crm_merge import find_duplicate_contact
             existing = find_duplicate_contact(user, name, phone)
         if existing:
+            if source_id_int:
+                contact_id_map[source_id_int] = existing.pk
             stats['skipped'] += 1
             if merge:
                 stats['conflicts'] += 1
             continue
         if dry_run:
+            if source_id_int:
+                contact_id_map[source_id_int] = -1
             stats['contacts'] += 1
             continue
         gender = None
         if row.get('gender') is not None:
             from workspace.services.contact_gender import normalize_contact_gender_import
             gender = normalize_contact_gender_import(row.get('gender'))
-        Customer.objects.create(
+        customer = Customer.objects.create(
             user=user,
             agency=agency,
             name=name,
             phone=phone,
-            phone_alt=row.get('phone_alt') or '',
+            phone_alt=phone_alt or '',
             email=row.get('email') or '',
             gender=gender,
             customer_type=row.get('customer_type') or 'سرنخ',
@@ -95,6 +123,8 @@ def _import_contacts(user, agency, rows: List[dict], *, merge: bool, dry_run: bo
             tags=row.get('tags') or '',
             notes=row.get('notes') or '',
         )
+        if source_id_int:
+            contact_id_map[source_id_int] = customer.pk
         stats['contacts'] += 1
     return stats
 
@@ -129,17 +159,35 @@ def _import_properties(user, agency, rows: List[dict], *, dry_run: bool) -> Dict
     return stats
 
 
-def _import_deals(user, agency, rows: List[dict], *, dry_run: bool) -> Dict[str, int]:
+def _import_deals(
+    user,
+    agency,
+    rows: List[dict],
+    *,
+    dry_run: bool,
+    contact_id_map: Dict[int, int],
+) -> Dict[str, int]:
     stats = {'deals': 0, 'skipped': 0}
     for row in rows or []:
         title = (row.get('title') or '').strip()
         if not title:
             stats['skipped'] += 1
             continue
-        customer_id = row.get('customer_id')
-        if customer_id and not customers_qs(user).filter(pk=customer_id).exists():
-            stats['skipped'] += 1
-            continue
+        raw_customer_id = row.get('customer_id')
+        customer_id = None
+        if raw_customer_id is not None and str(raw_customer_id).strip() != '':
+            try:
+                source_cid = int(raw_customer_id)
+            except (TypeError, ValueError):
+                stats['skipped'] += 1
+                continue
+            customer_id = contact_id_map.get(source_cid)
+            if not customer_id or customer_id < 0:
+                stats['skipped'] += 1
+                continue
+            if not customers_qs(user).filter(pk=customer_id).exists():
+                stats['skipped'] += 1
+                continue
         if dry_run:
             stats['deals'] += 1
             continue
@@ -166,16 +214,22 @@ def import_crm_payload(
     dry_run: bool = False,
 ) -> Dict[str, int]:
     agency = get_agency(user)
+    contact_id_map: Dict[int, int] = {}
     stats: Dict[str, int] = {'contacts': 0, 'properties': 0, 'deals': 0, 'skipped': 0, 'conflicts': 0}
-    c = _import_contacts(user, agency, payload.get('contacts') or [], merge=merge, dry_run=dry_run)
-    p = _import_properties(user, agency, payload.get('properties') or [], dry_run=dry_run)
-    d = _import_deals(user, agency, payload.get('deals') or [], dry_run=dry_run)
-    for k, v in c.items():
-        stats[k] = stats.get(k, 0) + v
-    for k, v in p.items():
-        stats[k] = stats.get(k, 0) + v
-    for k, v in d.items():
-        stats[k] = stats.get(k, 0) + v
+
+    with transaction.atomic():
+        c = _import_contacts(
+            user, agency, payload.get('contacts') or [],
+            merge=merge, dry_run=dry_run, contact_id_map=contact_id_map,
+        )
+        p = _import_properties(user, agency, payload.get('properties') or [], dry_run=dry_run)
+        d = _import_deals(
+            user, agency, payload.get('deals') or [],
+            dry_run=dry_run, contact_id_map=contact_id_map,
+        )
+        for part in (c, p, d):
+            for k, v in part.items():
+                stats[k] = stats.get(k, 0) + v
     return stats
 
 

@@ -57,9 +57,9 @@
                 <span class="a360-btn-label a360-btn-label--mobile">خروجی</span>
             </summary>
             <div class="a360-export__menu" role="menu">
-                <a href="{{ export_url }}?type=contacts&format=xlsx" role="menuitem">مخاطبین (XLSX)</a>
-                <a href="{{ export_url }}?type=properties&format=xlsx" role="menuitem">فایل‌های شخصی (XLSX)</a>
-                <a href="{{ export_url }}?type=deals&format=xlsx" role="menuitem">معاملات (XLSX)</a>
+                <a href="{{ export_url }}?type=contacts&format=xlsx" class="js-secure-export" data-export-type="fetch-blob" data-export-label="مخاطبین مشاور (XLSX)" role="menuitem">مخاطبین (XLSX)</a>
+                <a href="{{ export_url }}?type=properties&format=xlsx" class="js-secure-export" data-export-type="fetch-blob" data-export-label="فایل‌های شخصی مشاور (XLSX)" role="menuitem">فایل‌های شخصی (XLSX)</a>
+                <a href="{{ export_url }}?type=deals&format=xlsx" class="js-secure-export" data-export-type="fetch-blob" data-export-label="معاملات مشاور (XLSX)" role="menuitem">معاملات (XLSX)</a>
             </div>
         </details>
     </div>

@@ -18,7 +18,7 @@
         <i class="fas fa-chevron-down agency-fold__chev" aria-hidden="true"></i>
     </summary>
     <div class="agency-fold__body agency-fold__body--export">
-        <form method="post" action="{% url 'workspace:agency_team_export' %}" class="agency-export-form">
+        <form method="post" action="{% url 'workspace:agency_team_export' %}" class="agency-export-form js-secure-export-form" data-export-label="خروجی تیمی آژانس">
             {% csrf_token %}
             <label>
                 <span>نوع داده</span>
@@ -72,7 +72,7 @@
                 <input type="checkbox" name="all_members" value="1" checked>
                 خروجی از همه مشاوران
             </label>
-            <button type="submit" class="crm-btn crm-btn-primary">
+            <button type="submit" class="crm-btn crm-btn-primary js-secure-export-submit">
                 <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='download' size='inline' only %}</span>
                 دریافت خروجی
             </button>

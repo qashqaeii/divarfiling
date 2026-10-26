@@ -64,6 +64,22 @@ def is_valid_iran_mobile(phone: str) -> bool:
     return bool(re.fullmatch(r'09\d{9}', phone or ''))
 
 
+def is_valid_iran_landline(phone: str) -> bool:
+    """تلفن ثابت ایران پس از normalize_phone."""
+    p = normalize_phone(phone or '')
+    if not p:
+        return False
+    return bool(re.fullmatch(r'0[1-8]\d{8,9}', p))
+
+
+def is_valid_crm_phone(phone: str) -> bool:
+    """موبایل یا ثابت معتبر برای CRM."""
+    if not phone:
+        return False
+    p = normalize_phone(phone)
+    return is_valid_iran_mobile(p) or is_valid_iran_landline(p)
+
+
 def _apply_spoken_operator_phrases(text: str) -> str:
     out = text
     for pattern, repl in _SPOKEN_OPERATOR_PHRASES:

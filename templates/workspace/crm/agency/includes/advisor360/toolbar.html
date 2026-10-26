@@ -51,8 +51,8 @@
             دانلود خروجی
         </summary>
         <div class="a360-export__menu" role="menu">
-            <a href="{{ export_url }}?type={{ export_type }}&format=xlsx&q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&stage={{ request.GET.stage|urlencode }}" role="menuitem">XLSX</a>
-            <a href="{{ export_url }}?type={{ export_type }}&format=csv&q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&stage={{ request.GET.stage|urlencode }}" role="menuitem">CSV</a>
+            <a href="{{ export_url }}?type={{ export_type }}&format=xlsx&q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&stage={{ request.GET.stage|urlencode }}" class="js-secure-export" data-export-type="fetch-blob" data-export-label="خروجی XLSX مشاور" role="menuitem">XLSX</a>
+            <a href="{{ export_url }}?type={{ export_type }}&format=csv&q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&stage={{ request.GET.stage|urlencode }}" class="js-secure-export" data-export-type="fetch-blob" data-export-label="خروجی CSV مشاور" role="menuitem">CSV</a>
         </div>
     </details>
     {% endif %}

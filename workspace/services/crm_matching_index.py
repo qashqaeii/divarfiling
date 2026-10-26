@@ -125,9 +125,15 @@ def user_divar_listings_catalog_extra(user, dataset_id=None) -> str:
     from workspace.services.crm_matching import _divar_listings_base_qs
 
     qs = _divar_listings_base_qs(user, dataset_id=dataset_id)
-    row = qs.aggregate(n=Count('pk'), mx=Max('updated_at'), mp=Max('pk'))
+    row = qs.aggregate(
+        n=Count('pk'),
+        mp=Max('pk'),
+        mx_created=Max('created_at'),
+        mx_published=Max('published_at'),
+    )
     return _catalog_token(
-        f"dv:{dataset_id or ''}:{row['n'] or 0}:{row['mx'] or ''}:{row['mp'] or 0}",
+        f"dv:{dataset_id or ''}:{row['n'] or 0}:{row['mp'] or 0}:"
+        f"{row['mx_created'] or ''}:{row['mx_published'] or ''}",
     )
 
 

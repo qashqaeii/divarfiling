@@ -13,7 +13,9 @@ from workspace.models import Customer
 MATCH_INDEX_CACHE_TTL = 600
 MATCH_ITERATOR_CHUNK_SIZE = 500
 DIVAR_LISTINGS_CATALOG_REV_PREFIX = 'crm_match_divar_rev:'
-DIVAR_LISTINGS_CATALOG_REV_TTL = 86400 * 30
+CRM_PROPERTIES_CATALOG_REV_PREFIX = 'crm_match_props_rev:'
+CONTACTS_CATALOG_REV_PREFIX = 'crm_match_contacts_rev:'
+MATCH_CATALOG_REV_TTL = 86400 * 30
 
 
 @dataclass(frozen=True)
@@ -63,6 +65,7 @@ def customer_match_fingerprint(customer: Customer) -> str:
         'builder_buy_min_area': customer.builder_buy_min_area,
         'builder_buy_max_area': customer.builder_buy_max_area,
         'builder_buy_property_types': customer.builder_buy_property_types or '',
+        'rooms': customer.rooms or '',
     }
     digest = hashlib.sha256(_stable_json(payload).encode('utf-8')).hexdigest()
     return digest[:20]
@@ -75,9 +78,17 @@ def property_match_fingerprint(prop) -> str:
         'rent': prop.monthly_rent,
         'area': prop.area,
         'deal': prop.deal_mode or '',
+        'tx': prop.transaction_status or '',
         'type': prop.property_type or '',
         'hood': prop.neighborhood or '',
+        'district': prop.district or '',
         'city': prop.city or '',
+        'rooms': prop.rooms or '',
+        'floor': prop.floor,
+        'year': prop.build_year,
+        'parking': bool(prop.has_parking),
+        'storage': bool(prop.has_storage),
+        'elevator': bool(prop.has_elevator),
     }
     digest = hashlib.sha256(_stable_json(payload).encode('utf-8')).hexdigest()
     return digest[:20]
@@ -88,71 +99,44 @@ def _catalog_token(raw: str) -> str:
     return digest[:12]
 
 
-def user_contacts_catalog_extra(user) -> str:
-    """برای ایندکس ملک→مخاطب — وقتی پرونده مخاطبین عوض می‌شود."""
-    from django.db.models import Count, Max
-
-    from workspace.models import Customer
-
-    row = Customer.objects.filter(user=user).aggregate(
-        n=Count('pk'),
-        mx=Max('updated_at'),
-        mp=Max('pk'),
-    )
-    return _catalog_token(
-        f"ct:{row['n'] or 0}:{row['mx'] or ''}:{row['mp'] or 0}",
-    )
+def _read_catalog_revision(prefix: str, user_id: int) -> int:
+    return int(cache.get(f'{prefix}{int(user_id)}', 0) or 0)
 
 
-def user_crm_properties_catalog_extra(user) -> str:
-    """برای ایندکس مخاطب→فایل شخصی."""
-    from django.db.models import Count, Max
-
-    from workspace.services.crm_scope import properties_qs
-
-    row = properties_qs(user).aggregate(
-        n=Count('pk'),
-        mx=Max('updated_at'),
-        mp=Max('pk'),
-    )
-    return _catalog_token(
-        f"pr:{row['n'] or 0}:{row['mx'] or ''}:{row['mp'] or 0}",
-    )
-
-
-def bump_user_divar_listings_match_catalog(user_id: int) -> None:
-    """پس از import/به‌روزرسانی گسترده آگهی — ابطال کلید کاتالوگ تطبیق."""
-    key = f'{DIVAR_LISTINGS_CATALOG_REV_PREFIX}{int(user_id)}'
+def _bump_catalog_revision(prefix: str, user_id: int) -> None:
+    key = f'{prefix}{int(user_id)}'
     try:
         cache.incr(key)
     except ValueError:
-        cache.set(key, 1, DIVAR_LISTINGS_CATALOG_REV_TTL)
+        cache.set(key, 1, MATCH_CATALOG_REV_TTL)
+
+
+def bump_user_divar_listings_match_catalog(user_id: int) -> None:
+    """import / استخراج / save آگهی — revision سبک (بدون اسکن کل دیتاست)."""
+    _bump_catalog_revision(DIVAR_LISTINGS_CATALOG_REV_PREFIX, user_id)
+
+
+def bump_user_crm_properties_match_catalog(user_id: int) -> None:
+    _bump_catalog_revision(CRM_PROPERTIES_CATALOG_REV_PREFIX, user_id)
+
+
+def bump_user_contacts_match_catalog(user_id: int) -> None:
+    _bump_catalog_revision(CONTACTS_CATALOG_REV_PREFIX, user_id)
+
+
+def user_contacts_catalog_extra(user) -> str:
+    rev = _read_catalog_revision(CONTACTS_CATALOG_REV_PREFIX, user.pk)
+    return _catalog_token(f'ct:{rev}')
+
+
+def user_crm_properties_catalog_extra(user) -> str:
+    rev = _read_catalog_revision(CRM_PROPERTIES_CATALOG_REV_PREFIX, user.pk)
+    return _catalog_token(f'pr:{rev}')
 
 
 def user_divar_listings_catalog_extra(user, dataset_id=None) -> str:
-    """برای ایندکس مخاطب→دیوار — تغییر قیمت/محله بدون تغییر count را هم پوشش می‌دهد."""
-    from django.db.models import Count, Max, Sum
-
-    from workspace.services.crm_matching import _divar_listings_base_qs
-
-    qs = _divar_listings_base_qs(user, dataset_id=dataset_id)
-    row = qs.aggregate(
-        n=Count('pk'),
-        mp=Max('pk'),
-        mx_created=Max('created_at'),
-        mx_published=Max('published_at'),
-        mx_dataset=Max('dataset__updated_at'),
-        sum_price=Sum('price'),
-        sum_deposit=Sum('deposit'),
-        sum_rent=Sum('rent'),
-    )
-    rev = int(cache.get(f'{DIVAR_LISTINGS_CATALOG_REV_PREFIX}{user.pk}', 0) or 0)
-    return _catalog_token(
-        f"dv:{dataset_id or ''}:{rev}:{row['n'] or 0}:{row['mp'] or 0}:"
-        f"{row['mx_created'] or ''}:{row['mx_published'] or ''}:"
-        f"{row['mx_dataset'] or ''}:"
-        f"{row['sum_price'] or 0}:{row['sum_deposit'] or 0}:{row['sum_rent'] or 0}",
-    )
+    rev = _read_catalog_revision(DIVAR_LISTINGS_CATALOG_REV_PREFIX, user.pk)
+    return _catalog_token(f'dv:{dataset_id or ""}:{rev}')
 
 
 def _index_cache_key(
@@ -281,25 +265,47 @@ def hydrate_crm_matches(
     customer: Customer,
     user,
     refs: Sequence[ScoredRef],
+    *,
+    min_score: int = 25,
+    profile=None,
+    match_intent: str = '',
+    intent_label: str = '',
 ) -> List[Dict[str, Any]]:
-    from workspace.services.crm_matching import _score_crm_property
-    from workspace.services.crm_scope import properties_qs
+    from workspace.services.crm_matching import (
+        _crm_match_candidates_filtered_qs,
+        _crm_match_compatible,
+        _score_crm_property,
+        _score_crm_property_with_profile,
+    )
 
     if not refs:
         return []
     ids = [r.item_id for r in refs]
     props = {
         p.pk: p
-        for p in properties_qs(user).filter(pk__in=ids)
+        for p in _crm_match_candidates_filtered_qs(customer, user).filter(pk__in=ids)
     }
     out: List[Dict[str, Any]] = []
     for ref in refs:
         prop = props.get(ref.item_id)
         if not prop:
             continue
-        item = _score_crm_property(customer, prop)
-        if item and int(item.get('score') or 0) >= ref.score:
-            out.append(item)
+        if profile is None and not _crm_match_compatible(customer, prop):
+            continue
+        if profile is not None:
+            item = _score_crm_property_with_profile(
+                profile, prop,
+                match_intent=match_intent,
+                intent_label=intent_label,
+            )
+        else:
+            item = _score_crm_property(customer, prop)
+        if not item:
+            continue
+        score = int(item.get('score') or 0)
+        if score < min_score:
+            continue
+        out.append(item)
     return out
 
 
@@ -310,12 +316,17 @@ def hydrate_divar_matches(
     *,
     min_score: int = 25,
     dataset_id=None,
+    profile=None,
+    match_intent: str = '',
+    intent_label: str = '',
 ) -> List[Dict[str, Any]]:
     from workspace.services.crm_matching import (
         _divar_match_candidates_filtered_qs,
+        _infer_listing_property_type,
         _listing_is_genuine_owner,
         _listing_match_compatible,
         _score_listing,
+        _score_listing_with_profile,
     )
 
     if not refs:
@@ -336,7 +347,15 @@ def hydrate_divar_matches(
             continue
         if not _listing_match_compatible(customer, listing):
             continue
-        item = _score_listing(customer, listing)
+        if profile is not None:
+            inferred = _infer_listing_property_type(listing)
+            item = _score_listing_with_profile(
+                profile, listing, prop_type=inferred,
+                match_intent=match_intent,
+                intent_label=intent_label,
+            )
+        else:
+            item = _score_listing(customer, listing)
         if not item:
             continue
         score = int(item.get('score') or 0)

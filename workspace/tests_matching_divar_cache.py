@@ -1,7 +1,9 @@
 """رگرسیون کش و hydrate آگهی‌های دیوار در تطبیق."""
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import connection
 from django.test import TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 
 from workspace.models import Customer, Dataset, Listing
 from workspace.services.advertiser_signal import ADVERTISER_SIGNAL_GENUINE_PERSONAL
@@ -107,3 +109,25 @@ class DivarMatchCacheRegressionTests(TestCase):
             self.buyer, self.user, [stale_ref], min_score=25,
         )
         self.assertEqual(hydrated_after, [])
+
+    def test_catalog_extra_is_revision_only_no_listing_sql(self):
+        with CaptureQueriesContext(connection) as ctx:
+            user_divar_listings_catalog_extra(self.user)
+        self.assertEqual(len(ctx.captured_queries), 0)
+
+    def test_cache_hit_avoids_listing_table_scan(self):
+        get_customer_matches(
+            self.buyer, self.user, divar_enabled=True,
+            crm_page=1, divar_page=1, page_size=24,
+            rebuild_index=True,
+        )
+        with CaptureQueriesContext(connection) as captured:
+            get_customer_matches(
+                self.buyer, self.user, divar_enabled=True,
+                crm_page=1, divar_page=1, page_size=24,
+                rebuild_index=False,
+            )
+        sql_blob = ' '.join(q['sql'].lower() for q in captured.captured_queries)
+        self.assertNotIn('sum(', sql_blob)
+        self.assertLessEqual(sql_blob.count('from "workspace_listing"'), 1)
+        self._last_cache_hit_query_count = len(captured.captured_queries)

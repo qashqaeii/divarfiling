@@ -55,7 +55,9 @@ def collect_customer_match_results(
     )
     crm_total = len(crm_refs)
     crm_slice = slice_refs(crm_refs, crm_page, page_size)
-    crm_out = hydrate_crm_matches(customer, user, crm_slice)
+    crm_out = hydrate_crm_matches(
+        customer, user, crm_slice, min_score=crm_min_score,
+    )
 
     divar_refs: List[ScoredRef] = []
     divar_out: List[Dict[str, Any]] = []
@@ -160,7 +162,7 @@ def collect_property_contact_matches(
 # سازگاری با تست‌ها و فراخوانی‌های قدیمی
 def collect_crm_property_matches(customer: Customer, user, *, min_score: int) -> List[Dict[str, Any]]:
     refs = build_crm_index(customer, user, min_score=min_score)
-    return hydrate_crm_matches(customer, user, refs)
+    return hydrate_crm_matches(customer, user, refs, min_score=min_score)
 
 
 def collect_divar_listing_matches(

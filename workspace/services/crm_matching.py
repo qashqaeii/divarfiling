@@ -1206,20 +1206,17 @@ def _match_builder_group(
         source='crm', fingerprint=fp,
         extra=user_crm_properties_catalog_extra(user),
     )
+    from workspace.services.crm_matching_index import hydrate_crm_matches
+
     crm_refs, _ = get_or_build_index(crm_key, _build_crm_refs, rebuild=rebuild_index)
     crm_total = len(crm_refs)
-    crm_matches = []
-    for ref in slice_refs(crm_refs, crm_page, page_size):
-        prop = _crm_properties_qs(user).filter(pk=ref.item_id).first()
-        if not prop:
-            continue
-        item = _score_crm_property_with_profile(
-            profile, prop,
-            match_intent=intent,
-            intent_label=meta['intent_label'],
-        )
-        if item:
-            crm_matches.append(item)
+    crm_matches = hydrate_crm_matches(
+        customer, user, slice_refs(crm_refs, crm_page, page_size),
+        min_score=min_score,
+        profile=profile,
+        match_intent=intent,
+        intent_label=meta['intent_label'],
+    )
 
     divar_matches: List[Dict[str, Any]] = []
     divar_total = 0
@@ -1244,27 +1241,18 @@ def _match_builder_group(
             source='divar', fingerprint=fp,
             extra=user_divar_listings_catalog_extra(user),
         )
+        from workspace.services.crm_matching_index import hydrate_divar_matches
+
         divar_refs, _ = get_or_build_index(divar_key, _build_divar_refs, rebuild=rebuild_index)
         divar_total = len(divar_refs)
         divar_slice = slice_refs(divar_refs, divar_page, page_size)
-        from workspace.models import Listing
-
-        by_pk = {
-            lst.pk: lst
-            for lst in Listing.objects.filter(pk__in=[r.item_id for r in divar_slice]).select_related('dataset')
-        }
-        for ref in divar_slice:
-            listing = by_pk.get(ref.item_id)
-            if not listing:
-                continue
-            inferred = _infer_listing_property_type(listing)
-            item = _score_listing_with_profile(
-                profile, listing, prop_type=inferred,
-                match_intent=intent,
-                intent_label=meta['intent_label'],
-            )
-            if item:
-                divar_matches.append(item)
+        divar_matches = hydrate_divar_matches(
+            customer, user, divar_slice,
+            min_score=divar_min,
+            profile=profile,
+            match_intent=intent,
+            intent_label=meta['intent_label'],
+        )
         divar_has_more = page_has_more(divar_total, divar_page, page_size)
 
     return {

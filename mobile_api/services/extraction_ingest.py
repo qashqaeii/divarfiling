@@ -402,6 +402,10 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             'transaction_type', 'subcategory', 'updated_at',
         ])
 
+    from workspace.services.crm_matching_index import bump_user_divar_listings_match_catalog
+
+    bump_user_divar_listings_match_catalog(user.pk)
+
     ingested_count = len(seen_tokens)
     signal_counts = count_signals(ingested_signals)
     result = IngestResult(

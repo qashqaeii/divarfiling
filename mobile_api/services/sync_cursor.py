@@ -12,19 +12,33 @@ from django.utils.dateparse import parse_datetime
 SYNC_PROTOCOL_VERSION = 2
 
 
+class SyncCursorError(ValueError):
+    """Cursor نامعتبر یا دست‌کاری‌شده."""
+
+
 def encode_cursor(state: Dict[str, Any]) -> str:
     raw = json.dumps(state, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
     return base64.urlsafe_b64encode(raw).decode('ascii')
 
 
-def decode_cursor(token: Optional[str]) -> Dict[str, Any]:
+def decode_cursor(token: Optional[str], *, strict: bool = False) -> Dict[str, Any]:
     if not token or not str(token).strip():
         return {}
     try:
         raw = base64.urlsafe_b64decode(str(token).strip().encode('ascii'))
         data = json.loads(raw.decode('utf-8'))
-        return data if isinstance(data, dict) else {}
+        if not isinstance(data, dict):
+            if strict:
+                raise SyncCursorError('invalid_cursor')
+            return {}
+        if strict and not data.get('session_started'):
+            raise SyncCursorError('invalid_cursor')
+        return data
+    except SyncCursorError:
+        raise
     except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+        if strict:
+            raise SyncCursorError('invalid_cursor')
         return {}
 
 

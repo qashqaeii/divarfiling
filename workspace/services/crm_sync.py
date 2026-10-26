@@ -60,10 +60,12 @@ def export_crm_payload(user, *, agency_scope: bool = False) -> Dict[str, Any]:
 def _property_dedup_key(title: str, city: str, neighborhood: str, token: str) -> str:
     if token:
         return f'token:{token.strip().lower()}'
-    return '|'.join(
-        part.strip().lower()
-        for part in (title, city, neighborhood)
-    )
+    title = (title or '').strip().lower()
+    city = (city or '').strip().lower()
+    neighborhood = (neighborhood or '').strip().lower()
+    if title and city and neighborhood:
+        return f'title:{title}|{city}|{neighborhood}'
+    return ''
 
 
 def _find_existing_property(user, row: dict) -> Optional[CRMProperty]:
@@ -77,12 +79,13 @@ def _find_existing_property(user, row: dict) -> Optional[CRMProperty]:
             return found
     if not title:
         return None
-    qs = properties_qs(user).filter(title=title)
-    if city:
-        qs = qs.filter(city=city)
-    if neighborhood:
-        qs = qs.filter(neighborhood=neighborhood)
-    return qs.first()
+    city = (city or '').strip()
+    neighborhood = (neighborhood or '').strip()
+    if not (city and neighborhood):
+        return None
+    return properties_qs(user).filter(
+        title=title, city=city, neighborhood=neighborhood,
+    ).first()
 
 
 def _find_existing_deal(user, row: dict, customer_id: Optional[int]) -> Optional[CRMDeal]:
@@ -198,7 +201,7 @@ def _import_properties(
             source_id_int = None
 
         existing = _find_existing_property(user, row)
-        if existing or dedup in seen_keys:
+        if existing or (dedup and dedup in seen_keys):
             if source_id_int and existing:
                 property_id_map[source_id_int] = existing.pk
             stats['skipped'] += 1
@@ -206,7 +209,8 @@ def _import_properties(
         if dry_run:
             if source_id_int:
                 property_id_map[source_id_int] = -1
-            seen_keys.add(dedup)
+            if dedup:
+                seen_keys.add(dedup)
             stats['properties'] += 1
             continue
         prop = CRMProperty.objects.create(
@@ -227,7 +231,8 @@ def _import_properties(
         )
         if source_id_int:
             property_id_map[source_id_int] = prop.pk
-        seen_keys.add(dedup)
+        if dedup:
+            seen_keys.add(dedup)
         stats['properties'] += 1
     return stats
 
@@ -304,7 +309,9 @@ def _run_import_payload(user, payload: dict, *, merge: bool, dry_run: bool) -> D
     deal_keys: set = set()
 
     for c in properties_qs(user).only('title', 'city', 'neighborhood', 'token'):
-        property_keys.add(_property_dedup_key(c.title or '', c.city or '', c.neighborhood or '', c.token or ''))
+        key = _property_dedup_key(c.title or '', c.city or '', c.neighborhood or '', c.token or '')
+        if key:
+            property_keys.add(key)
 
     for d in deals_qs(user).only('title', 'listing_token', 'customer_id'):
         deal_keys.add(f'{d.listing_token or ""}|{d.title or ""}|{d.customer_id or ""}')

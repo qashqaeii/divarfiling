@@ -23,7 +23,16 @@ from workspace.services.crm_deal_stages import (
     serialize_stages_payload,
     stage_meta_map,
 )
-from workspace.services.crm_scope import deal_for_user, deals_qs, get_agency, property_for_user
+from workspace.services.crm_scope import (
+    can_create_property_deal,
+    can_edit_customer,
+    can_edit_deal,
+    customer_for_user,
+    deal_for_user,
+    deals_qs,
+    get_agency,
+    property_for_user,
+)
 
 
 def _parse_mobile_date(value):
@@ -90,17 +99,20 @@ def get_deal_detail(user, deal_id: int) -> Optional[dict]:
 
 def create_deal_from_mobile(user, data: Dict[str, Any]) -> CRMDeal:
     customer_id = int(data.get('customer_id') or 0)
-    customer = Customer.objects.filter(pk=customer_id, user=user).first()
-    if not customer:
-        from workspace.services.crm_scope import customers_qs
-        customer = customers_qs(user).filter(pk=customer_id).first()
+    customer = customer_for_user(user, customer_id)
     if not customer:
         raise ValueError('مخاطب یافت نشد.')
+    if not can_edit_customer(user, customer):
+        raise PermissionError('امکان ثبت معامله برای این مخاطب را ندارید')
 
     property_obj = None
     property_id = data.get('property_id')
     if property_id:
         property_obj = property_for_user(user, int(property_id))
+        if not property_obj:
+            raise ValueError('ملک یافت نشد.')
+        if not can_create_property_deal(user, property_obj):
+            raise PermissionError('امکان ثبت معامله برای این ملک را ندارید')
 
     value = data.get('amount') if 'amount' in data else data.get('value')
     if value is not None and value != '':
@@ -142,6 +154,8 @@ def update_deal_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optiona
     deal = deal_for_user(user, deal_id)
     if not deal:
         return None
+    if not can_edit_deal(user, deal):
+        raise PermissionError('امکان ویرایش این معامله را ندارید')
 
     if 'title' in data:
         deal.title = (data.get('title') or deal.title).strip()

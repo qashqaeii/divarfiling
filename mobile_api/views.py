@@ -821,7 +821,12 @@ class SyncPullView(APIView):
         cursor = request.GET.get('cursor', '')
         entities_raw = request.GET.get('entities', 'contacts')
         entities = [e.strip() for e in entities_raw.split(',') if e.strip()]
-        return api_ok(pull_sync(request.user, since, entities, cursor=cursor or None))
+        from mobile_api.services.sync_cursor import SyncCursorError
+        try:
+            payload = pull_sync(request.user, since, entities, cursor=cursor or None)
+        except SyncCursorError:
+            return api_error('Cursor نامعتبر', code='invalid_cursor', status=400)
+        return api_ok(payload)
 
 
 class SyncPushView(APIView):

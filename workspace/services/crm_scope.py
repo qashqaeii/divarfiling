@@ -241,6 +241,36 @@ def can_edit_customer(user, customer: Customer) -> bool:
     return is_customer_owner(user, customer)
 
 
+def assert_can_mutate_customer(user, customer: Customer) -> None:
+    """مطابق وب: اشتراک مخاطب فقط مشاهده — تغییر فقط برای مالک."""
+    if not can_edit_customer(user, customer):
+        raise PermissionError('امکان ویرایش این مخاطب را ندارید')
+
+
+def customer_share_mode(user, customer: Customer) -> Optional[str]:
+    if is_customer_owner(user, customer):
+        return None
+    share = (
+        CRMResourceShare.objects.filter(customer=customer, shared_with=user)
+        .only('share_mode')
+        .first()
+    )
+    return share.share_mode if share else None
+
+
+def can_mutate_reminder(user, reminder: Reminder) -> bool:
+    if reminder.user_id == user.id and not reminder.customer_id:
+        return True
+    if reminder.customer_id:
+        customer = reminder.customer
+        if customer is None:
+            customer = Customer.objects.filter(pk=reminder.customer_id).first()
+        if customer and can_edit_customer(user, customer):
+            return True
+        return False
+    return reminder.user_id == user.id
+
+
 
 
 

@@ -341,6 +341,7 @@ class MobileSyncOperation(models.Model):
     server_id = models.BigIntegerField(null=True, blank=True)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_OK)
     conflict_reason = models.CharField(max_length=300, blank=True)
+    payload_fingerprint = models.CharField(max_length=64, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

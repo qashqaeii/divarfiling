@@ -18,7 +18,14 @@ from mobile_api.serializers import (
 from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing, PropertyContact, Reminder
 from workspace.services.crm import filter_contacts, link_customer_listing, log_activity
 from workspace.services.crm_match_notifications import is_match_eligible
-from workspace.services.crm_scope import customers_qs, get_agency, properties_qs, reminders_qs
+from workspace.services.crm_scope import (
+    assert_can_mutate_customer,
+    can_mutate_reminder,
+    customers_qs,
+    get_agency,
+    properties_qs,
+    reminders_qs,
+)
 from workspace.services.crm_today import get_today_queue
 from accounts.phone_utils import normalize_phone
 
@@ -643,6 +650,7 @@ def create_activity(user, contact_id: int, data: Dict[str, Any]) -> CustomerActi
     c = get_contact(user, contact_id)
     if not c:
         raise ValueError('مخاطب یافت نشد.')
+    assert_can_mutate_customer(user, c)
     api_type = data.get('activity_type') or data.get('type') or 'note'
     ws_type = api_type_to_workspace(api_type)
     if not ws_type:
@@ -679,6 +687,7 @@ def create_reminder(user, contact_id: int, data: Dict[str, Any]) -> Reminder:
     c = get_contact(user, contact_id)
     if not c:
         raise ValueError('مخاطب یافت نشد.')
+    assert_can_mutate_customer(user, c)
     title = (data.get('title') or '').strip()
     if not title:
         raise ValueError('عنوان یادآور الزامی است.')
@@ -760,6 +769,8 @@ def update_reminder(user, reminder_id: int, data: Dict[str, Any]) -> Optional[Re
     r = reminders_qs(user).filter(pk=reminder_id).select_related('customer').first()
     if not r:
         return None
+    if not can_mutate_reminder(user, r):
+        raise PermissionError('امکان ویرایش این یادآور را ندارید')
     fields = []
     if 'title' in data:
         title = (data.get('title') or '').strip()
@@ -793,9 +804,11 @@ def update_reminder(user, reminder_id: int, data: Dict[str, Any]) -> Optional[Re
 
 
 def delete_reminder(user, reminder_id: int) -> bool:
-    r = reminders_qs(user).filter(pk=reminder_id).first()
+    r = reminders_qs(user).filter(pk=reminder_id).select_related('customer').first()
     if not r:
         return False
+    if not can_mutate_reminder(user, r):
+        raise PermissionError('امکان حذف این یادآور را ندارید')
     r.delete()
     return True
 
@@ -804,6 +817,8 @@ def complete_reminder(user, reminder_id: int, *, note: str = '') -> Optional[Rem
     r = reminders_qs(user).filter(pk=reminder_id, is_done=False).select_related('customer').first()
     if not r:
         return None
+    if not can_mutate_reminder(user, r):
+        raise PermissionError('امکان تکمیل این یادآور را ندارید')
     r.is_done = True
     r.save(update_fields=['is_done'])
     if r.customer_id:
@@ -816,9 +831,11 @@ def complete_reminder(user, reminder_id: int, *, note: str = '') -> Optional[Rem
 
 
 def postpone_reminder(user, reminder_id: int, *, days: int = 1, hours: int = 0) -> Optional[Reminder]:
-    r = reminders_qs(user).filter(pk=reminder_id, is_done=False).first()
+    r = reminders_qs(user).filter(pk=reminder_id, is_done=False).select_related('customer').first()
     if not r:
         return None
+    if not can_mutate_reminder(user, r):
+        raise PermissionError('امکان تعویق این یادآور را ندارید')
     delta_days = max(0, int(days or 0))
     delta_hours = max(0, int(hours or 0))
     if delta_days == 0 and delta_hours == 0:
@@ -833,6 +850,7 @@ def complete_follow_up_task(user, contact_id: int, *, note: str = '') -> Optiona
     c = get_contact(user, contact_id)
     if not c:
         return None
+    assert_can_mutate_customer(user, c)
     complete_follow_up(c, note=note)
     return c
 
@@ -842,6 +860,7 @@ def postpone_follow_up(user, contact_id: int, *, days: int = 1) -> Optional[Cust
     c = get_contact(user, contact_id)
     if not c:
         return None
+    assert_can_mutate_customer(user, c)
     base = c.next_follow_up or timezone.now().date()
     new_date = base + timedelta(days=max(1, days))
     set_next_follow_up(c, new_date, auto_status=False)
@@ -853,6 +872,7 @@ def link_listing_to_contact(user, contact_id: int, data: Dict[str, Any]) -> Cust
     c = get_contact(user, contact_id)
     if not c:
         raise ValueError('مخاطب یافت نشد.')
+    assert_can_mutate_customer(user, c)
     token = (data.get('token') or '').strip()
     if not token:
         raise ValueError('شناسه آگهی الزامی است.')

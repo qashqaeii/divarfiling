@@ -1,10 +1,9 @@
 """همگام‌سازی CRM وب ↔ دسکتاپ — D8."""
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.db import transaction
-
 from workspace.models import CRMDeal, CRMProperty, CRMSyncLog, Customer
 from workspace.services.crm_audit import log_agency_audit
 from workspace.services.crm_import_phone import parse_import_phone_fields
@@ -58,6 +57,47 @@ def export_crm_payload(user, *, agency_scope: bool = False) -> Dict[str, Any]:
     }
 
 
+def _property_dedup_key(title: str, city: str, neighborhood: str, token: str) -> str:
+    if token:
+        return f'token:{token.strip().lower()}'
+    return '|'.join(
+        part.strip().lower()
+        for part in (title, city, neighborhood)
+    )
+
+
+def _find_existing_property(user, row: dict) -> Optional[CRMProperty]:
+    token = (row.get('token') or '').strip()
+    title = (row.get('title') or '').strip()
+    city = (row.get('city') or '').strip()
+    neighborhood = (row.get('neighborhood') or '').strip()
+    if token:
+        found = properties_qs(user).filter(token=token).first()
+        if found:
+            return found
+    if not title:
+        return None
+    qs = properties_qs(user).filter(title=title)
+    if city:
+        qs = qs.filter(city=city)
+    if neighborhood:
+        qs = qs.filter(neighborhood=neighborhood)
+    return qs.first()
+
+
+def _find_existing_deal(user, row: dict, customer_id: Optional[int]) -> Optional[CRMDeal]:
+    title = (row.get('title') or '').strip()
+    if not title:
+        return None
+    listing_token = (row.get('listing_token') or '').strip()
+    qs = deals_qs(user).filter(title=title)
+    if listing_token:
+        qs = qs.filter(listing_token=listing_token)
+    if customer_id:
+        qs = qs.filter(customer_id=customer_id)
+    return qs.first()
+
+
 def _import_contacts(
     user,
     agency,
@@ -66,6 +106,7 @@ def _import_contacts(
     merge: bool,
     dry_run: bool,
     contact_id_map: Dict[int, int],
+    temp_id_counter: List[int],
 ) -> Dict[str, int]:
     stats = {'contacts': 0, 'skipped': 0, 'conflicts': 0}
     for row in rows or []:
@@ -100,7 +141,8 @@ def _import_contacts(
             continue
         if dry_run:
             if source_id_int:
-                contact_id_map[source_id_int] = -1
+                temp_id_counter[0] -= 1
+                contact_id_map[source_id_int] = temp_id_counter[0]
             stats['contacts'] += 1
             continue
         gender = None
@@ -129,32 +171,63 @@ def _import_contacts(
     return stats
 
 
-def _import_properties(user, agency, rows: List[dict], *, dry_run: bool) -> Dict[str, int]:
+def _import_properties(
+    user,
+    agency,
+    rows: List[dict],
+    *,
+    dry_run: bool,
+    property_id_map: Dict[int, int],
+    seen_keys: set,
+) -> Dict[str, int]:
     stats = {'properties': 0, 'skipped': 0}
     for row in rows or []:
         title = (row.get('title') or '').strip()
         if not title:
             stats['skipped'] += 1
             continue
+        token = (row.get('token') or '').strip()
+        city = (row.get('city') or '').strip()
+        neighborhood = (row.get('neighborhood') or '').strip()
+        dedup = _property_dedup_key(title, city, neighborhood, token)
+
+        source_id = row.get('id')
+        try:
+            source_id_int = int(source_id) if source_id is not None else None
+        except (TypeError, ValueError):
+            source_id_int = None
+
+        existing = _find_existing_property(user, row)
+        if existing or dedup in seen_keys:
+            if source_id_int and existing:
+                property_id_map[source_id_int] = existing.pk
+            stats['skipped'] += 1
+            continue
         if dry_run:
+            if source_id_int:
+                property_id_map[source_id_int] = -1
+            seen_keys.add(dedup)
             stats['properties'] += 1
             continue
-        CRMProperty.objects.create(
+        prop = CRMProperty.objects.create(
             user=user,
             agency=agency,
             title=title,
             property_type=row.get('property_type') or 'آپارتمان',
             deal_mode=row.get('deal_mode') or 'فروش',
             transaction_status=row.get('transaction_status') or 'فعال',
-            city=row.get('city') or '',
-            neighborhood=row.get('neighborhood') or '',
+            city=city,
+            neighborhood=neighborhood,
             sale_price=row.get('sale_price'),
             deposit=row.get('deposit'),
             monthly_rent=row.get('monthly_rent'),
             area=row.get('area'),
-            token=row.get('token') or '',
+            token=token,
             notes=row.get('notes') or '',
         )
+        if source_id_int:
+            property_id_map[source_id_int] = prop.pk
+        seen_keys.add(dedup)
         stats['properties'] += 1
     return stats
 
@@ -166,6 +239,7 @@ def _import_deals(
     *,
     dry_run: bool,
     contact_id_map: Dict[int, int],
+    seen_deal_keys: set,
 ) -> Dict[str, int]:
     stats = {'deals': 0, 'skipped': 0}
     for row in rows or []:
@@ -182,13 +256,27 @@ def _import_deals(
                 stats['skipped'] += 1
                 continue
             customer_id = contact_id_map.get(source_cid)
-            if not customer_id or customer_id < 0:
+            if customer_id is None:
                 stats['skipped'] += 1
                 continue
-            if not customers_qs(user).filter(pk=customer_id).exists():
+            if customer_id < 0:
+                if dry_run:
+                    customer_id = None
+                else:
+                    stats['skipped'] += 1
+                    continue
+            elif not customers_qs(user).filter(pk=customer_id).exists():
                 stats['skipped'] += 1
                 continue
+
+        listing_token = (row.get('listing_token') or '').strip()
+        deal_key = f'{listing_token}|{title}|{customer_id or ""}'
+        existing = _find_existing_deal(user, row, customer_id)
+        if existing or deal_key in seen_deal_keys:
+            stats['skipped'] += 1
+            continue
         if dry_run:
+            seen_deal_keys.add(deal_key)
             stats['deals'] += 1
             continue
         CRMDeal.objects.create(
@@ -199,10 +287,45 @@ def _import_deals(
             value=row.get('value'),
             probability=row.get('probability') or 0,
             customer_id=customer_id,
-            listing_token=row.get('listing_token') or '',
+            listing_token=listing_token,
             commission_amount=row.get('commission_amount'),
         )
+        seen_deal_keys.add(deal_key)
         stats['deals'] += 1
+    return stats
+
+
+def _run_import_payload(user, payload: dict, *, merge: bool, dry_run: bool) -> Dict[str, int]:
+    agency = get_agency(user)
+    contact_id_map: Dict[int, int] = {}
+    property_id_map: Dict[int, int] = {}
+    temp_id_counter = [0]
+    property_keys: set = set()
+    deal_keys: set = set()
+
+    for c in properties_qs(user).only('title', 'city', 'neighborhood', 'token'):
+        property_keys.add(_property_dedup_key(c.title or '', c.city or '', c.neighborhood or '', c.token or ''))
+
+    for d in deals_qs(user).only('title', 'listing_token', 'customer_id'):
+        deal_keys.add(f'{d.listing_token or ""}|{d.title or ""}|{d.customer_id or ""}')
+
+    stats: Dict[str, int] = {'contacts': 0, 'properties': 0, 'deals': 0, 'skipped': 0, 'conflicts': 0}
+
+    c = _import_contacts(
+        user, agency, payload.get('contacts') or [],
+        merge=merge, dry_run=dry_run, contact_id_map=contact_id_map, temp_id_counter=temp_id_counter,
+    )
+    p = _import_properties(
+        user, agency, payload.get('properties') or [],
+        dry_run=dry_run, property_id_map=property_id_map, seen_keys=property_keys,
+    )
+    d = _import_deals(
+        user, agency, payload.get('deals') or [],
+        dry_run=dry_run, contact_id_map=contact_id_map, seen_deal_keys=deal_keys,
+    )
+    for part in (c, p, d):
+        for k, v in part.items():
+            stats[k] = stats.get(k, 0) + v
     return stats
 
 
@@ -213,24 +336,14 @@ def import_crm_payload(
     merge: bool = True,
     dry_run: bool = False,
 ) -> Dict[str, int]:
-    agency = get_agency(user)
-    contact_id_map: Dict[int, int] = {}
-    stats: Dict[str, int] = {'contacts': 0, 'properties': 0, 'deals': 0, 'skipped': 0, 'conflicts': 0}
+    if dry_run:
+        with transaction.atomic():
+            stats = _run_import_payload(user, payload, merge=merge, dry_run=True)
+            transaction.set_rollback(True)
+        return stats
 
     with transaction.atomic():
-        c = _import_contacts(
-            user, agency, payload.get('contacts') or [],
-            merge=merge, dry_run=dry_run, contact_id_map=contact_id_map,
-        )
-        p = _import_properties(user, agency, payload.get('properties') or [], dry_run=dry_run)
-        d = _import_deals(
-            user, agency, payload.get('deals') or [],
-            dry_run=dry_run, contact_id_map=contact_id_map,
-        )
-        for part in (c, p, d):
-            for k, v in part.items():
-                stats[k] = stats.get(k, 0) + v
-    return stats
+        return _run_import_payload(user, payload, merge=merge, dry_run=False)
 
 
 def record_sync_log(user, sync_type: str, stats: dict) -> Optional[CRMSyncLog]:

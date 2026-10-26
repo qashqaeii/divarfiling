@@ -318,3 +318,41 @@ class MobileCloudExtractionJob(models.Model):
 
     def __str__(self):
         return f'cloud#{self.pk} — {self.status}'
+
+
+class MobileSyncOperation(models.Model):
+    """نتیجه پایدار عملیات Push Sync — Idempotency بر اساس op_id."""
+    STATUS_OK = 'ok'
+    STATUS_CONFLICT = 'conflict'
+    STATUS_PROCESSING = 'processing'
+    STATUS_CHOICES = [
+        (STATUS_OK, 'موفق'),
+        (STATUS_CONFLICT, 'تعارض'),
+        (STATUS_PROCESSING, 'در حال پردازش'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mobile_sync_operations',
+    )
+    op_id = models.CharField(max_length=128)
+    entity = models.CharField(max_length=40, blank=True)
+    server_id = models.BigIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_OK)
+    conflict_reason = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'عملیات Sync موبایل'
+        verbose_name_plural = 'عملیات‌های Sync موبایل'
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'op_id'], name='uniq_mobile_sync_op'),
+        ]
+        indexes = [
+            models.Index(fields=['user', 'created_at'], name='mobile_sync_op_user_created'),
+        ]
+
+    def __str__(self):
+        return f'{self.user_id}:{self.op_id}'

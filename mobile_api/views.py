@@ -818,9 +818,10 @@ class SyncPullView(APIView):
 
     def get(self, request):
         since = request.GET.get('since', '')
+        cursor = request.GET.get('cursor', '')
         entities_raw = request.GET.get('entities', 'contacts')
         entities = [e.strip() for e in entities_raw.split(',') if e.strip()]
-        return api_ok(pull_sync(request.user, since, entities))
+        return api_ok(pull_sync(request.user, since, entities, cursor=cursor or None))
 
 
 class SyncPushView(APIView):

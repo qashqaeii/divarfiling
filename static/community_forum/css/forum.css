@@ -723,6 +723,36 @@ body.ws-body--forum .ws-content:has(.cf-page),
   border-color: color-mix(in srgb, var(--cf-accent) 28%, var(--ws-border, #e2e8f0));
 }
 
+.cf-msg--moderator .cf-msg__bubble {
+  background: color-mix(in srgb, var(--cf-accent) 7%, var(--cf-bubble-other));
+  border-color: color-mix(in srgb, var(--cf-accent) 24%, var(--ws-border, #e2e8f0));
+  border-inline-start-width: 3px;
+  border-inline-start-color: color-mix(in srgb, var(--cf-accent) 52%, transparent);
+  box-shadow: var(--cf-shadow-bubble);
+}
+
+.cf-msg--moderator.cf-msg--mine .cf-msg__bubble {
+  background: color-mix(in srgb, var(--cf-accent) 10%, var(--cf-bubble-mine));
+  border-inline-start-width: 1px;
+  border-inline-start-color: color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+  border-inline-end-width: 3px;
+  border-inline-end-color: color-mix(in srgb, var(--cf-accent) 48%, transparent);
+}
+
+.cf-msg--moderator.cf-msg--notice .cf-msg__bubble {
+  background: color-mix(in srgb, var(--cf-accent) 6%, var(--ws-surface, #fff));
+}
+
+.cf-msg--moderator .cf-msg__name {
+  color: color-mix(in srgb, var(--cf-accent) 88%, var(--ws-text, #0f172a));
+}
+
+.cf-msg--moderator .cf-msg__avatar {
+  background: color-mix(in srgb, var(--cf-accent) 14%, var(--ws-surface, #fff));
+  border-color: color-mix(in srgb, var(--cf-accent) 32%, var(--ws-border, #e2e8f0));
+  color: color-mix(in srgb, var(--cf-accent) 90%, #4c1d95);
+}
+
 .cf-msg__stack {
   min-width: 0;
   max-width: var(--cf-bubble-max);
@@ -1510,40 +1540,67 @@ body.cf-emoji-sheet-open::before {
   margin: 0;
 }
 
+.cf-composer__main {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cf-composer__main.crm-field-voice {
+  min-width: 0;
+}
+
 .cf-composer__field {
   flex: 1;
   position: relative;
   min-width: 0;
 }
 
-.cf-composer .crm-field-voice {
-  --ws-voice-mic-size: 30px;
-  --ws-voice-mic-gap: 6px;
-}
-
-.cf-composer .crm-field-voice__wrap > .cf-composer__input {
-  box-sizing: border-box;
-}
-
 .cf-composer .crm-field-voice__mic.cf-composer__voice {
+  position: static;
+  transform: none;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: none;
   border-radius: 10px;
-  color: var(--cf-accent);
-  background: color-mix(in srgb, var(--cf-accent) 10%, transparent);
+  font-size: 1.05rem;
+  color: var(--ws-text-muted, #64748b);
+  background: transparent;
+  box-shadow: none;
+  animation: none;
 }
 
 .cf-composer .crm-field-voice__mic.cf-composer__voice:hover:not(:disabled):not(.is-unsupported) {
-  background: color-mix(in srgb, var(--cf-accent) 18%, transparent);
+  background: var(--ws-surface-2, #f1f5f9);
+  color: var(--cf-accent, var(--ws-primary, #7c3aed));
 }
 
 .cf-composer .crm-field-voice__mic.cf-composer__voice.is-listening {
-  color: #fff;
-  background: var(--cf-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-accent) 28%, transparent);
+  color: var(--cf-accent, var(--ws-primary, #7c3aed));
+  background: transparent;
+  box-shadow: none;
+  animation: cf-composer-voice-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes cf-composer-voice-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 .cf-composer .crm-field-voice__mic.cf-composer__voice:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--cf-accent) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--cf-accent, var(--ws-primary, #7c3aed)) 45%, transparent);
   outline-offset: 1px;
+}
+
+.cf-composer .crm-field-voice__mic.cf-composer__voice.is-unsupported {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .cf-composer__voice-status {

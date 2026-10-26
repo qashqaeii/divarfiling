@@ -124,6 +124,83 @@
       });
   }
 
+  function initForumComposerVoice() {
+    var root = $('cfComposerVoiceRoot');
+    var input = $('cfComposerInput');
+    var micBtn = $('cfComposerVoiceBtn');
+    if (!root || !input || !micBtn || root.dataset.crmFieldVoiceReady === '1') {
+      return !!root && root.dataset.crmFieldVoiceReady === '1';
+    }
+    var Voice = window.CrmSmartCommandVoice;
+    if (!Voice || typeof Voice.createVoiceInputAdapter !== 'function') {
+      return false;
+    }
+    var statusEl = root.querySelector('[data-crm-field-voice-status]');
+    if (typeof Voice.isSpeechRecognitionSupported === 'function' && !Voice.isSpeechRecognitionSupported()) {
+      micBtn.classList.add('is-unsupported');
+      micBtn.setAttribute('aria-disabled', 'true');
+      micBtn.title = 'ورود صوتی در این مرورگر پشتیبانی نمی‌شود';
+    }
+    Voice.createVoiceInputAdapter(root, {
+      input: input,
+      micBtn: micBtn,
+      voiceStatusEl: statusEl,
+      micAriaStart: 'دستیار صوتی',
+      micAriaStop: 'توقف دستیار صوتی',
+      micTooltip: 'دستیار صوتی',
+      silenceTimeoutMs: 3500,
+      getInputValue: function () {
+        return input.value || '';
+      },
+      setInputValue: function (text) {
+        input.value = text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      },
+      getSelectionRange: function () {
+        return { start: input.selectionStart, end: input.selectionEnd };
+      },
+      setSelectionRange: function (start, end) {
+        try {
+          input.setSelectionRange(start, end);
+        } catch (e) {}
+      },
+      isInputDisabled: function () {
+        return !!input.disabled;
+      },
+    });
+    if (statusEl && typeof MutationObserver !== 'undefined') {
+      var lastToast = '';
+      var obs = new MutationObserver(function () {
+        if (statusEl.hidden || !statusEl.classList.contains('is-error')) return;
+        var msg = (statusEl.textContent || '').trim();
+        if (!msg || msg === lastToast) return;
+        lastToast = msg;
+        toast(msg, true);
+      });
+      obs.observe(statusEl, {
+        attributes: true,
+        attributeFilter: ['hidden', 'class'],
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+    }
+    root.dataset.crmFieldVoiceReady = '1';
+    return true;
+  }
+
+  function scheduleForumComposerVoice() {
+    if (initForumComposerVoice()) return;
+    var attempts = 0;
+    (function retry() {
+      attempts += 1;
+      if (initForumComposerVoice() || attempts >= 40) return;
+      setTimeout(retry, 75);
+    })();
+    document.addEventListener('DOMContentLoaded', initForumComposerVoice);
+    window.addEventListener('load', initForumComposerVoice);
+  }
+
   function maybeShowWelcomeDialog(member) {
     var seen = !!(member && member.welcome_seen) || hasLocalWelcomeAck();
     if (seen) {
@@ -663,6 +740,7 @@
     if (opts.grouped) wrap.classList.add('cf-msg--grouped');
     if (isNoticeMessage(msg)) wrap.classList.add('cf-msg--notice');
     if (msg.is_pinned) wrap.classList.add('cf-msg--pinned');
+    if (msg.sender_is_moderator) wrap.classList.add('cf-msg--moderator');
     wrap.dataset.id = String(msg.id);
     if (!msg.is_deleted) wrap.tabIndex = 0;
 
@@ -730,7 +808,8 @@
     msg = normalizeIncoming(msg);
     wrap.className = 'cf-msg' + (msg.is_mine ? ' cf-msg--mine' : '') +
       (msg.is_deleted ? ' cf-msg--deleted' : '') +
-      (msg.is_pinned ? ' cf-msg--pinned' : '');
+      (msg.is_pinned ? ' cf-msg--pinned' : '') +
+      (msg.sender_is_moderator ? ' cf-msg--moderator' : '');
     var body = wrap.querySelector('.cf-msg__body');
     if (body) {
       if (msg.is_deleted) body.textContent = 'پیام حذف شده';
@@ -1571,9 +1650,7 @@
     if (el) el.setAttribute('dir', 'auto');
   });
 
-  if (typeof initCRMFieldVoice === 'function') {
-    initCRMFieldVoice($('cfComposer'));
-  }
+  scheduleForumComposerVoice();
 
   $('cfComposer').addEventListener('submit', sendMessage);
   $('cfComposerInput').addEventListener('input', function () {

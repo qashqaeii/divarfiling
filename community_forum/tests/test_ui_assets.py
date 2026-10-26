@@ -28,6 +28,10 @@ class ForumHiddenStateCssTests(SimpleTestCase):
         self.assertIn('.cf-send-failed', css)
         self.assertIn('.cf-loading', css)
 
+    def test_moderator_message_style_present(self):
+        css = self._forum_css()
+        self.assertIn('.cf-msg--moderator', css)
+
     def test_dialog_defines_cf_accent_for_primary_buttons(self):
         css = self._forum_css()
         idx = css.find('.cf-dialog {')
@@ -40,9 +44,9 @@ class ForumTemplateAssetVersionTests(SimpleTestCase):
     def test_forum_static_versions_bumped(self):
         path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'
         html = path.read_text(encoding='utf-8')
-        self.assertIn("community_forum/css/forum.css' %}?v=17", html)
-        self.assertIn("community_forum/js/forum-emoji.js' %}?v=17", html)
-        self.assertIn("community_forum/js/forum.js' %}?v=17", html)
+        self.assertIn("community_forum/css/forum.css' %}?v=20", html)
+        self.assertIn("community_forum/js/forum-emoji.js' %}?v=20", html)
+        self.assertIn("community_forum/js/forum.js' %}?v=20", html)
 
     def test_composer_emoji_controls_present(self):
         path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'
@@ -50,5 +54,6 @@ class ForumTemplateAssetVersionTests(SimpleTestCase):
         self.assertIn('id="cfEmojiToggle"', html)
         self.assertIn('id="cfEmojiPopover"', html)
         self.assertIn('id="cfQuickBar"', html)
+        self.assertIn('id="cfComposerVoiceBtn"', html)
         self.assertIn('data-crm-field-voice-mic', html)
         self.assertIn('cfComposerInput', html)

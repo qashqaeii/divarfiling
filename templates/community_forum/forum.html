@@ -4,7 +4,7 @@
 {% block body_extra_class %} ws-body--forum{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=20">
 {% endblock %}
 
 {% block page_title %}تالار گفتگو{% endblock %}
@@ -117,15 +117,17 @@
                 <button type="button" class="cf-composer__emoji" id="cfEmojiToggle" aria-label="ایموجی" aria-expanded="false" aria-controls="cfEmojiPopover">
                     <i class="far fa-smile" aria-hidden="true"></i>
                 </button>
-                <div class="cf-composer__field crm-field-voice" data-crm-field-voice data-crm-field-voice-silence-ms="3500">
-                    <div class="crm-field-voice__wrap">
-                        <textarea class="cf-composer__input ws-voice-enabled" id="cfComposerInput" data-voice-input="on" rows="1" maxlength="2000" placeholder="پیام خود را بنویسید…" aria-label="متن پیام"></textarea>
-                        <button type="button" class="crm-field-voice__mic cf-composer__voice" data-crm-field-voice-mic aria-label="دستیار صوتی" aria-pressed="false" title="دستیار صوتی — تبدیل گفتار به متن">
-                            <i class="fas fa-microphone crm-field-voice__mic-icon" data-sc="voice-icon" aria-hidden="true"></i>
-                        </button>
+                <div class="cf-composer__main crm-field-voice" id="cfComposerVoiceRoot" data-crm-field-voice data-crm-field-voice-silence-ms="3500">
+                    <button type="button" class="crm-field-voice__mic cf-composer__voice" id="cfComposerVoiceBtn" data-crm-field-voice-mic aria-label="دستیار صوتی" aria-pressed="false" title="دستیار صوتی — تبدیل گفتار به متن">
+                        <i class="fas fa-microphone crm-field-voice__mic-icon" data-sc="voice-icon" aria-hidden="true"></i>
+                    </button>
+                    <div class="cf-composer__field">
+                        <div class="crm-field-voice__wrap">
+                            <textarea class="cf-composer__input" id="cfComposerInput" rows="1" maxlength="2000" placeholder="پیام خود را بنویسید…" aria-label="متن پیام"></textarea>
+                        </div>
+                        <p class="crm-field-voice__status cf-composer__voice-status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
+                        <span class="cf-composer__count" id="cfCharCountWrap" hidden aria-hidden="true"><span id="cfCharCount">0</span>/2000</span>
                     </div>
-                    <p class="crm-field-voice__status cf-composer__voice-status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
-                    <span class="cf-composer__count" id="cfCharCountWrap" hidden aria-hidden="true"><span id="cfCharCount">0</span>/2000</span>
                 </div>
                 <button type="submit" class="cf-composer__send" id="cfSendBtn" disabled aria-label="ارسال">
                     <i class="fas fa-paper-plane" aria-hidden="true"></i>
@@ -365,6 +367,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community_forum/js/forum-emoji.js' %}?v=17" defer></script>
-<script src="{% static 'community_forum/js/forum.js' %}?v=17" defer></script>
+<script src="{% static 'community_forum/js/forum-emoji.js' %}?v=20" defer></script>
+<script src="{% static 'community_forum/js/forum.js' %}?v=20" defer></script>
 {% endblock %}

@@ -1,6 +1,8 @@
 """رگرسیون UI تطبیق — شمارنده‌ها، قالب صفحه‌بندی، CSS فیلتر مخاطب."""
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
@@ -89,3 +91,23 @@ class CrmMatchUiAssetTests(SimpleTestCase):
         self.assertIn('function crmSyncMatchPanelTabCounts', js)
         self.assertIn('function crmUpdateMatchColumnPager', js)
         self.assertNotIn('totalCrm || panel.querySelectorAll', js)
+
+
+class CrmMatchLoadMoreJsHarnessTests(SimpleTestCase):
+    def test_node_load_more_behavior_suite(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node.js not installed')
+        harness = REPO_ROOT / 'workspace' / 'tests' / 'js' / 'crm_match_load_more.test.mjs'
+        proc = subprocess.run(
+            [node, '--test', str(harness)],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        self.assertEqual(
+            proc.returncode, 0,
+            msg=(proc.stdout or '') + (proc.stderr or ''),
+        )

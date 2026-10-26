@@ -2157,8 +2157,7 @@ function crmUpdateMatchColumnPager(col) {
     else pager.removeAttribute('data-complete');
     if (btn) {
         btn.hidden = complete;
-        if (complete) btn.disabled = true;
-        else if (!btn.classList.contains('is-loading')) btn.disabled = false;
+        btn.disabled = complete;
     }
 }
 
@@ -2196,9 +2195,64 @@ function crmUpdatePropContactPager(root) {
     else pager.removeAttribute('data-complete');
     if (btn) {
         btn.hidden = complete;
-        if (complete) btn.disabled = true;
-        else if (!btn.classList.contains('is-loading')) btn.disabled = false;
+        btn.disabled = complete;
     }
+}
+
+function crmPropMatchActiveType(root) {
+    const chip = root?.querySelector('[data-prop-match-type-chips] [data-match-type].is-active');
+    return (chip?.dataset?.matchType || 'all').trim() || 'all';
+}
+
+function crmApplyPropMatchTypeFilter(root, type) {
+    if (!root) return 0;
+    const wanted = (type || 'all').trim() || 'all';
+    const emptyEl = root.querySelector('[data-prop-match-filter-empty]');
+    let shown = 0;
+    root.querySelectorAll('[data-prop-match-card]').forEach((row) => {
+        const match = wanted === 'all' || (row.dataset.customerType || '') === wanted;
+        row.hidden = !match;
+        row.classList.toggle('is-type-filter-hidden', !match);
+        if (match) shown += 1;
+    });
+    if (emptyEl) emptyEl.hidden = shown > 0;
+    return shown;
+}
+
+function crmRefreshPropMatchTypeChips(root, { preserveActive = true } = {}) {
+    const chipHost = root?.querySelector('[data-prop-match-type-chips]');
+    if (!chipHost) return crmApplyPropMatchTypeFilter(root, 'all');
+    const types = [...new Set(
+        [...root.querySelectorAll('[data-prop-match-card]')]
+            .map((r) => (r.dataset.customerType || '').trim())
+            .filter(Boolean),
+    )];
+    const prev = preserveActive ? crmPropMatchActiveType(root) : 'all';
+    if (types.length <= 1) {
+        chipHost.hidden = true;
+        return crmApplyPropMatchTypeFilter(root, 'all');
+    }
+    chipHost.hidden = false;
+    const activeType = (prev === 'all' || types.includes(prev)) ? prev : 'all';
+    const makeChip = (value, label) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'crm-pcm-chip' + (value === activeType ? ' is-active' : '');
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', value === activeType ? 'true' : 'false');
+        btn.dataset.matchType = value;
+        btn.textContent = label;
+        return btn;
+    };
+    chipHost.replaceChildren(makeChip('all', 'همه'));
+    types.forEach((t) => chipHost.appendChild(makeChip(t, t)));
+    return crmApplyPropMatchTypeFilter(root, activeType);
+}
+
+function crmFinishMatchLoadMore({ btn, col, pagerRoot, updatePager }) {
+    if (btn && btn.isConnected) btn.classList.remove('is-loading');
+    if (typeof updatePager === 'function') updatePager();
+    if (btn && btn.isConnected && !btn.hidden) btn.disabled = false;
 }
 
 function initCRMMatchesFilterDelegation() {
@@ -2370,15 +2424,26 @@ function initCRMMatches() {
             } else if (btn.parentNode) {
                 btn.remove();
             }
-            if (col) crmUpdateMatchColumnPager(col);
             applySourceFilter(panel.dataset.matchSourceFilter || 'all');
             updateSelection();
         } catch (err) {
             console.error('match load more', err);
-            btn.disabled = false;
+            if (pager) {
+                const status = pager.querySelector('[data-match-pager-status]');
+                if (status && col) {
+                    const total = crmParseDataInt(col.dataset.matchTotal, 0);
+                    const list = col.querySelector('[data-match-list]');
+                    const loaded = list ? list.querySelectorAll('[data-match-card]').length : 0;
+                    status.textContent = crmMatchPagerStatusText(loaded, total);
+                }
+            }
         } finally {
-            btn.classList.remove('is-loading');
             loadMoreBusy = false;
+            crmFinishMatchLoadMore({
+                btn,
+                col,
+                updatePager: () => { if (col) crmUpdateMatchColumnPager(col); },
+            });
         }
     });
 
@@ -2466,43 +2531,21 @@ function initCRMPropContactMatches() {
     }
 
     const chipHost = root.querySelector('[data-prop-match-type-chips]');
-    if (chipHost) {
-        const types = [...new Set(rows().map(r => (r.dataset.customerType || '').trim()).filter(Boolean))];
-        if (types.length > 1) {
-            chipHost.hidden = false;
-            const emptyEl = root.querySelector('[data-prop-match-filter-empty]');
-            const makeChip = (value, label) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'crm-pcm-chip' + (value === 'all' ? ' is-active' : '');
-                btn.setAttribute('role', 'tab');
-                btn.setAttribute('aria-selected', value === 'all' ? 'true' : 'false');
-                btn.dataset.matchType = value;
-                btn.textContent = label;
-                return btn;
-            };
-            chipHost.replaceChildren(makeChip('all', 'همه'));
-            types.forEach((t) => chipHost.appendChild(makeChip(t, t)));
-            chipHost.addEventListener('click', (ev) => {
-                const btn = ev.target.closest('[data-match-type]');
-                if (!btn) return;
-                const type = btn.dataset.matchType || 'all';
-                chipHost.querySelectorAll('[data-match-type]').forEach((c) => {
-                    const on = c === btn;
-                    c.classList.toggle('is-active', on);
-                    c.setAttribute('aria-selected', on ? 'true' : 'false');
-                });
-                let shown = 0;
-                rows().forEach((row) => {
-                    const match = type === 'all' || row.dataset.customerType === type;
-                    row.hidden = !match;
-                    row.classList.toggle('is-type-filter-hidden', !match);
-                    if (match) shown += 1;
-                });
-                if (emptyEl) emptyEl.hidden = shown > 0;
+    if (chipHost && !chipHost.dataset.bound) {
+        chipHost.dataset.bound = '1';
+        chipHost.addEventListener('click', (ev) => {
+            const chipBtn = ev.target.closest('[data-match-type]');
+            if (!chipBtn) return;
+            const type = chipBtn.dataset.matchType || 'all';
+            chipHost.querySelectorAll('[data-match-type]').forEach((c) => {
+                const on = c === chipBtn;
+                c.classList.toggle('is-active', on);
+                c.setAttribute('aria-selected', on ? 'true' : 'false');
             });
-        }
+            crmApplyPropMatchTypeFilter(root, type);
+        });
     }
+    crmRefreshPropMatchTypeChips(root, { preserveActive: true });
 
     crmUpdatePropContactPager(root);
 
@@ -2539,14 +2582,22 @@ function initCRMPropContactMatches() {
             } else if (btn.parentNode) {
                 btn.remove();
             }
-            crmUpdatePropContactPager(root);
+            crmRefreshPropMatchTypeChips(root, { preserveActive: true });
             updateSelection();
         } catch (err) {
             console.error('prop match load more', err);
-            btn.disabled = false;
+            if (pager && status) {
+                const total = crmParseDataInt(pager.dataset.propMatchTotal || root.dataset.propTotal, 0);
+                const list = root.querySelector('[data-prop-match-list]');
+                const loaded = list ? list.querySelectorAll('[data-prop-match-card]').length : 0;
+                status.textContent = crmMatchPagerStatusText(loaded, total);
+            }
         } finally {
-            btn.classList.remove('is-loading');
             propLoadMoreBusy = false;
+            crmFinishMatchLoadMore({
+                btn,
+                updatePager: () => crmUpdatePropContactPager(root),
+            });
         }
     });
 

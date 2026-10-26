@@ -145,7 +145,7 @@
 
             <div class="ws-content">
 
-                {% if is_workspace and not has_bot_license and request.resolver_match.url_name != 'upgrade' %}
+                {% if is_workspace and not has_bot_license and request.resolver_match.url_name != 'upgrade' and '/forum' not in request.path %}
                 {% include 'workspace/includes/bot_upgrade_banner.html' %}
                 {% endif %}
 

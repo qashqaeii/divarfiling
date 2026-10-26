@@ -624,8 +624,12 @@
   }
 
   function pinnedPreview(body) {
-    var t = (body || '').replace(/\s+/g, ' ').trim();
-    if (t.length > 72) return t.slice(0, 72) + '…';
+    var t = (body || '')
+      .replace(/\*\*/g, '')
+      .replace(/[*_`>#]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (t.length > 96) return t.slice(0, 96) + '…';
     return t;
   }
 
@@ -660,8 +664,8 @@
     root.hidden = false;
     var who = $('cfPinnedMsgWho');
     var prev = $('cfPinnedMsgPreview');
-    if (who) who.textContent = pm.sender_label || '';
-    if (prev) prev.textContent = pinnedPreview(pm.body);
+    if (who) who.textContent = pm.sender_label ? pm.sender_label : '';
+    if (prev) prev.textContent = pinnedPreview(pm.body) || '—';
     var unpinBtn = $('cfPinnedMsgUnpin');
     if (unpinBtn) unpinBtn.hidden = !state.canModerate;
   }

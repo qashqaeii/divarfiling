@@ -239,10 +239,25 @@
   ];
 
   var ALL_ITEMS = [];
+  var ALL_SEEN = new Set();
   CATEGORIES.forEach(function (cat) {
     if (cat.id === 'recent') return;
-    cat.items.forEach(function (it) { ALL_ITEMS.push(it); });
+    cat.items.forEach(function (it) {
+      if (ALL_SEEN.has(it.e)) return;
+      ALL_SEEN.add(it.e);
+      ALL_ITEMS.push(it);
+    });
   });
+
+  CATEGORIES.unshift({
+    id: 'all',
+    label: 'همه',
+    items: ALL_ITEMS,
+  });
+
+  function recentCategory() {
+    return CATEGORIES.find(function (c) { return c.id === 'recent'; });
+  }
 
   function loadRecent() {
     try {
@@ -259,8 +274,10 @@
     list.unshift(emoji);
     if (list.length > RECENT_MAX) list = list.slice(0, RECENT_MAX);
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch (e) {}
-    var recentCat = CATEGORIES[0];
-    recentCat.items = list.map(function (e) { return { e: e, k: '' }; });
+    var recentCat = recentCategory();
+    if (recentCat) {
+      recentCat.items = list.map(function (e) { return { e: e, k: '' }; });
+    }
   }
 
   function isMobile() {
@@ -291,10 +308,13 @@
     this.popover = opts.popover;
     this.textarea = opts.textarea;
     this.onPick = opts.onPick || function () {};
-    this.activeCat = 'smileys';
+    this.activeCat = 'all';
     this.open = false;
     this._bind();
-    CATEGORIES[0].items = loadRecent().map(function (e) { return { e: e, k: '' }; });
+    var recentCat = recentCategory();
+    if (recentCat) {
+      recentCat.items = loadRecent().map(function (e) { return { e: e, k: '' }; });
+    }
   }
 
   EmojiPicker.prototype._bind = function () {
@@ -386,7 +406,7 @@
     var active = this.activeCat;
     var cat = CATEGORIES.find(function (c) { return c.id === active; });
     if (!cat || (cat.id === 'recent' && !cat.items.length)) {
-      cat = CATEGORIES.find(function (c) { return c.id === 'smileys'; });
+      cat = CATEGORIES.find(function (c) { return c.id === 'all'; });
     }
     return cat ? cat.items : [];
   };
@@ -418,7 +438,10 @@
 
   EmojiPicker.prototype._pick = function (emoji) {
     pushRecent(emoji);
-    CATEGORIES[0].items = loadRecent().map(function (e) { return { e: e, k: '' }; });
+    var recentCat = recentCategory();
+    if (recentCat) {
+      recentCat.items = loadRecent().map(function (e) { return { e: e, k: '' }; });
+    }
     insertAtCursor(this.textarea, emoji);
     this.onPick(emoji);
     if (isMobile()) this.close();
@@ -432,8 +455,10 @@
     if (isMobile()) {
       document.body.classList.add('cf-emoji-sheet-open');
     }
-    this._renderGrid();
+    this.activeCat = 'all';
+    this._syncTabs();
     this.searchInput.value = '';
+    this._renderGrid();
     this.searchInput.focus();
   };
 

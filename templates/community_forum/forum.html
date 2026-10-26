@@ -4,7 +4,7 @@
 {% block body_extra_class %} ws-body--forum{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'community_forum/css/forum.css' %}?v=22">
 {% endblock %}
 
 {% block page_title %}تالار گفتگو{% endblock %}
@@ -44,10 +44,13 @@
         </div>
     </header>
 
-    <div class="cf-pinned" id="cfPinned" hidden>
+    <div class="cf-pinned" id="cfPinned" hidden role="region" aria-label="اطلاعیه پین‌شده">
         <button type="button" class="cf-pinned__toggle" id="cfPinnedToggle" aria-expanded="true">
-            <i class="fas fa-thumbtack cf-pinned__icon" aria-hidden="true"></i>
-            <span class="cf-pinned__title">اطلاعیه</span>
+            <span class="cf-pinned__badge" aria-hidden="true"><i class="fas fa-bullhorn"></i></span>
+            <span class="cf-pinned__title-wrap">
+                <span class="cf-pinned__title">اطلاعیه مدیریت</span>
+                <span class="cf-pinned__hint">برای همه اعضا</span>
+            </span>
             <i class="fas fa-chevron-up cf-pinned__chev" aria-hidden="true"></i>
         </button>
         <div class="cf-pinned__body" id="cfPinnedBody"></div>
@@ -66,15 +69,19 @@
 
     <section class="cf-chat" aria-label="گفتگو">
         <div class="cf-messages-wrap">
-            <div class="cf-pinned-msg" id="cfPinnedMsg" hidden>
+            <div class="cf-pinned-msg" id="cfPinnedMsg" hidden role="region" aria-label="پیام سنجاق‌شده">
                 <button type="button" class="cf-pinned-msg__hit" id="cfPinnedMsgHit" aria-label="رفتن به پیام سنجاق‌شده">
-                    <i class="fas fa-thumbtack cf-pinned-msg__icon" aria-hidden="true"></i>
+                    <span class="cf-pinned-msg__pin" aria-hidden="true"><i class="fas fa-thumbtack"></i></span>
                     <span class="cf-pinned-msg__text">
-                        <span class="cf-pinned-msg__who" id="cfPinnedMsgWho"></span>
+                        <span class="cf-pinned-msg__kicker">
+                            <span class="cf-pinned-msg__label">پیام سنجاق‌شده</span>
+                            <span class="cf-pinned-msg__who" id="cfPinnedMsgWho"></span>
+                        </span>
                         <span class="cf-pinned-msg__preview" id="cfPinnedMsgPreview"></span>
                     </span>
+                    <span class="cf-pinned-msg__go" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                 </button>
-                <button type="button" class="cf-icon-btn cf-icon-btn--sm" id="cfPinnedMsgUnpin" hidden aria-label="برداشتن سنجاق">
+                <button type="button" class="cf-pinned-msg__unpin" id="cfPinnedMsgUnpin" hidden aria-label="برداشتن سنجاق" title="برداشتن سنجاق">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
@@ -367,6 +374,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'community_forum/js/forum-emoji.js' %}?v=20" defer></script>
-<script src="{% static 'community_forum/js/forum.js' %}?v=20" defer></script>
+<script src="{% static 'community_forum/js/forum-emoji.js' %}?v=22" defer></script>
+<script src="{% static 'community_forum/js/forum.js' %}?v=22" defer></script>
 {% endblock %}

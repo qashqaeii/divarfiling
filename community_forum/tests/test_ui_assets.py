@@ -32,6 +32,12 @@ class ForumHiddenStateCssTests(SimpleTestCase):
         css = self._forum_css()
         self.assertIn('.cf-msg--moderator', css)
 
+    def test_pinned_message_bar_markup(self):
+        path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'
+        html = path.read_text(encoding='utf-8')
+        self.assertIn('cf-pinned-msg__kicker', html)
+        self.assertIn('cf-pinned-msg__label', html)
+
     def test_dialog_defines_cf_accent_for_primary_buttons(self):
         css = self._forum_css()
         idx = css.find('.cf-dialog {')
@@ -44,9 +50,9 @@ class ForumTemplateAssetVersionTests(SimpleTestCase):
     def test_forum_static_versions_bumped(self):
         path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'
         html = path.read_text(encoding='utf-8')
-        self.assertIn("community_forum/css/forum.css' %}?v=20", html)
-        self.assertIn("community_forum/js/forum-emoji.js' %}?v=20", html)
-        self.assertIn("community_forum/js/forum.js' %}?v=20", html)
+        self.assertIn("community_forum/css/forum.css' %}?v=22", html)
+        self.assertIn("community_forum/js/forum-emoji.js' %}?v=22", html)
+        self.assertIn("community_forum/js/forum.js' %}?v=22", html)
 
     def test_composer_emoji_controls_present(self):
         path = Path(settings.BASE_DIR) / 'templates' / 'community_forum' / 'forum.html'

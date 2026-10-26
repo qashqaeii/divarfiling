@@ -203,6 +203,7 @@ urlpatterns = [
     path('crm/contacts/export/', crm_views.CustomerExportView.as_view(), name='crm_export'),
     path('crm/contacts/import/', crm_views.CustomerImportView.as_view(), name='crm_import'),
     path('crm/contacts/import/template/', crm_views.CustomerImportTemplateView.as_view(), name='crm_import_template'),
+    path('crm/contacts/import/errors/', crm_views.CustomerImportErrorsDownloadView.as_view(), name='crm_import_errors'),
     path('crm/contacts/bulk/', crm_views.CustomerBulkActionView.as_view(), name='crm_bulk'),
     path('crm/contacts/merge/', crm_views.CustomerMergeView.as_view(), name='crm_merge'),
     path('crm/deals/', crm_views.CRMDealListView.as_view(), name='crm_deals'),

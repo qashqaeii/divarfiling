@@ -875,6 +875,36 @@ IMPORT_CONTACT_COLUMNS = {
     'جنسیت': 'gender',
 }
 
+IMPORT_CONTACT_HEADER_ALIASES = {
+    'نام مخاطب': 'name',
+    'نام مشتری': 'name',
+    'نام و نام خانوادگی': 'name',
+    'name': 'name',
+    'موبایل': 'phone',
+    'شماره تماس': 'phone',
+    'شماره همراه': 'phone',
+    'تلفن همراه': 'phone',
+    'mobile': 'phone',
+    'phone': 'phone',
+    'تلفن دوم': 'phone_alt',
+    'شماره دوم': 'phone_alt',
+    'ایمیل': 'email',
+    'email': 'email',
+    'نوع مخاطب': 'customer_type',
+    'نوع': 'customer_type',
+    'وضعیت': 'status',
+    'اولویت': 'priority',
+    'منبع': 'source',
+    'شهر': 'city',
+    'منطقه': 'district',
+    'محله': 'district',
+    'یادداشت': 'notes',
+    'توضیحات': 'notes',
+    'برچسب': 'tags',
+    'برچسب‌ها': 'tags',
+    'جنسیت': 'gender',
+}
+
 IMPORT_PROPERTY_COLUMNS = {
     'عنوان': 'title',
     'نوع ملک': 'property_type',

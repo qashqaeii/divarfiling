@@ -1003,11 +1003,19 @@ class DatasetRenameView(DatasetOwnerMixin, UpdateView):
 class DatasetExportView(ExportSecurityMixin, DatasetOwnerMixin, View):
     def get(self, request, dataset_id):
         dataset = self.get_dataset()
-        fmt = request.GET.get('format', 'csv')
+        fmt = (request.GET.get('format') or 'csv').lower().strip()
         listings = dataset.listings.all()
+        if fmt not in ('csv', 'json', 'xlsx'):
+            messages.error(request, 'فرمت خروجی نامعتبر است. از csv، xlsx یا json استفاده کنید.')
+            return redirect(
+                reverse('workspace:dataset_detail', kwargs={'dataset_id': dataset.pk}),
+            )
         filename = f'{dataset.name}.{fmt}'
         if fmt == 'json':
             return export_json_response(listings, filename)
+        if fmt == 'xlsx':
+            from workspace.services.export import export_excel_response
+            return export_excel_response(listings, filename)
         return export_csv_response(listings, filename)
 
 

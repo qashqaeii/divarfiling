@@ -308,7 +308,8 @@ def customers_qs(user) -> QuerySet:
 
         q |= Q(pk__in=shared)
 
-    return Customer.objects.filter(agency=m.agency).filter(q)
+    scope = Q(agency=m.agency) | Q(user=user, agency__isnull=True)
+    return Customer.objects.filter(scope).filter(q)
 
 
 

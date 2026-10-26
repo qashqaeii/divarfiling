@@ -164,8 +164,13 @@ from workspace.services.crm_matching import (
 from workspace.constants import LEAD_TYPES
 from workspace.services.crm_match_notifications import is_match_eligible
 from workspace.services.crm_import import (
-    import_contacts_from_file, import_column_specs, import_template_excel_response, import_template_headers,
+    build_import_errors_csv,
+    import_column_specs,
+    import_contacts_from_file_result,
+    import_template_excel_response,
+    import_template_headers,
 )
+from workspace.services.crm_redirect import append_query_param, safe_crm_next_url
 from workspace.services.crm_property_import import (
     import_properties_from_file, property_import_column_specs,
     property_import_template_excel_response, property_import_template_headers,
@@ -419,7 +424,12 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         return super().render_to_response(context, **response_kwargs)
 
     def get_queryset(self):
-        return filter_contacts(self.request.user, self.request.GET)
+        qs = filter_contacts(self.request.user, self.request.GET)
+        if self.request.GET.get('import_batch') == 'last':
+            ids = self.request.session.get('crm_import_created_ids') or []
+            if ids:
+                qs = qs.filter(pk__in=ids)
+        return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -3633,19 +3643,74 @@ class CustomerImportTemplateView(LoginRequiredMixin, View):
         return import_template_excel_response()
 
 
+class CustomerImportErrorsDownloadView(LoginRequiredMixin, View):
+    def get(self, request):
+        from django.http import HttpResponse
+
+        payload = request.session.pop('crm_import_error_report', None)
+        if not payload:
+            messages.info(request, 'گزارش خطای import در دسترس نیست.')
+            return redirect(reverse('workspace:crm_contacts'))
+        from workspace.services.crm_import import ContactImportResult, ImportRowError
+
+        result = ContactImportResult(
+            row_errors=[
+                ImportRowError(
+                    row_number=item['row'],
+                    column=item.get('column') or '',
+                    reason=item.get('reason') or '',
+                    hint=item.get('hint') or '',
+                )
+                for item in payload
+            ],
+        )
+        content = build_import_errors_csv(result)
+        response = HttpResponse(content, content_type='text/csv; charset=utf-8-sig')
+        response['Content-Disposition'] = 'attachment; filename="crm-import-errors.csv"'
+        return response
+
+
 class CustomerImportView(LoginRequiredMixin, View):
     def post(self, request):
         form = CustomerImportForm(request.POST, request.FILES)
-        nxt = request.POST.get('next') or reverse('workspace:crm_contacts')
+        nxt = safe_crm_next_url(request, request.POST.get('next') or '')
         if form.is_valid():
-            created, skipped, errors = import_contacts_from_file(request.user, form.cleaned_data['file'])
-            if errors:
-                for err in errors[:3]:
-                    messages.error(request, err)
-            if created:
-                messages.success(request, f'{created} مخاطب import شد ({skipped} رد شد).')
-            elif not errors:
-                messages.info(request, f'مخاطب جدیدی یافت نشد ({skipped} رد شد).')
+            result = import_contacts_from_file_result(request.user, form.cleaned_data['file'])
+            if result.aborted:
+                messages.error(request, result.abort_reason or 'Import متوقف شد.')
+                return redirect(nxt)
+            for err in result.error_messages()[:5]:
+                messages.warning(request, err)
+            visible = result.visible_created_count(request.user)
+            if result.created:
+                request.session['crm_import_created_ids'] = result.created_ids[:500]
+                summary = (
+                    f'{result.created} مخاطب ثبت شد'
+                    f' ({result.duplicates} تکراری، {result.skipped_empty_name} بدون نام، '
+                    f'{result.invalid_rows} نامعتبر).'
+                )
+                if visible < result.created:
+                    summary += f' {visible} مورد در فهرست شما قابل مشاهده است.'
+                messages.success(request, summary)
+                nxt = append_query_param(nxt, 'import_batch', 'last')
+            elif not result.error_messages():
+                messages.info(
+                    request,
+                    f'مخاطب جدیدی ثبت نشد ({result.duplicates} تکراری، '
+                    f'{result.skipped_empty_name} بدون نام).',
+                )
+            if result.row_errors:
+                request.session['crm_import_error_report'] = [
+                    {
+                        'row': e.row_number,
+                        'column': e.column,
+                        'reason': e.reason,
+                        'hint': e.hint,
+                    }
+                    for e in result.row_errors[:500]
+                ]
+            else:
+                request.session.pop('crm_import_error_report', None)
             return redirect(nxt)
         messages.error(request, 'فایل نامعتبر است.')
         view = CustomerListView()

@@ -20,7 +20,8 @@ from workspace.constants import (
 from workspace.forms import parse_money_input
 from workspace.models import CRMProperty
 from workspace.services.crm import normalize_phone
-from workspace.services.crm_scope import properties_qs
+from workspace.services.crm_scope import get_agency, properties_qs
+from workspace.services.spreadsheet_io import SpreadsheetReadError, read_uploaded_spreadsheet
 from workspace.services.features import parse_bool_feature, parse_rooms_value
 
 _FA_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
@@ -146,24 +147,15 @@ def import_properties_from_file(user, uploaded_file) -> Tuple[int, int, List[str
     Import personal property files from xlsx/csv.
     Returns (created_count, skipped_count, errors).
     """
-    import pandas as pd
-
-    name = (uploaded_file.name or '').lower()
-    raw = uploaded_file.read()
     errors: List[str] = []
     created = 0
     skipped = 0
+    agency = get_agency(user)
 
     try:
-        if name.endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(raw))
-        else:
-            df = pd.read_excel(io.BytesIO(raw))
-    except Exception as exc:
-        return 0, 0, [f'خواندن فایل ناموفق: {exc}']
-
-    if df.empty:
-        return 0, 0, ['فایل خالی است.']
+        df, _ext = read_uploaded_spreadsheet(uploaded_file)
+    except SpreadsheetReadError as exc:
+        return 0, 0, [str(exc)]
 
     active_props = properties_qs(user)
     existing_tokens = {
@@ -222,6 +214,7 @@ def import_properties_from_file(user, uploaded_file) -> Tuple[int, int, List[str
         try:
             CRMProperty.objects.create(
                 user=user,
+                agency=agency,
                 title=title_val,
                 property_type=property_type,
                 deal_mode=deal_mode,

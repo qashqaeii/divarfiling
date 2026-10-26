@@ -2,82 +2,187 @@
 from __future__ import annotations
 
 import io
-from typing import Any, Dict, List, Tuple
+import math
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
 
-from workspace.constants import CRM_PRIORITIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES, IMPORT_CONTACT_COLUMNS
+from workspace.constants import (
+    CRM_PRIORITIES,
+    CRM_SOURCES,
+    CRM_STATUSES,
+    CRM_TYPES,
+    IMPORT_CONTACT_COLUMNS,
+    IMPORT_CONTACT_HEADER_ALIASES,
+)
 from workspace.models import Customer
 from workspace.services.crm import log_activity, normalize_phone
+from workspace.services.crm_merge import find_duplicate_contact, normalize_contact_name
+from workspace.services.crm_scope import customers_qs, get_agency
 from workspace.services.contact_gender import normalize_contact_gender_import
+from workspace.services.spreadsheet_io import SpreadsheetReadError, read_uploaded_spreadsheet
 
 
-def _normalize_header(h: str) -> str:
-    return str(h or '').strip().replace('\ufeff', '')
+@dataclass
+class ImportRowError:
+    row_number: int
+    column: str
+    reason: str
+    hint: str = ''
 
 
-def _map_row(row: dict) -> Dict[str, Any]:
+@dataclass
+class ContactImportResult:
+    total_rows: int = 0
+    processed_rows: int = 0
+    created: int = 0
+    updated: int = 0
+    duplicates: int = 0
+    invalid_rows: int = 0
+    skipped_empty_name: int = 0
+    row_errors: List[ImportRowError] = field(default_factory=list)
+    created_ids: List[int] = field(default_factory=list)
+    aborted: bool = False
+    abort_reason: str = ''
+
+    @property
+    def skipped(self) -> int:
+        return self.duplicates + self.invalid_rows + self.skipped_empty_name
+
+    @property
+    def error_count(self) -> int:
+        return len(self.row_errors)
+
+    def error_messages(self, limit: int = 50) -> List[str]:
+        msgs = []
+        for err in self.row_errors[:limit]:
+            line = f'ردیف {err.row_number}'
+            if err.column:
+                line += f' ({err.column})'
+            line += f': {err.reason}'
+            if err.hint:
+                line += f' — {err.hint}'
+            msgs.append(line)
+        if self.aborted and self.abort_reason:
+            msgs.insert(0, self.abort_reason)
+        return msgs
+
+    def visible_created_count(self, user) -> int:
+        if not self.created_ids:
+            return 0
+        return customers_qs(user).filter(pk__in=self.created_ids).count()
+
+
+def _build_header_map(columns: List[str]) -> Dict[str, str]:
+    """نگاشت ستون فایل → فیلد مدل (بدون نگاشت مبهم دو ستون به یک مقصد)."""
+    canonical = {**IMPORT_CONTACT_COLUMNS, **IMPORT_CONTACT_HEADER_ALIASES}
+    mapping: Dict[str, str] = {}
+    for col in columns:
+        norm = str(col or '').strip().replace('\ufeff', '').replace('\u200c', '')
+        if not norm:
+            continue
+        field_name = canonical.get(norm)
+        if not field_name:
+            continue
+        if field_name in mapping.values():
+            continue
+        mapping[norm] = field_name
+    return mapping
+
+
+def _map_row(row: dict, header_to_field: Dict[str, str]) -> Dict[str, Any]:
     mapped: Dict[str, Any] = {}
-    for src, field in IMPORT_CONTACT_COLUMNS.items():
-        for key, val in row.items():
-            if _normalize_header(key) == src:
-                mapped[field] = val
-                break
+    for key, val in row.items():
+        field_name = header_to_field.get(str(key).strip())
+        if field_name and field_name not in mapped:
+            mapped[field_name] = val
     return mapped
 
 
 def _clean_str(val) -> str:
     if val is None:
         return ''
+    if isinstance(val, float) and math.isnan(val):
+        return ''
     s = str(val).strip()
     return '' if s.lower() in ('nan', 'none', 'null') else s
 
 
-def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]:
-    """
-    Import contacts from xlsx/csv.
-    Returns (created_count, skipped_count, errors).
-    """
-    import pandas as pd
+def _format_phone_display(raw: str) -> str:
+    cleaned = _clean_str(raw)
+    if not cleaned:
+        return ''
+    key = normalize_phone(cleaned)
+    if len(key) < 10:
+        return cleaned
+    return key
 
-    name = (uploaded_file.name or '').lower()
-    raw = uploaded_file.read()
-    errors: List[str] = []
-    created = 0
-    skipped = 0
 
+def import_contacts_from_file_result(user, uploaded_file) -> ContactImportResult:
+    result = ContactImportResult()
     try:
-        if name.endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(raw))
-        else:
-            df = pd.read_excel(io.BytesIO(raw))
-    except Exception as exc:
-        return 0, 0, [f'خواندن فایل ناموفق: {exc}']
+        df, _ext = read_uploaded_spreadsheet(uploaded_file)
+    except SpreadsheetReadError as exc:
+        result.aborted = True
+        result.abort_reason = str(exc)
+        return result
 
-    if df.empty:
-        return 0, 0, ['فایل خالی است.']
+    header_to_field = _build_header_map(list(df.columns))
+    if 'name' not in header_to_field.values():
+        result.aborted = True
+        result.abort_reason = (
+            'ستون «نام» شناسایی نشد. عنوان ستون را مطابق نمونه تنظیم کنید '
+            '(مثلاً نام، نام مخاطب، نام مشتری).'
+        )
+        return result
 
-    from workspace.services.crm_merge import normalize_contact_name
+    result.total_rows = len(df)
 
     existing_keys = set()
-    for c in Customer.objects.filter(user=user):
+    for c in customers_qs(user).only('name', 'phone', 'phone_alt'):
         phone_key = normalize_phone(c.phone)
         name_key = normalize_contact_name(c.name).casefold()
         if len(phone_key) >= 10 and name_key:
             existing_keys.add((name_key, phone_key))
 
+    in_file_keys = set()
+    agency = get_agency(user)
+
     for idx, row in df.iterrows():
+        row_num = int(idx) + 2
         row_dict = {str(k): row[k] for k in df.columns}
-        data = _map_row(row_dict)
+        data = _map_row(row_dict, header_to_field)
         name_val = _clean_str(data.get('name'))
         if not name_val:
-            skipped += 1
+            result.skipped_empty_name += 1
             continue
 
-        phone = _clean_str(data.get('phone'))
+        result.processed_rows += 1
+
+        phone_raw = data.get('phone')
+        phone = _format_phone_display(phone_raw)
         phone_key = normalize_phone(phone)
-        name_key = normalize_contact_name(name_val).casefold()
-        if len(phone_key) >= 10 and name_key and (name_key, phone_key) in existing_keys:
-            skipped += 1
+        if phone_raw and _clean_str(phone_raw) and len(phone_key) < 10:
+            result.invalid_rows += 1
+            result.row_errors.append(ImportRowError(
+                row_number=row_num,
+                column='تلفن',
+                reason='شماره تماس نامعتبر است',
+                hint='مثال: 09121234567',
+            ))
             continue
+
+        name_key = normalize_contact_name(name_val).casefold()
+        dup_key = (name_key, phone_key) if len(phone_key) >= 10 and name_key else None
+
+        if dup_key:
+            if dup_key in existing_keys or dup_key in in_file_keys:
+                result.duplicates += 1
+                continue
+            existing = find_duplicate_contact(user, name_val, phone)
+            if existing:
+                result.duplicates += 1
+                existing_keys.add(dup_key)
+                continue
 
         customer_type = _clean_str(data.get('customer_type')) or 'سرنخ'
         if customer_type not in CRM_TYPES:
@@ -99,9 +204,10 @@ def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]
 
         customer = Customer.objects.create(
             user=user,
+            agency=agency,
             name=name_val,
             phone=phone,
-            phone_alt=_clean_str(data.get('phone_alt')),
+            phone_alt=_format_phone_display(_clean_str(data.get('phone_alt'))),
             email=_clean_str(data.get('email')),
             gender=gender,
             customer_type=customer_type,
@@ -114,11 +220,34 @@ def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]
             notes=_clean_str(data.get('notes')),
         )
         log_activity(customer, 'یادداشت', content='واردشده از فایل', title='Import')
-        if len(phone_key) >= 10 and name_key:
-            existing_keys.add((name_key, phone_key))
-        created += 1
+        if dup_key:
+            existing_keys.add(dup_key)
+            in_file_keys.add(dup_key)
+        result.created_ids.append(customer.pk)
+        result.created += 1
 
-    return created, skipped, errors
+    return result
+
+
+def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]:
+    """
+    Import contacts from xlsx/csv.
+    Returns (created_count, skipped_count, errors) — سازگار با نسخه قبلی.
+    """
+    result = import_contacts_from_file_result(user, uploaded_file)
+    return result.created, result.skipped, result.error_messages()
+
+
+def build_import_errors_csv(result: ContactImportResult) -> bytes:
+    """فایل CSV خطاهای import برای دانلود."""
+    import csv
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(['ردیف', 'ستون', 'علت', 'راهکار'])
+    for err in result.row_errors:
+        writer.writerow([err.row_number, err.column, err.reason, err.hint])
+    return ('\ufeff' + buf.getvalue()).encode('utf-8')
 
 
 def import_template_headers() -> List[str]:
@@ -128,8 +257,8 @@ def import_template_headers() -> List[str]:
 def import_column_specs() -> List[Dict[str, Any]]:
     """متادیتای ستون‌ها برای UI import."""
     return [
-        {'header': 'نام', 'required': True, 'hint': 'نام کامل مخاطب', 'example': 'علی رضایی'},
-        {'header': 'تلفن', 'required': False, 'hint': 'شناسه یکتا — تکراری‌ها رد می‌شوند', 'example': '09121234567'},
+        {'header': 'نام', 'required': True, 'hint': 'نام کامل مخاطب (یا نام مخاطب / نام مشتری)', 'example': 'علی رضایی'},
+        {'header': 'تلفن', 'required': False, 'hint': 'با نام یکسان — تکراری رد می‌شود', 'example': '09121234567'},
         {'header': 'تلفن دوم', 'required': False, 'hint': 'شماره جایگزین', 'example': '02188776655'},
         {'header': 'ایمیل', 'required': False, 'hint': 'اختیاری', 'example': 'ali@example.com'},
         {'header': 'جنسیت', 'required': False, 'hint': 'اختیاری — آقا، خانم، male، female', 'example': 'خانم'},

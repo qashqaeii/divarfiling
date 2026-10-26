@@ -48,6 +48,7 @@ from workspace.services.agency_entitlement import (
     get_advisor_agency_seat_context,
     has_assigned_agency_seat,
 )
+from workspace.export_security import ExportSecurityMixin
 from workspace.services.agency_exports import export_member_data, export_team_data
 from workspace.services.agency_member_hub import build_member_hub_context
 
@@ -152,7 +153,7 @@ class AgencyAdvisorDetailView(AgencyTeamPerformanceRequiredMixin, LoginRequiredM
         return ctx
 
 
-class AgencyAdvisorExportView(AgencyTeamPerformanceRequiredMixin, LoginRequiredMixin, View):
+class AgencyAdvisorExportView(ExportSecurityMixin, AgencyTeamPerformanceRequiredMixin, LoginRequiredMixin, View):
     def get(self, request, member_id: int):
         data_type = request.GET.get('type', 'contacts')
         fmt = request.GET.get('format', 'xlsx')
@@ -171,7 +172,7 @@ class AgencyAdvisorExportView(AgencyTeamPerformanceRequiredMixin, LoginRequiredM
             )
 
 
-class AgencyTeamExportView(AgencyTeamManageRequiredMixin, LoginRequiredMixin, View):
+class AgencyTeamExportView(ExportSecurityMixin, AgencyTeamManageRequiredMixin, LoginRequiredMixin, View):
     def post(self, request):
         data_type = request.POST.get('type', 'contacts')
         fmt = request.POST.get('format', 'xlsx')

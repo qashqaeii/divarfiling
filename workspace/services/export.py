@@ -8,6 +8,8 @@ from typing import Iterable, List
 
 from django.http import HttpResponse
 
+from workspace.services.spreadsheet_io import spreadsheet_safe_cell, stable_union_fieldnames
+
 
 def listings_to_rows(listings) -> List[dict]:
     rows = []
@@ -35,10 +37,15 @@ def export_csv_response(listings, filename: str = 'export.csv') -> HttpResponse:
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
+    fieldnames = stable_union_fieldnames(rows)
+    safe_rows = [
+        {k: spreadsheet_safe_cell(row.get(k)) for k in fieldnames}
+        for row in rows
+    ]
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=list(rows[0].keys()), extrasaction='ignore')
+    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
-    writer.writerows(rows)
+    writer.writerows(safe_rows)
 
     response = HttpResponse('\ufeff' + output.getvalue(), content_type='text/csv; charset=utf-8-sig')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'

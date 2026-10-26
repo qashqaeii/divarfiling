@@ -274,18 +274,19 @@ body.ws-body--forum .ws-content:has(.cf-page),
 }
 
 .cf-btn--primary {
+  --cf-btn-accent: var(--cf-accent, var(--ws-primary, #7c3aed));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--cf-accent) 92%, #fff) 0%,
-    var(--cf-accent) 100%
+    color-mix(in srgb, var(--cf-btn-accent) 92%, #fff) 0%,
+    var(--cf-btn-accent) 100%
   );
   color: #fff;
-  border-color: color-mix(in srgb, var(--cf-accent) 40%, transparent);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--cf-accent) 32%, transparent);
+  border-color: color-mix(in srgb, var(--cf-btn-accent) 40%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--cf-btn-accent) 32%, transparent);
 }
 
 .cf-btn--primary:hover {
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--cf-accent) 38%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--cf-btn-accent, var(--cf-accent, var(--ws-primary, #7c3aed))) 38%, transparent);
 }
 
 .cf-btn--danger {
@@ -1515,6 +1516,56 @@ body.cf-emoji-sheet-open::before {
   min-width: 0;
 }
 
+.cf-composer .crm-field-voice {
+  --ws-voice-mic-size: 30px;
+  --ws-voice-mic-gap: 6px;
+}
+
+.cf-composer .crm-field-voice__wrap > .cf-composer__input {
+  box-sizing: border-box;
+}
+
+.cf-composer .crm-field-voice__mic.cf-composer__voice {
+  border-radius: 10px;
+  color: var(--cf-accent);
+  background: color-mix(in srgb, var(--cf-accent) 10%, transparent);
+}
+
+.cf-composer .crm-field-voice__mic.cf-composer__voice:hover:not(:disabled):not(.is-unsupported) {
+  background: color-mix(in srgb, var(--cf-accent) 18%, transparent);
+}
+
+.cf-composer .crm-field-voice__mic.cf-composer__voice.is-listening {
+  color: #fff;
+  background: var(--cf-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-accent) 28%, transparent);
+}
+
+.cf-composer .crm-field-voice__mic.cf-composer__voice:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cf-accent) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.cf-composer__voice-status {
+  position: absolute;
+  z-index: 3;
+  bottom: calc(100% + 6px);
+  inset-inline: 0;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.45;
+  background: var(--ws-surface, #fff);
+  border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.cf-composer__voice-status[hidden] {
+  display: none !important;
+}
+
 .cf-composer__input {
   width: 100%;
   resize: none;
@@ -1581,6 +1632,7 @@ body.cf-emoji-sheet-open::before {
 
 /* ─── Dialogs ─── */
 .cf-dialog {
+  --cf-accent: var(--ws-primary, #7c3aed);
   --cf-dialog-radius: 22px;
   border: none;
   border-radius: var(--cf-dialog-radius);
@@ -1934,7 +1986,153 @@ body.cf-emoji-sheet-open::before {
 }
 
 .cf-dialog--welcome {
-  width: min(420px, calc(100vw - 24px));
+  width: min(400px, calc(100vw - 28px));
+  max-height: none;
+  border-radius: 24px;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cf-dialog--welcome::backdrop {
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(14px) saturate(1.08);
+}
+
+.cf-welcome {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--ws-surface, #fff);
+  box-shadow:
+    0 36px 72px rgba(15, 23, 42, 0.2),
+    0 0 0 1px color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+}
+
+.cf-welcome__mesh {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 168px;
+  background:
+    radial-gradient(ellipse 90% 80% at 50% -20%, color-mix(in srgb, var(--cf-accent) 28%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--cf-accent) 10%, #fff) 0%, var(--ws-surface, #fff) 100%);
+  pointer-events: none;
+}
+
+.cf-welcome__close {
+  position: absolute;
+  top: 12px;
+  inset-inline-start: 12px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--ws-surface, #fff) 82%, transparent);
+  backdrop-filter: blur(10px);
+  color: var(--ws-text-muted, #64748b);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cf-welcome__close:hover {
+  background: var(--ws-surface, #fff);
+  color: var(--ws-text, #0f172a);
+}
+
+.cf-welcome__hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 28px 22px 8px;
+}
+
+.cf-welcome__mark {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--cf-accent);
+  background: color-mix(in srgb, #fff 90%, var(--ws-surface, #fff));
+  border: 1px solid color-mix(in srgb, var(--cf-accent) 22%, transparent);
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--cf-accent) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.cf-welcome__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.35;
+  color: var(--ws-text, #0f172a);
+}
+
+.cf-welcome__tagline {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--ws-text-muted, #64748b);
+  font-weight: 500;
+}
+
+.cf-welcome__points {
+  list-style: none;
+  margin: 0;
+  padding: 12px 18px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cf-welcome__points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 88%, var(--ws-surface, #fff));
+  border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 50%, transparent);
+}
+
+.cf-welcome__point-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--cf-accent);
+  background: color-mix(in srgb, var(--cf-accent) 10%, var(--ws-surface, #fff));
+}
+
+.cf-welcome__point-text {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--ws-text-secondary, #475569);
+  padding-top: 4px;
+}
+
+.cf-welcome__actions {
+  padding: 14px 18px 18px;
+}
+
+html[data-theme="dark"] .cf-welcome {
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] .cf-welcome__mark {
+  background: color-mix(in srgb, var(--ws-surface, #0f172a) 92%, #fff);
 }
 
 .cf-input {

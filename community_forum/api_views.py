@@ -309,9 +309,10 @@ class ForumProfileAPIView(ForumAPIBase):
         if data.get('welcome_ack'):
             from django.utils import timezone
 
-            member.welcome_seen_at = timezone.now()
-            member.save(update_fields=['welcome_seen_at', 'updated_at'])
-            return JsonResponse({'ok': True})
+            if not member.welcome_seen_at:
+                member.welcome_seen_at = timezone.now()
+                member.save(update_fields=['welcome_seen_at', 'updated_at'])
+            return JsonResponse({'ok': True, 'welcome_seen': True})
         if 'display_name' in data:
             try:
                 update_display_name(member, data.get('display_name', ''))

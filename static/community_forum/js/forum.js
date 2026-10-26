@@ -41,6 +41,8 @@
     viewRecorded: new Set(),
     viewObserver: null,
     viewFlushTimer: null,
+    welcomeSeen: false,
+    welcomeAckInFlight: false,
   };
 
   var overlay = { hideTimer: null, stripOpen: false };
@@ -90,6 +92,57 @@
 
   function draftKey() {
     return state.myPublicId ? 'cf_draft:' + state.myPublicId : 'cf_draft:anon';
+  }
+
+  function welcomeAckStorageKey() {
+    return state.myPublicId ? 'cf_welcome_ack:' + state.myPublicId : 'cf_welcome_ack:anon';
+  }
+
+  function hasLocalWelcomeAck() {
+    try {
+      return localStorage.getItem(welcomeAckStorageKey()) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setLocalWelcomeAck() {
+    try {
+      localStorage.setItem(welcomeAckStorageKey(), '1');
+    } catch (e) {}
+  }
+
+  function ackWelcomeSeen() {
+    if (state.welcomeSeen || state.welcomeAckInFlight) return;
+    state.welcomeAckInFlight = true;
+    state.welcomeSeen = true;
+    setLocalWelcomeAck();
+    fetchJson(apiUrl('profile/'), { method: 'POST', body: { welcome_ack: true } })
+      .catch(function () {})
+      .finally(function () {
+        state.welcomeAckInFlight = false;
+      });
+  }
+
+  function maybeShowWelcomeDialog(member) {
+    var seen = !!(member && member.welcome_seen) || hasLocalWelcomeAck();
+    if (seen) {
+      state.welcomeSeen = true;
+      return;
+    }
+    var dlg = $('cfWelcomeDialog');
+    if (!dlg) return;
+    var onClose = function () {
+      ackWelcomeSeen();
+    };
+    dlg.addEventListener('close', onClose);
+    var ackBtn = $('cfWelcomeAck');
+    if (ackBtn) {
+      ackBtn.addEventListener('click', function () {
+        dlg.close();
+      }, { once: true });
+    }
+    openDialog(dlg);
   }
 
   function uuid() {
@@ -1518,6 +1571,10 @@
     if (el) el.setAttribute('dir', 'auto');
   });
 
+  if (typeof initCRMFieldVoice === 'function') {
+    initCRMFieldVoice($('cfComposer'));
+  }
+
   $('cfComposer').addEventListener('submit', sendMessage);
   $('cfComposerInput').addEventListener('input', function () {
     updateChar();
@@ -1679,14 +1736,7 @@
     }
     if (data.pinned_message) applyPinnedMessage(normalizeIncoming(data.pinned_message));
     else renderPinnedBar();
-    if (!data.member.welcome_seen) {
-      var dlg = $('cfWelcomeDialog');
-      openDialog(dlg);
-      $('cfWelcomeAck').addEventListener('click', function () {
-        dlg.close();
-        fetchJson(apiUrl('profile/'), { method: 'POST', body: { welcome_ack: true } });
-      }, { once: true });
-    }
+    maybeShowWelcomeDialog(data.member);
     touchSyncClock();
     return loadInitial();
   }).then(function () {

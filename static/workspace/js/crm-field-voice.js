@@ -51,12 +51,12 @@
         const wrapEl = wrap.querySelector(':scope > .crm-field-voice__wrap');
         if (wrapEl) {
             const direct = wrapEl.querySelector(
-                '.crm-input, .crm-textarea, .ws-input, .ws-textarea, .crm-msg-composer-field, .crm-act-content, .agency-space-publish-note__input, .mk-share-msg-input, [data-crm-field-voice-editor], [contenteditable="true"]',
+                '.crm-input, .crm-textarea, .ws-input, .ws-textarea, .cf-composer__input, .crm-msg-composer-field, .crm-act-content, .agency-space-publish-note__input, .mk-share-msg-input, [data-crm-field-voice-editor], [contenteditable="true"]',
             );
             if (direct) return direct;
         }
         return wrap.querySelector(
-            '.crm-input, .crm-textarea, .ws-input, .ws-textarea, .crm-msg-composer-field, .crm-act-content, .agency-space-publish-note__input, .mk-share-msg-input, [data-crm-field-voice-editor], [contenteditable="true"]',
+            '.crm-input, .crm-textarea, .ws-input, .ws-textarea, .cf-composer__input, .crm-msg-composer-field, .crm-act-content, .agency-space-publish-note__input, .mk-share-msg-input, [data-crm-field-voice-editor], [contenteditable="true"]',
         );
     }
 

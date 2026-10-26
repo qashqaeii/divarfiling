@@ -93,3 +93,31 @@ class ForumAccessTests(TestCase):
         stats = purge_expired_messages(retention_days=30)
         self.assertGreaterEqual(stats['messages'], 1)
         self.assertFalse(ForumMessage.objects.filter(pk=old.pk).exists())
+
+    def test_welcome_ack_once(self):
+        member = get_or_create_member(self.user)
+        self.assertIsNone(member.welcome_seen_at)
+        url = reverse('workspace:community_forum:api_profile')
+        bootstrap = reverse('workspace:community_forum:api_bootstrap')
+        r0 = self.client.get(bootstrap)
+        self.assertTrue(r0.json()['member']['welcome_seen'] is False)
+        r1 = self.client.post(
+            url,
+            data=json.dumps({'welcome_ack': True}),
+            content_type='application/json',
+        )
+        self.assertEqual(r1.status_code, 200)
+        self.assertTrue(r1.json()['welcome_seen'])
+        member.refresh_from_db()
+        first_seen = member.welcome_seen_at
+        self.assertIsNotNone(first_seen)
+        r2 = self.client.post(
+            url,
+            data=json.dumps({'welcome_ack': True}),
+            content_type='application/json',
+        )
+        self.assertEqual(r2.status_code, 200)
+        member.refresh_from_db()
+        self.assertEqual(member.welcome_seen_at, first_seen)
+        r3 = self.client.get(bootstrap)
+        self.assertTrue(r3.json()['member']['welcome_seen'])

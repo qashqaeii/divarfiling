@@ -106,21 +106,24 @@
                     <section class="pcs-panel" data-pcs-panel="divar" role="tabpanel" hidden>
                         <header class="pcs-panel-hero pcs-panel-hero--divar">
                             <div class="pcs-panel-hero__copy">
-                                <h3 class="pcs-panel-hero__title">آگهی دیوار با AI</h3>
-                                <p class="pcs-panel-hero__hint">چند عنوان پیشنهادی و متن کامل آگهی — آماده کپی در دیوار</p>
+                                <span class="pcs-panel-hero__kicker"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تولید با AI</span>
+                                <h3 class="pcs-panel-hero__title">آگهی دیوار</h3>
+                                <p class="pcs-panel-hero__hint">عنوان‌های پیشنهادی و متن کامل — آماده کپی در اپ دیوار</p>
                             </div>
-                            <div class="pcs-panel-hero__actions pcs-ai-toolbar">
-                                <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarTitles">
-                                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تولید عنوان‌ها
+                            <div class="pcs-panel-hero__toolbar" role="group" aria-label="ابزار تولید آگهی">
+                                <button type="button" class="pcs-btn pcs-btn--soft pcs-hero-btn" id="pcsGenDivarTitles">
+                                    <i class="fas fa-heading" aria-hidden="true"></i> تولید عنوان‌ها
                                 </button>
-                                <div class="pcs-ai-toolbar__combo">
-                                    <select id="pcsDivarBodyStyle" class="pcs-select" aria-label="سبک متن آگهی">
+                                <div class="pcs-hero-split">
+                                    <select id="pcsDivarBodyStyle" class="pcs-select pcs-hero-select" aria-label="سبک متن آگهی">
                                         <option value="formal">رسمی</option>
                                         <option value="promo">تبلیغاتی</option>
                                         <option value="short">مختصر</option>
                                         <option value="full">توضیح کامل</option>
                                     </select>
-                                    <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarBody">تولید متن آگهی</button>
+                                    <button type="button" class="pcs-btn pcs-btn--primary pcs-hero-btn" id="pcsGenDivarBody">
+                                        <i class="fas fa-align-right" aria-hidden="true"></i> تولید متن آگهی
+                                    </button>
                                 </div>
                             </div>
                         </header>
@@ -147,11 +150,12 @@
                     <section class="pcs-panel" data-pcs-panel="social" role="tabpanel" hidden>
                         <header class="pcs-panel-hero pcs-panel-hero--social">
                             <div class="pcs-panel-hero__copy">
-                                <h3 class="pcs-panel-hero__title">کپشن و شبکه‌های اجتماعی</h3>
-                                <p class="pcs-panel-hero__hint">نسخه‌های مختلف برای پست، واتساپ و تلگرام — با یک کلیک کپی کنید</p>
+                                <span class="pcs-panel-hero__kicker"><i class="fas fa-hashtag" aria-hidden="true"></i> شبکه‌های اجتماعی</span>
+                                <h3 class="pcs-panel-hero__title">کپشن و پیام‌های آماده</h3>
+                                <p class="pcs-panel-hero__hint">چند لحن برای پست، واتساپ و تلگرام — با یک کلیک کپی کنید</p>
                             </div>
-                            <div class="pcs-panel-hero__actions">
-                                <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenSocial">
+                            <div class="pcs-panel-hero__toolbar pcs-panel-hero__toolbar--single">
+                                <button type="button" class="pcs-btn pcs-btn--primary pcs-hero-btn" id="pcsGenSocial">
                                     <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تولید محتوای شبکه‌ها
                                 </button>
                             </div>

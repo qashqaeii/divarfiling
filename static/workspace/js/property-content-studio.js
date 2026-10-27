@@ -3966,10 +3966,12 @@
     }
 
     async function aiPost(action, body) {
-        const res = await fetch(`${cfg.aiBaseUrl}${action}/`, {
+        const base = String(cfg.aiBaseUrl || '').replace(/\/?$/, '/');
+        const res = await fetch(`${base}${action}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
             body: JSON.stringify(body || {}),
+            credentials: 'same-origin',
         });
         let data = {};
         try {
@@ -3981,6 +3983,140 @@
             throw new Error(data.error || (res.status === 429 ? 'سهمیه AI تمام شده است' : 'خطا'));
         }
         return data;
+    }
+
+    function ensureDraftAiShell() {
+        if (!state.draft) {
+            throw new Error('استودیو هنوز بارگذاری نشده — چند ثانیه صبر کنید و دوباره تلاش کنید');
+        }
+        state.draft.ai = state.draft.ai || {};
+        state.draft.ai.divar = state.draft.ai.divar || { titles: [], body: '', selected_title_index: 0 };
+        state.draft.ai.social = state.draft.ai.social || { captions: [], hashtags: [] };
+    }
+
+    function setAiButtonsBusy(busy, buttons) {
+        (buttons || []).forEach((btn) => {
+            if (!btn) return;
+            btn.disabled = busy;
+            btn.classList.toggle('is-busy', busy);
+            btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+        });
+    }
+
+    async function runAiAction(fn, buttons) {
+        if (state.aiInflight) {
+            toast('در حال تولید محتوا…');
+            return;
+        }
+        if (cfg.aiEnabled === false) {
+            toast('سرویس هوش مصنوعی برای این حساب فعال نیست');
+            return;
+        }
+        state.aiInflight = true;
+        setAiButtonsBusy(true, buttons);
+        try {
+            await fn();
+        } finally {
+            state.aiInflight = false;
+            setAiButtonsBusy(false, buttons);
+        }
+    }
+
+    function bindPcsAiGeneration() {
+        const modal = $('#pcsModal');
+        if (!modal || modal.dataset.pcsAiGenBound === '1') return;
+        modal.dataset.pcsAiGenBound = '1';
+
+        modal.addEventListener('click', async (e) => {
+            const titlesBtn = e.target.closest('#pcsGenDivarTitles');
+            const bodyBtn = e.target.closest('#pcsGenDivarBody');
+            const socialBtn = e.target.closest('#pcsGenSocial');
+            if (!titlesBtn && !bodyBtn && !socialBtn) return;
+            if (modal.hasAttribute('hidden')) return;
+            e.preventDefault();
+
+            if (titlesBtn) {
+                await runAiAction(async () => {
+                    try {
+                        ensureDraftAiShell();
+                        const data = await aiPost('divar-titles');
+                        const incoming = data.data?.titles || [];
+                        if (!incoming.length) {
+                            toast('عنوانی از AI دریافت نشد');
+                            return;
+                        }
+                        const prev = state.draft.ai.divar.titles || [];
+                        if (prev.length && !window.confirm('عنوان‌های قبلی با نتایج جدید جایگزین شوند؟')) {
+                            return;
+                        }
+                        state.draft.ai.divar.titles = incoming;
+                        scheduleSave();
+                        renderDivarTitles();
+                        renderAiStrip();
+                        toast('عنوان‌ها تولید شد');
+                    } catch (err) {
+                        toast(err.message || 'خطای AI');
+                    }
+                }, [titlesBtn]);
+                return;
+            }
+
+            if (bodyBtn) {
+                await runAiAction(async () => {
+                    try {
+                        ensureDraftAiShell();
+                        const style = $('#pcsDivarBodyStyle')?.value || 'formal';
+                        const data = await aiPost('divar-body', { style });
+                        const body = data.data?.body || '';
+                        if (!body.trim()) {
+                            toast('متنی از AI دریافت نشد');
+                            return;
+                        }
+                        const bodyEl = $('#pcsDivarBody');
+                        if (bodyEl?.value?.trim() && !window.confirm('متن فعلی دیوار جایگزین شود؟')) {
+                            return;
+                        }
+                        state.draft.ai.divar.body = body;
+                        if (bodyEl) bodyEl.value = body;
+                        updateCharCountEl(bodyEl, '#pcsDivarBodyCount');
+                        scheduleSave();
+                        renderAiStrip();
+                        toast('متن آگهی تولید شد');
+                    } catch (err) {
+                        toast(err.message || 'خطای AI');
+                    }
+                }, [bodyBtn, $('#pcsDivarBodyStyle')]);
+                return;
+            }
+
+            if (socialBtn) {
+                await runAiAction(async () => {
+                    try {
+                        ensureDraftAiShell();
+                        const data = await aiPost('social');
+                        const d = data.data || {};
+                        const hasManual = (state.draft.ai.social.captions || []).some((c) => (c.text || '').trim())
+                            || ($('#pcsWhatsappText')?.value || '').trim()
+                            || ($('#pcsTelegramText')?.value || '').trim();
+                        if (hasManual && !window.confirm('متن‌های شبکه‌های اجتماعی جایگزین شوند؟')) {
+                            return;
+                        }
+                        state.draft.ai.social.captions = d.captions || [];
+                        state.draft.ai.social.hashtags = d.hashtags || [];
+                        state.draft.ai.social.whatsapp_short = d.whatsapp_short || '';
+                        state.draft.ai.social.whatsapp_full = d.whatsapp_full || '';
+                        state.draft.ai.social.telegram = d.telegram || '';
+                        state.draft.ai.social.ctas = d.ctas || [];
+                        syncFormFromDraft();
+                        scheduleSave();
+                        renderAiStrip();
+                        toast('محتوای شبکه‌ها تولید شد');
+                    } catch (err) {
+                        toast(err.message || 'خطای AI');
+                    }
+                }, [socialBtn]);
+            }
+        });
     }
 
     function bindEvents() {
@@ -4026,66 +4162,7 @@
             if (!$('#pcsModal')?.hasAttribute('hidden')) closeModal();
         });
         $$('.pcs-tab').forEach((t) => t.addEventListener('click', () => setTab(t.dataset.pcsTab)));
-        async function runAiAction(fn, buttons) {
-            if (state.aiInflight) return;
-            state.aiInflight = true;
-            buttons.forEach((b) => { if (b) b.disabled = true; });
-            try {
-                await fn();
-            } finally {
-                state.aiInflight = false;
-                buttons.forEach((b) => { if (b) b.disabled = false; });
-            }
-        }
-
-        $('#pcsGenDivarTitles')?.addEventListener('click', async () => {
-            const btn = $('#pcsGenDivarTitles');
-            await runAiAction(async () => {
-                try {
-                    const data = await aiPost('divar-titles');
-                    if (!state.draft.ai.divar.titles?.length || window.confirm('عنوان‌های قبلی جایگزین شوند؟')) {
-                        state.draft.ai.divar.titles = data.data?.titles || [];
-                    }
-                    scheduleSave();
-                    renderDivarTitles();
-                    renderAiStrip();
-                } catch (e) { toast(e.message || 'خطای AI'); }
-            }, [btn]);
-        });
-        $('#pcsGenDivarBody')?.addEventListener('click', async () => {
-            const btn = $('#pcsGenDivarBody');
-            await runAiAction(async () => {
-                try {
-                    const style = $('#pcsDivarBodyStyle')?.value || 'formal';
-                    const data = await aiPost('divar-body', { style });
-                    const body = data.data?.body || '';
-                    if ($('#pcsDivarBody')?.value && !window.confirm('متن فعلی دیوار جایگزین شود؟')) return;
-                    state.draft.ai.divar.body = body;
-                    $('#pcsDivarBody').value = body;
-                    scheduleSave();
-                } catch (e) { toast(e.message || 'خطای AI'); }
-            }, [btn]);
-        });
-        $('#pcsGenSocial')?.addEventListener('click', async () => {
-            const btn = $('#pcsGenSocial');
-            await runAiAction(async () => {
-                try {
-                    const data = await aiPost('social');
-                    const d = data.data || {};
-                    const hasManual = (state.draft.ai.social.captions || []).some((c) => (c.text || '').trim());
-                    if (hasManual && !window.confirm('متن‌های شبکه‌های اجتماعی جایگزین شوند؟')) return;
-                    state.draft.ai.social.captions = d.captions || [];
-                    state.draft.ai.social.hashtags = d.hashtags || [];
-                    state.draft.ai.social.whatsapp_short = d.whatsapp_short || '';
-                    state.draft.ai.social.whatsapp_full = d.whatsapp_full || '';
-                    state.draft.ai.social.telegram = d.telegram || '';
-                    state.draft.ai.social.ctas = d.ctas || [];
-                    syncFormFromDraft();
-                    scheduleSave();
-                    renderAiStrip();
-                } catch (e) { toast(e.message || 'خطای AI'); }
-            }, [btn]);
-        });
+        bindPcsAiGeneration();
         $('#pcsCopyDivarBundle')?.addEventListener('click', () => {
             const idx = state.draft?.ai?.divar?.selected_title_index || 0;
             const title = state.draft?.ai?.divar?.titles?.[idx]?.text || '';

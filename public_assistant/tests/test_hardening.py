@@ -1,6 +1,7 @@
 import json
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import Client, TestCase, override_settings
@@ -97,6 +98,15 @@ class SessionCreateRateLimitTest(TestCase):
         second = self._post_chat_no_session_cookie()
         self.assertEqual(second.status_code, 429)
         self.assertFalse(second.json().get('ok'))
+
+    def test_staff_bypasses_session_create_rate_limit(self):
+        User = get_user_model()
+        staff = User.objects.create_user(username='pa-staff-rl', password='x', is_staff=True)
+        self.client.force_login(staff)
+        first = self._post_chat_no_session_cookie()
+        second = self._post_chat_no_session_cookie()
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
 
 
 @override_settings(PUBLIC_ASSISTANT_TRUSTED_PROXY_IPS=['127.0.0.1'])

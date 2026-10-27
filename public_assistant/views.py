@@ -18,6 +18,7 @@ from public_assistant.services.rate_limit import (
     check_reset_rate_limit,
     check_session_create_rate,
     ip_hash,
+    rate_limit_bypassed,
 )
 from public_assistant.services.request_body import InvalidRequestBody, parse_json_object
 from public_assistant.services.session import session_from_cookie, set_session_cookie
@@ -75,11 +76,12 @@ def chat_view(request):
 
     norm = normalize_persian(message)
 
-    try:
-        check_chat_rate_limit(request, str(session.id))
-        check_duplicate_request(str(session.id), norm)
-    except RateLimitExceeded:
-        return _rate_limit_response()
+    if not rate_limit_bypassed(request):
+        try:
+            check_chat_rate_limit(request, str(session.id))
+            check_duplicate_request(str(session.id), norm)
+        except RateLimitExceeded:
+            return _rate_limit_response()
 
     result = answer_question(session=session, message=message)
     resp = JsonResponse(result)

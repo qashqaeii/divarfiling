@@ -11,6 +11,14 @@ class RateLimitExceeded(Exception):
     pass
 
 
+def rate_limit_bypassed(request) -> bool:
+    """مدیر سیستم (is_staff) هنگام استفاده از سایت لاگین‌شده — بدون سقف عمومی."""
+    user = getattr(request, 'user', None)
+    if user is None or not getattr(user, 'is_authenticated', False):
+        return False
+    return bool(getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
+
+
 def _trusted_proxy_ips() -> frozenset[str]:
     raw = getattr(settings, 'PUBLIC_ASSISTANT_TRUSTED_PROXY_IPS', None) or []
     return frozenset(str(x).strip() for x in raw if str(x).strip())
@@ -64,6 +72,8 @@ def _limits() -> tuple[int, int]:
 
 
 def check_chat_rate_limit(request, session_id: str) -> None:
+    if rate_limit_bypassed(request):
+        return
     per_ip, per_session = _limits()
     window = 3600
     if not _consume(f'pa:rl:chat:ip:{ip_hash(request)}', per_ip, window):
@@ -73,6 +83,8 @@ def check_chat_rate_limit(request, session_id: str) -> None:
 
 
 def check_session_create_rate(request) -> None:
+    if rate_limit_bypassed(request):
+        return
     limit = int(getattr(settings, 'PUBLIC_ASSISTANT_SESSION_CREATE_LIMIT_PER_HOUR', 12))
     window = 3600
     if not _consume(f'pa:rl:session:new:{ip_hash(request)}', limit, window):
@@ -80,6 +92,8 @@ def check_session_create_rate(request) -> None:
 
 
 def check_feedback_rate_limit(request, session_id: str) -> None:
+    if rate_limit_bypassed(request):
+        return
     limit = int(getattr(settings, 'PUBLIC_ASSISTANT_FEEDBACK_LIMIT_PER_HOUR', 30))
     if not _consume(f'pa:rl:feedback:ip:{ip_hash(request)}', limit, 3600):
         raise RateLimitExceeded('feedback')
@@ -88,6 +102,8 @@ def check_feedback_rate_limit(request, session_id: str) -> None:
 
 
 def check_reset_rate_limit(request) -> None:
+    if rate_limit_bypassed(request):
+        return
     limit = int(getattr(settings, 'PUBLIC_ASSISTANT_RESET_LIMIT_PER_HOUR', 10))
     if not _consume(f'pa:rl:reset:ip:{ip_hash(request)}', limit, 3600):
         raise RateLimitExceeded('reset')

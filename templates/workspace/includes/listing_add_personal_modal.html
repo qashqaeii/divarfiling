@@ -1,0 +1,56 @@
+{% load static %}
+{# مودال انتخاب زونکن هنگام افزودن آگهی فایلینگ به فایل شخصی #}
+<div class="ws-modal ws-ld-personal-modal" id="modal-listing-add-personal" role="dialog" aria-modal="true" aria-labelledby="wsListingAddPersonalTitle" hidden data-modal-uses-hidden>
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-ld-personal-modal__panel">
+        <div class="ws-modal-head ws-ld-personal-modal__head">
+            <div class="ws-ld-personal-modal__intro">
+                <h2 id="wsListingAddPersonalTitle" class="ws-modal-title">افزودن به فایل شخصی</h2>
+                <p class="ws-modal-sub" data-ws-personal-place-sub>آگهی از فایلینگ دیوار حذف و به فایل‌های شخصی منتقل می‌شود.</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" action="#" id="wsListingAddPersonalForm" class="ws-ld-personal-place-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="">
+            <input type="hidden" name="redirect" value="">
+            <input type="hidden" name="folder_id" value="" data-ws-personal-folder-id>
+            <div class="ws-modal-body ws-ld-personal-modal__body">
+                <p class="ws-ld-personal-place__loading" data-ws-personal-place-loading hidden>
+                    <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                    <span>در حال بارگذاری زونکن‌ها…</span>
+                </p>
+                <div class="ws-ld-personal-place" data-ws-personal-place>
+                    <p class="ws-ld-personal-place__label">زونکن (اختیاری)</p>
+                    <div class="ws-ld-personal-place__filters" data-ws-personal-cabinet-filters hidden role="tablist" aria-label="فیلتر کمد"></div>
+                    <div class="ws-ld-personal-place__scroll">
+                        <ul class="ws-ld-personal-place__list" data-ws-personal-folder-list role="list"></ul>
+                    </div>
+                    <button type="button" class="ws-ld-personal-place__none is-selected" data-ws-personal-folder-choice="" aria-pressed="true">
+                        <span class="ws-ld-personal-place__accent" aria-hidden="true"></span>
+                        <span class="ws-ld-personal-place__ico" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+                        <span class="ws-ld-personal-place__info">
+                            <strong>بدون زونکن</strong>
+                            <em>فقط در فهرست فایل‌های شخصی</em>
+                        </span>
+                        <span class="ws-ld-personal-place__tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+                    </button>
+                    <p class="ws-ld-personal-place__hint">
+                        <i class="fas fa-hand-pointer" aria-hidden="true"></i>
+                        یک زونکن انتخاب کنید یا بدون مجموعه ادامه دهید.
+                    </p>
+                </div>
+            </div>
+            <div class="ws-modal-foot ws-ld-personal-modal__foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary" data-ws-personal-submit>
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i> تأیید و افزودن
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+window.wsListingPersonalFoldersUrl = '{% url "workspace:crm_property_folders" %}';
+window.wsListingPersonalCabinetsUrl = '{% url "workspace:crm_property_cabinets" %}';
+</script>

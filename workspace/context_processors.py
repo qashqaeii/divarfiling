@@ -1,4 +1,6 @@
 """Context processor برای workspace."""
+import json
+
 from divar_shop.db_safe import DB_CONTEXT_ERRORS
 from workspace.carto_basemap import get_carto_basemap_api_key
 from ai_workspace.constants import CRM_MESSAGE_TONE_CHOICES, is_ai_enabled
@@ -30,6 +32,18 @@ _WS_NAV_MORE_URL_NAMES = frozenset({
 })
 
 
+def _filing_personal_place_json(user):
+    from workspace.services.crm_property_cabinets import list_property_cabinets, serialize_cabinet
+    from workspace.services.crm_property_folders import list_property_folders, serialize_folder
+
+    folders = list_property_folders(user)
+    cabinets = list_property_cabinets(user)
+    return (
+        json.dumps([serialize_folder(f) for f in folders], ensure_ascii=False),
+        json.dumps([serialize_cabinet(c) for c in cabinets], ensure_ascii=False),
+    )
+
+
 def _ws_nav_flags(request, user, show_agency_nav: bool):
     match = getattr(request, 'resolver_match', None)
     url_name = getattr(match, 'url_name', '') or ''
@@ -58,6 +72,9 @@ def workspace_context(request):
     user = getattr(request, 'user', None)
     if user is None or not user.is_authenticated:
         return ctx
+    path = getattr(request, 'path', '') or ''
+    if path.startswith('/workspace'):
+        ctx['is_workspace'] = True
     try:
         return _build_workspace_context(request, user, ctx)
     except DB_CONTEXT_ERRORS:
@@ -167,6 +184,8 @@ def _build_workspace_context(request, user, ctx):
             from workspace.services.workspace_agency_home import resolve_workspace_agency_nav_url
 
             ctx['ws_agency_nav_url'] = resolve_workspace_agency_nav_url(user)
+        if request.path.startswith('/workspace/datasets/'):
+            ctx['property_folders_json'], ctx['property_cabinets_json'] = _filing_personal_place_json(user)
         from workspace.services.agency_rbac import (
             PERM_CONTRACTS_VIEW_TEAM,
             PERM_FINANCE_VIEW,

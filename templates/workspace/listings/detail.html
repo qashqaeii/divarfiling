@@ -94,10 +94,11 @@
                         <i class="fas fa-check" aria-hidden="true"></i><span>قبلاً اضافه شده</span>
                     </span>
                     {% else %}
-                    <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-hero-form">
+                    <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-hero-form" data-listing-add-personal-form onsubmit="return !window.wsInterceptListingPersonalAdd || window.wsInterceptListingPersonalAdd(event)">
                         {% csrf_token %}
                         <input type="hidden" name="redirect" value="property">
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="hidden" name="folder_id" value="">
                         <button type="submit" class="crm-prop-hero-act crm-prop-hero-act--accent" title="تبدیل آگهی دیوار به فایل شخصی">
                             <i class="fas fa-folder-plus" aria-hidden="true"></i><span>فایل شخصی</span>
                         </button>
@@ -811,10 +812,11 @@
                 <span>فایل شخصی</span>
             </a>
             {% else %}
-            <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-dock-form ws-ld-dock-form--personal">
+            <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-dock-form ws-ld-dock-form--personal" data-listing-add-personal-form onsubmit="return !window.wsInterceptListingPersonalAdd || window.wsInterceptListingPersonalAdd(event)">
                 {% csrf_token %}
                 <input type="hidden" name="redirect" value="property">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="folder_id" value="">
                 <button type="submit" class="crm-prop-dock-btn crm-prop-dock-btn--personal" title="افزودن به فایل شخصی" aria-label="افزودن به فایل شخصی">
                     <i class="fas fa-folder-plus" aria-hidden="true"></i>
                     <span>افزودن شخصی</span>
@@ -887,11 +889,12 @@
                 </a>
                 <p class="ws-ld-mob-more__notice">این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.</p>
                 {% else %}
-                <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-mob-more__form">
+                <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-mob-more__form" data-listing-add-personal-form onsubmit="return !window.wsInterceptListingPersonalAdd || window.wsInterceptListingPersonalAdd(event)">
                     {% csrf_token %}
                     <input type="hidden" name="redirect" value="property">
                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="ws-ld-mob-more__act ws-ld-mob-more__act--personal">
+                    <input type="hidden" name="folder_id" value="">
+                    <button type="submit" class="ws-ld-mob-more__act ws-ld-mob-more__act--personal" data-ld-more-close>
                         <i class="fas fa-folder-plus" aria-hidden="true"></i>
                         <span>فایل شخصی</span>
                     </button>
@@ -1002,6 +1005,17 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if property_folders_json %}
+<script>
+window.wsListingPersonalPlaceBootstrap = {
+    folders: {{ property_folders_json|safe }},
+    cabinets: {{ property_cabinets_json|default:'[]'|safe }},
+};
+</script>
+{% endif %}
+<script>
+if (typeof initListingAddPersonal === 'function') initListingAddPersonal();
+</script>
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% if divar_contact_enabled %}

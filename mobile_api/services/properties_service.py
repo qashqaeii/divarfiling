@@ -321,7 +321,10 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> tuple[CRMProperty
             .first()
         )
         if listing:
-            prop, created = add_listing_to_personal_files(user, listing)
+            folder_id = data.get('folder_id')
+            prop, created, _assigned = add_listing_to_personal_files(
+                user, listing, folder_id=folder_id,
+            )
             _apply_mobile_property_overrides(prop, data, title_required=False)
             return prop, created
 

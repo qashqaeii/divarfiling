@@ -1077,10 +1077,16 @@ def finalize_listing_moved_to_personal(user, listing, prop: CRMProperty) -> None
     remove_listing_from_filing(user, listing)
 
 
-def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
+def add_listing_to_personal_files(
+    user,
+    listing,
+    *,
+    folder_id=None,
+) -> tuple[CRMProperty, bool, Optional[str]]:
     """
     انتقال آگهی به فایل‌های شخصی:
     ساخت/بازیابی CRMProperty، ذخیره محلی تصاویر، مهاجرت املاک مرتبط، حذف از فایلینگ دیوار.
+    folder_id اختیاری — در صورت معتبر بودن، ملک به زونکن اضافه می‌شود.
     """
     from django.db import IntegrityError, transaction
 
@@ -1159,7 +1165,30 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
         _sync_contacts(prop)
         finalize_listing_moved_to_personal(user, listing, prop)
 
-    return prop, created
+    assigned_folder_name: Optional[str] = None
+    if folder_id is not None and str(folder_id).strip() not in ('', '0'):
+        from workspace.services.crm_property_folders import add_property_to_folder, folder_for_user
+
+        try:
+            fid = int(folder_id)
+        except (TypeError, ValueError):
+            fid = 0
+        if fid > 0:
+            folder = folder_for_user(user, fid)
+            if folder:
+                try:
+                    add_property_to_folder(user, fid, prop.pk)
+                    assigned_folder_name = folder.name
+                except ValueError as exc:
+                    logger.warning(
+                        'listing_personal_folder_assign_failed user_id=%s property_id=%s folder_id=%s err=%s',
+                        user.pk,
+                        prop.pk,
+                        fid,
+                        exc,
+                    )
+
+    return prop, created, assigned_folder_name
 
 
 def resolve_listing_for_property(user, prop) -> Optional[Listing]:

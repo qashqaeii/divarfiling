@@ -2,13 +2,15 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from licenses.models import License
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from workspace.models import CRMProperty, Dataset, Listing
+from workspace.models import CRMProperty, CRMPropertyFolderItem, Dataset, Listing
 from workspace.services.crm import add_listing_to_personal_files
 from workspace.services.crm_property_duplicate import duplicate_property
+from shop.models import LicensePlan, Order, Product
 from workspace.services.listing_personal_status import (
     DIVAR_SOURCE_PLATFORM,
     get_crm_property_by_source_identity,
@@ -36,6 +38,36 @@ class ListingPersonalDuplicateTests(TestCase):
             neighborhood='ونک',
         )
 
+    def _grant_bot_license(self):
+        product = Product.objects.create(
+            title='ربات تست فایلینگ',
+            slug='test-bot-listing-personal',
+            description='',
+            is_active=True,
+        )
+        plan = LicensePlan.objects.create(
+            product=product,
+            name='ماهانه',
+            plan_type='monthly',
+            price=1000,
+            duration_days=30,
+            is_active=True,
+        )
+        order = Order.objects.create(
+            user=self.user,
+            product=product,
+            plan=plan,
+            amount=plan.price,
+            status='paid',
+        )
+        License.objects.create(
+            order=order,
+            plan=plan,
+            license_key='TEST-LISTING-PERSONAL',
+            status='active',
+            max_activations=1,
+        )
+
     def _reextract_listing(self):
         dataset2 = Dataset.objects.create(user=self.user, name='فایل فردا')
         return Listing.objects.create(
@@ -48,7 +80,7 @@ class ListingPersonalDuplicateTests(TestCase):
         )
 
     def test_convert_stores_source_identity(self):
-        prop, created = add_listing_to_personal_files(self.user, self.listing)
+        prop, created, _ = add_listing_to_personal_files(self.user, self.listing)
         self.assertTrue(created)
         prop.refresh_from_db()
         self.assertEqual(prop.source_platform, DIVAR_SOURCE_PLATFORM)
@@ -56,7 +88,7 @@ class ListingPersonalDuplicateTests(TestCase):
         self.assertEqual(prop.token, 'divar-abc-123')
 
     def test_reextracted_listing_marked_personal_in_api(self):
-        prop, _ = add_listing_to_personal_files(self.user, self.listing)
+        prop, _, _ = add_listing_to_personal_files(self.user, self.listing)
         reextracted = self._reextract_listing()
 
         client = APIClient()
@@ -69,7 +101,7 @@ class ListingPersonalDuplicateTests(TestCase):
         self.assertEqual(data['personal_property_id'], prop.pk)
 
     def test_list_endpoint_includes_personal_status(self):
-        prop, _ = add_listing_to_personal_files(self.user, self.listing)
+        prop, _, _ = add_listing_to_personal_files(self.user, self.listing)
         reextracted = self._reextract_listing()
 
         client = APIClient()
@@ -110,16 +142,16 @@ class ListingPersonalDuplicateTests(TestCase):
         self.assertEqual(status_map, {})
 
     def test_second_personalize_returns_existing(self):
-        prop1, created1 = add_listing_to_personal_files(self.user, self.listing)
+        prop1, created1, _ = add_listing_to_personal_files(self.user, self.listing)
         self.assertTrue(created1)
         reextracted = self._reextract_listing()
-        prop2, created2 = add_listing_to_personal_files(self.user, reextracted)
+        prop2, created2, _ = add_listing_to_personal_files(self.user, reextracted)
         self.assertFalse(created2)
         self.assertEqual(prop1.pk, prop2.pk)
         self.assertEqual(CRMProperty.objects.filter(user=self.user).count(), 1)
 
     def test_mobile_create_property_already_added(self):
-        prop, _ = add_listing_to_personal_files(self.user, self.listing)
+        prop, _, _ = add_listing_to_personal_files(self.user, self.listing)
         reextracted = self._reextract_listing()
 
         client = APIClient()
@@ -175,7 +207,7 @@ class ListingPersonalDuplicateTests(TestCase):
                 )
 
     def test_property_copy_clears_source_identity(self):
-        prop, _ = add_listing_to_personal_files(self.user, self.listing)
+        prop, _, _ = add_listing_to_personal_files(self.user, self.listing)
         copy = duplicate_property(self.user, prop.pk)
         self.assertNotEqual(copy.pk, prop.pk)
         self.assertEqual(copy.source_platform, '')
@@ -206,7 +238,7 @@ class ListingPersonalDuplicateTests(TestCase):
             )
 
         with patch('workspace.services.crm.property_from_listing', side_effect=_raise_unique):
-            prop, created = add_listing_to_personal_files(self.user, self.listing)
+            prop, created, _ = add_listing_to_personal_files(self.user, self.listing)
 
         self.assertFalse(created)
         self.assertEqual(prop.pk, existing.pk)
@@ -231,7 +263,7 @@ class ListingPersonalDuplicateTests(TestCase):
         from django.test import Client
         from django.urls import reverse
 
-        prop, created = add_listing_to_personal_files(self.user, self.listing)
+        prop, created, _ = add_listing_to_personal_files(self.user, self.listing)
         self.assertTrue(created)
         reextracted = self._reextract_listing()
         url = reverse(
@@ -255,3 +287,41 @@ class ListingPersonalDuplicateTests(TestCase):
         with patch('workspace.services.crm.property_from_listing', side_effect=_raise_other):
             with self.assertRaises(IntegrityError):
                 add_listing_to_personal_files(self.user, self.listing)
+
+    def test_convert_with_optional_folder(self):
+        from workspace.services.crm_property_folders import create_property_folder
+
+        folder = create_property_folder(self.user, name='فروش ونک')
+        prop, created, folder_name = add_listing_to_personal_files(
+            self.user, self.listing, folder_id=folder.pk,
+        )
+        self.assertTrue(created)
+        self.assertEqual(folder_name, 'فروش ونک')
+        self.assertTrue(
+            CRMPropertyFolderItem.objects.filter(folder=folder, property=prop).exists(),
+        )
+
+    def test_listing_add_personal_post_with_folder_id(self):
+        from django.test import Client
+        from django.urls import reverse
+
+        from workspace.services.crm_property_folders import create_property_folder
+
+        self._grant_bot_license()
+        folder = create_property_folder(self.user, name='اجاره')
+        url = reverse(
+            'workspace:listing_add_personal',
+            kwargs={'dataset_id': self.dataset.pk, 'listing_id': self.listing.pk},
+        )
+        client = Client()
+        client.force_login(self.user)
+        resp = client.post(url, {'folder_id': str(folder.pk), 'next': '/workspace/'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertNotIn('/workspace/upgrade/', resp.url)
+        prop = get_crm_property_by_source_identity(
+            self.user, DIVAR_SOURCE_PLATFORM, self.listing.token,
+        )
+        self.assertIsNotNone(prop)
+        self.assertTrue(
+            CRMPropertyFolderItem.objects.filter(folder=folder, property=prop).exists(),
+        )

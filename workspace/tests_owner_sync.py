@@ -94,7 +94,7 @@ class UpsertPropertyOwnerTests(TestCase):
         self.listing.data = {'شماره تماس': '09123334455', 'نام مالک': 'رضا کریمی'}
         self.listing.save(update_fields=['data'])
         listing_id = self.listing.pk
-        prop, created = add_listing_to_personal_files(self.user, self.listing)
+        prop, created, _ = add_listing_to_personal_files(self.user, self.listing)
         self.assertTrue(created)
         self.assertEqual(prop.phone, '09123334455')
         self.assertEqual(prop.owner_name, 'رضا کریمی')
@@ -256,7 +256,7 @@ class MoveListingToPersonalFilesTests(TestCase):
         listing_id = self.listing.pk
         with self.settings(MEDIA_ROOT=self._media_root()):
             with self._mock_image_download():
-                prop, created = add_listing_to_personal_files(self.user, self.listing)
+                prop, created, _ = add_listing_to_personal_files(self.user, self.listing)
         self.assertTrue(created)
         self.assertFalse(Listing.objects.filter(pk=listing_id).exists())
         self.dataset.refresh_from_db()
@@ -274,7 +274,7 @@ class MoveListingToPersonalFilesTests(TestCase):
     def test_second_convert_is_idempotent_and_clears_filing(self):
         with self.settings(MEDIA_ROOT=self._media_root()):
             with self._mock_image_download():
-                prop1, created1 = add_listing_to_personal_files(self.user, self.listing)
+                prop1, created1, _ = add_listing_to_personal_files(self.user, self.listing)
         self.assertTrue(created1)
         leftover = Listing.objects.create(
             dataset=self.dataset,
@@ -284,7 +284,7 @@ class MoveListingToPersonalFilesTests(TestCase):
         )
         with self.settings(MEDIA_ROOT=self._media_root()):
             with self._mock_image_download():
-                prop2, created2 = add_listing_to_personal_files(self.user, leftover)
+                prop2, created2, _ = add_listing_to_personal_files(self.user, leftover)
         self.assertFalse(created2)
         self.assertEqual(prop1.pk, prop2.pk)
         self.assertFalse(

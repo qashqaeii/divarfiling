@@ -1151,6 +1151,12 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
         )
         ctx['carto_basemap_key'] = get_carto_basemap_api_key()
+        if 'property_folders_json' not in ctx:
+            from workspace.context_processors import _filing_personal_place_json
+
+            ctx['property_folders_json'], ctx['property_cabinets_json'] = _filing_personal_place_json(
+                self.request.user,
+            )
         return ctx
 
     def _whatsapp_text(self, listing, tx):
@@ -1379,16 +1385,20 @@ class ListingAddToPersonalFilesView(DatasetOwnerMixin, View):
     def post(self, request, dataset_id, listing_id):
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
-        prop, created = add_listing_to_personal_files(request.user, listing)
+        folder_id = (request.POST.get('folder_id') or '').strip() or None
+        prop, created, folder_name = add_listing_to_personal_files(
+            request.user, listing, folder_id=folder_id,
+        )
+        folder_suffix = f' و به زونکن «{folder_name}» اضافه شد' if folder_name else ''
         if created:
             messages.success(
                 request,
-                'آگهی به فایل‌های شخصی منتقل شد و از فایلینگ دیوار حذف شد.',
+                f'آگهی به فایل‌های شخصی منتقل شد و از فایلینگ دیوار حذف شد{folder_suffix}.',
             )
         else:
             messages.info(
                 request,
-                'این آگهی قبلاً در فایل‌های شخصی بود؛ از فایلینگ دیوار حذف شد.',
+                f'این آگهی قبلاً در فایل‌های شخصی بود؛ از فایلینگ دیوار حذف شد{folder_suffix}.',
             )
         if request.POST.get('redirect') == 'property':
             return redirect('workspace:crm_property_detail', property_id=prop.pk)

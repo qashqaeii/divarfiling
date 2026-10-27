@@ -250,7 +250,7 @@ class PersonalFileFromListingTests(TestCase):
         from workspace.services.crm import add_listing_to_personal_files
         from workspace.services.crm_scope import property_for_user, properties_qs
 
-        prop, created = add_listing_to_personal_files(self.user, self.listing)
+        prop, created, _ = add_listing_to_personal_files(self.user, self.listing)
         self.assertTrue(created)
         self.assertEqual(prop.agency_id, self.agency.pk)
         self.assertIsNotNone(property_for_user(self.user, prop.pk))

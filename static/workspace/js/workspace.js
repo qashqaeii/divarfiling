@@ -494,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPublicShareForms();
     initWSGalleryLightbox();
     initWSGalleryHeroTriggers();
+    initListingAddPersonal();
 });
 
 function getCsrfToken() {
@@ -502,6 +503,24 @@ function getCsrfToken() {
     const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : '';
 }
+
+window.wsInterceptListingPersonalAdd = function (event) {
+    const form = event && event.target;
+    if (!form || form.nodeName !== 'FORM') return true;
+    if (!form.hasAttribute('data-listing-add-personal-form')) return true;
+    if (form.dataset.personalSkipIntercept === '1') return true;
+    event.preventDefault();
+    event.stopPropagation();
+    if (typeof initListingAddPersonal === 'function') {
+        initListingAddPersonal();
+    }
+    const run = window.__wsListingPersonalHandle;
+    if (typeof run === 'function') {
+        run(form);
+        return false;
+    }
+    return false;
+};
 
 function buildDefaultShareMessage(title, url, template) {
     const safeTitle = (title || 'ملک').trim() || 'ملک';
@@ -3960,4 +3979,351 @@ function initMap(allMarkers, settings) {
     setupAdvancedFilters();
     setupSplitList();
     updateMapChrome(activeMode);
+}
+
+const WS_PERSONAL_FOLDER_LAST_KEY = 'ws_last_personal_folder_id';
+let wsPersonalPlaceCache = null;
+let wsPersonalPendingInlineForm = null;
+
+function wsEscapeHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;');
+}
+
+async function wsReadJsonResponse(resp) {
+    const ct = (resp.headers.get('content-type') || '').toLowerCase();
+    if (!ct.includes('application/json')) return {};
+    try {
+        return await resp.json();
+    } catch (_err) {
+        return {};
+    }
+}
+
+function wsPersonalPlaceFromBootstrap() {
+    const boot = window.wsListingPersonalPlaceBootstrap;
+    if (!boot || typeof boot !== 'object') return null;
+    const folders = Array.isArray(boot.folders) ? boot.folders : [];
+    const cabinets = Array.isArray(boot.cabinets) ? boot.cabinets : [];
+    return { folders, cabinets, ok: true };
+}
+
+async function loadWsPersonalPlaceData(forceRefresh) {
+    if (!forceRefresh && wsPersonalPlaceCache?.ok) return wsPersonalPlaceCache;
+    const boot = wsPersonalPlaceFromBootstrap();
+    if (!forceRefresh && boot && boot.folders.length) {
+        wsPersonalPlaceCache = boot;
+        return boot;
+    }
+    const foldersUrl = window.wsListingPersonalFoldersUrl;
+    const cabinetsUrl = window.wsListingPersonalCabinetsUrl;
+    let folders = boot?.folders ? [...boot.folders] : [];
+    let cabinets = boot?.cabinets ? [...boot.cabinets] : [];
+    try {
+        if (foldersUrl) {
+            const fResp = await fetch(foldersUrl, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            const fData = await wsReadJsonResponse(fResp);
+            if (Array.isArray(fData.folders)) {
+                folders = fData.folders;
+            }
+        }
+        if (cabinetsUrl) {
+            const cResp = await fetch(cabinetsUrl, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            const cData = await wsReadJsonResponse(cResp);
+            if (Array.isArray(cData.cabinets)) {
+                cabinets = cData.cabinets;
+            }
+        }
+        wsPersonalPlaceCache = { folders, cabinets, ok: true };
+    } catch (_err) {
+        if (boot) {
+            wsPersonalPlaceCache = boot;
+            return boot;
+        }
+        wsPersonalPlaceCache = { folders, cabinets, ok: true };
+    }
+    return wsPersonalPlaceCache;
+}
+
+function wsSubmitListingPersonalForm(targetForm, folderId) {
+    if (!targetForm || !targetForm.action) return;
+    const fid = folderId == null ? '' : String(folderId);
+    const folderInput = targetForm.querySelector('[name=folder_id]');
+    if (folderInput) folderInput.value = fid;
+    if (fid) {
+        try {
+            localStorage.setItem(WS_PERSONAL_FOLDER_LAST_KEY, fid);
+        } catch (_e) { /* ignore */ }
+    }
+    targetForm.dataset.personalSkipIntercept = '1';
+    targetForm.submit();
+}
+
+function wsBuildListingPersonalPostForm(action, fields) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = action;
+    form.style.display = 'none';
+    const csrf = getCsrfToken();
+    if (csrf) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrf;
+        form.appendChild(csrfInput);
+    }
+    Object.entries(fields || {}).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value == null ? '' : String(value);
+        form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    return form;
+}
+
+function initListingAddPersonal() {
+    const alreadyBound = document.documentElement.dataset.listingPersonalBound === '1';
+    if (alreadyBound && typeof window.__wsListingPersonalHandle === 'function') return;
+    document.documentElement.dataset.listingPersonalBound = '1';
+
+    const modal = document.getElementById('modal-listing-add-personal');
+    const modalForm = document.getElementById('wsListingAddPersonalForm');
+    const placeSection = modal?.querySelector('[data-ws-personal-place]');
+    const folderListEl = modal?.querySelector('[data-ws-personal-folder-list]');
+    const cabinetFiltersEl = modal?.querySelector('[data-ws-personal-cabinet-filters]');
+    const modalFolderIdInput = modalForm?.querySelector('[data-ws-personal-folder-id]');
+    const noneBtn = modal?.querySelector('[data-ws-personal-folder-choice=""]');
+    const loadingEl = modal?.querySelector('[data-ws-personal-place-loading]');
+
+    let cabinetFilter = 'all';
+    let placeData = { folders: [], cabinets: [] };
+
+    function setPersonalPlaceLoading(on) {
+        if (loadingEl) {
+            loadingEl.hidden = !on;
+            loadingEl.setAttribute('aria-hidden', on ? 'false' : 'true');
+            loadingEl.classList.toggle('is-active', on);
+        }
+        if (placeSection) placeSection.classList.toggle('is-loading', on);
+    }
+
+    function closeParentDetails(el) {
+        const details = el?.closest('details.mk-action-menu, details.mk-lcard-more');
+        if (details) details.open = false;
+    }
+
+    function setSelectedFolder(folderId) {
+        const id = folderId == null ? '' : String(folderId);
+        if (modalFolderIdInput) modalFolderIdInput.value = id;
+        const allChoices = modal?.querySelectorAll('[data-ws-personal-folder-choice]') || [];
+        allChoices.forEach((btn) => {
+            const fid = btn.getAttribute('data-ws-personal-folder-choice') || '';
+            const on = fid === id;
+            btn.classList.toggle('is-selected', on);
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+    }
+
+    function foldersForCabinet(filter) {
+        const folders = placeData.folders || [];
+        if (filter === 'all') return folders;
+        if (filter === 'none') return folders.filter((f) => !f.cabinet_id && !(f.cabinet && f.cabinet.id));
+        const cid = String(filter);
+        return folders.filter((f) => String(f.cabinet_id || f.cabinet?.id || '') === cid);
+    }
+
+    function renderCabinetFilters() {
+        if (!cabinetFiltersEl) return;
+        const cabinets = placeData.cabinets || [];
+        const hasUncategorized = (placeData.folders || []).some(
+            (f) => !f.cabinet_id && !(f.cabinet && f.cabinet.id),
+        );
+        if (!cabinets.length && !hasUncategorized) {
+            cabinetFiltersEl.hidden = true;
+            cabinetFiltersEl.innerHTML = '';
+            return;
+        }
+        cabinetFiltersEl.hidden = false;
+        const chips = [
+            { id: 'all', label: 'همه زونکن‌ها' },
+            ...cabinets.map((c) => ({ id: String(c.id), label: c.name })),
+        ];
+        if (hasUncategorized) chips.push({ id: 'none', label: 'بدون کمد' });
+        cabinetFiltersEl.innerHTML = chips.map((chip) => (
+            `<button type="button" class="ws-ld-personal-place__chip${chip.id === cabinetFilter ? ' is-active' : ''}" data-ws-personal-cabinet="${chip.id}" role="tab" aria-selected="${chip.id === cabinetFilter ? 'true' : 'false'}">${wsEscapeHtml(chip.label)}</button>`
+        )).join('');
+        cabinetFiltersEl.querySelectorAll('[data-ws-personal-cabinet]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                cabinetFilter = btn.getAttribute('data-ws-personal-cabinet') || 'all';
+                renderCabinetFilters();
+                renderFolderList();
+            });
+        });
+    }
+
+    function renderFolderList() {
+        if (!folderListEl) return;
+        const visible = foldersForCabinet(cabinetFilter);
+        folderListEl.innerHTML = visible.map((folder) => {
+            const icon = wsEscapeHtml(folder.icon || 'fa-folder');
+            const color = wsEscapeHtml(folder.color || '#6366f1');
+            const count = folder.property_count != null ? folder.property_count : 0;
+            const cab = folder.cabinet?.name;
+            const meta = wsEscapeHtml(cab ? `${count} فایل · ${cab}` : `${count} فایل`);
+            return `<li><button type="button" class="ws-ld-personal-place__item" data-ws-personal-folder-choice="${folder.id}" style="--zonkan-color:${color}" aria-pressed="false">
+                <span class="ws-ld-personal-place__accent" aria-hidden="true"></span>
+                <span class="ws-ld-personal-place__ico" aria-hidden="true"><i class="fas ${icon}"></i></span>
+                <span class="ws-ld-personal-place__info"><strong>${wsEscapeHtml(folder.name)}</strong><em>${meta}</em></span>
+                <span class="ws-ld-personal-place__tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+            </button></li>`;
+        }).join('');
+        folderListEl.querySelectorAll('[data-ws-personal-folder-choice]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                setSelectedFolder(btn.getAttribute('data-ws-personal-folder-choice'));
+            });
+        });
+        const current = modalFolderIdInput?.value || '';
+        if (current && !visible.some((f) => String(f.id) === String(current))) {
+            setSelectedFolder('');
+        } else {
+            setSelectedFolder(current);
+        }
+    }
+
+    function renderPlacePicker(data) {
+        placeData = data;
+        cabinetFilter = 'all';
+        if (!placeSection) return;
+        const hasFolders = (data.folders || []).length > 0;
+        placeSection.hidden = false;
+        if (!hasFolders) {
+            if (folderListEl) folderListEl.innerHTML = '';
+            if (cabinetFiltersEl) {
+                cabinetFiltersEl.hidden = true;
+                cabinetFiltersEl.innerHTML = '';
+            }
+            setSelectedFolder('');
+            return;
+        }
+        let last = '';
+        try {
+            last = localStorage.getItem(WS_PERSONAL_FOLDER_LAST_KEY) || '';
+        } catch (_e) { /* ignore */ }
+        const validLast = (data.folders || []).some((f) => String(f.id) === String(last)) ? last : '';
+        renderCabinetFilters();
+        renderFolderList();
+        setSelectedFolder(validLast);
+    }
+
+    function finalizePersonalAdd(folderId) {
+        if (wsPersonalPendingInlineForm) {
+            wsSubmitListingPersonalForm(wsPersonalPendingInlineForm, folderId);
+            wsPersonalPendingInlineForm = null;
+            if (modal) WSModal.close(modal);
+            return;
+        }
+        if (modalForm && modalForm.action && modalForm.action !== '#') {
+            wsSubmitListingPersonalForm(modalForm, folderId);
+            return;
+        }
+    }
+
+    let personalAddLoadSeq = 0;
+
+    async function beginPersonalAdd(inlineForm, action, fields) {
+        const loadSeq = ++personalAddLoadSeq;
+        wsPersonalPendingInlineForm = inlineForm || null;
+        if (modalForm && action) {
+            modalForm.action = action;
+            const nextInput = modalForm.querySelector('[name=next]');
+            const redirectInput = modalForm.querySelector('[name=redirect]');
+            if (nextInput) nextInput.value = fields?.next || '';
+            if (redirectInput) redirectInput.value = fields?.redirect || '';
+        }
+        if (modal && modalForm) {
+            setSelectedFolder('');
+            setPersonalPlaceLoading(true);
+            WSModal.open('modal-listing-add-personal');
+        }
+        let data = { folders: [], cabinets: [] };
+        try {
+            data = await loadWsPersonalPlaceData(true);
+        } catch (_err) {
+            data = wsPersonalPlaceFromBootstrap() || { folders: [], cabinets: [] };
+        } finally {
+            if (loadSeq === personalAddLoadSeq) {
+                setPersonalPlaceLoading(false);
+            }
+        }
+        if (modal && modalForm) {
+            renderPlacePicker(data);
+            return;
+        }
+        const hasFolders = (data.folders || []).length > 0;
+        if (!hasFolders) {
+            if (inlineForm) {
+                finalizePersonalAdd('');
+            } else {
+                const fallback = wsBuildListingPersonalPostForm(action, fields);
+                wsSubmitListingPersonalForm(fallback, '');
+            }
+            return;
+        }
+        if (inlineForm) {
+            if (hasFolders) {
+                console.error('[ws] listing personal modal missing; cannot pick folder');
+                return;
+            }
+            finalizePersonalAdd('');
+        } else if (!hasFolders) {
+            const fallback = wsBuildListingPersonalPostForm(action, fields);
+            wsSubmitListingPersonalForm(fallback, '');
+        }
+    }
+
+    noneBtn?.addEventListener('click', () => setSelectedFolder(''));
+
+    modalForm?.addEventListener('submit', (e) => {
+        if (modalForm.dataset.personalSkipIntercept === '1') return;
+        e.preventDefault();
+        finalizePersonalAdd(modalFolderIdInput?.value || '');
+    });
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-listing-add-personal]');
+        if (!btn) return;
+        if (btn.closest('form[data-listing-add-personal-form]')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        closeParentDetails(btn);
+        const action = btn.getAttribute('data-action');
+        if (!action) return;
+        const fields = {
+            next: btn.getAttribute('data-next') || '',
+            redirect: btn.getAttribute('data-redirect') || '',
+        };
+        try {
+            await beginPersonalAdd(null, action, fields);
+        } catch (_err) {
+            const fallback = wsBuildListingPersonalPostForm(action, fields);
+            wsSubmitListingPersonalForm(fallback, '');
+        }
+    }, true);
+
+    window.__wsListingPersonalHandle = function (inlineForm) {
+        if (!inlineForm) return;
+        const nextVal = inlineForm.querySelector('[name=next]')?.value || '';
+        const redirectVal = inlineForm.querySelector('[name=redirect]')?.value || '';
+        beginPersonalAdd(inlineForm, inlineForm.action, { next: nextVal, redirect: redirectVal });
+    };
 }

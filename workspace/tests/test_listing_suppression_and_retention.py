@@ -173,7 +173,7 @@ class CRMSafetyWithSuppressionTests(TestCase):
     def test_crm_property_survives_filing_delete(self):
         ds = Dataset.objects.create(user=self.user, name='f')
         listing = Listing.objects.create(dataset=ds, token='crm-keep', title='ملک')
-        prop, _ = add_listing_to_personal_files(self.user, listing)
+        prop, _, _ = add_listing_to_personal_files(self.user, listing)
         delete_divar_listing_from_filing(self.user, 'crm-keep')
         prop.refresh_from_db()
         self.assertIsNone(prop.deleted_at)

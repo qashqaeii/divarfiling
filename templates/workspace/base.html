@@ -37,7 +37,7 @@
 
     <link rel="stylesheet" href="{% static 'workspace/css/workspace.css' %}?v=66">
     <link rel="stylesheet" href="{% static 'workspace/css/minimal.css' %}?v=101">
-    <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=31">
+    <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=36">
     <link rel="stylesheet" href="{% static 'workspace/css/crm-field-voice.css' %}?v=7">
     <link rel="stylesheet" href="{% static 'workspace/css/export-security.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
@@ -235,7 +235,21 @@
     <script src="{% static 'workspace/js/crm-smart-command-voice.js' %}?v=8"></script>
     <script src="{% static 'workspace/js/crm-field-voice.js' %}?v=5"></script>
     <script src="{% static 'workspace/js/workspace-voice-input.js' %}?v=6"></script>
-    <script src="{% static 'workspace/js/workspace.js' %}?v=102"></script>
+    {% if is_workspace %}
+    <script>
+    window.wsListingPersonalFoldersUrl = '{% url "workspace:crm_property_folders" %}';
+    window.wsListingPersonalCabinetsUrl = '{% url "workspace:crm_property_cabinets" %}';
+    </script>
+    {% if property_folders_json %}
+    <script>
+    window.wsListingPersonalPlaceBootstrap = {
+        folders: {{ property_folders_json|safe }},
+        cabinets: {{ property_cabinets_json|default:'[]'|safe }},
+    };
+    </script>
+    {% endif %}
+    {% endif %}
+    <script src="{% static 'workspace/js/workspace.js' %}?v=110"></script>
     <script src="{% static 'workspace/js/export-security.js' %}?v=4"></script>
 
     {% include 'workspace/includes/signup_welcome_gift.html' %}

@@ -674,7 +674,7 @@ class PropertyAccessibilitiesAutomationTests(TestCase):
             longitude=51.4100,
             data={'نوع مختصات': 'FUZZY', 'در شعاع (متر)': 400},
         )
-        prop, created = add_listing_to_personal_files(self.user, listing)
+        prop, created, _ = add_listing_to_personal_files(self.user, listing)
         self.assertTrue(created)
         prop.refresh_from_db()
         self.assertFalse(stored_nearby_pois_valid(prop))

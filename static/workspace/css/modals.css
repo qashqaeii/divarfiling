@@ -3663,4 +3663,351 @@ html.mk-theme-dark .mk-occ__date-input {
     }
 }
 
+/* ── افزودن فایلینگ به فایل شخصی + انتخاب زونکن ── */
+#modal-listing-add-personal.ws-modal.is-open {
+    z-index: 1200;
+}
+
+#modal-listing-add-personal .ws-ld-personal-place-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    font-family: inherit;
+}
+
+#modal-listing-add-personal .ws-ld-personal-modal__panel {
+    max-width: min(26.5rem, calc(100vw - 1.5rem));
+}
+
+#modal-listing-add-personal .ws-ld-personal-modal__intro {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+#modal-listing-add-personal .ws-modal-title {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+}
+
+#modal-listing-add-personal .ws-modal-sub {
+    font-size: 0.8rem !important;
+    line-height: 1.55 !important;
+    margin-top: 0.35rem !important;
+    max-width: 28em;
+}
+
+#modal-listing-add-personal .ws-ld-personal-modal__body {
+    padding-top: 0.85rem !important;
+    padding-bottom: 0.65rem !important;
+}
+
+.ws-ld-personal-place__loading {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ws-text-muted, #64748b);
+    margin: 0 0 0.75rem;
+    text-align: center;
+}
+
+.ws-ld-personal-place__loading.is-active {
+    display: flex;
+}
+
+.ws-ld-personal-place__loading[hidden] {
+    display: none !important;
+}
+
+.ws-ld-personal-place__loading i {
+    font-size: 0.9rem;
+    color: var(--ws-primary, #7c3aed);
+}
+
+.ws-ld-personal-place.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.ws-ld-personal-place__label {
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.02em;
+    color: var(--ws-text-secondary, #475569);
+    margin: 0 0 0.55rem;
+}
+
+.ws-ld-personal-place__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.7rem;
+}
+
+.ws-ld-personal-place__chip {
+    border: 1px solid var(--mk-modal-border, #e2e8f0);
+    background: color-mix(in srgb, var(--mk-modal-bg, #fff) 88%, var(--ws-surface-2, #f1f5f9));
+    color: var(--ws-text-secondary, #475569);
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.74rem;
+    font-weight: 650;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.ws-ld-personal-place__chip.is-active {
+    border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 45%, var(--mk-modal-border));
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 11%, var(--mk-modal-bg));
+    color: var(--ws-primary, #7c3aed);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ws-primary) 12%, transparent);
+}
+
+.ws-ld-personal-place__scroll {
+    max-height: min(38vh, 16.5rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 0.45rem;
+    padding-inline-end: 0.15rem;
+    scrollbar-gutter: stable;
+}
+
+.ws-ld-personal-place__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.ws-ld-personal-place__list:empty {
+    display: none;
+}
+
+.ws-ld-personal-place__item,
+.ws-ld-personal-place__none {
+    --zonkan-color: var(--ws-primary, #7c3aed);
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 3.25rem;
+    padding: 0.62rem 0.72rem;
+    margin: 0;
+    border: 1px solid color-mix(in srgb, var(--zonkan-color) 20%, var(--mk-modal-border, #e2e8f0));
+    border-radius: 12px;
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--zonkan-color) 7%, var(--mk-modal-bg, #fff)),
+        var(--mk-modal-bg, #fff)
+    );
+    box-shadow: 0 1px 0 color-mix(in srgb, #fff 75%, transparent) inset;
+    cursor: pointer;
+    text-align: right;
+    font-family: inherit;
+    transition: transform 0.16s ease, border-color 0.15s, box-shadow 0.15s;
+}
+
+.ws-ld-personal-place__none {
+    margin-top: 0.15rem;
+}
+
+.ws-ld-personal-place__item:hover,
+.ws-ld-personal-place__none:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--zonkan-color) 38%, var(--mk-modal-border));
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--zonkan-color) 8%, transparent);
+}
+
+.ws-ld-personal-place__item.is-selected,
+.ws-ld-personal-place__none.is-selected {
+    border-color: color-mix(in srgb, var(--zonkan-color) 50%, var(--mk-modal-border));
+    box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--zonkan-color) 14%, transparent),
+        0 4px 14px color-mix(in srgb, var(--zonkan-color) 10%, transparent);
+}
+
+.ws-ld-personal-place__accent {
+    position: absolute;
+    inset-block: 0.55rem;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: var(--zonkan-color);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.ws-ld-personal-place__item.is-selected .ws-ld-personal-place__accent,
+.ws-ld-personal-place__none.is-selected .ws-ld-personal-place__accent {
+    opacity: 1;
+}
+
+.ws-ld-personal-place__ico {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 0.85rem;
+    background: color-mix(in srgb, var(--zonkan-color) 14%, var(--mk-modal-bg, #fff));
+    color: var(--zonkan-color);
+    border: 1px solid color-mix(in srgb, var(--zonkan-color) 18%, transparent);
+    flex-shrink: 0;
+}
+
+.ws-ld-personal-place__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    text-align: start;
+}
+
+.ws-ld-personal-place__info strong {
+    font-size: 0.86rem;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    color: var(--ws-text, #0f172a);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-ld-personal-place__info em {
+    font-size: 0.72rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--ws-text-muted, #64748b);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-ld-personal-place__tick {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    color: #fff;
+    background: var(--zonkan-color);
+    opacity: 0;
+    transform: scale(0.85);
+    flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.ws-ld-personal-place__item.is-selected .ws-ld-personal-place__tick,
+.ws-ld-personal-place__none.is-selected .ws-ld-personal-place__tick {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ws-ld-personal-place__hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin: 0.65rem 0 0;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--ws-text-muted, #64748b);
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 6%, var(--mk-modal-bg));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 10%, var(--mk-modal-border));
+}
+
+.ws-ld-personal-place__hint i {
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    color: var(--ws-primary, #7c3aed);
+    opacity: 0.9;
+}
+
+@media (max-width: 640px) {
+    #modal-listing-add-personal.ws-modal {
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+    }
+
+    #modal-listing-add-personal .ws-ld-personal-modal__panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: min(92dvh, calc(100vh - env(safe-area-inset-top, 0px)));
+        margin: 0;
+        border-radius: 16px 16px 0 0 !important;
+        transform: translateY(100%);
+    }
+
+    #modal-listing-add-personal.ws-modal.is-open .ws-ld-personal-modal__panel {
+        transform: translateY(0) !important;
+    }
+
+    #modal-listing-add-personal .ws-ld-personal-modal__head {
+        padding: 1rem 1.1rem 0 !important;
+    }
+
+    #modal-listing-add-personal .ws-ld-personal-modal__body {
+        padding: 0.85rem 1.1rem 0.5rem !important;
+    }
+
+    #modal-listing-add-personal .ws-ld-personal-modal__foot {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.85rem 1.1rem calc(0.9rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #modal-listing-add-personal .ws-ld-personal-modal__foot .ws-btn {
+        width: 100%;
+        min-height: 2.75rem;
+        font-size: 0.88rem;
+        font-weight: 650;
+        justify-content: center;
+    }
+
+    .ws-ld-personal-place__filters {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.2rem;
+        margin-inline: -0.15rem;
+        padding-inline: 0.15rem;
+    }
+
+    .ws-ld-personal-place__scroll {
+        max-height: min(46vh, 18rem);
+    }
+
+    .ws-ld-personal-place__item,
+    .ws-ld-personal-place__none {
+        min-height: 3.5rem;
+        padding: 0.72rem 0.8rem;
+    }
+
+    .ws-ld-personal-place__info strong {
+        font-size: 0.9rem;
+    }
+
+    .ws-ld-personal-place__info em {
+        font-size: 0.74rem;
+    }
+}
+
 

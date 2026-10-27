@@ -2381,6 +2381,12 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['ai_listing_summary_style_options'] = LISTING_SUMMARY_STYLE_CHOICES
             ctx['ai_listing_summary_default_tone'] = DEFAULT_LISTING_SUMMARY_TONE
             ctx['ai_listing_summary_default_style'] = DEFAULT_LISTING_SUMMARY_STYLE
+        from ai_workspace.constants import FEATURE_PROPERTY_CONTENT_STUDIO
+        ctx['can_open_content_studio'] = not ctx.get('property_is_deleted')
+        ctx['content_studio_ai_enabled'] = (
+            is_ai_enabled()
+            and is_feature_enabled(FEATURE_PROPERTY_CONTENT_STUDIO, self.request.user)
+        )
         from workspace.services.agency_space_ui_context import apply_agency_space_crm_context
         from workspace.services.agency_space_provenance import provenance_for_property
         apply_agency_space_crm_context(ctx, self.request.user, property=p)

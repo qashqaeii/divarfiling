@@ -150,13 +150,17 @@
 .mk-filing-datasets .fl-mob-header__icon--tour .fl-header__tour-label {
     display: none;
 }
-.mk-filing-datasets .fl-header__help {
+.mk-filing-datasets .fl-header__help,
+.crm-app .fl-header__help {
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 0.42rem;
+    justify-content: center;
+    gap: 0;
+    width: 2.25rem;
+    min-width: 2.25rem;
     height: 2.25rem;
-    padding: 0 0.85rem 0 0.7rem;
+    padding: 0;
     border: 1px solid color-mix(in srgb, #f59e0b 35%, var(--ws-border));
     border-radius: 999px;
     background:
@@ -224,10 +228,21 @@
 .mk-filing-datasets .fl-header__help-bulb--hero i {
     font-size: 1.75rem;
 }
-.mk-filing-datasets .fl-header__help-label {
-    position: relative;
-    z-index: 1;
-    letter-spacing: -0.01em;
+.mk-filing-datasets .fl-header__help-label,
+.crm-app .fl-header__help-label {
+    display: none;
+}
+/* دکمه‌های راهنما در منو/هیرو — فقط آیکن چراغ */
+.mk-filing-datasets [data-modal-open*="help"] > span:not([class]),
+.crm-app [data-modal-open*="help"] > span:not([class]) {
+    display: none;
+}
+.mk-filing-datasets .crm-prop-hero-act[data-modal-open*="help"],
+.crm-app .crm-prop-hero-act[data-modal-open*="help"] {
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+    gap: 0;
 }
 .mk-filing-datasets .fl-header__help:hover {
     color: #92400e;
@@ -3245,19 +3260,13 @@
     margin-top: 0.65rem;
 }
 .mk-filing-datasets .ws-tbx-hero-help {
-    width: auto;
+    width: 2.45rem;
+    min-width: 2.45rem;
     min-height: 2.45rem;
-    padding-inline: 0.85rem;
+    padding-inline: 0;
 }
 @media (max-width: 768px) {
     .mk-filing-datasets .ws-tbx-hero-actions {
         justify-content: flex-start;
-    }
-    .mk-filing-datasets .ws-tbx-hero-help .fl-header__help-label {
-        display: none;
-    }
-    .mk-filing-datasets .ws-tbx-hero-help {
-        width: 2.45rem;
-        padding-inline: 0;
     }
 }

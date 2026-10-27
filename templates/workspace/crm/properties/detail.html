@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=11">
 {% endif %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ai-listing-summary.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/property-content-studio.css' %}?v=35">
 {% if agency_space_enabled %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=6">
 {% endif %}
@@ -157,6 +158,11 @@
                     </button>
                     {% endif %}
                     {# عملیات اصلی — چپ نوار (آخر DOM) #}
+                    {% if can_open_content_studio %}
+                    <button type="button" class="crm-prop-hero-act pcs-hero-studio" data-pcs-open title="استودیوی هوشمند ملک" aria-haspopup="dialog">
+                        <i class="fas fa-wand-magic-sparkles"></i><span>استودیوی هوشمند ملک</span>
+                    </button>
+                    {% endif %}
                     {% if can_show_property_public_share %}
                     <button type="button" class="crm-prop-hero-act crm-prop-hero-act--accent" data-crm-property-share-open title="اشتراک با مشتری" aria-haspopup="dialog">
                         <i class="fas fa-share-alt"></i><span>اشتراک</span>
@@ -1205,6 +1211,11 @@
                     <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
                 </button>
                 {% endif %}
+                {% if can_open_content_studio %}
+                <button type="button" class="ws-crm-pd-mob-more__act ws-crm-pd-mob-more__act--primary pcs-mob-more-studio" data-pcs-open data-crm-pd-more-close>
+                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>استودیو محتوا</span>
+                </button>
+                {% endif %}
                 {% if can_show_property_public_share %}
                 <button type="button" class="ws-crm-pd-mob-more__act ws-crm-pd-mob-more__act--primary" data-crm-property-share-open data-crm-pd-more-close>
                     <i class="fas fa-share-alt" aria-hidden="true"></i><span>اشتراک</span>
@@ -1332,6 +1343,9 @@
 {% endblock %}
 
 {% block modals %}
+{% if can_open_content_studio %}
+{% include 'workspace/crm/includes/property_content_studio_modal.html' %}
+{% endif %}
 {% if can_edit_property and not property_is_deleted %}
 {% include 'workspace/crm/includes/property_duplicate_modal.html' %}
 {% endif %}
@@ -1341,6 +1355,20 @@
 {% endblock %}
 
 {% block crm_js %}
+{% if can_open_content_studio %}
+<script>
+window.PCS_CONFIG = {
+    propertyId: {{ property.id }},
+    sessionUrl: "{% url 'workspace:crm_property_content_studio_session' property.id %}",
+    draftUrl: "{% url 'workspace:crm_property_content_studio_draft' property.id %}",
+    brandUrl: "{% url 'workspace:crm_property_content_studio_brand' property.id %}",
+    aiBaseUrl: "{% url 'workspace:crm_property_content_studio_ai' property.id 'divar-titles' %}".replace(/divar-titles\/?$/, ''),
+    csrf: "{{ csrf_token }}",
+    aiEnabled: {{ content_studio_ai_enabled|yesno:"true,false" }}
+};
+</script>
+<script src="{% static 'workspace/js/property-content-studio.js' %}?v=35" defer></script>
+{% endif %}
 {% if agency_space_enabled %}
 <script>
 window.AGENCY_SPACE_API = {
@@ -1424,7 +1452,10 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', openCrmPdMore);
     });
     document.querySelectorAll('[data-crm-pd-more-close]').forEach(function (btn) {
-        btn.addEventListener('click', closeCrmPdMore);
+        btn.addEventListener('click', function () {
+            if (btn.hasAttribute('data-pcs-open')) return;
+            closeCrmPdMore();
+        });
     });
     var mapNavSheet = document.getElementById('wsCrmPdMapNavSheet');
     var mapNavTrigger = document.querySelector('[data-crm-pd-map-nav-open]');
@@ -1613,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 {% endif %}
 {% if show_nearby_pois %}
-<script src="{% static 'workspace/js/crm-property-nearby-pois.js' %}?v=8"></script>
+<script src="{% static 'workspace/js/crm-property-nearby-pois.js' %}?v=9"></script>
 {% endif %}
 {% if ai_listing_summary_enabled %}
 <script src="{% static 'workspace/js/ai.js' %}?v=14"></script>
@@ -1956,6 +1987,6 @@ document.addEventListener('DOMContentLoaded', function () {
 {% block extra_js %}
 {{ block.super }}
 {% if divar_contact_enabled %}
-<script src="{% static 'workspace/js/divar_contact.js' %}?v=8"></script>
+<script src="{% static 'workspace/js/divar_contact.js' %}?v=9"></script>
 {% endif %}
 {% endblock %}

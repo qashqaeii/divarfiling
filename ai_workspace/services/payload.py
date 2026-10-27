@@ -8,11 +8,16 @@ from typing import Any, Dict, List, Optional
 from ai_workspace.constants import (
     FEATURE_LISTING_SUMMARY,
     FEATURE_NL_COMMAND,
+    FEATURE_PROPERTY_CONTENT_STUDIO,
     FEATURE_UPLOAD_BRIEF,
     NL_COMMAND_ALLOWED_INTENTS,
     NL_COMMAND_INTENT_CREATE_CONTACT,
     NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
     NL_COMMAND_INTENT_CREATE_REMINDER,
+)
+from ai_workspace.services.property_content_studio_payload import (
+    normalize_studio_ai_payload,
+    validate_studio_ai_payload,
 )
 from ai_workspace.services.listing_summary_polish import polish_listing_payload
 from ai_workspace.services.parse import parse_json_text, salvage_listing_json
@@ -453,6 +458,29 @@ def is_valid_nl_command_payload(data: Optional[Dict[str, Any]]) -> bool:
     return True
 
 
+def normalize_property_content_studio_payload(
+    data: Optional[Dict[str, Any]],
+    raw_text: str = '',
+) -> Dict[str, Any]:
+    parsed = dict(data or {})
+    if not parsed and raw_text:
+        parsed = parse_json_text(raw_text) or {}
+    for task in ('divar_titles', 'divar_body', 'social_pack'):
+        norm = normalize_studio_ai_payload(task, parsed, raw_text)
+        if validate_studio_ai_payload(task, norm):
+            return norm
+    return normalize_studio_ai_payload('divar_body', parsed, raw_text)
+
+
+def is_valid_property_content_studio_payload(data: Optional[Dict[str, Any]]) -> bool:
+    if not data:
+        return False
+    for task in ('divar_titles', 'divar_body', 'social_pack'):
+        if validate_studio_ai_payload(task, data):
+            return True
+    return False
+
+
 def normalize_payload(feature: str, data: Optional[Dict[str, Any]], raw_text: str = '') -> Dict[str, Any]:
     if feature == FEATURE_LISTING_SUMMARY:
         return normalize_listing_payload(data, raw_text)
@@ -460,6 +488,8 @@ def normalize_payload(feature: str, data: Optional[Dict[str, Any]], raw_text: st
         return normalize_upload_brief_payload(data, raw_text)
     if feature == FEATURE_NL_COMMAND:
         return normalize_nl_command_payload(data, raw_text)
+    if feature == FEATURE_PROPERTY_CONTENT_STUDIO:
+        return normalize_property_content_studio_payload(data, raw_text)
     return dict(data or {})
 
 
@@ -470,6 +500,8 @@ def is_valid_payload(feature: str, data: Optional[Dict[str, Any]]) -> bool:
         return is_valid_upload_brief_payload(data)
     if feature == FEATURE_NL_COMMAND:
         return is_valid_nl_command_payload(data)
+    if feature == FEATURE_PROPERTY_CONTENT_STUDIO:
+        return is_valid_property_content_studio_payload(data)
     return bool(data)
 
 

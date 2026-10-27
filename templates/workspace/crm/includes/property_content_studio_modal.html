@@ -1,0 +1,329 @@
+{% load static %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Estedad:wght@400;600;700;800&family=Lalezar&family=Markazi+Text:wght@400;600;700&family=Gulzar&display=swap" rel="stylesheet">
+<div id="pcsModal" class="pcs-modal" role="dialog" aria-modal="true" aria-labelledby="pcsModalTitle" hidden>
+    <div class="pcs-modal__backdrop" data-pcs-close tabindex="-1"></div>
+    <div class="pcs-modal__panel">
+        <div class="pcs-modal__grab" aria-hidden="true"></div>
+        <header class="pcs-header">
+            <div class="pcs-header__top">
+                <div class="pcs-header__brand">
+                    <span class="pcs-header__sparkle" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+                    <div>
+                        <h2 id="pcsModalTitle" class="pcs-header__title">استودیوی هوشمند ملک</h2>
+                        <p class="pcs-header__sub">از فایل ملک، محتوای آماده انتشار بسازید</p>
+                    </div>
+                </div>
+                <div class="pcs-header__actions">
+                    <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon pcs-mob-settings-head" id="pcsOpenSettingsHead" aria-label="تنظیمات برند">
+                        <i class="fas fa-sliders" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="pcs-btn pcs-btn--primary pcs-btn--glow" id="pcsPrimaryAction" hidden>
+                        <i class="fas fa-sparkles" aria-hidden="true"></i>
+                        <span>ساخت محتوا</span>
+                    </button>
+                    <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon pcs-btn--close" data-pcs-close aria-label="بستن">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="pcs-property-bar" id="pcsHeaderProperty" hidden>
+                <div class="pcs-property-bar__thumb" id="pcsHeaderThumb"></div>
+                <div class="pcs-property-bar__body">
+                    <strong class="pcs-property-bar__title" id="pcsHeaderTitle"></strong>
+                    <span class="pcs-property-bar__loc" id="pcsHeaderLocation"></span>
+                    <div class="pcs-property-bar__chips" id="pcsHeaderChips"></div>
+                </div>
+                <div class="pcs-property-bar__price" id="pcsHeaderPrice"></div>
+            </div>
+        </header>
+
+        <nav class="pcs-tabs" id="pcsTabs" role="tablist" aria-label="بخش‌های استودیو">
+            <button type="button" class="pcs-tab is-active" role="tab" data-pcs-tab="posters" aria-selected="true">
+                <i class="fas fa-palette" aria-hidden="true"></i>
+                <span class="pcs-tab__text"><span class="pcs-tab__short">پوستر</span><span class="pcs-tab__long">پوسترها و استوری‌برد</span></span>
+            </button>
+            <button type="button" class="pcs-tab" role="tab" data-pcs-tab="divar">
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                <span class="pcs-tab__text"><span class="pcs-tab__short">دیوار</span><span class="pcs-tab__long">آگهی دیوار با AI</span></span>
+            </button>
+            <button type="button" class="pcs-tab" role="tab" data-pcs-tab="social">
+                <i class="fas fa-hashtag" aria-hidden="true"></i>
+                <span class="pcs-tab__text"><span class="pcs-tab__short">شبکه‌ها</span><span class="pcs-tab__long">کپشن و شبکه‌ها</span></span>
+            </button>
+            <button type="button" class="pcs-tab" role="tab" data-pcs-tab="share">
+                <i class="fas fa-share-nodes" aria-hidden="true"></i>
+                <span class="pcs-tab__text"><span class="pcs-tab__short">اشتراک</span><span class="pcs-tab__long">اشتراک‌گذاری</span></span>
+            </button>
+        </nav>
+
+        <div class="pcs-body">
+            <div class="pcs-layout">
+                <main class="pcs-main">
+                    <section class="pcs-panel is-active" data-pcs-panel="posters" role="tabpanel">
+                        <div class="pcs-toolbar">
+                            <div class="pcs-section-head">
+                                <h3 class="pcs-section-head__title">قالب‌های پوستر</h3>
+                                <p class="pcs-section-head__hint">ابعاد خروجی را انتخاب کنید — هر قالب برای شبکه اجتماعی متفاوت طراحی شده</p>
+                            </div>
+                            <div class="pcs-toolbar__actions">
+                                <button type="button" class="pcs-btn pcs-btn--ghost pcs-mobile-settings-btn" id="pcsOpenSettings">
+                                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                                    <span>برند و نمایش</span>
+                                </button>
+                                <div class="pcs-format-segment" id="pcsFormatBar" role="group" aria-label="فرمت خروجی"></div>
+                            </div>
+                        </div>
+                        <div class="pcs-poster-stage">
+                            <p class="pcs-poster-stage__hint" aria-hidden="true"><i class="fas fa-hand-pointer"></i> برای دیدن قالب‌ها به چپ و راست بکشید</p>
+                            <div class="pcs-poster-grid" id="pcsPosterGrid"></div>
+                            <div class="pcs-poster-dots" id="pcsPosterDots" role="tablist" aria-label="قالب‌های پوستر"></div>
+                        </div>
+                        <div class="pcs-ai-strip" id="pcsAiStrip" aria-label="خلاصه AI"></div>
+                        <div class="pcs-storyboard" id="pcsStoryboard">
+                            <div class="pcs-section-head pcs-section-head--row">
+                                <div>
+                                    <h3 class="pcs-section-head__title">استوری چنداسلایدی</h3>
+                                    <p class="pcs-section-head__hint">اسلایدها بر اساس تصاویر و اطلاعات همین فایل ساخته می‌شوند</p>
+                                </div>
+                                <button type="button" class="pcs-btn pcs-btn--soft pcs-btn--sm" id="pcsStoryDownloadAll">
+                                    <i class="fas fa-download" aria-hidden="true"></i> دانلود همه
+                                </button>
+                            </div>
+                            <div class="pcs-storyboard__track" id="pcsStoryTrack"></div>
+                        </div>
+                    </section>
+
+                    <section class="pcs-panel" data-pcs-panel="divar" role="tabpanel" hidden>
+                        <div class="pcs-ai-toolbar">
+                            <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarTitles">
+                                <i class="fas fa-wand-magic-sparkles"></i> تولید عنوان‌ها
+                            </button>
+                            <select id="pcsDivarBodyStyle" class="pcs-select" aria-label="سبک متن">
+                                <option value="formal">رسمی</option>
+                                <option value="promo">تبلیغاتی</option>
+                                <option value="short">مختصر</option>
+                                <option value="full">توضیح کامل</option>
+                            </select>
+                            <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarBody">تولید متن آگهی</button>
+                        </div>
+                        <div class="pcs-ai-cards" id="pcsDivarTitles"></div>
+                        <label class="pcs-field">
+                            <span>متن آگهی دیوار</span>
+                            <textarea id="pcsDivarBody" rows="10" class="pcs-textarea"></textarea>
+                        </label>
+                        <div class="pcs-inline-actions">
+                            <button type="button" class="pcs-btn pcs-btn--ghost" id="pcsCopyDivarBundle">آماده‌سازی برای انتشار در دیوار</button>
+                        </div>
+                    </section>
+
+                    <section class="pcs-panel" data-pcs-panel="social" role="tabpanel" hidden>
+                        <div class="pcs-ai-toolbar">
+                            <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenSocial">
+                                <i class="fas fa-wand-magic-sparkles"></i> تولید محتوای شبکه‌ها
+                            </button>
+                        </div>
+                        <div class="pcs-ai-cards" id="pcsSocialCaptions"></div>
+                        <label class="pcs-field">
+                            <span>هشتگ‌ها</span>
+                            <textarea id="pcsHashtags" rows="3" class="pcs-textarea"></textarea>
+                        </label>
+                        <label class="pcs-field">
+                            <span>متن واتساپ</span>
+                            <textarea id="pcsWhatsappText" rows="4" class="pcs-textarea"></textarea>
+                        </label>
+                        <label class="pcs-field">
+                            <span>متن تلگرام</span>
+                            <textarea id="pcsTelegramText" rows="4" class="pcs-textarea"></textarea>
+                        </label>
+                        <div class="pcs-cta-list" id="pcsCtaList"></div>
+                    </section>
+
+                    <section class="pcs-panel" data-pcs-panel="share" role="tabpanel" hidden>
+                        <div class="pcs-share-grid" id="pcsShareGrid"></div>
+                        <p class="pcs-hint">برای اینستاگرام و سایر شبکه‌ها بدون API رسمی، فایل را دانلود کنید و دستی منتشر کنید.</p>
+                    </section>
+                </main>
+
+                <aside class="pcs-sidebar" id="pcsSidebar">
+                    <div class="pcs-sidebar__inner" id="pcsSidebarInner">
+                        <section class="pcs-settings-block">
+                            <h3 class="pcs-settings-block__title"><i class="fas fa-id-card" aria-hidden="true"></i> هویت برند</h3>
+                            <label class="pcs-field">
+                                <span class="pcs-field__label"><i class="fas fa-building" aria-hidden="true"></i><span>نام برند / آژانس</span></span>
+                                <input type="text" id="pcsBrandName" class="pcs-input" autocomplete="organization" placeholder="مثلاً آژانس املاک نگین">
+                            </label>
+                            <label class="pcs-field">
+                                <span class="pcs-field__label"><i class="fas fa-user-tie" aria-hidden="true"></i><span>نام مشاور</span></span>
+                                <input type="text" id="pcsConsultantName" class="pcs-input" autocomplete="name" placeholder="نام و نام خانوادگی">
+                            </label>
+                            <label class="pcs-field">
+                                <span class="pcs-field__label"><i class="fas fa-phone" aria-hidden="true"></i><span>شماره تماس تبلیغاتی</span></span>
+                                <input type="tel" id="pcsContactPhone" class="pcs-input" dir="ltr" inputmode="tel" autocomplete="tel" placeholder="09xxxxxxxxx">
+                            </label>
+                            <label class="pcs-field">
+                                <span class="pcs-field__label"><i class="fab fa-instagram" aria-hidden="true"></i><span>اینستاگرام</span></span>
+                                <input type="text" id="pcsInstagram" class="pcs-input" dir="ltr" placeholder="@username">
+                            </label>
+                            <label class="pcs-color-field">
+                                <span class="pcs-field__label pcs-field__label--block"><i class="fas fa-palette" aria-hidden="true"></i><span>رنگ اصلی برند</span></span>
+                                <div class="pcs-color-field__row">
+                                    <span class="pcs-color-field__swatch" id="pcsColorSwatch" aria-hidden="true"></span>
+                                    <input type="color" id="pcsPrimaryColor" class="pcs-color-input" value="#7c3aed" title="انتخاب رنگ">
+                                    <span class="pcs-color-field__hint">روی پوستر و دکمه‌ها</span>
+                                </div>
+                            </label>
+                        </section>
+
+                        <section class="pcs-settings-block">
+                            <h3 class="pcs-settings-block__title"><i class="fas fa-eye" aria-hidden="true"></i> نمایش روی پوستر</h3>
+                            <p class="pcs-settings-block__lead">مواردی که روی خروجی تصویری دیده می‌شوند.</p>
+                            <div class="pcs-toggles" id="pcsVisibilityToggles"></div>
+                        </section>
+
+                        <section class="pcs-settings-block pcs-settings-block--quality">
+                            <h3 class="pcs-settings-block__title"><i class="fas fa-clipboard-check" aria-hidden="true"></i> کیفیت فایل</h3>
+                            <ul class="pcs-quality" id="pcsQualityList"></ul>
+                        </section>
+                    </div>
+                    <footer class="pcs-sidebar__foot" id="pcsSidebarFoot">
+                        <button type="button" class="pcs-btn pcs-btn--primary pcs-btn--block pcs-save-brand" id="pcsSaveBrandDefaults">
+                            <i class="fas fa-check" aria-hidden="true"></i> ذخیره در پروفایل
+                        </button>
+                    </footer>
+                </aside>
+            </div>
+        </div>
+
+        <footer class="pcs-footer" id="pcsFooter">
+            <span class="pcs-footer__label">اشتراک سریع</span>
+            <div class="pcs-footer__actions">
+                <button type="button" class="pcs-btn pcs-btn--primary pcs-footer__primary" id="pcsDownloadAll">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    <span>دانلود همه پوسترها</span>
+                </button>
+                <div class="pcs-footer__quick" role="group" aria-label="اشتراک سریع">
+                    <button type="button" class="pcs-share-chip" id="pcsCopyShareLink">
+                        <i class="fas fa-link" aria-hidden="true"></i><span>کپی لینک</span>
+                    </button>
+                    <button type="button" class="pcs-share-chip pcs-share-chip--wa" id="pcsShareWhatsapp">
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i><span>واتساپ</span>
+                    </button>
+                    <button type="button" class="pcs-share-chip pcs-share-chip--tg" id="pcsShareTelegram">
+                        <i class="fab fa-telegram" aria-hidden="true"></i><span>تلگرام</span>
+                    </button>
+                    <button type="button" class="pcs-share-chip pcs-share-chip--settings" id="pcsFooterSettings">
+                        <i class="fas fa-sliders" aria-hidden="true"></i><span>تنظیمات</span>
+                    </button>
+                </div>
+            </div>
+        </footer>
+
+        <div class="pcs-editor" id="pcsEditor" hidden>
+            <header class="pcs-editor__head">
+                <div class="pcs-editor__head-leading">
+                    <button type="button" class="pcs-btn pcs-btn--soft pcs-editor__back" id="pcsEditorBack" aria-label="بازگشت به لیست پوسترها">
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        <span class="pcs-editor__back-label">بازگشت</span>
+                    </button>
+                </div>
+                <div class="pcs-editor__head-main">
+                    <div class="pcs-editor__head-text">
+                        <div class="pcs-editor__title-row">
+                            <h3 class="pcs-editor__title">ویرایش پوستر</h3>
+                            <span class="pcs-editor__tpl-badge" id="pcsEditorTplBadge"></span>
+                        </div>
+                        <p class="pcs-editor__sub" id="pcsEditorSub">تغییرات را در پیش‌نمایش زنده ببینید</p>
+                    </div>
+                </div>
+                <div class="pcs-editor__head-trailing">
+                    <span class="pcs-editor__format-pill" id="pcsEditorFormatPill" hidden></span>
+                    <button type="button" class="pcs-editor__dismiss" id="pcsEditorClose" aria-label="بستن ویرایشگر">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                        <span class="pcs-editor__dismiss-label">بستن</span>
+                    </button>
+                </div>
+            </header>
+            <nav class="pcs-editor__mob-tabs" id="pcsEditorMobTabs" role="tablist" aria-label="بخش ویرایشگر">
+                <button type="button" class="pcs-editor__mob-tab is-active" role="tab" data-pcs-editor-pane="preview" aria-selected="true">
+                    <i class="fas fa-eye" aria-hidden="true"></i><span>پیش‌نمایش</span>
+                </button>
+                <button type="button" class="pcs-editor__mob-tab" role="tab" data-pcs-editor-pane="settings" aria-selected="false">
+                    <i class="fas fa-sliders" aria-hidden="true"></i><span>تنظیمات</span>
+                </button>
+            </nav>
+            <div class="pcs-editor__workspace">
+                <div class="pcs-editor__preview-pane is-active" data-pcs-editor-pane="preview" role="tabpanel">
+                    <div class="pcs-editor__preview-stage">
+                        <span class="pcs-editor__preview-tag"><i class="fas fa-circle" aria-hidden="true"></i> زنده</span>
+                        <span class="pcs-editor__preview-meta" id="pcsEditorLiveMeta" aria-live="polite"></span>
+                        <div class="pcs-editor__preview" id="pcsEditorPreview"></div>
+                    </div>
+                </div>
+                <div class="pcs-editor__settings-pane" data-pcs-editor-pane="settings" role="tabpanel">
+                    <div class="pcs-editor__controls" id="pcsEditorControls"></div>
+                </div>
+            </div>
+            <footer class="pcs-editor__foot">
+                <button type="button" class="pcs-btn pcs-btn--ghost" id="pcsEditorCancel">
+                    <i class="fas fa-xmark" aria-hidden="true"></i><span>انصراف</span>
+                </button>
+                <button type="button" class="pcs-btn pcs-btn--ghost" id="pcsEditorReset">
+                    <i class="fas fa-rotate-left" aria-hidden="true"></i><span>پیش‌فرض</span>
+                </button>
+                <button type="button" class="pcs-btn pcs-btn--soft" id="pcsEditorDownload" hidden>
+                    <i class="fas fa-download" aria-hidden="true"></i><span>دانلود</span>
+                </button>
+                <button type="button" class="pcs-btn pcs-btn--primary" id="pcsEditorSave">
+                    <i class="fas fa-check" aria-hidden="true"></i><span>ذخیره</span>
+                </button>
+            </footer>
+        </div>
+
+        <div class="pcs-loading" id="pcsLoading" hidden>
+            <div class="pcs-spinner" aria-hidden="true"></div>
+            <span>در حال بارگذاری استودیو…</span>
+        </div>
+
+        <div class="pcs-lightbox" id="pcsLightbox" hidden aria-modal="true" role="dialog" aria-label="پیش‌نمایش پوستر">
+            <button type="button" class="pcs-lightbox__backdrop" data-pcs-lightbox-close aria-label="بستن"></button>
+            <div class="pcs-lightbox__panel">
+                <header class="pcs-lightbox__head">
+                    <div class="pcs-lightbox__head-text">
+                        <strong id="pcsLightboxTitle">پیش‌نمایش</strong>
+                        <span class="pcs-lightbox__sub" id="pcsLightboxSub"></span>
+                    </div>
+                    <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon" data-pcs-lightbox-close aria-label="بستن"><i class="fas fa-times"></i></button>
+                </header>
+                <div class="pcs-lightbox__preview" id="pcsLightboxPreview"></div>
+                <footer class="pcs-lightbox__foot">
+                    <button type="button" class="pcs-btn pcs-btn--ghost" data-pcs-lightbox-close>بستن</button>
+                    <button type="button" class="pcs-btn pcs-btn--primary" id="pcsLightboxDownload">
+                        <i class="fas fa-download" aria-hidden="true"></i> دانلود این پوستر
+                    </button>
+                </footer>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pcs-settings-sheet" id="pcsSettingsSheet" hidden>
+    <button type="button" class="pcs-settings-sheet__backdrop" data-pcs-settings-close aria-label="بستن"></button>
+    <div class="pcs-settings-sheet__panel" id="pcsSettingsSheetPanel" role="dialog" aria-label="تنظیمات برند">
+        <div class="pcs-settings-sheet__grab" aria-hidden="true"></div>
+        <header class="pcs-settings-sheet__head">
+            <div class="pcs-settings-sheet__head-text">
+                <strong>تنظیمات برند و نمایش</strong>
+                <p class="pcs-settings-sheet__sub">هویت آژانس و موارد روی پوستر</p>
+            </div>
+            <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon" data-pcs-settings-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        </header>
+        <div class="pcs-settings-sheet__scroll" id="pcsSettingsSheetBody"></div>
+        <footer class="pcs-settings-sheet__foot" id="pcsSettingsSheetFoot" aria-label="ذخیره تنظیمات">
+            <button type="button" class="pcs-btn pcs-btn--primary pcs-btn--block pcs-save-brand pcs-save-brand--sheet" id="pcsSaveBrandDefaultsSheet">
+                <i class="fas fa-check" aria-hidden="true"></i> ذخیره در پروفایل
+            </button>
+        </footer>
+    </div>
+</div>

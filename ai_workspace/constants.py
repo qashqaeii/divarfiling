@@ -10,10 +10,12 @@ FEATURE_CRM_MESSAGE = 'crm_message'
 FEATURE_UPLOAD_BRIEF = 'upload_brief'
 FEATURE_NL_COMMAND = 'nl_command'
 FEATURE_MANAGEMENT_ANALYSIS = 'management_analysis'
+FEATURE_PROPERTY_CONTENT_STUDIO = 'property_content_studio'
 
 AI_FEATURES = {
     FEATURE_LISTING_SUMMARY: True,
     FEATURE_CRM_MESSAGE: True,
+    FEATURE_PROPERTY_CONTENT_STUDIO: True,
     # غیرفعال محصولی — endpoint فقط پاسخ کنترل‌شده می‌دهد؛ LLM صدا زده نمی‌شود.
     FEATURE_UPLOAD_BRIEF: False,
     FEATURE_NL_COMMAND: True,
@@ -25,6 +27,7 @@ FEATURE_DAILY_LIMITS = {
     FEATURE_CRM_MESSAGE: 24,
     FEATURE_NL_COMMAND: 30,
     FEATURE_MANAGEMENT_ANALYSIS: 200,
+    FEATURE_PROPERTY_CONTENT_STUDIO: 24,
 }
 
 FEATURE_GENERATION = {
@@ -36,6 +39,10 @@ FEATURE_GENERATION = {
         'temperature': 0.1,
         'max_tokens': 2200,
     },
+    FEATURE_PROPERTY_CONTENT_STUDIO: {
+        'temperature': 0.35,
+        'max_tokens': 1800,
+    },
 }
 
 DEFAULT_DAILY_LIMIT = 30
@@ -46,6 +53,7 @@ FEATURE_LABELS = {
     FEATURE_UPLOAD_BRIEF: 'تحلیل آپلود',
     FEATURE_NL_COMMAND: 'فرمان هوشمند',
     FEATURE_MANAGEMENT_ANALYSIS: 'تحلیل مدیریت',
+    FEATURE_PROPERTY_CONTENT_STUDIO: 'استودیو محتوای ملک',
 }
 
 DEFAULT_CRM_TONE = 'رسمی'
@@ -156,6 +164,7 @@ JSON_FEATURES = frozenset({
     FEATURE_LISTING_SUMMARY,
     FEATURE_NL_COMMAND,
     FEATURE_MANAGEMENT_ANALYSIS,
+    FEATURE_PROPERTY_CONTENT_STUDIO,
 })
 
 # نسخه دستی prompt — فقط وقتی محتوا عوض شد افزایش دهید (نه mtime)
@@ -166,6 +175,7 @@ PROMPT_VERSIONS = {
     FEATURE_NL_COMMAND: 'nl_command_v3',
     # max 20 chars — AIUsageLog.prompt_version
     FEATURE_MANAGEMENT_ANALYSIS: 'mgmt_analysis_v4',
+    FEATURE_PROPERTY_CONTENT_STUDIO: 'prop_studio_v1',
 }
 
 NL_COMMAND_INTENT_CREATE_REMINDER = 'create_reminder'

@@ -2447,11 +2447,58 @@ class WorkspaceSettings(models.Model):
         default=False,
         verbose_name='تور آموزشی میزکار',
     )
+    content_studio_defaults = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='پیش‌فرض استودیو محتوای ملک',
+        help_text='برند، رنگ و تنظیمات نمایش پیش‌فرض برای پوستر و محتوای تبلیغاتی.',
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'تنظیمات workspace'
         verbose_name_plural = 'تنظیمات workspace'
+
+
+class CRMPropertyContentStudioDraft(models.Model):
+    """پیش‌نویس استودیو محتوای ملک — per user per property."""
+    property = models.ForeignKey(
+        'CRMProperty',
+        on_delete=models.CASCADE,
+        related_name='content_studio_drafts',
+        verbose_name='ملک',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='property_content_studio_drafts',
+        verbose_name='کاربر',
+    )
+    payload = models.JSONField(default=dict, blank=True, verbose_name='داده پیش‌نویس')
+    property_fingerprint = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        verbose_name='نگاشت وضعیت ملک',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'پیش‌نویس استودیو محتوا'
+        verbose_name_plural = 'پیش‌نویس‌های استودیو محتوا'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['property', 'user'],
+                name='uniq_content_studio_draft_property_user',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['user', 'updated_at']),
+        ]
+
+    def __str__(self):
+        return f'استودیو #{self.property_id} — {self.user_id}'
 
 
 from workspace.divar_session_models import (  # noqa: E402,F401

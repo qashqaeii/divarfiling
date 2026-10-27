@@ -63,20 +63,25 @@ def _property_fields(prop: CRMProperty) -> Dict[str, str]:
     return fields
 
 
-def _location_fields(prop: CRMProperty, *, include_address: bool = False) -> Dict[str, str]:
+def _location_fields(
+    prop: CRMProperty,
+    *,
+    include_address: bool = False,
+    mask_sensitive: bool = False,
+) -> Dict[str, str]:
     fields: Dict[str, str] = {}
     if prop.city:
         fields['شهر'] = prop.city
     if prop.district:
         fields['منطقه'] = prop.district
-    if prop.neighborhood:
+    if prop.neighborhood and not mask_sensitive:
         fields['محله'] = prop.neighborhood
-    if include_address and prop.address:
+    if include_address and prop.address and not mask_sensitive:
         fields['آدرس'] = prop.address
     return fields
 
 
-def _extra_lines(prop: CRMProperty, limit: int = 16) -> str:
+def _extra_lines(prop: CRMProperty, limit: int = 16, *, include_crm_notes: bool = True) -> str:
     lines: List[str] = []
     amenities = (prop.amenities or '').strip()
     if amenities:
@@ -86,7 +91,7 @@ def _extra_lines(prop: CRMProperty, limit: int = 16) -> str:
                 lines.append(text)
             if len(lines) >= limit:
                 break
-    if prop.notes and len(lines) < limit:
+    if include_crm_notes and prop.notes and len(lines) < limit:
         for line in prop.notes.splitlines():
             text = line.strip()
             if text:
@@ -118,18 +123,25 @@ def build(
     benchmark: Dict[str, Any] | None = None,
     *,
     feature_profile: Dict[str, Any] | None = None,
+    include_address: bool = False,
+    include_crm_notes: bool = True,
+    mask_sensitive: bool = False,
 ) -> Dict[str, Any]:
     benchmark = benchmark or {}
     feature_profile = feature_profile or {}
 
     tab_financial = _join_fields(_financial_fields(prop))
     tab_property = _join_fields(_property_fields(prop))
-    tab_location = _join_fields(_location_fields(prop, include_address=False))
+    tab_location = _join_fields(
+        _location_fields(prop, include_address=include_address, mask_sensitive=mask_sensitive),
+    )
     tab_features = _feature_lines(feature_profile) if feature_profile.get('has_details') else ''
     if not tab_features:
         tab_features = tab_property
-    tab_text = truncate(redact_pii_text((prop.notes or '').strip()), 1200)
-    tab_extra = redact_pii_text(_extra_lines(prop))
+    tab_text = ''
+    if include_crm_notes:
+        tab_text = truncate(redact_pii_text((prop.notes or '').strip()), 1200)
+    tab_extra = redact_pii_text(_extra_lines(prop, include_crm_notes=include_crm_notes))
 
     bench = _benchmark_block(benchmark)
     description = tab_text or tab_extra
@@ -144,7 +156,7 @@ def build(
         'rooms': prop.rooms or '',
         'floor': str(prop.floor) if prop.floor is not None else '',
         'build_year': str(prop.build_year) if prop.build_year else '',
-        'neighborhood': prop.neighborhood or '',
+        'neighborhood': (prop.neighborhood or '') if not mask_sensitive else '',
         'city': prop.city or '',
         'tab_financial': tab_financial,
         'tab_property': tab_property,

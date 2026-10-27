@@ -41,6 +41,24 @@ from workspace.services.public_share_common import (
 )
 
 
+def existing_property_share_for_user(user, prop: CRMProperty) -> Optional[CRMPropertyPublicShare]:
+    """لینک فعال موجود — بدون ایجاد خودکار."""
+    return (
+        CRMPropertyPublicShare.objects.filter(
+            property=prop, created_by=user, is_active=True,
+        )
+        .order_by('-created_at')
+        .first()
+    )
+
+
+def existing_property_share_url(user, prop: CRMProperty, request) -> str:
+    share = existing_property_share_for_user(user, prop)
+    if not share:
+        return ''
+    return property_public_share_url(request, share)
+
+
 def get_or_create_property_share(user, prop: CRMProperty) -> CRMPropertyPublicShare:
     from django.core.exceptions import PermissionDenied
 

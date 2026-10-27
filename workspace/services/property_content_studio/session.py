@@ -9,7 +9,8 @@ from workspace.services.property_content_studio.brand import default_brand_from_
 from workspace.services.property_content_studio.draft import get_or_create_draft
 from workspace.services.property_content_studio.quality import build_quality_report
 from workspace.services.property_content_studio.storyboard import build_default_storyboard
-from workspace.services.property_public_share import get_or_create_property_share, property_public_share_url
+from workspace.services.crm_matching_access import can_create_property_public_link
+from workspace.services.property_public_share import existing_property_share_url
 
 
 def build_studio_session(
@@ -19,12 +20,7 @@ def build_studio_session(
     *,
     mask_sensitive: bool = False,
 ) -> Dict[str, Any]:
-    public_url = ''
-    try:
-        share = get_or_create_property_share(user, prop)
-        public_url = property_public_share_url(request, share) if request else ''
-    except Exception:
-        public_url = ''
+    public_url = existing_property_share_url(user, prop, request) if request else ''
 
     property_payload = build_studio_property_payload(
         prop,
@@ -59,4 +55,5 @@ def build_studio_session(
         'ai_enabled': ai_enabled,
         'ai_quota': ai_quota,
         'mask_sensitive': mask_sensitive,
+        'can_create_public_share': can_create_property_public_link(user, prop),
     }

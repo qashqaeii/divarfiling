@@ -60,14 +60,16 @@ def _price_display(prop: CRMProperty) -> Dict[str, Any]:
     return {'show': False, 'label': '', 'deal_mode': prop.deal_mode or ''}
 
 
-def _headline(prop: CRMProperty) -> str:
+def _headline(prop: CRMProperty, *, mask_sensitive: bool = False) -> str:
+    title = (prop.title or '').strip()
+    if mask_sensitive:
+        return title or prop.property_type or 'ملک'
     parts = []
     if prop.area:
         parts.append(f'{format_area(prop.area)}')
     rooms = _rooms_label(prop.rooms or '')
     if rooms:
         parts.append(rooms)
-    title = (prop.title or '').strip()
     if parts:
         return '، '.join(parts)
     return title or prop.property_type or 'ملک'
@@ -103,7 +105,7 @@ def build_studio_property_payload(
     return {
         'id': prop.pk,
         'title': (prop.title or '').strip(),
-        'headline': _headline(prop),
+        'headline': _headline(prop, mask_sensitive=mask_sensitive),
         'property_type': prop.property_type or '',
         'deal_mode': prop.deal_mode or '',
         'area': prop.area,
@@ -120,7 +122,7 @@ def build_studio_property_payload(
         'images': images,
         'image_count': len(images),
         'cover_image': images[0] if images else '',
-        'description_excerpt': _public_description(prop),
+        'description_excerpt': '',
         'file_code': f'#{prop.pk}',
         'public_share_url': (public_share_url or '').strip(),
         'has_parking': bool(prop.has_parking),
@@ -129,14 +131,6 @@ def build_studio_property_payload(
         'templates': list(POSTER_TEMPLATES),
         'formats': OUTPUT_FORMATS,
     }
-
-
-def _public_description(prop: CRMProperty) -> str:
-    """متن قابل استفاده برای AI — بدون یادداشت داخلی CRM."""
-    notes = (prop.notes or '').strip()
-    if len(notes) > 600:
-        return notes[:600] + '…'
-    return notes
 
 
 def apply_visibility(

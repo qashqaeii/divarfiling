@@ -79,6 +79,50 @@ def normalize_studio_ai_payload(task: str, data: Optional[Dict[str, Any]], raw_t
     return dict(payload)
 
 
+_FACT_DENY_PATTERNS = {
+    'has_parking': re.compile(r'پارکینگ\s*(دارد|موجود|ویژه)', re.I),
+    'has_storage': re.compile(r'انبار(?:ی)?\s*(دارد|موجود)', re.I),
+    'has_elevator': re.compile(r'آسانسور\s*(دارد|موجود)', re.I),
+}
+
+
+def _scrub_text_for_facts(prop, text: str) -> str:
+    out = text or ''
+    for field, pattern in _FACT_DENY_PATTERNS.items():
+        if not getattr(prop, field, False):
+            out = pattern.sub('', out)
+    return re.sub(r'\s{2,}', ' ', out).strip()
+
+
+def enforce_property_facts(prop, task: str, data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """حذف ادعاهای قطعی درباره امکاناتی که در ملک ثبت نشده‌اند."""
+    payload = dict(data or {})
+    if task == 'divar_titles':
+        titles = []
+        for item in payload.get('titles') or []:
+            if not isinstance(item, dict):
+                continue
+            text = _scrub_text_for_facts(prop, str(item.get('text') or ''))
+            if text:
+                titles.append({**item, 'text': text})
+        payload['titles'] = titles
+    elif task == 'divar_body':
+        payload['body'] = _scrub_text_for_facts(prop, str(payload.get('body') or ''))
+    elif task == 'social_pack':
+        caps = []
+        for item in payload.get('captions') or []:
+            if not isinstance(item, dict):
+                continue
+            text = _scrub_text_for_facts(prop, str(item.get('text') or ''))
+            if text:
+                caps.append({**item, 'text': text})
+        payload['captions'] = caps
+        for key in ('whatsapp_short', 'whatsapp_full', 'telegram'):
+            if key in payload:
+                payload[key] = _scrub_text_for_facts(prop, str(payload.get(key) or ''))
+    return payload
+
+
 def validate_studio_ai_payload(task: str, data: Optional[Dict[str, Any]]) -> bool:
     if not data:
         return False

@@ -1364,10 +1364,11 @@ window.PCS_CONFIG = {
     brandUrl: "{% url 'workspace:crm_property_content_studio_brand' property.id %}",
     aiBaseUrl: "{% url 'workspace:crm_property_content_studio_ai' property.id 'divar-titles' %}".replace(/divar-titles\/?$/, ''),
     csrf: "{{ csrf_token }}",
-    aiEnabled: {{ content_studio_ai_enabled|yesno:"true,false" }}
+    aiEnabled: {{ content_studio_ai_enabled|yesno:"true,false" }},
+    publicShareUrl: "{% url 'workspace:crm_property_public_share' property.id %}"
 };
 </script>
-<script src="{% static 'workspace/js/property-content-studio.js' %}?v=35" defer></script>
+<script src="{% static 'workspace/js/property-content-studio.js' %}?v=36" defer></script>
 {% endif %}
 {% if agency_space_enabled %}
 <script>

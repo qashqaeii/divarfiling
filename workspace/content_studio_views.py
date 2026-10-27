@@ -8,9 +8,14 @@ from django.http import JsonResponse
 from django.views import View
 
 from workspace.mixins import WorkspaceLoginMixin
-from workspace.services.crm_scope import property_for_user
+from workspace.services.property_content_studio.access import resolve_studio_access
 from workspace.services.property_content_studio.brand import save_user_brand_defaults
-from workspace.services.property_content_studio.draft import delete_draft, save_draft
+from workspace.services.property_content_studio.draft import (
+    delete_draft,
+    save_draft,
+    sync_draft_with_property,
+)
+from workspace.services.property_content_studio.draft_validate import DraftValidationError
 from workspace.services.property_content_studio.session import build_studio_session
 
 logger = logging.getLogger(__name__)
@@ -23,46 +28,60 @@ def _parse_json(request) -> dict:
         return {}
 
 
-def _property_or_404(user, property_id):
-    prop = property_for_user(user, property_id)
-    if not prop or prop.deleted_at:
-        return None
-    return prop
+def _studio_property_or_404(user, property_id):
+    prop, share_ctx = resolve_studio_access(user, property_id)
+    if not prop:
+        return None, None
+    return prop, share_ctx
 
 
 class PropertyContentStudioSessionView(WorkspaceLoginMixin, View):
     """بارگذاری اولیه استودیو."""
 
     def get(self, request, property_id):
-        prop = _property_or_404(request.user, property_id)
+        prop, share_ctx = _studio_property_or_404(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
-        from workspace.services.crm_property_share import build_property_share_context
-
-        share_ctx = build_property_share_context(request.user, prop)
         data = build_studio_session(
             request.user,
             prop,
             request,
             mask_sensitive=share_ctx.mask_sensitive,
         )
+        data['can_edit_property'] = share_ctx.can_edit
         return JsonResponse(data)
 
 
 class PropertyContentStudioDraftView(WorkspaceLoginMixin, View):
     def put(self, request, property_id):
-        prop = _property_or_404(request.user, property_id)
+        prop, share_ctx = _studio_property_or_404(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
         body = _parse_json(request)
+        if body.get('sync_property'):
+            meta = sync_draft_with_property(request.user, prop)
+            return JsonResponse({'ok': True, 'draft_stale': meta['stale'], 'property_fingerprint': meta['fingerprint']})
         payload = body.get('draft') or body.get('payload') or body
         if not isinstance(payload, dict):
             return JsonResponse({'ok': False, 'error': 'فرمت پیش‌نویس نامعتبر است'}, status=400)
-        saved = save_draft(request.user, prop, payload)
-        return JsonResponse({'ok': True, 'draft': saved})
+        try:
+            saved, meta = save_draft(
+                request.user,
+                prop,
+                payload,
+                sync_property=bool(body.get('sync_property_content')),
+            )
+        except DraftValidationError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({
+            'ok': True,
+            'draft': saved,
+            'draft_stale': meta['stale'],
+            'property_fingerprint': meta['fingerprint'],
+        })
 
     def delete(self, request, property_id):
-        prop = _property_or_404(request.user, property_id)
+        prop, _ = _studio_property_or_404(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
         delete_draft(request.user, prop)
@@ -71,7 +90,7 @@ class PropertyContentStudioDraftView(WorkspaceLoginMixin, View):
 
 class PropertyContentStudioBrandView(WorkspaceLoginMixin, View):
     def put(self, request, property_id):
-        prop = _property_or_404(request.user, property_id)
+        prop, _ = _studio_property_or_404(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
         body = _parse_json(request)
@@ -95,19 +114,27 @@ class PropertyContentStudioAIView(WorkspaceLoginMixin, View):
         if not is_feature_enabled(FEATURE_PROPERTY_CONTENT_STUDIO, request.user):
             return JsonResponse({'ok': False, 'error': 'قابلیت AI استودیو غیرفعال است.'}, status=403)
 
-        prop = _property_or_404(request.user, property_id)
+        prop, share_ctx = _studio_property_or_404(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
 
         body = _parse_json(request)
         try:
             if action == 'divar-titles':
-                return JsonResponse(generate_divar_titles(request.user, property_id))
+                return JsonResponse(
+                    generate_divar_titles(request.user, property_id, mask_sensitive=share_ctx.mask_sensitive),
+                )
             if action == 'divar-body':
                 style = (body.get('style') or 'formal').strip()
-                return JsonResponse(generate_divar_body(request.user, property_id, style))
+                return JsonResponse(
+                    generate_divar_body(
+                        request.user, property_id, style, mask_sensitive=share_ctx.mask_sensitive,
+                    ),
+                )
             if action == 'social':
-                return JsonResponse(generate_social_pack(request.user, property_id))
+                return JsonResponse(
+                    generate_social_pack(request.user, property_id, mask_sensitive=share_ctx.mask_sensitive),
+                )
             return JsonResponse({'ok': False, 'error': 'عملیات نامعتبر'}, status=400)
         except LookupError:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)

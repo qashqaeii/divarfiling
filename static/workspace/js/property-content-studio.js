@@ -188,6 +188,13 @@
         format: 'story',
         editorTemplate: null,
         saveTimer: null,
+        saveSeq: 0,
+        saveInflight: false,
+        savePending: false,
+        saveStatus: 'idle',
+        sessionToken: 0,
+        exportInflight: false,
+        aiInflight: false,
         libsLoaded: false,
         brandFieldsBound: false,
         visTogglesBound: false,
@@ -213,15 +220,27 @@
         else if (msg) console.log(msg);
     }
 
+    function visibilityMap() {
+        const base = state.session?.brand_effective?.visibility || state.session?.brand?.visibility || {};
+        const ov = state.draft?.brand_override?.visibility || {};
+        return { ...base, ...ov };
+    }
+
     function visibleData() {
         const p = { ...(state.session?.property || {}) };
-        const vis = state.draft?.brand_override?.visibility || state.session?.brand_effective?.visibility || {};
-        if (!vis.price) p.price = { show: false, label: '' };
-        if (!vis.neighborhood) p.location_line = p.city || '';
-        if (!vis.area) p.area_label = '';
-        if (!vis.bedrooms) p.rooms_label = '';
-        if (!vis.amenities) p.amenities = [];
-        if (!vis.file_code) p.file_code = '';
+        const vis = visibilityMap();
+        if (vis.price === false) p.price = { show: false, label: '', deal_mode: p.deal_mode || '' };
+        if (vis.neighborhood === false) {
+            p.neighborhood = '';
+            p.location_line = p.city || '';
+        }
+        if (vis.area === false) p.area_label = '';
+        if (vis.bedrooms === false) p.rooms_label = '';
+        if (vis.floor === false) {
+            p.floor = null;
+        }
+        if (vis.amenities === false) p.amenities = [];
+        if (vis.file_code === false) p.file_code = '';
         return { property: p, brand: mergeBrand(), vis };
     }
 
@@ -290,16 +309,37 @@
         return list;
     }
 
-    function orderedImages(tpl) {
+    function orderedImages(tpl, confOverride) {
         const imgs = propertyImageList();
-        const conf = posterConfig(tpl || 'luxury');
+        const conf = confOverride
+            ? normalizePosterConfig(confOverride, imgs)
+            : posterConfig(tpl || 'luxury');
         const order = (conf.image_order && conf.image_order.length) ? conf.image_order : imgs.map((_, i) => i);
         return order.filter((i) => i >= 0 && i < imgs.length).map((i) => imgs[i]);
     }
 
     function defaultPropertyHeadline() {
-        const p = state.session?.property || {};
-        return String(p.headline || p.title || '').trim();
+        const { property: p, vis } = visibleData();
+        const customTitle = String(p.title || '').trim();
+        const parts = [];
+        if (vis.area !== false && p.area_label) parts.push(p.area_label);
+        if (vis.bedrooms !== false && p.rooms_label) parts.push(p.rooms_label);
+        if (parts.length) return parts.join('، ');
+        return customTitle || p.property_type || 'ملک';
+    }
+
+    function visibleHeadline(conf) {
+        const custom = (conf?.headline || '').trim();
+        if (custom) return custom;
+        return defaultPropertyHeadline();
+    }
+
+    function slideImageAt(index) {
+        const imgs = propertyImageList();
+        if (!imgs.length) return '';
+        const i = parseInt(index, 10);
+        if (!Number.isFinite(i) || i < 0 || i >= imgs.length) return imgs[0];
+        return imgs[i];
     }
 
     function editorImageOrderForGallery(imgs, conf) {
@@ -464,6 +504,35 @@
             img.crossOrigin = 'anonymous';
             img.referrerPolicy = 'no-referrer';
         });
+    }
+
+    async function verifyImagesForExport(root) {
+        const imgs = root ? Array.from(root.querySelectorAll('img')) : [];
+        if (!imgs.length) return { ok: true };
+        const failures = [];
+        await Promise.all(imgs.map((img) => new Promise((resolve) => {
+            const check = () => {
+                if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                    resolve();
+                    return;
+                }
+                failures.push(img.src || 'تصویر');
+                resolve();
+            };
+            if (img.complete) {
+                check();
+                return;
+            }
+            img.addEventListener('load', check, { once: true });
+            img.addEventListener('error', () => {
+                failures.push(img.src || 'تصویر');
+                resolve();
+            }, { once: true });
+        })));
+        if (failures.length) {
+            return { ok: false, message: 'برخی تصاویر برای خروجی PNG بارگذاری نشدند (ممکن است محدودیت CORS باشد).' };
+        }
+        return { ok: true };
     }
 
     function esc(s) {
@@ -859,17 +928,27 @@
         refreshEditorPreview(state.editorTemplate);
     }
 
-    function buildCanvasHtml(templateId, formatKey, confOverride) {
+    function buildCanvasHtml(templateId, formatKey, confOverride, renderOpts) {
         const fmt = FORMATS[formatKey] || FORMATS.story;
+        const opts = renderOpts || {};
         const { property: p, brand: b } = visibleData();
         const conf = confOverride
             ? normalizePosterConfig(confOverride, propertyImageList())
             : posterConfig(templateId);
-        const imgs = orderedImages(templateId);
-        const primary = primaryImageUrl(conf);
+        const imgs = orderedImages(templateId, confOverride ? conf : null);
+        if (opts.primaryImageIndex != null) {
+            conf.primary_image_index = opts.primaryImageIndex;
+        }
+        const primary = opts.heroImageUrl || primaryImageUrl(conf);
         const cropY = conf.crop_y ?? 50;
-        const headline = (conf.headline || p.headline || p.title || '').trim();
-        const price = p.price?.show ? p.price.label : '';
+        const headline = (opts.headlineOverride || visibleHeadline(conf) || '').trim();
+        let price = p.price?.show ? p.price.label : '';
+        if (opts.suppressPrice) {
+            price = '';
+        } else if (opts.priceLabel !== undefined) {
+            price = opts.priceLabel || '';
+        }
+        const locLine = opts.locationOverride !== undefined ? opts.locationOverride : (p.location_line || p.city || '');
         const primaryColor = normalizeBrandColor(b.colors?.primary || '#7c3aed');
         const accentInk = inkAccentOnWhite(primaryColor);
         const badgeInk = textOnColor(primaryColor);
@@ -881,8 +960,10 @@
         (p.amenities || []).slice(0, 3).forEach((c) => chips.push(c));
 
         const dealLabel = p.deal_mode === 'فروش' ? 'فروش' : (p.deal_mode || 'آگهی');
-        const locLine = p.location_line || p.city || '';
-        const specItems = chips.length ? chips : [p.property_type, p.area_label, p.rooms_label].filter(Boolean);
+        const specItems = opts.specLines?.length
+            ? opts.specLines
+            : (chips.length ? chips : [p.property_type, p.area_label, p.rooms_label].filter(Boolean));
+        const showPromoBadge = opts.showPromoBadge !== false;
         let inner = '';
         if (templateId === 'luxury') {
             inner = `
@@ -1019,7 +1100,7 @@
                         ${topFeature ? `<div style="position:absolute;bottom:22px;right:22px;z-index:2;display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:14px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,.28);${pcsTextStyle(`font-size:22px;font-weight:800;color:${accentInk};`)}">${pcsSvg(chipIconFor(topFeature), 22, accentInk)}<span>${esc(topFeature)}</span></div>` : ''}
                     </div>
                     <div style="position:relative;z-index:3;padding:36px 44px 48px;margin-top:-44px;">
-                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">${pcsSvg('bolt', 28, '#fbbf24')}<span style="${pcsTextStyle('font-size:22px;font-weight:700;color:#e2e8f0;')}">پیشنهاد ویژه</span></div>
+                        ${showPromoBadge ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">${pcsSvg('bolt', 28, '#fbbf24')}<span style="${pcsTextStyle('font-size:22px;font-weight:700;color:#e2e8f0;')}">پیشنهاد ویژه</span></div>` : ''}
                         <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, 52, 'headline')}px;font-weight:800;line-height:1.08;color:#f8fafc;margin-bottom:10px;text-shadow:0 8px 28px rgba(0,0,0,.55);`, conf)}">${esc(headline)}</div>
                         ${locLine ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">${pcsSvg('location', 24, '#cbd5e1')}<span style="${pcsTextStyle('font-size:26px;color:#e2e8f0;')}">${esc(locLine)}</span></div>` : ''}
                         ${statTilesHtml(p, '', primaryColor, 'dark')}
@@ -1232,6 +1313,10 @@
         await ensureLibs();
         await ensurePersianFonts();
         armImagesForExport(canvas);
+        const verify = await verifyImagesForExport(canvas);
+        if (!verify.ok) {
+            throw new Error(verify.message || 'تصویر آماده export نیست');
+        }
         const fmt = FORMATS[formatKey] || FORMATS.story;
         return html2canvas(canvas, {
             useCORS: true,
@@ -1358,6 +1443,61 @@
         });
     }
 
+    function storySlideConf(slide) {
+        const imgs = propertyImageList();
+        const base = posterFieldDefaults(imgs);
+        if (slide.image_index != null) {
+            base.primary_image_index = Math.max(0, parseInt(slide.image_index, 10) || 0);
+        }
+        if (slide.type === 'gallery_price' && slide.image_indices?.length) {
+            base.image_order = slide.image_indices.slice();
+        }
+        if (slide.title) base.headline = slide.title;
+        return normalizePosterConfig(base, imgs);
+    }
+
+    function buildStoryboardSlideHtml(slide, formatKey) {
+        const fmtKey = formatKey || 'story';
+        if (!slide) return buildCanvasHtml('minimal', fmtKey);
+        const conf = storySlideConf(slide);
+        if (slide.type === 'cover') {
+            return buildCanvasHtml('luxury', fmtKey, conf, {
+                headlineOverride: slide.title || visibleHeadline(conf),
+                locationOverride: slide.subtitle,
+                heroImageUrl: slide.image_index != null ? slideImageAt(slide.image_index) : undefined,
+                primaryImageIndex: slide.image_index,
+                showPromoBadge: false,
+            });
+        }
+        if (slide.type === 'specs') {
+            const lines = (slide.lines || []).filter(Boolean);
+            return buildCanvasHtml('minimal', fmtKey, conf, {
+                headlineOverride: lines[0] || visibleHeadline(conf),
+                specLines: lines.length > 1 ? lines.slice(1) : lines,
+                heroImageUrl: slide.image_index != null ? slideImageAt(slide.image_index) : undefined,
+                showPromoBadge: false,
+            });
+        }
+        if (slide.type === 'gallery_price') {
+            return buildCanvasHtml('gallery', fmtKey, conf, {
+                headlineOverride: slide.title || visibleHeadline(conf),
+                galleryIndices: slide.image_indices || [],
+                priceLabel: slide.price_label || '',
+                showPromoBadge: false,
+            });
+        }
+        if (slide.type === 'contact') {
+            const cta = slide.cta || 'برای هماهنگی بازدید پیام دهید';
+            return buildCanvasHtml('minimal', fmtKey, conf, {
+                headlineOverride: cta,
+                specLines: [],
+                suppressPrice: true,
+                showPromoBadge: false,
+            });
+        }
+        return buildCanvasHtml('minimal', fmtKey, conf);
+    }
+
     function renderStoryboard() {
         const track = $('#pcsStoryTrack');
         if (!track || !state.draft?.storyboard?.slides) return;
@@ -1370,8 +1510,7 @@
             el.className = 'pcs-story-slide';
             const frame = document.createElement('div');
             frame.className = 'pcs-story-slide__frame';
-            const tpl = slide.type === 'cover' ? 'luxury' : slide.type === 'gallery_price' ? 'gallery' : 'minimal';
-            frame.innerHTML = buildCanvasHtml(tpl, 'story');
+            frame.innerHTML = buildStoryboardSlideHtml(slide, 'story');
             el.appendChild(frame);
             track.appendChild(el);
         });
@@ -1579,11 +1718,90 @@
                 toast('کپی شد');
             });
         });
+        wrap.querySelectorAll('textarea[data-cap-idx]').forEach((ta) => {
+            ta.addEventListener('input', () => {
+                const i = parseInt(ta.dataset.capIdx, 10);
+                if (state.draft?.ai?.social?.captions?.[i]) {
+                    state.draft.ai.social.captions[i].text = ta.value;
+                    scheduleSave();
+                    renderAiStrip();
+                }
+            });
+        });
+    }
+
+    function collectDraftFromForm() {
+        if (!state.draft) return null;
+        const bodyEl = $('#pcsDivarBody');
+        if (bodyEl) state.draft.ai.divar.body = bodyEl.value;
+        state.draft.ai.social.hashtags = ($('#pcsHashtags')?.value || '').split(/\s+/).filter(Boolean);
+        state.draft.ai.social.whatsapp_full = $('#pcsWhatsappText')?.value || '';
+        state.draft.ai.social.telegram = $('#pcsTelegramText')?.value || '';
+        return state.draft;
+    }
+
+    function setSaveStatus(status) {
+        state.saveStatus = status;
+        const el = $('#pcsSaveStatus');
+        if (!el) return;
+        const map = {
+            idle: '',
+            saving: 'در حال ذخیره…',
+            saved: 'ذخیره شد',
+            failed: 'خطا در ذخیره',
+        };
+        el.textContent = map[status] || '';
+        el.classList.toggle('is-error', status === 'failed');
     }
 
     function scheduleSave() {
         clearTimeout(state.saveTimer);
-        state.saveTimer = setTimeout(saveDraft, 800);
+        state.saveTimer = setTimeout(() => { flushSaveDraft(); }, 800);
+    }
+
+    async function flushSaveDraft() {
+        if (!state.draft || state.saveInflight) {
+            state.savePending = true;
+            return;
+        }
+        const draftSnapshot = JSON.stringify(collectDraftFromForm() || state.draft);
+        const seq = ++state.saveSeq;
+        state.saveInflight = true;
+        setSaveStatus('saving');
+        const token = csrf();
+        try {
+            const res = await fetch(cfg.draftUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
+                body: JSON.stringify({ draft: JSON.parse(draftSnapshot) }),
+            });
+            let data = {};
+            try { data = await res.json(); } catch (_) { /* ignore */ }
+            if (seq !== state.saveSeq) return;
+            if (!res.ok || data.ok === false) {
+                setSaveStatus('failed');
+                toast(data.error || 'ذخیره پیش‌نویس ناموفق بود');
+                return;
+            }
+            if (data.draft) state.draft = data.draft;
+            if (typeof data.draft_stale === 'boolean') {
+                state.session = state.session || {};
+                state.session.draft_stale = data.draft_stale;
+            }
+            renderStaleBanner();
+            setSaveStatus('saved');
+        } catch (_) {
+            if (seq === state.saveSeq) {
+                setSaveStatus('failed');
+                toast('خطا در ارتباط هنگام ذخیره');
+            }
+        } finally {
+            state.saveInflight = false;
+            if (state.savePending) {
+                state.savePending = false;
+                flushSaveDraft();
+            }
+        }
     }
 
     async function saveBrandDefaults() {
@@ -1649,26 +1867,63 @@
     }
 
     async function saveDraft() {
-        if (!state.draft) return;
-        $('#pcsDivarBody') && (state.draft.ai.divar.body = $('#pcsDivarBody').value);
-        const hashTags = ($('#pcsHashtags')?.value || '').split(/\s+/).filter(Boolean);
-        state.draft.ai.social.hashtags = hashTags;
-        state.draft.ai.social.whatsapp_full = $('#pcsWhatsappText')?.value || '';
-        state.draft.ai.social.telegram = $('#pcsTelegramText')?.value || '';
-        await fetch(cfg.draftUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
-            body: JSON.stringify({ draft: state.draft }),
-        });
+        clearTimeout(state.saveTimer);
+        await flushSaveDraft();
+    }
+
+    function renderStaleBanner() {
+        const banner = $('#pcsStaleBanner');
+        if (!banner) return;
+        const stale = !!state.session?.draft_stale;
+        if (stale) banner.removeAttribute('hidden');
+        else banner.setAttribute('hidden', '');
+    }
+
+    async function syncDraftWithProperty() {
+        const token = csrf();
+        try {
+            const res = await fetch(cfg.draftUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
+                body: JSON.stringify({ sync_property: true }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+                toast(data.error || 'هماهنگ‌سازی ناموفق بود');
+                return;
+            }
+            state.session = state.session || {};
+            state.session.draft_stale = !!data.draft_stale;
+            state.session.property_fingerprint = data.property_fingerprint;
+            if (state.session.property) {
+                const sessionRes = await fetch(cfg.sessionUrl, { headers: { Accept: 'application/json' } });
+                const sessionData = await sessionRes.json();
+                if (sessionData.ok) {
+                    state.session.property = sessionData.property;
+                    state.session.brand_effective = sessionData.brand_effective;
+                    state.draft.storyboard = sessionData.draft?.storyboard || state.draft.storyboard;
+                }
+            }
+            renderHeader();
+            renderPosters();
+            renderStoryboard();
+            renderStaleBanner();
+            toast('محتوا با اطلاعات فعلی فایل هماهنگ شد');
+        } catch (_) {
+            toast('خطا در هماهنگ‌سازی');
+        }
     }
 
     async function loadSession() {
         const loading = $('#pcsLoading');
+        const token = ++state.sessionToken;
         loading?.removeAttribute('hidden');
         try {
             const res = await fetch(cfg.sessionUrl, { headers: { Accept: 'application/json' } });
             const data = await res.json();
+            if (token !== state.sessionToken) return;
             if (!data.ok) throw new Error(data.error || 'خطا');
+            if ($('#pcsModal')?.hasAttribute('hidden')) return;
             state.session = data;
             state.draft = data.draft || {};
             state.draft.ai = state.draft.ai || { divar: { titles: [], body: '', selected_title_index: 0 }, social: { captions: [], hashtags: [] } };
@@ -1687,10 +1942,11 @@
             syncFormFromDraft();
             renderAiStrip();
             renderSharePanel();
+            renderStaleBanner();
             setTab(state.draft.active_tab || 'posters');
             requestAnimationFrame(() => rescaleAllPreviews());
         } finally {
-            loading?.setAttribute('hidden', '');
+            if (token === state.sessionToken) loading?.setAttribute('hidden', '');
         }
     }
 
@@ -1703,17 +1959,42 @@
         const grid = $('#pcsShareGrid');
         if (!grid) return;
         const url = state.session?.property?.public_share_url || '';
+        const canCreate = !!state.session?.can_create_public_share;
         grid.innerHTML = `
             <div class="pcs-share-card">
                 <p class="pcs-share-card__label">لینک عمومی فایل</p>
                 <input type="text" class="pcs-input" id="pcsShareUrlField" readonly dir="ltr" value="${esc(url)}">
                 <button type="button" class="pcs-btn pcs-btn--soft pcs-btn--block" id="pcsShareTabCopy">کپی لینک</button>
+                ${!url && canCreate ? '<button type="button" class="pcs-btn pcs-btn--primary pcs-btn--block" id="pcsShareCreateLink">ایجاد لینک عمومی</button>' : ''}
+                ${!url && !canCreate ? '<p class="pcs-share-card__hint">لینک عمومی فعالی وجود ندارد.</p>' : ''}
             </div>
             <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--block" id="pcsShareTabDivar">رفتن به تب آگهی دیوار</button>`;
         $('#pcsShareTabCopy')?.addEventListener('click', () => {
-            if (!url) { toast('لینک عمومی موجود نیست'); return; }
-            navigator.clipboard.writeText(url);
+            const current = $('#pcsShareUrlField')?.value || url;
+            if (!current) { toast('لینک عمومی موجود نیست'); return; }
+            navigator.clipboard.writeText(current);
             toast('لینک کپی شد');
+        });
+        $('#pcsShareCreateLink')?.addEventListener('click', async () => {
+            if (!cfg.publicShareUrl) {
+                toast('مسیر ایجاد لینک در دسترس نیست');
+                return;
+            }
+            try {
+                const res = await fetch(cfg.publicShareUrl, {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    toast(data.error || 'ایجاد لینک ناموفق بود');
+                    return;
+                }
+                state.session.property.public_share_url = data.share_url || '';
+                renderSharePanel();
+                toast('لینک عمومی ایجاد شد');
+            } catch (_) {
+                toast('خطا در ایجاد لینک');
+            }
         });
         $('#pcsShareTabDivar')?.addEventListener('click', () => setTab('divar'));
     }
@@ -1854,17 +2135,18 @@
         loadSession().catch(() => toast('بارگذاری استودیو ناموفق بود'));
     }
 
-    function closeModal() {
+    async function closeModal() {
         closePreview();
         closeSettingsSheet();
         if (!$('#pcsEditor')?.hasAttribute('hidden')) {
             closeEditor();
             if (!$('#pcsEditor')?.hasAttribute('hidden')) return;
         }
+        await saveDraft();
+        state.sessionToken += 1;
         resetStudioShellState();
         $('#pcsModal')?.setAttribute('hidden', '');
         unlockPageScroll();
-        saveDraft();
     }
 
     const settingsSheetState = { sidebar: null, footParent: null };
@@ -2316,13 +2598,27 @@
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
             body: JSON.stringify(body || {}),
         });
-        const data = await res.json();
-        if (!data.ok) throw new Error(data.error || 'خطا');
+        let data = {};
+        try {
+            data = await res.json();
+        } catch (_) {
+            throw new Error('پاسخ سرور نامعتبر بود');
+        }
+        if (!res.ok || data.ok === false) {
+            throw new Error(data.error || (res.status === 429 ? 'سهمیه AI تمام شده است' : 'خطا'));
+        }
         return data;
     }
 
     function bindEvents() {
         bindEditorSettingsDelegation();
+        document.addEventListener('input', (e) => {
+            const id = e.target?.id;
+            if (!id || !e.target.closest('#pcsModal')) return;
+            if (id === 'pcsDivarBody' || id === 'pcsHashtags' || id === 'pcsWhatsappText' || id === 'pcsTelegramText') {
+                scheduleSave();
+            }
+        });
         document.addEventListener('click', (e) => {
             const trigger = e.target.closest('[data-pcs-open]');
             if (!trigger) return;
@@ -2349,38 +2645,65 @@
             if (!$('#pcsModal')?.hasAttribute('hidden')) closeModal();
         });
         $$('.pcs-tab').forEach((t) => t.addEventListener('click', () => setTab(t.dataset.pcsTab)));
-        $('#pcsGenDivarTitles')?.addEventListener('click', async () => {
+        async function runAiAction(fn, buttons) {
+            if (state.aiInflight) return;
+            state.aiInflight = true;
+            buttons.forEach((b) => { if (b) b.disabled = true; });
             try {
-                const data = await aiPost('divar-titles');
-                state.draft.ai.divar.titles = data.data?.titles || [];
-                scheduleSave();
-                renderDivarTitles();
-                renderAiStrip();
-            } catch (e) { toast(e.message || 'خطای AI'); }
+                await fn();
+            } finally {
+                state.aiInflight = false;
+                buttons.forEach((b) => { if (b) b.disabled = false; });
+            }
+        }
+
+        $('#pcsGenDivarTitles')?.addEventListener('click', async () => {
+            const btn = $('#pcsGenDivarTitles');
+            await runAiAction(async () => {
+                try {
+                    const data = await aiPost('divar-titles');
+                    if (!state.draft.ai.divar.titles?.length || window.confirm('عنوان‌های قبلی جایگزین شوند؟')) {
+                        state.draft.ai.divar.titles = data.data?.titles || [];
+                    }
+                    scheduleSave();
+                    renderDivarTitles();
+                    renderAiStrip();
+                } catch (e) { toast(e.message || 'خطای AI'); }
+            }, [btn]);
         });
         $('#pcsGenDivarBody')?.addEventListener('click', async () => {
-            try {
-                const style = $('#pcsDivarBodyStyle')?.value || 'formal';
-                const data = await aiPost('divar-body', { style });
-                state.draft.ai.divar.body = data.data?.body || '';
-                $('#pcsDivarBody').value = state.draft.ai.divar.body;
-                scheduleSave();
-            } catch (e) { toast(e.message || 'خطای AI'); }
+            const btn = $('#pcsGenDivarBody');
+            await runAiAction(async () => {
+                try {
+                    const style = $('#pcsDivarBodyStyle')?.value || 'formal';
+                    const data = await aiPost('divar-body', { style });
+                    const body = data.data?.body || '';
+                    if ($('#pcsDivarBody')?.value && !window.confirm('متن فعلی دیوار جایگزین شود؟')) return;
+                    state.draft.ai.divar.body = body;
+                    $('#pcsDivarBody').value = body;
+                    scheduleSave();
+                } catch (e) { toast(e.message || 'خطای AI'); }
+            }, [btn]);
         });
         $('#pcsGenSocial')?.addEventListener('click', async () => {
-            try {
-                const data = await aiPost('social');
-                const d = data.data || {};
-                state.draft.ai.social.captions = d.captions || [];
-                state.draft.ai.social.hashtags = d.hashtags || [];
-                state.draft.ai.social.whatsapp_short = d.whatsapp_short || '';
-                state.draft.ai.social.whatsapp_full = d.whatsapp_full || '';
-                state.draft.ai.social.telegram = d.telegram || '';
-                state.draft.ai.social.ctas = d.ctas || [];
-                syncFormFromDraft();
-                scheduleSave();
-                renderAiStrip();
-            } catch (e) { toast(e.message || 'خطای AI'); }
+            const btn = $('#pcsGenSocial');
+            await runAiAction(async () => {
+                try {
+                    const data = await aiPost('social');
+                    const d = data.data || {};
+                    const hasManual = (state.draft.ai.social.captions || []).some((c) => (c.text || '').trim());
+                    if (hasManual && !window.confirm('متن‌های شبکه‌های اجتماعی جایگزین شوند؟')) return;
+                    state.draft.ai.social.captions = d.captions || [];
+                    state.draft.ai.social.hashtags = d.hashtags || [];
+                    state.draft.ai.social.whatsapp_short = d.whatsapp_short || '';
+                    state.draft.ai.social.whatsapp_full = d.whatsapp_full || '';
+                    state.draft.ai.social.telegram = d.telegram || '';
+                    state.draft.ai.social.ctas = d.ctas || [];
+                    syncFormFromDraft();
+                    scheduleSave();
+                    renderAiStrip();
+                } catch (e) { toast(e.message || 'خطای AI'); }
+            }, [btn]);
         });
         $('#pcsCopyDivarBundle')?.addEventListener('click', () => {
             const idx = state.draft?.ai?.divar?.selected_title_index || 0;
@@ -2421,6 +2744,12 @@
             if (pr) openPreview(pr.getAttribute('data-pcs-preview'));
         });
         $('#pcsDownloadAll')?.addEventListener('click', async () => {
+            if (state.exportInflight) return;
+            state.exportInflight = true;
+            const btn = $('#pcsDownloadAll');
+            if (btn) btn.disabled = true;
+            let okCount = 0;
+            let failCount = 0;
             try {
                 await ensureLibs();
                 await ensurePersianFonts();
@@ -2431,21 +2760,40 @@
                     try {
                         const shot = await rasterizeCanvas(canvas, state.format);
                         const blob = await new Promise((r) => shot.toBlob(r, 'image/png'));
+                        if (!blob) throw new Error('empty blob');
                         zip.file(`${tpl}-${state.format}.png`, blob);
-                    } catch (_) { /* skip */ }
+                        okCount += 1;
+                    } catch (_) {
+                        failCount += 1;
+                    }
                     host.remove();
                 }
+                if (!okCount) {
+                    toast('هیچ پوستری برای ZIP تولید نشد');
+                    return;
+                }
                 const out = await zip.generateAsync({ type: 'blob' });
+                const objUrl = URL.createObjectURL(out);
                 const a = document.createElement('a');
-                a.href = URL.createObjectURL(out);
+                a.href = objUrl;
                 a.download = `property-${cfg.propertyId}-posters.zip`;
                 a.click();
-                toast('فایل ZIP آماده شد');
+                URL.revokeObjectURL(objUrl);
+                toast(failCount ? `${okCount} فایل OK — ${failCount} خطا` : 'فایل ZIP آماده شد');
             } catch (_) {
                 toast('خطا در ساخت ZIP');
+            } finally {
+                state.exportInflight = false;
+                if (btn) btn.disabled = false;
             }
         });
         $('#pcsStoryDownloadAll')?.addEventListener('click', async () => {
+            if (state.exportInflight) return;
+            state.exportInflight = true;
+            const btn = $('#pcsStoryDownloadAll');
+            if (btn) btn.disabled = true;
+            let okCount = 0;
+            let failCount = 0;
             try {
                 await ensureLibs();
                 await ensurePersianFonts();
@@ -2455,34 +2803,46 @@
                 for (const id of order) {
                     const slide = (state.draft?.storyboard?.slides || []).find((s) => s.id === id);
                     if (!slide) continue;
-                    const tpl = slide.type === 'cover' ? 'luxury' : slide.type === 'gallery_price' ? 'gallery' : 'minimal';
-                    const host = createExportHost(buildCanvasHtml(tpl, 'story'), 'story');
+                    const host = createExportHost(buildStoryboardSlideHtml(slide, 'story'), 'story');
                     const canvas = host.querySelector('.pcs-canvas');
                     try {
                         const shot = await rasterizeCanvas(canvas, 'story');
                         const blob = await new Promise((r) => shot.toBlob(r, 'image/png'));
-                        zip.file(`story-${String(++idx).padStart(2, '0')}-${tpl}.png`, blob);
-                    } catch (_) { /* skip */ }
+                        if (!blob) throw new Error('empty blob');
+                        zip.file(`story-${String(++idx).padStart(2, '0')}-${slide.id || slide.type}.png`, blob);
+                        okCount += 1;
+                    } catch (_) {
+                        failCount += 1;
+                    }
                     host.remove();
                 }
-                if (!idx) { toast('اسلایدی برای دانلود نیست'); return; }
+                if (!okCount) {
+                    toast('اسلاید سالم برای ZIP وجود ندارد');
+                    return;
+                }
                 const out = await zip.generateAsync({ type: 'blob' });
+                const objUrl = URL.createObjectURL(out);
                 const a = document.createElement('a');
-                a.href = URL.createObjectURL(out);
+                a.href = objUrl;
                 a.download = `property-${cfg.propertyId}-storyboard.zip`;
                 a.click();
-                toast('استوری‌برد دانلود شد');
+                URL.revokeObjectURL(objUrl);
+                toast(failCount ? `${okCount} اسلاید — ${failCount} خطا` : 'استوری‌برد دانلود شد');
             } catch (_) {
                 toast('خطا در دانلود استوری‌برد');
+            } finally {
+                state.exportInflight = false;
+                if (btn) btn.disabled = false;
             }
         });
         $('#pcsOpenSettings')?.addEventListener('click', openSettingsSheet);
         $('#pcsOpenSettingsHead')?.addEventListener('click', openSettingsSheet);
         $('#pcsFooterSettings')?.addEventListener('click', openSettingsSheet);
         $$('[data-pcs-settings-close]').forEach((el) => el.addEventListener('click', closeSettingsSheet));
-        $('#pcsEditorClose')?.addEventListener('click', closeEditor);
-        $('#pcsEditorBack')?.addEventListener('click', closeEditor);
-        $('#pcsEditorCancel')?.addEventListener('click', closeEditor);
+        $('#pcsEditorClose')?.addEventListener('click', () => closeEditor());
+        $('#pcsEditorBack')?.addEventListener('click', () => closeEditor());
+        $('#pcsEditorCancel')?.addEventListener('click', () => closeEditor());
+        $('#pcsStaleSync')?.addEventListener('click', () => syncDraftWithProperty());
         $('#pcsEditorSave')?.addEventListener('click', () => {
             const tpl = state.editorTemplate;
             if (!tpl || !state.draft) return;

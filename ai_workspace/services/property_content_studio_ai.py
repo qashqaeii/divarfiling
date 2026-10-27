@@ -1,6 +1,7 @@
 """AI Content Service — آگهی دیوار و شبکه‌های اجتماعی."""
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List
 
 from workspace.models import CRMProperty
@@ -12,6 +13,7 @@ from ai_workspace.constants import FEATURE_PROPERTY_CONTENT_STUDIO
 from ai_workspace.context_builders import property_context
 from ai_workspace.services.gateway import GatewayResult, run
 from ai_workspace.services.property_content_studio_payload import (
+    enforce_property_facts,
     normalize_studio_ai_payload,
     validate_studio_ai_payload,
 )
@@ -38,9 +40,21 @@ _TASK_LABELS = {
 }
 
 
-def _studio_context(user, prop: CRMProperty, task: str, extra: Dict[str, Any] | None = None) -> Dict[str, Any]:
-    base = property_context.build(prop, include_address=False)
-    studio = build_studio_property_payload(prop, mask_sensitive=False)
+def _studio_context(
+    user,
+    prop: CRMProperty,
+    task: str,
+    extra: Dict[str, Any] | None = None,
+    *,
+    mask_sensitive: bool = False,
+) -> Dict[str, Any]:
+    base = property_context.build(
+        prop,
+        include_address=False,
+        include_crm_notes=False,
+        mask_sensitive=mask_sensitive,
+    )
+    studio = build_studio_property_payload(prop, mask_sensitive=mask_sensitive)
     ctx = {
         **base,
         'studio': studio,
@@ -49,14 +63,30 @@ def _studio_context(user, prop: CRMProperty, task: str, extra: Dict[str, Any] | 
         'divar_description_max': DIVAR_AD_DESCRIPTION_MAX_CHARS,
         'task_label': _TASK_LABELS.get(task, task),
         'task_schema': _TASK_SCHEMAS.get(task, '{}'),
+        'property_facts': {
+            'has_parking': bool(prop.has_parking),
+            'has_storage': bool(prop.has_storage),
+            'has_elevator': bool(prop.has_elevator),
+            'property_type': prop.property_type or '',
+            'deal_mode': prop.deal_mode or '',
+            'area': prop.area,
+            'rooms': prop.rooms or '',
+        },
     }
     if extra:
         ctx.update(extra)
     return ctx
 
 
-def _run_task(user, prop: CRMProperty, task: str, extra: Dict[str, Any] | None = None) -> GatewayResult:
-    context = _studio_context(user, prop, task, extra)
+def _run_task(
+    user,
+    prop: CRMProperty,
+    task: str,
+    extra: Dict[str, Any] | None = None,
+    *,
+    mask_sensitive: bool = False,
+) -> GatewayResult:
+    context = _studio_context(user, prop, task, extra, mask_sensitive=mask_sensitive)
     return run(
         FEATURE_PROPERTY_CONTENT_STUDIO,
         user,
@@ -66,34 +96,43 @@ def _run_task(user, prop: CRMProperty, task: str, extra: Dict[str, Any] | None =
     )
 
 
-def generate_divar_titles(user, property_id: int) -> Dict[str, Any]:
+def generate_divar_titles(user, property_id: int, *, mask_sensitive: bool = False) -> Dict[str, Any]:
     prop = property_for_user(user, property_id)
     if not prop:
         raise LookupError('property')
-    result = _run_task(user, prop, 'divar_titles')
+    result = _run_task(user, prop, 'divar_titles', mask_sensitive=mask_sensitive)
     data = normalize_studio_ai_payload('divar_titles', result.data, result.text)
+    data = enforce_property_facts(prop, 'divar_titles', data)
     if not validate_studio_ai_payload('divar_titles', data):
         raise ValueError('invalid_ai_response')
     return _result_dict(result, data)
 
 
-def generate_divar_body(user, property_id: int, style: str) -> Dict[str, Any]:
+def generate_divar_body(
+    user,
+    property_id: int,
+    style: str,
+    *,
+    mask_sensitive: bool = False,
+) -> Dict[str, Any]:
     prop = property_for_user(user, property_id)
     if not prop:
         raise LookupError('property')
-    result = _run_task(user, prop, 'divar_body', {'body_style': style})
+    result = _run_task(user, prop, 'divar_body', {'body_style': style}, mask_sensitive=mask_sensitive)
     data = normalize_studio_ai_payload('divar_body', result.data, result.text)
+    data = enforce_property_facts(prop, 'divar_body', data)
     if not validate_studio_ai_payload('divar_body', data):
         raise ValueError('invalid_ai_response')
     return _result_dict(result, data)
 
 
-def generate_social_pack(user, property_id: int) -> Dict[str, Any]:
+def generate_social_pack(user, property_id: int, *, mask_sensitive: bool = False) -> Dict[str, Any]:
     prop = property_for_user(user, property_id)
     if not prop:
         raise LookupError('property')
-    result = _run_task(user, prop, 'social_pack')
+    result = _run_task(user, prop, 'social_pack', mask_sensitive=mask_sensitive)
     data = normalize_studio_ai_payload('social_pack', result.data, result.text)
+    data = enforce_property_facts(prop, 'social_pack', data)
     if not validate_studio_ai_payload('social_pack', data):
         raise ValueError('invalid_ai_response')
     return _result_dict(result, data)

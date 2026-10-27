@@ -104,4 +104,11 @@ EVAL_QUESTIONS: list[tuple[str, str]] = [
     ('لینک برای مشتری چطوری بفرستم', 'share-public-file'),
     ('شماره تماس کجا وارد کنم در فایل شخصی', 'crm-property-owner-contact'),
     ('چطوری لینک برای مشتری بسازیم', 'share-public-file'),
+    ('مچینگ کار نمیکنه', 'crm-matching'),
+    ('چرا پیشنهاد فایل خالیه', 'crm-matching'),
+    ('دستیار پس از تماس اندروید', 'android-post-call-assistant'),
+    ('پنجره شناور بعد تماس نمیاد', 'android-post-call-assistant'),
+    ('تالار گفتگو کجاست', 'community-forum'),
+    ('فایل رو ببر تو زونکن', 'crm-property-folders-cabinets'),
+    ('از استخراج تا لینک مشتری', 'workflow-extract-to-share'),
 ]

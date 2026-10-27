@@ -6,7 +6,7 @@ SITE_URL_DISPLAY = 'divarfiling.ir'
 
 CREATOR_NAME = 'حسین قشقایی'
 CREATOR_PHONE = '09357930033'
-CREATOR_PHONE_DISPLAY = '۰۹۳۵۷۹۳۰۰۳۳'
+CREATOR_PHONE_DISPLAY = 'تماس مستقیم با مدیر'
 CREATOR_PHONE_TEL = '+989357930033'
 
 CREATOR_TELEGRAM = '@hosseinQashqaeii'

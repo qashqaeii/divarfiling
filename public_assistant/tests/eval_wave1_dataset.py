@@ -24,4 +24,7 @@ WAVE1_EVAL_QUESTIONS: list[tuple[str, str]] = [
     # مراحل
     ('مراحل ساخت ملک شخصی', 'crm-property-create-edit'),
     ('از dataset به crm', 'filing-listing-manage'),
+    ('مچینگ خالیه چرا', 'crm-matching'),
+    ('بعد از تماس چیکار کنم گوشی', 'android-post-call-assistant'),
+    ('انجمن مشاوران', 'community-forum'),
 ]

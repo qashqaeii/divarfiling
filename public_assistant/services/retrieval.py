@@ -50,12 +50,38 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         boost += 4.0
     if article_id == 'crm-activities-reminders' and 'یادآوری' in query_norm and 'تماس' in query_norm:
         boost += 2.0
-    if article_id == 'crm-matching' and any(w in query_norm for w in ('تطبیق', 'مناسب', 'پیشنهاد فایل')):
+    if article_id == 'crm-matching' and any(
+        w in query_norm for w in ('تطبیق', 'مناسب', 'پیشنهاد فایل', 'مچینگ', 'مچ')
+    ):
         boost += 3.5
+    if article_id == 'crm-matching' and any(
+        w in query_norm for w in ('خالی', 'نیست', 'نمی', 'کار نمی', 'پیشنهاد نمی')
+    ):
+        boost += 5.0
     if article_id == 'crm-matching' and 'مخاطب' in query_norm and any(
         w in query_norm for w in ('تب', 'پیشنهاد', 'پیشنهادها')
     ):
         boost += 9.0
+    if article_id == 'android-post-call-assistant' and any(
+        w in query_norm for w in ('تماس', 'بعد از تماس', 'پس از تماس', 'post call', 'شناور', 'overlay')
+    ):
+        boost += 6.5
+    if article_id == 'android-post-call-assistant' and 'دستیار' in query_norm and any(
+        w in query_norm for w in ('تماس', 'اندروید', 'گوشی', 'اپ')
+    ):
+        boost += 5.0
+    if article_id == 'community-forum' and any(
+        w in query_norm for w in ('تالار', 'forum', 'گفتگو', 'انجمن')
+    ):
+        boost += 6.0
+    if article_id == 'workflow-extract-to-share' and any(
+        w in query_norm for w in ('استخراج', 'زونکن', 'لینک', 'مشتری')
+    ) and query_norm.count(' ') >= 2:
+        boost += 4.0
+    if article_id == 'crm-property-folders-cabinets' and any(
+        w in query_norm for w in ('زونکن', 'پوشه', 'کمد', 'دسته بندی')
+    ) and any(w in query_norm for w in ('ببر', 'بفرست', 'منتقل', 'مرتب', 'چطور', 'چطوری')):
+        boost += 8.0
     if article_id == 'filing-listing-manage' and 'dataset' in query_norm and 'crm' in query_norm:
         boost += 9.0
     if article_id == 'share-public-file' and 'لینک' in query_norm and any(
@@ -103,6 +129,10 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         boost += 4.0
     if article_id == 'support-common-errors' and any(w in query_norm for w in ('مشکل', 'خطا', 'نمی')):
         boost += 3.0
+    if article_id == 'support-wave1-crm-filing' and 'لینک' in query_norm and any(
+        w in query_norm for w in ('باز', 'نمی', 'کار نمی', 'خطا', 'مشتری')
+    ):
+        boost += 9.0
     if article_id == 'share-public-file' and 'share' in query_norm:
         boost += 5.0
     if article_id == 'academy-public' and 'آموزش' in query_norm:
@@ -203,6 +233,10 @@ def _intent_penalty(query_norm: str, article_id: str) -> float:
         penalty += 3.0
     if article_id == 'intro-crm-filing-extractor' and 'تطبیق' in query_norm:
         penalty += 2.5
+    if article_id == 'crm-matching' and 'لینک' in query_norm and any(
+        w in query_norm for w in ('باز', 'نمی', 'کار نمی', 'share')
+    ):
+        penalty += 7.0
     if article_id == 'crm-contacts' and 'پیگیری' in query_norm:
         penalty += 3.0
     if article_id == 'crm-contacts-manage' and any(
@@ -233,6 +267,15 @@ def _intent_penalty(query_norm: str, article_id: str) -> float:
         'فایل شخصی' in query_norm or ('شخصی' in query_norm and 'فایل' in query_norm)
     ):
         penalty += 5.0
+    if article_id == 'workflow-extract-to-share' and 'لینک' in query_norm and any(
+        w in query_norm for w in ('مشتری', 'بفرست', 'ارسال', 'ساخت', 'share')
+    ):
+        if not any(w in query_norm for w in ('استخراج', 'زونکن', 'دیوار', 'گردش', 'dataset')):
+            penalty += 9.0
+    if article_id == 'workflow-extract-to-share' and any(
+        w in query_norm for w in ('چطور', 'چطوری', 'چگونه')
+    ) and 'لینک' in query_norm and 'استخراج' not in query_norm:
+        penalty += 6.0
     return penalty
 
 

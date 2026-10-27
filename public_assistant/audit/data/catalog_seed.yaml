@@ -540,12 +540,12 @@ features:
     license_notes: ''
     release_status: shipped
     verification_status: code_reviewed
-    knowledge_articles: []
+    knowledge_articles: [android-post-call-assistant]
     help_section_ids: []
     source_refs:
       - divar-mobile-app/android/app/src/main/java/ir/divarfiling/mobile/feature/postcall/
-    last_verified_at: null
-    notes: بدون مقاله دانشنامه عمومی؛ فقط کد اندروید
+    last_verified_at: '2026-10-27'
+    notes: ''
 
   - id: android-extract-tab
     title: استخراج در اپ اندروید
@@ -600,6 +600,25 @@ features:
     source_refs:
       - workspace/urls.py
     last_verified_at: '2026-10-19'
+
+  - id: community-forum
+    title: تالار گفتگو میزکار
+    domain: workspace
+    parent_id: null
+    user_description: گفتگوی real-time کاربران؛ feature flag سرور
+    platforms: [web]
+    web_paths: [/workspace/forum/]
+    operations: [chat, react, search]
+    roles: [advisor]
+    license_notes: بدون نیاز به لایسنس در صورت فعال بودن rollout
+    release_status: shipped
+    verification_status: code_reviewed
+    knowledge_articles: [community-forum]
+    help_section_ids: []
+    source_refs:
+      - community_forum/
+      - django/docs/community_forum.md
+    last_verified_at: '2026-10-27'
 
   - id: public-assistant-widget
     title: دستیار عمومی سایت

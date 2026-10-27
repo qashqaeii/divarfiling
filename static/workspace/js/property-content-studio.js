@@ -189,6 +189,7 @@
         editorTemplate: null,
         saveTimer: null,
         saveSeq: 0,
+        draftDirtyRev: 0,
         saveInflight: false,
         savePending: false,
         saveStatus: 'idle',
@@ -426,7 +427,7 @@
         });
         if (pane === 'preview' || !mob) {
             const prev = $('#pcsEditorPreview');
-            if (prev) whenImagesReady(prev, () => scalePreviewCanvas(prev, state.format, mob ? 0.92 : 1));
+            if (prev) scheduleEditorPreviewScale(prev, state.format);
         }
     }
 
@@ -1175,6 +1176,10 @@
         const fmt = FORMATS[formatKey] || FORMATS.story;
         const isLightbox = wrap.id === 'pcsLightboxPreview' || wrap.classList.contains('pcs-lightbox__preview');
         const isEditorPreview = wrap.id === 'pcsEditorPreview';
+        if (isEditorPreview && !editorPreviewPaneVisible()) {
+            previewScaleAttempts.delete(wrap);
+            return;
+        }
         let containerW = wrap.clientWidth || wrap.getBoundingClientRect().width || 0;
         if (isLightbox) {
             const b = lightboxPreviewBounds(wrap);
@@ -1241,24 +1246,55 @@
         wrap.classList.add('is-ready');
     }
 
-    function whenImagesReady(wrap, cb) {
+    function editorPreviewPaneVisible() {
+        const pane = $('#pcsEditorPreview')?.closest('.pcs-editor__preview-pane');
+        if (!pane) return true;
+        if (!isMobileViewport()) return true;
+        return pane.classList.contains('is-active');
+    }
+
+    function whenImagesReady(wrap, cb, timeoutMs) {
+        const limit = timeoutMs ?? 5000;
+        let settled = false;
+        const done = () => {
+            if (settled) return;
+            settled = true;
+            cb();
+        };
+        const timer = setTimeout(done, limit);
+        const finish = () => {
+            clearTimeout(timer);
+            done();
+        };
         const imgs = wrap ? wrap.querySelectorAll('img') : [];
         if (!imgs.length) {
-            cb();
+            finish();
             return;
         }
         let pending = 0;
         imgs.forEach((img) => {
             if (img.complete) return;
             pending += 1;
-            const finish = () => {
+            const onEnd = () => {
                 pending -= 1;
-                if (pending <= 0) cb();
+                if (pending <= 0) finish();
             };
-            img.addEventListener('load', finish, { once: true });
-            img.addEventListener('error', finish, { once: true });
+            img.addEventListener('load', onEnd, { once: true });
+            img.addEventListener('error', onEnd, { once: true });
         });
-        if (pending === 0) cb();
+        if (pending === 0) finish();
+    }
+
+    function scheduleEditorPreviewScale(wrap, formatKey) {
+        if (!wrap || wrap.id !== 'pcsEditorPreview') return;
+        if (!editorPreviewPaneVisible()) return;
+        const maxH = previewMaxHeight(formatKey, wrap) || 520;
+        wrap.style.overflow = 'hidden';
+        wrap.style.maxHeight = `${maxH}px`;
+        const run = () => scalePreviewCanvas(wrap, formatKey);
+        run();
+        requestAnimationFrame(run);
+        whenImagesReady(wrap, run);
     }
 
     function bindPosterCarousel() {
@@ -1754,7 +1790,12 @@
         el.classList.toggle('is-error', status === 'failed');
     }
 
+    function markDraftDirty() {
+        state.draftDirtyRev += 1;
+    }
+
     function scheduleSave() {
+        markDraftDirty();
         clearTimeout(state.saveTimer);
         state.saveTimer = setTimeout(() => { flushSaveDraft(); }, 800);
     }
@@ -1764,7 +1805,9 @@
             state.savePending = true;
             return;
         }
-        const draftSnapshot = JSON.stringify(collectDraftFromForm() || state.draft);
+        const snapshotRev = state.draftDirtyRev;
+        const draftPayload = collectDraftFromForm() || state.draft;
+        const draftSnapshot = JSON.stringify(draftPayload);
         const seq = ++state.saveSeq;
         state.saveInflight = true;
         setSaveStatus('saving');
@@ -1783,10 +1826,17 @@
                 toast(data.error || 'ذخیره پیش‌نویس ناموفق بود');
                 return;
             }
-            if (data.draft) state.draft = data.draft;
+            const stillCurrent = snapshotRev === state.draftDirtyRev;
+            if (data.draft && stillCurrent) {
+                state.draft = data.draft;
+            }
             if (typeof data.draft_stale === 'boolean') {
                 state.session = state.session || {};
                 state.session.draft_stale = data.draft_stale;
+            }
+            if (typeof data.property_fingerprint === 'string') {
+                state.session = state.session || {};
+                state.session.property_fingerprint = data.property_fingerprint;
             }
             renderStaleBanner();
             setSaveStatus('saved');
@@ -1797,7 +1847,8 @@
             }
         } finally {
             state.saveInflight = false;
-            if (state.savePending) {
+            const needsAnotherSave = state.savePending || snapshotRev !== state.draftDirtyRev;
+            if (needsAnotherSave) {
                 state.savePending = false;
                 flushSaveDraft();
             }
@@ -1895,20 +1946,21 @@
             state.session = state.session || {};
             state.session.draft_stale = !!data.draft_stale;
             state.session.property_fingerprint = data.property_fingerprint;
-            if (state.session.property) {
-                const sessionRes = await fetch(cfg.sessionUrl, { headers: { Accept: 'application/json' } });
-                const sessionData = await sessionRes.json();
-                if (sessionData.ok) {
-                    state.session.property = sessionData.property;
-                    state.session.brand_effective = sessionData.brand_effective;
-                    state.draft.storyboard = sessionData.draft?.storyboard || state.draft.storyboard;
-                }
+            if (data.property) {
+                state.session.property = data.property;
+            }
+            if (data.draft) {
+                state.draft = data.draft;
             }
             renderHeader();
             renderPosters();
             renderStoryboard();
             renderStaleBanner();
-            toast('محتوا با اطلاعات فعلی فایل هماهنگ شد');
+            if (data.needs_manual_review) {
+                toast('استوری‌برد با فایل هماهنگ شد؛ متن‌های AI را دستی بررسی کنید');
+            } else {
+                toast('محتوا با اطلاعات فعلی فایل هماهنگ شد');
+            }
         } catch (_) {
             toast('خطا در هماهنگ‌سازی');
         }
@@ -2278,32 +2330,38 @@
     function refreshEditorPreview(tpl) {
         const activeTpl = tpl || state.editorTemplate;
         if (!activeTpl) return;
-        updateEditorBufferFromForm(activeTpl);
-        const conf = state.editorBuffer ? { ...state.editorBuffer } : null;
-        const prev = $('#pcsEditorPreview');
-        if (!prev || !conf) return;
-        resetEditorPreviewWrap(prev);
-        prev.innerHTML = buildCanvasHtml(activeTpl, state.format, conf);
-        updateEditorLiveMeta(conf, activeTpl);
-        whenImagesReady(prev, () => scalePreviewCanvas(prev, state.format));
-        const controls = editorControlsEl();
-        const cropLbl = controls?.querySelector('#pcsEditCropValue');
-        if (cropLbl) cropLbl.textContent = `${conf.crop_y}%`;
-        const headCount = controls?.querySelector('#pcsEditHeadlineCount');
-        if (headCount) headCount.textContent = `${(controls.querySelector('#pcsEditHeadline')?.value || '').length} کاراکتر`;
-        syncCropPresetActive(conf.crop_y);
-        controls?.querySelectorAll('[data-pcs-edit-range]').forEach((inp) => {
-            const key = inp.getAttribute('data-pcs-edit-range');
-            const lbl = controls.querySelector(`[data-pcs-range-val="${key}"]`);
-            if (!lbl) return;
-            if (key === 'blur') lbl.textContent = `${conf.img_blur}px`;
-            else if (key === 'pip_tilt') lbl.textContent = `${conf.pip_tilt}°`;
-            else if (key === 'pip_crop') lbl.textContent = `${conf.pip_crop_y}%`;
-            else if (key === 'hero_vignette') lbl.textContent = `${conf.hero_vignette}%`;
-            else if (key === 'brightness' || key === 'opacity' || key === 'headline_scale' || key === 'price_scale') {
-                lbl.textContent = `${conf[key === 'headline_scale' ? 'headline_scale' : key === 'price_scale' ? 'price_scale' : key === 'brightness' ? 'img_brightness' : 'img_opacity']}%`;
-            }
-        });
+        let conf = null;
+        try {
+            updateEditorBufferFromForm(activeTpl);
+            conf = state.editorBuffer ? { ...state.editorBuffer } : null;
+            const prev = $('#pcsEditorPreview');
+            if (!prev || !conf) return;
+            resetEditorPreviewWrap(prev);
+            prev.innerHTML = buildCanvasHtml(activeTpl, state.format, conf);
+            updateEditorLiveMeta(conf, activeTpl);
+            scheduleEditorPreviewScale(prev, state.format);
+            const controls = editorControlsEl();
+            const cropLbl = controls?.querySelector('#pcsEditCropValue');
+            if (cropLbl) cropLbl.textContent = `${conf.crop_y}%`;
+            const headCount = controls?.querySelector('#pcsEditHeadlineCount');
+            if (headCount) headCount.textContent = `${(controls.querySelector('#pcsEditHeadline')?.value || '').length} کاراکتر`;
+            syncCropPresetActive(conf.crop_y);
+            controls?.querySelectorAll('[data-pcs-edit-range]').forEach((inp) => {
+                const key = inp.getAttribute('data-pcs-edit-range');
+                const lbl = controls.querySelector(`[data-pcs-range-val="${key}"]`);
+                if (!lbl) return;
+                if (key === 'blur') lbl.textContent = `${conf.img_blur}px`;
+                else if (key === 'pip_tilt') lbl.textContent = `${conf.pip_tilt}°`;
+                else if (key === 'pip_crop') lbl.textContent = `${conf.pip_crop_y}%`;
+                else if (key === 'hero_vignette') lbl.textContent = `${conf.hero_vignette}%`;
+                else if (key === 'brightness' || key === 'opacity' || key === 'headline_scale' || key === 'price_scale') {
+                    lbl.textContent = `${conf[key === 'headline_scale' ? 'headline_scale' : key === 'price_scale' ? 'price_scale' : key === 'brightness' ? 'img_brightness' : 'img_opacity']}%`;
+                }
+            });
+        } catch (err) {
+            console.error('pcs refreshEditorPreview', err);
+            toast('خطا در به‌روزرسانی پیش‌نمایش');
+        }
     }
 
     function resetStudioShellState() {
@@ -2355,6 +2413,18 @@
             if (e.target.matches('[data-pcs-pip-enabled]')) {
                 const controls = editorControlsEl();
                 controls?.querySelector('[data-pcs-pip-panel]')?.classList.toggle('is-open', e.target.checked);
+                if (e.target.checked && propertyImageList().length > 1) {
+                    const buf = state.editorBuffer;
+                    if (buf) {
+                        const primary = buf.primary_image_index || 0;
+                        if (buf.pip_image_index == null || buf.pip_image_index === primary) {
+                            buf.pip_image_index = (primary + 1) % propertyImageList().length;
+                        }
+                        const pipHidden = controls?.querySelector('#pcsEditPipImage');
+                        if (pipHidden) pipHidden.value = String(buf.pip_image_index);
+                    }
+                }
+                if (isMobileViewport()) setEditorMobPane('preview');
                 refreshEditorPreview(state.editorTemplate);
             }
         });
@@ -2577,6 +2647,7 @@
         }
 
         $('#pcsEditor')?.removeAttribute('hidden');
+        $('#pcsLoading')?.setAttribute('hidden', '');
         $('#pcsModal')?.classList.add('pcs-modal--editor');
         setEditorMobPane('preview');
         refreshEditorPreview(tpl);
@@ -2862,7 +2933,8 @@
             const tpl = state.editorTemplate;
             if (!tpl || !state.draft) return;
             if (!window.confirm('تنظیمات این قالب به حالت پیش‌فرض برگردد؟')) return;
-            if (state.draft.posters) delete state.draft.posters[tpl];
+            state.draft.posters = state.draft.posters || {};
+            state.draft.posters[tpl] = null;
             scheduleSave();
             openEditor(tpl);
             toast('به پیش‌فرض برگشت');

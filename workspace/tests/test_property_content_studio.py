@@ -13,7 +13,8 @@ from workspace.models import (
     WorkspaceSettings,
 )
 from workspace.services.property_content_studio.adapter import build_studio_property_payload
-from workspace.services.property_content_studio.draft import save_draft
+from workspace.services.property_content_studio.adapter import build_studio_property_payload
+from workspace.services.property_content_studio.draft import save_draft, sync_draft_with_property
 from workspace.services.property_content_studio.draft_validate import DraftValidationError, validate_and_merge_draft
 from workspace.services.property_content_studio.fingerprint import property_content_fingerprint
 from workspace.services.property_content_studio.quality import build_quality_report
@@ -166,6 +167,75 @@ class PropertyContentStudioAPITests(TestCase):
         ws = WorkspaceSettings.objects.get(user=self.user)
         self.assertEqual(ws.content_studio_defaults.get('brand_name'), 'آژانس تست')
 
+    def test_draft_put_rejects_invalid_json(self):
+        url = reverse('workspace:crm_property_content_studio_draft', args=[self.prop.pk])
+        res = self.client.put(url, data='not-json', content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(res.json()['ok'])
+
+    def test_draft_put_rejects_json_array_body(self):
+        url = reverse('workspace:crm_property_content_studio_draft', args=[self.prop.pk])
+        res = self.client.put(url, data='[]', content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+
+    def test_brand_put_rejects_invalid_json(self):
+        url = reverse('workspace:crm_property_content_studio_brand', args=[self.prop.pk])
+        res = self.client.put(url, data='"text"', content_type='application/json')
+        self.assertEqual(res.status_code, 400)
+
+    def test_draft_brand_override_cleared_via_api(self):
+        url = reverse('workspace:crm_property_content_studio_draft', args=[self.prop.pk])
+        self.client.put(
+            url,
+            data=json.dumps({'draft': {'brand_override': {'brand_name': 'موقت'}}}),
+            content_type='application/json',
+        )
+        res = self.client.put(
+            url,
+            data=json.dumps({'draft': {'brand_override': {}}}),
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, 200)
+        draft = CRMPropertyContentStudioDraft.objects.get(property=self.prop, user=self.user)
+        self.assertEqual(draft.payload.get('brand_override'), {})
+
+    def test_sync_updates_storyboard_price_and_keeps_cta(self):
+        from workspace.services.property_content_studio.storyboard import build_default_storyboard
+
+        prop_payload = build_studio_property_payload(self.prop)
+        storyboard = build_default_storyboard(self.prop, prop_payload)
+        for slide in storyboard['slides']:
+            if slide['id'] == 'contact':
+                slide['cta'] = 'CTA دستی'
+        save_draft(self.user, self.prop, {'storyboard': storyboard})
+        old_price = next(
+            s['price_label'] for s in storyboard['slides'] if s['id'] == 'gallery_price'
+        )
+        self.prop.sale_price = 9_999_999_999
+        self.prop.save()
+        meta = sync_draft_with_property(self.user, self.prop)
+        slides = meta['draft']['storyboard']['slides']
+        gallery = next(s for s in slides if s['id'] == 'gallery_price')
+        contact = next(s for s in slides if s['id'] == 'contact')
+        self.assertNotEqual(gallery['price_label'], old_price)
+        self.assertEqual(contact['cta'], 'CTA دستی')
+        self.assertFalse(meta['needs_manual_review'])
+        self.assertFalse(meta['stale'])
+
+    def test_sync_stays_stale_when_ai_needs_review(self):
+        save_draft(
+            self.user,
+            self.prop,
+            {'ai': {'divar': {'body': 'متن تولید شده'}}},
+        )
+        self.prop.sale_price = 5_555_555_555
+        self.prop.save()
+        meta = sync_draft_with_property(self.user, self.prop)
+        self.assertTrue(meta['needs_manual_review'])
+        self.assertTrue(meta['stale'])
+        draft = CRMPropertyContentStudioDraft.objects.get(property=self.prop, user=self.user)
+        self.assertNotEqual(draft.property_fingerprint, property_content_fingerprint(self.prop))
+
 
 class PropertyContentStudioConfidentialShareTests(TestCase):
     def setUp(self):
@@ -217,6 +287,31 @@ class PropertyContentStudioDraftValidateTests(TestCase):
     def test_rejects_unknown_keys(self):
         with self.assertRaises(DraftValidationError):
             validate_and_merge_draft(None, {'hack_field': True})
+
+    def test_clears_brand_override_when_empty_dict_sent(self):
+        stored = {'brand_override': {'brand_name': 'قدیمی', 'colors': {'primary': '#111111'}}}
+        merged, _ = validate_and_merge_draft(stored, {'brand_override': {}})
+        self.assertEqual(merged['brand_override'], {})
+
+    def test_removes_poster_template_on_null(self):
+        stored = {
+            'posters': {
+                'luxury': {'headline': 'سفارشی', 'pip_enabled': True},
+                'minimal': {'headline': 'بماند'},
+            },
+        }
+        merged, _ = validate_and_merge_draft(stored, {'posters': {'luxury': None}})
+        self.assertNotIn('luxury', merged['posters'])
+        self.assertEqual(merged['posters']['minimal']['headline'], 'بماند')
+
+    def test_poster_reset_replaces_not_shallow_merge(self):
+        stored = {'posters': {'luxury': {'headline': 'قدیم', 'pip_enabled': True}}}
+        merged, _ = validate_and_merge_draft(
+            stored,
+            {'posters': {'luxury': {'headline': 'جدید'}}},
+        )
+        self.assertEqual(merged['posters']['luxury']['headline'], 'جدید')
+        self.assertNotIn('pip_enabled', merged['posters']['luxury'])
 
 
 class PropertyContentStudioQualityTests(TestCase):

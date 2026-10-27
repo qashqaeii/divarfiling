@@ -7,7 +7,12 @@ from typing import Any, Dict, Optional, Tuple
 from workspace.models import CRMProperty, CRMPropertyContentStudioDraft
 from workspace.services.property_content_studio.constants import DRAFT_VERSION
 from workspace.services.property_content_studio.draft_validate import DraftValidationError, validate_and_merge_draft
+from workspace.services.property_content_studio.adapter import build_studio_property_payload
 from workspace.services.property_content_studio.fingerprint import property_content_fingerprint
+from workspace.services.property_content_studio.storyboard import (
+    _draft_has_reviewable_ai,
+    merge_storyboard_with_property,
+)
 
 
 def empty_draft_payload() -> Dict[str, Any]:
@@ -104,10 +109,29 @@ def sync_draft_with_property(user, prop: CRMProperty) -> Dict[str, Any]:
     fp = property_content_fingerprint(prop)
     draft = CRMPropertyContentStudioDraft.objects.filter(property=prop, user=user).first()
     if not draft:
-        return {'stale': False, 'fingerprint': fp}
-    draft.property_fingerprint = fp
-    draft.save(update_fields=['property_fingerprint', 'updated_at'])
-    return {'stale': False, 'fingerprint': fp}
+        return {'stale': False, 'fingerprint': fp, 'needs_manual_review': False}
+
+    property_payload = build_studio_property_payload(prop)
+    payload = _merge_payload(draft.payload)
+    payload['storyboard'] = merge_storyboard_with_property(
+        payload.get('storyboard') or {},
+        property_payload,
+    )
+    needs_manual_review = _draft_has_reviewable_ai(payload)
+    draft.payload = payload
+    update_fields = ['payload', 'updated_at']
+    if not needs_manual_review:
+        draft.property_fingerprint = fp
+        update_fields.append('property_fingerprint')
+    draft.save(update_fields=update_fields)
+    stale = bool(draft.property_fingerprint and draft.property_fingerprint != fp)
+    return {
+        'stale': stale,
+        'fingerprint': fp,
+        'needs_manual_review': needs_manual_review,
+        'draft': payload,
+        'property': property_payload,
+    }
 
 
 def delete_draft(user, prop: CRMProperty) -> None:

@@ -21,11 +21,25 @@ from workspace.services.property_content_studio.session import build_studio_sess
 logger = logging.getLogger(__name__)
 
 
+class InvalidRequestJsonError(ValueError):
+    pass
+
+
 def _parse_json(request) -> dict:
-    try:
-        return json.loads(request.body.decode('utf-8') or '{}')
-    except json.JSONDecodeError:
+    raw = request.body.decode('utf-8') if request.body else ''
+    if not raw.strip():
         return {}
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise InvalidRequestJsonError('بدنهٔ درخواست JSON معتبر نیست')
+    if isinstance(data, list) or not isinstance(data, dict):
+        raise InvalidRequestJsonError('بدنهٔ درخواست باید شیء JSON باشد')
+    return data
+
+
+def _json_error_response(exc: InvalidRequestJsonError):
+    return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
 
 
 def _studio_property_or_404(user, property_id):
@@ -57,10 +71,20 @@ class PropertyContentStudioDraftView(WorkspaceLoginMixin, View):
         prop, share_ctx = _studio_property_or_404(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
-        body = _parse_json(request)
+        try:
+            body = _parse_json(request)
+        except InvalidRequestJsonError as exc:
+            return _json_error_response(exc)
         if body.get('sync_property'):
             meta = sync_draft_with_property(request.user, prop)
-            return JsonResponse({'ok': True, 'draft_stale': meta['stale'], 'property_fingerprint': meta['fingerprint']})
+            return JsonResponse({
+                'ok': True,
+                'draft_stale': meta['stale'],
+                'property_fingerprint': meta['fingerprint'],
+                'needs_manual_review': meta.get('needs_manual_review', False),
+                'draft': meta.get('draft'),
+                'property': meta.get('property'),
+            })
         payload = body.get('draft') or body.get('payload') or body
         if not isinstance(payload, dict):
             return JsonResponse({'ok': False, 'error': 'فرمت پیش‌نویس نامعتبر است'}, status=400)
@@ -93,7 +117,10 @@ class PropertyContentStudioBrandView(WorkspaceLoginMixin, View):
         prop, _ = _studio_property_or_404(request.user, property_id)
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
-        body = _parse_json(request)
+        try:
+            body = _parse_json(request)
+        except InvalidRequestJsonError as exc:
+            return _json_error_response(exc)
         brand = save_user_brand_defaults(request.user, body)
         return JsonResponse({'ok': True, 'brand': brand})
 
@@ -118,7 +145,10 @@ class PropertyContentStudioAIView(WorkspaceLoginMixin, View):
         if not prop:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
 
-        body = _parse_json(request)
+        try:
+            body = _parse_json(request)
+        except InvalidRequestJsonError as exc:
+            return _json_error_response(exc)
         try:
             if action == 'divar-titles':
                 return JsonResponse(

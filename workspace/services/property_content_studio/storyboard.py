@@ -1,7 +1,7 @@
 """Storyboard slide definitions — تطبیق با دادهٔ موجود."""
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 from workspace.models import CRMProperty
 
@@ -52,3 +52,77 @@ def build_default_storyboard(prop: CRMProperty, studio_payload: Dict[str, Any]) 
     })
 
     return {'slides': slides, 'order': [s['id'] for s in slides]}
+
+
+def _draft_has_reviewable_ai(payload: Dict[str, Any]) -> bool:
+    ai = payload.get('ai') or {}
+    divar = ai.get('divar') or {}
+    if _clip_text(divar.get('body')):
+        return True
+    for item in divar.get('titles') or []:
+        if isinstance(item, dict) and _clip_text(item.get('text')):
+            return True
+    social = ai.get('social') or {}
+    for key in ('whatsapp_full', 'whatsapp_short', 'telegram'):
+        if _clip_text(social.get(key)):
+            return True
+    for item in social.get('captions') or []:
+        if isinstance(item, dict) and _clip_text(item.get('text')):
+            return True
+    return False
+
+
+def _clip_text(value: Any) -> str:
+    return str(value or '').strip()
+
+
+def merge_storyboard_with_property(
+    existing: Dict[str, Any],
+    studio_payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    """فیلدهای خودکار استوری‌برد را با ملک هماهنگ می‌کند؛ CTA و سفارشی‌سازی‌های دستی حفظ می‌شوند."""
+    fresh = build_default_storyboard(None, studio_payload)
+    fresh_by_id = {s['id']: s for s in fresh.get('slides') or []}
+    slides_out: List[Dict[str, Any]] = []
+    seen: Set[str] = set()
+
+    for raw in existing.get('slides') or []:
+        if not isinstance(raw, dict):
+            continue
+        sid = str(raw.get('id') or '').strip()
+        if not sid or sid in seen:
+            continue
+        seen.add(sid)
+        slide = dict(raw)
+        ref = fresh_by_id.get(sid)
+        if not ref:
+            slides_out.append(slide)
+            continue
+        if sid == 'cover':
+            slide['title'] = ref.get('title', '')
+            slide['subtitle'] = ref.get('subtitle', '')
+            slide['image_index'] = ref.get('image_index')
+        elif sid == 'specs':
+            slide['lines'] = list(ref.get('lines') or [])
+            slide['image_index'] = ref.get('image_index')
+        elif sid == 'gallery_price':
+            slide['price_label'] = ref.get('price_label', '')
+            slide['image_indices'] = list(ref.get('image_indices') or [])
+        slides_out.append(slide)
+
+    for sid, ref in fresh_by_id.items():
+        if sid not in seen:
+            slides_out.append(dict(ref))
+            seen.add(sid)
+
+    order = [x for x in (existing.get('order') or []) if x in seen]
+    if not order:
+        order = fresh.get('order') or [s['id'] for s in slides_out]
+    else:
+        for sid in fresh.get('order') or []:
+            if sid not in order and sid in seen:
+                order.append(sid)
+
+    by_id = {s['id']: s for s in slides_out}
+    slides_out = [by_id[sid] for sid in order if sid in by_id]
+    return {'slides': slides_out, 'order': order}

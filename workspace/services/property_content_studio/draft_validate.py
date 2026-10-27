@@ -229,19 +229,22 @@ def validate_and_merge_draft(
         if bo is not None and not isinstance(bo, dict):
             raise DraftValidationError('brand_override نامعتبر')
         if isinstance(bo, dict):
-            clean: Dict[str, Any] = {}
-            for k in ('brand_name', 'consultant_name', 'contact_phone', 'instagram', 'logo_url'):
-                if k in bo:
-                    clean[k] = _clip_str(bo.get(k), 200 if k != 'contact_phone' else 20)
-            if 'colors' in bo and isinstance(bo['colors'], dict):
-                clean['colors'] = {
-                    kk: _clip_str(bo['colors'].get(kk), 16)
-                    for kk in ('primary', 'accent', 'text_on_primary')
-                    if kk in bo['colors']
-                }
-            if 'visibility' in bo:
-                clean['visibility'] = _normalize_visibility(bo.get('visibility'))
-            merged['brand_override'] = {**merged.get('brand_override', {}), **clean}
+            if not bo:
+                merged['brand_override'] = {}
+            else:
+                clean: Dict[str, Any] = {}
+                for k in ('brand_name', 'consultant_name', 'contact_phone', 'instagram', 'logo_url'):
+                    if k in bo:
+                        clean[k] = _clip_str(bo.get(k), 200 if k != 'contact_phone' else 20)
+                if 'colors' in bo and isinstance(bo['colors'], dict):
+                    clean['colors'] = {
+                        kk: _clip_str(bo['colors'].get(kk), 16)
+                        for kk in ('primary', 'accent', 'text_on_primary')
+                        if kk in bo['colors']
+                    }
+                if 'visibility' in bo:
+                    clean['visibility'] = _normalize_visibility(bo.get('visibility'))
+                merged['brand_override'] = clean
     if 'posters' in incoming:
         posters_in = incoming.get('posters')
         if not isinstance(posters_in, dict):
@@ -250,7 +253,10 @@ def validate_and_merge_draft(
         for tpl, conf in list(posters_in.items())[:_MAX_POSTER_KEYS]:
             if tpl not in _TEMPLATE_IDS:
                 continue
-            posters[tpl] = {**(posters.get(tpl) or {}), **_normalize_poster_config(conf, tpl)}
+            if conf is None:
+                posters.pop(tpl, None)
+                continue
+            posters[tpl] = _normalize_poster_config(conf, tpl)
         merged['posters'] = posters
     if 'storyboard' in incoming:
         sb_in = incoming.get('storyboard')

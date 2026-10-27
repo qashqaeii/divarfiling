@@ -1,6 +1,6 @@
 {% load static %}
 {% if public_assistant_widget %}
-<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=15">
 <div id="pa-root" class="pa-root" dir="rtl" data-config-url="{% url 'public_assistant:config' %}" data-chat-url="{% url 'public_assistant:chat' %}" data-feedback-url="{% url 'public_assistant:feedback' %}" data-reset-url="{% url 'public_assistant:reset' %}" hidden>
   <button type="button" class="pa-backdrop" id="paBackdrop" aria-label="بستن گفتگو" tabindex="-1"></button>
   <div class="pa-dock" id="paDock">
@@ -76,5 +76,5 @@
     </button>
   </div>
 </div>
-<script src="{% static 'public_assistant/js/widget.js' %}?v=14" defer></script>
+<script src="{% static 'public_assistant/js/widget.js' %}?v=15" defer></script>
 {% endif %}

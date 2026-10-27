@@ -213,6 +213,15 @@ class PlanAdvisorCatalogTests(TestCase):
         self.assertFalse(ctx.is_subscription)
         self.assertTrue(ctx.is_property_listing)
 
+    def test_listing_price_update_not_subscription_anchor(self):
+        q = (
+            'وقتی یک آگهی از دیوار استخراج می‌کنم و بعداً صاحب آگهی قیمت یا مشخصات ملک را '
+            'تغییر می‌دهد، آیا فایلینگ دیوار به‌روزرسانی می‌کند؟'
+        )
+        ctx = analyze_subscription_query(q)
+        self.assertFalse(ctx.is_subscription)
+        self.assertFalse(ctx.wants_comparison)
+
     def test_listing_update_not_plan_compare(self):
         q = (
             'وقتی یک آگهی از دیوار استخراج می‌کنم و بعداً صاحب آگهی قیمت یا مشخصات ملک را '

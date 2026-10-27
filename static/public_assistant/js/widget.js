@@ -23,6 +23,10 @@
     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.6 1.2c0 1.5-2.1 1.8-2.1 3.3V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="17.5" r=".75" fill="currentColor"/></svg>';
   var ICON_LINK_LICENSE =
     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>';
+  var ICON_CLOCK =
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v4.2l2.6 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_ALERT =
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8.5v4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="16.2" r=".85" fill="currentColor"/><path d="M10.3 5.2 4.8 16a1.5 1.5 0 0 0 1.3 2.2h11.8a1.5 1.5 0 0 0 1.3-2.2L13.7 5.2a1.5 1.5 0 0 0-2.6 0z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
 
   function getCookie(name) {
     var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
@@ -568,6 +572,26 @@
     return wrap;
   }
 
+  function buildSystemNoticeHtml(variant, title, description) {
+    var icon = variant === 'limit' ? ICON_CLOCK : ICON_ALERT;
+    return (
+      '<div class="pa-system-notice pa-system-notice--' +
+      variant +
+      '" role="status" aria-live="polite">' +
+      '<div class="pa-system-notice__mark">' +
+      icon +
+      '</div>' +
+      '<div class="pa-system-notice__copy">' +
+      '<span class="pa-system-notice__title">' +
+      escapeHtml(title) +
+      '</span>' +
+      '<span class="pa-system-notice__desc">' +
+      escapeHtml(description) +
+      '</span>' +
+      '</div></div>'
+    );
+  }
+
   function makeActionBtn(label, title, html, onClick) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -582,15 +606,22 @@
   function appendMessage(role, html, options) {
     options = options || {};
     var div = document.createElement('div');
-    var extra = options.variant ? ' pa-msg--' + options.variant : '';
+    var isSystem = options.variant === 'error' || options.variant === 'limit';
+    var extra = isSystem ? ' pa-msg--system pa-msg--system-' + options.variant : '';
+    if (!isSystem && options.variant) {
+      extra += ' pa-msg--' + options.variant;
+    }
     div.className = 'pa-msg pa-msg--' + (role === 'user' ? 'user' : 'bot') + extra;
     var body = document.createElement('div');
     body.className = 'pa-msg__body';
     body.setAttribute('dir', 'auto');
     if (role === 'user') {
       body.innerHTML = '<p>' + escapeHtml(html) + '</p>';
-    } else if (options.variant === 'error' || options.variant === 'limit') {
-      body.innerHTML = '<p>' + (options.rawHtml ? html : escapeHtml(html)) + '</p>';
+    } else if (isSystem) {
+      var sysTitle =
+        options.systemTitle ||
+        (options.variant === 'limit' ? 'کمی مکث کنید' : 'مشکلی پیش آمد');
+      body.innerHTML = buildSystemNoticeHtml(options.variant, sysTitle, html);
     } else {
       body.innerHTML = html;
     }
@@ -640,7 +671,7 @@
     if (role === 'bot' && options.retryText) {
       var retry = document.createElement('button');
       retry.type = 'button';
-      retry.className = 'pa-msg__retry';
+      retry.className = isSystem ? 'pa-system-notice__retry' : 'pa-msg__retry';
       retry.textContent = 'تلاش دوباره';
       retry.addEventListener('click', function () {
         input.value = options.retryText;
@@ -767,15 +798,20 @@
         if (res.status === 429) {
           appendMessage(
             'bot',
-            'تعداد درخواست‌ها زیاد است. لطفاً یک یا دو دقیقه صبر کنید و دوباره امتحان کنید.',
-            { variant: 'limit', retryText: text }
+            'درخواست‌ها زیاد است. یک یا دو دقیقه بعد همان سؤال را دوباره بپرسید.',
+            {
+              variant: 'limit',
+              retryText: text,
+              systemTitle: 'کمی مکث کنید',
+            }
           );
           return;
         }
         if (!res.body.ok) {
-          appendMessage('bot', res.body.error || 'خطا در پاسخ‌دهی.', {
+          appendMessage('bot', res.body.error || 'پاسخی دریافت نشد. دوباره تلاش کنید.', {
             variant: 'error',
             retryText: text,
+            systemTitle: 'خطا در پاسخ',
           });
           return;
         }
@@ -790,9 +826,10 @@
         hideTyping();
         setSending(false);
         lastFailedMessage = text;
-        appendMessage('bot', 'اتصال برقرار نشد. اتصال اینترنت را بررسی کنید.', {
+        appendMessage('bot', 'اتصال برقرار نشد. اینترنت را بررسی کنید و دوباره بفرستید.', {
           variant: 'error',
           retryText: text,
+          systemTitle: 'اتصال قطع شد',
         });
       });
   }

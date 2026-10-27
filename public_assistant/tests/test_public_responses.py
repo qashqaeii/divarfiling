@@ -125,6 +125,14 @@ class PublicResponsePolicyTest(TestCase):
     def test_internal_snake_case_in_backticks_still_blocked(self):
         self.assertTrue(contains_internal_leak('نیاز به `has_active_bot_license` دارد'))
 
+    def test_sanitize_strips_unique_together_jargon(self):
+        from public_assistant.services.public_copy import sanitize_public_knowledge_text
+
+        raw = 'یکتا است (`unique_together dataset+token`).'
+        cleaned = sanitize_public_knowledge_text(raw)
+        self.assertNotIn('unique_together', cleaned.lower())
+        self.assertFalse(contains_internal_leak(cleaned))
+
     def test_polish_keeps_answer_with_workspace_paths(self):
         raw = (
             '**ثبت مخاطب**\n\n'

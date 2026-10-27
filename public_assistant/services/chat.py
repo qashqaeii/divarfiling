@@ -23,6 +23,7 @@ from public_assistant.services.public_copy import (
     finalize_public_answer,
     format_public_fallback,
     polish_public_answer,
+    sanitize_public_knowledge_text,
     strip_unsolicited_subscription_pitch,
 )
 from public_assistant.services.public_links import LINK_STYLE_PROMPT
@@ -36,7 +37,11 @@ from public_assistant.services.plan_answer_guard import (
     reconcile_subscription_answer,
     strip_unverified_subscription_prices,
 )
-from public_assistant.services.plan_intent import analyze_subscription_query, is_independent_user_turn
+from public_assistant.services.plan_intent import (
+    analyze_subscription_query,
+    is_independent_user_turn,
+    is_product_operations_topic,
+)
 from public_assistant.services.public_plans import load_public_plan_catalog
 from public_assistant.services.security import (
     filter_sources,
@@ -176,7 +181,7 @@ def _format_context(chunks: list[RetrievedChunk]) -> str:
             f'بخش: {ch.heading or "—"}\n'
             f'خلاصه: {summary or "—"}\n'
             f'دسترسی/اشتراک: {_public_subscription_note(ch.subscription_note)}\n'
-            f'متن:\n{ch.body}\n'
+            f'متن:\n{sanitize_public_knowledge_text(ch.body or "")}\n'
             + (f'{link_block}\n' if link_block else '')
         )
     return '\n---\n'.join(parts)
@@ -308,7 +313,8 @@ def answer_question(
 
     if not text:
         status = PublicAssistantUsageLog.STATUS_FALLBACK
-        if plan_catalog and sub_ctx.is_subscription:
+        product_ops = is_product_operations_topic(normalize_persian(user_text))
+        if plan_catalog and sub_ctx.is_subscription and not product_ops:
             text = compose_subscription_answer(sub_ctx, plan_catalog)
         if not text:
             text = _fallback_from_chunks(chunks)
@@ -337,7 +343,10 @@ def answer_question(
         role=PublicChatMessage.ROLE_USER,
         content=user_text,
     )
-    text = finalize_public_answer(text or '')
+    if not sub_ctx.is_subscription:
+        text = strip_unsolicited_subscription_pitch(text or '')
+    text = sanitize_public_knowledge_text(text or '')
+    text = finalize_public_answer(text)
 
     PublicChatMessage.objects.create(
         session=session,

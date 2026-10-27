@@ -265,7 +265,7 @@ def _has_subscription_anchor(norm: str) -> bool:
         return True
     if 'اشتراک' in norm and 'فایلینگ' in norm:
         return True
-    if 'قیمت' in norm and any(w in norm for w in ('اشتراک', 'لایسنس', 'پلن', 'ربات', 'استخراج')):
+    if 'قیمت' in norm and any(w in norm for w in ('اشتراک', 'لایسنس', 'پلن', 'ربات')):
         return True
     if 'خرید' in norm and any(w in norm for w in ('اشتراک', 'لایسنس', 'پلن', 'ربات')):
         return True
@@ -280,6 +280,28 @@ def _has_subscription_anchor(norm: str) -> bool:
         if not is_product_operations_topic(norm):
             return True
     return False
+
+
+def _is_listing_or_property_price_context(norm: str) -> bool:
+    """قیمت/مشخصات آگهی یا ملک — نه قیمت اشتراک."""
+    if not any(w in norm for w in ('قیمت', 'مبلغ', 'بودجه')):
+        return False
+    return any(
+        w in norm
+        for w in (
+            'آگهی',
+            'ملک',
+            'مشخصات',
+            'دیوار',
+            'فایل',
+            'استخراج',
+            'به روز',
+            'به‌روز',
+            'ویرایش',
+            'تغییر',
+            'صاحب',
+        )
+    )
 
 
 def is_product_operations_topic(norm: str) -> bool:
@@ -491,9 +513,14 @@ def analyze_subscription_query(
     wants_comparison = any(
         w in norm
         for w in ('بهتر', 'بهتره', 'به صرفه', 'به‌صرفه', 'مقایسه', 'فرق', 'تفاوت')
-    ) or (' یا ' in f' {norm} ' and has_subscription_anchor)
-    if wants_comparison and is_property and not has_subscription_anchor:
-        wants_comparison = False
+    ) or (
+        ' یا ' in f' {norm} '
+        and has_subscription_anchor
+        and not _is_listing_or_property_price_context(norm)
+    )
+    if wants_comparison and (is_property or _is_listing_or_property_price_context(norm)):
+        if not any(w in norm for w in ('پلن', 'لایسنس', 'اشتراک', 'سه‌ماهه', 'سالانه', 'ماهانه')):
+            wants_comparison = False
     wants_recommendation = any(
         w in norm for w in ('بخرم', 'مناسب', 'کدوم', 'کدام', 'انتخاب', 'بهتره', 'بهتر است')
     )

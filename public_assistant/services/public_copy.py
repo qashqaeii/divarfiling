@@ -13,6 +13,8 @@ _INTERNAL_LEAK_RE = re.compile(
     r'FEATURE_DAILY_LIMITS|AI_LICENSED_UNLIMITED|'
     r'has_active_bot_license|agency_rbac_v2|'
     r'LicensePlan|PaymentSettings|'
+    r'unique_together|'
+    r'\bForeignKey\b|\bManyToMany\b|'
     r'feature\s*flag|'
     r'\b[a-z_]+/[a-z_]+\.py\b|'
     r'\bmodels\.py\b|'
@@ -83,12 +85,31 @@ def _strip_citations(text: str) -> str:
     return text.strip()
 
 
+def sanitize_public_knowledge_text(text: str) -> str:
+    """زبان کاربر — بدون اصطلاحات پیاده‌سازی دیتابیس."""
+    if not text:
+        return text
+    out = text
+    replacements = (
+        (re.compile(r'`unique_together[^`]*`', re.I), 'شناسه یکتا همان آگهی در یک مجموعه فایل'),
+        (re.compile(r'unique_together[^\n)\]]*', re.I), ''),
+        (re.compile(r'\bper[- ]dataset\b', re.I), 'در هر مجموعه فایل'),
+        (re.compile(r'\bper[- ]user\b', re.I), 'برای هر کاربر'),
+        (re.compile(r'\bdataset\+token\b', re.I), 'مجموعه فایل و شناسه آگهی'),
+    )
+    for pat, repl in replacements:
+        out = pat.sub(repl, out)
+    out = re.sub(r'\(\s*\)', '', out)
+    out = re.sub(r'\n{3,}', '\n\n', out)
+    return out.strip()
+
+
 def format_public_fallback(chunks: list[RetrievedChunk]) -> str:
     if not chunks:
         return _INSUFFICIENT_INFO
     parts: list[str] = []
     for ch in chunks[:3]:
-        body = (ch.body or '').strip()
+        body = sanitize_public_knowledge_text((ch.body or '').strip())
         if not body or contains_internal_leak(body):
             continue
         heading = f' — {ch.heading}' if ch.heading else ''
@@ -103,7 +124,7 @@ def format_public_fallback(chunks: list[RetrievedChunk]) -> str:
 
 
 def polish_public_answer(text: str, *, chunks: list[RetrievedChunk] | None = None) -> str:
-    cleaned = _strip_citations(text)
+    cleaned = sanitize_public_knowledge_text(_strip_citations(text))
     if not cleaned:
         return _INSUFFICIENT_INFO if not chunks else format_public_fallback(chunks)
     if contains_internal_leak(cleaned):
@@ -122,7 +143,15 @@ def finalize_public_answer(text: str) -> str:
 _SUBSCRIPTION_BUY_URL_RE = re.compile(r'/products/divar-extraction-bot/buy/', re.I)
 _SUBSCRIPTION_PLAN_LINE_RE = re.compile(
     r'پلن\s+\*\*|خرید اشتراک|لایسنس\s+یک|برای کار\s+\*\*تک‌نفره\*\*|تخفیف حجمی آژانس|'
-    r'مقایسه\s+\*\*سه‌ماهه\*\*|۳×\s*ماهانه',
+    r'مقایسه\s+\*\*سه‌ماهه\*\*|۳×\s*ماهانه|پلن\s+آزمایشی|اشتراک\s+ماهانه',
+    re.I,
+)
+_PLAN_PRICE_SNIPPET_RE = re.compile(
+    r'۹۹۰٬۰۰۰|۲٬۵۰۰٬۰۰۰|۲٬۹۷۰٬۰۰۰|۸٬۰۰۰٬۰۰۰|۴۷۰٬۰۰۰|۲۵۰٬۰۰۰',
+)
+_PLAN_PITCH_PARAGRAPH_RE = re.compile(
+    r'(divar-extraction-bot|تک‌نفره|سه‌ماهه\s+شخصی|یک‌ماهه\s+شخصی|'
+    r'خرید\s+اشتراک|مقایسه\s+\*\*|۳×\s*ماهانه|پلن\s+\*\*)',
     re.I,
 )
 
@@ -131,20 +160,27 @@ def strip_unsolicited_subscription_pitch(text: str) -> str:
     """حذف تبلیغ پلن از پاسخ سؤالات عملیاتی محصول."""
     if not text:
         return text
-    if _SUBSCRIPTION_BUY_URL_RE.search(text):
+    paragraphs = re.split(r'\n\s*\n', text.strip())
+    kept: list[str] = []
+    for para in paragraphs:
+        if _SUBSCRIPTION_BUY_URL_RE.search(para):
+            continue
+        if _PLAN_PITCH_PARAGRAPH_RE.search(para) and (
+            _PLAN_PRICE_SNIPPET_RE.search(para) or 'تومان' in para
+        ):
+            continue
         lines = []
-        for line in text.splitlines():
+        for line in para.splitlines():
             if _SUBSCRIPTION_BUY_URL_RE.search(line):
                 continue
             if _SUBSCRIPTION_PLAN_LINE_RE.search(line) and 'تومان' in line:
                 continue
             if 'برای کار **تک‌نفره**' in line or 'برای کار تک‌نفره' in line:
                 continue
+            if _PLAN_PRICE_SNIPPET_RE.search(line) and _SUBSCRIPTION_PLAN_LINE_RE.search(line):
+                continue
             lines.append(line)
-        text = '\n'.join(lines)
-    elif _SUBSCRIPTION_PLAN_LINE_RE.search(text) and any(
-        c in text for c in ('تومان', '٬۰۰۰', ',000')
-    ):
-        lines = [ln for ln in text.splitlines() if not _SUBSCRIPTION_PLAN_LINE_RE.search(ln)]
-        text = '\n'.join(lines)
-    return text.strip()
+        block = '\n'.join(lines).strip()
+        if block:
+            kept.append(block)
+    return '\n\n'.join(kept).strip()

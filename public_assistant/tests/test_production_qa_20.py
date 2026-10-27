@@ -169,6 +169,23 @@ class ProductionAnswerRegressionTest(TestCase):
                 self.assertNotIn(leak, ans, msg=f'{leak} in {msg[:40]}')
 
     @patch('public_assistant.services.chat.llm.complete', return_value=('', 'mock', 'mock', 1, 0, 0))
+    def test_fallback_listing_price_update_uses_sync_article(self, _mock):
+        session = PublicChatSession.objects.create(ip_hash='prod-fb-sync')
+        q = (
+            'وقتی یک آگهی از دیوار استخراج می‌کنم و بعداً صاحب آگهی قیمت یا مشخصات را '
+            'تغییر می‌دهد، آیا فایلینگ دیوار به‌روزرسانی می‌کند؟'
+        )
+        out = answer_question(session=session, message=q)
+        self.assertTrue(out['ok'])
+        ans = out['answer']
+        self.assertNotIn('divar-extraction-bot/buy', ans)
+        self.assertNotIn('unique_together', ans.lower())
+        self.assertTrue(
+            any(w in ans for w in ('استخراج', 'همگام', 'به‌روز', 'به روز', 'مجموعه فایل')),
+            msg=ans[:300],
+        )
+
+    @patch('public_assistant.services.chat.llm.complete', return_value=('', 'mock', 'mock', 1, 0, 0))
     def test_fallback_budget_question_uses_matching_not_plan(self, _mock):
         session = PublicChatSession.objects.create(ip_hash='prod-fb')
         q = (

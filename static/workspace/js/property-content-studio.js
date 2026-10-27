@@ -766,16 +766,16 @@
     }
 
     function specChipRow(items, primaryColor, variant) {
-        const list = (items || []).filter(Boolean).slice(0, 4);
+        const list = (items || []).filter(Boolean).slice(0, 3);
         if (!list.length) return '';
         const dark = variant === 'dark';
-        return `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+        return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
             ${list.map((t) => `
-            <span style="${pcsTextStyle(`display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-size:21px;font-weight:700;${
+            <span style="${pcsTextStyle(`display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;font-size:19px;font-weight:700;max-width:100%;${
                 dark
-                    ? `color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);box-shadow:0 4px 14px rgba(0,0,0,.2);`
-                    : `color:${primaryColor};background:${primaryRgba(primaryColor, 0.1)};border:1px solid ${primaryRgba(primaryColor, 0.22)};`
-            }`)}">${pcsSvg(chipIconFor(t), 18, dark ? '#f8fafc' : primaryColor)}<span>${esc(t)}</span></span>`).join('')}
+                    ? `color:#f8fafc;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);`
+                    : `color:${primaryColor};background:${primaryRgba(primaryColor, 0.08)};border:1px solid ${primaryRgba(primaryColor, 0.18)};`
+            }`)}">${pcsSvg(chipIconFor(t), 17, dark ? '#f1f5f9' : primaryColor)}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">${esc(t)}</span></span>`).join('')}
         </div>`;
     }
 
@@ -826,21 +826,53 @@
         </div>`;
     }
 
-    function priceHighlightHtml(price, color, variant, conf) {
+    function priceHighlightHtml(price, color, variant, conf, opts) {
         if (!price) return '';
+        const o = opts || {};
         const dark = variant === 'dark';
+        const campaign = variant === 'campaign';
         const c = conf || {};
-        const px = posterFontSize(c, dark ? 40 : 46, 'price');
-        if (dark) {
-            return `<div style="margin-top:20px;display:inline-flex;align-items:center;gap:14px;padding:16px 28px;border-radius:18px;background:linear-gradient(135deg,${primaryRgba(color, 0.42)},rgba(0,0,0,.5));border:1px solid ${primaryRgba(color, 0.55)};box-shadow:0 14px 36px rgba(0,0,0,.45);">
-                ${pcsSvg('tag', 26, '#f5e6a8')}
-                <span style="${pcsTextStyle(`font-size:${px}px;font-weight:800;color:#fff;`, c)}">${esc(price)}</span>
+        const basePx = o.basePx || (campaign ? 52 : dark ? 44 : 42);
+        const px = posterFontSize(c, basePx, 'price');
+        if (campaign) {
+            return `<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;border-radius:20px;background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);border:2px solid ${primaryRgba(color, 0.28)};box-shadow:0 18px 44px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.5) inset;">
+                <span style="${pcsTextStyle('font-size:20px;font-weight:800;color:#64748b;')}">قیمت</span>
+                <span style="${pcsTextStyle(`font-size:${px}px;font-weight:900;color:${color};letter-spacing:-0.02em;`)}">${esc(price)}</span>
             </div>`;
         }
-        return `<div style="display:inline-flex;align-items:center;gap:12px;margin-bottom:12px;">
-            ${pcsSvg('tag', 28, color)}
-            <span style="${pcsTextStyle(`font-size:${px}px;font-weight:800;color:${color};`, c)}">${esc(price)}</span>
+        if (dark) {
+            return `<div style="margin-top:16px;display:inline-flex;align-items:center;gap:12px;padding:14px 24px;border-radius:16px;background:linear-gradient(135deg,${primaryRgba(color, 0.92)},${primaryRgba(color, 0.65)});border:1px solid rgba(255,255,255,.28);box-shadow:0 16px 40px ${primaryRgba(color, 0.45)};">
+                ${pcsSvg('tag', 24, '#fff')}
+                <span style="${pcsTextStyle(`font-size:${px}px;font-weight:900;color:#fff;`, c)}">${esc(price)}</span>
+            </div>`;
+        }
+        return `<div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:10px;padding:12px 18px;border-radius:14px;background:${primaryRgba(color, 0.08)};border:1px solid ${primaryRgba(color, 0.16)};">
+            ${pcsSvg('tag', 24, color)}
+            <span style="${pcsTextStyle(`font-size:${px}px;font-weight:900;color:${color};`, c)}">${esc(price)}</span>
         </div>`;
+    }
+
+    function posterFormatLayout(formatKey) {
+        const key = formatKey || 'story';
+        const isSquare = key === 'square';
+        const isPost = key === 'post';
+        return {
+            key,
+            isSquare,
+            isPost,
+            isStory: key === 'story',
+            pad: isSquare ? 26 : isPost ? 32 : 40,
+            luxuryHeroCut: isSquare ? '32%' : isPost ? '28%' : '22%',
+            luxuryCardPad: isSquare ? 22 : isPost ? 26 : 32,
+            minimalImgH: isSquare ? '54%' : isPost ? '50%' : '46%',
+            galleryMediaH: isSquare ? '56%' : isPost ? '53%' : '50%',
+            boldHeroH: Math.round((FORMATS[key] || FORMATS.story).h * (isSquare ? 0.5 : isPost ? 0.46 : 0.42)),
+            hlLuxury: isSquare ? 42 : isPost ? 48 : 54,
+            hlMinimal: isSquare ? 34 : isPost ? 38 : 44,
+            hlGallery: isSquare ? 32 : isPost ? 36 : 40,
+            hlBold: isSquare ? 44 : isPost ? 48 : 54,
+            priceBold: isSquare ? 42 : isPost ? 46 : 52,
+        };
     }
 
     function editorFontPicker(selected) {
@@ -1179,74 +1211,69 @@
             ? opts.specLines
             : (chips.length ? chips : [p.property_type, p.area_label, p.rooms_label].filter(Boolean));
         const showPromoBadge = opts.showPromoBadge !== false;
+        const layout = posterFormatLayout(formatKey);
+        const pad = layout.pad;
         let inner = '';
         if (templateId === 'luxury') {
             inner = `
-                <div style="position:absolute;inset:0;background:#030305;overflow:hidden;">
-                    <div style="position:absolute;inset:-8% 0 22% 0;overflow:hidden;">
-                        ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;transform:scale(1.1);`, conf) : '<div style="width:100%;height:100%;background:linear-gradient(160deg,#1e293b,#0f172a);"></div>'}
-                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.6) 0%,transparent 26%,transparent 46%,rgba(0,0,0,.9) 100%);"></div>
-                        <div style="position:absolute;inset:0;background:radial-gradient(ellipse 90% 70% at 50% 32%, transparent 32%, rgba(0,0,0,.55) 100%);"></div>
-                        <div style="position:absolute;inset:0;background:radial-gradient(circle at 88% 10%, ${primaryRgba(primaryColor, 0.5)} 0%, transparent 42%);opacity:.9;"></div>
+                <div style="position:absolute;inset:0;background:linear-gradient(180deg,#0c0c10 0%,#14141c 55%,#0a0a0e 100%);overflow:hidden;">
+                    <div style="position:absolute;inset:-4% 0 ${layout.luxuryHeroCut} 0;overflow:hidden;">
+                        ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;transform:scale(1.06);`, conf) : '<div style="width:100%;height:100%;background:linear-gradient(160deg,#1e293b,#0f172a);"></div>'}
+                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,10,18,.42) 0%,transparent 22%,transparent 58%,rgba(8,10,18,.55) 100%);"></div>
+                        <div style="position:absolute;inset:0;background:radial-gradient(ellipse 95% 80% at 50% 18%, transparent 40%, rgba(0,0,0,.32) 100%);opacity:.85;"></div>
+                        <div style="position:absolute;inset:0;background:radial-gradient(circle at 92% 8%, ${primaryRgba(primaryColor, 0.35)} 0%, transparent 38%);opacity:.75;"></div>
                         ${posterHeroWarmth(conf)}
                         ${posterHeroVignetteExtra(conf)}
                         ${posterPipInset(conf, primaryColor, accentInk, 'luxury_hero')}
                     </div>
                     ${posterPipInset(conf, primaryColor, accentInk, 'luxury_overlay')}
-                    ${posterBokehDots(primaryColor)}
+                    <div style="position:absolute;width:320px;height:320px;border-radius:50%;top:8%;right:-12%;background:radial-gradient(circle,${primaryRgba(primaryColor, 0.2)} 0%,transparent 70%);pointer-events:none;z-index:2;"></div>
                     ${posterShineOverlay()}
-                    ${posterGrainOverlay()}
-                    ${brandLogoBlock(b, 76)}
-                    <div style="position:absolute;inset:26px;border:1px solid rgba(255,255,255,.22);border-radius:14px;pointer-events:none;z-index:3;"></div>
-                    <div style="position:absolute;inset:34px;border:1px solid rgba(212,175,55,.32);border-radius:10px;pointer-events:none;z-index:3;"></div>
-                    <div style="position:absolute;top:48px;left:48px;z-index:6;display:flex;align-items:center;gap:12px;">
+                    ${brandLogoBlock(b, layout.isSquare ? 64 : 72)}
+                    <div style="position:absolute;inset:${pad}px;border:1px solid rgba(255,255,255,.14);border-radius:18px;pointer-events:none;z-index:3;"></div>
+                    <div style="position:absolute;top:${pad + 8}px;left:${pad + 8}px;z-index:7;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                         ${dealBadgeHtml(dealLabel, primaryColor, 'dark')}
-                        <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.35);">${pcsSvg('gem', 18, '#f5e6a8')}</span>
+                        <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:rgba(212,175,55,.14);border:1px solid rgba(212,175,55,.32);">${pcsSvg('gem', 17, '#f5e6a8')}</span>
                     </div>
-                    <div style="position:absolute;left:48px;right:48px;bottom:140px;z-index:6;">
-                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-                            ${pcsSvg('building', 26, '#f5e6a8')}
-                            <div style="width:64px;height:4px;border-radius:4px;background:linear-gradient(90deg,#d4af37,#f5e6a8,#d4af37);"></div>
-                            <div style="width:7px;height:7px;border-radius:50%;background:${primaryColor};box-shadow:0 0 14px ${primaryRgba(primaryColor, 0.85)};"></div>
+                    <div style="position:absolute;left:${pad}px;right:${pad}px;bottom:${pad}px;z-index:8;padding:${layout.luxuryCardPad}px;border-radius:22px;background:linear-gradient(165deg,rgba(15,18,28,.88) 0%,rgba(8,10,16,.92) 100%);border:1px solid rgba(255,255,255,.16);box-shadow:0 28px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06) inset;">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                            <div style="width:52px;height:3px;border-radius:4px;background:linear-gradient(90deg,#d4af37,#f5e6a8);"></div>
+                            <span style="${pcsTextStyle('font-size:17px;font-weight:800;color:rgba(245,230,168,.92);letter-spacing:.06em;')}">LUXURY LISTING</span>
                         </div>
-                        <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, 54, 'headline')}px;font-weight:800;line-height:1.12;margin-bottom:12px;color:#fff;text-shadow:0 6px 32px rgba(0,0,0,.6);`, conf)}">${esc(headline)}</div>
+                        <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, layout.hlLuxury, 'headline')}px;font-weight:900;line-height:1.14;margin-bottom:10px;color:#fff;`, conf)}">${esc(headline)}</div>
+                        ${priceHighlightHtml(price, primaryColor, 'dark', conf)}
                         ${statTilesHtml(p, locLine, primaryColor, 'dark')}
                         ${specChipRow(specItems, primaryColor, 'dark')}
-                        ${priceHighlightHtml(price, primaryColor, 'dark', conf)}
+                        ${brandName ? `<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);">${brandFooterHtml(brandName, phone, 'dark')}</div>` : ''}
                     </div>
-                    ${brandName ? `<div style="position:absolute;bottom:0;left:0;right:0;z-index:6;padding:24px 48px 40px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.94));">${brandFooterHtml(brandName, phone, 'dark')}</div>` : ''}
                 </div>`;
         } else if (templateId === 'minimal') {
-            const imgH = fmt.h > 1500 ? '46%' : '42%';
             inner = `
-                <div style="height:100%;position:relative;overflow:hidden;background:linear-gradient(145deg,#f8fafc 0%,#eef2f7 42%,${primaryRgba(primaryColor, 0.14)} 100%);box-sizing:border-box;padding:40px;">
-                    <div style="position:absolute;width:400px;height:400px;border-radius:50%;top:-110px;left:-70px;background:${primaryRgba(primaryColor, 0.16)};"></div>
-                    <div style="position:absolute;width:260px;height:260px;border-radius:50%;bottom:70px;right:-50px;background:${primaryRgba(primaryColor, 0.11)};"></div>
-                    <div style="position:relative;z-index:1;height:100%;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 32px 80px rgba(15,23,42,.12),0 0 0 1px rgba(15,23,42,.05);display:flex;flex-direction:column;">
-                        <div style="position:relative;height:${imgH};overflow:hidden;">
+                <div style="height:100%;position:relative;overflow:hidden;background:linear-gradient(160deg,#f1f5f9 0%,#eef2f7 45%,${primaryRgba(primaryColor, 0.1)} 100%);box-sizing:border-box;padding:${pad}px;">
+                    <div style="position:absolute;width:360px;height:360px;border-radius:50%;top:-90px;right:-80px;background:${primaryRgba(primaryColor, 0.12)};"></div>
+                    <div style="position:relative;z-index:1;height:100%;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 24px 64px rgba(15,23,42,.1),0 0 0 1px rgba(15,23,42,.06);display:flex;flex-direction:column;">
+                        <div style="position:relative;height:${layout.minimalImgH};overflow:hidden;background:#e2e8f0;">
                             ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;`, conf) : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);"></div>`}
-                            <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(15,23,42,.28) 100%);"></div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 58%,rgba(15,23,42,.22) 100%);"></div>
                             ${posterHeroWarmth(conf)}
                             ${posterHeroVignetteExtra(conf)}
                             ${posterPipInset(conf, primaryColor, accentInk, 'minimal_hero')}
-                            ${posterShineOverlay()}
-                            <div style="position:absolute;top:24px;right:24px;z-index:2;">${dealBadgeHtml(dealLabel, accentInk, 'light')}</div>
-                            ${locLine ? `<div style="position:absolute;bottom:20px;right:24px;left:24px;z-index:2;display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,.92);border:1px solid #e2e8f0;box-shadow:0 8px 22px rgba(15,23,42,.12);">
-                                ${pcsSvg('location', 20, accentInk)}
-                                <span style="${pcsTextStyle(`font-size:22px;font-weight:600;color:#334155;`)}">${esc(locLine)}</span>
+                            <div style="position:absolute;top:20px;right:20px;z-index:2;">${dealBadgeHtml(dealLabel, accentInk, 'light')}</div>
+                            ${locLine ? `<div style="position:absolute;bottom:18px;right:20px;left:20px;z-index:2;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.94);border:1px solid #e8edf3;box-shadow:0 10px 26px rgba(15,23,42,.1);">
+                                ${pcsSvg('location', 19, accentInk)}
+                                <span style="${pcsTextStyle(`font-size:20px;font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`)}">${esc(locLine)}</span>
                             </div>` : ''}
                         </div>
-                        <div style="padding:36px 40px 40px;flex:1;display:flex;flex-direction:column;border-top:4px solid ${accentInk};background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);">
-                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                                ${pcsSvg(chipIconFor(p.property_type || 'ملک'), 22, accentInk)}
-                                <span style="${pcsTextStyle('font-size:20px;font-weight:700;color:#64748b;')}">${esc(p.property_type || 'ملک')}</span>
+                        <div style="padding:${layout.isSquare ? 22 : 28}px ${layout.isSquare ? 22 : 32}px ${layout.isSquare ? 24 : 32}px;flex:1;display:flex;flex-direction:column;background:#fff;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                                <span style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:${primaryRgba(accentInk, 0.08)};${pcsTextStyle(`font-size:18px;font-weight:800;color:${accentInk};`)}">${pcsSvg(chipIconFor(p.property_type || 'ملک'), 18, accentInk)}<span>${esc(p.property_type || 'ملک')}</span></span>
                             </div>
-                            <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, 42, 'headline')}px;font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:8px;`, conf)}">${esc(headline)}</div>
+                            <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, layout.hlMinimal, 'headline')}px;font-weight:900;color:#0f172a;line-height:1.18;margin-bottom:6px;`, conf)}">${esc(headline)}</div>
                             ${priceHighlightHtml(price, accentInk, 'light', conf)}
                             ${statTilesHtml(p, '', accentInk, 'light')}
                             ${specChipRow(specItems, accentInk, 'light')}
-                            ${amenityRows((p.amenities || []).slice(0, 3), accentInk, true)}
-                            ${brandName ? `<div style="margin-top:auto;padding-top:20px;border-top:1px dashed #e2e8f0;">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
+                            ${layout.isStory ? amenityRows((p.amenities || []).slice(0, 2), accentInk, true) : ''}
+                            ${brandName ? `<div style="margin-top:auto;padding-top:16px;border-top:1px solid #eef2f7;">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
                         </div>
                     </div>
                 </div>`;
@@ -1254,77 +1281,77 @@
             const g0 = imgs[0] || '';
             const g1 = imgs[1] || g0;
             const g2 = imgs[2] || g1;
-            const cellOverlay = `<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.55) 100%);pointer-events:none;"></div>`;
+            const cellOverlay = `<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.5) 100%);pointer-events:none;"></div>`;
             const imgCount = imgs.filter(Boolean).length;
             const grid = imgs.length >= 3
-                ? `<div style="position:relative;height:56%;padding:14px;background:linear-gradient(180deg,#0f172a,#1e293b);box-sizing:border-box;">
-                    <div style="display:grid;grid-template-columns:1.2fr .8fr;grid-template-rows:1fr 1fr;height:100%;gap:12px;">
-                        <div style="position:relative;grid-row:span 2;border-radius:16px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.35);">
+                ? `<div style="position:relative;height:${layout.galleryMediaH};padding:12px 12px 10px;background:linear-gradient(165deg,#0f172a 0%,#1e293b 48%,#0b1220 100%);box-sizing:border-box;">
+                    <div style="display:grid;grid-template-columns:1.35fr .72fr;grid-template-rows:1fr 1fr;height:100%;gap:10px;">
+                        <div style="position:relative;grid-row:span 2;border-radius:18px;overflow:hidden;box-shadow:0 20px 48px rgba(0,0,0,.42);border:2px solid rgba(255,255,255,.08);">
                             ${posterImg(g0, galleryPosterImgStyle(cropY), conf)}
                             ${posterHeroWarmth(conf)}
                             ${posterHeroVignetteExtra(conf)}
                             ${posterPipInset(conf, primaryColor, accentInk)}
                             ${cellOverlay}
                         </div>
-                        <div style="position:relative;border-radius:14px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.25);">${posterImg(g1, galleryPosterImgStyle(cropY), conf)}${cellOverlay}</div>
-                        <div style="position:relative;border-radius:14px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.25);">${posterImg(g2, galleryPosterImgStyle(cropY), conf)}${cellOverlay}</div>
+                        <div style="position:relative;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.08);transform:rotate(-1.5deg);">${posterImg(g1, galleryPosterImgStyle(cropY), conf)}${cellOverlay}</div>
+                        <div style="position:relative;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.08);transform:rotate(1.2deg);">${posterImg(g2, galleryPosterImgStyle(cropY), conf)}${cellOverlay}</div>
                     </div>
-                    <div style="position:absolute;top:24px;right:24px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+                    <div style="position:absolute;top:18px;right:18px;z-index:3;display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
                         ${dealBadgeHtml(dealLabel, primaryColor, 'dark')}
-                        <span style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.2);${pcsTextStyle('font-size:18px;color:#e2e8f0;font-weight:700;')}">${pcsSvg('images', 18, '#38bdf8')}<span>${imgCount} تصویر</span></span>
+                        <span style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(15,23,42,.78);border:1px solid rgba(255,255,255,.18);${pcsTextStyle('font-size:17px;color:#e2e8f0;font-weight:700;')}">${pcsSvg('images', 17, '#38bdf8')}<span>${imgCount} تصویر</span></span>
                     </div>
                    </div>`
-                : `<div style="position:relative;height:52%;overflow:hidden;">
+                : `<div style="position:relative;height:${layout.galleryMediaH};overflow:hidden;border-radius:0 0 18px 18px;">
                     ${g0 ? posterImg(g0, galleryPosterImgStyle(cropY), conf) : '<div style="height:100%;background:#334155"></div>'}
-                    <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,0,0,.5));"></div>
+                    <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,0,0,.45));"></div>
                    </div>`;
+            const infoPad = layout.isSquare ? '20px 22px 22px' : `${26}px ${pad}px ${pad}px`;
             inner = `
                 <div style="background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);height:100%;display:flex;flex-direction:column;position:relative;">
                     ${grid}
-                    <div style="flex:1;padding:32px 40px 40px;display:flex;flex-direction:column;justify-content:space-between;">
-                        <div>
-                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-                                ${pcsSvg('images', 24, accentInk)}
-                                <div style="width:56px;height:4px;border-radius:4px;background:linear-gradient(90deg,${accentInk},${primaryRgba(accentInk, 0.35)});"></div>
+                    <div style="flex:1;padding:${infoPad};display:flex;flex-direction:column;justify-content:flex-end;gap:12px;min-height:0;">
+                        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                            <div style="flex:1;min-width:0;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                                    ${pcsSvg('images', 22, accentInk)}
+                                    <div style="width:48px;height:3px;border-radius:4px;background:linear-gradient(90deg,${accentInk},${primaryRgba(accentInk, 0.35)});"></div>
+                                </div>
+                                <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, layout.hlGallery, 'headline')}px;font-weight:900;color:#0f172a;line-height:1.16;`, conf)}">${esc(headline)}</div>
+                                ${locLine ? `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;">${pcsSvg('location', 20, '#64748b')}<span style="${pcsTextStyle('font-size:22px;color:#475569;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:520px;')}">${esc(locLine)}</span></div>` : ''}
                             </div>
-                            <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, 40, 'headline')}px;font-weight:800;color:#0f172a;line-height:1.18;margin-bottom:8px;`, conf)}">${esc(headline)}</div>
-                            ${locLine ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">${pcsSvg('location', 22, '#64748b')}<span style="${pcsTextStyle('font-size:25px;color:#475569;')}">${esc(locLine)}</span></div>` : ''}
-                            ${statTilesHtml(p, '', accentInk, 'light')}
-                            ${specChipRow(specItems, accentInk, 'light')}
+                            <div style="flex-shrink:0;">${priceHighlightHtml(price, accentInk, 'light', conf)}</div>
                         </div>
-                        <div style="padding-top:18px;margin-top:14px;border-top:2px solid #e8edf3;">
-                            ${priceHighlightHtml(price, accentInk, 'light', conf)}
-                            ${brandName ? `<div style="margin-top:14px;">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
-                        </div>
+                        ${statTilesHtml(p, '', accentInk, 'light')}
+                        ${specChipRow(specItems, accentInk, 'light')}
+                        ${brandName ? `<div style="padding-top:12px;border-top:1px solid #e8edf3;">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
                     </div>
                 </div>`;
         } else {
             const topFeature = chips[0] || p.property_type || '';
-            const boldHeroH = Math.round(fmt.h * 0.48);
+            const boldHeroH = layout.boldHeroH;
+            const boldPad = pad;
             inner = `
-                <div style="height:100%;position:relative;overflow:hidden;background:#05070d;">
-                    <div style="position:absolute;width:160%;height:62%;top:-12%;left:-30%;background:linear-gradient(135deg,${primaryColor},${primaryRgba(primaryColor, 0.55)});transform:rotate(-10deg);opacity:.94;"></div>
-                    <div style="position:absolute;width:90%;height:40%;bottom:-5%;right:-20%;background:linear-gradient(45deg,${primaryRgba(primaryColor, 0.38)},transparent);transform:rotate(8deg);"></div>
-                    <div style="position:absolute;inset:0;background:radial-gradient(circle at 20% 80%,rgba(255,255,255,.08),transparent 45%);pointer-events:none;z-index:1;"></div>
-                    <div style="position:relative;z-index:2;margin:32px 32px 0;border-radius:22px;overflow:hidden;box-shadow:0 28px 64px rgba(0,0,0,.5);border:3px solid rgba(255,255,255,.18);">
+                <div style="height:100%;position:relative;overflow:hidden;background:radial-gradient(ellipse 120% 80% at 50% -10%, ${primaryRgba(primaryColor, 0.55)} 0%, #05070d 52%);">
+                    <div style="position:absolute;width:140%;height:55%;top:-18%;left:-22%;background:linear-gradient(125deg,${primaryColor},${primaryRgba(primaryColor, 0.45)});transform:rotate(-8deg);opacity:.88;"></div>
+                    <div style="position:absolute;width:70%;height:38%;bottom:8%;right:-18%;background:linear-gradient(45deg,${primaryRgba(primaryColor, 0.5)},transparent);transform:rotate(10deg);opacity:.75;"></div>
+                    <div style="position:absolute;inset:0;background:radial-gradient(circle at 18% 88%,rgba(255,255,255,.07),transparent 42%);pointer-events:none;z-index:1;"></div>
+                    <div style="position:relative;z-index:2;margin:${boldPad}px ${boldPad}px 0;border-radius:20px;overflow:hidden;box-shadow:0 26px 60px rgba(0,0,0,.48);border:2px solid rgba(255,255,255,.2);">
                         ${primary ? posterImg(primary, `width:100%;height:${boldHeroH}px;object-fit:cover;object-position:center ${cropY}%;display:block;`, conf) : `<div style="height:${boldHeroH}px;background:#1e293b"></div>`}
-                        <div style="position:absolute;top:0;left:0;right:0;height:${boldHeroH}px;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.4),transparent 42%);"></div>
+                        <div style="position:absolute;top:0;left:0;right:0;height:${boldHeroH}px;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.35),transparent 48%);"></div>
                         ${posterHeroWarmth(conf)}
                         ${posterHeroVignetteExtra(conf)}
                         ${posterPipInset(conf, primaryColor, accentInk)}
-                        <div style="position:absolute;top:22px;right:22px;z-index:2;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
-                        ${topFeature ? `<div style="position:absolute;bottom:22px;right:22px;z-index:2;display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:14px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,.28);${pcsTextStyle(`font-size:22px;font-weight:800;color:${accentInk};`)}">${pcsSvg(chipIconFor(topFeature), 22, accentInk)}<span>${esc(topFeature)}</span></div>` : ''}
+                        <div style="position:absolute;top:18px;right:18px;z-index:2;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
+                        ${topFeature ? `<div style="position:absolute;bottom:18px;right:18px;z-index:2;display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:14px;background:#fff;box-shadow:0 12px 32px rgba(0,0,0,.28);${pcsTextStyle(`font-size:20px;font-weight:800;color:${accentInk};`)}">${pcsSvg(chipIconFor(topFeature), 20, accentInk)}<span>${esc(topFeature)}</span></div>` : ''}
                     </div>
-                    <div style="position:relative;z-index:3;padding:36px 44px 48px;margin-top:-44px;">
-                        ${showPromoBadge ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">${pcsSvg('bolt', 28, '#fbbf24')}<span style="${pcsTextStyle('font-size:22px;font-weight:700;color:#e2e8f0;')}">پیشنهاد ویژه</span></div>` : ''}
-                        <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, 52, 'headline')}px;font-weight:800;line-height:1.08;color:#f8fafc;margin-bottom:10px;text-shadow:0 8px 28px rgba(0,0,0,.55);`, conf)}">${esc(headline)}</div>
-                        ${locLine ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">${pcsSvg('location', 24, '#cbd5e1')}<span style="${pcsTextStyle('font-size:26px;color:#e2e8f0;')}">${esc(locLine)}</span></div>` : ''}
-                        ${statTilesHtml(p, '', primaryColor, 'dark')}
+                    <div style="position:relative;z-index:3;padding:${layout.isSquare ? 22 : 30}px ${boldPad}px ${boldPad}px;margin-top:${layout.isSquare ? -28 : -36}px;">
+                        ${showPromoBadge ? `<div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 14px;border-radius:999px;background:rgba(251,191,36,.16);border:1px solid rgba(251,191,36,.35);">${pcsSvg('bolt', 22, '#fbbf24')}<span style="${pcsTextStyle('font-size:19px;font-weight:800;color:#fde68a;')}">پیشنهاد ویژه</span></div>` : ''}
+                        <div style="width:64px;height:5px;border-radius:6px;background:linear-gradient(90deg,${primaryColor},#fbbf24);margin-bottom:12px;"></div>
+                        <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, layout.hlBold, 'headline')}px;font-weight:900;line-height:1.1;color:#f8fafc;margin-bottom:8px;text-shadow:0 6px 24px rgba(0,0,0,.45);`, conf)}">${esc(headline)}</div>
+                        ${locLine ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">${pcsSvg('location', 22, '#cbd5e1')}<span style="${pcsTextStyle('font-size:23px;color:#e2e8f0;font-weight:600;')}">${esc(locLine)}</span></div>` : ''}
                         ${specChipRow(specItems, primaryColor, 'dark')}
-                        <div style="margin-top:16px;display:inline-flex;align-items:stretch;">
-                            ${price ? `<div style="display:inline-flex;align-items:center;gap:14px;padding:16px 32px;border-radius:18px;background:#fff;border:2px solid ${primaryRgba(accentInk, 0.22)};box-shadow:0 14px 40px rgba(0,0,0,.3);">${pcsSvg('tag', 30, accentInk)}<span style="${pcsTextStyle(`font-size:48px;font-weight:900;color:${accentInk};`)}">${esc(price)}</span></div>` : ''}
-                        </div>
-                        ${brandName ? `<div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.18);">${brandFooterHtml(brandName, phone, 'dark')}</div>` : ''}
+                        ${priceHighlightHtml(price, accentInk, 'campaign', conf, { basePx: layout.priceBold })}
+                        ${brandName ? `<div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.16);">${brandFooterHtml(brandName, phone, 'dark')}</div>` : ''}
                     </div>
                 </div>`;
         }

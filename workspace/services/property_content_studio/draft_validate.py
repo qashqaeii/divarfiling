@@ -24,7 +24,7 @@ _PIP_SIZES = frozenset({'s', 'm', 'l'})
 _PIP_SHAPES = frozenset({'rounded', 'circle', 'card'})
 _PIP_BORDERS = frozenset({'light', 'brand', 'gold'})
 _WARMTH = frozenset({'neutral', 'warm', 'cool'})
-_FONT_KEYS = frozenset({'vazirmatn', 'estedad', 'lalezar', 'markazi', 'gulzar'})
+_FONT_KEYS = frozenset({'vazirmatn', 'estedad', 'lalezar', 'markazi', 'gulzar', 'parastoo'})
 
 
 class DraftValidationError(ValueError):

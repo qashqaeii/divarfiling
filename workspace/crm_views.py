@@ -2387,6 +2387,28 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             is_ai_enabled()
             and is_feature_enabled(FEATURE_PROPERTY_CONTENT_STUDIO, self.request.user)
         )
+        if ctx['can_open_content_studio']:
+            from django.utils.safestring import mark_safe
+            from workspace.services.property_content_studio.constants import POSTER_TEMPLATES
+
+            _pcs_template_icons = {
+                'luxury': 'fa-gem',
+                'minimal': 'fa-feather',
+                'gallery': 'fa-images',
+                'bold': 'fa-bolt',
+            }
+            ctx['pcs_template_meta'] = mark_safe(
+                json.dumps(
+                    {
+                        t['id']: {
+                            'label': t['label'],
+                            'icon': _pcs_template_icons[t['id']],
+                        }
+                        for t in POSTER_TEMPLATES
+                    },
+                    ensure_ascii=False,
+                ),
+            )
         from workspace.services.agency_space_ui_context import apply_agency_space_crm_context
         from workspace.services.agency_space_provenance import provenance_for_property
         apply_agency_space_crm_context(ctx, self.request.user, property=p)

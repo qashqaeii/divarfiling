@@ -1,7 +1,7 @@
 {% load static %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Estedad:wght@400;600;700;800&family=Lalezar&family=Markazi+Text:wght@400;600;700&family=Gulzar&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Estedad:wght@400;600;700;800&family=Lalezar&family=Markazi+Text:wght@400;600;700&family=Gulzar&family=Parastoo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <div id="pcsModal" class="pcs-modal" role="dialog" aria-modal="true" aria-labelledby="pcsModalTitle" hidden>
     <div class="pcs-modal__backdrop" data-pcs-close tabindex="-1"></div>
     <div class="pcs-modal__panel">
@@ -177,8 +177,7 @@
                             <label class="pcs-color-field">
                                 <span class="pcs-field__label pcs-field__label--block"><i class="fas fa-palette" aria-hidden="true"></i><span>رنگ اصلی برند</span></span>
                                 <div class="pcs-color-field__row">
-                                    <span class="pcs-color-field__swatch" id="pcsColorSwatch" aria-hidden="true"></span>
-                                    <input type="color" id="pcsPrimaryColor" class="pcs-color-input" value="#7c3aed" title="انتخاب رنگ">
+                                    <input type="color" id="pcsPrimaryColor" class="pcs-color-input" value="#7c3aed" title="انتخاب رنگ" aria-label="رنگ اصلی برند">
                                     <span class="pcs-color-field__hint">روی پوستر و دکمه‌ها</span>
                                 </div>
                             </label>
@@ -239,7 +238,10 @@
                 <div class="pcs-editor__head-main">
                     <div class="pcs-editor__head-text">
                         <div class="pcs-editor__title-row">
-                            <h3 class="pcs-editor__title">ویرایش پوستر</h3>
+                            <h3 class="pcs-editor__title">
+                                ویرایش پوستر
+                                <span class="pcs-editor__dirty-flag" id="pcsEditorDirtyFlag" hidden>· ذخیره‌نشده</span>
+                            </h3>
                             <span class="pcs-editor__tpl-badge" id="pcsEditorTplBadge"></span>
                         </div>
                         <p class="pcs-editor__sub" id="pcsEditorSub">تغییرات را در پیش‌نمایش زنده ببینید</p>
@@ -266,7 +268,21 @@
                     <div class="pcs-editor__preview-stage">
                         <span class="pcs-editor__preview-tag"><i class="fas fa-circle" aria-hidden="true"></i> زنده</span>
                         <span class="pcs-editor__preview-meta" id="pcsEditorLiveMeta" aria-live="polite"></span>
-                        <div class="pcs-editor__preview" id="pcsEditorPreview"></div>
+                        <div class="pcs-editor__preview-toolbar" id="pcsEditorPreviewToolbar" aria-label="کنترل پیش‌نمایش">
+                            <button type="button" class="pcs-editor__preview-tool" data-pcs-preview-zoom-out" aria-label="کوچک‌نمایی">
+                                <i class="fas fa-minus" aria-hidden="true"></i>
+                            </button>
+                            <span class="pcs-editor__preview-zoom-label" id="pcsEditorPreviewZoomLabel">100%</span>
+                            <button type="button" class="pcs-editor__preview-tool" data-pcs-preview-zoom-in" aria-label="بزرگ‌نمایی">
+                                <i class="fas fa-plus" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="pcs-editor__preview-tool pcs-editor__preview-tool--text" data-pcs-preview-zoom-reset title="بازنشانی نما">
+                                <i class="fas fa-compress" aria-hidden="true"></i><span>بازنشانی</span>
+                            </button>
+                        </div>
+                        <div class="pcs-editor__preview-viewport" id="pcsEditorPreviewViewport">
+                            <div class="pcs-editor__preview" id="pcsEditorPreview"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="pcs-editor__settings-pane" data-pcs-editor-pane="settings" role="tabpanel">

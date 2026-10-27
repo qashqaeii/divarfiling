@@ -31,6 +31,7 @@
         lalezar: { label: 'لاله‌زار', family: "'Lalezar', Vazirmatn, sans-serif", load: '400 32px Lalezar' },
         markazi: { label: 'مرکزی', family: "'Markazi Text', Vazirmatn, serif", load: '700 32px \"Markazi Text\"' },
         gulzar: { label: 'گلزار', family: "'Gulzar', Vazirmatn, serif", load: '400 32px Gulzar' },
+        parastoo: { label: 'پرستو', family: "'Parastoo', Vazirmatn, sans-serif", load: '700 32px Parastoo' },
     };
 
     function posterFieldDefaults(imgs) {
@@ -63,11 +64,11 @@
     const COMPOSITION_PRESETS = {
         pip_classic: {
             pip_enabled: true, pip_corner: 'br', pip_size: 'm', pip_shape: 'rounded',
-            pip_border: 'light', pip_tilt: -5, hero_vignette: 22, hero_warmth: 'neutral',
+            pip_border: 'gold', pip_tilt: -7, hero_vignette: 16, hero_warmth: 'neutral',
         },
         magazine: {
             pip_enabled: true, pip_corner: 'bl', pip_size: 'l', pip_shape: 'card',
-            pip_border: 'brand', pip_tilt: 6, hero_vignette: 35, hero_warmth: 'warm',
+            pip_border: 'brand', pip_tilt: 5, hero_vignette: 48, hero_warmth: 'warm',
         },
         cinematic: {
             pip_enabled: false, hero_vignette: 58, hero_warmth: 'cool', img_brightness: 90, img_blur: 0,
@@ -109,6 +110,28 @@
 
     function editorControlsEl() {
         return $('#pcsEditorControls');
+    }
+
+    function resolveTemplateMeta(tpl) {
+        const fromPage = cfg.templateMeta?.[tpl];
+        if (fromPage && fromPage.label) {
+            return {
+                label: fromPage.label,
+                icon: fromPage.icon || TEMPLATE_META[tpl]?.icon || 'fa-image',
+            };
+        }
+        return TEMPLATE_META[tpl] || { label: tpl, icon: 'fa-image' };
+    }
+
+    function setEditorTplBadge(meta) {
+        const badge = $('#pcsEditorTplBadge');
+        if (!badge || !meta) return;
+        badge.replaceChildren();
+        const icon = document.createElement('i');
+        icon.className = `fas ${meta.icon || 'fa-image'}`;
+        icon.setAttribute('aria-hidden', 'true');
+        badge.appendChild(icon);
+        badge.appendChild(document.createTextNode(` ${meta.label}`));
     }
 
     function pcsFontFamily(conf) {
@@ -203,6 +226,9 @@
         editorBuffer: null,
         editorSnapshot: null,
         editorDirty: false,
+        editorGallerySlot: 0,
+        editorPreviewView: { zoom: 1, panX: 0, panY: 0 },
+        editorPreviewViewBound: false,
     };
 
     const $ = (sel, root) => (root || document).querySelector(sel);
@@ -259,7 +285,9 @@
 
     function posterConfigFromDraft(tpl) {
         const posters = state.draft?.posters || {};
-        return normalizePosterConfig(posters[tpl], propertyImageList());
+        const raw = posters[tpl];
+        if (raw == null) return normalizePosterConfig(null, propertyImageList());
+        return normalizePosterConfig(raw, propertyImageList());
     }
 
     function posterConfig(tpl) {
@@ -291,6 +319,11 @@
         state.editorDirty = state.editorSnapshot !== JSON.stringify(state.editorBuffer);
         const bar = $('#pcsEditor');
         bar?.classList.toggle('pcs-editor--dirty', state.editorDirty);
+        const dirtyFlag = $('#pcsEditorDirtyFlag');
+        if (dirtyFlag) {
+            if (state.editorDirty) dirtyFlag.removeAttribute('hidden');
+            else dirtyFlag.setAttribute('hidden', '');
+        }
     }
 
     function initEditorBuffer(tpl) {
@@ -299,6 +332,7 @@
         state.editorSnapshot = JSON.stringify(state.editorBuffer);
         state.editorDirty = false;
         $('#pcsEditor')?.classList.remove('pcs-editor--dirty');
+        $('#pcsEditorDirtyFlag')?.setAttribute('hidden', '');
     }
 
     function propertyImageList() {
@@ -353,21 +387,104 @@
         return raw.slice(0, 3);
     }
 
-    function editorGallerySlotGrid(imgs, galleryOrder) {
+    const GALLERY_LAYOUT_SLOTS = [
+        { title: 'تصویر اصلی', sub: 'سلول بزرگ' },
+        { title: 'بالا چپ', sub: 'گرید' },
+        { title: 'پایین چپ', sub: 'گرید' },
+    ];
+
+    function editorAssetFilmstrip(imgs, selectedIdx, pickAttrName) {
+        if (!imgs.length) {
+            return '<p class="pcs-editor__empty">تصویری برای این فایل ثبت نشده است.</p>';
+        }
+        const attr = pickAttrName || 'data-pcs-asset-pick';
+        return `<div class="pcs-editor__filmstrip" role="listbox" aria-label="کتابخانه تصاویر">
+            ${imgs.map((url, i) => `
+            <button type="button" class="pcs-editor__film-thumb${selectedIdx === i ? ' is-selected' : ''}"
+                ${attr}="${i}" data-pcs-img-idx="${i}" aria-pressed="${selectedIdx === i}">
+                <img src="${esc(url)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                <span class="pcs-editor__film-thumb-num">${i + 1}</span>
+            </button>`).join('')}
+        </div>`;
+    }
+
+    function editorGalleryComposer(imgs, galleryOrder) {
         if (!imgs.length) return '';
-        return [0, 1, 2].map((slot) => `
-            <div class="pcs-editor__gallery-slot">
-                <span class="pcs-editor__gallery-slot-label">اسلاید ${slot + 1}</span>
-                <input type="hidden" data-pcs-gallery-slot="${slot}" value="${galleryOrder[slot]}">
-                <div class="pcs-editor__img-grid pcs-editor__img-grid--compact" role="radiogroup" aria-label="تصویر اسلاید ${slot + 1}">
-                    ${imgs.map((url, i) => `
-                    <button type="button" class="pcs-editor__img-tile${galleryOrder[slot] === i ? ' is-selected' : ''}"
-                        data-pcs-gallery-slot-pick="${slot}" data-pcs-img-idx="${i}" aria-pressed="${galleryOrder[slot] === i}">
-                        <img src="${esc(url)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-                        <span class="pcs-editor__img-tile-num">${i + 1}</span>
-                    </button>`).join('')}
-                </div>
-            </div>`).join('');
+        const active = state.editorGallerySlot ?? 0;
+        const pickIdx = galleryOrder[active] ?? 0;
+        return `<div class="pcs-editor__gallery-dock" data-pcs-gallery-dock>
+            <p class="pcs-editor__gallery-dock-hint">ابتدا یک بخش چیدمان را انتخاب کنید، سپس از نوار تصاویر یکی را اختصاص دهید.</p>
+            <div class="pcs-editor__gallery-layout" role="tablist" aria-label="بخش‌های چیدمان">
+                ${GALLERY_LAYOUT_SLOTS.map((meta, slot) => {
+                    const idx = galleryOrder[slot] ?? slot;
+                    const url = imgs[idx] || '';
+                    return `<button type="button" class="pcs-editor__layout-slot${active === slot ? ' is-active' : ''}"
+                        data-pcs-gallery-slot-btn="${slot}" role="tab" aria-selected="${active === slot ? 'true' : 'false'}">
+                        <span class="pcs-editor__layout-slot-thumb">${url ? `<img src="${esc(url)}" alt="">` : '<i class="fas fa-image" aria-hidden="true"></i>'}</span>
+                        <span class="pcs-editor__layout-slot-text">
+                            <strong>${esc(meta.title)}</strong>
+                            <small>${esc(meta.sub)} · تصویر ${idx + 1}</small>
+                        </span>
+                        <input type="hidden" data-pcs-gallery-slot="${slot}" value="${idx}">
+                    </button>`;
+                }).join('')}
+            </div>
+            ${editorAssetFilmstrip(imgs, pickIdx, 'data-pcs-gallery-pick')}
+            <div class="pcs-editor__gallery-dock-actions">
+                <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--sm" data-pcs-gallery-autofill>
+                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> پر کردن هوشمند
+                </button>
+                <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--sm" data-pcs-gallery-rotate>
+                    <i class="fas fa-rotate" aria-hidden="true"></i> چرخش بخش‌ها
+                </button>
+            </div>
+        </div>`;
+    }
+
+    function syncGalleryDockUi() {
+        const dock = document.querySelector('[data-pcs-gallery-dock]');
+        if (!dock) return;
+        const imgs = propertyImageList();
+        const ord = editorImageOrderForGallery(imgs, state.editorBuffer || {});
+        const active = state.editorGallerySlot ?? 0;
+        dock.querySelectorAll('[data-pcs-gallery-slot-btn]').forEach((btn) => {
+            const slot = parseInt(btn.getAttribute('data-pcs-gallery-slot-btn') || '0', 10);
+            const idx = ord[slot] ?? 0;
+            btn.classList.toggle('is-active', slot === active);
+            btn.setAttribute('aria-selected', slot === active ? 'true' : 'false');
+            const thumb = btn.querySelector('.pcs-editor__layout-slot-thumb');
+            const url = imgs[idx];
+            if (thumb) {
+                thumb.innerHTML = url
+                    ? `<img src="${esc(url)}" alt="">`
+                    : '<i class="fas fa-image" aria-hidden="true"></i>';
+            }
+            const small = btn.querySelector('.pcs-editor__layout-slot-text small');
+            const meta = GALLERY_LAYOUT_SLOTS[slot] || { sub: '' };
+            if (small) small.textContent = `${meta.sub} · تصویر ${idx + 1}`;
+            const hid = btn.querySelector('[data-pcs-gallery-slot]');
+            if (hid) hid.value = String(idx);
+        });
+        dock.querySelectorAll('[data-pcs-gallery-pick]').forEach((btn) => {
+            const i = parseInt(btn.getAttribute('data-pcs-img-idx') || '0', 10);
+            btn.classList.toggle('is-selected', i === (ord[active] ?? 0));
+        });
+    }
+
+    function editorPrimaryPicker(imgs, selectedIndex) {
+        const idx = Math.min(imgs.length - 1, Math.max(0, selectedIndex || 0));
+        return `<div class="pcs-editor__primary-pick">
+            <input type="hidden" id="pcsEditImage" value="${idx}">
+            <p class="pcs-editor__mini-label">تصویر شاخص: <strong data-pcs-primary-label>${idx + 1}</strong> از ${imgs.length}</p>
+            ${editorAssetFilmstrip(imgs, idx, 'data-pcs-primary-pick')}
+        </div>`;
+    }
+
+    function editorPipImagePicker(imgs, pipIdx) {
+        const idx = Math.min(imgs.length - 1, Math.max(0, pipIdx ?? 1));
+        return `<select class="pcs-input pcs-editor__pip-select" data-pcs-pip-image-select aria-label="تصویر کوچک">
+            ${imgs.map((_, i) => `<option value="${i}"${i === idx ? ' selected' : ''}>تصویر ${i + 1}</option>`).join('')}
+        </select>`;
     }
 
     function renderEditorFormatBar(tpl) {
@@ -388,6 +505,7 @@
                 if (fmtPill && fmtMeta) {
                     fmtPill.innerHTML = `<i class="fas ${fmtMeta.icon}" aria-hidden="true"></i> ${esc(fmtMeta.label)} · ${esc(fmtMeta.sub)}`;
                 }
+                resetEditorPreviewView();
                 refreshEditorPreview(tpl);
             });
             bar.appendChild(b);
@@ -427,7 +545,11 @@
         });
         if (pane === 'preview' || !mob) {
             const prev = $('#pcsEditorPreview');
-            if (prev) scheduleEditorPreviewScale(prev, state.format);
+            if (prev) {
+                requestAnimationFrame(() => {
+                    scheduleEditorPreviewScale(prev, state.format);
+                });
+            }
         }
     }
 
@@ -776,38 +898,92 @@
         return `<div style="position:absolute;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse 82% 72% at 50% 42%,transparent 30%,rgba(0,0,0,${o}) 100%);"></div>`;
     }
 
-    function posterPipInset(conf, primaryColor, accentInk) {
-        if (!conf.pip_enabled) return '';
-        const url = pipImageUrl(conf);
-        if (!url) return '';
-        const sizePct = { s: 20, m: 28, l: 36 }[conf.pip_size] || 28;
+    function isMagazineComposition(conf) {
+        return !!conf?.pip_enabled && conf.pip_shape === 'card' && conf.pip_size === 'l';
+    }
+
+    function posterMagazineHeroBlend() {
+        return `<div style="position:absolute;inset:0;z-index:5;pointer-events:none;background:linear-gradient(180deg,transparent 28%,rgba(15,23,42,.22) 58%,rgba(15,23,42,.72) 100%);"></div>
+            <div style="position:absolute;inset:0;z-index:5;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.42) 0%,transparent 38%);"></div>`;
+    }
+
+    function posterPipClassicHtml(conf, url, primaryColor, accentInk) {
+        const sizePct = { s: 22, m: 30, l: 34 }[conf.pip_size] || 30;
         const corners = {
-            br: 'bottom:26px;right:26px;',
-            bl: 'bottom:26px;left:26px;',
-            tr: 'top:26px;right:26px;',
-            tl: 'top:26px;left:26px;',
+            br: 'bottom:14%;right:5%;',
+            bl: 'bottom:14%;left:5%;',
+            tr: 'top:12%;right:5%;',
+            tl: 'top:12%;left:5%;',
         };
         const pos = corners[conf.pip_corner] || corners.br;
         const shape = conf.pip_shape || 'rounded';
-        const radius = shape === 'circle' ? '50%' : shape === 'card' ? '10px' : '16px';
+        const radius = shape === 'circle' ? '50%' : '18px';
         const aspect = shape === 'circle' ? '1/1' : '5/4';
         const crop = conf.pip_crop_y ?? 50;
-        const border = conf.pip_border === 'gold'
-            ? '3px solid rgba(212,175,55,.9)'
-            : conf.pip_border === 'brand'
-                ? `3px solid ${accentInk || primaryColor}`
-                : '3px solid rgba(255,255,255,.95)';
         const tilt = conf.pip_tilt ?? 0;
-        const pad = shape === 'card' ? 'padding:8px 8px 22px 8px;background:#fff;' : '';
-        const innerRadius = shape === 'card' ? '6px' : radius;
-        return `<div style="position:absolute;${pos}z-index:9;width:${sizePct}%;max-width:320px;aspect-ratio:${aspect};transform:rotate(${tilt}deg);filter:drop-shadow(0 22px 40px rgba(0,0,0,.42));">
-            <div style="width:100%;height:100%;border-radius:${radius};overflow:hidden;border:${border};${pad}box-sizing:border-box;">
-                <div style="width:100%;height:100%;border-radius:${innerRadius};overflow:hidden;background:#0f172a;">
-                    ${posterImg(url, `width:100%;height:100%;object-fit:cover;object-position:center ${crop}%;`, conf)}
+        const rim = conf.pip_border === 'gold'
+            ? 'linear-gradient(135deg,#f5e6a8 0%,#d4af37 48%,#b8860b 100%)'
+            : conf.pip_border === 'brand'
+                ? `linear-gradient(135deg,${primaryRgba(primaryColor, 0.95)} 0%,${primaryRgba(accentInk || primaryColor, 0.85)} 100%)`
+                : 'linear-gradient(145deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.72) 100%)';
+        const innerRadius = shape === 'circle' ? '50%' : '14px';
+        return `<div style="position:absolute;${pos}z-index:9;width:${sizePct}%;max-width:300px;aspect-ratio:${aspect};transform:rotate(${tilt}deg);filter:drop-shadow(0 28px 48px rgba(0,0,0,.55)) drop-shadow(0 8px 18px rgba(0,0,0,.35));">
+            <div style="position:absolute;inset:-18%;background:radial-gradient(ellipse at 50% 80%,rgba(0,0,0,.45),transparent 68%);opacity:.65;z-index:0;"></div>
+            <div style="position:relative;z-index:1;padding:4px;border-radius:${radius};background:${rim};box-shadow:0 0 0 1px rgba(255,255,255,.35) inset;">
+                <div style="position:relative;border-radius:${innerRadius};overflow:hidden;background:#0f172a;aspect-ratio:${aspect};">
+                    ${posterImg(url, `width:100%;height:100%;object-fit:cover;object-position:center ${crop}%;display:block;`, conf)}
+                    <div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(145deg,rgba(255,255,255,.18) 0%,transparent 42%,rgba(0,0,0,.12) 100%);"></div>
                 </div>
             </div>
-            <div style="position:absolute;inset:4px;border-radius:${radius};pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);"></div>
+            <div style="position:absolute;top:10%;right:8%;width:10px;height:10px;border-radius:50%;background:${primaryColor};box-shadow:0 0 12px ${primaryRgba(primaryColor, 0.9)};z-index:2;opacity:.85;"></div>
         </div>`;
+    }
+
+    function posterPipMagazineHtml(conf, url, primaryColor, accentInk, placement) {
+        const crop = conf.pip_crop_y ?? 50;
+        const tilt = conf.pip_tilt ?? 0;
+        const ink = accentInk || primaryColor;
+        const idx = (parseInt(conf.pip_image_index, 10) || 0) + 1;
+        const layout = placement === 'luxury_overlay'
+            ? 'bottom:188px;left:44px;width:min(44%,400px);'
+            : placement === 'minimal_hero'
+                ? 'bottom:28px;left:26px;width:min(46%,360px);'
+                : 'bottom:12%;left:6%;width:min(44%,380px);';
+        const backTilt = tilt - 3;
+        return `<div style="position:absolute;${layout}z-index:11;transform:rotate(${tilt}deg);filter:drop-shadow(0 36px 70px rgba(0,0,0,.5));">
+            <div style="position:absolute;inset:10px -14px -14px 14px;border-radius:14px;border:2px solid rgba(255,255,255,.28);transform:rotate(${backTilt}deg);opacity:.55;z-index:0;"></div>
+            <div style="position:relative;z-index:1;background:#fff;padding:14px 14px 52px;border-radius:12px;box-shadow:0 0 0 1px rgba(15,23,42,.08),0 24px 56px rgba(0,0,0,.38);">
+                <div style="position:absolute;top:0;left:14px;right:14px;height:4px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,${ink},${primaryRgba(ink, 0.45)});"></div>
+                <div style="position:relative;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#0f172a;">
+                    ${posterImg(url, `width:100%;height:100%;object-fit:cover;object-position:center ${crop}%;display:block;`, conf)}
+                    <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.35) 100%);pointer-events:none;"></div>
+                </div>
+                <div style="position:absolute;left:18px;right:18px;bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <span style="${pcsTextStyle('font-size:15px;font-weight:800;color:#64748b;letter-spacing:.04em;')}">نمای تکمیلی</span>
+                    <span style="display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:28px;padding:0 10px;border-radius:8px;background:${primaryRgba(ink, 0.12)};${pcsTextStyle(`font-size:14px;font-weight:800;color:${ink};`)}">${idx}</span>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function posterPipInset(conf, primaryColor, accentInk, placement = 'inline') {
+        if (!conf.pip_enabled) return '';
+        const url = pipImageUrl(conf);
+        if (!url) return '';
+        const magazine = isMagazineComposition(conf);
+        if (magazine) {
+            if (placement === 'luxury_hero') return posterMagazineHeroBlend();
+            if (placement === 'luxury_overlay') {
+                return posterPipMagazineHtml(conf, url, primaryColor, accentInk, 'luxury_overlay');
+            }
+            const scope = placement === 'minimal_hero' ? 'minimal_hero' : 'inline';
+            return `${posterMagazineHeroBlend()}${posterPipMagazineHtml(conf, url, primaryColor, accentInk, scope)}`;
+        }
+        if (placement === 'luxury_overlay' || placement === 'luxury_hero') {
+            if (placement === 'luxury_overlay') return '';
+            return posterPipClassicHtml(conf, url, primaryColor, accentInk);
+        }
+        return posterPipClassicHtml(conf, url, primaryColor, accentInk);
     }
 
     function editorOptionChips(attr, options, activeValue) {
@@ -816,74 +992,115 @@
         </div>`;
     }
 
-    function editorCompositionPresets() {
-        const items = [
-            ['pip_classic', 'عکس در عکس'],
-            ['magazine', 'مجله‌ای'],
-            ['cinematic', 'سینمایی'],
-            ['clean', 'خالص'],
-        ];
-        return `<div class="pcs-editor__composition-row" role="group" aria-label="پیش‌تنظیم ترکیب">
-            ${items.map(([key, label]) => `<button type="button" class="pcs-editor__composition-btn" data-pcs-composition="${key}">${esc(label)}</button>`).join('')}
-        </div>`;
-    }
+    const COMPOSITION_UI = [
+        { key: 'pip_classic', icon: 'fa-clone', label: 'عکس در عکس', sub: 'قاب شیشه‌ای شناور' },
+        { key: 'magazine', icon: 'fa-book-open', label: 'مجله‌ای', sub: 'کارت تحریریه' },
+        { key: 'cinematic', icon: 'fa-film', label: 'سینمایی', sub: 'عمق و کنتراست' },
+        { key: 'clean', icon: 'fa-sun', label: 'خالص', sub: 'مینیمال' },
+    ];
 
-    function editorPipSection(imgs, conf) {
-        if (imgs.length < 2) {
-            return `<section class="pcs-editor__section pcs-editor__section--muted">
-                <h4 class="pcs-editor__section-title"><i class="fas fa-clone" aria-hidden="true"></i> عکس در عکس</h4>
-                <p class="pcs-editor__section-hint">حداقل دو تصویر برای فایل لازم است تا تصویر کوچک روی تصویر اصلی قرار بگیرد.</p>
-            </section>`;
+    function guessCompositionKey(conf) {
+        if (!conf) return 'clean';
+        if (!conf.pip_enabled && (conf.hero_vignette ?? 0) <= 4 && (conf.hero_warmth || 'neutral') === 'neutral') {
+            return 'clean';
         }
-        const pipIdx = conf.pip_image_index ?? 1;
-        const pipOn = !!conf.pip_enabled;
-        return `<section class="pcs-editor__section">
-            <h4 class="pcs-editor__section-title"><i class="fas fa-clone" aria-hidden="true"></i> عکس در عکس</h4>
-            <p class="pcs-editor__section-hint">یک تصویر دوم به‌صورت شناور روی تصویر اصلی — مناسب نمایش اتاق دوم یا نما</p>
-            <label class="pcs-editor__toggle">
-                <input type="checkbox" data-pcs-pip-enabled${pipOn ? ' checked' : ''}>
-                <span class="pcs-editor__toggle-track" aria-hidden="true"></span>
-                <span class="pcs-editor__toggle-label">فعال‌سازی عکس در عکس</span>
-            </label>
-            <div class="pcs-editor__pip-panel${pipOn ? ' is-open' : ''}" data-pcs-pip-panel>
-                <input type="hidden" id="pcsEditPipImage" value="${pipIdx}">
-                <p class="pcs-editor__mini-label">تصویر کوچک</p>
-                ${editorThumbGrid(imgs, pipIdx, 'pip')}
-                <p class="pcs-editor__mini-label">جایگاه</p>
-                ${editorOptionChips('pcs-pip-corner', [['br', 'پایین راست'], ['bl', 'پایین چپ'], ['tr', 'بالا راست'], ['tl', 'بالا چپ']], conf.pip_corner || 'br')}
-                <p class="pcs-editor__mini-label">اندازه و شکل</p>
-                ${editorOptionChips('pcs-pip-size', [['s', 'کوچک'], ['m', 'متوسط'], ['l', 'بزرگ']], conf.pip_size || 'm')}
-                ${editorOptionChips('pcs-pip-shape', [['rounded', 'گرد'], ['circle', 'دایره'], ['card', 'پولاروید']], conf.pip_shape || 'rounded')}
-                <p class="pcs-editor__mini-label">حاشیه</p>
-                ${editorOptionChips('pcs-pip-border', [['light', 'سفید'], ['brand', 'برند'], ['gold', 'طلایی']], conf.pip_border || 'light')}
-                <label class="pcs-editor__range-label">قاب تصویر کوچک <span data-pcs-range-val="pip_crop">${conf.pip_crop_y ?? 50}%</span></label>
-                <input type="range" class="pcs-editor__range" data-pcs-edit-range="pip_crop" min="0" max="100" value="${conf.pip_crop_y ?? 50}">
-                <label class="pcs-editor__range-label">چرخش جزئی <span data-pcs-range-val="pip_tilt">${conf.pip_tilt ?? 0}°</span></label>
-                <input type="range" class="pcs-editor__range" data-pcs-edit-range="pip_tilt" min="-10" max="10" value="${conf.pip_tilt ?? 0}">
-            </div>
-        </section>`;
+        if (!conf.pip_enabled && (conf.hero_vignette ?? 0) >= 40) return 'cinematic';
+        if (conf.pip_enabled && conf.pip_shape === 'card' && conf.pip_size === 'l') return 'magazine';
+        if (conf.pip_enabled) return 'pip_classic';
+        return 'clean';
     }
 
-    function editorHeroMoodSection(conf) {
-        return `<section class="pcs-editor__section">
-            <h4 class="pcs-editor__section-title"><i class="fas fa-camera-retro" aria-hidden="true"></i> جو تصویر اصلی</h4>
-            <p class="pcs-editor__section-hint">لنز، گرما و عمق — روی تصویر بزرگ (نه متن پوستر)</p>
-            <p class="pcs-editor__mini-label">دمای رنگ</p>
-            ${editorOptionChips('pcs-hero-warmth', [['neutral', 'خنثی'], ['warm', 'گرم'], ['cool', 'سرد']], conf.hero_warmth || 'neutral')}
-            <label class="pcs-editor__range-label">سایه لنز (وینیت) <span data-pcs-range-val="hero_vignette">${conf.hero_vignette ?? 0}%</span></label>
-            <input type="range" class="pcs-editor__range" data-pcs-edit-range="hero_vignette" min="0" max="80" value="${conf.hero_vignette ?? 0}">
+    function syncCompositionActiveCard(key) {
+        const controls = editorControlsEl();
+        if (!controls) return;
+        controls.querySelectorAll('[data-pcs-composition]').forEach((btn) => {
+            const on = btn.getAttribute('data-pcs-composition') === key;
+            btn.classList.toggle('is-active', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+    }
+
+    function syncPipTuneVisibility(pipOn) {
+        const tune = editorControlsEl()?.querySelector('[data-pcs-pip-tune]');
+        if (!tune) return;
+        tune.classList.toggle('is-collapsed', !pipOn);
+        tune.setAttribute('aria-hidden', pipOn ? 'false' : 'true');
+    }
+
+    function editorComposeSection(imgs, conf) {
+        const activeKey = guessCompositionKey(conf);
+        state.editorCompositionKey = activeKey;
+        const pipOn = !!conf.pip_enabled;
+        const pipIdx = conf.pip_image_index ?? 1;
+        const pipBlock = imgs.length < 2
+            ? '<p class="pcs-editor__compose-note">برای لایه دوم حداقل دو تصویر در فایل لازم است.</p>'
+            : `<div class="pcs-editor__pip-tune${pipOn ? '' : ' is-collapsed'}" data-pcs-pip-tune aria-hidden="${pipOn ? 'false' : 'true'}">
+                <div class="pcs-editor__pip-tune-grid">
+                    <div class="pcs-editor__pip-tune-field">
+                        <span class="pcs-editor__mini-label">تصویر لایه دوم</span>
+                        ${editorPipImagePicker(imgs, pipIdx)}
+                    </div>
+                    <div class="pcs-editor__pip-tune-field">
+                        <span class="pcs-editor__mini-label">جایگاه</span>
+                        ${editorOptionChips('pcs-pip-corner', [['br', 'پایین راست'], ['bl', 'پایین چپ'], ['tr', 'بالا راست'], ['tl', 'بالا چپ']], conf.pip_corner || 'br')}
+                    </div>
+                </div>
+                <div class="pcs-editor__pip-tune-grid">
+                    <div class="pcs-editor__pip-tune-field">
+                        <span class="pcs-editor__mini-label">اندازه</span>
+                        ${editorOptionChips('pcs-pip-size', [['s', 'ک'], ['m', 'م'], ['l', 'ب']], conf.pip_size || 'm')}
+                    </div>
+                    <div class="pcs-editor__pip-tune-field">
+                        <span class="pcs-editor__mini-label">شکل</span>
+                        ${editorOptionChips('pcs-pip-shape', [['rounded', 'گرد'], ['circle', 'دایره'], ['card', 'کارت']], conf.pip_shape || 'rounded')}
+                    </div>
+                </div>
+                <label class="pcs-editor__range-label">چرخش لایه <span data-pcs-range-val="pip_tilt">${conf.pip_tilt ?? 0}°</span></label>
+                <input type="range" class="pcs-editor__range" data-pcs-edit-range="pip_tilt" min="-10" max="10" value="${conf.pip_tilt ?? 0}">
+            </div>`;
+
+        return `<section class="pcs-editor__section pcs-editor__section--compose">
+            <div class="pcs-editor__compose-head">
+                <h4 class="pcs-editor__section-title"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> ترکیب حرفه‌ای</h4>
+                <p class="pcs-editor__section-hint">یک استایل انتخاب کنید — عکس در عکس با همان کارت فعال می‌شود، بدون سوئیچ جداگانه</p>
+            </div>
+            <input type="hidden" id="pcsEditPipEnabled" value="${pipOn ? '1' : '0'}">
+            <input type="hidden" id="pcsEditPipImage" value="${pipIdx}">
+            <div class="pcs-editor__style-grid" role="listbox" aria-label="استایل ترکیب">
+                ${COMPOSITION_UI.map((item) => `
+                <button type="button" class="pcs-editor__style-card${activeKey === item.key ? ' is-active' : ''}"
+                    data-pcs-composition="${item.key}" role="option" aria-selected="${activeKey === item.key ? 'true' : 'false'}">
+                    <span class="pcs-editor__style-card-icon" aria-hidden="true"><i class="fas ${item.icon}"></i></span>
+                    <span class="pcs-editor__style-card-text">
+                        <strong>${esc(item.label)}</strong>
+                        <small>${esc(item.sub)}</small>
+                    </span>
+                </button>`).join('')}
+            </div>
+            <details class="pcs-editor__compose-fine">
+                <summary class="pcs-editor__compose-fine-summary">تنظیم ظریف لایه و نور</summary>
+                <div class="pcs-editor__compose-fine-body">
+                    ${pipBlock}
+                    <div class="pcs-editor__compose-mood">
+                        <span class="pcs-editor__mini-label">دمای تصویر</span>
+                        ${editorOptionChips('pcs-hero-warmth', [['neutral', 'خنثی'], ['warm', 'گرم'], ['cool', 'سرد']], conf.hero_warmth || 'neutral')}
+                        <label class="pcs-editor__range-label">وینیت <span data-pcs-range-val="hero_vignette">${conf.hero_vignette ?? 0}%</span></label>
+                        <input type="range" class="pcs-editor__range" data-pcs-edit-range="hero_vignette" min="0" max="80" value="${conf.hero_vignette ?? 0}">
+                    </div>
+                </div>
+            </details>
         </section>`;
     }
 
     function syncCompositionFormFromBuffer(conf) {
         const controls = editorControlsEl();
         if (!controls || !conf) return;
-        const pipCheck = controls.querySelector('[data-pcs-pip-enabled]');
-        if (pipCheck) pipCheck.checked = !!conf.pip_enabled;
-        const pipPanel = controls.querySelector('[data-pcs-pip-panel]');
-        pipPanel?.classList.toggle('is-open', !!conf.pip_enabled);
+        const pipEnabledHidden = controls.querySelector('#pcsEditPipEnabled');
+        if (pipEnabledHidden) pipEnabledHidden.value = conf.pip_enabled ? '1' : '0';
+        syncPipTuneVisibility(!!conf.pip_enabled);
         const pipHidden = controls.querySelector('#pcsEditPipImage');
         if (pipHidden) pipHidden.value = String(conf.pip_image_index ?? 1);
+        syncCompositionActiveCard(guessCompositionKey(conf));
         controls.querySelectorAll('[data-pcs-pip-corner]').forEach((b) => {
             b.classList.toggle('is-active', b.getAttribute('data-pcs-pip-corner') === (conf.pip_corner || 'br'));
         });
@@ -909,17 +1126,14 @@
         setRange('brightness', conf.img_brightness ?? 100);
         setRange('blur', conf.img_blur ?? 0);
         const pipIdx = conf.pip_image_index ?? 1;
-        controls.querySelectorAll('[data-pcs-pip-grid] .pcs-editor__img-tile').forEach((tile) => {
-            const i = parseInt(tile.getAttribute('data-pcs-img-idx') || '0', 10);
-            const on = i === pipIdx;
-            tile.classList.toggle('is-selected', on);
-            tile.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
+        const pipSelect = controls.querySelector('[data-pcs-pip-image-select]');
+        if (pipSelect) pipSelect.value = String(pipIdx);
     }
 
     function applyCompositionPreset(key) {
         const preset = COMPOSITION_PRESETS[key];
         if (!preset || !state.editorBuffer) return;
+        state.editorCompositionKey = key;
         Object.assign(state.editorBuffer, preset);
         if (state.editorBuffer.pip_enabled && propertyImageList().length > 1) {
             const p = state.editorBuffer.primary_image_index || 0;
@@ -976,8 +1190,9 @@
                         <div style="position:absolute;inset:0;background:radial-gradient(circle at 88% 10%, ${primaryRgba(primaryColor, 0.5)} 0%, transparent 42%);opacity:.9;"></div>
                         ${posterHeroWarmth(conf)}
                         ${posterHeroVignetteExtra(conf)}
-                        ${posterPipInset(conf, primaryColor, accentInk)}
+                        ${posterPipInset(conf, primaryColor, accentInk, 'luxury_hero')}
                     </div>
+                    ${posterPipInset(conf, primaryColor, accentInk, 'luxury_overlay')}
                     ${posterBokehDots(primaryColor)}
                     ${posterShineOverlay()}
                     ${posterGrainOverlay()}
@@ -1013,7 +1228,7 @@
                             <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(15,23,42,.28) 100%);"></div>
                             ${posterHeroWarmth(conf)}
                             ${posterHeroVignetteExtra(conf)}
-                            ${posterPipInset(conf, primaryColor, accentInk)}
+                            ${posterPipInset(conf, primaryColor, accentInk, 'minimal_hero')}
                             ${posterShineOverlay()}
                             <div style="position:absolute;top:24px;right:24px;z-index:2;">${dealBadgeHtml(dealLabel, accentInk, 'light')}</div>
                             ${locLine ? `<div style="position:absolute;bottom:20px;right:24px;left:24px;z-index:2;display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,.92);border:1px solid #e2e8f0;box-shadow:0 8px 22px rgba(15,23,42,.12);">
@@ -1137,14 +1352,152 @@
     }
 
     function editorPreviewBounds(wrap) {
+        const viewport = $('#pcsEditorPreviewViewport') || wrap?.closest?.('.pcs-editor__preview-viewport');
         const stage = wrap?.closest?.('.pcs-editor__preview-stage');
-        if (!stage) return null;
-        const tagH = stage.querySelector('.pcs-editor__preview-tag')?.offsetHeight || 24;
-        const pad = 28;
+        if (!viewport && !stage) return null;
+        const pad = 24;
+        const host = viewport || stage;
         return {
-            width: Math.max(180, stage.clientWidth - pad),
-            height: Math.max(220, stage.clientHeight - tagH - pad),
+            width: Math.max(180, host.clientWidth - pad),
+            height: Math.max(200, host.clientHeight - pad),
         };
+    }
+
+    const EDITOR_PREVIEW_ZOOM_MIN = 0.55;
+    const EDITOR_PREVIEW_ZOOM_MAX = 2.4;
+    const EDITOR_PREVIEW_ZOOM_STEP = 0.12;
+
+    function resetEditorPreviewView() {
+        state.editorPreviewView = { zoom: 1, panX: 0, panY: 0 };
+        applyEditorPreviewViewTransform();
+    }
+
+    function clampEditorPreviewZoom(z) {
+        return Math.min(EDITOR_PREVIEW_ZOOM_MAX, Math.max(EDITOR_PREVIEW_ZOOM_MIN, z));
+    }
+
+    function setEditorPreviewZoom(nextZoom) {
+        state.editorPreviewView.zoom = clampEditorPreviewZoom(nextZoom);
+        applyEditorPreviewViewTransform();
+        const wrap = $('#pcsEditorPreview');
+        if (wrap && wrap._pcsLastVisual) {
+            updateEditorPreviewScrollSize(wrap._pcsLastVisual.w, wrap._pcsLastVisual.h);
+        }
+    }
+
+    function updateEditorPreviewScrollSize(visualW, visualH) {
+        const wrap = $('#pcsEditorPreview');
+        if (!wrap) return;
+        const z = state.editorPreviewView.zoom;
+        const pad = 28;
+        wrap.style.minWidth = `${Math.round(visualW * z) + pad}px`;
+        wrap.style.minHeight = `${Math.round(visualH * z) + pad}px`;
+    }
+
+    function applyEditorPreviewViewTransform() {
+        const wrap = $('#pcsEditorPreview');
+        const scaler = wrap ? $('.pcs-preview-scaler', wrap) : null;
+        const { zoom, panX, panY } = state.editorPreviewView;
+        if (scaler) {
+            scaler.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+            scaler.style.transformOrigin = 'top center';
+        }
+        if (wrap?._pcsLastVisual) {
+            updateEditorPreviewScrollSize(wrap._pcsLastVisual.w, wrap._pcsLastVisual.h);
+        }
+        const label = $('#pcsEditorPreviewZoomLabel');
+        if (label) label.textContent = `${Math.round(zoom * 100)}٪`;
+        const viewport = $('#pcsEditorPreviewViewport');
+        viewport?.classList.toggle('is-zoomed', zoom > 1.02 || Math.abs(panX) > 2 || Math.abs(panY) > 2);
+    }
+
+    function bindEditorPreviewZoomControls() {
+        const editor = $('#pcsEditor');
+        if (!editor || editor.dataset.pcsZoomControlsBound === '1') return;
+        editor.dataset.pcsZoomControlsBound = '1';
+        editor.addEventListener('click', (e) => {
+            const zoomIn = e.target.closest('[data-pcs-preview-zoom-in]');
+            const zoomOut = e.target.closest('[data-pcs-preview-zoom-out]');
+            const zoomReset = e.target.closest('[data-pcs-preview-zoom-reset]');
+            if (!zoomIn && !zoomOut && !zoomReset) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (zoomIn) {
+                setEditorPreviewZoom(state.editorPreviewView.zoom + EDITOR_PREVIEW_ZOOM_STEP);
+            } else if (zoomOut) {
+                setEditorPreviewZoom(state.editorPreviewView.zoom - EDITOR_PREVIEW_ZOOM_STEP);
+            } else {
+                resetEditorPreviewView();
+            }
+        });
+    }
+
+    function bindEditorPreviewViewEvents() {
+        if (state.editorPreviewViewBound) return;
+        const viewport = $('#pcsEditorPreviewViewport');
+        if (!viewport) return;
+        state.editorPreviewViewBound = true;
+
+        viewport.addEventListener('wheel', (e) => {
+            if (!$('#pcsEditor')?.hasAttribute('hidden')) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -EDITOR_PREVIEW_ZOOM_STEP : EDITOR_PREVIEW_ZOOM_STEP;
+                setEditorPreviewZoom(state.editorPreviewView.zoom + delta);
+            }
+        }, { passive: false });
+
+        let panning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        let panOriginX = 0;
+        let panOriginY = 0;
+
+        const endPan = () => {
+            panning = false;
+            viewport.classList.remove('is-panning');
+        };
+
+        viewport.addEventListener('mousedown', (e) => {
+            if (e.button !== 0 || e.target.closest('button, a, input, select, textarea')) return;
+            panning = true;
+            panStartX = e.clientX;
+            panStartY = e.clientY;
+            panOriginX = state.editorPreviewView.panX;
+            panOriginY = state.editorPreviewView.panY;
+            viewport.classList.add('is-panning');
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!panning) return;
+            state.editorPreviewView.panX = panOriginX + (e.clientX - panStartX);
+            state.editorPreviewView.panY = panOriginY + (e.clientY - panStartY);
+            applyEditorPreviewViewTransform();
+        });
+
+        window.addEventListener('mouseup', endPan);
+        viewport.addEventListener('mouseleave', endPan);
+
+        let touchId = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) return;
+            const t = e.touches[0];
+            touchId = t.identifier;
+            touchStartX = t.clientX;
+            touchStartY = t.clientY;
+            panOriginX = state.editorPreviewView.panX;
+            panOriginY = state.editorPreviewView.panY;
+        }, { passive: true });
+        viewport.addEventListener('touchmove', (e) => {
+            const t = [...e.touches].find((x) => x.identifier === touchId);
+            if (!t) return;
+            state.editorPreviewView.panX = panOriginX + (t.clientX - touchStartX);
+            state.editorPreviewView.panY = panOriginY + (t.clientY - touchStartY);
+            applyEditorPreviewViewTransform();
+        }, { passive: true });
+        viewport.addEventListener('touchend', () => { touchId = null; });
     }
 
     function previewMaxHeight(formatKey, wrap) {
@@ -1208,17 +1561,29 @@
         const visualW = Math.round(fmt.w * scale);
         const visualH = Math.round(fmt.h * scale);
 
-        wrap.style.overflow = isLightbox ? 'auto' : 'hidden';
-        wrap.style.width = '100%';
-        wrap.style.display = 'flex';
-        wrap.style.justifyContent = 'center';
-        wrap.style.alignItems = isLightbox ? 'center' : 'flex-start';
-        wrap.style.height = isLightbox ? 'auto' : `${visualH}px`;
-        wrap.style.minHeight = isLightbox ? '0' : '0';
-        wrap.style.maxHeight = isLightbox && maxH ? `${maxH}px` : 'none';
-        if (isLightbox) {
-            wrap.style.padding = '1rem 0.85rem 1.1rem';
+        if (isEditorPreview) {
+            wrap.style.overflow = 'visible';
+            wrap.style.width = 'max-content';
+            wrap.style.maxWidth = 'none';
+            wrap.style.maxHeight = 'none';
+            wrap.style.height = 'auto';
+            wrap.style.display = 'block';
+            wrap.style.margin = '0 auto';
+            wrap.style.padding = '14px 18px';
             wrap.style.boxSizing = 'border-box';
+        } else {
+            wrap.style.overflow = isLightbox ? 'auto' : 'hidden';
+            wrap.style.width = '100%';
+            wrap.style.display = 'flex';
+            wrap.style.justifyContent = 'center';
+            wrap.style.alignItems = isLightbox ? 'center' : 'flex-start';
+            wrap.style.height = isLightbox ? 'auto' : `${visualH}px`;
+            wrap.style.minHeight = isLightbox ? '0' : '0';
+            wrap.style.maxHeight = isLightbox && maxH ? `${maxH}px` : 'none';
+            if (isLightbox) {
+                wrap.style.padding = '1rem 0.85rem 1.1rem';
+                wrap.style.boxSizing = 'border-box';
+            }
         }
 
         let scaler = $('.pcs-preview-scaler', wrap);
@@ -1243,6 +1608,11 @@
         canvas.style.left = '0';
         canvas.style.top = '0';
         canvas.style.margin = '0';
+        if (isEditorPreview) {
+            wrap._pcsLastVisual = { w: visualW, h: visualH };
+            updateEditorPreviewScrollSize(visualW, visualH);
+            applyEditorPreviewViewTransform();
+        }
         wrap.classList.add('is-ready');
     }
 
@@ -1287,14 +1657,25 @@
 
     function scheduleEditorPreviewScale(wrap, formatKey) {
         if (!wrap || wrap.id !== 'pcsEditorPreview') return;
-        if (!editorPreviewPaneVisible()) return;
+        const viewport = $('#pcsEditorPreviewViewport');
         const maxH = previewMaxHeight(formatKey, wrap) || 520;
-        wrap.style.overflow = 'hidden';
-        wrap.style.maxHeight = `${maxH}px`;
+        if (viewport) {
+            viewport.style.maxHeight = `${maxH}px`;
+            viewport.style.minHeight = 'min(42vh, 400px)';
+        }
         const run = () => scalePreviewCanvas(wrap, formatKey);
-        run();
-        requestAnimationFrame(run);
-        whenImagesReady(wrap, run);
+        const runAfterLayout = () => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(run);
+            });
+        };
+        runAfterLayout();
+        whenImagesReady(wrap, runAfterLayout);
+        clearTimeout(wrap._pcsScaleFallbackTimer);
+        wrap._pcsScaleFallbackTimer = setTimeout(() => {
+            scalePreviewCanvas(wrap, formatKey);
+            wrap.classList.add('is-ready');
+        }, 350);
     }
 
     function bindPosterCarousel() {
@@ -1381,7 +1762,7 @@
         if (!grid) return;
         grid.innerHTML = '';
         TEMPLATES.forEach((tpl) => {
-            const meta = TEMPLATE_META[tpl] || { label: tpl, icon: 'fa-image' };
+            const meta = resolveTemplateMeta(tpl);
             const card = document.createElement('article');
             card.className = `pcs-poster-card pcs-poster-card--${tpl}`;
             const head = document.createElement('div');
@@ -1415,7 +1796,7 @@
     }
 
     function openPreview(tpl) {
-        const meta = TEMPLATE_META[tpl] || { label: tpl };
+        const meta = resolveTemplateMeta(tpl);
         const box = $('#pcsLightboxPreview');
         const lb = $('#pcsLightbox');
         const title = $('#pcsLightboxTitle');
@@ -1612,11 +1993,6 @@
         if (sidebar) settingsSheetState.sidebar = sidebar;
     }
 
-    function syncColorSwatch(color) {
-        const sw = $('#pcsColorSwatch');
-        if (sw && color) sw.style.background = color;
-    }
-
     function bindBrandFields() {
         const b = mergeBrand();
         const set = (id, val) => { const el = $(id); if (el) el.value = val || ''; };
@@ -1626,7 +2002,6 @@
         set('#pcsInstagram', b.instagram);
         const primary = normalizeBrandColor(b.colors?.primary || '#7c3aed');
         set('#pcsPrimaryColor', primary);
-        syncColorSwatch(primary);
         if (state.brandFieldsBound) return;
         state.brandFieldsBound = true;
         document.addEventListener('input', (e) => {
@@ -1646,7 +2021,6 @@
                 const norm = normalizeBrandColor(el.value);
                 if (norm !== el.value) el.value = norm;
                 state.draft.brand_override.colors = { ...(state.draft.brand_override.colors || {}), primary: norm };
-                syncColorSwatch(norm);
             }
             scheduleSave();
             renderPosters();
@@ -2263,9 +2637,14 @@
             headline_scale: parseInt(controls?.querySelector('[data-pcs-edit-range="headline_scale"]')?.value || String(prev.headline_scale ?? 100), 10),
             price_scale: parseInt(controls?.querySelector('[data-pcs-edit-range="price_scale"]')?.value || String(prev.price_scale ?? 100), 10),
             font_key: fontBtn?.getAttribute('data-pcs-font-key') || prev.font_key || 'vazirmatn',
-            pip_enabled: !!controls?.querySelector('[data-pcs-pip-enabled]')?.checked,
+            pip_enabled: controls?.querySelector('#pcsEditPipEnabled')?.value === '1',
             pip_image_index: imgs.length
-                ? Math.min(imgs.length - 1, Math.max(0, parseInt(controls?.querySelector('#pcsEditPipImage')?.value || String(prev.pip_image_index ?? 1), 10)))
+                ? Math.min(imgs.length - 1, Math.max(0, parseInt(
+                    controls?.querySelector('[data-pcs-pip-image-select]')?.value
+                    || controls?.querySelector('#pcsEditPipImage')?.value
+                    || String(prev.pip_image_index ?? 1),
+                    10,
+                )))
                 : 0,
             pip_corner: controls?.querySelector('[data-pcs-pip-corner].is-active')?.getAttribute('data-pcs-pip-corner') || prev.pip_corner || 'br',
             pip_size: controls?.querySelector('[data-pcs-pip-size].is-active')?.getAttribute('data-pcs-pip-size') || prev.pip_size || 'm',
@@ -2304,11 +2683,15 @@
         wrap.classList.remove('is-ready');
         wrap.style.height = '';
         wrap.style.minHeight = '';
+        wrap.style.minWidth = '';
         wrap.style.maxHeight = '';
+        wrap.style.maxWidth = '';
         wrap.style.overflow = '';
         wrap.style.display = '';
         wrap.style.justifyContent = '';
         wrap.style.alignItems = '';
+        wrap.style.padding = '';
+        wrap._pcsLastVisual = null;
     }
 
     function updateEditorLiveMeta(conf, tpl) {
@@ -2410,21 +2793,11 @@
 
         pane.addEventListener('change', (e) => {
             if (!state.editorTemplate) return;
-            if (e.target.matches('[data-pcs-pip-enabled]')) {
+            if (e.target.matches('[data-pcs-pip-image-select]')) {
                 const controls = editorControlsEl();
-                controls?.querySelector('[data-pcs-pip-panel]')?.classList.toggle('is-open', e.target.checked);
-                if (e.target.checked && propertyImageList().length > 1) {
-                    const buf = state.editorBuffer;
-                    if (buf) {
-                        const primary = buf.primary_image_index || 0;
-                        if (buf.pip_image_index == null || buf.pip_image_index === primary) {
-                            buf.pip_image_index = (primary + 1) % propertyImageList().length;
-                        }
-                        const pipHidden = controls?.querySelector('#pcsEditPipImage');
-                        if (pipHidden) pipHidden.value = String(buf.pip_image_index);
-                    }
-                }
-                if (isMobileViewport()) setEditorMobPane('preview');
+                const v = e.target.value;
+                const pipHidden = controls?.querySelector('#pcsEditPipImage');
+                if (pipHidden) pipHidden.value = v;
                 refreshEditorPreview(state.editorTemplate);
             }
         });
@@ -2460,31 +2833,78 @@
                 return;
             }
 
-            const primaryTile = e.target.closest('.pcs-editor__img-tile[data-pcs-img-idx]');
-            if (primaryTile?.closest('[data-pcs-primary-grid]')) {
-                const idx = parseInt(primaryTile.getAttribute('data-pcs-img-idx') || '0', 10);
+            const primaryPick = e.target.closest('[data-pcs-primary-pick]');
+            if (primaryPick) {
+                const idx = parseInt(primaryPick.getAttribute('data-pcs-img-idx') || '0', 10);
                 const hidden = controls.querySelector('#pcsEditImage');
                 if (hidden) hidden.value = String(idx);
-                controls.querySelectorAll('[data-pcs-primary-grid] .pcs-editor__img-tile').forEach((tile) => {
-                    const on = tile === primaryTile;
-                    tile.classList.toggle('is-selected', on);
-                    tile.setAttribute('aria-pressed', on ? 'true' : 'false');
+                const lbl = controls.querySelector('[data-pcs-primary-label]');
+                if (lbl) lbl.textContent = String(idx + 1);
+                controls.querySelectorAll('[data-pcs-primary-pick]').forEach((btn) => {
+                    const on = btn === primaryPick;
+                    btn.classList.toggle('is-selected', on);
+                    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
                 });
                 refreshEditorPreview(tpl);
                 return;
             }
 
-            const galleryTile = e.target.closest('[data-pcs-gallery-slot-pick]');
-            if (galleryTile) {
-                const slot = galleryTile.getAttribute('data-pcs-gallery-slot-pick');
-                const idx = parseInt(galleryTile.getAttribute('data-pcs-img-idx') || '0', 10);
+            const gallerySlotBtn = e.target.closest('[data-pcs-gallery-slot-btn]');
+            if (gallerySlotBtn) {
+                state.editorGallerySlot = parseInt(gallerySlotBtn.getAttribute('data-pcs-gallery-slot-btn') || '0', 10);
+                syncGalleryDockUi();
+                return;
+            }
+
+            const galleryPick = e.target.closest('[data-pcs-gallery-pick]');
+            if (galleryPick) {
+                const idx = parseInt(galleryPick.getAttribute('data-pcs-img-idx') || '0', 10);
+                const slot = state.editorGallerySlot ?? 0;
                 const hidden = controls.querySelector(`[data-pcs-gallery-slot="${slot}"]`);
                 if (hidden) hidden.value = String(idx);
-                controls.querySelectorAll(`[data-pcs-gallery-slot-pick="${slot}"]`).forEach((tile) => {
-                    const on = tile === galleryTile;
-                    tile.classList.toggle('is-selected', on);
-                    tile.setAttribute('aria-pressed', on ? 'true' : 'false');
+                const slots = [0, 1, 2].map((s) => {
+                    const inp = controls.querySelector(`[data-pcs-gallery-slot="${s}"]`);
+                    const fallback = editorImageOrderForGallery(propertyImageList(), state.editorBuffer || {})[s];
+                    const v = parseInt(inp?.value || String(fallback), 10);
+                    return Number.isFinite(v) ? v : s;
                 });
+                slots[slot] = idx;
+                if (state.editorBuffer) {
+                    state.editorBuffer.image_order = buildGalleryImageOrder(propertyImageList(), slots);
+                }
+                syncGalleryDockUi();
+                refreshEditorPreview(tpl);
+                return;
+            }
+
+            if (e.target.closest('[data-pcs-gallery-autofill]')) {
+                const imgsList = propertyImageList();
+                const picks = imgsList.map((_, i) => i);
+                const slots = [0, 1, 2].map((s) => picks[s] ?? picks[0] ?? 0);
+                if (state.editorBuffer) {
+                    state.editorBuffer.image_order = buildGalleryImageOrder(imgsList, slots);
+                }
+                [0, 1, 2].forEach((s) => {
+                    const hid = controls.querySelector(`[data-pcs-gallery-slot="${s}"]`);
+                    if (hid) hid.value = String(slots[s]);
+                });
+                syncGalleryDockUi();
+                refreshEditorPreview(tpl);
+                return;
+            }
+
+            if (e.target.closest('[data-pcs-gallery-rotate]')) {
+                const imgsList = propertyImageList();
+                const ord = editorImageOrderForGallery(imgsList, state.editorBuffer || {});
+                const rotated = [ord[1], ord[2], ord[0]];
+                if (state.editorBuffer) {
+                    state.editorBuffer.image_order = buildGalleryImageOrder(imgsList, rotated);
+                }
+                [0, 1, 2].forEach((s) => {
+                    const hid = controls.querySelector(`[data-pcs-gallery-slot="${s}"]`);
+                    if (hid) hid.value = String(rotated[s]);
+                });
+                syncGalleryDockUi();
                 refreshEditorPreview(tpl);
                 return;
             }
@@ -2495,20 +2915,6 @@
                     const on = b === fontBtn;
                     b.classList.toggle('is-active', on);
                     b.setAttribute('aria-pressed', on ? 'true' : 'false');
-                });
-                refreshEditorPreview(tpl);
-                return;
-            }
-
-            const pipTile = e.target.closest('.pcs-editor__img-tile[data-pcs-img-idx]');
-            if (pipTile?.closest('[data-pcs-pip-grid]')) {
-                const idx = parseInt(pipTile.getAttribute('data-pcs-img-idx') || '0', 10);
-                const hidden = controls.querySelector('#pcsEditPipImage');
-                if (hidden) hidden.value = String(idx);
-                controls.querySelectorAll('[data-pcs-pip-grid] .pcs-editor__img-tile').forEach((tile) => {
-                    const on = tile === pipTile;
-                    tile.classList.toggle('is-selected', on);
-                    tile.setAttribute('aria-pressed', on ? 'true' : 'false');
                 });
                 refreshEditorPreview(tpl);
                 return;
@@ -2537,15 +2943,18 @@
             return;
         }
         state.editorTemplate = tpl;
+        state.editorGallerySlot = 0;
+        resetEditorPreviewView();
+        bindEditorPreviewZoomControls();
+        bindEditorPreviewViewEvents();
         initEditorBuffer(tpl);
-        const meta = TEMPLATE_META[tpl] || { label: tpl, icon: 'fa-image' };
+        const meta = resolveTemplateMeta(tpl);
         const fmtMeta = FORMAT_META[state.format] || FORMAT_META.story;
         const conf = state.editorBuffer;
         const imgs = propertyImageList();
         const galleryOrder = editorImageOrderForGallery(imgs, conf);
 
-        const badge = $('#pcsEditorTplBadge');
-        if (badge) badge.innerHTML = `<i class="fas ${meta.icon}" aria-hidden="true"></i> ${esc(meta.label)}`;
+        setEditorTplBadge(meta);
         const fmtPill = $('#pcsEditorFormatPill');
         if (fmtPill) {
             fmtPill.hidden = false;
@@ -2558,10 +2967,10 @@
         if (controls) {
             const headlineVal = conf.headline || defaultPropertyHeadline();
             const galleryBlock = tpl === 'gallery' && imgs.length
-                ? `<section class="pcs-editor__section">
-                    <h4 class="pcs-editor__section-title"><i class="fas fa-images" aria-hidden="true"></i> تصاویر گالری</h4>
-                    <p class="pcs-editor__section-hint">برای هر بخش چیدمان یک تصویر انتخاب کنید — پیش‌نمایش بلافاصله به‌روز می‌شود</p>
-                    <div class="pcs-editor__gallery-slots">${editorGallerySlotGrid(imgs, galleryOrder)}</div>
+                ? `<section class="pcs-editor__section pcs-editor__section--dock">
+                    <h4 class="pcs-editor__section-title"><i class="fas fa-images" aria-hidden="true"></i> چیدمان تصاویر</h4>
+                    <p class="pcs-editor__section-hint">یک کتابخانه تصویر — سه بخش پوستر بدون تکرار گرید</p>
+                    ${editorGalleryComposer(imgs, galleryOrder)}
                 </section>`
                 : '';
 
@@ -2571,6 +2980,7 @@
                     <p class="pcs-editor__section-hint">پیش‌نمایش با همان ابعاد دانلود به‌روز می‌شود</p>
                     <div class="pcs-editor__format-bar" id="pcsEditFormatBar"></div>
                 </section>
+                ${galleryBlock}
                 <section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-pen-fancy" aria-hidden="true"></i> عنوان تبلیغاتی</h4>
                     <p class="pcs-editor__section-hint">متن اصلی روی پوستر — کوتاه و جذاب باشد</p>
@@ -2588,9 +2998,8 @@
                 </section>
                 ${tpl !== 'gallery' ? `<section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-image" aria-hidden="true"></i> تصویر شاخص</h4>
-                    <p class="pcs-editor__section-hint">تصویر بزرگ یا پس‌زمینه پوستر — بلافاصله در پیش‌نمایش زنده اعمال می‌شود</p>
-                    <input type="hidden" id="pcsEditImage" value="${conf.primary_image_index || 0}">
-                    ${editorThumbGrid(imgs, conf.primary_image_index || 0, 'primary')}
+                    <p class="pcs-editor__section-hint">از نوار تصاویر یک تصویر شاخص انتخاب کنید</p>
+                    ${editorPrimaryPicker(imgs, conf.primary_image_index || 0)}
                 </section>` : ''}
                 <section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-crop-simple" aria-hidden="true"></i> قاب‌بندی تصویر</h4>
@@ -2605,20 +3014,14 @@
                         <span class="pcs-editor__range-value" id="pcsEditCropValue">${conf.crop_y ?? 50}%</span>
                     </div>
                 </section>
-                <section class="pcs-editor__section">
-                    <h4 class="pcs-editor__section-title"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> ترکیب حرفه‌ای</h4>
-                    <p class="pcs-editor__section-hint">یک کلیک — استایل آماده برای استوری و پست</p>
-                    ${editorCompositionPresets()}
-                </section>
-                ${editorPipSection(imgs, conf)}
-                ${editorHeroMoodSection(conf)}
-                ${imgs.length > 1 ? `<section class="pcs-editor__section">
+                ${editorComposeSection(imgs, conf)}
+                ${imgs.length > 1 && tpl !== 'gallery' ? `<section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-sort" aria-hidden="true"></i> ترتیب تصاویر فایل</h4>
-                    <p class="pcs-editor__section-hint">برای جابه‌جایی در گالری و چیدمان، تصاویر را بالا یا پایین ببرید</p>
+                    <p class="pcs-editor__section-hint">ترتیب پیش‌فرض فایل — برای قالب‌های تک‌تصویری و گالری داخلی</p>
                     ${editorImageOrderPanel(imgs, conf.image_order)}
                 </section>` : ''}
                 <section class="pcs-editor__section">
-                    <h4 class="pcs-editor__section-title"><i class="fas fa-adjust" aria-hidden="true"></i> افکت تصویر شاخص</h4>
+                    <h4 class="pcs-editor__section-title"><i class="fas fa-adjust" aria-hidden="true"></i> ${tpl === 'gallery' ? 'افکت تصاویر' : 'افکت تصویر شاخص'}</h4>
                     <label class="pcs-editor__range-label">روشنایی <span data-pcs-range-val="brightness">${conf.img_brightness ?? 100}%</span></label>
                     <input type="range" class="pcs-editor__range" data-pcs-edit-range="brightness" min="40" max="160" value="${conf.img_brightness ?? 100}">
                     <label class="pcs-editor__range-label">تاری <span data-pcs-range-val="blur">${conf.img_blur ?? 0}px</span></label>
@@ -2635,7 +3038,6 @@
                     <label class="pcs-editor__range-label">اندازه قیمت <span data-pcs-range-val="price_scale">${conf.price_scale ?? 100}%</span></label>
                     <input type="range" class="pcs-editor__range" data-pcs-edit-range="price_scale" min="70" max="140" value="${conf.price_scale ?? 100}">
                 </section>
-                ${galleryBlock}
                 <div class="pcs-editor__tip">
                     <i class="fas fa-lightbulb" aria-hidden="true"></i>
                     <span>برای دیدن جزئیات بیشتر، در موبایل بین پیش‌نمایش و تنظیمات جابه‌جا شوید.</span>
@@ -2682,6 +3084,8 @@
     }
 
     function bindEvents() {
+        bindEditorPreviewZoomControls();
+        bindEditorPreviewViewEvents();
         bindEditorSettingsDelegation();
         document.addEventListener('input', (e) => {
             const id = e.target?.id;
@@ -2967,8 +3371,13 @@
 
     window.openPropertyContentStudio = openModal;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function bootPcs() {
         bindEvents();
         document.addEventListener('touchmove', onPcsTouchMove, { passive: false });
-    });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootPcs);
+    } else {
+        bootPcs();
+    }
 })();

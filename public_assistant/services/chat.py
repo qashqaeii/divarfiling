@@ -23,6 +23,7 @@ from public_assistant.services.public_copy import (
     finalize_public_answer,
     format_public_fallback,
     polish_public_answer,
+    strip_unsolicited_subscription_pitch,
 )
 from public_assistant.services.public_links import LINK_STYLE_PROMPT
 from public_assistant.services.plan_advisor import (
@@ -35,7 +36,7 @@ from public_assistant.services.plan_answer_guard import (
     reconcile_subscription_answer,
     strip_unverified_subscription_prices,
 )
-from public_assistant.services.plan_intent import analyze_subscription_query
+from public_assistant.services.plan_intent import analyze_subscription_query, is_independent_user_turn
 from public_assistant.services.public_plans import load_public_plan_catalog
 from public_assistant.services.security import (
     filter_sources,
@@ -71,15 +72,18 @@ SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ د�
 - نکته‌ها: «نکته: ...» — فقط اگر در منبع آمده یا کاربر مستقیم درباره محدودیت پرسیده.
 - در پاسخ «چطور استخراج کنم»، مراحل و پلتفرم‌ها را بگو؛ بدون نکتهٔ پایانی تجمیعی درباره مرورگر، نرخ دیوار یا قطع اینترنت مگر در منبع باشد.
 - لحن مشاور محصول: حرفه‌ای، دقیق، قابل‌اعتماد — نه رباتیک و نه تبلیغاتی.
-- برای سؤالات آموزشی («چطور»، «چه امکاناتی»، «چه کمکی») معمولاً حداقل **۱۲۰–۲۲۰ کلمه** مفید بنویس اگر منبع محتوا دارد؛ خالی‌گویی نکن."""
+- برای سؤالات آموزشی («چطور»، «چه امکاناتی»، «چه کمکی») معمولاً حداقل **۱۲۰–۲۲۰ کلمه** مفید بنویس اگر منبع محتوا دارد؛ خالی‌گویی نکن.
+- اگر سؤال درباره CRM، فایلینگ، تطبیق، آگهی یا ملک است، **قیمت یا لینک خرید پلن/اشتراک** را در پاسخ نیاور مگر کاربر مستقیماً درباره اشتراک پرسیده باشد."""
 
 
 def _compose_retrieval_query(session: PublicChatSession, message: str) -> str:
     """سؤال‌های کوتاه/ادامه‌دار را با موضوع نوبت قبل غنی می‌کند."""
+    if is_independent_user_turn(message):
+        return message
     norm = normalize_persian(message)
     tokens = tokenize_query(message)
-    followup_hint = len(tokens) <= 5 or any(
-        w in norm for w in ('کجا', 'چطور', 'چگونه', 'چجوری', 'همون', 'همین', 'اون', 'لینک', 'شماره')
+    followup_hint = len(tokens) <= 4 or any(
+        w in norm for w in ('کجا', 'همون', 'همین', 'اون', 'همان')
     )
     if not followup_hint:
         return message
@@ -313,6 +317,8 @@ def answer_question(
         if sub_ctx.is_subscription:
             text = reconcile_subscription_answer(text, sub_ctx, plan_catalog)
             text = strip_unverified_subscription_prices(text, sub_ctx, plan_catalog)
+        else:
+            text = strip_unsolicited_subscription_pitch(text)
     if sub_ctx.is_subscription and not plan_catalog and not text:
         text = compose_no_catalog_answer()
 

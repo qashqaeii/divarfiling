@@ -117,3 +117,34 @@ def finalize_public_answer(text: str) -> str:
     from public_assistant.services.public_links import normalize_public_answer_links
 
     return normalize_public_answer_links((text or '').strip())
+
+
+_SUBSCRIPTION_BUY_URL_RE = re.compile(r'/products/divar-extraction-bot/buy/', re.I)
+_SUBSCRIPTION_PLAN_LINE_RE = re.compile(
+    r'پلن\s+\*\*|خرید اشتراک|لایسنس\s+یک|برای کار\s+\*\*تک‌نفره\*\*|تخفیف حجمی آژانس|'
+    r'مقایسه\s+\*\*سه‌ماهه\*\*|۳×\s*ماهانه',
+    re.I,
+)
+
+
+def strip_unsolicited_subscription_pitch(text: str) -> str:
+    """حذف تبلیغ پلن از پاسخ سؤالات عملیاتی محصول."""
+    if not text:
+        return text
+    if _SUBSCRIPTION_BUY_URL_RE.search(text):
+        lines = []
+        for line in text.splitlines():
+            if _SUBSCRIPTION_BUY_URL_RE.search(line):
+                continue
+            if _SUBSCRIPTION_PLAN_LINE_RE.search(line) and 'تومان' in line:
+                continue
+            if 'برای کار **تک‌نفره**' in line or 'برای کار تک‌نفره' in line:
+                continue
+            lines.append(line)
+        text = '\n'.join(lines)
+    elif _SUBSCRIPTION_PLAN_LINE_RE.search(text) and any(
+        c in text for c in ('تومان', '٬۰۰۰', ',000')
+    ):
+        lines = [ln for ln in text.splitlines() if not _SUBSCRIPTION_PLAN_LINE_RE.search(ln)]
+        text = '\n'.join(lines)
+    return text.strip()

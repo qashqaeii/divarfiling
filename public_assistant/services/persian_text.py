@@ -96,7 +96,7 @@ def normalize_persian(text: str) -> str:
     return text
 
 
-def expand_query_tokens(tokens: list[str]) -> list[str]:
+def expand_query_tokens(tokens: list[str], *, link_customer: bool = False) -> list[str]:
     expanded: list[str] = []
     seen: set[str] = set()
     for tok in tokens:
@@ -107,6 +107,14 @@ def expand_query_tokens(tokens: list[str]) -> list[str]:
         for alt in QUERY_SYNONYMS.get(tok, []):
             alt_n = normalize_persian(alt)
             if alt_n and alt_n not in seen and len(alt_n) >= 2:
+                if link_customer and tok in ('مشتری', 'مخاطب') and alt_n in (
+                    'crm',
+                    'مخاطب',
+                    'خریدار',
+                    'مراجع',
+                    'مشتری',
+                ):
+                    continue
                 seen.add(alt_n)
                 expanded.append(alt_n)
     return expanded
@@ -116,4 +124,7 @@ def tokenize_query(text: str) -> list[str]:
     norm = normalize_persian(text)
     parts = re.split(r'[^\w\u0600-\u06ff]+', norm)
     tokens = [p for p in parts if len(p) >= 2 and p not in STOPWORDS]
-    return expand_query_tokens(tokens)
+    link_customer = 'لینک' in norm and any(
+        w in norm for w in ('مشتری', 'share', 'عمومی', 'بفرست', 'ارسال', 'بساز')
+    )
+    return expand_query_tokens(tokens, link_customer=link_customer)

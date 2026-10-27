@@ -8,6 +8,7 @@ from django.db.models import Prefetch, Q
 from public_assistant.constants import MAX_RETRIEVAL_CHUNKS, MIN_RETRIEVAL_SCORE
 from public_assistant.models import KnowledgeArticle, KnowledgeChunk
 from public_assistant.services.persian_text import normalize_persian, tokenize_query
+from public_assistant.services.plan_intent import is_product_operations_topic
 
 
 @dataclass
@@ -21,6 +22,16 @@ class RetrievedChunk:
     related_links: list
     subscription_note: str
     summary: str = ''
+
+
+def _is_customer_link_howto(query_norm: str) -> bool:
+    if 'لینک' not in query_norm:
+        return False
+    if not any(w in query_norm for w in ('مشتری', 'share', 'عمومی')):
+        return False
+    return any(
+        w in query_norm for w in ('چطور', 'چطوری', 'چگونه', 'بفرست', 'ارسال', 'بساز', 'ساخت', 'share')
+    )
 
 
 def _intent_boost(query_norm: str, article_id: str) -> float:
@@ -82,6 +93,42 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         w in query_norm for w in ('زونکن', 'پوشه', 'کمد', 'دسته بندی')
     ) and any(w in query_norm for w in ('ببر', 'بفرست', 'منتقل', 'مرتب', 'چطور', 'چطوری')):
         boost += 8.0
+    if article_id == 'crm-contact-archive' and 'بایگانی' in query_norm and any(
+        w in query_norm for w in ('مخاطب', 'مشتری', 'گروهی', 'حذف')
+    ):
+        boost += 7.0
+    if article_id == 'crm-property-archive' and 'بایگانی' in query_norm and any(
+        w in query_norm for w in ('ملک', 'فایل شخصی', 'وضعیت معامله')
+    ):
+        boost += 7.0
+    if article_id == 'crm-rental-renewal-reminder' and any(
+        w in query_norm for w in ('اجاره', 'قرارداد', 'تمدید', 'پایان')
+    ) and 'ماه' in query_norm:
+        boost += 7.0
+    if article_id == 'filing-listing-sync-update' and any(
+        w in query_norm for w in ('به روز', 'به‌روز', 'تغییر قیمت', 'ویرایش آگهی')
+    ):
+        boost += 6.5
+    if article_id == 'filing-listing-fields' and any(
+        w in query_norm for w in ('چه اطلاعات', 'چه داده', 'ذخیره', 'استخراج')
+    ) and 'آگهی' in query_norm:
+        boost += 5.0
+    if article_id == 'filing-listing-duplicates' and any(w in query_norm for w in ('تکراری', 'duplicate', 'دو بار')):
+        boost += 6.0
+    if article_id == 'filing-bulk-to-personal' and any(w in query_norm for w in ('گروهی', 'چند', 'bulk')):
+        boost += 5.0
+    if article_id == 'filing-location-fields' and any(
+        w in query_norm for w in ('محله', 'خیابان', 'منطقه', 'استان')
+    ) and 'آگهی' in query_norm:
+        boost += 5.5
+    if article_id == 'crm-matching' and 'بودجه' in query_norm and any(
+        w in query_norm for w in ('میلیارد', 'پیشنهاد', 'خارج', 'تطبیق')
+    ):
+        boost += 5.0
+    if article_id == 'plans-overview' and 'فایلینگ دیوار' in query_norm and not any(
+        w in query_norm for w in ('آگهی', 'مشتری', 'تطبیق', 'بودجه', 'استخراج')
+    ):
+        boost += 2.0
     if article_id == 'filing-listing-manage' and 'dataset' in query_norm and 'crm' in query_norm:
         boost += 9.0
     if article_id == 'share-public-file' and 'لینک' in query_norm and any(
@@ -106,9 +153,12 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         )
     ):
         boost += 5.0
-    if article_id == 'crm-contacts' and any(
-        w in query_norm for w in ('مخاطب', 'مشتری', 'خریدار', 'تماس')
-    ) and any(w in query_norm for w in ('ثبت', 'اضافه', 'چطور', 'چگونه', 'چجوری', 'جدید', 'ساخت')):
+    if (
+        article_id == 'crm-contacts'
+        and not _is_customer_link_howto(query_norm)
+        and any(w in query_norm for w in ('مخاطب', 'مشتری', 'خریدار', 'تماس'))
+        and any(w in query_norm for w in ('ثبت', 'اضافه', 'چطور', 'چگونه', 'چجوری', 'جدید', 'ساخت'))
+    ):
         boost += 7.0
     if article_id == 'crm-personal-properties' and (
         'فایل شخصی' in query_norm
@@ -117,12 +167,8 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         or ('شماره' in query_norm and 'فایل' in query_norm)
     ):
         boost += 7.5
-    if article_id == 'share-public-file' and 'لینک' in query_norm and 'مشتری' in query_norm:
-        if any(
-            w in query_norm
-            for w in ('چطور', 'چطوری', 'چگونه', 'بفرست', 'ارسال', 'بساز', 'ساخت', 'عمومی', 'share', 'اشتراک')
-        ):
-            boost += 12.0
+    if _is_customer_link_howto(query_norm) and article_id == 'share-public-file':
+        boost += 18.0
     if article_id == 'agency-create-roles' and 'آژانس' in query_norm and any(
         w in query_norm for w in ('ساخت', 'نقش', 'مالک', 'منشی')
     ):
@@ -130,7 +176,7 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
     if article_id == 'support-common-errors' and any(w in query_norm for w in ('مشکل', 'خطا', 'نمی')):
         boost += 3.0
     if article_id == 'support-wave1-crm-filing' and 'لینک' in query_norm and any(
-        w in query_norm for w in ('باز', 'نمی', 'کار نمی', 'خطا', 'مشتری')
+        w in query_norm for w in ('باز', 'نمی', 'کار نمی', 'خطا')
     ):
         boost += 9.0
     if article_id == 'share-public-file' and 'share' in query_norm:
@@ -140,7 +186,8 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
     if article_id == 'extractor-single-batch' and 'گروهی' in query_norm:
         boost += 5.0
     if article_id == 'plans-overview' and any(w in query_norm for w in ('قیمت', 'پلن', 'چنده', 'هزینه', 'خرید')):
-        boost += 4.0
+        if not is_product_operations_topic(query_norm):
+            boost += 4.0
     if article_id == 'plans-trial-7d' and any(w in query_norm for w in ('هدیه', 'هفت', 'آزمایشی', 'رایگان', 'trial')):
         boost += 4.5
     if article_id == 'plans-trial-vs-welcome' and any(
@@ -245,6 +292,14 @@ def _intent_penalty(query_norm: str, article_id: str) -> float:
         penalty += 6.0
     if article_id == 'crm-property-owner-contact' and 'لینک' in query_norm and 'مشتری' in query_norm:
         penalty += 4.0
+    if _is_customer_link_howto(query_norm) and article_id in (
+        'crm-contacts',
+        'crm-advisor-guide',
+        'crm-matching',
+        'support-wave1-crm-filing',
+        'crm-contact-archive',
+    ):
+        penalty += 10.0
     if article_id == 'filing-collections' and any(
         w in query_norm for w in ('امکانات', 'چیست', 'چیه', 'تفاوت', 'فرق')
     ):

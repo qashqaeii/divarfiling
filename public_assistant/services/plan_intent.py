@@ -43,15 +43,49 @@ _SUBSCRIPTION_STRONG = (
     'نسخه آزمایشی',
     'پلن آزمایشی',
     'آزمایشی خرید',
-    'فایلینگ دیوار',
 )
 
 _SUBSCRIPTION_FILING = (
     'اشتراک فایلینگ',
-    'فایلینگ دیوار',
-    'فایل های دیوار',
-    'فایل‌های دیوار',
-    'مدیریت فایل',
+    'پلن فایلینگ',
+    'لایسنس فایلینگ',
+    'خرید اشتراک فایلینگ',
+)
+
+_PRODUCT_OPERATIONS_HINTS = (
+    'بودجه',
+    'مشتری',
+    'مخاطب',
+    'تطبیق',
+    'مچینگ',
+    'انعطاف',
+    'زونکن',
+    'کمد',
+    'بایگانی',
+    'dataset',
+    'دیتاست',
+    'مجموعه فایل',
+    'آگهی',
+    'استخراج',
+    'فایل شخصی',
+    'املاک شخصی',
+    'پیشنهادها',
+    'قرارداد اجاره',
+    'تمدید اجاره',
+    'rental_contract',
+    'محله‌های',
+    'محله های',
+    'متراژ',
+    'خریدار',
+    'مستأجر',
+    'مستاجر',
+    'معامله',
+    'تکراری',
+    'به‌روزرسانی',
+    'به روزرسانی',
+    'تغییر قیمت',
+    'صفحه‌بندی',
+    'matches-more',
 )
 
 _SUBSCRIPTION_MEDIUM = (
@@ -98,8 +132,17 @@ _PROPERTY_STRONG = (
     'مالک',
     'فروشنده',
     'خریدار ملک',
+    'خریدار',
+    'مشتری',
+    'مخاطب',
     'listing',
     'متر',
+    'بودجه',
+    'محله',
+    'تطبیق',
+    'زونکن',
+    'بایگانی',
+    'dataset',
 )
 
 _TEAM_PATTERNS = (
@@ -163,11 +206,18 @@ def _to_ascii_digits(text: str) -> str:
     return text.translate(_PERSIAN_DIGITS).translate(_ARABIC_DIGITS)
 
 
+def _size_looks_like_file_count(norm: str, end_index: int) -> bool:
+    tail = norm[end_index : end_index + 16]
+    return bool(re.match(r'\s*(?:فایل|آگهی|ملک|dataset|دیتاست)', tail))
+
+
 def extract_team_size(text: str) -> int | None:
     norm = _to_ascii_digits(normalize_persian(text))
     found: list[int] = []
     for pat in _TEAM_PATTERNS:
         for m in pat.finditer(norm):
+            if _size_looks_like_file_count(norm, m.end()):
+                continue
             n = int(m.group(1))
             if 1 <= n <= 100:
                 found.append(n)
@@ -208,16 +258,48 @@ def _is_share_file_context(norm: str) -> bool:
     return False
 
 
-def _is_subscription_topic(norm: str) -> bool:
-    if any(h in norm for h in _SUBSCRIPTION_FILING):
-        return True
+def _has_subscription_anchor(norm: str) -> bool:
     if any(h in norm for h in _SUBSCRIPTION_STRONG):
         return True
-    if 'اشتراک' in norm and ('فایلینگ' in norm or 'دیوار' in norm):
+    if any(h in norm for h in _SUBSCRIPTION_FILING):
         return True
-    if 'پلن' in norm or 'لایسنس' in norm:
+    if 'اشتراک' in norm and 'فایلینگ' in norm:
         return True
+    if 'قیمت' in norm and any(w in norm for w in ('اشتراک', 'لایسنس', 'پلن', 'ربات', 'استخراج')):
+        return True
+    if 'خرید' in norm and any(w in norm for w in ('اشتراک', 'لایسنس', 'پلن', 'ربات')):
+        return True
+    team = extract_team_size(norm)
+    if team is not None and any(
+        w in norm for w in ('قیمت', 'ماهانه', 'مشاور', 'لایسنس', 'اشتراک', 'تخفیف', 'آژانس', 'نفر')
+    ):
+        return True
+    if extract_duration(norm) and any(
+        w in norm for w in ('قیمت', 'چقدر', 'چنده', 'هزینه', 'می‌شود', 'میشود', 'بخرم', 'پلن')
+    ):
+        if not is_product_operations_topic(norm):
+            return True
     return False
+
+
+def is_product_operations_topic(norm: str) -> bool:
+    """سؤال عملیاتی CRM/فایلینگ — نه خرید اشتراک."""
+    score = sum(1 for h in _PRODUCT_OPERATIONS_HINTS if h in norm)
+    if 'پیشنهاد' in norm and any(w in norm for w in ('فایل', 'ملک', 'مشتری', 'مخاطب', 'بودجه')):
+        score += 2
+    if 'قیمت' in norm and any(w in norm for w in ('آگهی', 'ملک', 'فایل', 'دیوار', 'تغییر', 'به روز', 'به‌روز')):
+        score += 2
+    if 'خرید' in norm and any(w in norm for w in ('ملک', 'آپارتمان', 'خانه', 'زمین', 'واحد')):
+        score += 2
+    if 'فایلینگ دیوار' in norm and any(w in norm for w in ('آگهی', 'استخراج', 'تطبیق', 'crm', 'میزکار')):
+        score += 2
+    if 'ماه' in norm and any(w in norm for w in ('قبل', 'بعد', 'یادآوری', 'قرارداد', 'اجاره')):
+        score += 1
+    return score >= 2
+
+
+def _is_subscription_topic(norm: str) -> bool:
+    return _has_subscription_anchor(norm)
 
 
 def _is_subscription_followup(norm: str) -> bool:
@@ -244,9 +326,26 @@ def _is_subscription_followup(norm: str) -> bool:
 def _is_topic_break(norm: str) -> bool:
     if _is_share_file_context(norm):
         return True
+    if is_product_operations_topic(norm):
+        return True
     if any(h in norm for h in _HOWTO_BREAK) and any(h in norm for h in _CRM_TOPIC):
         return True
     if any(h in norm for h in _HOWTO_BREAK) and not _is_subscription_topic(norm):
+        return True
+    return False
+
+
+def is_independent_user_turn(message: str) -> bool:
+    """سؤال تازه و مستقل — برای بازیابی بدون الحاق پیام قبلی."""
+    norm = normalize_persian(message)
+    tokens = [t for t in re.split(r'[^\w\u0600-\u06ff]+', norm) if len(t) >= 2]
+    if len(tokens) >= 12 or len(norm) >= 90:
+        return True
+    if ('؟' in message or '?' in message) and len(tokens) >= 7:
+        return True
+    if is_product_operations_topic(norm) and len(tokens) >= 5:
+        return True
+    if _has_subscription_anchor(norm):
         return True
     return False
 
@@ -330,11 +429,31 @@ def analyze_subscription_query(
             raw_message=message,
         )
 
+    if is_product_operations_topic(norm) and not _has_subscription_anchor(norm):
+        return SubscriptionQueryContext(
+            is_subscription=False,
+            is_property_listing=True,
+            wants_price=False,
+            wants_comparison=False,
+            wants_recommendation=False,
+            wants_trial_info=False,
+            wants_welcome_gift=False,
+            wants_features=False,
+            team_size=None,
+            solo_advisor=False,
+            agency_context=False,
+            newbie=False,
+            duration=None,
+            needs_team_count=False,
+            raw_message=message,
+        )
+
     property_score = sum(1 for h in _PROPERTY_STRONG if h in norm)
+    has_subscription_anchor = _has_subscription_anchor(norm)
     subscription_score = sum(1 for h in _SUBSCRIPTION_STRONG if h in norm)
     if any(h in norm for h in _SUBSCRIPTION_FILING):
         subscription_score += 2
-    if any(h in norm for h in _SUBSCRIPTION_MEDIUM):
+    if has_subscription_anchor and any(h in norm for h in _SUBSCRIPTION_MEDIUM):
         subscription_score += 1
 
     team_size, duration = _resolve_slots_from_history(session, message)
@@ -342,9 +461,12 @@ def analyze_subscription_query(
     agency_context = any(h in norm for h in _AGENCY_HINTS)
     if team_size and team_size >= 2:
         agency_context = True
-        subscription_score += 2
+        if has_subscription_anchor:
+            subscription_score += 2
 
     wants_price = any(w in norm for w in ('قیمت', 'چنده', 'هزینه', 'چقدر', 'مبلغ', 'تومان'))
+    if wants_price and property_score >= 1 and not has_subscription_anchor:
+        wants_price = False
 
     solo = any(h in norm for h in _SOLO_HINTS) or ('تنها' in norm and 'کار' in norm)
     if team_size and team_size >= 2:
@@ -354,26 +476,34 @@ def analyze_subscription_query(
     if solo:
         subscription_score += 1
 
-    has_subscription_anchor = any(h in norm for h in _SUBSCRIPTION_STRONG) or any(
-        h in norm for h in _SUBSCRIPTION_FILING
-    )
     if property_score >= 1 and not has_subscription_anchor:
         is_property = True
     elif property_score >= 2 and subscription_score < 2:
         is_property = True
+    elif is_product_operations_topic(norm) and not has_subscription_anchor:
+        is_property = True
     else:
         is_property = False
 
-    is_subscription = subscription_score >= 1 and not is_property
-    if team_size and team_size >= 2 and not is_property:
+    is_subscription = bool(has_subscription_anchor and subscription_score >= 1 and not is_property)
+    if team_size and team_size >= 2 and has_subscription_anchor and not is_property:
         is_subscription = True
     wants_comparison = any(
         w in norm
         for w in ('بهتر', 'بهتره', 'به صرفه', 'به‌صرفه', 'مقایسه', 'فرق', 'تفاوت')
-    ) or ' یا ' in f' {norm} '
+    ) or (' یا ' in f' {norm} ' and has_subscription_anchor)
+    if wants_comparison and is_property and not has_subscription_anchor:
+        wants_comparison = False
     wants_recommendation = any(
-        w in norm for w in ('پیشنهاد', 'بخرم', 'مناسب', 'کدوم', 'کدام', 'انتخاب', 'بهتره', 'بهتر است')
+        w in norm for w in ('بخرم', 'مناسب', 'کدوم', 'کدام', 'انتخاب', 'بهتره', 'بهتر است')
     )
+    if 'پیشنهاد' in norm:
+        if any(w in norm for w in ('پلن', 'لایسنس', 'اشتراک')):
+            wants_recommendation = True
+        elif any(w in norm for w in ('فایل', 'ملک', 'مشتری', 'مخاطب', 'بودجه')):
+            wants_recommendation = False
+        elif has_subscription_anchor:
+            wants_recommendation = True
     wants_trial_info = any(w in norm for w in ('آزمایشی', 'trial', 'پلن آزمایشی')) and not any(
         w in norm for w in ('هدیه', 'خوش آمد', 'ثبت نام', 'ثبت‌نام', 'رایگان')
     )
@@ -387,8 +517,19 @@ def analyze_subscription_query(
         w in norm for w in ('crm', 'هوش', 'ai', 'امکانات', 'قابلیت', 'شامل', 'دارد')
     ) and is_subscription
 
-    if not is_property and (wants_price or wants_comparison or wants_recommendation):
-        is_subscription = is_subscription or subscription_score >= 1
+    if not is_property and has_subscription_anchor and (
+        wants_price or wants_comparison or wants_recommendation
+    ):
+        is_subscription = True
+
+    if (
+        not is_subscription
+        and not is_property
+        and session
+        and _is_subscription_followup(norm)
+        and (team_size is not None or duration is not None)
+    ):
+        is_subscription = True
 
     needs_team_count = bool(
         is_subscription
@@ -410,7 +551,8 @@ def analyze_subscription_query(
         is_property_listing=is_property,
         wants_price=wants_price,
         wants_comparison=wants_comparison,
-        wants_recommendation=wants_recommendation or newbie_hint(norm),
+        wants_recommendation=wants_recommendation
+        or (newbie_hint(norm) and (has_subscription_anchor or is_subscription)),
         wants_trial_info=wants_trial_info,
         wants_welcome_gift=wants_welcome_gift,
         wants_features=wants_features,

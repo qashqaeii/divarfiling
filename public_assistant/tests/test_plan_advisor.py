@@ -204,6 +204,26 @@ class PlanAdvisorCatalogTests(TestCase):
         self.assertTrue(ctx.is_property_listing)
         self.assertFalse(ctx.is_subscription)
 
+    def test_matching_budget_not_subscription(self):
+        q = (
+            'اگر مشتری بودجه ۱۰ میلیارد داشته باشد و یک فایل ۱۰ میلیارد و ۵۰۰ میلیون '
+            'قیمت داشته باشد آیا سیستم ممکن است آن را پیشنهاد کند؟'
+        )
+        ctx = analyze_subscription_query(q)
+        self.assertFalse(ctx.is_subscription)
+        self.assertTrue(ctx.is_property_listing)
+
+    def test_listing_update_not_plan_compare(self):
+        q = (
+            'وقتی یک آگهی از دیوار استخراج می‌کنم و بعداً صاحب آگهی قیمت یا مشخصات ملک را '
+            'تغییر می‌دهد آیا فایلینگ دیوار اطلاعات را به‌روزرسانی می‌کند؟'
+        )
+        ctx = analyze_subscription_query(q)
+        self.assertFalse(ctx.is_subscription)
+
+    def test_48_files_not_team_size(self):
+        self.assertIsNone(extract_team_size('۴۸ فایل پیشنهادی برای مخاطب'))
+
     def test_share_file_not_subscription(self):
         ctx = analyze_subscription_query('چطور لینک اشتراک فایل برای مشتری بفرستم؟')
         self.assertFalse(ctx.is_subscription)

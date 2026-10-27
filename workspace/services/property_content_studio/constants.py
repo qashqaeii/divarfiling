@@ -27,7 +27,7 @@ DEFAULT_VISIBILITY = {
     'amenities': True,
     'consultant_name': True,
     'contact_phone': True,
-    'file_code': True,
+    'file_code': False,
 }
 
 DEFAULT_BRAND_COLORS = {

@@ -100,6 +100,17 @@ def _normalize_poster_config(raw: Any, template_id: str) -> Dict[str, Any]:
     if 'font_key' in raw:
         fk = str(raw.get('font_key') or 'vazirmatn')
         out['font_key'] = fk if fk in _FONT_KEYS else 'vazirmatn'
+    for wkey in ('headline_weight', 'price_weight'):
+        if wkey in raw:
+            n = _clip_int(raw.get(wkey), 500, 900, 900)
+            out[wkey] = 900 if n >= 850 else 700 if n >= 650 else 600 if n >= 550 else 500
+    for bkey in ('headline_italic', 'headline_underline', 'price_italic', 'price_underline'):
+        if bkey in raw:
+            out[bkey] = bool(raw.get(bkey))
+    for ckey in ('headline_color', 'price_color'):
+        if ckey in raw:
+            c = str(raw.get(ckey) or '').strip()
+            out[ckey] = c if len(c) == 7 and c.startswith('#') else ''
     if 'image_order' in raw and isinstance(raw.get('image_order'), list):
         order = []
         for item in raw['image_order'][:32]:

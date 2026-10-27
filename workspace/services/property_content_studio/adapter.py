@@ -7,6 +7,7 @@ from workspace.models import CRMProperty
 from workspace.services.display import transaction_profile
 from workspace.services.formatting import format_area, format_toman
 from workspace.services.property_content_studio.constants import OUTPUT_FORMATS, POSTER_TEMPLATES
+from workspace.services.property_features import feature_data_rows_for_display
 from workspace.services.property_images import normalize_external_image_url
 
 
@@ -75,6 +76,53 @@ def _headline(prop: CRMProperty, *, mask_sensitive: bool = False) -> str:
     return title or prop.property_type or 'ملک'
 
 
+def _floor_label(prop: CRMProperty) -> str:
+    fl = prop.floor
+    tf = prop.total_floors
+    if fl is None and not tf:
+        return ''
+    if fl is not None and tf:
+        return f'طبقه {fl} از {tf}'
+    if fl is not None:
+        return f'طبقه {fl}'
+    return f'{tf} طبقه'
+
+
+def _build_year_label(prop: CRMProperty) -> str:
+    y = prop.build_year
+    return f'ساخت {y}' if y else ''
+
+
+def _studio_detail_chips(prop: CRMProperty, *, max_items: int = 6) -> List[str]:
+    chips: List[str] = []
+    for row in feature_data_rows_for_display(prop.feature_data, limit=max_items):
+        label = str(row.get('label') or '').strip()
+        value = str(row.get('value') or '').strip()
+        if not value:
+            continue
+        if label and label not in value and value not in label:
+            piece = f'{label}: {value}'
+        else:
+            piece = value
+        if len(piece) > 44:
+            piece = piece[:41] + '…'
+        if piece not in chips:
+            chips.append(piece)
+        if len(chips) >= max_items:
+            return chips
+    if prop.land_area and prop.area and abs(float(prop.land_area) - float(prop.area)) > 0.01:
+        chip = f'زمین {format_area(prop.land_area)}'
+        if chip not in chips and len(chips) < max_items:
+            chips.append(chip)
+    if prop.is_vacant and 'تخلیه' not in chips and len(chips) < max_items:
+        chips.append('تخلیه')
+    if prop.has_two_corner and len(chips) < max_items:
+        chips.append('دو نبش')
+    if prop.has_two_access and len(chips) < max_items:
+        chips.append('دو معبر')
+    return chips
+
+
 def _location_line(prop: CRMProperty, *, mask_sensitive: bool) -> str:
     if mask_sensitive:
         city = (prop.city or '').strip()
@@ -114,6 +162,9 @@ def build_studio_property_payload(
         'rooms_label': _rooms_label(prop.rooms or ''),
         'floor': prop.floor,
         'total_floors': prop.total_floors,
+        'floor_label': _floor_label(prop),
+        'build_year_label': _build_year_label(prop),
+        'detail_chips': _studio_detail_chips(prop),
         'neighborhood': (prop.neighborhood or '').strip() if not mask_sensitive else '',
         'city': (prop.city or '').strip(),
         'location_line': _location_line(prop, mask_sensitive=mask_sensitive),
@@ -150,8 +201,11 @@ def apply_visibility(
         out['rooms_label'] = ''
     if not visibility.get('floor', True):
         out['floor'] = None
+        out['floor_label'] = ''
+        out['build_year_label'] = ''
     if not visibility.get('amenities', True):
         out['amenities'] = []
+        out['detail_chips'] = []
     if not visibility.get('file_code', True):
         out['file_code'] = ''
     return out

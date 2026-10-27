@@ -63,6 +63,32 @@ class PropertyContentStudioAdapterTests(TestCase):
         fp2 = property_content_fingerprint(self.prop)
         self.assertNotEqual(fp1, fp2)
 
+    def test_payload_includes_extended_poster_details(self):
+        self.prop.floor = 3
+        self.prop.total_floors = 8
+        self.prop.build_year = 1400
+        self.prop.feature_data = {'جنس کف': 'سرامیک'}
+        self.prop.save()
+        payload = build_studio_property_payload(self.prop)
+        self.assertEqual(payload['floor_label'], 'طبقه 3 از 8')
+        self.assertEqual(payload['build_year_label'], 'ساخت 1400')
+        joined = ' '.join(payload['detail_chips'])
+        self.assertIn('سرامیک', joined)
+
+    def test_detail_chips_exclude_internal_location_metadata(self):
+        self.prop.feature_data = {
+            'جنس کف': 'سرامیک',
+            '_location_precision': 'approximate',
+            '_location_source': 'listing_coordinates',
+        }
+        self.prop.save()
+        payload = build_studio_property_payload(self.prop)
+        joined = ' '.join(payload['detail_chips'])
+        self.assertIn('سرامیک', joined)
+        self.assertNotIn('location_precision', joined)
+        self.assertNotIn('location_source', joined)
+        self.assertNotIn('approximate', joined.lower())
+
 
 class PropertyContentStudioAPITests(TestCase):
     def setUp(self):

@@ -48,6 +48,14 @@
             font_key: 'vazirmatn',
             headline_scale: 100,
             price_scale: 100,
+            headline_weight: 900,
+            price_weight: 900,
+            headline_italic: false,
+            headline_underline: false,
+            price_italic: false,
+            price_underline: false,
+            headline_color: '',
+            price_color: '',
             pip_enabled: false,
             pip_image_index: pipDefault,
             pip_corner: 'br',
@@ -105,7 +113,43 @@
         merged.pip_shape = pipShape === 'circle' || pipShape === 'card' ? pipShape : 'rounded';
         const pipBorder = merged.pip_border;
         merged.pip_border = pipBorder === 'brand' || pipBorder === 'gold' ? pipBorder : 'light';
+        merged.headline_weight = normalizePosterTextWeight(merged.headline_weight, 900);
+        merged.price_weight = normalizePosterTextWeight(merged.price_weight, 900);
+        merged.headline_italic = !!merged.headline_italic;
+        merged.headline_underline = !!merged.headline_underline;
+        merged.price_italic = !!merged.price_italic;
+        merged.price_underline = !!merged.price_underline;
+        merged.headline_color = normalizePosterHexColor(merged.headline_color);
+        merged.price_color = normalizePosterHexColor(merged.price_color);
         return merged;
+    }
+
+    function normalizePosterTextWeight(value, fallback) {
+        const n = parseInt(value, 10);
+        if (!Number.isFinite(n)) return fallback ?? 900;
+        if (n >= 850) return 900;
+        if (n >= 650) return 700;
+        if (n >= 550) return 600;
+        return 500;
+    }
+
+    function normalizePosterHexColor(value) {
+        const c = String(value || '').trim();
+        return /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : '';
+    }
+
+    function posterTextEmphasis(conf, role, defaultColor) {
+        const isPrice = role === 'price';
+        const weight = normalizePosterTextWeight(isPrice ? conf?.price_weight : conf?.headline_weight, 900);
+        const italic = !!(isPrice ? conf?.price_italic : conf?.headline_italic);
+        const underline = !!(isPrice ? conf?.price_underline : conf?.headline_underline);
+        const custom = normalizePosterHexColor(isPrice ? conf?.price_color : conf?.headline_color);
+        let css = `font-weight:${weight};`;
+        if (italic) css += 'font-style:italic;';
+        if (underline) css += 'text-decoration:underline;';
+        if (custom) css += `color:${custom};`;
+        else if (defaultColor) css += `color:${defaultColor};`;
+        return css;
     }
 
     function editorControlsEl() {
@@ -144,8 +188,209 @@
         return Math.max(10, Math.round(px * scale / 100));
     }
 
+    let _pcsMeasureCanvas;
+
+    function pcsMeasureCtx(conf, weight) {
+        if (typeof document === 'undefined') return null;
+        if (!_pcsMeasureCanvas) {
+            _pcsMeasureCanvas = document.createElement('canvas');
+        }
+        const ctx = _pcsMeasureCanvas.getContext('2d');
+        if (!ctx) return null;
+        const w = weight || 900;
+        ctx.font = `${w} 32px ${pcsFontFamily(conf)}`;
+        return ctx;
+    }
+
+    function pcsMeasureTextWidth(text, fontSizePx, conf, weight) {
+        const ctx = pcsMeasureCtx(conf, weight);
+        if (!ctx) {
+            const len = String(text || '').length;
+            return len * fontSizePx * 0.52;
+        }
+        ctx.font = `${weight || 900} ${fontSizePx}px ${pcsFontFamily(conf)}`;
+        return ctx.measureText(String(text || '')).width;
+    }
+
+    function posterWrapHeadlineLines(headline, fontSizePx, maxWidthPx, conf, weight) {
+        const w = weight || 900;
+        const raw = String(headline || 'ملک').trim();
+        const words = raw.split(/\s+/).filter(Boolean);
+        if (!words.length) return [raw || 'ملک'];
+        const lines = [];
+        let line = '';
+        words.forEach((word) => {
+            const candidate = line ? `${line} ${word}` : word;
+            if (pcsMeasureTextWidth(candidate, fontSizePx, conf, w) <= maxWidthPx) {
+                line = candidate;
+                return;
+            }
+            if (line) lines.push(line);
+            line = word;
+            if (pcsMeasureTextWidth(line, fontSizePx, conf, w) > maxWidthPx && line.length > 1) {
+                lines.push(line);
+                line = '';
+            }
+        });
+        if (line) lines.push(line);
+        return lines.length ? lines : [raw];
+    }
+
+    function posterHeadlineFit(conf, basePx, headline, maxWidthPx, maxLines) {
+        const cap = Math.max(1, maxLines || 3);
+        const hw = normalizePosterTextWeight(conf?.headline_weight, 900);
+        let px = basePx;
+        const floor = Math.max(28, Math.round(basePx * 0.58));
+        while (px >= floor) {
+            const fitted = posterFontSize(conf, px, 'headline');
+            const lines = posterWrapHeadlineLines(headline, fitted, maxWidthPx, conf, hw);
+            if (lines.length <= cap) {
+                const widest = lines.reduce((m, ln) => Math.max(m, pcsMeasureTextWidth(ln, fitted, conf, hw)), 0);
+                if (widest <= maxWidthPx * 1.02) return { px: fitted, lines };
+            }
+            px -= 2;
+        }
+        const fitted = posterFontSize(conf, floor, 'headline');
+        return { px: fitted, lines: posterWrapHeadlineLines(headline, fitted, maxWidthPx, conf, hw).slice(0, cap) };
+    }
+
+    function posterHeadlineBlockHeight(linePx, lineCount, lineHeight) {
+        const lh = lineHeight || 1.12;
+        return Math.round(linePx * lh * Math.max(1, lineCount));
+    }
+
+    function posterHeadlineSize(conf, basePx, headline, layoutOpts) {
+        const o = layoutOpts || {};
+        const maxW = o.maxWidth || 920;
+        const maxLines = o.maxLines || 3;
+        return posterHeadlineFit(conf, basePx, headline, maxW, maxLines).px;
+    }
+
+    function posterPriceFit(conf, layout, price, maxWidthPx) {
+        let px = posterFontSize(conf, layout.priceLg, 'price');
+        const floor = Math.max(32, Math.round(layout.priceLg * 0.62));
+        const text = String(price || '');
+        const weight = normalizePosterTextWeight(conf?.price_weight, 900);
+        while (px > floor && pcsMeasureTextWidth(text, px, conf, weight) > maxWidthPx) {
+            px -= 2;
+        }
+        return px;
+    }
+
+    function posterPriceWeight(conf) {
+        return normalizePosterTextWeight(conf?.price_weight, 900);
+    }
+
+    function posterPriceValueHtml(price, px, priceEmph, maxWidthPx, conf) {
+        const text = String(price || '');
+        const weight = posterPriceWeight(conf);
+        const maxW = maxWidthPx || 900;
+        let lines = [text];
+        if (pcsMeasureTextWidth(text, px, conf, weight) > maxW * 1.02) {
+            lines = posterWrapHeadlineLines(text, px, maxW, conf, weight);
+            if (lines.length > 2) {
+                lines = posterWrapHeadlineLines(text, Math.max(28, px - 4), maxW, conf, weight).slice(0, 2);
+            }
+        }
+        const lineStyle = `font-size:${px}px;line-height:1.18;${priceEmph}`;
+        if (lines.length <= 1) {
+            return `<div class="pcs-poster-price-value" style="${pcsTextStyle(lineStyle)}">${esc(text)}</div>`;
+        }
+        return `<div class="pcs-poster-price-value pcs-poster-price-value--wrap">${lines.map((ln) => `<div style="${pcsTextStyle(lineStyle)}">${esc(ln)}</div>`).join('')}</div>`;
+    }
+
+    function sanitizePosterTextForExport(root) {
+        const canvas = root?.classList?.contains('pcs-canvas') ? root : root?.querySelector?.('.pcs-canvas');
+        if (!canvas) return;
+        canvas.style.unicodeBidi = 'isolate';
+        canvas.style.direction = 'rtl';
+        canvas.style.textRendering = 'auto';
+        canvas.querySelectorAll('*').forEach((el) => {
+            if (!el.style) return;
+            const tag = el.tagName;
+            if (tag === 'IMG' || tag === 'SVG') return;
+            if (el.getAttribute('dir') === 'ltr') {
+                el.style.unicodeBidi = 'isolate';
+                return;
+            }
+            el.style.unicodeBidi = 'inherit';
+            el.style.textRendering = 'auto';
+            const ls = el.style.letterSpacing;
+            if (ls && (ls.startsWith('-') || parseFloat(ls) < 0)) {
+                el.style.letterSpacing = '0';
+            }
+            if (el.style.textDecorationThickness || el.style.textUnderlineOffset) {
+                el.style.textDecorationThickness = '';
+                el.style.textUnderlineOffset = '';
+            }
+        });
+        canvas.querySelectorAll('.pcs-poster-price-value').forEach((el) => {
+            el.style.display = 'block';
+            el.style.width = '100%';
+            el.style.maxWidth = '100%';
+            if (!el.classList.contains('pcs-poster-price-value--wrap')) {
+                el.style.whiteSpace = 'nowrap';
+            }
+        });
+    }
+
+    function formatDimsHtml(formatKey) {
+        const f = FORMATS[formatKey] || FORMATS.story;
+        return `<span dir="ltr" class="pcs-ltr-dims" lang="en">${f.w}&nbsp;×&nbsp;${f.h}</span>`;
+    }
+
+    function isPosterNumericToken(word) {
+        const w = String(word || '').trim();
+        if (!w) return true;
+        if (/^[\d۰-۹]+([.,٫][\d۰-۹]+)?$/.test(w)) return true;
+        if (/^متر[،,]?$/.test(w)) return true;
+        return false;
+    }
+
+    function modernHeadlineIsSpecStyle(headline) {
+        const h = String(headline || '');
+        if (/متر|متری|خواب|اتاق|سوئیت/i.test(h)) return true;
+        if (/[\d۰-۹]/.test(h) && /[،,]/.test(h)) return true;
+        return false;
+    }
+
+    function pickHeadlineFocusIndex(words) {
+        if (!words || words.length < 2) return 0;
+        const stop = new Set(['و', 'در', 'با', 'از', 'به', 'برای', 'تا', 'که']);
+        let best = -1;
+        let bestScore = -1;
+        words.forEach((w, i) => {
+            if (!w || stop.has(w) || isPosterNumericToken(w)) return;
+            const score = w.length * 2 + (i > 0 ? 1 : 0);
+            if (score > bestScore) {
+                bestScore = score;
+                best = i;
+            }
+        });
+        if (best < 0) return Math.min(1, words.length - 1);
+        return best;
+    }
+
+    let _pcsActivePosterConf = null;
+
+    function withPosterRenderConf(conf, fn) {
+        const prev = _pcsActivePosterConf;
+        _pcsActivePosterConf = conf;
+        try {
+            return fn();
+        } finally {
+            _pcsActivePosterConf = prev;
+        }
+    }
+
     function pcsTextStyle(extra, conf) {
-        return `font-family:${pcsFontFamily(conf)};direction:rtl;unicode-bidi:plaintext;text-rendering:optimizeLegibility;${extra || ''}`;
+        const c = conf != null ? conf : _pcsActivePosterConf;
+        return `font-family:${pcsFontFamily(c)};${extra || ''}`;
+    }
+
+    function syncCanvasTypography(root) {
+        applyFontToSubtree(root);
+        sanitizePosterTextForExport(root);
     }
 
     let fontsReady = false;
@@ -265,8 +510,13 @@
         if (vis.bedrooms === false) p.rooms_label = '';
         if (vis.floor === false) {
             p.floor = null;
+            p.floor_label = '';
+            p.build_year_label = '';
         }
-        if (vis.amenities === false) p.amenities = [];
+        if (vis.amenities === false) {
+            p.amenities = [];
+            p.detail_chips = [];
+        }
         if (vis.file_code === false) p.file_code = '';
         return { property: p, brand: mergeBrand(), vis };
     }
@@ -503,7 +753,7 @@
                 const fmtMeta = FORMAT_META[key];
                 const fmtPill = $('#pcsEditorFormatPill');
                 if (fmtPill && fmtMeta) {
-                    fmtPill.innerHTML = `<i class="fas ${fmtMeta.icon}" aria-hidden="true"></i> ${esc(fmtMeta.label)} · ${esc(fmtMeta.sub)}`;
+                    fmtPill.innerHTML = `<i class="fas ${fmtMeta.icon}" aria-hidden="true"></i> ${esc(fmtMeta.label)} · ${formatDimsHtml(state.format)}`;
                 }
                 resetEditorPreviewView();
                 refreshEditorPreview(tpl);
@@ -871,12 +1121,15 @@
             pad: isSquare ? 36 : isPost ? 44 : 52,
             safeTop,
             safeBottom,
-            heroLuxury: isSquare ? '64%' : isPost ? '68%' : '74%',
-            footerLuxury: isSquare ? '36%' : isPost ? '32%' : '26%',
+            heroLuxury: isSquare ? '62%' : isPost ? '66%' : '68%',
+            footerLuxury: isSquare ? '38%' : isPost ? '34%' : '32%',
             modernHead: isSquare ? 58 : isPost ? 68 : 82,
-            modernImgH: isSquare ? Math.round(fmt.h * 0.5) : isPost ? Math.round(fmt.h * 0.47) : Math.round(fmt.h * 0.5),
-            collageMainH: isSquare ? Math.round(fmt.h * 0.5) : isPost ? Math.round(fmt.h * 0.48) : Math.round(fmt.h * 0.52),
-            campaignImgH: isSquare ? Math.round(fmt.h * 0.54) : isPost ? Math.round(fmt.h * 0.5) : Math.round(fmt.h * 0.52),
+            modernImgMin: isSquare ? Math.round(fmt.h * 0.42) : isPost ? Math.round(fmt.h * 0.4) : Math.round(fmt.h * 0.44),
+            modernFooterMin: isSquare ? 200 : isPost ? 220 : 260,
+            collageMainH: isSquare ? Math.round(fmt.h * 0.46) : isPost ? Math.round(fmt.h * 0.44) : Math.round(fmt.h * 0.48),
+            collageThumb: isSquare ? 200 : isPost ? 228 : 268,
+            collageThumbGap: isSquare ? 16 : 20,
+            campaignImgRatio: isSquare ? 0.58 : isPost ? 0.56 : 0.6,
             hlLuxury: isSquare ? 52 : isPost ? 62 : 80,
             hlModern: isSquare ? 56 : isPost ? 66 : 84,
             hlCollage: isSquare ? 50 : isPost ? 58 : 76,
@@ -885,10 +1138,28 @@
         };
     }
 
+    function faNormCompareText(s) {
+        const digits = '۰۱۲۳۴۵۶۷۸۹';
+        return String(s || '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/[۰-۹]/g, (c) => String(digits.indexOf(c)));
+    }
+
+    function posterDetailChipAllowed(text) {
+        const s = String(text || '').trim();
+        if (!s) return false;
+        if (/location[_\s]*(precision|source)/i.test(s)) return false;
+        if (/listing_coordinates|manual_pin|approximate|coordinates/i.test(s) && /[_.:]/.test(s)) return false;
+        if (/^[_a-z0-9_.]+:\s*/i.test(s)) return false;
+        return true;
+    }
+
     function headlineInText(headline, fragment) {
         if (!fragment) return false;
-        const h = String(headline || '').replace(/\s+/g, ' ');
-        const f = String(fragment).replace(/\s+/g, ' ');
+        const h = faNormCompareText(headline);
+        const f = faNormCompareText(fragment);
+        if (!f) return false;
         return h.includes(f) || f.includes(h);
     }
 
@@ -903,87 +1174,131 @@
         if (p.property_type && !headlineInText(headline, p.property_type)) {
             specs.push({ icon: 'building', text: p.property_type });
         }
-        const amenities = (p.amenities || []).filter((a) => a && !headlineInText(headline, a)).slice(0, 3);
-        return { locLine: locLine || '', specs, amenities };
-    }
-
-    function posterHeadlineSize(conf, basePx, headline) {
-        const len = String(headline || '').length;
-        let px = basePx;
-        if (len > 58) px = Math.round(basePx * 0.72);
-        else if (len > 42) px = Math.round(basePx * 0.82);
-        else if (len > 28) px = Math.round(basePx * 0.92);
-        return posterFontSize(conf, px, 'headline');
+        if (p.floor_label && !headlineInText(headline, p.floor_label)) {
+            specs.push({ icon: 'building', text: p.floor_label });
+        }
+        if (p.build_year_label && !headlineInText(headline, p.build_year_label)) {
+            specs.push({ icon: 'building', text: p.build_year_label });
+        }
+        const detailExtra = (p.detail_chips || []).filter((a) => a && posterDetailChipAllowed(a) && !headlineInText(headline, a));
+        const amenities = [...detailExtra, ...(p.amenities || [])]
+            .filter((a) => a && !headlineInText(headline, a));
+        const seen = new Set();
+        const dedupedAmenities = amenities.filter((a) => {
+            const k = String(a);
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+        });
+        const maxChips = 5;
+        const trimmedSpecs = specs.slice(0, maxChips);
+        const amenitySlots = Math.max(0, maxChips - trimmedSpecs.length);
+        return {
+            locLine: locLine || '',
+            specs: trimmedSpecs,
+            amenities: dedupedAmenities.slice(0, amenitySlots),
+        };
     }
 
     function posterSpecsLineHtml(facts, color, variant, opts) {
         const o = opts || {};
         const compact = !!o.compact;
-        const items = [...facts.specs, ...facts.amenities.map((t) => ({ icon: amenityIconKey(t), text: t }))].slice(0, compact ? 3 : 4);
+        const chipLimit = compact ? 5 : 6;
+        const items = [...facts.specs, ...facts.amenities.map((t) => ({ icon: amenityIconKey(t), text: t }))].slice(0, chipLimit);
         if (!items.length && !facts.locLine) return '';
         const dark = variant === 'dark';
-        const metaPx = compact ? 24 : 30;
-        const sep = dark ? 'rgba(255,255,255,.28)' : 'rgba(15,23,42,.12)';
-        const textColor = dark ? '#e8edf3' : '#475569';
+        const prominent = !!o.prominent;
+        const metaPx = prominent ? 34 : (compact ? 28 : 32);
+        const iconPx = prominent ? 24 : (compact ? 20 : 24);
+        const sep = dark ? 'rgba(255,255,255,.28)' : 'rgba(15,23,42,.14)';
+        const textColor = dark ? '#e8edf3' : (prominent ? '#1e293b' : '#475569');
+        const chipTextColor = dark ? '#f8fafc' : (prominent ? '#0f172a' : '#334155');
         const loc = facts.locLine
-            ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:${items.length ? '10px' : '0'};">
-                ${pcsSvg('location', compact ? 20 : 24, dark ? '#cbd5e1' : color)}
+            ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:${items.length ? '12px' : '0'};">
+                ${pcsSvg('location', iconPx, dark ? '#cbd5e1' : color)}
                 <span style="${pcsTextStyle(`font-size:${metaPx}px;font-weight:700;color:${textColor};line-height:1.35;`)}">${esc(facts.locLine)}</span>
             </div>`
             : '';
         const row = items.length
             ? `<div style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;">
                 ${items.map((it) => `
-                <span style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:${dark ? 'rgba(255,255,255,.08)' : 'rgba(15,23,42,.04)'};border:1px solid ${sep};">
-                    ${pcsSvg(it.icon, 18, dark ? '#f1f5f9' : color)}
-                    <span style="${pcsTextStyle(`font-size:${metaPx - 2}px;font-weight:700;color:${dark ? '#f8fafc' : '#334155'};`)}">${esc(it.text)}</span>
+                <span style="display:inline-flex;align-items:center;gap:8px;padding:${prominent ? '10px 16px' : '8px 14px'};border-radius:12px;background:${dark ? 'rgba(255,255,255,.08)' : 'rgba(15,23,42,.05)'};border:1px solid ${sep};">
+                    ${pcsSvg(it.icon, prominent ? 22 : 18, dark ? '#f1f5f9' : color)}
+                    <span style="${pcsTextStyle(`font-size:${metaPx - (prominent ? 0 : 2)}px;font-weight:${prominent ? 800 : 700};color:${chipTextColor};`)}">${esc(it.text)}</span>
                 </span>`).join('')}
             </div>`
             : '';
         return `<div style="margin-top:${o.noMargin ? 0 : 10}px;">${loc}${row}</div>`;
     }
 
-    function posterPriceEditorial(price, conf, layout, color, onDark) {
+    function posterPriceEditorial(price, conf, layout, color, onDark, opts) {
         if (!price) return '';
-        const px = posterFontSize(conf, layout.priceLg, 'price');
+        const o = opts || {};
+        const maxW = o.maxWidth || layout.w - layout.pad * 2 - 48;
+        const px = posterPriceFit(conf, layout, price, maxW);
+        const priceDefault = onDark ? '#fff' : color;
+        const priceEmph = posterTextEmphasis(conf, 'price', priceDefault);
         if (onDark) {
-            return `<div style="display:inline-flex;flex-direction:column;gap:4px;padding:14px 22px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);">
-                <span style="${pcsTextStyle('font-size:22px;font-weight:700;color:rgba(255,255,255,.72);')}">قیمت</span>
-                <span style="${pcsTextStyle(`font-size:${px}px;font-weight:900;color:#fff;line-height:1;`)}">${esc(price)}</span>
+            return `<div style="display:inline-flex;flex-direction:column;gap:6px;padding:16px 24px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);">
+                <span style="${pcsTextStyle('font-size:24px;font-weight:700;color:rgba(255,255,255,.72);')}">قیمت</span>
+                <span class="pcs-poster-price-value" style="${pcsTextStyle(`font-size:${px}px;line-height:1.18;${priceEmph}`)}">${esc(price)}</span>
             </div>`;
         }
-        return `<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:16px 20px;border-radius:16px;background:#fff;border:1px solid rgba(20,18,16,.08);box-shadow:0 12px 32px rgba(20,18,16,.06);">
-            <span style="${pcsTextStyle(`font-size:24px;font-weight:700;color:${primaryRgba(color, 0.55)};`)}">قیمت</span>
-            <span style="${pcsTextStyle(`font-size:${px}px;font-weight:900;color:${color};line-height:1;letter-spacing:-0.02em;`)}">${esc(price)}</span>
+        if (o.variant === 'inline') {
+            return `<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:14px 18px;border-radius:14px;background:rgba(15,23,42,.04);">
+                <span style="${pcsTextStyle(`font-size:26px;font-weight:700;color:${primaryRgba(color, 0.55)};`)}">قیمت</span>
+                <span class="pcs-poster-price-value" style="${pcsTextStyle(`font-size:${px}px;line-height:1.18;${priceEmph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        return `<div class="pcs-poster-price-block" style="padding:2px 0;max-width:${maxW}px;">
+            <div class="pcs-poster-price-label" style="${pcsTextStyle(`font-size:26px;font-weight:700;color:${primaryRgba(color, 0.5)};margin-bottom:6px;`)}">قیمت</div>
+            ${posterPriceValueHtml(price, px, priceEmph, maxW, conf)}
         </div>`;
     }
 
-    function modernHeadlineMarkup(headline, conf, accent, basePx) {
-        const words = String(headline || 'ملک').trim().split(/\s+/).filter(Boolean);
-        const px = posterHeadlineSize(conf, basePx, headline);
-        const pxHi = posterFontSize(conf, Math.round(basePx * 1.05), 'headline');
-        if (words.length < 2) {
-            return `<div style="${pcsTextStyle(`font-size:${px}px;font-weight:900;line-height:1.06;color:#0f172a;`)}">${esc(headline || 'ملک')}</div>`;
+    function modernHeadlineMarkup(headline, conf, accent, basePx, maxWidthPx) {
+        const raw = String(headline || 'ملک').trim();
+        const maxW = maxWidthPx || 900;
+        const fit = posterHeadlineFit(conf, basePx, raw, maxW, modernHeadlineIsSpecStyle(raw) ? 2 : 3);
+        const px = fit.px;
+        const emph = posterTextEmphasis(conf, 'headline', '#0f172a');
+        const lineStyle = `font-size:${px}px;line-height:1.12;letter-spacing:-0.02em;${emph}`;
+
+        if (modernHeadlineIsSpecStyle(raw)) {
+            const lines = fit.lines.map((ln) => `<div style="${pcsTextStyle(lineStyle)}">${esc(ln)}</div>`).join('');
+            return `<div style="max-width:100%;padding:6px 0 4px;border-inline-end:6px solid ${accent};padding-inline-end:18px;">
+                ${lines}
+            </div>`;
         }
-        const hi = Math.min(1, words.length - 1);
+
+        const words = raw.split(/\s+/).filter(Boolean);
+        const pxHi = posterFontSize(conf, Math.round(px * 1.04), 'headline');
+        const focusEmph = posterTextEmphasis(conf, 'headline', '');
+        if (words.length < 2) {
+            return `<div style="${pcsTextStyle(lineStyle)}">${esc(raw || 'ملک')}</div>`;
+        }
+        const hi = pickHeadlineFocusIndex(words);
         const before = words.slice(0, hi).join(' ');
         const focus = words[hi];
         const after = words.slice(hi + 1).join(' ');
-        const inkOnAccent = textOnColor(accent);
-        return `<div style="max-width:100%;">
-            ${before ? `<div style="${pcsTextStyle(`font-size:${px}px;font-weight:900;line-height:1.04;color:#0f172a;`)}">${esc(before)}</div>` : ''}
-            <div style="display:inline-block;margin:8px 0 6px;padding:6px 18px 8px;background:${accent};transform:skewX(-4deg);">
-                <span style="${pcsTextStyle(`font-size:${pxHi}px;font-weight:900;line-height:1.05;color:${inkOnAccent};display:inline-block;transform:skewX(4deg);`)}">${esc(focus)}</span>
+        const inkOnAccent = normalizePosterHexColor(conf?.headline_color) || textOnColor(accent);
+        const focusStyle = `font-size:${pxHi}px;line-height:1.08;${focusEmph}${focusEmph.includes('color:') ? '' : `color:${inkOnAccent};`}`;
+        return `<div style="max-width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
+            ${before ? `<div style="${pcsTextStyle(lineStyle)}">${esc(before)}</div>` : ''}
+            <div style="display:block;max-width:100%;padding:8px 20px 10px;background:${accent};border-radius:6px;">
+                <span style="${pcsTextStyle(focusStyle)}">${esc(focus)}</span>
             </div>
-            ${after ? `<div style="${pcsTextStyle(`font-size:${px}px;font-weight:900;line-height:1.04;color:#0f172a;`)}">${esc(after)}</div>` : ''}
+            ${after ? `<div style="${pcsTextStyle(lineStyle)}">${esc(after)}</div>` : ''}
         </div>`;
     }
 
-    function collageCircleFrame(url, size, cropY, conf, styleExtra, ringColor) {
+    function collageThumbFrame(url, size, cropY, conf, ringColor) {
         if (!url) return '';
         const ring = ringColor || '#fff';
-        return `<div style="width:${size}px;height:${size}px;border-radius:50%;padding:4px;background:linear-gradient(145deg,#fff,${ring});box-shadow:0 20px 48px rgba(0,0,0,.5);${styleExtra || ''}">
-            <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;background:#111;">
+        const radius = Math.max(18, Math.round(size * 0.13));
+        const innerR = Math.max(14, radius - 4);
+        return `<div style="width:${size}px;height:${size}px;flex-shrink:0;border-radius:${radius}px;padding:4px;background:linear-gradient(155deg,#fff 0%,${primaryRgba(ring, 0.45)} 100%);box-shadow:0 28px 64px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.22);">
+            <div style="width:100%;height:100%;border-radius:${innerR}px;overflow:hidden;background:#0f172a;border:2px solid rgba(255,255,255,.18);">
                 ${posterImg(url, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;display:block;`, conf)}
             </div>
         </div>`;
@@ -1039,33 +1354,35 @@
     function renderLuxuryPoster(ctx) {
         const { layout, conf, primary, cropY, headline, price, facts, primaryColor, accentInk, brandName, phone, dealLabel, b, gold, cream, charcoal } = ctx;
         const pad = layout.pad;
-        const hl = posterHeadlineSize(conf, layout.hlLuxury, headline);
-        const cardLift = layout.isStory ? 56 : 44;
+        const contentW = layout.w - pad * 2;
+        const headFit = posterHeadlineFit(conf, layout.hlLuxury, headline, contentW, 3);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', '#fff');
+        const headHtml = headFit.lines.map((ln) => `<div style="${pcsTextStyle(`font-size:${hl}px;line-height:1.1;letter-spacing:-0.02em;text-shadow:0 2px 24px rgba(0,0,0,.45);${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const headZone = posterHeadlineBlockHeight(hl, headFit.lines.length, 1.1) + 56;
+        const cardLift = layout.isStory ? 48 : 40;
+        const priceColor = primaryColor || charcoal;
         return `
-            <div style="position:absolute;inset:0;background:${cream};overflow:hidden;">
-                <div style="position:absolute;inset:${Math.round(pad * 0.55)}px ${pad}px ${Math.round(layout.h * 0.22)}px;border:1px solid rgba(201,162,39,.35);border-radius:4px;pointer-events:none;z-index:4;"></div>
-                <div style="position:absolute;top:0;left:0;right:0;height:${layout.heroLuxury};overflow:hidden;">
+            <div style="position:absolute;inset:0;background:${cream};overflow:hidden;display:flex;flex-direction:column;">
+                <div style="position:absolute;inset:${Math.round(pad * 0.55)}px ${pad}px ${pad + 120}px;border:1px solid rgba(201,162,39,.32);border-radius:4px;pointer-events:none;z-index:4;"></div>
+                <div style="position:relative;flex:1;min-height:0;overflow:hidden;">
                     ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;`, conf) : `<div style="width:100%;height:100%;background:linear-gradient(165deg,#3d3830,#1a1814);"></div>`}
-                    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,14,.18) 0%,transparent 32%,transparent 48%,rgba(18,16,14,.55) 100%);"></div>
+                    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,14,.22) 0%,transparent 28%,transparent 58%,rgba(18,16,14,.72) 100%);pointer-events:none;"></div>
                     ${posterHeroWarmth(conf)}
                     ${posterHeroVignetteExtra(conf)}
                     ${posterPipInset(conf, primaryColor, accentInk, 'luxury_hero')}
-                    <div style="position:absolute;left:${pad}px;right:${pad}px;bottom:24px;z-index:6;max-width:94%;">
-                        <div style="display:inline-block;padding:14px 0 0;">
-                            <div style="width:56px;height:2px;background:${gold};margin-bottom:16px;"></div>
-                            <div style="${pcsTextStyle(`font-size:${hl}px;font-weight:900;line-height:1.12;color:#fff;letter-spacing:-0.02em;`)}">${esc(headline)}</div>
-                        </div>
+                    <div style="position:absolute;left:${pad}px;right:${pad}px;bottom:${headZone}px;z-index:6;">
+                        <div style="width:56px;height:2px;background:${gold};margin-bottom:14px;"></div>
+                        ${headHtml}
                     </div>
                     ${brandLogoBlock(b, layout.isSquare ? 62 : 70)}
                     <div style="position:absolute;top:${pad}px;left:${pad}px;z-index:7;transform:scale(.92);transform-origin:top left;">${dealBadgeHtml(dealLabel, gold, 'dark')}</div>
                 </div>
                 ${posterPipInset(conf, primaryColor, accentInk, 'luxury_overlay')}
-                <div style="position:absolute;left:${pad}px;right:${pad}px;bottom:${layout.safeBottom}px;z-index:9;margin-top:-${cardLift}px;">
-                    <div style="background:rgba(255,251,245,.97);border-radius:20px;padding:24px 28px 22px;box-shadow:0 28px 72px rgba(20,18,16,.14);border:1px solid rgba(20,18,16,.06);">
-                        ${price ? posterPriceEditorial(price, conf, layout, charcoal, false) : ''}
-                        ${posterSpecsLineHtml(facts, charcoal, 'light', { compact: true, noMargin: !price })}
-                        ${brandName ? `<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(20,18,16,.08);">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
-                    </div>
+                <div style="position:relative;z-index:9;margin:-${cardLift}px ${pad}px ${layout.safeBottom}px;padding:22px 26px 20px;background:linear-gradient(180deg,rgba(255,251,245,.98),rgba(247,242,232,.98));border-radius:22px;box-shadow:0 24px 64px rgba(20,18,16,.16);border:1px solid rgba(20,18,16,.06);">
+                    ${price ? posterPriceEditorial(price, conf, layout, priceColor, false, { maxWidth: contentW - 20 }) : ''}
+                    ${posterSpecsLineHtml(facts, charcoal, 'light', { compact: true, noMargin: !price })}
+                    ${brandName ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(20,18,16,.08);">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
                 </div>
             </div>`;
     }
@@ -1073,26 +1390,26 @@
     function renderModernPoster(ctx) {
         const { layout, conf, primary, cropY, headline, price, facts, accentInk, brandName, phone, dealLabel, primaryColor } = ctx;
         const pad = layout.pad;
-        const imgH = layout.modernImgH;
+        const contentW = layout.w - pad * 2;
         return `
             <div style="position:absolute;inset:0;background:#f6f4f0;overflow:hidden;">
                 <div style="position:absolute;top:0;right:0;width:42%;height:38%;background:linear-gradient(225deg,${primaryRgba(accentInk, 0.09)},transparent);pointer-events:none;"></div>
-                <div style="position:absolute;inset:0;box-sizing:border-box;padding:${pad}px ${pad}px ${layout.safeBottom}px;display:grid;grid-template-rows:auto ${imgH}px auto auto;gap:20px;align-content:start;">
-                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-                        <div style="flex:1;min-width:0;">${modernHeadlineMarkup(headline, conf, accentInk, layout.hlModern)}</div>
-                        <div style="flex-shrink:0;transform:scale(.9);transform-origin:top left;">${dealBadgeHtml(dealLabel, accentInk, 'light')}</div>
+                <div style="position:absolute;inset:0;box-sizing:border-box;padding:${pad}px ${pad}px ${layout.safeBottom}px;display:flex;flex-direction:column;gap:18px;">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-shrink:0;">
+                        <div style="flex:1;min-width:0;padding-top:4px;">${modernHeadlineMarkup(headline, conf, accentInk, layout.hlModern, contentW - 100)}</div>
+                        <div style="flex-shrink:0;margin-top:2px;">${dealBadgeHtml(dealLabel, accentInk, 'light')}</div>
                     </div>
-                    <div style="position:relative;border-radius:22px;overflow:hidden;box-shadow:0 32px 64px rgba(15,23,42,.12);border:1px solid rgba(15,23,42,.06);">
+                    <div style="position:relative;flex:1;min-height:${layout.modernImgMin}px;border-radius:22px;overflow:hidden;box-shadow:0 32px 64px rgba(15,23,42,.12);border:1px solid rgba(15,23,42,.06);">
                         <div style="position:absolute;top:0;bottom:0;right:0;width:6px;background:${accentInk};z-index:2;"></div>
                         ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;`, conf) : `<div style="width:100%;height:100%;background:#e2e8f0;"></div>`}
                         ${posterHeroWarmth(conf)}
                         ${posterPipInset(conf, primaryColor, accentInk, 'minimal_hero')}
                     </div>
-                    <div style="display:grid;grid-template-columns:${price ? '1fr auto' : '1fr'};gap:16px;align-items:end;">
-                        <div>${posterSpecsLineHtml(facts, accentInk, 'light', { compact: true, noMargin: true })}</div>
-                        ${price ? `<div style="min-width:200px;">${posterPriceEditorial(price, conf, layout, accentInk, false)}</div>` : ''}
+                    <div style="flex-shrink:0;display:flex;flex-direction:column;gap:16px;min-height:${layout.modernFooterMin}px;justify-content:flex-end;padding-top:6px;">
+                        ${price ? posterPriceEditorial(price, conf, layout, accentInk, false, { maxWidth: contentW }) : ''}
+                        ${posterSpecsLineHtml(facts, accentInk, 'light', { compact: true, noMargin: true, prominent: true })}
+                        ${brandName ? `<div style="padding-top:12px;border-top:1px solid rgba(15,23,42,.1);font-size:26px;">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
                     </div>
-                    ${brandName ? `<div style="padding-top:12px;border-top:1px solid rgba(15,23,42,.08);">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
                 </div>
             </div>`;
     }
@@ -1100,46 +1417,56 @@
     function renderCollagePoster(ctx) {
         const { layout, conf, cropY, headline, price, facts, primaryColor, accentInk, brandName, phone, dealLabel, g0, g1, g2, imgCount, primary } = ctx;
         const pad = layout.pad;
-        const hl = posterHeadlineSize(conf, layout.hlCollage, headline);
         const accent = accentInk;
         const mainUrl = g0 || primary;
         const sec1 = imgCount >= 2 ? (g1 || '') : '';
         const sec2 = imgCount >= 3 ? (g2 || '') : '';
-        const mainH = layout.collageMainH;
-        const mainTop = layout.isSquare ? 108 : layout.isPost ? 118 : 132;
-        const circle = imgCount >= 2 ? (layout.isSquare ? 156 : 188) : 0;
-        const circlesHtml = imgCount >= 3
-            ? `${collageCircleFrame(sec1, circle, cropY, conf, `position:absolute;right:${pad}px;top:${mainTop + 24}px;z-index:6;`, accent)}
-               ${collageCircleFrame(sec2, Math.round(circle * 0.78), cropY, conf, `position:absolute;right:${pad + 48}px;top:${mainTop + mainH - circle * 0.55}px;z-index:7;`, '#fff')}
+        const footerH = layout.isSquare ? 280 : layout.isPost ? 300 : 340;
+        const headMaxW = layout.w - pad * 2 - 120;
+        const headFit = posterHeadlineFit(conf, layout.hlCollage, headline, headMaxW, 2);
+        const hl = headFit.px;
+        const headBlockH = posterHeadlineBlockHeight(hl, headFit.lines.length, 1.08) + 20;
+        const headTop = pad;
+        const mainTop = headTop + headBlockH + 16;
+        const mainWpct = layout.isSquare ? 54 : 56;
+        const mainH = Math.min(layout.collageMainH, layout.h - mainTop - footerH - pad);
+        const headEmph = posterTextEmphasis(conf, 'headline', '#fff');
+        const headHtml = headFit.lines.map((ln) => `<div style="${pcsTextStyle(`font-size:${hl}px;line-height:1.08;letter-spacing:-0.02em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const thumbBase = layout.collageThumb;
+        const thumbGap = layout.collageThumbGap;
+        const thumbLg = thumbBase;
+        const thumbSm = Math.round(thumbBase * 0.92);
+        const stripW = Math.round(layout.w * 0.44);
+        const thumbsHtml = imgCount >= 3
+            ? `<div style="position:absolute;right:${pad}px;top:0;width:${stripW - pad}px;height:${mainH}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${thumbGap}px;z-index:6;pointer-events:none;">
+                ${collageThumbFrame(sec1, thumbLg, cropY, conf, accent)}
+                ${collageThumbFrame(sec2, thumbSm, cropY, conf, '#fff')}
+               </div>
                ${posterPipInset(conf, primaryColor, accentInk)}`
             : imgCount === 2
-                ? `${collageCircleFrame(sec1, circle, cropY, conf, `position:absolute;right:${pad}px;top:${mainTop + Math.round(mainH * 0.35)}px;z-index:6;`, accent)}
+                ? `<div style="position:absolute;right:${pad}px;top:0;width:${stripW - pad}px;height:${mainH}px;display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:none;">
+                    ${collageThumbFrame(sec1, Math.round(thumbBase * 1.04), cropY, conf, accent)}
+                   </div>
                    ${posterPipInset(conf, primaryColor, accentInk)}`
                 : `${posterPipInset(conf, primaryColor, accentInk)}`;
         return `
-            <div style="position:absolute;inset:0;background:#0c0c0c;overflow:hidden;">
-                <div style="position:absolute;width:55%;height:100%;top:0;right:0;background:linear-gradient(180deg,${accent} 0%,${primaryRgba(accent, 0.75)} 100%);opacity:.95;"></div>
-                <div style="position:absolute;width:120%;height:45%;bottom:-20%;left:-30%;background:#0c0c0c;border-radius:50%;z-index:2;"></div>
-                <div style="position:absolute;top:${pad}px;left:${pad}px;right:${pad}px;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-                    <div style="transform:scale(.9);transform-origin:top left;">${dealBadgeHtml(dealLabel, '#fff', 'dark')}</div>
-                    <div style="flex:1;text-align:end;max-width:72%;">
-                        <div style="${pcsTextStyle(`font-size:${hl}px;font-weight:900;line-height:1.1;color:#fff;letter-spacing:-0.02em;`)}">${esc(headline)}</div>
-                    </div>
+            <div style="position:absolute;inset:0;background:#0c0c0c;overflow:hidden;display:flex;flex-direction:column;">
+                <div style="position:absolute;width:${stripW}px;height:100%;top:0;right:0;background:linear-gradient(180deg,${accent} 0%,${primaryRgba(accent, 0.82)} 100%);z-index:1;"></div>
+                <div style="position:relative;z-index:5;padding:${headTop}px ${pad}px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-height:${headBlockH}px;box-sizing:border-box;">
+                    <div style="transform:scale(.9);transform-origin:top left;flex-shrink:0;">${dealBadgeHtml(dealLabel, '#fff', 'dark')}</div>
+                    <div style="flex:1;max-width:${headMaxW}px;text-align:end;">${headHtml}</div>
                 </div>
-                <div style="position:absolute;left:${pad}px;top:${mainTop}px;width:${layout.isSquare ? '56%' : '58%'};height:${mainH}px;border-radius:120px 120px 28px 28px;overflow:hidden;z-index:4;box-shadow:0 36px 80px rgba(0,0,0,.55);border:3px solid rgba(255,255,255,.14);">
-                    ${mainUrl ? posterImg(mainUrl, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;`, conf) : '<div style="width:100%;height:100%;background:#334155;"></div>'}
-                    ${posterHeroWarmth(conf)}
-                </div>
-                ${circlesHtml}
-                <div style="position:absolute;left:0;right:0;bottom:0;z-index:8;padding:${pad}px ${pad}px ${layout.safeBottom}px;background:#0c0c0c;border-top:1px solid rgba(255,255,255,.08);">
-                    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;">
-                        <div style="flex:1;min-width:220px;">${posterSpecsLineHtml(facts, '#fff', 'dark', { compact: true, noMargin: true })}</div>
-                        ${price ? `<div style="flex-shrink:0;text-align:end;">
-                            <div style="${pcsTextStyle('font-size:22px;font-weight:700;color:rgba(255,255,255,.65);margin-bottom:6px;')}">قیمت</div>
-                            <div style="${pcsTextStyle(`font-size:${posterFontSize(conf, layout.priceLg, 'price')}px;font-weight:900;color:${accent};line-height:1;`)}">${esc(price)}</div>
-                        </div>` : ''}
+                <div style="position:relative;flex:1;min-height:0;z-index:4;">
+                    <div style="position:absolute;left:${pad}px;top:0;width:${mainWpct}%;height:${mainH}px;border-radius:100px 100px 24px 24px;overflow:hidden;box-shadow:0 36px 80px rgba(0,0,0,.55);border:3px solid rgba(255,255,255,.12);">
+                        ${mainUrl ? posterImg(mainUrl, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;`, conf) : '<div style="width:100%;height:100%;background:#334155;"></div>'}
+                        ${posterHeroWarmth(conf)}
                     </div>
-                    ${brandName ? `<div style="margin-top:14px;opacity:.95;">${brandFooterHtml(brandName, phone, 'dark')}</div>` : ''}
+                    ${thumbsHtml}
+                </div>
+                <div style="position:relative;z-index:8;flex-shrink:0;padding:${pad}px ${pad}px ${layout.safeBottom}px;background:#0c0c0c;border-top:1px solid rgba(255,255,255,.08);">
+                    ${price ? `<div style="margin-bottom:14px;">${posterPriceEditorial(price, conf, layout, accent, true, { maxWidth: layout.w - pad * 2 })}</div>` : ''}
+                    ${posterSpecsLineHtml(facts, '#fff', 'dark', { compact: true, noMargin: true })}
+                    ${brandName ? `<div style="margin-top:12px;">${brandFooterHtml(brandName, phone, 'dark')}</div>` : ''}
                 </div>
             </div>`;
     }
@@ -1147,31 +1474,33 @@
     function renderCampaignPoster(ctx) {
         const { layout, conf, primary, cropY, headline, price, facts, primaryColor, accentInk, brandName, phone, dealLabel } = ctx;
         const pad = layout.pad;
-        const hl = posterHeadlineSize(conf, layout.hlCampaign, headline);
-        const imgH = layout.campaignImgH;
+        const contentW = layout.w - pad * 2;
+        const headFit = posterHeadlineFit(conf, layout.hlCampaign, headline, contentW, 3);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', '#0f172a');
+        const headHtml = headFit.lines.map((ln) => `<div style="${pcsTextStyle(`font-size:${hl}px;line-height:1.08;letter-spacing:-0.02em;${headEmph}`)}">${esc(ln)}</div>`).join('');
         const cta = phone ? 'هماهنگی بازدید' : 'مشاوره رایگان';
-        const panelH = layout.h - imgH - pad + 28 - layout.safeBottom;
         return `
-            <div style="position:absolute;inset:0;background:#0a0a0f;overflow:hidden;">
-                <div style="position:absolute;top:0;left:0;right:0;height:${imgH + pad}px;padding:${pad}px ${pad}px 0;box-sizing:border-box;">
-                    <div style="position:relative;width:100%;height:100%;border-radius:24px;overflow:hidden;box-shadow:0 32px 70px rgba(0,0,0,.45);">
+            <div style="position:absolute;inset:0;background:#0a0a0f;overflow:hidden;display:flex;flex-direction:column;">
+                <div style="flex:1;min-height:0;padding:${pad}px ${pad}px 0;box-sizing:border-box;display:flex;flex-direction:column;">
+                    <div style="position:relative;flex:1;min-height:${Math.round(layout.h * 0.38)}px;border-radius:24px;overflow:hidden;box-shadow:0 32px 70px rgba(0,0,0,.45);">
                         ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;`, conf) : `<div style="width:100%;height:100%;background:#1e293b;"></div>`}
-                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 45%,rgba(0,0,0,.25));"></div>
+                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1),transparent 50%,rgba(0,0,0,.35));pointer-events:none;"></div>
                         ${posterHeroWarmth(conf)}
                         ${posterPipInset(conf, primaryColor, accentInk)}
                         <div style="position:absolute;top:16px;right:16px;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
-                        <div style="position:absolute;bottom:0;left:0;right:0;height:38%;background:linear-gradient(180deg,transparent,${primaryRgba(primaryColor, 0.92)});"></div>
+                        <div style="position:absolute;bottom:0;left:0;right:0;height:32%;background:linear-gradient(180deg,transparent,${primaryRgba(primaryColor, 0.88)});pointer-events:none;"></div>
                     </div>
                 </div>
-                <div style="position:absolute;left:0;right:0;bottom:0;height:${Math.max(panelH, 320)}px;padding:${pad}px ${pad}px ${layout.safeBottom}px;box-sizing:border-box;background:#fff;border-radius:28px 28px 0 0;box-shadow:0 -20px 60px rgba(0,0,0,.2);">
-                    <div style="${pcsTextStyle(`font-size:${hl}px;font-weight:900;line-height:1.1;color:#0f172a;margin-bottom:12px;letter-spacing:-0.02em;`)}">${esc(headline)}</div>
+                <div style="flex-shrink:0;margin-top:-20px;padding:${pad + 8}px ${pad}px ${layout.safeBottom}px;background:#fff;border-radius:28px 28px 0 0;box-shadow:0 -16px 48px rgba(0,0,0,.18);">
+                    <div style="margin-bottom:10px;">${headHtml}</div>
+                    ${price ? `<div style="margin-bottom:12px;">${posterPriceEditorial(price, conf, layout, accentInk, false, { maxWidth: contentW })}</div>` : ''}
                     ${posterSpecsLineHtml(facts, accentInk, 'light', { compact: true, noMargin: true })}
-                    ${price ? `<div style="margin-top:14px;">${posterPriceEditorial(price, conf, layout, accentInk, false)}</div>` : ''}
-                    <div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border-radius:16px;background:${primaryRgba(accentInk, 0.08)};border:1px solid ${primaryRgba(accentInk, 0.16)};">
-                        <span style="${pcsTextStyle('font-size:28px;font-weight:800;color:#334155;')}">${esc(cta)}</span>
-                        ${phone ? `<span dir="ltr" style="${pcsTextStyle(`font-size:32px;font-weight:900;color:${accentInk};`)}">${esc(phone)}</span>` : ''}
+                    <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:16px;background:${primaryRgba(accentInk, 0.1)};border:1px solid ${primaryRgba(accentInk, 0.18)};">
+                        <span style="${pcsTextStyle('font-size:30px;font-weight:800;color:#334155;')}">${esc(cta)}</span>
+                        ${phone ? `<span dir="ltr" style="${pcsTextStyle(`font-size:34px;font-weight:900;color:${accentInk};`)}">${esc(phone)}</span>` : ''}
                     </div>
-                    ${brandName ? `<div style="margin-top:14px;">${brandFooterHtml(brandName, '', 'light')}</div>` : ''}
+                    ${brandName ? `<div style="margin-top:12px;">${brandFooterHtml(brandName, '', 'light')}</div>` : ''}
                 </div>
             </div>`;
     }
@@ -1181,6 +1510,136 @@
         if (templateId === 'minimal') return renderModernPoster(ctx);
         if (templateId === 'gallery') return renderCollagePoster(ctx);
         return renderCampaignPoster(ctx);
+    }
+
+    function editorTypeStylePreviewCss(conf, role, fallbackColor) {
+        const isHeadline = role === 'headline';
+        const previewConf = {
+            headline_weight: conf.headline_weight,
+            price_weight: conf.price_weight,
+            headline_italic: conf.headline_italic,
+            price_italic: conf.price_italic,
+            headline_underline: conf.headline_underline,
+            price_underline: conf.price_underline,
+            headline_color: conf.headline_color,
+            price_color: conf.price_color,
+        };
+        return posterTextEmphasis(previewConf, isHeadline ? 'headline' : 'price', fallbackColor);
+    }
+
+    function editorTypeWeightSegment(role, weight) {
+        const prefix = role === 'headline' ? 'pcs-headline' : 'pcs-price';
+        const labels = { 500: 'معمولی', 700: 'پررنگ', 900: 'بولد' };
+        return [500, 700, 900].map((w) => `
+            <button type="button" class="pcs-type-segment__btn${weight === w ? ' is-active' : ''}"
+                data-${prefix}-weight="${w}" aria-pressed="${weight === w ? 'true' : 'false'}">${labels[w]}</button>`).join('');
+    }
+
+    function editorTypeColorPresets(role, conf, presets, fallbackColor) {
+        const custom = normalizePosterHexColor(role === 'headline' ? conf.headline_color : conf.price_color);
+        const auto = !custom;
+        const current = custom || fallbackColor;
+        const presetBtns = presets.map((hex) => `
+            <button type="button" class="pcs-type-swatch${!auto && current === hex ? ' is-active' : ''}"
+                data-pcs-edit-color-preset="${role}" data-color="${hex}"
+                style="--pcs-swatch:${hex};" title="${hex}" aria-label="رنگ ${hex}"></button>`).join('');
+        return `
+            <div class="pcs-type-colors" data-pcs-type-colors="${role}">
+                <button type="button" class="pcs-type-swatch pcs-type-swatch--auto${auto ? ' is-active' : ''}"
+                    data-pcs-edit-color-auto="${role}" title="رنگ پیش‌فرض قالب">
+                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    <span>خودکار</span>
+                </button>
+                ${presetBtns}
+                <label class="pcs-type-swatch pcs-type-swatch--picker" title="رنگ دلخواه">
+                    <input type="color" class="pcs-editor__color-swatch" data-pcs-edit-color="${role}" value="${esc(current)}" aria-label="رنگ ${role === 'headline' ? 'عنوان' : 'قیمت'}">
+                    <i class="fas fa-eyedropper" aria-hidden="true"></i>
+                </label>
+            </div>`;
+    }
+
+    function editorTypeStylePanel(role, conf, active) {
+        const isHeadline = role === 'headline';
+        const c = conf || {};
+        const weight = normalizePosterTextWeight(isHeadline ? c.headline_weight : c.price_weight, 900);
+        const italic = !!(isHeadline ? c.headline_italic : c.price_italic);
+        const underline = !!(isHeadline ? c.headline_underline : c.price_underline);
+        const prefix = isHeadline ? 'pcs-headline' : 'pcs-price';
+        const title = isHeadline ? 'عنوان' : 'قیمت';
+        const sample = isHeadline ? 'آپارتمان نورگیر' : '۱۲ میلیارد تومان';
+        const fallbackColor = isHeadline ? '#0f172a' : '#7c3aed';
+        const previewBg = isHeadline ? 'linear-gradient(135deg,#f8fafc,#eef2ff)' : 'linear-gradient(135deg,#faf5ff,#f5f3ff)';
+        const presets = isHeadline
+            ? ['#0f172a', '#1e293b', '#7c3aed', '#b45309']
+            : ['#7c3aed', '#5b21b6', '#0f172a', '#ea580c'];
+        const previewCss = editorTypeStylePreviewCss(c, role, fallbackColor);
+        const fontKey = c.font_key || 'vazirmatn';
+        const family = (PCS_FONTS[fontKey] || PCS_FONTS.vazirmatn).family;
+        const tabId = `pcs-type-tab-${role}`;
+        return `
+            <article class="pcs-type-panel${active ? ' is-active' : ''}" data-pcs-type-panel="${role}"
+                id="pcs-type-panel-${role}" role="tabpanel" aria-labelledby="${tabId}"${active ? '' : ' hidden'}>
+                <div class="pcs-type-panel__preview" style="background:${previewBg};">
+                    <span class="pcs-type-panel__sample" style="font-family:${family};${previewCss}">${esc(sample)}</span>
+                </div>
+                <div class="pcs-type-panel__field">
+                    <span class="pcs-type-panel__label">وزن فونت</span>
+                    <div class="pcs-type-segment" role="group" aria-label="وزن ${title}">
+                        ${editorTypeWeightSegment(role, weight)}
+                    </div>
+                </div>
+                <div class="pcs-type-panel__footer">
+                    <div class="pcs-type-panel__field pcs-type-panel__field--inline">
+                        <span class="pcs-type-panel__label">افکت</span>
+                        <div class="pcs-type-toggles">
+                            <button type="button" class="pcs-type-toggle${italic ? ' is-active' : ''}" data-${prefix}-italic
+                                aria-pressed="${italic ? 'true' : 'false'}" title="مورب">
+                                <i class="fas fa-italic" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="pcs-type-toggle${underline ? ' is-active' : ''}" data-${prefix}-underline
+                                aria-pressed="${underline ? 'true' : 'false'}" title="خط زیر">
+                                <i class="fas fa-underline" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pcs-type-panel__field pcs-type-panel__field--colors">
+                        <span class="pcs-type-panel__label">رنگ</span>
+                        ${editorTypeColorPresets(role, c, presets, fallbackColor)}
+                    </div>
+                </div>
+            </article>`;
+    }
+
+    function editorTextStyleControls(conf) {
+        return `<div class="pcs-type-studio" data-pcs-type-studio>
+            <div class="pcs-type-studio__tabs" role="tablist" aria-label="استایل عنوان و قیمت">
+                <button type="button" role="tab" class="pcs-type-studio__tab is-active" id="pcs-type-tab-headline"
+                    data-pcs-type-tab="headline" aria-selected="true" aria-controls="pcs-type-panel-headline">
+                    <i class="fas fa-heading" aria-hidden="true"></i><span>عنوان</span>
+                </button>
+                <button type="button" role="tab" class="pcs-type-studio__tab" id="pcs-type-tab-price"
+                    data-pcs-type-tab="price" aria-selected="false" aria-controls="pcs-type-panel-price">
+                    <i class="fas fa-tag" aria-hidden="true"></i><span>قیمت</span>
+                </button>
+            </div>
+            ${editorTypeStylePanel('headline', conf, true)}
+            ${editorTypeStylePanel('price', conf, false)}
+        </div>`;
+    }
+
+    function syncTypeStylePreview(conf) {
+        const controls = editorControlsEl();
+        if (!controls || !conf) return;
+        ['headline', 'price'].forEach((role) => {
+            const card = controls.querySelector(`[data-pcs-type-panel="${role}"]`);
+            const sample = card?.querySelector('.pcs-type-panel__sample');
+            if (!sample) return;
+            const fallback = role === 'headline' ? '#0f172a' : '#7c3aed';
+            const family = pcsFontFamily(conf);
+            sample.style.fontFamily = family;
+            const emph = editorTypeStylePreviewCss(conf, role, fallback);
+            sample.style.cssText = `font-family:${family};${emph}`;
+        });
     }
 
     function editorFontPicker(selected) {
@@ -1521,7 +1980,7 @@
             phone,
             dealLabel,
         });
-        const inner = renderPosterTemplate(templateId, renderCtx);
+        const inner = withPosterRenderConf(conf, () => renderPosterTemplate(templateId, renderCtx));
 
         return `<div class="pcs-canvas ${fmt.cls}" data-pcs-canvas data-template="${templateId}" data-font-key="${esc(conf.font_key || 'vazirmatn')}" style="width:${fmt.w}px;height:${fmt.h}px;--pcs-scale:1;${pcsTextStyle('', conf)}">${inner}</div>`;
     }
@@ -1549,11 +2008,11 @@
         const viewport = $('#pcsEditorPreviewViewport') || wrap?.closest?.('.pcs-editor__preview-viewport');
         const stage = wrap?.closest?.('.pcs-editor__preview-stage');
         if (!viewport && !stage) return null;
-        const pad = 24;
+        const pad = 12;
         const host = viewport || stage;
         return {
             width: Math.max(180, host.clientWidth - pad),
-            height: Math.max(200, host.clientHeight - pad),
+            height: Math.max(220, host.clientHeight - pad),
         };
     }
 
@@ -1697,7 +2156,7 @@
     function previewMaxHeight(formatKey, wrap) {
         if (wrap?.id === 'pcsEditorPreview') {
             const b = editorPreviewBounds(wrap);
-            return b ? b.height : Math.min(window.innerHeight * 0.55, 520);
+            return b ? b.height : Math.min(window.innerHeight * 0.64, 640);
         }
         if (wrap?.id === 'pcsLightboxPreview' || wrap?.classList?.contains('pcs-lightbox__preview')) {
             const b = lightboxPreviewBounds(wrap);
@@ -1763,7 +2222,7 @@
             wrap.style.height = 'auto';
             wrap.style.display = 'block';
             wrap.style.margin = '0 auto';
-            wrap.style.padding = '14px 18px';
+            wrap.style.padding = '10px 12px';
             wrap.style.boxSizing = 'border-box';
         } else {
             wrap.style.overflow = isLightbox ? 'auto' : 'hidden';
@@ -1852,10 +2311,10 @@
     function scheduleEditorPreviewScale(wrap, formatKey) {
         if (!wrap || wrap.id !== 'pcsEditorPreview') return;
         const viewport = $('#pcsEditorPreviewViewport');
-        const maxH = previewMaxHeight(formatKey, wrap) || 520;
+        const maxH = previewMaxHeight(formatKey, wrap) || 640;
         if (viewport) {
-            viewport.style.maxHeight = `${maxH}px`;
-            viewport.style.minHeight = 'min(42vh, 400px)';
+            viewport.style.maxHeight = `${Math.min(maxH + 8, Math.round(window.innerHeight * 0.68))}px`;
+            viewport.style.minHeight = 'min(50vh, 480px)';
         }
         const run = () => scalePreviewCanvas(wrap, formatKey);
         const runAfterLayout = () => {
@@ -1939,6 +2398,7 @@
             logging: false,
             onclone: (_doc, cloned) => {
                 applyFontToSubtree(cloned);
+                sanitizePosterTextForExport(cloned);
             },
         });
     }
@@ -1965,6 +2425,7 @@
             const preview = document.createElement('div');
             preview.className = 'pcs-poster-card__preview' + (state.format === 'post' ? ' is-post' : state.format === 'square' ? ' is-square' : '');
             preview.innerHTML = buildCanvasHtml(tpl, state.format);
+            syncCanvasTypography(preview);
             const foot = document.createElement('div');
             foot.className = 'pcs-poster-card__foot';
             foot.innerHTML = `
@@ -1999,8 +2460,13 @@
         state.previewTemplate = tpl;
         if (title) title.textContent = meta.label;
         const fmtMeta = FORMAT_META[state.format];
-        if (sub) sub.textContent = fmtMeta ? `${fmtMeta.label} · ${fmtMeta.sub}` : '';
+        if (sub) {
+            sub.innerHTML = fmtMeta
+                ? `${esc(fmtMeta.label)} · ${formatDimsHtml(state.format)}`
+                : '';
+        }
         box.innerHTML = buildCanvasHtml(tpl, state.format);
+        syncCanvasTypography(box);
         box.classList.remove('is-ready');
         box.style.height = '';
         box.style.maxHeight = '';
@@ -2021,6 +2487,9 @@
         const host = createExportHost(buildCanvasHtml(tpl, state.format), state.format);
         const canvas = host.querySelector('.pcs-canvas');
         try {
+            await ensurePersianFonts();
+            await new Promise((resolve) => whenImagesReady(host, resolve, 10000));
+            sanitizePosterTextForExport(canvas);
             await exportCanvasElement(canvas, `property-${cfg.propertyId}-${tpl}-${state.format}.png`, state.format);
             toast('دانلود شروع شد');
         } catch (e) {
@@ -2037,7 +2506,7 @@
             const b = document.createElement('button');
             b.type = 'button';
             b.className = 'pcs-format-btn' + (state.format === key ? ' is-active' : '');
-            b.innerHTML = `<i class="fas ${meta.icon}" aria-hidden="true"></i><span class="pcs-format-btn__label">${meta.label}</span><span class="pcs-format-btn__sub">${meta.sub}</span>`;
+            b.innerHTML = `<i class="fas ${meta.icon}" aria-hidden="true"></i><span class="pcs-format-btn__label">${meta.label}</span><span class="pcs-format-btn__sub">${formatDimsHtml(key)}</span>`;
             b.addEventListener('click', () => {
                 state.format = key;
                 if (state.draft) state.draft.format = key;
@@ -2830,6 +3299,24 @@
             img_opacity: parseInt(controls?.querySelector('[data-pcs-edit-range="opacity"]')?.value || String(prev.img_opacity ?? 100), 10),
             headline_scale: parseInt(controls?.querySelector('[data-pcs-edit-range="headline_scale"]')?.value || String(prev.headline_scale ?? 100), 10),
             price_scale: parseInt(controls?.querySelector('[data-pcs-edit-range="price_scale"]')?.value || String(prev.price_scale ?? 100), 10),
+            headline_weight: normalizePosterTextWeight(
+                controls?.querySelector('[data-pcs-headline-weight].is-active')?.getAttribute('data-pcs-headline-weight'),
+                prev.headline_weight ?? 900,
+            ),
+            price_weight: normalizePosterTextWeight(
+                controls?.querySelector('[data-pcs-price-weight].is-active')?.getAttribute('data-pcs-price-weight'),
+                prev.price_weight ?? 900,
+            ),
+            headline_italic: !!controls?.querySelector('[data-pcs-headline-italic].is-active'),
+            headline_underline: !!controls?.querySelector('[data-pcs-headline-underline].is-active'),
+            price_italic: !!controls?.querySelector('[data-pcs-price-italic].is-active'),
+            price_underline: !!controls?.querySelector('[data-pcs-price-underline].is-active'),
+            headline_color: controls?.querySelector('[data-pcs-edit-color-auto="headline"].is-active')
+                ? ''
+                : normalizePosterHexColor(controls?.querySelector('[data-pcs-edit-color="headline"]')?.value),
+            price_color: controls?.querySelector('[data-pcs-edit-color-auto="price"].is-active')
+                ? ''
+                : normalizePosterHexColor(controls?.querySelector('[data-pcs-edit-color="price"]')?.value),
             font_key: fontBtn?.getAttribute('data-pcs-font-key') || prev.font_key || 'vazirmatn',
             pip_enabled: controls?.querySelector('#pcsEditPipEnabled')?.value === '1',
             pip_image_index: imgs.length
@@ -2915,6 +3402,7 @@
             if (!prev || !conf) return;
             resetEditorPreviewWrap(prev);
             prev.innerHTML = buildCanvasHtml(activeTpl, state.format, conf);
+            syncCanvasTypography(prev);
             updateEditorLiveMeta(conf, activeTpl);
             scheduleEditorPreviewScale(prev, state.format);
             const controls = editorControlsEl();
@@ -2923,6 +3411,7 @@
             const headCount = controls?.querySelector('#pcsEditHeadlineCount');
             if (headCount) headCount.textContent = `${(controls.querySelector('#pcsEditHeadline')?.value || '').length} کاراکتر`;
             syncCropPresetActive(conf.crop_y);
+            syncTypeStylePreview(conf);
             controls?.querySelectorAll('[data-pcs-edit-range]').forEach((inp) => {
                 const key = inp.getAttribute('data-pcs-edit-range');
                 const lbl = controls.querySelector(`[data-pcs-range-val="${key}"]`);
@@ -2980,13 +3469,21 @@
             if (!state.editorTemplate) return;
             const t = e.target;
             if (!t.closest('#pcsEditorControls')) return;
-            if (t.matches('#pcsEditHeadline, #pcsEditCrop, [data-pcs-edit-range]')) {
+            if (t.matches('#pcsEditHeadline, #pcsEditCrop, [data-pcs-edit-range], [data-pcs-edit-color]')) {
                 refreshEditorPreview(state.editorTemplate);
             }
         });
 
         pane.addEventListener('change', (e) => {
             if (!state.editorTemplate) return;
+            if (e.target.matches('[data-pcs-edit-color]')) {
+                const role = e.target.getAttribute('data-pcs-edit-color');
+                const wrap = editorControlsEl()?.querySelector(`[data-pcs-type-colors="${role}"]`);
+                wrap?.querySelector('[data-pcs-edit-color-auto]')?.classList.remove('is-active');
+                wrap?.querySelectorAll('[data-pcs-edit-color-preset]').forEach((b) => b.classList.remove('is-active'));
+                refreshEditorPreview(state.editorTemplate);
+                return;
+            }
             if (e.target.matches('[data-pcs-pip-image-select]')) {
                 const controls = editorControlsEl();
                 const v = e.target.value;
@@ -3103,12 +3600,87 @@
                 return;
             }
 
+            const typeTab = e.target.closest('[data-pcs-type-tab]');
+            if (typeTab) {
+                const role = typeTab.getAttribute('data-pcs-type-tab');
+                const studio = typeTab.closest('[data-pcs-type-studio]');
+                if (studio && role) {
+                    studio.querySelectorAll('[data-pcs-type-tab]').forEach((btn) => {
+                        const on = btn === typeTab;
+                        btn.classList.toggle('is-active', on);
+                        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+                    });
+                    studio.querySelectorAll('[data-pcs-type-panel]').forEach((panel) => {
+                        const on = panel.getAttribute('data-pcs-type-panel') === role;
+                        panel.classList.toggle('is-active', on);
+                        panel.hidden = !on;
+                    });
+                }
+                return;
+            }
+
             const fontBtn = e.target.closest('[data-pcs-font-key]');
             if (fontBtn) {
                 controls.querySelectorAll('[data-pcs-font-key]').forEach((b) => {
                     const on = b === fontBtn;
                     b.classList.toggle('is-active', on);
                     b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+                refreshEditorPreview(tpl);
+                return;
+            }
+
+            const hw = e.target.closest('[data-pcs-headline-weight]');
+            if (hw) {
+                hw.closest('.pcs-type-segment')?.querySelectorAll('[data-pcs-headline-weight]').forEach((b) => {
+                    const on = b === hw;
+                    b.classList.toggle('is-active', on);
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+                refreshEditorPreview(tpl);
+                return;
+            }
+            const pw = e.target.closest('[data-pcs-price-weight]');
+            if (pw) {
+                pw.closest('.pcs-type-segment')?.querySelectorAll('[data-pcs-price-weight]').forEach((b) => {
+                    const on = b === pw;
+                    b.classList.toggle('is-active', on);
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+                refreshEditorPreview(tpl);
+                return;
+            }
+            const textToggle = e.target.closest(
+                '[data-pcs-headline-italic], [data-pcs-headline-underline], [data-pcs-price-italic], [data-pcs-price-underline]',
+            );
+            if (textToggle) {
+                textToggle.classList.toggle('is-active');
+                const on = textToggle.classList.contains('is-active');
+                textToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+                refreshEditorPreview(tpl);
+                return;
+            }
+            const colorPreset = e.target.closest('[data-pcs-edit-color-preset]');
+            if (colorPreset) {
+                const role = colorPreset.getAttribute('data-pcs-edit-color-preset');
+                const hex = colorPreset.getAttribute('data-color');
+                const inp = controls.querySelector(`[data-pcs-edit-color="${role}"]`);
+                const wrap = controls.querySelector(`[data-pcs-type-colors="${role}"]`);
+                if (inp && hex) inp.value = hex;
+                wrap?.querySelector('[data-pcs-edit-color-auto]')?.classList.remove('is-active');
+                wrap?.querySelectorAll('[data-pcs-edit-color-preset]').forEach((b) => {
+                    b.classList.toggle('is-active', b === colorPreset);
+                });
+                refreshEditorPreview(tpl);
+                return;
+            }
+            const colorAuto = e.target.closest('[data-pcs-edit-color-auto]');
+            if (colorAuto) {
+                const role = colorAuto.getAttribute('data-pcs-edit-color-auto');
+                const wrap = controls.querySelector(`[data-pcs-type-colors="${role}"]`);
+                wrap?.querySelectorAll('[data-pcs-edit-color-preset]').forEach((b) => b.classList.remove('is-active'));
+                wrap?.querySelectorAll('[data-pcs-edit-color-auto]').forEach((b) => {
+                    b.classList.toggle('is-active', b === colorAuto);
                 });
                 refreshEditorPreview(tpl);
                 return;
@@ -3152,7 +3724,7 @@
         const fmtPill = $('#pcsEditorFormatPill');
         if (fmtPill) {
             fmtPill.hidden = false;
-            fmtPill.innerHTML = `<i class="fas ${fmtMeta.icon}" aria-hidden="true"></i> ${esc(fmtMeta.label)} · ${esc(fmtMeta.sub)}`;
+            fmtPill.innerHTML = `<i class="fas ${fmtMeta.icon}" aria-hidden="true"></i> ${esc(fmtMeta.label)} · ${formatDimsHtml(state.format)}`;
         }
         const dlBtn = $('#pcsEditorDownload');
         if (dlBtn) dlBtn.hidden = false;
@@ -3225,12 +3797,13 @@
                 </section>
                 <section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-font" aria-hidden="true"></i> تایپوگرافی</h4>
-                    <p class="pcs-editor__section-hint">۵ فونت فارسی — روی عنوان و قیمت اعمال می‌شود</p>
+                    <p class="pcs-editor__section-hint">فونت روی همهٔ متن پوستر است؛ وزن و رنگ عنوان و قیمت را در کارت‌های زیر تنظیم کنید</p>
                     ${editorFontPicker(conf.font_key || 'vazirmatn')}
                     <label class="pcs-editor__range-label">اندازه عنوان <span data-pcs-range-val="headline_scale">${conf.headline_scale ?? 100}%</span></label>
                     <input type="range" class="pcs-editor__range" data-pcs-edit-range="headline_scale" min="70" max="140" value="${conf.headline_scale ?? 100}">
                     <label class="pcs-editor__range-label">اندازه قیمت <span data-pcs-range-val="price_scale">${conf.price_scale ?? 100}%</span></label>
                     <input type="range" class="pcs-editor__range" data-pcs-edit-range="price_scale" min="70" max="140" value="${conf.price_scale ?? 100}">
+                    ${editorTextStyleControls(conf)}
                 </section>
                 <div class="pcs-editor__tip">
                     <i class="fas fa-lightbulb" aria-hidden="true"></i>

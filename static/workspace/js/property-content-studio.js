@@ -2706,6 +2706,110 @@
         }
     }
 
+    function aiStyleTone(style) {
+        const s = String(style || '').trim();
+        if (/رسمی|حرفه/i.test(s)) return 'formal';
+        if (/صمیمی|دوستانه/i.test(s)) return 'warm';
+        if (/جذاب|تبلیغ/i.test(s)) return 'vivid';
+        if (/کوتاه|مختصر/i.test(s)) return 'short';
+        return 'neutral';
+    }
+
+    function aiStyleIcon(tone) {
+        const icons = {
+            formal: 'fa-briefcase',
+            warm: 'fa-face-smile',
+            vivid: 'fa-bolt',
+            short: 'fa-compress',
+            neutral: 'fa-pen-nib',
+        };
+        return icons[tone] || icons.neutral;
+    }
+
+    function truncatePreviewText(text, max) {
+        const t = String(text || '').trim();
+        if (t.length <= max) return t;
+        return `${t.slice(0, max - 1)}…`;
+    }
+
+    function updateCharCountEl(el, counterId) {
+        const counter = counterId ? $(counterId) : null;
+        if (!counter || !el) return;
+        const len = (el.value || '').length;
+        counter.textContent = len ? `${len} کاراکتر` : '';
+    }
+
+    function renderHashtagPreview() {
+        const raw = ($('#pcsHashtags')?.value || '').trim();
+        const wrap = $('#pcsHashtagPreview');
+        if (!wrap) return;
+        const tags = raw.split(/\s+/).filter((t) => t.startsWith('#') || t.length > 0);
+        if (!tags.length) {
+            wrap.innerHTML = '';
+            wrap.setAttribute('aria-hidden', 'true');
+            return;
+        }
+        wrap.innerHTML = tags.map((t) => {
+            const label = t.startsWith('#') ? t : `#${t}`;
+            return `<span class="pcs-hashtag-chip">${esc(label)}</span>`;
+        }).join('');
+        wrap.removeAttribute('aria-hidden');
+    }
+
+    function bindAiCopyFieldButtons() {
+        const copy = (sel, label) => {
+            const el = $(sel);
+            if (!el?.value) {
+                toast('متنی برای کپی نیست');
+                return;
+            }
+            navigator.clipboard.writeText(el.value);
+            toast(label || 'کپی شد');
+        };
+        $('#pcsCopyDivarBody')?.addEventListener('click', () => copy('#pcsDivarBody', 'متن آگهی کپی شد'));
+        $('#pcsCopyHashtags')?.addEventListener('click', () => copy('#pcsHashtags', 'هشتگ‌ها کپی شد'));
+        $('#pcsCopyWhatsapp')?.addEventListener('click', () => copy('#pcsWhatsappText', 'متن واتساپ کپی شد'));
+        $('#pcsCopyTelegram')?.addEventListener('click', () => copy('#pcsTelegramText', 'متن تلگرام کپی شد'));
+    }
+
+    function buildAiCopyCard(opts) {
+        const { style, text, index, kind, selected } = opts;
+        const tone = aiStyleTone(style);
+        const charLen = (text || '').length;
+        const actions = kind === 'title'
+            ? `<button type="button" class="pcs-copy-card__action" data-copy-title="${index}" title="کپی عنوان">
+                    <i class="fas fa-copy" aria-hidden="true"></i><span>کپی</span>
+                </button>
+                <button type="button" class="pcs-copy-card__action pcs-copy-card__action--primary" data-use-title="${index}">
+                    <i class="fas fa-check" aria-hidden="true"></i><span>انتخاب</span>
+                </button>`
+            : `<button type="button" class="pcs-copy-card__action" data-copy-cap="${index}" title="کپی کپشن">
+                    <i class="fas fa-copy" aria-hidden="true"></i><span>کپی</span>
+                </button>`;
+        const dataAttr = kind === 'title' ? `data-title-idx="${index}"` : `data-cap-idx="${index}"`;
+        return `
+            <article class="pcs-copy-card pcs-copy-card--${tone}${selected ? ' is-selected' : ''}">
+                <header class="pcs-copy-card__head">
+                    <span class="pcs-copy-card__badge"><i class="fas ${aiStyleIcon(tone)}" aria-hidden="true"></i>${esc(style || 'متن')}</span>
+                    <div class="pcs-copy-card__meta">
+                        <span class="pcs-copy-card__count">${charLen} کاراکتر</span>
+                        <div class="pcs-copy-card__actions">${actions}</div>
+                    </div>
+                </header>
+                <div class="pcs-copy-card__body">
+                    <textarea class="pcs-copy-card__textarea" ${dataAttr} rows="${kind === 'title' ? 2 : 5}" placeholder="متن را ویرایش کنید…">${esc(text || '')}</textarea>
+                </div>
+            </article>`;
+    }
+
+    function aiCopyEmptyState(message, cta) {
+        return `<div class="pcs-copy-empty">
+            <span class="pcs-copy-empty__icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+            <p class="pcs-copy-empty__text">${esc(message)}</p>
+            ${cta ? `<p class="pcs-copy-empty__hint">${esc(cta)}</p>` : ''}
+        </div>`;
+    }
+
     function renderAiStrip() {
         const strip = $('#pcsAiStrip');
         if (!strip) return;
@@ -2713,12 +2817,22 @@
         const cap = (state.draft?.ai?.social?.captions || [])[0];
         strip.innerHTML = `
             <div class="pcs-ai-mini">
-                <div class="pcs-ai-mini__head"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><h4>عنوان‌های دیوار (AI)</h4></div>
-                ${titles.length ? titles.map((t) => `<div class="pcs-ai-mini__line">${esc(t.text)}</div>`).join('') : '<p class="pcs-ai-mini__empty">هنوز تولید نشده — از تب آگهی دیوار تولید کنید</p>'}
+                <div class="pcs-ai-mini__head"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><h4>عنوان‌های دیوار</h4></div>
+                ${titles.length
+            ? titles.map((t) => `<blockquote class="pcs-ai-mini__quote pcs-ai-mini__quote--${aiStyleTone(t.style)}">
+                    <span class="pcs-ai-mini__quote-label">${esc(t.style)}</span>
+                    <p>${esc(truncatePreviewText(t.text, 120))}</p>
+                </blockquote>`).join('')
+            : `<p class="pcs-ai-mini__empty">از تب «آگهی دیوار» عنوان تولید کنید</p>`}
             </div>
             <div class="pcs-ai-mini">
-                <div class="pcs-ai-mini__head"><i class="fas fa-comment-dots" aria-hidden="true"></i><h4>کپشن شبکه‌ها (AI)</h4></div>
-                <p class="pcs-ai-mini__line">${cap ? esc(cap.text) : '<span class="pcs-ai-mini__empty">—</span>'}</p>
+                <div class="pcs-ai-mini__head"><i class="fas fa-comment-dots" aria-hidden="true"></i><h4>کپشن شبکه‌ها</h4></div>
+                ${cap
+            ? `<blockquote class="pcs-ai-mini__quote pcs-ai-mini__quote--${aiStyleTone(cap.style)}">
+                    <span class="pcs-ai-mini__quote-label">${esc(cap.style)}</span>
+                    <p>${esc(truncatePreviewText(cap.text, 140))}</p>
+                </blockquote>`
+            : '<p class="pcs-ai-mini__empty">از تب «کپشن و شبکه‌ها» محتوا بسازید</p>'}
             </div>`;
     }
 
@@ -2738,19 +2852,26 @@
         setFieldValue('#pcsTelegramText', state.draft?.ai?.social?.telegram || '');
         renderDivarTitles();
         renderSocialCaptions();
+        updateCharCountEl($('#pcsDivarBody'), '#pcsDivarBodyCount');
+        renderHashtagPreview();
     }
 
     function renderDivarTitles() {
         const wrap = $('#pcsDivarTitles');
         if (!wrap) return;
         const titles = state.draft?.ai?.divar?.titles || [];
-        wrap.innerHTML = titles.map((t, i) => `
-            <div class="pcs-ai-card">
-                <div class="pcs-ai-card__head"><strong>${esc(t.style)}</strong>
-                <div><button type="button" class="pcs-link-btn" data-copy-title="${i}">کپی</button>
-                <button type="button" class="pcs-link-btn" data-use-title="${i}">انتخاب</button></div></div>
-                <textarea data-title-idx="${i}">${esc(t.text)}</textarea>
-            </div>`).join('');
+        const selected = state.draft?.ai?.divar?.selected_title_index ?? 0;
+        if (!titles.length) {
+            wrap.innerHTML = aiCopyEmptyState('هنوز عنوانی تولید نشده', 'دکمه «تولید عنوان‌ها» را بزنید');
+            return;
+        }
+        wrap.innerHTML = titles.map((t, i) => buildAiCopyCard({
+            style: t.style,
+            text: t.text,
+            index: i,
+            kind: 'title',
+            selected: i === selected,
+        })).join('');
         wrap.querySelectorAll('[data-copy-title]').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const i = btn.getAttribute('data-copy-title');
@@ -2763,6 +2884,7 @@
             btn.addEventListener('click', () => {
                 state.draft.ai.divar.selected_title_index = parseInt(btn.getAttribute('data-use-title'), 10);
                 scheduleSave();
+                renderDivarTitles();
                 toast('عنوان انتخاب شد');
             });
         });
@@ -2770,6 +2892,8 @@
             ta.addEventListener('input', () => {
                 const i = parseInt(ta.dataset.titleIdx, 10);
                 if (state.draft.ai.divar.titles[i]) state.draft.ai.divar.titles[i].text = ta.value;
+                const count = ta.closest('.pcs-copy-card')?.querySelector('.pcs-copy-card__count');
+                if (count) count.textContent = `${ta.value.length} کاراکتر`;
                 scheduleSave();
                 renderAiStrip();
             });
@@ -2780,10 +2904,17 @@
         const wrap = $('#pcsSocialCaptions');
         if (!wrap) return;
         const caps = state.draft?.ai?.social?.captions || [];
-        wrap.innerHTML = caps.map((c, i) => `
-            <div class="pcs-ai-card"><div class="pcs-ai-card__head"><strong>${esc(c.style)}</strong>
-            <button type="button" class="pcs-link-btn" data-copy-cap="${i}">کپی</button></div>
-            <textarea data-cap-idx="${i}">${esc(c.text)}</textarea></div>`).join('');
+        if (!caps.length) {
+            wrap.innerHTML = aiCopyEmptyState('کپشنی تولید نشده', '«تولید محتوای شبکه‌ها» را بزنید');
+            return;
+        }
+        wrap.innerHTML = caps.map((c, i) => buildAiCopyCard({
+            style: c.style,
+            text: c.text,
+            index: i,
+            kind: 'caption',
+            selected: false,
+        })).join('');
         wrap.querySelectorAll('[data-copy-cap]').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const ta = wrap.querySelector(`[data-cap-idx="${btn.getAttribute('data-copy-cap')}"]`);
@@ -2796,6 +2927,8 @@
                 const i = parseInt(ta.dataset.capIdx, 10);
                 if (state.draft?.ai?.social?.captions?.[i]) {
                     state.draft.ai.social.captions[i].text = ta.value;
+                    const count = ta.closest('.pcs-copy-card')?.querySelector('.pcs-copy-card__count');
+                    if (count) count.textContent = `${ta.value.length} کاراکتر`;
                     scheduleSave();
                     renderAiStrip();
                 }
@@ -3854,11 +3987,17 @@
         bindEditorPreviewZoomControls();
         bindEditorPreviewViewEvents();
         bindEditorSettingsDelegation();
+        if (!document.body.dataset.pcsAiCopyBound) {
+            document.body.dataset.pcsAiCopyBound = '1';
+            bindAiCopyFieldButtons();
+        }
         document.addEventListener('input', (e) => {
             const id = e.target?.id;
             if (!id || !e.target.closest('#pcsModal')) return;
             if (id === 'pcsDivarBody' || id === 'pcsHashtags' || id === 'pcsWhatsappText' || id === 'pcsTelegramText') {
                 scheduleSave();
+                if (id === 'pcsDivarBody') updateCharCountEl(e.target, '#pcsDivarBodyCount');
+                if (id === 'pcsHashtags') renderHashtagPreview();
             }
         });
         document.addEventListener('click', (e) => {

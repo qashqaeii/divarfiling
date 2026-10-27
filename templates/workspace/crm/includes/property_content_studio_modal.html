@@ -104,47 +104,89 @@
                     </section>
 
                     <section class="pcs-panel" data-pcs-panel="divar" role="tabpanel" hidden>
-                        <div class="pcs-ai-toolbar">
-                            <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarTitles">
-                                <i class="fas fa-wand-magic-sparkles"></i> تولید عنوان‌ها
-                            </button>
-                            <select id="pcsDivarBodyStyle" class="pcs-select" aria-label="سبک متن">
-                                <option value="formal">رسمی</option>
-                                <option value="promo">تبلیغاتی</option>
-                                <option value="short">مختصر</option>
-                                <option value="full">توضیح کامل</option>
-                            </select>
-                            <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarBody">تولید متن آگهی</button>
-                        </div>
-                        <div class="pcs-ai-cards" id="pcsDivarTitles"></div>
-                        <label class="pcs-field">
-                            <span>متن آگهی دیوار</span>
-                            <textarea id="pcsDivarBody" rows="10" class="pcs-textarea"></textarea>
-                        </label>
-                        <div class="pcs-inline-actions">
-                            <button type="button" class="pcs-btn pcs-btn--ghost" id="pcsCopyDivarBundle">آماده‌سازی برای انتشار در دیوار</button>
-                        </div>
+                        <header class="pcs-panel-hero pcs-panel-hero--divar">
+                            <div class="pcs-panel-hero__copy">
+                                <h3 class="pcs-panel-hero__title">آگهی دیوار با AI</h3>
+                                <p class="pcs-panel-hero__hint">چند عنوان پیشنهادی و متن کامل آگهی — آماده کپی در دیوار</p>
+                            </div>
+                            <div class="pcs-panel-hero__actions pcs-ai-toolbar">
+                                <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarTitles">
+                                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تولید عنوان‌ها
+                                </button>
+                                <div class="pcs-ai-toolbar__combo">
+                                    <select id="pcsDivarBodyStyle" class="pcs-select" aria-label="سبک متن آگهی">
+                                        <option value="formal">رسمی</option>
+                                        <option value="promo">تبلیغاتی</option>
+                                        <option value="short">مختصر</option>
+                                        <option value="full">توضیح کامل</option>
+                                    </select>
+                                    <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenDivarBody">تولید متن آگهی</button>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="pcs-copy-stack" id="pcsDivarTitles" aria-label="عنوان‌های پیشنهادی"></div>
+                        <article class="pcs-doc-block">
+                            <header class="pcs-doc-block__head">
+                                <span class="pcs-field__label"><i class="fas fa-align-right" aria-hidden="true"></i><span>متن آگهی دیوار</span></span>
+                                <div class="pcs-doc-block__tools">
+                                    <span class="pcs-doc-block__count" id="pcsDivarBodyCount" aria-live="polite"></span>
+                                    <button type="button" class="pcs-copy-card__action" id="pcsCopyDivarBody" title="کپی متن">
+                                        <i class="fas fa-copy" aria-hidden="true"></i> کپی
+                                    </button>
+                                </div>
+                            </header>
+                            <textarea id="pcsDivarBody" rows="12" class="pcs-copy-card__textarea pcs-copy-card__textarea--doc" placeholder="متن آگهی را اینجا بنویسید یا با AI تولید کنید…"></textarea>
+                            <footer class="pcs-doc-block__foot">
+                                <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--sm" id="pcsCopyDivarBundle">
+                                    <i class="fas fa-box-open" aria-hidden="true"></i> بسته انتشار (عنوان + متن)
+                                </button>
+                            </footer>
+                        </article>
                     </section>
 
                     <section class="pcs-panel" data-pcs-panel="social" role="tabpanel" hidden>
-                        <div class="pcs-ai-toolbar">
-                            <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenSocial">
-                                <i class="fas fa-wand-magic-sparkles"></i> تولید محتوای شبکه‌ها
-                            </button>
+                        <header class="pcs-panel-hero pcs-panel-hero--social">
+                            <div class="pcs-panel-hero__copy">
+                                <h3 class="pcs-panel-hero__title">کپشن و شبکه‌های اجتماعی</h3>
+                                <p class="pcs-panel-hero__hint">نسخه‌های مختلف برای پست، واتساپ و تلگرام — با یک کلیک کپی کنید</p>
+                            </div>
+                            <div class="pcs-panel-hero__actions">
+                                <button type="button" class="pcs-btn pcs-btn--soft" id="pcsGenSocial">
+                                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> تولید محتوای شبکه‌ها
+                                </button>
+                            </div>
+                        </header>
+                        <div class="pcs-copy-stack" id="pcsSocialCaptions" aria-label="کپشن‌های شبکه‌ها"></div>
+                        <article class="pcs-doc-block pcs-doc-block--tags">
+                            <header class="pcs-doc-block__head">
+                                <span class="pcs-field__label"><i class="fas fa-hashtag" aria-hidden="true"></i><span>هشتگ‌ها</span></span>
+                                <button type="button" class="pcs-copy-card__action" id="pcsCopyHashtags" title="کپی هشتگ‌ها">
+                                    <i class="fas fa-copy" aria-hidden="true"></i> کپی
+                                </button>
+                            </header>
+                            <textarea id="pcsHashtags" rows="2" class="pcs-copy-card__textarea pcs-copy-card__textarea--compact" placeholder="#تهران #آپارتمان …"></textarea>
+                            <div class="pcs-hashtag-preview" id="pcsHashtagPreview" aria-hidden="true"></div>
+                        </article>
+                        <div class="pcs-channel-grid">
+                            <article class="pcs-channel-card pcs-channel-card--wa">
+                                <header class="pcs-channel-card__head">
+                                    <span class="pcs-channel-card__brand"><i class="fab fa-whatsapp" aria-hidden="true"></i> واتساپ</span>
+                                    <button type="button" class="pcs-copy-card__action" id="pcsCopyWhatsapp" title="کپی متن واتساپ">
+                                        <i class="fas fa-copy" aria-hidden="true"></i> کپی
+                                    </button>
+                                </header>
+                                <textarea id="pcsWhatsappText" rows="6" class="pcs-copy-card__textarea" placeholder="پیام کوتاه برای ارسال در واتساپ…"></textarea>
+                            </article>
+                            <article class="pcs-channel-card pcs-channel-card--tg">
+                                <header class="pcs-channel-card__head">
+                                    <span class="pcs-channel-card__brand"><i class="fab fa-telegram" aria-hidden="true"></i> تلگرام</span>
+                                    <button type="button" class="pcs-copy-card__action" id="pcsCopyTelegram" title="کپی متن تلگرام">
+                                        <i class="fas fa-copy" aria-hidden="true"></i> کپی
+                                    </button>
+                                </header>
+                                <textarea id="pcsTelegramText" rows="6" class="pcs-copy-card__textarea" placeholder="متن کانال یا گروه تلگرام…"></textarea>
+                            </article>
                         </div>
-                        <div class="pcs-ai-cards" id="pcsSocialCaptions"></div>
-                        <label class="pcs-field">
-                            <span>هشتگ‌ها</span>
-                            <textarea id="pcsHashtags" rows="3" class="pcs-textarea"></textarea>
-                        </label>
-                        <label class="pcs-field">
-                            <span>متن واتساپ</span>
-                            <textarea id="pcsWhatsappText" rows="4" class="pcs-textarea"></textarea>
-                        </label>
-                        <label class="pcs-field">
-                            <span>متن تلگرام</span>
-                            <textarea id="pcsTelegramText" rows="4" class="pcs-textarea"></textarea>
-                        </label>
                         <div class="pcs-cta-list" id="pcsCtaList"></div>
                     </section>
 

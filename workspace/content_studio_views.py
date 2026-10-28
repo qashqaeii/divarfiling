@@ -132,6 +132,7 @@ class PropertyContentStudioAIView(WorkspaceLoginMixin, View):
         from ai_workspace.services.property_content_studio_ai import (
             generate_divar_body,
             generate_divar_titles,
+            generate_poster_headlines,
             generate_social_pack,
         )
         from ai_workspace.services.quota import QuotaExceededError, quota_error_response
@@ -153,6 +154,10 @@ class PropertyContentStudioAIView(WorkspaceLoginMixin, View):
             if action == 'divar-titles':
                 return JsonResponse(
                     generate_divar_titles(request.user, property_id, mask_sensitive=share_ctx.mask_sensitive),
+                )
+            if action == 'poster-headlines':
+                return JsonResponse(
+                    generate_poster_headlines(request.user, property_id, mask_sensitive=share_ctx.mask_sensitive),
                 )
             if action == 'divar-body':
                 style = (body.get('style') or 'formal').strip()

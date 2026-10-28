@@ -41,7 +41,7 @@ FEATURE_GENERATION = {
     },
     FEATURE_PROPERTY_CONTENT_STUDIO: {
         'temperature': 0.35,
-        'max_tokens': 1800,
+        'max_tokens': 2400,
     },
 }
 
@@ -175,7 +175,7 @@ PROMPT_VERSIONS = {
     FEATURE_NL_COMMAND: 'nl_command_v3',
     # max 20 chars — AIUsageLog.prompt_version
     FEATURE_MANAGEMENT_ANALYSIS: 'mgmt_analysis_v4',
-    FEATURE_PROPERTY_CONTENT_STUDIO: 'prop_studio_v1',
+    FEATURE_PROPERTY_CONTENT_STUDIO: 'prop_studio_v2',
 }
 
 NL_COMMAND_INTENT_CREATE_REMINDER = 'create_reminder'

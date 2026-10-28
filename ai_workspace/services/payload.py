@@ -465,7 +465,7 @@ def normalize_property_content_studio_payload(
     parsed = dict(data or {})
     if not parsed and raw_text:
         parsed = parse_json_text(raw_text) or {}
-    for task in ('divar_titles', 'divar_body', 'social_pack'):
+    for task in ('divar_titles', 'poster_headlines', 'divar_body', 'social_pack'):
         norm = normalize_studio_ai_payload(task, parsed, raw_text)
         if validate_studio_ai_payload(task, norm):
             return norm
@@ -475,7 +475,7 @@ def normalize_property_content_studio_payload(
 def is_valid_property_content_studio_payload(data: Optional[Dict[str, Any]]) -> bool:
     if not data:
         return False
-    for task in ('divar_titles', 'divar_body', 'social_pack'):
+    for task in ('divar_titles', 'poster_headlines', 'divar_body', 'social_pack'):
         if validate_studio_ai_payload(task, data):
             return True
     return False

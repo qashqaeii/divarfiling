@@ -2388,26 +2388,39 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             and is_feature_enabled(FEATURE_PROPERTY_CONTENT_STUDIO, self.request.user)
         )
         if ctx['can_open_content_studio']:
-            from django.utils.safestring import mark_safe
-            from workspace.services.property_content_studio.constants import POSTER_TEMPLATES
+            from pathlib import Path
 
+            from django.conf import settings
+            from django.templatetags.static import static
+            from django.utils.safestring import mark_safe
+            from workspace.services.property_content_studio.constants import POSTER_TEMPLATES, STORY_SLIDE_IDENTITIES
+
+            static_root = Path(settings.BASE_DIR) / 'static'
             _pcs_template_icons = {
                 'luxury': 'fa-gem',
                 'minimal': 'fa-feather',
                 'gallery': 'fa-images',
                 'bold': 'fa-bolt',
+                'pearlescent': 'fa-layer-group',
+                'sculptural': 'fa-palette',
+                'emerald_atelier': 'fa-building-columns',
+                'pearl_gallery': 'fa-gem',
             }
+            template_meta = {}
+            for t in POSTER_TEMPLATES:
+                entry = {
+                    'label': t['label'],
+                    'icon': _pcs_template_icons.get(t['id'], 'fa-image'),
+                }
+                overlay_rel = t.get('overlay')
+                if overlay_rel and (static_root / overlay_rel).is_file():
+                    entry['overlay'] = static(overlay_rel)
+                template_meta[t['id']] = entry
             ctx['pcs_template_meta'] = mark_safe(
-                json.dumps(
-                    {
-                        t['id']: {
-                            'label': t['label'],
-                            'icon': _pcs_template_icons[t['id']],
-                        }
-                        for t in POSTER_TEMPLATES
-                    },
-                    ensure_ascii=False,
-                ),
+                json.dumps(template_meta, ensure_ascii=False),
+            )
+            ctx['pcs_story_slides'] = mark_safe(
+                json.dumps(STORY_SLIDE_IDENTITIES, ensure_ascii=False),
             )
         from workspace.services.agency_space_ui_context import apply_agency_space_crm_context
         from workspace.services.agency_space_provenance import provenance_for_property

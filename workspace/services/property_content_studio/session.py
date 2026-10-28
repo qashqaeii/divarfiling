@@ -8,7 +8,7 @@ from workspace.services.property_content_studio.adapter import build_studio_prop
 from workspace.services.property_content_studio.brand import default_brand_from_user, merge_brand
 from workspace.services.property_content_studio.draft import get_or_create_draft
 from workspace.services.property_content_studio.quality import build_quality_report
-from workspace.services.property_content_studio.storyboard import build_default_storyboard
+from workspace.services.property_content_studio.storyboard import build_default_storyboard, merge_storyboard_with_property
 from workspace.services.crm_matching_access import can_create_property_public_link
 from workspace.services.property_public_share import existing_property_share_url
 
@@ -34,6 +34,15 @@ def build_studio_session(
 
     if not payload.get('storyboard', {}).get('slides'):
         payload['storyboard'] = build_default_storyboard(prop, property_payload)
+    else:
+        payload['storyboard'] = merge_storyboard_with_property(
+            payload.get('storyboard') or {},
+            property_payload,
+        )
+    stored_sb = (draft_row.payload or {}).get('storyboard')
+    if stored_sb != payload['storyboard']:
+        draft_row.payload = payload
+        draft_row.save(update_fields=['payload', 'updated_at'])
 
     quality = build_quality_report(prop, user)
 

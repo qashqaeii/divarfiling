@@ -12,18 +12,28 @@
         post: { w: 1080, h: 1350, cls: 'pcs-canvas--post' },
         square: { w: 1080, h: 1080, cls: 'pcs-canvas--square' },
     };
-    const TEMPLATES = ['luxury', 'minimal', 'gallery', 'bold'];
+    const CORE_POSTER_TEMPLATES = ['luxury', 'minimal', 'gallery', 'bold'];
+    const OVERLAY_POSTER_TEMPLATES = ['pearlescent', 'sculptural', 'emerald_atelier', 'pearl_gallery'];
+    const TEMPLATES = [...CORE_POSTER_TEMPLATES, ...OVERLAY_POSTER_TEMPLATES];
     const TEMPLATE_META = {
         luxury: { label: 'لوکس', icon: 'fa-gem' },
         minimal: { label: 'مدرن', icon: 'fa-building' },
         gallery: { label: 'کلاژ', icon: 'fa-shapes' },
         bold: { label: 'کمپین', icon: 'fa-bolt' },
+        pearlescent: { label: 'قاب استوری', icon: 'fa-layer-group' },
+        sculptural: { label: 'قاب عاج', icon: 'fa-palette' },
+        emerald_atelier: { label: 'قاب زمرد', icon: 'fa-building-columns' },
+        pearl_gallery: { label: 'گالری مروارید', icon: 'fa-gem' },
     };
     const FORMAT_META = {
         story: { label: 'استوری', sub: '1080×1920', icon: 'fa-mobile-screen' },
         post: { label: 'پست', sub: '1080×1350', icon: 'fa-image' },
         square: { label: 'مربع', sub: '1080×1080', icon: 'fa-square' },
     };
+    /** خروجی دانلود — WebP برای حجم کمتر (fallback به PNG در مرورگرهای قدیمی) */
+    const PCS_EXPORT_IMAGE_TYPE = 'image/webp';
+    const PCS_EXPORT_IMAGE_QUALITY = 0.86;
+    const PCS_EXPORT_EXT = 'webp';
     const PCS_FONT_STACK = "'Vazirmatn', Tahoma, 'Segoe UI', sans-serif";
     const PCS_FONTS = {
         vazirmatn: { label: 'وزیرمتن', family: "'Vazirmatn', Tahoma, sans-serif", load: '400 32px Vazirmatn' },
@@ -40,6 +50,7 @@
         return {
             headline: '',
             primary_image_index: 0,
+            secondary_image_index: 1,
             image_order: (imgs || []).map((_, i) => i),
             crop_y: 50,
             img_brightness: 100,
@@ -92,6 +103,16 @@
         const merged = { ...base, ...raw, image_order: (raw.image_order && raw.image_order.length) ? raw.image_order.slice() : base.image_order };
         const pIdx = parseInt(merged.primary_image_index, 10);
         merged.primary_image_index = Number.isFinite(pIdx) ? pIdx : 0;
+        const secRaw = parseInt(merged.secondary_image_index, 10);
+        const imgCount = (imgs || []).length;
+        merged.secondary_image_index = Number.isFinite(secRaw) ? secRaw : (imgCount > 1 ? 1 : 0);
+        if (imgCount > 0) {
+            merged.primary_image_index = Math.min(imgCount - 1, Math.max(0, merged.primary_image_index));
+            merged.secondary_image_index = Math.min(imgCount - 1, Math.max(0, merged.secondary_image_index));
+            if (imgCount > 1 && merged.secondary_image_index === merged.primary_image_index) {
+                merged.secondary_image_index = (merged.primary_image_index + 1) % imgCount;
+            }
+        }
         const crop = parseInt(merged.crop_y, 10);
         merged.crop_y = Number.isFinite(crop) ? Math.min(100, Math.max(0, crop)) : 50;
         merged.pip_enabled = !!merged.pip_enabled;
@@ -121,7 +142,91 @@
         merged.price_underline = !!merged.price_underline;
         merged.headline_color = normalizePosterHexColor(merged.headline_color);
         merged.price_color = normalizePosterHexColor(merged.price_color);
+        merged.brand_primary = normalizePosterHexColor(merged.brand_primary);
+        merged.text_layout = normalizeTextLayout(merged.text_layout);
+        consolidateTextLayoutTypography(merged);
         return merged;
+    }
+
+    const PCS_TEXT_LAYOUT_ROLES = ['headline', 'meta', 'price'];
+
+    function defaultTextLayoutEntry() {
+        return { x: 0, y: 0, s: 100 };
+    }
+
+    function normalizeTextLayout(raw) {
+        const out = {};
+        PCS_TEXT_LAYOUT_ROLES.forEach((role) => {
+            const src = raw && typeof raw === 'object' ? raw[role] : null;
+            if (!src || typeof src !== 'object') {
+                out[role] = defaultTextLayoutEntry();
+                return;
+            }
+            const x = parseFloat(src.x);
+            const y = parseFloat(src.y);
+            const s = parseFloat(src.s != null ? src.s : src.scale);
+            out[role] = {
+                x: Number.isFinite(x) ? Math.min(55, Math.max(-55, x)) : 0,
+                y: Number.isFinite(y) ? Math.min(55, Math.max(-55, y)) : 0,
+                s: Number.isFinite(s) ? Math.min(180, Math.max(50, s)) : 100,
+            };
+        });
+        return out;
+    }
+
+    /** عنوان/قیمت: اندازه پایدار در headline_scale/price_scale؛ s فقط transform موقت (مشخصات در s). */
+    function consolidateTextLayoutTypography(conf) {
+        if (!conf) return;
+        conf.text_layout = normalizeTextLayout(conf.text_layout);
+        ['headline', 'price'].forEach((role) => {
+            const entry = conf.text_layout[role];
+            if (!entry || entry.s === 100) return;
+            const v = Math.round(entry.s);
+            if (role === 'headline') conf.headline_scale = v;
+            else conf.price_scale = v;
+            entry.s = 100;
+        });
+    }
+
+    function posterTextLayoutStyle(conf, role) {
+        const layout = normalizeTextLayout(conf?.text_layout)[role] || defaultTextLayoutEntry();
+        const parts = [];
+        if (layout.x || layout.y) {
+            parts.push(`translate(${layout.x}%, ${layout.y}%)`);
+        }
+        if (layout.s !== 100) {
+            parts.push(`scale(${layout.s / 100})`);
+        }
+        if (!parts.length) return '';
+        return `transform:${parts.join(' ')};transform-origin:top right;`;
+    }
+
+    function wrapPosterTextRole(role, html, conf) {
+        if (!html) return '';
+        const layoutCss = posterTextLayoutStyle(conf, role);
+        return `<div class="pcs-poster-text" data-pcs-text-role="${role}" style="position:relative;width:100%;max-width:100%;${layoutCss}">${html}</div>`;
+    }
+
+    function wrapPosterHeadlineRole(html, conf) {
+        return wrapPosterTextRole('headline', html, conf);
+    }
+
+    function wrapPosterMetaRole(html, conf) {
+        return wrapPosterTextRole('meta', html, conf);
+    }
+
+    function wrapPosterPriceRole(html, conf) {
+        return wrapPosterTextRole('price', html, conf);
+    }
+
+    function posterSpecsLineWrapped(facts, color, variant, opts, conf) {
+        const inner = posterSpecsLineHtml(facts, color, variant, opts);
+        return wrapPosterMetaRole(inner, conf);
+    }
+
+    function posterPriceEditorialWrapped(price, conf, layout, color, onDark, opts) {
+        if (!price) return '';
+        return wrapPosterPriceRole(posterPriceEditorial(price, conf, layout, color, onDark, opts), conf);
     }
 
     function normalizePosterTextWeight(value, fallback) {
@@ -472,9 +577,16 @@
         editorSnapshot: null,
         editorDirty: false,
         editorGallerySlot: 0,
+        editorEmeraldSlot: 0,
+        editorStorySlideId: null,
         editorPreviewView: { zoom: 1, panX: 0, panY: 0 },
         editorPreviewViewBound: false,
+        editorTextRole: null,
+        editorTextDrag: null,
+        editorPosterHeadlineSuggestions: null,
     };
+
+    const PCS_POSTER_HEADLINE_MAX = 44;
 
     const $ = (sel, root) => (root || document).querySelector(sel);
     const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -533,11 +645,165 @@
         return out;
     }
 
+    function storySlideCatalogRef(slideId) {
+        return cfg.storySlides?.[slideId] || {};
+    }
+
+    /** کلیدهایی که برای «قدیمی» (لوکس در فرمت استوری) همیشه از هویت اسلاید کاور اعمال می‌شوند */
+    const STORY_POSTER_IDENTITY_KEYS = [
+        'font_key', 'headline_scale', 'price_scale', 'img_brightness', 'img_blur', 'img_opacity',
+    ];
+
+    function usesLuxuryStoryIdentity(tpl, formatKey) {
+        const fmt = formatKey || state.format;
+        return fmt === 'story' && tpl === 'luxury' && !!storySlideCatalogRef('cover').poster;
+    }
+
+    function posterDisplayLabel(tpl, formatKey) {
+        if (usesLuxuryStoryIdentity(tpl, formatKey)) {
+            return storySlideCatalogRef('cover').label || 'لوکس';
+        }
+        return resolveTemplateMeta(tpl).label;
+    }
+
+    function applyStoryPosterIdentityKeys(conf, identityPoster) {
+        if (!identityPoster || !conf) return conf;
+        const out = { ...conf };
+        STORY_POSTER_IDENTITY_KEYS.forEach((k) => {
+            if (identityPoster[k] !== undefined) out[k] = identityPoster[k];
+        });
+        return out;
+    }
+
+    function ensureStoryboardSlideIdentities() {
+        if (!state.draft?.storyboard?.slides) return;
+        state.draft.storyboard.slides.forEach((slide) => {
+            const ref = storySlideCatalogRef(slide.id);
+            if (!ref || typeof ref !== 'object') return;
+            if (ref.template_id) slide.template_id = ref.template_id;
+            if (ref.label) slide.label = ref.label;
+            slide.poster = { ...(ref.poster || {}), ...(slide.poster || {}) };
+        });
+    }
+
+    function ensureStoryboardSlidesStructure() {
+        if (!state.draft?.storyboard) return false;
+        const snapshot = JSON.stringify(state.draft.storyboard);
+        const imgs = propertyImageList();
+        const p = state.session?.property || {};
+        let slides = [...(state.draft.storyboard.slides || [])];
+        let order = [...(state.draft.storyboard.order || slides.map((s) => s.id))];
+        const hasExtra = slides.some((s) => s.id === 'extra_photos');
+        const hasEmerald = slides.some((s) => s.id === 'emerald_showcase');
+        const hasPearl = slides.some((s) => s.id === 'pearl_showcase');
+        const ref = storySlideCatalogRef('extra_photos');
+        const emeraldRef = storySlideCatalogRef('emerald_showcase');
+        const pearlRef = storySlideCatalogRef('pearl_showcase');
+
+        if (imgs.length >= 2 && !hasEmerald && emeraldRef) {
+            const archIdx = 0;
+            const stripIdx = imgs.length > 1 ? 1 : 0;
+            const emerald = {
+                id: 'emerald_showcase',
+                type: 'dual_photos',
+                title: String(p.title || p.headline || '').trim(),
+                subtitle: String(p.location_line || p.city || '').trim(),
+                image_index: archIdx,
+                image_indices: [stripIdx],
+            };
+            if (emeraldRef.template_id) emerald.template_id = emeraldRef.template_id;
+            if (emeraldRef.label) emerald.label = emeraldRef.label;
+            if (emeraldRef.poster) emerald.poster = { ...emeraldRef.poster };
+            const insertBefore = order.indexOf('extra_photos');
+            const anchor = insertBefore >= 0 ? insertBefore : order.indexOf('contact');
+            if (anchor >= 0) {
+                order.splice(anchor, 0, 'emerald_showcase');
+            } else {
+                order.push('emerald_showcase');
+            }
+            slides.push(emerald);
+        } else if (imgs.length < 2 && hasEmerald) {
+            slides = slides.filter((s) => s.id !== 'emerald_showcase');
+            order = order.filter((id) => id !== 'emerald_showcase');
+        }
+
+        if (imgs.length >= 2 && !hasPearl && pearlRef) {
+            const pearl = {
+                id: 'pearl_showcase',
+                type: 'dual_photos',
+                title: String(p.title || p.headline || '').trim(),
+                subtitle: String(p.location_line || p.city || '').trim(),
+                image_index: 0,
+                image_indices: [imgs.length > 1 ? 1 : 0],
+            };
+            if (pearlRef.template_id) pearl.template_id = pearlRef.template_id;
+            if (pearlRef.label) pearl.label = pearlRef.label;
+            if (pearlRef.poster) pearl.poster = { ...pearlRef.poster };
+            const insertBefore = order.indexOf('extra_photos');
+            const anchor = insertBefore >= 0 ? insertBefore : order.indexOf('contact');
+            if (anchor >= 0) {
+                order.splice(anchor, 0, 'pearl_showcase');
+            } else {
+                order.push('pearl_showcase');
+            }
+            slides.push(pearl);
+        } else if (imgs.length < 2 && hasPearl) {
+            slides = slides.filter((s) => s.id !== 'pearl_showcase');
+            order = order.filter((id) => id !== 'pearl_showcase');
+        }
+
+        if (imgs.length > 3 && !hasExtra && ref) {
+            const extra = {
+                id: 'extra_photos',
+                type: 'photo_showcase',
+                title: String(p.title || p.headline || '').trim(),
+                subtitle: String(p.location_line || p.city || '').trim(),
+                image_index: Math.min(3, imgs.length - 1),
+                image_indices: sculpturalCircleIndices(imgs, Math.min(3, imgs.length - 1), 3),
+            };
+            if (ref.template_id) extra.template_id = ref.template_id;
+            if (ref.label) extra.label = ref.label;
+            if (ref.poster) extra.poster = { ...ref.poster };
+            const contactIdx = order.indexOf('contact');
+            if (contactIdx >= 0) {
+                order.splice(contactIdx, 0, 'extra_photos');
+            } else {
+                order.push('extra_photos');
+            }
+            slides.push(extra);
+        } else if (imgs.length <= 3 && hasExtra) {
+            slides = slides.filter((s) => s.id !== 'extra_photos');
+            order = order.filter((id) => id !== 'extra_photos');
+        }
+
+        state.draft.storyboard.slides = slides;
+        const freshOrder = ['cover', 'specs', 'gallery_price'];
+        if (imgs.length >= 2) {
+            freshOrder.push('emerald_showcase', 'pearl_showcase');
+        }
+        if (imgs.length > 3) freshOrder.push('extra_photos');
+        freshOrder.push('contact');
+        const valid = new Set(slides.map((s) => s.id));
+        state.draft.storyboard.order = freshOrder.filter((id) => valid.has(id));
+        ensureStoryboardSlideIdentities();
+        return JSON.stringify(state.draft.storyboard) !== snapshot;
+    }
+
     function posterConfigFromDraft(tpl) {
+        const imgs = propertyImageList();
         const posters = state.draft?.posters || {};
         const raw = posters[tpl];
-        if (raw == null) return normalizePosterConfig(null, propertyImageList());
-        return normalizePosterConfig(raw, propertyImageList());
+        if (usesLuxuryStoryIdentity(tpl, state.format)) {
+            const identity = storySlideCatalogRef('cover').poster || {};
+            const base = { ...posterFieldDefaults(imgs), ...identity };
+            if (raw == null) {
+                return normalizePosterConfig(base, imgs);
+            }
+            const merged = normalizePosterConfig({ ...base, ...raw }, imgs);
+            return normalizePosterConfig(applyStoryPosterIdentityKeys(merged, identity), imgs);
+        }
+        if (raw == null) return normalizePosterConfig(null, imgs);
+        return normalizePosterConfig(raw, imgs);
     }
 
     function posterConfig(tpl) {
@@ -579,6 +845,7 @@
     function initEditorBuffer(tpl) {
         const imgs = propertyImageList();
         state.editorBuffer = { ...normalizePosterConfig(posterConfigFromDraft(tpl), imgs) };
+        consolidateTextLayoutTypography(state.editorBuffer);
         state.editorSnapshot = JSON.stringify(state.editorBuffer);
         state.editorDirty = false;
         $('#pcsEditor')?.classList.remove('pcs-editor--dirty');
@@ -592,6 +859,18 @@
         if (cover && !list.includes(cover)) list.unshift(cover);
         if (!list.length && cover) list.push(cover);
         return list;
+    }
+
+    function posterGridTemplates() {
+        const imgs = propertyImageList();
+        const list = [...CORE_POSTER_TEMPLATES, 'pearlescent'];
+        if (imgs.length >= 2) list.push('emerald_atelier', 'pearl_gallery');
+        if (imgs.length > 3) list.push('sculptural');
+        return list;
+    }
+
+    function posterTemplatesForSession() {
+        return posterGridTemplates();
     }
 
     function orderedImages(tpl, confOverride) {
@@ -718,6 +997,101 @@
         dock.querySelectorAll('[data-pcs-gallery-pick]').forEach((btn) => {
             const i = parseInt(btn.getAttribute('data-pcs-img-idx') || '0', 10);
             btn.classList.toggle('is-selected', i === (ord[active] ?? 0));
+        });
+    }
+
+    const EMERALD_LAYOUT_SLOTS = [
+        { title: 'قوس بزرگ', sub: 'تصویر شاخص' },
+        { title: 'نوار کناری', sub: 'تصویر دوم' },
+    ];
+    const OVERLAY_DUAL_SLOT_PRESETS = {
+        emerald_atelier: EMERALD_LAYOUT_SLOTS,
+        pearl_gallery: [
+            { title: 'دایره اصلی', sub: 'تصویر شاخص' },
+            { title: 'دایره مکمل', sub: 'تصویر دوم' },
+        ],
+    };
+
+    function overlayDualSlotMeta(tpl) {
+        return OVERLAY_DUAL_SLOT_PRESETS[tpl] || EMERALD_LAYOUT_SLOTS;
+    }
+
+    function emeraldStripIndex(conf, imgs) {
+        const n = (imgs || []).length;
+        if (n < 2) return 0;
+        const hero = Math.max(0, Math.min(n - 1, conf?.primary_image_index || 0));
+        let strip = parseInt(conf?.secondary_image_index, 10);
+        if (!Number.isFinite(strip)) strip = hero === 0 ? 1 : 0;
+        strip = Math.min(n - 1, Math.max(0, strip));
+        if (strip === hero) strip = (hero + 1) % n;
+        return strip;
+    }
+
+    function editorEmeraldImageComposer(imgs, archIdx, stripIdx, tpl) {
+        if (!imgs.length) return '<p class="pcs-editor__empty">حداقل دو تصویر لازم است.</p>';
+        const slots = overlayDualSlotMeta(tpl || state.editorTemplate || 'emerald_atelier');
+        const arch = Math.min(imgs.length - 1, Math.max(0, archIdx || 0));
+        let strip = emeraldStripIndex({ primary_image_index: arch, secondary_image_index: stripIdx }, imgs);
+        const active = state.editorEmeraldSlot ?? 0;
+        const pickIdx = active === 0 ? arch : strip;
+        return `<div class="pcs-editor__gallery-dock" data-pcs-emerald-dock>
+            <p class="pcs-editor__gallery-dock-hint">ابتدا «قوس» یا «نوار» را انتخاب کنید، سپس از نوار تصاویر یکی را اختصاص دهید.</p>
+            <div class="pcs-editor__gallery-layout" role="tablist" aria-label="جایگاه تصاویر قاب زمرد">
+                ${slots.map((meta, slot) => {
+                    const idx = slot === 0 ? arch : strip;
+                    const url = imgs[idx] || '';
+                    return `<button type="button" class="pcs-editor__layout-slot${active === slot ? ' is-active' : ''}"
+                        data-pcs-emerald-slot-btn="${slot}" role="tab" aria-selected="${active === slot ? 'true' : 'false'}">
+                        <span class="pcs-editor__layout-slot-thumb">${url ? `<img src="${esc(url)}" alt="">` : '<i class="fas fa-image" aria-hidden="true"></i>'}</span>
+                        <span class="pcs-editor__layout-slot-text">
+                            <strong>${esc(meta.title)}</strong>
+                            <small>${esc(meta.sub)} · تصویر ${idx + 1}</small>
+                        </span>
+                        <input type="hidden" data-pcs-emerald-slot="${slot}" value="${idx}">
+                    </button>`;
+                }).join('')}
+            </div>
+            <input type="hidden" id="pcsEditImage" value="${arch}">
+            <input type="hidden" id="pcsEditEmeraldStrip" value="${strip}">
+            ${editorAssetFilmstrip(imgs, pickIdx, 'data-pcs-emerald-pick')}
+        </div>`;
+    }
+
+    function syncEmeraldDockUi() {
+        const dock = editorControlsEl()?.querySelector('[data-pcs-emerald-dock]');
+        if (!dock) return;
+        const imgs = propertyImageList();
+        const archInp = dock.querySelector('#pcsEditImage');
+        const stripInp = dock.querySelector('#pcsEditEmeraldStrip');
+        const arch = parseInt(archInp?.value || '0', 10);
+        let strip = parseInt(stripInp?.value || '1', 10);
+        if (imgs.length > 1 && strip === arch) {
+            strip = (arch + 1) % imgs.length;
+            if (stripInp) stripInp.value = String(strip);
+        }
+        const active = state.editorEmeraldSlot ?? 0;
+        dock.querySelectorAll('[data-pcs-emerald-slot-btn]').forEach((btn) => {
+            const slot = parseInt(btn.getAttribute('data-pcs-emerald-slot-btn') || '0', 10);
+            const idx = slot === 0 ? arch : strip;
+            btn.classList.toggle('is-active', slot === active);
+            btn.setAttribute('aria-selected', slot === active ? 'true' : 'false');
+            const thumb = btn.querySelector('.pcs-editor__layout-slot-thumb');
+            const url = imgs[idx];
+            if (thumb) {
+                thumb.innerHTML = url
+                    ? `<img src="${esc(url)}" alt="">`
+                    : '<i class="fas fa-image" aria-hidden="true"></i>';
+            }
+            const small = btn.querySelector('.pcs-editor__layout-slot-text small');
+            const meta = overlayDualSlotMeta(state.editorTemplate || 'emerald_atelier')[slot] || { sub: '' };
+            if (small) small.textContent = `${meta.sub} · تصویر ${idx + 1}`;
+            const hid = btn.querySelector('[data-pcs-emerald-slot]');
+            if (hid) hid.value = String(idx);
+        });
+        dock.querySelectorAll('[data-pcs-emerald-pick]').forEach((btn) => {
+            const i = parseInt(btn.getAttribute('data-pcs-img-idx') || '0', 10);
+            const pickIdx = active === 0 ? arch : strip;
+            btn.classList.toggle('is-selected', i === pickIdx);
         });
     }
 
@@ -1318,6 +1692,17 @@
         const dealLabel = opts.dealLabel;
         const facts = posterContentFacts(p, headline, locLine);
         const imgCount = imgs.filter(Boolean).length;
+        const heroIdx = opts.primaryImageIndex != null
+            ? opts.primaryImageIndex
+            : (conf.primary_image_index || 0);
+        let circleImageIndices = opts.circleImageIndices;
+        if (!circleImageIndices || !circleImageIndices.length) {
+            circleImageIndices = sculpturalCircleIndices(imgs, heroIdx, 3);
+        }
+        const stripImageIndex = opts.stripImageIndex != null
+            ? opts.stripImageIndex
+            : emeraldStripIndex({ primary_image_index: heroIdx, secondary_image_index: conf.secondary_image_index }, propertyImageList());
+        const stripUrl = slideImageAt(stripImageIndex) || imgs[1] || primary || '';
         const g0 = imgs[0] || primary || '';
         const g1 = imgs[1] || '';
         const g2 = imgs[2] || '';
@@ -1342,6 +1727,10 @@
             phone,
             dealLabel,
             imgCount,
+            heroIdx,
+            circleImageIndices,
+            stripImageIndex,
+            stripUrl,
             g0,
             g1,
             g2,
@@ -1373,15 +1762,15 @@
                     ${posterPipInset(conf, primaryColor, accentInk, 'luxury_hero')}
                     <div style="position:absolute;left:${pad}px;right:${pad}px;bottom:${headZone}px;z-index:6;">
                         <div style="width:56px;height:2px;background:${gold};margin-bottom:14px;"></div>
-                        ${headHtml}
+                        ${wrapPosterHeadlineRole(headHtml, conf)}
                     </div>
                     ${brandLogoBlock(b, layout.isSquare ? 62 : 70)}
                     <div style="position:absolute;top:${pad}px;left:${pad}px;z-index:7;transform:scale(.92);transform-origin:top left;">${dealBadgeHtml(dealLabel, gold, 'dark')}</div>
                 </div>
                 ${posterPipInset(conf, primaryColor, accentInk, 'luxury_overlay')}
                 <div style="position:relative;z-index:9;margin:-${cardLift}px ${pad}px ${layout.safeBottom}px;padding:22px 26px 20px;background:linear-gradient(180deg,rgba(255,251,245,.98),rgba(247,242,232,.98));border-radius:22px;box-shadow:0 24px 64px rgba(20,18,16,.16);border:1px solid rgba(20,18,16,.06);">
-                    ${price ? posterPriceEditorial(price, conf, layout, priceColor, false, { maxWidth: contentW - 20 }) : ''}
-                    ${posterSpecsLineHtml(facts, charcoal, 'light', { compact: true, noMargin: !price })}
+                    ${price ? posterPriceEditorialWrapped(price, conf, layout, priceColor, false, { maxWidth: contentW - 20 }) : ''}
+                    ${posterSpecsLineWrapped(facts, charcoal, 'light', { compact: true, noMargin: !price }, conf)}
                     ${brandName ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(20,18,16,.08);">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
                 </div>
             </div>`;
@@ -1396,7 +1785,7 @@
                 <div style="position:absolute;top:0;right:0;width:42%;height:38%;background:linear-gradient(225deg,${primaryRgba(accentInk, 0.09)},transparent);pointer-events:none;"></div>
                 <div style="position:absolute;inset:0;box-sizing:border-box;padding:${pad}px ${pad}px ${layout.safeBottom}px;display:flex;flex-direction:column;gap:18px;">
                     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-shrink:0;">
-                        <div style="flex:1;min-width:0;padding-top:4px;">${modernHeadlineMarkup(headline, conf, accentInk, layout.hlModern, contentW - 100)}</div>
+                        <div style="flex:1;min-width:0;padding-top:4px;">${wrapPosterHeadlineRole(modernHeadlineMarkup(headline, conf, accentInk, layout.hlModern, contentW - 100), conf)}</div>
                         <div style="flex-shrink:0;margin-top:2px;">${dealBadgeHtml(dealLabel, accentInk, 'light')}</div>
                     </div>
                     <div style="position:relative;flex:1;min-height:${layout.modernImgMin}px;border-radius:22px;overflow:hidden;box-shadow:0 32px 64px rgba(15,23,42,.12);border:1px solid rgba(15,23,42,.06);">
@@ -1406,8 +1795,8 @@
                         ${posterPipInset(conf, primaryColor, accentInk, 'minimal_hero')}
                     </div>
                     <div style="flex-shrink:0;display:flex;flex-direction:column;gap:16px;min-height:${layout.modernFooterMin}px;justify-content:flex-end;padding-top:6px;">
-                        ${price ? posterPriceEditorial(price, conf, layout, accentInk, false, { maxWidth: contentW }) : ''}
-                        ${posterSpecsLineHtml(facts, accentInk, 'light', { compact: true, noMargin: true, prominent: true })}
+                        ${price ? posterPriceEditorialWrapped(price, conf, layout, accentInk, false, { maxWidth: contentW }) : ''}
+                        ${posterSpecsLineWrapped(facts, accentInk, 'light', { compact: true, noMargin: true, prominent: true }, conf)}
                         ${brandName ? `<div style="padding-top:12px;border-top:1px solid rgba(15,23,42,.1);font-size:26px;">${brandFooterHtml(brandName, phone, 'light')}</div>` : ''}
                     </div>
                 </div>
@@ -1454,7 +1843,7 @@
                 <div style="position:absolute;width:${stripW}px;height:100%;top:0;right:0;background:linear-gradient(180deg,${accent} 0%,${primaryRgba(accent, 0.82)} 100%);z-index:1;"></div>
                 <div style="position:relative;z-index:5;padding:${headTop}px ${pad}px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-height:${headBlockH}px;box-sizing:border-box;">
                     <div style="transform:scale(.9);transform-origin:top left;flex-shrink:0;">${dealBadgeHtml(dealLabel, '#fff', 'dark')}</div>
-                    <div style="flex:1;max-width:${headMaxW}px;text-align:end;">${headHtml}</div>
+                    <div style="flex:1;max-width:${headMaxW}px;text-align:end;">${wrapPosterHeadlineRole(headHtml, conf)}</div>
                 </div>
                 <div style="position:relative;flex:1;min-height:0;z-index:4;">
                     <div style="position:absolute;left:${pad}px;top:0;width:${mainWpct}%;height:${mainH}px;border-radius:100px 100px 24px 24px;overflow:hidden;box-shadow:0 36px 80px rgba(0,0,0,.55);border:3px solid rgba(255,255,255,.12);">
@@ -1464,8 +1853,8 @@
                     ${thumbsHtml}
                 </div>
                 <div style="position:relative;z-index:8;flex-shrink:0;padding:${pad}px ${pad}px ${layout.safeBottom}px;background:#0c0c0c;border-top:1px solid rgba(255,255,255,.08);">
-                    ${price ? `<div style="margin-bottom:14px;">${posterPriceEditorial(price, conf, layout, accent, true, { maxWidth: layout.w - pad * 2 })}</div>` : ''}
-                    ${posterSpecsLineHtml(facts, '#fff', 'dark', { compact: true, noMargin: true })}
+                    ${price ? `<div style="margin-bottom:14px;">${posterPriceEditorialWrapped(price, conf, layout, accent, true, { maxWidth: layout.w - pad * 2 })}</div>` : ''}
+                    ${posterSpecsLineWrapped(facts, '#fff', 'dark', { compact: true, noMargin: true }, conf)}
                     ${brandName ? `<div style="margin-top:12px;">${brandFooterHtml(brandName, phone, 'dark')}</div>` : ''}
                 </div>
             </div>`;
@@ -1493,9 +1882,9 @@
                     </div>
                 </div>
                 <div style="flex-shrink:0;margin-top:-20px;padding:${pad + 8}px ${pad}px ${layout.safeBottom}px;background:#fff;border-radius:28px 28px 0 0;box-shadow:0 -16px 48px rgba(0,0,0,.18);">
-                    <div style="margin-bottom:10px;">${headHtml}</div>
-                    ${price ? `<div style="margin-bottom:12px;">${posterPriceEditorial(price, conf, layout, accentInk, false, { maxWidth: contentW })}</div>` : ''}
-                    ${posterSpecsLineHtml(facts, accentInk, 'light', { compact: true, noMargin: true })}
+                    <div style="margin-bottom:10px;">${wrapPosterHeadlineRole(headHtml, conf)}</div>
+                    ${price ? `<div style="margin-bottom:12px;">${posterPriceEditorialWrapped(price, conf, layout, accentInk, false, { maxWidth: contentW })}</div>` : ''}
+                    ${posterSpecsLineWrapped(facts, accentInk, 'light', { compact: true, noMargin: true }, conf)}
                     <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:16px;background:${primaryRgba(accentInk, 0.1)};border:1px solid ${primaryRgba(accentInk, 0.18)};">
                         <span style="${pcsTextStyle('font-size:30px;font-weight:800;color:#334155;')}">${esc(cta)}</span>
                         ${phone ? `<span dir="ltr" style="${pcsTextStyle(`font-size:34px;font-weight:900;color:${accentInk};`)}">${esc(phone)}</span>` : ''}
@@ -1505,10 +1894,550 @@
             </div>`;
     }
 
+    function pearlescentOverlayUrl() {
+        return cfg.templateMeta?.pearlescent?.overlay || '';
+    }
+
+    function pearlescentLayoutMetrics(canvasH) {
+        return {
+            photoH: Math.round(0.455 * canvasH),
+            bodyTop: Math.round(0.47 * canvasH),
+            bodyBottom: Math.round(0.875 * canvasH),
+            footerTop: Math.round(0.878 * canvasH),
+            footerBottom: Math.round(0.985 * canvasH),
+        };
+    }
+
+    function renderPearlescentPoster(ctx) {
+        const overlay = pearlescentOverlayUrl();
+        if (!overlay) return renderModernPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            primaryColor, accentInk, brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const m = pearlescentLayoutMetrics(fmt.h);
+        const ink = '#0a3560';
+        const footInk = '#ffffff';
+        const sidePad = layout.isStory ? 72 : 56;
+        const contentW = layout.w - sidePad * 2;
+        const headFit = posterHeadlineFit(conf, layout.hlModern, headline, contentW, 3);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', ink);
+        const headHtml = headFit.lines.map((ln) => `<div style="${pcsTextStyle(`font-size:${hl}px;line-height:1.1;letter-spacing:-0.02em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const specsHtml = posterSpecsLineHtml(metaFacts, accentInk, 'light', {
+            compact: true,
+            noMargin: true,
+            prominent: true,
+        });
+        const priceHtml = price
+            ? `<div style="margin-top:14px;">${posterPriceEditorial(price, conf, layout, accentInk, false, { maxWidth: contentW })}</div>`
+            : '';
+        const bodyHtml = `<div dir="rtl" style="max-width:100%;display:flex;flex-direction:column;gap:0;width:100%;overflow:visible;">
+            ${wrapPosterHeadlineRole(headHtml, conf)}
+            ${specsHtml ? wrapPosterMetaRole(`<div style="margin-top:12px;">${specsHtml}</div>`, conf) : ''}
+            ${priceHtml ? wrapPosterPriceRole(priceHtml, conf) : ''}
+        </div>`;
+        const cta = phone ? 'هماهنگی بازدید' : 'مشاوره رایگان';
+        const footerHtml = `
+            <div style="display:flex;flex-direction:column;gap:10px;width:100%;align-items:stretch;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);">
+                    <span style="${pcsTextStyle(`font-size:28px;font-weight:800;color:${footInk};`)}">${esc(cta)}</span>
+                    ${phone ? `<span dir="ltr" style="${pcsTextStyle(`font-size:30px;font-weight:900;color:${footInk};`)}">${esc(phone)}</span>` : ''}
+                </div>
+                ${brandName ? brandFooterHtml(brandName, '', 'dark') : ''}
+            </div>`;
+        const logoSize = layout.isStory ? 68 : 58;
+
+        return `
+            <div class="pcs-pearlescent-frame" style="position:absolute;inset:0;background:#e8f4fc;overflow:hidden;">
+                <div style="position:absolute;left:0;right:0;top:0;height:${m.photoH}px;overflow:hidden;z-index:0;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:center ${cropY}%;`, conf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#5a8fb8 0%,#2a5080 100%);"></div>`}
+                    ${posterHeroWarmth(conf)}
+                    <div style="position:absolute;top:${layout.pad}px;right:${layout.pad}px;z-index:4;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
+                    <div style="position:absolute;top:${layout.pad}px;left:${layout.pad}px;z-index:4;">${brandLogoBlock(b, logoSize)}</div>
+                </div>
+                <div style="position:absolute;left:${sidePad}px;right:${sidePad}px;top:${m.bodyTop}px;height:${Math.max(0, m.bodyBottom - m.bodyTop)}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;padding-top:8px;box-sizing:border-box;">
+                    ${bodyHtml}
+                </div>
+                <div style="position:absolute;left:${sidePad - 12}px;right:${sidePad - 12}px;top:${m.footerTop}px;height:${Math.max(0, m.footerBottom - m.footerTop)}px;z-index:3;display:flex;align-items:center;justify-content:center;padding:0 8px;box-sizing:border-box;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+            </div>`;
+    }
+
+    function sculpturalOverlayUrl() {
+        return cfg.templateMeta?.sculptural?.overlay || '';
+    }
+
+    /** کالیبراسیون از تحلیل alpha فایل overlay (941×1672) */
+    const SCULPTURAL_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 0, y0: 3, x1: 772, y1: 819, focusX: 347, focusY: 420 },
+        text: { x0: 520, y0: 798, x1: 939, y1: 1519, padX: 34, padY: 8, padEndX: 30, padEndY: 72 },
+        footer: { x0: 52, y0: 1542, x1: 888, y1: 1660 },
+        badge: { cx: 718, cy: 52 },
+        logo: { cx: 46, cy: 46, size: 48 },
+        circles: [
+            { cx: 173.05, cy: 1007.84, d: 284, inset: 0.97, z: 1 },
+            { cx: 457.77, cy: 1183.04, d: 280, inset: 0.97, z: 2 },
+            { cx: 176.53, cy: 1354.73, d: 286, inset: 0.97, z: 3 },
+        ],
+    };
+
+    /** مرجع اندازهٔ واقعی فایل overlay (webp) */
+    const SCULPTURAL_OVERLAY_REF = { w: SCULPTURAL_CALIBRATION.refW, h: SCULPTURAL_CALIBRATION.refH };
+
+    /** اندیس تصاویر دایره‌ها — بدون تکرار تصویر قهرمان */
+    function sculpturalCircleIndices(imgs, heroIndex, count) {
+        const n = (imgs || []).length;
+        const want = count != null ? count : 3;
+        if (!n) return [];
+        const hero = Math.max(0, Math.min(n - 1, heroIndex || 0));
+        const picked = [];
+        for (let i = 0; i < n && picked.length < want; i += 1) {
+            if (i !== hero && imgs[i]) picked.push(i);
+        }
+        for (let i = 0; picked.length < want && i < n; i += 1) {
+            if (imgs[i]) picked.push(i);
+        }
+        while (picked.length < want && n) {
+            picked.push(picked[picked.length - 1] ?? hero);
+        }
+        return picked.slice(0, want);
+    }
+
+    /**
+     * مختصات از تحلیل alpha قالب — سوراخ‌های شفاف overlay (941×1672).
+     */
+    function sculpturalLayoutMetrics(w, h) {
+        const cal = SCULPTURAL_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const pd = (d) => Math.round(d * sx);
+        const hero = cal.hero;
+        return {
+            hero: {
+                left: px(hero.x0),
+                top: py(hero.y0),
+                width: px(hero.x1 - hero.x0),
+                height: py(hero.y1 - hero.y0),
+                objX: ((hero.focusX - hero.x0) / (hero.x1 - hero.x0)) * 100,
+                objY: ((hero.focusY - hero.y0) / (hero.y1 - hero.y0)) * 100,
+            },
+            circles: cal.circles
+                .slice()
+                .sort((a, b) => (a.z || 0) - (b.z || 0))
+                .map((c) => ({
+                    cx: px(c.cx),
+                    cy: py(c.cy),
+                    d: pd(c.d * (c.inset || 0.8)),
+                    z: c.z || 1,
+                })),
+            text: {
+                left: px(cal.text.x0 + (cal.text.padX || 0)),
+                top: py(cal.text.y0 + (cal.text.padY || 0)),
+                width: px((cal.text.x1 - cal.text.x0) - (cal.text.padX || 0) - (cal.text.padEndX || 0)),
+                height: py((cal.text.y1 - cal.text.y0) - (cal.text.padY || 0) - (cal.text.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function sculpturalCircleSlotHtml(url, cx, cy, d, conf, zIndex) {
+        const z = zIndex || 1;
+        if (!url) {
+            return `<div style="position:absolute;left:${cx - d / 2}px;top:${cy - d / 2}px;width:${d}px;height:${d}px;border-radius:50%;background:#1a2218;z-index:${z};"></div>`;
+        }
+        return `<div style="position:absolute;left:${cx - d / 2}px;top:${cy - d / 2}px;width:${d}px;height:${d}px;border-radius:50%;overflow:hidden;z-index:${z};isolation:isolate;background:#1a2218;">
+            ${posterImg(url, 'width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center center;display:block;', conf)}
+        </div>`;
+    }
+
+    function sculpturalMetaLine(p, metaFacts) {
+        const parts = [];
+        if (metaFacts.locLine) parts.push(metaFacts.locLine);
+        if (p.property_type) parts.push(p.property_type);
+        if (p.area_label && !parts.some((x) => x.includes(p.area_label))) parts.push(p.area_label);
+        return parts.filter(Boolean).slice(0, 3).join(' · ');
+    }
+
+    function sculpturalPriceLine(price, conf, layout, h, maxW) {
+        if (!price) return '';
+        const safeW = Math.max(120, Math.floor(maxW * 0.92));
+        const px = Math.min(posterPriceFit(conf, layout, price, safeW), Math.round(h * 0.048));
+        const emph = posterTextEmphasis(conf, 'price', '#ffffff');
+        return `<div style="margin-top:14px;width:100%;max-width:100%;overflow:hidden;box-sizing:border-box;">
+            <span style="${pcsTextStyle(`display:block;max-width:100%;overflow:hidden;font-size:${px}px;line-height:1.15;${emph}text-shadow:0 2px 16px rgba(0,0,0,.55);`)}">${esc(price)}</span>
+        </div>`;
+    }
+
+    function renderSculpturalPoster(ctx) {
+        const overlay = sculpturalOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            primaryColor, accentInk, brandName, phone, facts, dealLabel, b, p,
+            imgs, circleImageIndices, heroIdx,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = sculpturalLayoutMetrics(w, h);
+        const ink = '#f7f4ec';
+        const inkMuted = 'rgba(247,244,236,.88)';
+        const textShadow = 'text-shadow:0 2px 12px rgba(0,0,0,.55);';
+        const textW = Math.max(140, m.text.width);
+        const headFit = posterHeadlineFit(conf, layout.hlModern, headline, Math.floor(textW * 0.96), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.012em;${headEmph}${textShadow}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:12px 0 0;font-size:${Math.round(h * 0.0165)}px;font-weight:600;color:${inkMuted};line-height:1.5;${textShadow}`)}">${esc(metaLine)}</p>`
+            : '';
+        const priceHtml = sculpturalPriceLine(price, conf, layout, h, textW);
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;max-width:100%;max-height:100%;overflow:visible;box-sizing:border-box;padding-top:2px;">
+            ${wrapPosterTextRole('headline', headHtml, conf)}
+            ${wrapPosterTextRole('meta', metaHtml, conf)}
+            ${wrapPosterTextRole('price', priceHtml, conf)}
+        </div>`;
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 14px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.016) + 'px;font-weight:700;color:rgba(255,255,255,.9);')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.025) + 'px;font-weight:900;color:#fff;letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const logoSize = layout.isStory ? (SCULPTURAL_CALIBRATION.logo.size || 48) : 42;
+        const circleIdx = circleImageIndices || [];
+        const circlesHtml = m.circles.map((slot, i) => {
+            const idx = circleIdx[i];
+            const url = idx != null && imgs[idx] ? imgs[idx] : (imgs[(heroIdx + i + 1) % (imgs.length || 1)] || '');
+            return sculpturalCircleSlotHtml(url, slot.cx, slot.cy, slot.d, conf, slot.z);
+        }).join('');
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+
+        return `
+            <div class="pcs-sculptural-frame" style="position:absolute;inset:0;background:#ebe6dc;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, conf) : `<div style="width:100%;height:100%;background:linear-gradient(160deg,#6b7560 0%,#2f3828 100%);"></div>`}
+                    ${posterHeroWarmth(conf)}
+                </div>
+                ${circlesHtml}
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0) scale(.85);transform-origin:top right;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function emeraldAtelierOverlayUrl() {
+        return cfg.templateMeta?.emerald_atelier?.overlay || '';
+    }
+
+    /** کالیبراسیون از سوراخ‌های alpha overlay (941×1672) */
+    const EMERALD_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        arch: { x0: 142, y0: 128, x1: 636, y1: 1014, focusX: 390, focusY: 520 },
+        strip: { x0: 694, y0: 326, x1: 899, y1: 1014, focusX: 798, focusY: 620 },
+        text: { x0: 128, y0: 1060, x1: 916, y1: 1410, padX: 28, padY: 14, padEndX: 32, padEndY: 24 },
+        footer: { x0: 48, y0: 1598, x1: 892, y1: 1658 },
+        badge: { cx: 848, cy: 72 },
+        logo: { cx: 92, cy: 72, size: 52 },
+    };
+
+    function emeraldAtelierPhotoIndices(imgs, heroIndex) {
+        const n = (imgs || []).length;
+        const hero = Math.max(0, Math.min(Math.max(0, n - 1), heroIndex || 0));
+        if (n < 2) return { arch: hero, strip: hero };
+        let strip = hero === 0 ? 1 : 0;
+        if (strip === hero) strip = (hero + 1) % n;
+        return { arch: hero, strip };
+    }
+
+    function emeraldLayoutMetrics(w, h) {
+        const cal = EMERALD_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            arch: box(cal.arch),
+            strip: box(cal.strip),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function emeraldPhotoSlotHtml(url, slot, conf, cropY) {
+        const pos = `${slot.objX.toFixed(1)}% ${cropY}%`;
+        if (!url) {
+            return `<div style="position:absolute;left:${slot.left}px;top:${slot.top}px;width:${slot.width}px;height:${slot.height}px;background:#0a0a0a;z-index:1;"></div>`;
+        }
+        return `<div style="position:absolute;left:${slot.left}px;top:${slot.top}px;width:${slot.width}px;height:${slot.height}px;overflow:hidden;z-index:1;">
+            ${posterImg(url, `width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:${pos};display:block;`, conf)}
+        </div>`;
+    }
+
+    function renderEmeraldAtelierPoster(ctx) {
+        const overlay = emeraldAtelierOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, stripUrl, cropY, headline, price, locLine,
+            primaryColor, brandName, phone, dealLabel, b, p, facts,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = emeraldLayoutMetrics(w, h);
+        const ink = '#122820';
+        const inkMuted = 'rgba(18,40,32,.78)';
+        const priceInk = '#0b4d3e';
+        const textW = Math.max(160, m.text.width);
+        const headFit = posterHeadlineFit(conf, layout.hlModern, headline, Math.floor(textW * 0.96), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.22;letter-spacing:-0.01em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaParts = [];
+        if (metaFacts.locLine) metaParts.push(metaFacts.locLine);
+        if (p.property_type) metaParts.push(p.property_type);
+        if (p.area_label && !metaParts.some((x) => x.includes(p.area_label))) metaParts.push(p.area_label);
+        const metaLine = metaParts.filter(Boolean).slice(0, 3).join(' · ');
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:10px 0 0;font-size:${Math.round(h * 0.016)}px;font-weight:600;color:${inkMuted};line-height:1.5;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(conf, layout, price, Math.floor(textW * 0.94));
+            const emph = posterTextEmphasis(conf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:12px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, conf)}
+            ${wrapPosterTextRole('meta', metaHtml, conf)}
+            ${wrapPosterTextRole('price', priceHtml, conf)}
+        </div>`;
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 16px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.015) + 'px;font-weight:700;color:rgba(255,255,255,.92);')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.024) + 'px;font-weight:900;color:#fff;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const logoSize = layout.isStory ? (EMERALD_CALIBRATION.logo.size || 52) : 44;
+        const archUrl = primary || stripUrl;
+        const sideUrl = stripUrl || primary;
+
+        return `
+            <div class="pcs-emerald-frame" style="position:absolute;inset:0;background:#e8dcc8;overflow:hidden;">
+                ${emeraldPhotoSlotHtml(archUrl, m.arch, conf, cropY)}
+                ${emeraldPhotoSlotHtml(sideUrl, m.strip, conf, cropY)}
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0) scale(.82);transform-origin:top right;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function pearlGalleryOverlayUrl() {
+        return cfg.templateMeta?.pearl_gallery?.overlay || '';
+    }
+
+    /** کالیبراسیون از سوراخ‌های دایره‌ای alpha overlay (940×1672) */
+    const PEARL_GALLERY_CALIBRATION = {
+        refW: 940,
+        refH: 1672,
+        primary: { cx: 452, cy: 526, d: 702 },
+        secondary: { cx: 760, cy: 804, d: 310 },
+        text: { x0: 108, y0: 1008, x1: 832, y1: 1518, padX: 24, padY: 10, padEndX: 28, padEndY: 18 },
+        footer: { x0: 72, y0: 1554, x1: 868, y1: 1628 },
+        badge: { cx: 818, cy: 92 },
+        logo: { cx: 96, cy: 78, size: 50 },
+    };
+
+    function pearlLayoutMetrics(w, h) {
+        const cal = PEARL_GALLERY_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const circle = (c) => ({
+            cx: px(c.cx),
+            cy: py(c.cy),
+            d: px(c.d),
+        });
+        const t = cal.text;
+        return {
+            primary: circle(cal.primary),
+            secondary: circle(cal.secondary),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function pearlPhotoCircleHtml(url, slot, conf, cropY) {
+        const pos = `50% ${cropY}%`;
+        if (!url) {
+            return sculpturalCircleSlotHtml('', slot.cx, slot.cy, slot.d, conf, 1);
+        }
+        return `<div style="position:absolute;left:${slot.cx - slot.d / 2}px;top:${slot.cy - slot.d / 2}px;width:${slot.d}px;height:${slot.d}px;border-radius:50%;overflow:hidden;z-index:1;isolation:isolate;background:#0f172a;">
+            ${posterImg(url, `width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:${pos};display:block;`, conf)}
+        </div>`;
+    }
+
+    function pearlDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:9px;padding:9px 20px 10px;border-radius:999px;background:linear-gradient(145deg,rgba(245,224,196,.97) 0%,rgba(212,175,130,.92) 48%,rgba(194,154,108,.9) 100%);border:1px solid rgba(255,255,255,.42);box-shadow:0 10px 28px rgba(8,12,24,.42),inset 0 1px 0 rgba(255,255,255,.55);backdrop-filter:blur(6px);${pcsTextStyle('font-size:18px;line-height:1.1;color:#141c28;font-weight:800;letter-spacing:.03em;')}">
+            <span aria-hidden="true" style="width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#1e293b,#0f172a);opacity:.65;flex-shrink:0;box-shadow:0 0 0 1px rgba(255,255,255,.25);"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderPearlGalleryPoster(ctx) {
+        const overlay = pearlGalleryOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, stripUrl, cropY, headline, price, locLine,
+            primaryColor, brandName, phone, dealLabel, b, p, facts,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = pearlLayoutMetrics(w, h);
+        const ink = '#f4f1eb';
+        const inkMuted = 'rgba(244,241,235,.86)';
+        const priceInk = '#e8c9a8';
+        const textShadow = 'text-shadow:0 2px 14px rgba(0,0,0,.45);';
+        const textW = Math.max(160, m.text.width);
+        const headFit = posterHeadlineFit(conf, layout.hlModern, headline, Math.floor(textW * 0.96), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.012em;${headEmph}${textShadow}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:12px 0 0;font-size:${Math.round(h * 0.0165)}px;font-weight:600;color:${inkMuted};line-height:1.5;${textShadow}`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(conf, layout, price, Math.floor(textW * 0.94));
+            const emph = posterTextEmphasis(conf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:14px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.12;${emph}${textShadow}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;max-width:100%;overflow:visible;box-sizing:border-box;padding-bottom:6px;">
+            ${wrapPosterTextRole('headline', headHtml, conf)}
+            ${wrapPosterTextRole('meta', metaHtml, conf)}
+            ${wrapPosterTextRole('price', priceHtml, conf)}
+        </div>`;
+        const footerInk = '#1e293b';
+        const footerMuted = 'rgba(30,41,59,.82)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 14px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.0155) + 'px;font-weight:700;color:' + footerMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.023) + 'px;font-weight:900;color:' + footerInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const logoSize = layout.isStory ? (PEARL_GALLERY_CALIBRATION.logo.size || 50) : 44;
+        const mainUrl = primary || stripUrl;
+        const accentUrl = stripUrl || primary;
+
+        return `
+            <div class="pcs-pearl-frame" style="position:absolute;inset:0;background:#0b1220;overflow:hidden;">
+                ${pearlPhotoCircleHtml(mainUrl, m.primary, conf, cropY)}
+                ${pearlPhotoCircleHtml(accentUrl, m.secondary, conf, cropY)}
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${pearlDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
     function renderPosterTemplate(templateId, ctx) {
         if (templateId === 'luxury') return renderLuxuryPoster(ctx);
         if (templateId === 'minimal') return renderModernPoster(ctx);
         if (templateId === 'gallery') return renderCollagePoster(ctx);
+        if (templateId === 'pearlescent') return renderPearlescentPoster(ctx);
+        if (templateId === 'sculptural') return renderSculpturalPoster(ctx);
+        if (templateId === 'emerald_atelier') return renderEmeraldAtelierPoster(ctx);
+        if (templateId === 'pearl_gallery') return renderPearlGalleryPoster(ctx);
         return renderCampaignPoster(ctx);
     }
 
@@ -1610,12 +2539,28 @@
             </article>`;
     }
 
+    function editorMetaStylePanel(conf, active) {
+        const c = conf || {};
+        const s = Math.round(textLayoutEntry(c, 'meta').s);
+        return `
+            <article class="pcs-type-panel${active ? ' is-active' : ''}" data-pcs-type-panel="meta"
+                id="pcs-type-panel-meta" role="tabpanel" aria-labelledby="pcs-type-tab-meta"${active ? '' : ' hidden'}>
+                <p class="pcs-editor__section-hint">اندازه خط مشخصات (متراژ، محله، …) — جدا از عنوان و قیمت</p>
+                <label class="pcs-editor__range-label">اندازه مشخصات <span data-pcs-meta-scale-val>${s}%</span></label>
+                <input type="range" class="pcs-editor__range" data-pcs-edit-meta-scale min="50" max="180" value="${s}">
+            </article>`;
+    }
+
     function editorTextStyleControls(conf) {
         return `<div class="pcs-type-studio" data-pcs-type-studio>
-            <div class="pcs-type-studio__tabs" role="tablist" aria-label="استایل عنوان و قیمت">
+            <div class="pcs-type-studio__tabs" role="tablist" aria-label="استایل متن پوستر">
                 <button type="button" role="tab" class="pcs-type-studio__tab is-active" id="pcs-type-tab-headline"
                     data-pcs-type-tab="headline" aria-selected="true" aria-controls="pcs-type-panel-headline">
                     <i class="fas fa-heading" aria-hidden="true"></i><span>عنوان</span>
+                </button>
+                <button type="button" role="tab" class="pcs-type-studio__tab" id="pcs-type-tab-meta"
+                    data-pcs-type-tab="meta" aria-selected="false" aria-controls="pcs-type-panel-meta">
+                    <i class="fas fa-list-ul" aria-hidden="true"></i><span>مشخصات</span>
                 </button>
                 <button type="button" role="tab" class="pcs-type-studio__tab" id="pcs-type-tab-price"
                     data-pcs-type-tab="price" aria-selected="false" aria-controls="pcs-type-panel-price">
@@ -1623,6 +2568,7 @@
                 </button>
             </div>
             ${editorTypeStylePanel('headline', conf, true)}
+            ${editorMetaStylePanel(conf, false)}
             ${editorTypeStylePanel('price', conf, false)}
         </div>`;
     }
@@ -1963,7 +2909,9 @@
             price = opts.priceLabel || '';
         }
         const locLine = opts.locationOverride !== undefined ? opts.locationOverride : (p.location_line || p.city || '');
-        const primaryColor = normalizeBrandColor(b.colors?.primary || '#7c3aed');
+        const primaryColor = normalizeBrandColor(
+            conf.brand_primary || b.colors?.primary || '#7c3aed',
+        );
         const accentInk = inkAccentOnWhite(primaryColor);
         const badgeInk = textOnColor(primaryColor);
         const brandName = b.visibility?.consultant_name !== false ? (b.consultant_name || b.brand_name || '') : '';
@@ -1979,6 +2927,9 @@
             brandName,
             phone,
             dealLabel,
+            primaryImageIndex: opts.primaryImageIndex,
+            circleImageIndices: opts.circleImageIndices,
+            stripImageIndex: opts.stripImageIndex,
         });
         const inner = withPosterRenderConf(conf, () => renderPosterTemplate(templateId, renderCtx));
 
@@ -2072,10 +3023,13 @@
             const zoomIn = e.target.closest('[data-pcs-preview-zoom-in]');
             const zoomOut = e.target.closest('[data-pcs-preview-zoom-out]');
             const zoomReset = e.target.closest('[data-pcs-preview-zoom-reset]');
-            if (!zoomIn && !zoomOut && !zoomReset) return;
+            const textLayoutReset = e.target.closest('[data-pcs-text-layout-reset]');
+            if (!zoomIn && !zoomOut && !zoomReset && !textLayoutReset) return;
             e.preventDefault();
             e.stopPropagation();
-            if (zoomIn) {
+            if (textLayoutReset) {
+                resetEditorTextLayout();
+            } else if (zoomIn) {
                 setEditorPreviewZoom(state.editorPreviewView.zoom + EDITOR_PREVIEW_ZOOM_STEP);
             } else if (zoomOut) {
                 setEditorPreviewZoom(state.editorPreviewView.zoom - EDITOR_PREVIEW_ZOOM_STEP);
@@ -2083,6 +3037,7 @@
                 resetEditorPreviewView();
             }
         });
+        bindEditorTransformBar();
     }
 
     function bindEditorPreviewViewEvents() {
@@ -2112,6 +3067,7 @@
 
         viewport.addEventListener('mousedown', (e) => {
             if (e.button !== 0 || e.target.closest('button, a, input, select, textarea')) return;
+            if (e.target.closest('[data-pcs-text-role], [data-pcs-text-resize]')) return;
             panning = true;
             panStartX = e.clientX;
             panStartY = e.clientY;
@@ -2265,6 +3221,7 @@
             wrap._pcsLastVisual = { w: visualW, h: visualH };
             updateEditorPreviewScrollSize(visualW, visualH);
             applyEditorPreviewViewTransform();
+            setupEditorTextInteraction(wrap);
         }
         wrap.classList.add('is-ready');
     }
@@ -2403,25 +3360,43 @@
         });
     }
 
+    async function rasterCanvasToBlob(canvasEl) {
+        const webp = await new Promise((resolve) => {
+            canvasEl.toBlob((b) => resolve(b), PCS_EXPORT_IMAGE_TYPE, PCS_EXPORT_IMAGE_QUALITY);
+        });
+        if (webp && webp.size > 0) {
+            return { blob: webp, ext: PCS_EXPORT_EXT };
+        }
+        const png = await new Promise((resolve) => {
+            canvasEl.toBlob((b) => resolve(b), 'image/png');
+        });
+        return { blob: png, ext: 'png' };
+    }
+
     async function exportCanvasElement(canvas, filename, formatKey) {
         const shot = await rasterizeCanvas(canvas, formatKey || state.format);
+        const { blob, ext } = await rasterCanvasToBlob(shot);
+        if (!blob) throw new Error('empty blob');
+        const base = String(filename || 'poster').replace(/\.(png|jpe?g|webp)$/i, '');
         const link = document.createElement('a');
-        link.download = filename;
-        link.href = shot.toDataURL('image/png');
+        link.download = `${base}.${ext}`;
+        const objUrl = URL.createObjectURL(blob);
+        link.href = objUrl;
         link.click();
+        URL.revokeObjectURL(objUrl);
     }
 
     function renderPosters() {
         const grid = $('#pcsPosterGrid');
         if (!grid) return;
         grid.innerHTML = '';
-        TEMPLATES.forEach((tpl) => {
+        posterTemplatesForSession().forEach((tpl) => {
             const meta = resolveTemplateMeta(tpl);
             const card = document.createElement('article');
             card.className = `pcs-poster-card pcs-poster-card--${tpl}`;
             const head = document.createElement('div');
             head.className = 'pcs-poster-card__head';
-            head.innerHTML = `<span class="pcs-poster-card__badge"><i class="fas ${meta.icon}" aria-hidden="true"></i> ${esc(meta.label)}</span>`;
+            head.innerHTML = `<span class="pcs-poster-card__badge"><i class="fas ${meta.icon}" aria-hidden="true"></i> ${esc(posterDisplayLabel(tpl, state.format))}</span>`;
             const preview = document.createElement('div');
             preview.className = 'pcs-poster-card__preview' + (state.format === 'post' ? ' is-post' : state.format === 'square' ? ' is-square' : '');
             preview.innerHTML = buildCanvasHtml(tpl, state.format);
@@ -2458,7 +3433,7 @@
         const sub = $('#pcsLightboxSub');
         if (!box || !lb) return;
         state.previewTemplate = tpl;
-        if (title) title.textContent = meta.label;
+        if (title) title.textContent = posterDisplayLabel(tpl, state.format);
         const fmtMeta = FORMAT_META[state.format];
         if (sub) {
             sub.innerHTML = fmtMeta
@@ -2484,13 +3459,23 @@
     }
 
     async function downloadPoster(tpl) {
-        const host = createExportHost(buildCanvasHtml(tpl, state.format), state.format);
+        const fmt = state.format;
+        let innerHtml;
+        if (state.editorStorySlideId && state.editorTemplate === tpl) {
+            const slide = findStorySlide(state.editorStorySlideId);
+            const conf = state.editorBuffer ? { ...state.editorBuffer } : null;
+            innerHtml = slide && conf ? storyPreviewHtml(slide, conf) : buildCanvasHtml(tpl, fmt);
+        } else {
+            const conf = state.editorTemplate === tpl && state.editorBuffer ? { ...state.editorBuffer } : null;
+            innerHtml = buildCanvasHtml(tpl, fmt, conf);
+        }
+        const host = createExportHost(innerHtml, fmt);
         const canvas = host.querySelector('.pcs-canvas');
         try {
             await ensurePersianFonts();
             await new Promise((resolve) => whenImagesReady(host, resolve, 10000));
             sanitizePosterTextForExport(canvas);
-            await exportCanvasElement(canvas, `property-${cfg.propertyId}-${tpl}-${state.format}.png`, state.format);
+            await exportCanvasElement(canvas, `property-${cfg.propertyId}-${tpl}-${state.format}.webp`, state.format);
             toast('دانلود شروع شد');
         } catch (e) {
             toast('خطا در تولید تصویر');
@@ -2523,59 +3508,101 @@
         });
     }
 
+    function storySlideIdentity(slide) {
+        const catalog = cfg.storySlides || {};
+        const ref = catalog[slide?.id] || {};
+        const templateId = slide?.template_id || ref.template_id || 'minimal';
+        const label = slide?.label || ref.label || resolveTemplateMeta(templateId).label;
+        const posterMerge = { ...(ref.poster || {}), ...(slide?.poster || {}) };
+        return { templateId, label, posterMerge };
+    }
+
+    function storySlideLabel(slide) {
+        return storySlideIdentity(slide).label;
+    }
+
+    function storySlideTemplateId(slide) {
+        return storySlideIdentity(slide).templateId;
+    }
+
     function storySlideConf(slide) {
         const imgs = propertyImageList();
-        const base = posterFieldDefaults(imgs);
+        const { posterMerge } = storySlideIdentity(slide);
+        const base = { ...posterFieldDefaults(imgs), ...posterMerge };
         if (slide.image_index != null) {
             base.primary_image_index = Math.max(0, parseInt(slide.image_index, 10) || 0);
+        }
+        if (slide.type === 'dual_photos' && slide.image_indices?.length) {
+            base.secondary_image_index = Math.max(0, parseInt(slide.image_indices[0], 10) || 1);
         }
         if (slide.type === 'gallery_price' && slide.image_indices?.length) {
             base.image_order = slide.image_indices.slice();
         }
         if (slide.title) base.headline = slide.title;
-        return normalizePosterConfig(base, imgs);
+        let conf = normalizePosterConfig(base, imgs);
+        const ref = storySlideCatalogRef(slide.id);
+        if (ref?.poster) {
+            conf = normalizePosterConfig(applyStoryPosterIdentityKeys(conf, ref.poster), imgs);
+        }
+        return conf;
+    }
+
+    function storySlideRenderOpts(slide, conf) {
+        const opts = { showPromoBadge: false };
+        if (slide.type === 'cover') {
+            opts.headlineOverride = slide.title || visibleHeadline(conf);
+            opts.locationOverride = slide.subtitle;
+            if (slide.image_index != null) {
+                opts.heroImageUrl = slideImageAt(slide.image_index);
+                opts.primaryImageIndex = slide.image_index;
+            }
+        } else if (slide.type === 'specs') {
+            const lines = (slide.lines || []).filter(Boolean);
+            opts.headlineOverride = lines[0] || visibleHeadline(conf);
+            opts.specLines = lines.length > 1 ? lines.slice(1) : lines;
+            if (slide.image_index != null) opts.heroImageUrl = slideImageAt(slide.image_index);
+        } else if (slide.type === 'gallery_price') {
+            opts.headlineOverride = slide.title || visibleHeadline(conf);
+            opts.galleryIndices = slide.image_indices || [];
+            opts.priceLabel = slide.price_label || '';
+        } else if (slide.type === 'photo_showcase') {
+            opts.headlineOverride = slide.title || visibleHeadline(conf);
+            opts.locationOverride = slide.subtitle;
+            const imgs = propertyImageList();
+            const hero = slide.image_index != null ? slide.image_index : 0;
+            if (slide.image_index != null) {
+                opts.heroImageUrl = slideImageAt(slide.image_index);
+                opts.primaryImageIndex = slide.image_index;
+            }
+            if (slide.image_indices?.length) {
+                opts.circleImageIndices = slide.image_indices.slice(0, 3);
+            } else {
+                opts.circleImageIndices = sculpturalCircleIndices(imgs, hero, 3);
+            }
+        } else if (slide.type === 'dual_photos') {
+            opts.headlineOverride = slide.title || visibleHeadline(conf);
+            opts.locationOverride = slide.subtitle;
+            const hero = slide.image_index != null ? slide.image_index : 0;
+            if (slide.image_index != null) {
+                opts.heroImageUrl = slideImageAt(slide.image_index);
+                opts.primaryImageIndex = slide.image_index;
+            }
+            const stripIdx = slide.image_indices?.[0];
+            if (stripIdx != null) opts.stripImageIndex = stripIdx;
+        } else if (slide.type === 'contact') {
+            opts.headlineOverride = slide.cta || 'برای هماهنگی بازدید پیام دهید';
+            opts.specLines = [];
+            opts.suppressPrice = true;
+        }
+        return opts;
     }
 
     function buildStoryboardSlideHtml(slide, formatKey) {
         const fmtKey = formatKey || 'story';
         if (!slide) return buildCanvasHtml('minimal', fmtKey);
         const conf = storySlideConf(slide);
-        if (slide.type === 'cover') {
-            return buildCanvasHtml('luxury', fmtKey, conf, {
-                headlineOverride: slide.title || visibleHeadline(conf),
-                locationOverride: slide.subtitle,
-                heroImageUrl: slide.image_index != null ? slideImageAt(slide.image_index) : undefined,
-                primaryImageIndex: slide.image_index,
-                showPromoBadge: false,
-            });
-        }
-        if (slide.type === 'specs') {
-            const lines = (slide.lines || []).filter(Boolean);
-            return buildCanvasHtml('minimal', fmtKey, conf, {
-                headlineOverride: lines[0] || visibleHeadline(conf),
-                specLines: lines.length > 1 ? lines.slice(1) : lines,
-                heroImageUrl: slide.image_index != null ? slideImageAt(slide.image_index) : undefined,
-                showPromoBadge: false,
-            });
-        }
-        if (slide.type === 'gallery_price') {
-            return buildCanvasHtml('gallery', fmtKey, conf, {
-                headlineOverride: slide.title || visibleHeadline(conf),
-                galleryIndices: slide.image_indices || [],
-                priceLabel: slide.price_label || '',
-                showPromoBadge: false,
-            });
-        }
-        if (slide.type === 'contact') {
-            const cta = slide.cta || 'برای هماهنگی بازدید پیام دهید';
-            return buildCanvasHtml('minimal', fmtKey, conf, {
-                headlineOverride: cta,
-                specLines: [],
-                suppressPrice: true,
-                showPromoBadge: false,
-            });
-        }
-        return buildCanvasHtml('minimal', fmtKey, conf);
+        const tpl = storySlideTemplateId(slide);
+        return buildCanvasHtml(tpl, fmtKey, conf, storySlideRenderOpts(slide, conf));
     }
 
     function renderStoryboard() {
@@ -2587,11 +3614,26 @@
             const slide = (state.draft.storyboard.slides || []).find((s) => s.id === id);
             if (!slide) return;
             const el = document.createElement('div');
-            el.className = 'pcs-story-slide';
+            el.className = 'pcs-story-slide pcs-story-slide--editable';
+            el.setAttribute('role', 'button');
+            el.setAttribute('tabindex', '0');
+            el.setAttribute('aria-label', `ویرایش استوری ${storySlideLabel(slide)}`);
+            const cap = document.createElement('span');
+            cap.className = 'pcs-story-slide__label';
+            cap.textContent = storySlideLabel(slide);
             const frame = document.createElement('div');
             frame.className = 'pcs-story-slide__frame';
             frame.innerHTML = buildStoryboardSlideHtml(slide, 'story');
             el.appendChild(frame);
+            el.appendChild(cap);
+            const openSlideEditor = () => openEditor(storySlideTemplateId(slide), slide.id);
+            el.addEventListener('click', openSlideEditor);
+            el.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter' || ev.key === ' ') {
+                    ev.preventDefault();
+                    openSlideEditor();
+                }
+            });
             track.appendChild(el);
         });
         requestAnimationFrame(() => {
@@ -2772,6 +3814,68 @@
         $('#pcsCopyTelegram')?.addEventListener('click', () => copy('#pcsTelegramText', 'متن تلگرام کپی شد'));
     }
 
+    function buildDivarTitleCard(opts) {
+        const { style, text, index, selected } = opts;
+        const tone = aiStyleTone(style);
+        const len = (text || '').length;
+        const idxLabel = ['۱', '۲', '۳'][index] || String(index + 1);
+        const countCls = len > 50 ? ' is-over' : len > 44 ? ' is-warn' : '';
+        return `
+            <article class="pcs-divar-title pcs-divar-title--${tone}${selected ? ' is-selected' : ''}">
+                <span class="pcs-divar-title__idx" aria-hidden="true">${idxLabel}</span>
+                <div class="pcs-divar-title__main">
+                    <div class="pcs-divar-title__top">
+                        <span class="pcs-divar-title__tag">${esc(style || 'عنوان')}</span>
+                        <span class="pcs-divar-title__count${countCls}">${len}<span aria-hidden="true"> / ۵۰</span></span>
+                    </div>
+                    <textarea class="pcs-divar-title__input" data-title-idx="${index}" rows="2" dir="rtl" placeholder="عنوان آگهی…">${esc(text || '')}</textarea>
+                </div>
+                <div class="pcs-divar-title__actions">
+                    <button type="button" class="pcs-divar-icon-btn" data-copy-title="${index}" title="کپی عنوان">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="pcs-divar-icon-btn pcs-divar-icon-btn--pick${selected ? ' is-on' : ''}" data-use-title="${index}" title="انتخاب برای بسته انتشار">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </article>`;
+    }
+
+    function divarTitlesEmptyState() {
+        return `<div class="pcs-divar-empty">
+            <p>هنوز عنوانی نیست — <button type="button" class="pcs-divar-empty__link" data-pcs-gen-divar-titles>با AI بساز</button></p>
+        </div>`;
+    }
+
+    function socialCaptionsEmptyState() {
+        return `<div class="pcs-divar-empty">
+            <p>کپشنی نیست — <button type="button" class="pcs-divar-empty__link" data-pcs-gen-social>با AI بساز</button></p>
+        </div>`;
+    }
+
+    function buildSocialCaptionCard(opts) {
+        const { style, text, index } = opts;
+        const tone = aiStyleTone(style);
+        const len = (text || '').length;
+        const toneInitial = (style || 'ک').trim().charAt(0) || 'ک';
+        return `
+            <article class="pcs-social-caption pcs-social-caption--${tone}">
+                <span class="pcs-social-caption__tone" title="${esc(style || '')}">${esc(toneInitial)}</span>
+                <div class="pcs-social-caption__main">
+                    <div class="pcs-social-caption__meta">
+                        <span class="pcs-social-caption__label">${esc(style || 'کپشن')}</span>
+                        <span class="pcs-social-caption__count">${len} کاراکتر</span>
+                    </div>
+                    <textarea class="pcs-social-caption__input" data-cap-idx="${index}" rows="4" dir="rtl" placeholder="متن کپشن…">${esc(text || '')}</textarea>
+                </div>
+                <div class="pcs-social-caption__actions">
+                    <button type="button" class="pcs-divar-icon-btn" data-copy-cap="${index}" title="کپی کپشن">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </article>`;
+    }
+
     function buildAiCopyCard(opts) {
         const { style, text, index, kind, selected } = opts;
         const tone = aiStyleTone(style);
@@ -2811,29 +3915,7 @@
     }
 
     function renderAiStrip() {
-        const strip = $('#pcsAiStrip');
-        if (!strip) return;
-        const titles = (state.draft?.ai?.divar?.titles || []).slice(0, 2);
-        const cap = (state.draft?.ai?.social?.captions || [])[0];
-        strip.innerHTML = `
-            <div class="pcs-ai-mini">
-                <div class="pcs-ai-mini__head"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><h4>عنوان‌های دیوار</h4></div>
-                ${titles.length
-            ? titles.map((t) => `<blockquote class="pcs-ai-mini__quote pcs-ai-mini__quote--${aiStyleTone(t.style)}">
-                    <span class="pcs-ai-mini__quote-label">${esc(t.style)}</span>
-                    <p>${esc(truncatePreviewText(t.text, 120))}</p>
-                </blockquote>`).join('')
-            : `<p class="pcs-ai-mini__empty">از تب «آگهی دیوار» عنوان تولید کنید</p>`}
-            </div>
-            <div class="pcs-ai-mini">
-                <div class="pcs-ai-mini__head"><i class="fas fa-comment-dots" aria-hidden="true"></i><h4>کپشن شبکه‌ها</h4></div>
-                ${cap
-            ? `<blockquote class="pcs-ai-mini__quote pcs-ai-mini__quote--${aiStyleTone(cap.style)}">
-                    <span class="pcs-ai-mini__quote-label">${esc(cap.style)}</span>
-                    <p>${esc(truncatePreviewText(cap.text, 140))}</p>
-                </blockquote>`
-            : '<p class="pcs-ai-mini__empty">از تب «کپشن و شبکه‌ها» محتوا بسازید</p>'}
-            </div>`;
+        /* خلاصه AI فقط در تب‌های دیوار/شبکه‌ها — نه در پوسترها */
     }
 
     function setFieldValue(id, value) {
@@ -2843,6 +3925,9 @@
 
     function syncFormFromDraft() {
         setFieldValue('#pcsDivarBody', state.draft?.ai?.divar?.body || '');
+        const bodyStyle = state.draft?.ai?.divar?.body_style || 'formal';
+        const styleEl = $('#pcsDivarBodyStyle');
+        if (styleEl) styleEl.value = bodyStyle;
         const tags = (state.draft?.ai?.social?.hashtags || []).join(' ');
         setFieldValue('#pcsHashtags', tags);
         setFieldValue(
@@ -2862,14 +3947,16 @@
         const titles = state.draft?.ai?.divar?.titles || [];
         const selected = state.draft?.ai?.divar?.selected_title_index ?? 0;
         if (!titles.length) {
-            wrap.innerHTML = aiCopyEmptyState('هنوز عنوانی تولید نشده', 'دکمه «تولید عنوان‌ها» را بزنید');
+            wrap.innerHTML = divarTitlesEmptyState();
+            wrap.querySelector('[data-pcs-gen-divar-titles]')?.addEventListener('click', () => {
+                $('#pcsGenDivarTitles')?.click();
+            });
             return;
         }
-        wrap.innerHTML = titles.map((t, i) => buildAiCopyCard({
+        wrap.innerHTML = titles.map((t, i) => buildDivarTitleCard({
             style: t.style,
             text: t.text,
             index: i,
-            kind: 'title',
             selected: i === selected,
         })).join('');
         wrap.querySelectorAll('[data-copy-title]').forEach((btn) => {
@@ -2892,8 +3979,13 @@
             ta.addEventListener('input', () => {
                 const i = parseInt(ta.dataset.titleIdx, 10);
                 if (state.draft.ai.divar.titles[i]) state.draft.ai.divar.titles[i].text = ta.value;
-                const count = ta.closest('.pcs-copy-card')?.querySelector('.pcs-copy-card__count');
-                if (count) count.textContent = `${ta.value.length} کاراکتر`;
+                const count = ta.closest('.pcs-divar-title')?.querySelector('.pcs-divar-title__count');
+                if (count) {
+                    const len = ta.value.length;
+                    count.innerHTML = `${len}<span aria-hidden="true"> / ۵۰</span>`;
+                    count.classList.toggle('is-warn', len > 44 && len <= 50);
+                    count.classList.toggle('is-over', len > 50);
+                }
                 scheduleSave();
                 renderAiStrip();
             });
@@ -2905,15 +3997,16 @@
         if (!wrap) return;
         const caps = state.draft?.ai?.social?.captions || [];
         if (!caps.length) {
-            wrap.innerHTML = aiCopyEmptyState('کپشنی تولید نشده', '«تولید محتوای شبکه‌ها» را بزنید');
+            wrap.innerHTML = socialCaptionsEmptyState();
+            wrap.querySelector('[data-pcs-gen-social]')?.addEventListener('click', () => {
+                $('#pcsGenSocial')?.click();
+            });
             return;
         }
-        wrap.innerHTML = caps.map((c, i) => buildAiCopyCard({
+        wrap.innerHTML = caps.map((c, i) => buildSocialCaptionCard({
             style: c.style,
             text: c.text,
             index: i,
-            kind: 'caption',
-            selected: false,
         })).join('');
         wrap.querySelectorAll('[data-copy-cap]').forEach((btn) => {
             btn.addEventListener('click', () => {
@@ -2927,7 +4020,7 @@
                 const i = parseInt(ta.dataset.capIdx, 10);
                 if (state.draft?.ai?.social?.captions?.[i]) {
                     state.draft.ai.social.captions[i].text = ta.value;
-                    const count = ta.closest('.pcs-copy-card')?.querySelector('.pcs-copy-card__count');
+                    const count = ta.closest('.pcs-social-caption')?.querySelector('.pcs-social-caption__count');
                     if (count) count.textContent = `${ta.value.length} کاراکتر`;
                     scheduleSave();
                     renderAiStrip();
@@ -2940,6 +4033,8 @@
         if (!state.draft) return null;
         const bodyEl = $('#pcsDivarBody');
         if (bodyEl) state.draft.ai.divar.body = bodyEl.value;
+        const styleEl = $('#pcsDivarBodyStyle');
+        if (styleEl) state.draft.ai.divar.body_style = styleEl.value || 'formal';
         state.draft.ai.social.hashtags = ($('#pcsHashtags')?.value || '').split(/\s+/).filter(Boolean);
         state.draft.ai.social.whatsapp_full = $('#pcsWhatsappText')?.value || '';
         state.draft.ai.social.telegram = $('#pcsTelegramText')?.value || '';
@@ -3008,7 +4103,6 @@
                 state.session = state.session || {};
                 state.session.property_fingerprint = data.property_fingerprint;
             }
-            renderStaleBanner();
             setSaveStatus('saved');
         } catch (_) {
             if (seq === state.saveSeq) {
@@ -3092,50 +4186,6 @@
         await flushSaveDraft();
     }
 
-    function renderStaleBanner() {
-        const banner = $('#pcsStaleBanner');
-        if (!banner) return;
-        const stale = !!state.session?.draft_stale;
-        if (stale) banner.removeAttribute('hidden');
-        else banner.setAttribute('hidden', '');
-    }
-
-    async function syncDraftWithProperty() {
-        const token = csrf();
-        try {
-            const res = await fetch(cfg.draftUrl, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
-                body: JSON.stringify({ sync_property: true }),
-            });
-            const data = await res.json();
-            if (!res.ok || !data.ok) {
-                toast(data.error || 'هماهنگ‌سازی ناموفق بود');
-                return;
-            }
-            state.session = state.session || {};
-            state.session.draft_stale = !!data.draft_stale;
-            state.session.property_fingerprint = data.property_fingerprint;
-            if (data.property) {
-                state.session.property = data.property;
-            }
-            if (data.draft) {
-                state.draft = data.draft;
-            }
-            renderHeader();
-            renderPosters();
-            renderStoryboard();
-            renderStaleBanner();
-            if (data.needs_manual_review) {
-                toast('استوری‌برد با فایل هماهنگ شد؛ متن‌های AI را دستی بررسی کنید');
-            } else {
-                toast('محتوا با اطلاعات فعلی فایل هماهنگ شد');
-            }
-        } catch (_) {
-            toast('خطا در هماهنگ‌سازی');
-        }
-    }
-
     async function loadSession() {
         const loading = $('#pcsLoading');
         const token = ++state.sessionToken;
@@ -3148,6 +4198,7 @@
             if ($('#pcsModal')?.hasAttribute('hidden')) return;
             state.session = data;
             state.draft = data.draft || {};
+            if (ensureStoryboardSlidesStructure()) scheduleSave();
             state.draft.ai = state.draft.ai || { divar: { titles: [], body: '', selected_title_index: 0 }, social: { captions: [], hashtags: [] } };
             state.draft.ai.divar = state.draft.ai.divar || { titles: [], body: '', selected_title_index: 0 };
             state.draft.ai.social = state.draft.ai.social || { captions: [], hashtags: [] };
@@ -3164,7 +4215,6 @@
             syncFormFromDraft();
             renderAiStrip();
             renderSharePanel();
-            renderStaleBanner();
             setTab(state.draft.active_tab || 'posters');
             requestAnimationFrame(() => rescaleAllPreviews());
         } finally {
@@ -3251,8 +4301,9 @@
         const mob = isMobileViewport();
         const showDl = tab === 'posters';
         const showQuick = tab === 'posters' || tab === 'share';
+        const showFooter = tab === 'posters' || tab === 'share';
         if (dl) dl.hidden = !showDl;
-        footer.hidden = mob && !showQuick && !showDl;
+        footer.hidden = !showFooter;
         footer.classList.toggle('pcs-footer--minimal', mob && tab !== 'posters');
     }
 
@@ -3426,6 +4477,18 @@
             headline: (controls?.querySelector('#pcsEditHeadline')?.value || '').trim(),
             crop_y: Math.min(100, Math.max(0, cropVal)),
             primary_image_index: imgs.length ? Math.min(imgs.length - 1, Math.max(0, primary)) : 0,
+            secondary_image_index: (() => {
+                const stripEl = controls?.querySelector('#pcsEditEmeraldStrip');
+                const fallback = prev.secondary_image_index ?? (imgs.length > 1 ? 1 : 0);
+                const v = stripEl
+                    ? parseInt(stripEl.value || String(fallback), 10)
+                    : parseInt(String(fallback), 10);
+                if (!imgs.length) return 0;
+                let s = Math.min(imgs.length - 1, Math.max(0, Number.isFinite(v) ? v : 0));
+                const p = imgs.length ? Math.min(imgs.length - 1, Math.max(0, primary)) : 0;
+                if (imgs.length > 1 && s === p) s = (p + 1) % imgs.length;
+                return s;
+            })(),
             image_order: imageOrder,
             img_brightness: parseInt(controls?.querySelector('[data-pcs-edit-range="brightness"]')?.value || String(prev.img_brightness ?? 100), 10),
             img_blur: parseInt(controls?.querySelector('[data-pcs-edit-range="blur"]')?.value || String(prev.img_blur ?? 0), 10),
@@ -3468,18 +4531,75 @@
             pip_tilt: parseInt(controls?.querySelector('[data-pcs-edit-range="pip_tilt"]')?.value || String(prev.pip_tilt ?? 0), 10),
             hero_vignette: parseInt(controls?.querySelector('[data-pcs-edit-range="hero_vignette"]')?.value || String(prev.hero_vignette ?? 0), 10),
             hero_warmth: controls?.querySelector('[data-pcs-hero-warmth].is-active')?.getAttribute('data-pcs-hero-warmth') || prev.hero_warmth || 'neutral',
+            brand_primary: (() => {
+                const inp = controls?.querySelector('#pcsEditBrandPrimary');
+                if (!inp) return prev.brand_primary || '';
+                const picked = normalizePosterHexColor(inp.value);
+                const global = normalizeBrandColor(mergeBrand().colors?.primary || '#7c3aed');
+                if (!picked || picked === global) return '';
+                return picked;
+            })(),
+            text_layout: normalizeTextLayout(prev.text_layout),
         };
     }
 
     function updateEditorBufferFromForm(tpl) {
         if (!state.editorBuffer) return;
         Object.assign(state.editorBuffer, readEditorForm(tpl));
+        state.editorBuffer.text_layout = normalizeTextLayout(state.editorBuffer.text_layout);
+        state.editorBuffer.text_layout.headline.s = 100;
+        state.editorBuffer.text_layout.price.s = 100;
         syncEditorDirtyFlag();
+    }
+
+    function findStorySlide(slideId) {
+        return (state.draft?.storyboard?.slides || []).find((s) => s.id === slideId) || null;
+    }
+
+    function editorBrandPrimarySection(conf) {
+        const b = mergeBrand();
+        const global = normalizeBrandColor(b.colors?.primary || '#7c3aed');
+        const val = normalizePosterHexColor(conf?.brand_primary) || global;
+        const scopeHint = state.editorStorySlideId ? ' این استوری' : ' این پوستر';
+        return `
+            <section class="pcs-editor__section">
+                <h4 class="pcs-editor__section-title"><i class="fas fa-palette" aria-hidden="true"></i> رنگ اصلی برند</h4>
+                <p class="pcs-editor__section-hint">روی${scopeHint}، دکمه‌ها و جزئیات گرافیکی اعمال می‌شود</p>
+                <div class="pcs-editor__brand-color-row">
+                    <input type="color" id="pcsEditBrandPrimary" class="pcs-editor__color-swatch pcs-editor__color-swatch--lg"
+                        value="${esc(val)}" aria-label="رنگ اصلی برند">
+                    <span class="pcs-editor__brand-color-val" id="pcsEditBrandPrimaryVal">${esc(val)}</span>
+                    <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--sm" id="pcsEditBrandPrimaryReset">
+                        <i class="fas fa-rotate-left" aria-hidden="true"></i> پیش‌فرض برند
+                    </button>
+                </div>
+            </section>`;
+    }
+
+    function storyPreviewHtml(slide, conf) {
+        if (!slide) return '';
+        const mergedSlide = {
+            ...slide,
+            poster: normalizePosterConfig({ ...(slide.poster || {}), ...conf }, propertyImageList()),
+        };
+        return buildStoryboardSlideHtml(mergedSlide, 'story');
     }
 
     function commitEditorToDraft(tpl) {
         if (!state.draft || !tpl) return;
         updateEditorBufferFromForm(tpl);
+        if (state.editorStorySlideId) {
+            const slide = findStorySlide(state.editorStorySlideId);
+            if (slide) {
+                slide.poster = { ...state.editorBuffer };
+                const imgs = propertyImageList();
+                if (slide.type === 'dual_photos' && state.editorBuffer) {
+                    slide.image_index = state.editorBuffer.primary_image_index;
+                    slide.image_indices = [emeraldStripIndex(state.editorBuffer, imgs)];
+                }
+            }
+            return;
+        }
         state.draft.posters = state.draft.posters || {};
         state.draft.posters[tpl] = { ...state.editorBuffer };
     }
@@ -3487,8 +4607,13 @@
     function clearEditorSession() {
         state.editorBuffer = null;
         state.editorTemplate = null;
+        state.editorStorySlideId = null;
         state.editorSnapshot = null;
         state.editorDirty = false;
+        state.editorTextRole = null;
+        state.editorPosterHeadlineSuggestions = null;
+        teardownEditorTextInteraction();
+        syncEditorTypeTabForRole(null);
         $('#pcsEditor')?.classList.remove('pcs-editor--dirty');
     }
 
@@ -3506,6 +4631,353 @@
         wrap.style.alignItems = '';
         wrap.style.padding = '';
         wrap._pcsLastVisual = null;
+        teardownEditorTextInteraction(wrap);
+    }
+
+    const PCS_TEXT_ROLE_LABELS = { headline: 'عنوان', meta: 'مشخصات', price: 'قیمت' };
+
+    function textLayoutEntry(conf, role) {
+        return normalizeTextLayout(conf?.text_layout)[role] || defaultTextLayoutEntry();
+    }
+
+    function effectiveTextRoleScale(conf, role) {
+        const entry = textLayoutEntry(conf, role);
+        if (role === 'meta') return Math.round(entry.s);
+        const base = role === 'headline' ? (conf?.headline_scale ?? 100) : (conf?.price_scale ?? 100);
+        if (entry.s === 100) return Math.round(base);
+        return Math.min(180, Math.max(50, Math.round(base * entry.s / 100)));
+    }
+
+    function setTextRoleTransformFromEffective(conf, role, effectivePct) {
+        if (!conf || !role) return;
+        conf.text_layout = normalizeTextLayout(conf.text_layout);
+        const eff = Math.min(180, Math.max(50, Math.round(effectivePct)));
+        if (role === 'meta') {
+            conf.text_layout.meta.s = eff;
+            return;
+        }
+        const base = role === 'headline' ? (conf.headline_scale ?? 100) : (conf.price_scale ?? 100);
+        const safeBase = Math.max(1, base);
+        conf.text_layout[role].s = Math.min(180, Math.max(50, Math.round((eff / safeBase) * 100)));
+    }
+
+    function setTextRoleTransformScale(conf, role, value) {
+        if (!conf || !role) return;
+        conf.text_layout = normalizeTextLayout(conf.text_layout);
+        const v = Math.min(180, Math.max(50, Math.round(value)));
+        conf.text_layout[role].s = v;
+    }
+
+    function setTextRoleScale(conf, role, value) {
+        if (!conf) return;
+        const v = Math.min(180, Math.max(50, Math.round(value)));
+        conf.text_layout = normalizeTextLayout(conf.text_layout);
+        if (role === 'meta') {
+            conf.text_layout.meta.s = v;
+            return;
+        }
+        if (role === 'headline') conf.headline_scale = v;
+        if (role === 'price') conf.price_scale = v;
+        conf.text_layout[role].s = 100;
+    }
+
+    function commitTextRoleTransformScale(conf, role) {
+        if (!conf || !role) return;
+        const entry = textLayoutEntry(conf, role);
+        if (entry.s === 100) return;
+        if (role === 'meta') return;
+        const base = role === 'headline' ? (conf.headline_scale ?? 100) : (conf.price_scale ?? 100);
+        const merged = Math.min(180, Math.max(50, Math.round(base * entry.s / 100)));
+        if (role === 'headline') conf.headline_scale = merged;
+        else conf.price_scale = merged;
+        entry.s = 100;
+    }
+
+    function syncEditorTransformBar(role) {
+        const bar = $('#pcsEditorTransformBar');
+        if (!bar) return;
+        if (!role || !state.editorBuffer) {
+            bar.setAttribute('hidden', '');
+            return;
+        }
+        bar.removeAttribute('hidden');
+        const lbl = bar.querySelector('[data-pcs-transform-role-label]');
+        if (lbl) lbl.textContent = PCS_TEXT_ROLE_LABELS[role] || role;
+        const scaleVal = effectiveTextRoleScale(state.editorBuffer, role);
+        const range = bar.querySelector('[data-pcs-transform-scale]');
+        const rangeLbl = bar.querySelector('[data-pcs-transform-scale-val]');
+        if (range) range.value = String(scaleVal);
+        if (rangeLbl) rangeLbl.textContent = `${scaleVal}%`;
+    }
+
+    function syncEditorTypeTabForRole(role) {
+        const controls = editorControlsEl();
+        if (controls) {
+            const tabRole = role === 'price' ? 'price' : role === 'meta' ? 'meta' : 'headline';
+            controls.querySelectorAll('[data-pcs-type-tab]').forEach((btn) => {
+                const on = btn.getAttribute('data-pcs-type-tab') === tabRole;
+                btn.classList.toggle('is-active', on);
+                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            controls.querySelectorAll('[data-pcs-type-panel]').forEach((panel) => {
+                const key = panel.getAttribute('data-pcs-type-panel');
+                const on = key === tabRole;
+                panel.hidden = !on;
+                panel.classList.toggle('is-active', on);
+            });
+        }
+        const focus = $('#pcsEditorTextFocus');
+        if (focus) {
+            if (!role) {
+                focus.setAttribute('hidden', '');
+            } else {
+                focus.removeAttribute('hidden');
+                const lbl = focus.querySelector('[data-pcs-text-focus-label]');
+                if (lbl) lbl.textContent = PCS_TEXT_ROLE_LABELS[role] || role;
+            }
+        }
+        syncEditorTransformBar(role);
+    }
+
+    function applyTextLayoutToElement(el, conf, role) {
+        if (!el) return;
+        el.style.transform = '';
+        el.style.transformOrigin = 'top right';
+        const layoutCss = posterTextLayoutStyle(conf, role);
+        if (layoutCss) {
+            layoutCss.split(';').filter(Boolean).forEach((chunk) => {
+                const idx = chunk.indexOf(':');
+                if (idx < 0) return;
+                const prop = chunk.slice(0, idx).trim();
+                const val = chunk.slice(idx + 1).trim();
+                if (prop) el.style[prop] = val;
+            });
+        }
+        const badge = el.querySelector('[data-pcs-text-scale-label]');
+        if (badge) {
+            badge.textContent = `${effectiveTextRoleScale(conf, role)}%`;
+        }
+    }
+
+    function mountPosterTextTransformChrome(el) {
+        el.querySelector('.pcs-poster-text__chrome')?.remove();
+        const chrome = document.createElement('div');
+        chrome.className = 'pcs-poster-text__chrome';
+        chrome.innerHTML = `
+            <span class="pcs-poster-text__badge" data-pcs-text-scale-label>100%</span>
+            <span class="pcs-poster-text__handle pcs-poster-text__handle--nw" data-pcs-text-resize="nw"></span>
+            <span class="pcs-poster-text__handle pcs-poster-text__handle--ne" data-pcs-text-resize="ne"></span>
+            <span class="pcs-poster-text__handle pcs-poster-text__handle--sw" data-pcs-text-resize="sw"></span>
+            <span class="pcs-poster-text__handle pcs-poster-text__handle--se" data-pcs-text-resize="se"></span>
+        `;
+        el.appendChild(chrome);
+    }
+
+    function editorTextCanvasMetrics(previewWrap) {
+        const canvas = previewWrap?.querySelector?.('.pcs-canvas');
+        if (!canvas) return null;
+        const fmt = FORMATS[state.format] || FORMATS.story;
+        const rect = canvas.getBoundingClientRect();
+        const logicalW = fmt.w || parseInt(canvas.style.width, 10) || 1080;
+        const logicalH = fmt.h || parseInt(canvas.style.height, 10) || 1920;
+        return { canvas, rect, logicalW, logicalH };
+    }
+
+    function teardownEditorTextInteraction(previewWrap) {
+        const wrap = previewWrap || $('#pcsEditorPreview');
+        if (wrap) {
+            wrap.classList.remove('pcs-editor__preview--text-edit');
+            const canvas = wrap.querySelector('.pcs-canvas');
+            if (canvas && wrap._pcsTextCanvasHandler) {
+                canvas.removeEventListener('mousedown', wrap._pcsTextCanvasHandler);
+                wrap._pcsTextCanvasHandler = null;
+            }
+            wrap.querySelectorAll('[data-pcs-text-role]').forEach((el) => {
+                el.classList.remove('is-selected', 'pcs-poster-text--hit');
+                el.querySelector('.pcs-poster-text__chrome')?.remove();
+            });
+        }
+        if (state.editorTextDrag?.onMove) {
+            window.removeEventListener('mousemove', state.editorTextDrag.onMove);
+            window.removeEventListener('mouseup', state.editorTextDrag.onUp);
+        }
+        state.editorTextDrag = null;
+        syncEditorTransformBar(null);
+    }
+
+    function selectEditorTextRole(role, previewWrap) {
+        const wrap = previewWrap || $('#pcsEditorPreview');
+        state.editorTextRole = role || null;
+        wrap?.querySelectorAll('[data-pcs-text-role]').forEach((el) => {
+            const r = el.getAttribute('data-pcs-text-role');
+            const on = r === role;
+            el.classList.toggle('is-selected', on);
+            if (on) {
+                mountPosterTextTransformChrome(el);
+                if (state.editorBuffer) applyTextLayoutToElement(el, state.editorBuffer, r);
+            } else {
+                el.querySelector('.pcs-poster-text__chrome')?.remove();
+            }
+        });
+        syncEditorTypeTabForRole(role);
+    }
+
+    function nudgeEditorTextRole(role, dir) {
+        if (!state.editorBuffer || !role) return;
+        state.editorBuffer.text_layout = normalizeTextLayout(state.editorBuffer.text_layout);
+        const entry = state.editorBuffer.text_layout[role];
+        const step = 1.2;
+        if (dir === 'x-') entry.x = Math.min(55, entry.x + step);
+        if (dir === 'x+') entry.x = Math.max(-55, entry.x - step);
+        if (dir === 'y-') entry.y = Math.max(-55, entry.y - step);
+        if (dir === 'y+') entry.y = Math.min(55, entry.y + step);
+        const wrap = $('#pcsEditorPreview');
+        const el = wrap?.querySelector(`[data-pcs-text-role="${role}"]`);
+        applyTextLayoutToElement(el, state.editorBuffer, role);
+        syncEditorTransformBar(role);
+        syncEditorDirtyFlag();
+        scheduleSave();
+    }
+
+    function beginEditorTextDrag(previewWrap, el, role, mode, clientX, clientY) {
+        const metrics = editorTextCanvasMetrics(previewWrap);
+        if (!metrics || !state.editorBuffer) return;
+        state.editorBuffer.text_layout = normalizeTextLayout(state.editorBuffer.text_layout);
+        const layout = { ...state.editorBuffer.text_layout[role] };
+        const start = { mode, role, x0: clientX, y0: clientY, layout, el };
+        const onMove = (ev) => {
+            if (!state.editorTextDrag || !state.editorBuffer) return;
+            const m = editorTextCanvasMetrics(previewWrap);
+            if (!m) return;
+            const dxPx = ev.clientX - start.x0;
+            const dyPx = ev.clientY - start.y0;
+            const dxPct = (dxPx / m.rect.width) * 100;
+            const dyPct = (dyPx / m.rect.height) * 100;
+            const entry = state.editorBuffer.text_layout[start.role];
+            if (start.mode === 'move') {
+                entry.x = Math.min(55, Math.max(-55, start.layout.x + dxPct));
+                entry.y = Math.min(55, Math.max(-55, start.layout.y + dyPct));
+            } else {
+                const delta = ((dxPx + dyPx) / m.rect.width) * 140;
+                entry.s = Math.min(180, Math.max(50, start.layout.s + delta));
+            }
+            applyTextLayoutToElement(start.el, state.editorBuffer, start.role);
+            syncEditorTransformBar(start.role);
+            syncEditorDirtyFlag();
+        };
+        const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            state.editorTextDrag = null;
+            if (start.mode === 'resize') {
+                commitTextRoleTransformScale(state.editorBuffer, start.role);
+                refreshEditorPreview(state.editorTemplate);
+                selectEditorTextRole(start.role, previewWrap);
+            }
+            scheduleSave();
+        };
+        state.editorTextDrag = { onMove, onUp };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }
+
+    function setupEditorTextInteraction(previewWrap) {
+        teardownEditorTextInteraction(previewWrap);
+        if (!previewWrap || previewWrap.id !== 'pcsEditorPreview') return;
+        const canvas = previewWrap.querySelector('.pcs-canvas');
+        if (!canvas) return;
+        previewWrap.classList.add('pcs-editor__preview--text-edit');
+        canvas.querySelectorAll('[data-pcs-text-role]').forEach((el) => {
+            el.classList.add('pcs-poster-text--hit');
+        });
+        const onCanvasDown = (e) => {
+            if (e.button !== 0 || !state.editorBuffer) return;
+            const roleEl = e.target.closest('[data-pcs-text-role]');
+            if (roleEl) {
+                e.stopPropagation();
+                e.preventDefault();
+                const role = roleEl.getAttribute('data-pcs-text-role');
+                if (!role) return;
+                selectEditorTextRole(role, previewWrap);
+                const resize = e.target.closest('[data-pcs-text-resize]');
+                beginEditorTextDrag(previewWrap, roleEl, role, resize ? 'resize' : 'move', e.clientX, e.clientY);
+                return;
+            }
+            if (e.target.closest('.pcs-canvas')) {
+                selectEditorTextRole(null, previewWrap);
+            }
+        };
+        previewWrap._pcsTextCanvasHandler = onCanvasDown;
+        canvas.addEventListener('mousedown', onCanvasDown);
+        if (state.editorTextRole) {
+            selectEditorTextRole(state.editorTextRole, previewWrap);
+        }
+    }
+
+    function bindEditorTransformBar() {
+        const editor = $('#pcsEditor');
+        if (!editor || editor.dataset.pcsTransformBarBound === '1') return;
+        editor.dataset.pcsTransformBarBound = '1';
+        editor.addEventListener('input', (e) => {
+            const scale = e.target.closest('[data-pcs-transform-scale]');
+            if (!scale || !state.editorBuffer || !state.editorTextRole) return;
+            setTextRoleTransformFromEffective(state.editorBuffer, state.editorTextRole, parseInt(scale.value, 10));
+            const el = $('#pcsEditorPreview')?.querySelector(`[data-pcs-text-role="${state.editorTextRole}"]`);
+            applyTextLayoutToElement(el, state.editorBuffer, state.editorTextRole);
+            syncEditorTransformBar(state.editorTextRole);
+            syncEditorDirtyFlag();
+            scheduleSave();
+        });
+        editor.addEventListener('change', (e) => {
+            const scale = e.target.closest('[data-pcs-transform-scale]');
+            if (!scale || !state.editorBuffer || !state.editorTextRole) return;
+            const role = state.editorTextRole;
+            if (role === 'headline' || role === 'price') {
+                commitTextRoleTransformScale(state.editorBuffer, role);
+                refreshEditorPreview(state.editorTemplate);
+                selectEditorTextRole(role, $('#pcsEditorPreview'));
+                syncEditorDirtyFlag();
+                scheduleSave();
+            }
+        });
+        editor.addEventListener('click', (e) => {
+            const nudge = e.target.closest('[data-pcs-transform-nudge]');
+            if (nudge && state.editorTextRole) {
+                e.preventDefault();
+                nudgeEditorTextRole(state.editorTextRole, nudge.getAttribute('data-pcs-transform-nudge'));
+                return;
+            }
+            const stepBtn = e.target.closest('[data-pcs-transform-scale-step]');
+            if (stepBtn && state.editorTextRole && state.editorBuffer) {
+                e.preventDefault();
+                const role = state.editorTextRole;
+                const step = parseInt(stepBtn.getAttribute('data-pcs-transform-scale-step') || '0', 10);
+                const cur = effectiveTextRoleScale(state.editorBuffer, role);
+                setTextRoleTransformFromEffective(state.editorBuffer, role, cur + step);
+                if (role === 'headline' || role === 'price') {
+                    commitTextRoleTransformScale(state.editorBuffer, role);
+                    refreshEditorPreview(state.editorTemplate);
+                    selectEditorTextRole(role, $('#pcsEditorPreview'));
+                } else {
+                    const el = $('#pcsEditorPreview')?.querySelector(`[data-pcs-text-role="${role}"]`);
+                    applyTextLayoutToElement(el, state.editorBuffer, role);
+                    syncEditorTransformBar(role);
+                }
+                syncEditorDirtyFlag();
+                scheduleSave();
+            }
+        });
+    }
+
+    function resetEditorTextLayout() {
+        if (!state.editorBuffer) return;
+        state.editorBuffer.text_layout = normalizeTextLayout(null);
+        state.editorTextRole = null;
+        syncEditorTypeTabForRole(null);
+        refreshEditorPreview(state.editorTemplate);
+        syncEditorDirtyFlag();
+        scheduleSave();
+        toast('چیدمان متن بازنشانی شد');
     }
 
     function updateEditorLiveMeta(conf, tpl) {
@@ -3516,6 +4988,18 @@
             const ord = editorImageOrderForGallery(imgs, conf);
             const pip = conf.pip_enabled ? ' · عکس در عکس' : '';
             meta.textContent = `گالری: ${ord.map((i) => i + 1).join(' · ')} · قاب ${conf.crop_y}%${pip}`;
+            return;
+        }
+        if (tpl === 'emerald_atelier' && imgs.length >= 2) {
+            const arch = conf.primary_image_index || 0;
+            const strip = emeraldStripIndex(conf, imgs);
+            meta.textContent = `قوس: تصویر ${arch + 1} · نوار: ${strip + 1} · قاب ${conf.crop_y}%`;
+            return;
+        }
+        if (tpl === 'pearl_gallery' && imgs.length >= 2) {
+            const arch = conf.primary_image_index || 0;
+            const strip = emeraldStripIndex(conf, imgs);
+            meta.textContent = `دایره اصلی: ${arch + 1} · مکمل: ${strip + 1} · قاب ${conf.crop_y}%`;
             return;
         }
         const pipPart = conf.pip_enabled ? ` · عکس در عکس ${(conf.pip_image_index ?? 0) + 1}` : '';
@@ -3534,7 +5018,12 @@
             const prev = $('#pcsEditorPreview');
             if (!prev || !conf) return;
             resetEditorPreviewWrap(prev);
-            prev.innerHTML = buildCanvasHtml(activeTpl, state.format, conf);
+            if (state.editorStorySlideId) {
+                const slide = findStorySlide(state.editorStorySlideId);
+                prev.innerHTML = slide ? storyPreviewHtml(slide, conf) : '';
+            } else {
+                prev.innerHTML = buildCanvasHtml(activeTpl, state.format, conf);
+            }
             syncCanvasTypography(prev);
             updateEditorLiveMeta(conf, activeTpl);
             scheduleEditorPreviewScale(prev, state.format);
@@ -3602,7 +5091,11 @@
             if (!state.editorTemplate) return;
             const t = e.target;
             if (!t.closest('#pcsEditorControls')) return;
-            if (t.matches('#pcsEditHeadline, #pcsEditCrop, [data-pcs-edit-range], [data-pcs-edit-color]')) {
+            if (t.id === 'pcsEditBrandPrimary') {
+                const lbl = $('#pcsEditBrandPrimaryVal');
+                if (lbl) lbl.textContent = t.value;
+            }
+            if (t.matches('#pcsEditHeadline, #pcsEditCrop, [data-pcs-edit-range], [data-pcs-edit-color], #pcsEditBrandPrimary')) {
                 refreshEditorPreview(state.editorTemplate);
             }
         });
@@ -3644,6 +5137,27 @@
                 refreshEditorPreview(tpl);
                 return;
             }
+            if (e.target.closest('#pcsEditHeadlineAi') || e.target.closest('#pcsEditHeadlineAiRefresh')) {
+                e.preventDefault();
+                const btn = e.target.closest('#pcsEditHeadlineAi') || e.target.closest('#pcsEditHeadlineAiRefresh');
+                void runEditorPosterHeadlineAi(btn);
+                return;
+            }
+            const posterHeadlinePick = e.target.closest('[data-pcs-pick-poster-headline]');
+            if (posterHeadlinePick) {
+                e.preventDefault();
+                applyEditorPosterHeadlinePick(parseInt(posterHeadlinePick.getAttribute('data-pcs-pick-poster-headline') || '0', 10));
+                return;
+            }
+            if (e.target.closest('#pcsEditBrandPrimaryReset')) {
+                const global = normalizeBrandColor(mergeBrand().colors?.primary || '#7c3aed');
+                const inp = controls.querySelector('#pcsEditBrandPrimary');
+                if (inp) inp.value = global;
+                const lbl = controls.querySelector('#pcsEditBrandPrimaryVal');
+                if (lbl) lbl.textContent = global;
+                refreshEditorPreview(tpl);
+                return;
+            }
 
             const cropBtn = e.target.closest('[data-pcs-crop-preset]');
             if (cropBtn) {
@@ -3669,6 +5183,40 @@
                     btn.classList.toggle('is-selected', on);
                     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
                 });
+                refreshEditorPreview(tpl);
+                return;
+            }
+
+            const emeraldSlotBtn = e.target.closest('[data-pcs-emerald-slot-btn]');
+            if (emeraldSlotBtn) {
+                state.editorEmeraldSlot = parseInt(emeraldSlotBtn.getAttribute('data-pcs-emerald-slot-btn') || '0', 10);
+                syncEmeraldDockUi();
+                return;
+            }
+
+            const emeraldPick = e.target.closest('[data-pcs-emerald-pick]');
+            if (emeraldPick) {
+                const idx = parseInt(emeraldPick.getAttribute('data-pcs-img-idx') || '0', 10);
+                const slot = state.editorEmeraldSlot ?? 0;
+                const archInp = controls.querySelector('#pcsEditImage');
+                const stripInp = controls.querySelector('#pcsEditEmeraldStrip');
+                const imgsList = propertyImageList();
+                if (slot === 0 && archInp) {
+                    archInp.value = String(idx);
+                    if (stripInp && imgsList.length > 1 && parseInt(stripInp.value, 10) === idx) {
+                        stripInp.value = String((idx + 1) % imgsList.length);
+                    }
+                } else if (stripInp) {
+                    stripInp.value = String(idx);
+                    if (archInp && parseInt(archInp.value, 10) === idx && imgsList.length > 1) {
+                        archInp.value = String((idx + 1) % imgsList.length);
+                    }
+                }
+                if (state.editorBuffer) {
+                    state.editorBuffer.primary_image_index = parseInt(archInp?.value || '0', 10);
+                    state.editorBuffer.secondary_image_index = parseInt(stripInp?.value || '1', 10);
+                }
+                syncEmeraldDockUi();
                 refreshEditorPreview(tpl);
                 return;
             }
@@ -3748,7 +5296,21 @@
                         panel.classList.toggle('is-active', on);
                         panel.hidden = !on;
                     });
+                    if (role === 'headline' || role === 'price' || role === 'meta') {
+                        selectEditorTextRole(role, $('#pcsEditorPreview'));
+                    }
                 }
+                return;
+            }
+
+            const metaScale = e.target.closest('[data-pcs-edit-meta-scale]');
+            if (metaScale && state.editorBuffer) {
+                const v = parseInt(metaScale.value, 10);
+                setTextRoleScale(state.editorBuffer, 'meta', v);
+                const lbl = controls.querySelector('[data-pcs-meta-scale-val]');
+                if (lbl) lbl.textContent = `${v}%`;
+                refreshEditorPreview(tpl);
+                selectEditorTextRole('meta', $('#pcsEditorPreview'));
                 return;
             }
 
@@ -3836,24 +5398,51 @@
         });
     }
 
-    function openEditor(tpl) {
+    function openEditor(tpl, storySlideId) {
         if (!state.draft) {
             toast('استودیو هنوز بارگذاری نشده است');
             return;
         }
+        state.editorStorySlideId = storySlideId || null;
+        let slide = null;
+        if (storySlideId) {
+            slide = findStorySlide(storySlideId);
+            if (!slide) {
+                toast('اسلاید استوری یافت نشد');
+                state.editorStorySlideId = null;
+                return;
+            }
+            state.format = 'story';
+            tpl = storySlideTemplateId(slide);
+        }
         state.editorTemplate = tpl;
         state.editorGallerySlot = 0;
+        state.editorEmeraldSlot = 0;
         resetEditorPreviewView();
         bindEditorPreviewZoomControls();
         bindEditorPreviewViewEvents();
-        initEditorBuffer(tpl);
+        if (storySlideId && slide) {
+            const imgs = propertyImageList();
+            state.editorBuffer = { ...storySlideConf(slide) };
+            state.editorSnapshot = JSON.stringify(state.editorBuffer);
+            state.editorDirty = false;
+        } else {
+            initEditorBuffer(tpl);
+        }
         const meta = resolveTemplateMeta(tpl);
         const fmtMeta = FORMAT_META[state.format] || FORMAT_META.story;
         const conf = state.editorBuffer;
         const imgs = propertyImageList();
         const galleryOrder = editorImageOrderForGallery(imgs, conf);
+        const badgeLabel = slide ? storySlideLabel(slide) : posterDisplayLabel(tpl, state.format);
 
-        setEditorTplBadge(meta);
+        setEditorTplBadge({ ...meta, label: badgeLabel });
+        const sub = $('#pcsEditorSub');
+        if (sub) {
+            sub.textContent = slide
+                ? 'تنظیمات این اسلاید استوری — رنگ برند و تایپوگرافی فقط روی همین اسلاید'
+                : 'تغییرات را در پیش‌نمایش زنده ببینید';
+        }
         const fmtPill = $('#pcsEditorFormatPill');
         if (fmtPill) {
             fmtPill.hidden = false;
@@ -3886,6 +5475,10 @@
                     <div class="pcs-editor__headline-row">
                         <input type="text" id="pcsEditHeadline" class="pcs-input" maxlength="120"
                             placeholder="مثلاً آپارتمان نوساز با نور عالی" value="${esc(headlineVal)}">
+                        <button type="button" class="pcs-btn pcs-btn--primary pcs-btn--sm" id="pcsEditHeadlineAi"
+                            title="تولید عنوان کوتاه با AI"${cfg.aiEnabled === false ? ' disabled' : ''}>
+                            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>AI</span>
+                        </button>
                         <button type="button" class="pcs-btn pcs-btn--soft pcs-btn--sm" id="pcsEditHeadlineFromFile">
                             <i class="fas fa-file-lines" aria-hidden="true"></i> از فایل
                         </button>
@@ -3893,13 +5486,22 @@
                             <i class="fas fa-eraser" aria-hidden="true"></i>
                         </button>
                     </div>
-                    <span class="pcs-editor__meta" id="pcsEditHeadlineCount">${headlineVal.length} کاراکتر</span>
+                    <div class="pcs-editor__headline-ai" id="pcsEditHeadlineAiPanel" hidden></div>
+                    <span class="pcs-editor__meta" id="pcsEditHeadlineCount">${headlineVal.length} کاراکتر · ایده‌آل زیر ${PCS_POSTER_HEADLINE_MAX} برای استوری</span>
                 </section>
-                ${tpl !== 'gallery' ? `<section class="pcs-editor__section">
+                ${(tpl === 'emerald_atelier' || tpl === 'pearl_gallery') && imgs.length >= 2
+                    ? `<section class="pcs-editor__section pcs-editor__section--dock">
+                    <h4 class="pcs-editor__section-title"><i class="fas ${tpl === 'pearl_gallery' ? 'fa-gem' : 'fa-building-columns'}" aria-hidden="true"></i> ${tpl === 'pearl_gallery' ? 'تصاویر گالری مروارید' : 'تصاویر قاب زمرد'}</h4>
+                    <p class="pcs-editor__section-hint">${tpl === 'pearl_gallery' ? 'دایره اصلی = تصویر شاخص · دایره مکمل = تصویر دوم' : 'قوس بزرگ = تصویر شاخص · نوار کناری = تصویر دوم'}</p>
+                    ${editorEmeraldImageComposer(imgs, conf.primary_image_index, conf.secondary_image_index, tpl)}
+                </section>`
+                    : tpl !== 'gallery'
+                        ? `<section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-image" aria-hidden="true"></i> تصویر شاخص</h4>
                     <p class="pcs-editor__section-hint">از نوار تصاویر یک تصویر شاخص انتخاب کنید</p>
                     ${editorPrimaryPicker(imgs, conf.primary_image_index || 0)}
-                </section>` : ''}
+                </section>`
+                        : ''}
                 <section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-crop-simple" aria-hidden="true"></i> قاب‌بندی تصویر</h4>
                     <p class="pcs-editor__section-hint">کدام بخش تصویر در کادر دیده شود${tpl === 'gallery' ? ' (روی همه تصاویر گالری)' : ''}</p>
@@ -3913,7 +5515,7 @@
                         <span class="pcs-editor__range-value" id="pcsEditCropValue">${conf.crop_y ?? 50}%</span>
                     </div>
                 </section>
-                ${editorComposeSection(imgs, conf)}
+                ${tpl !== 'gallery' && tpl !== 'emerald_atelier' && tpl !== 'pearl_gallery' ? editorComposeSection(imgs, conf) : ''}
                 ${imgs.length > 1 && tpl !== 'gallery' ? `<section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-sort" aria-hidden="true"></i> ترتیب تصاویر فایل</h4>
                     <p class="pcs-editor__section-hint">ترتیب پیش‌فرض فایل — برای قالب‌های تک‌تصویری و گالری داخلی</p>
@@ -3928,24 +5530,26 @@
                     <label class="pcs-editor__range-label">شفافیت <span data-pcs-range-val="opacity">${conf.img_opacity ?? 100}%</span></label>
                     <input type="range" class="pcs-editor__range" data-pcs-edit-range="opacity" min="35" max="100" value="${conf.img_opacity ?? 100}">
                 </section>
+                ${editorBrandPrimarySection(conf)}
                 <section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-font" aria-hidden="true"></i> تایپوگرافی</h4>
                     <p class="pcs-editor__section-hint">فونت روی همهٔ متن پوستر است؛ وزن و رنگ عنوان و قیمت را در کارت‌های زیر تنظیم کنید</p>
                     ${editorFontPicker(conf.font_key || 'vazirmatn')}
                     <label class="pcs-editor__range-label">اندازه عنوان <span data-pcs-range-val="headline_scale">${conf.headline_scale ?? 100}%</span></label>
-                    <input type="range" class="pcs-editor__range" data-pcs-edit-range="headline_scale" min="70" max="140" value="${conf.headline_scale ?? 100}">
+                    <input type="range" class="pcs-editor__range" data-pcs-edit-range="headline_scale" min="50" max="180" value="${conf.headline_scale ?? 100}">
                     <label class="pcs-editor__range-label">اندازه قیمت <span data-pcs-range-val="price_scale">${conf.price_scale ?? 100}%</span></label>
-                    <input type="range" class="pcs-editor__range" data-pcs-edit-range="price_scale" min="70" max="140" value="${conf.price_scale ?? 100}">
+                    <input type="range" class="pcs-editor__range" data-pcs-edit-range="price_scale" min="50" max="180" value="${conf.price_scale ?? 100}">
                     ${editorTextStyleControls(conf)}
                 </section>
                 <div class="pcs-editor__tip">
                     <i class="fas fa-lightbulb" aria-hidden="true"></i>
-                    <span>برای دیدن جزئیات بیشتر، در موبایل بین پیش‌نمایش و تنظیمات جابه‌جا شوید.</span>
+                    <span>روی پیش‌نمایش، بلوک عنوان / مشخصات / قیمت را کلیک کنید؛ بکشید تا جابه‌جا شود. دستگیره گوشه برای اندازه. تب تایپوگرافی همان بخش انتخاب‌شده را ویرایش می‌کند.</span>
                 </div>`;
 
             bindEditorControlEvents(tpl, controls);
             renderEditorFormatBar(tpl);
             syncCropPresetActive(conf.crop_y ?? 50);
+            if (tpl === 'emerald_atelier' || tpl === 'pearl_gallery') syncEmeraldDockUi();
         }
 
         $('#pcsEditor')?.removeAttribute('hidden');
@@ -3963,6 +5567,74 @@
             const p = parseInt(b.getAttribute('data-pcs-crop-preset') || '50', 10);
             b.classList.toggle('is-active', Math.abs(val - p) <= 8);
         });
+    }
+
+    function renderEditorPosterHeadlineSuggestions(titles) {
+        const panel = $('#pcsEditHeadlineAiPanel');
+        if (!panel) return;
+        const list = Array.isArray(titles) ? titles : [];
+        if (!list.length) {
+            panel.innerHTML = '';
+            panel.setAttribute('hidden', '');
+            return;
+        }
+        panel.removeAttribute('hidden');
+        panel.innerHTML = `
+            <div class="pcs-editor__headline-ai__head">
+                <span>پیشنهاد AI — یکی را بزنید</span>
+                <button type="button" class="pcs-editor__headline-ai__refresh" id="pcsEditHeadlineAiRefresh" title="تولید دوباره">
+                    <i class="fas fa-rotate" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="pcs-editor__headline-ai__list" role="list">
+                ${list.map((item, index) => {
+                    const text = String(item?.text || '').trim();
+                    const style = String(item?.style || 'پیشنهاد').trim();
+                    const len = text.length;
+                    const lenCls = len > PCS_POSTER_HEADLINE_MAX ? ' is-over' : len > PCS_POSTER_HEADLINE_MAX - 4 ? ' is-warn' : '';
+                    return `<button type="button" class="pcs-editor__headline-ai__chip" role="listitem"
+                        data-pcs-pick-poster-headline="${index}" title="${esc(style)}">
+                        <span class="pcs-editor__headline-ai__chip-style">${esc(style)}</span>
+                        <span class="pcs-editor__headline-ai__chip-text">${esc(text)}</span>
+                        <span class="pcs-editor__headline-ai__chip-len${lenCls}">${len}/${PCS_POSTER_HEADLINE_MAX}</span>
+                    </button>`;
+                }).join('')}
+            </div>`;
+    }
+
+    async function runEditorPosterHeadlineAi(triggerBtn) {
+        const existing = state.editorPosterHeadlineSuggestions || [];
+        if (existing.length && !window.confirm('پیشنهادهای قبلی با نتایج جدید AI جایگزین شوند؟')) {
+            return;
+        }
+        await runAiAction(async () => {
+            const data = await aiPost('poster-headlines');
+            const incoming = data.data?.titles || [];
+            if (!incoming.length) {
+                toast('عنوانی از AI دریافت نشد');
+                return;
+            }
+            state.editorPosterHeadlineSuggestions = incoming;
+            renderEditorPosterHeadlineSuggestions(incoming);
+            toast('عنوان‌های تبلیغاتی آماده است — یکی را انتخاب کنید');
+        }, [triggerBtn, $('#pcsEditHeadlineAiRefresh')].filter(Boolean));
+    }
+
+    function applyEditorPosterHeadlinePick(index) {
+        const titles = state.editorPosterHeadlineSuggestions || [];
+        const item = titles[index];
+        const text = String(item?.text || '').trim();
+        if (!text) return;
+        const controls = editorControlsEl();
+        const inp = controls?.querySelector('#pcsEditHeadline');
+        if (inp) inp.value = text.slice(0, 120);
+        const cnt = controls?.querySelector('#pcsEditHeadlineCount');
+        if (cnt) cnt.textContent = `${inp.value.length} کاراکتر`;
+        refreshEditorPreview(state.editorTemplate);
+        controls?.querySelectorAll('[data-pcs-pick-poster-headline]').forEach((btn) => {
+            btn.classList.toggle('is-selected', parseInt(btn.getAttribute('data-pcs-pick-poster-headline'), 10) === index);
+        });
+        toast('عنوان روی پوستر اعمال شد');
     }
 
     async function aiPost(action, body) {
@@ -4077,6 +5749,7 @@
                             return;
                         }
                         state.draft.ai.divar.body = body;
+                        state.draft.ai.divar.body_style = style;
                         if (bodyEl) bodyEl.value = body;
                         updateCharCountEl(bodyEl, '#pcsDivarBodyCount');
                         scheduleSave();
@@ -4135,6 +5808,13 @@
                 if (id === 'pcsDivarBody') updateCharCountEl(e.target, '#pcsDivarBodyCount');
                 if (id === 'pcsHashtags') renderHashtagPreview();
             }
+        });
+        document.addEventListener('change', (e) => {
+            if (e.target?.id !== 'pcsDivarBodyStyle') return;
+            if (!e.target.closest('#pcsModal')) return;
+            ensureDraftAiShell();
+            state.draft.ai.divar.body_style = e.target.value || 'formal';
+            scheduleSave();
         });
         document.addEventListener('click', (e) => {
             const trigger = e.target.closest('[data-pcs-open]');
@@ -4212,14 +5892,14 @@
                 await ensureLibs();
                 await ensurePersianFonts();
                 const zip = new JSZip();
-                for (const tpl of TEMPLATES) {
+                for (const tpl of posterTemplatesForSession()) {
                     const host = createExportHost(buildCanvasHtml(tpl, state.format), state.format);
                     const canvas = host.querySelector('.pcs-canvas');
                     try {
                         const shot = await rasterizeCanvas(canvas, state.format);
-                        const blob = await new Promise((r) => shot.toBlob(r, 'image/png'));
+                        const { blob, ext } = await rasterCanvasToBlob(shot);
                         if (!blob) throw new Error('empty blob');
-                        zip.file(`${tpl}-${state.format}.png`, blob);
+                        zip.file(`${tpl}-${state.format}.${ext}`, blob);
                         okCount += 1;
                     } catch (_) {
                         failCount += 1;
@@ -4245,54 +5925,6 @@
                 if (btn) btn.disabled = false;
             }
         });
-        $('#pcsStoryDownloadAll')?.addEventListener('click', async () => {
-            if (state.exportInflight) return;
-            state.exportInflight = true;
-            const btn = $('#pcsStoryDownloadAll');
-            if (btn) btn.disabled = true;
-            let okCount = 0;
-            let failCount = 0;
-            try {
-                await ensureLibs();
-                await ensurePersianFonts();
-                const zip = new JSZip();
-                const order = state.draft?.storyboard?.order || [];
-                let idx = 0;
-                for (const id of order) {
-                    const slide = (state.draft?.storyboard?.slides || []).find((s) => s.id === id);
-                    if (!slide) continue;
-                    const host = createExportHost(buildStoryboardSlideHtml(slide, 'story'), 'story');
-                    const canvas = host.querySelector('.pcs-canvas');
-                    try {
-                        const shot = await rasterizeCanvas(canvas, 'story');
-                        const blob = await new Promise((r) => shot.toBlob(r, 'image/png'));
-                        if (!blob) throw new Error('empty blob');
-                        zip.file(`story-${String(++idx).padStart(2, '0')}-${slide.id || slide.type}.png`, blob);
-                        okCount += 1;
-                    } catch (_) {
-                        failCount += 1;
-                    }
-                    host.remove();
-                }
-                if (!okCount) {
-                    toast('اسلاید سالم برای ZIP وجود ندارد');
-                    return;
-                }
-                const out = await zip.generateAsync({ type: 'blob' });
-                const objUrl = URL.createObjectURL(out);
-                const a = document.createElement('a');
-                a.href = objUrl;
-                a.download = `property-${cfg.propertyId}-storyboard.zip`;
-                a.click();
-                URL.revokeObjectURL(objUrl);
-                toast(failCount ? `${okCount} اسلاید — ${failCount} خطا` : 'استوری‌برد دانلود شد');
-            } catch (_) {
-                toast('خطا در دانلود استوری‌برد');
-            } finally {
-                state.exportInflight = false;
-                if (btn) btn.disabled = false;
-            }
-        });
         $('#pcsOpenSettings')?.addEventListener('click', openSettingsSheet);
         $('#pcsOpenSettingsHead')?.addEventListener('click', openSettingsSheet);
         $('#pcsFooterSettings')?.addEventListener('click', openSettingsSheet);
@@ -4300,15 +5932,16 @@
         $('#pcsEditorClose')?.addEventListener('click', () => closeEditor());
         $('#pcsEditorBack')?.addEventListener('click', () => closeEditor());
         $('#pcsEditorCancel')?.addEventListener('click', () => closeEditor());
-        $('#pcsStaleSync')?.addEventListener('click', () => syncDraftWithProperty());
         $('#pcsEditorSave')?.addEventListener('click', () => {
             const tpl = state.editorTemplate;
             if (!tpl || !state.draft) return;
+            const wasStory = !!state.editorStorySlideId;
             commitEditorToDraft(tpl);
             scheduleSave();
             renderPosters();
+            renderStoryboard();
             closeEditor(true);
-            toast('تغییرات پوستر ذخیره شد');
+            toast(wasStory ? 'تغییرات استوری ذخیره شد' : 'تغییرات پوستر ذخیره شد');
         });
         $('#pcsEditorDownload')?.addEventListener('click', async () => {
             const tpl = state.editorTemplate;
@@ -4319,7 +5952,18 @@
         $('#pcsEditorReset')?.addEventListener('click', () => {
             const tpl = state.editorTemplate;
             if (!tpl || !state.draft) return;
-            if (!window.confirm('تنظیمات این قالب به حالت پیش‌فرض برگردد؟')) return;
+            if (!window.confirm('تنظیمات به حالت پیش‌فرض برگردد؟')) return;
+            if (state.editorStorySlideId) {
+                const slide = findStorySlide(state.editorStorySlideId);
+                if (slide) {
+                    const ref = storySlideCatalogRef(slide.id);
+                    slide.poster = ref?.poster ? { ...ref.poster } : {};
+                    scheduleSave();
+                    openEditor(storySlideTemplateId(slide), slide.id);
+                    toast('استوری به پیش‌فرض برگشت');
+                }
+                return;
+            }
             state.draft.posters = state.draft.posters || {};
             state.draft.posters[tpl] = null;
             scheduleSave();

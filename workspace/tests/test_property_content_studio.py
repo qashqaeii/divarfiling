@@ -12,8 +12,10 @@ from workspace.models import (
     CRMResourceShare,
     WorkspaceSettings,
 )
-from workspace.services.property_content_studio.adapter import build_studio_property_payload
-from workspace.services.property_content_studio.adapter import build_studio_property_payload
+from workspace.services.property_content_studio.adapter import (
+    build_studio_property_payload,
+    format_divar_facts_outline,
+)
 from workspace.services.property_content_studio.draft import save_draft, sync_draft_with_property
 from workspace.services.property_content_studio.draft_validate import DraftValidationError, validate_and_merge_draft
 from workspace.services.property_content_studio.fingerprint import property_content_fingerprint
@@ -55,6 +57,19 @@ class PropertyContentStudioAdapterTests(TestCase):
     def test_notes_not_in_public_description(self):
         payload = build_studio_property_payload(self.prop)
         self.assertEqual(payload['description_excerpt'], '')
+        self.prop.amenities = 'نورگیر عالی و بالکن'
+        self.prop.save()
+        payload2 = build_studio_property_payload(self.prop)
+        self.assertIn('نورگیر', payload2['description_excerpt'])
+        self.assertNotIn('یادداشت محرمانه', payload2['description_excerpt'])
+
+    def test_divar_facts_outline_lists_core_specs(self):
+        payload = build_studio_property_payload(self.prop)
+        outline = format_divar_facts_outline(payload)
+        self.assertIn('متراژ', outline)
+        self.assertIn('سعادت', outline)
+        self.assertIn('آسانسور', outline)
+        self.assertNotIn('پارکینگ', outline)
 
     def test_fingerprint_changes_when_price_changes(self):
         fp1 = property_content_fingerprint(self.prop)
@@ -230,6 +245,11 @@ class PropertyContentStudioAPITests(TestCase):
 
         prop_payload = build_studio_property_payload(self.prop)
         storyboard = build_default_storyboard(self.prop, prop_payload)
+        cover = next(s for s in storyboard['slides'] if s['id'] == 'cover')
+        self.assertEqual(cover.get('template_id'), 'luxury')
+        self.assertEqual(cover.get('label'), 'لوکس')
+        self.assertEqual(cover.get('poster', {}).get('font_key'), 'gulzar')
+        self.assertEqual(cover.get('poster', {}).get('headline_scale'), 140)
         for slide in storyboard['slides']:
             if slide['id'] == 'contact':
                 slide['cta'] = 'CTA دستی'
@@ -247,6 +267,84 @@ class PropertyContentStudioAPITests(TestCase):
         self.assertEqual(contact['cta'], 'CTA دستی')
         self.assertFalse(meta['needs_manual_review'])
         self.assertFalse(meta['stale'])
+
+    def test_storyboard_extra_photos_when_more_than_three_images(self):
+        from workspace.services.property_content_studio.storyboard import (
+            build_default_storyboard,
+            merge_storyboard_with_property,
+        )
+
+        payload = {
+            'images': ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg'],
+            'headline': 'عنوان',
+            'location_line': 'تهران',
+            'price': {'show': True, 'label': '۱۲ میلیارد'},
+        }
+        storyboard = build_default_storyboard(None, payload)
+        ids = [s['id'] for s in storyboard['slides']]
+        self.assertIn('extra_photos', ids)
+        extra = next(s for s in storyboard['slides'] if s['id'] == 'extra_photos')
+        self.assertEqual(extra.get('template_id'), 'sculptural')
+        self.assertEqual(extra.get('label'), 'عاج')
+        self.assertEqual(extra.get('image_index'), 3)
+
+        few = build_default_storyboard(None, {'images': ['a.jpg', 'b.jpg', 'c.jpg']})
+        self.assertNotIn('extra_photos', [s['id'] for s in few['slides']])
+
+        merged = merge_storyboard_with_property(storyboard, {'images': ['a.jpg', 'b.jpg']})
+        self.assertNotIn('extra_photos', [s['id'] for s in merged['slides']])
+
+    def test_storyboard_emerald_showcase_when_at_least_two_images(self):
+        from workspace.services.property_content_studio.storyboard import (
+            build_default_storyboard,
+            merge_storyboard_with_property,
+        )
+
+        payload = {
+            'images': ['a.jpg', 'b.jpg'],
+            'headline': 'عنوان',
+            'location_line': 'تهران',
+        }
+        storyboard = build_default_storyboard(None, payload)
+        ids = [s['id'] for s in storyboard['slides']]
+        self.assertIn('emerald_showcase', ids)
+        emerald = next(s for s in storyboard['slides'] if s['id'] == 'emerald_showcase')
+        self.assertEqual(emerald.get('template_id'), 'emerald_atelier')
+        self.assertEqual(emerald.get('label'), 'زمرد')
+        self.assertEqual(emerald.get('image_index'), 0)
+        self.assertEqual(emerald.get('image_indices'), [1])
+
+        one = build_default_storyboard(None, {'images': ['a.jpg']})
+        self.assertNotIn('emerald_showcase', [s['id'] for s in one['slides']])
+
+        merged = merge_storyboard_with_property(storyboard, {'images': ['a.jpg']})
+        self.assertNotIn('emerald_showcase', [s['id'] for s in merged['slides']])
+
+    def test_storyboard_pearl_showcase_when_at_least_two_images(self):
+        from workspace.services.property_content_studio.storyboard import (
+            build_default_storyboard,
+            merge_storyboard_with_property,
+        )
+
+        payload = {
+            'images': ['a.jpg', 'b.jpg'],
+            'headline': 'عنوان',
+            'location_line': 'تهران',
+        }
+        storyboard = build_default_storyboard(None, payload)
+        ids = [s['id'] for s in storyboard['slides']]
+        self.assertIn('pearl_showcase', ids)
+        pearl = next(s for s in storyboard['slides'] if s['id'] == 'pearl_showcase')
+        self.assertEqual(pearl.get('template_id'), 'pearl_gallery')
+        self.assertEqual(pearl.get('label'), 'مروارید')
+        self.assertEqual(pearl.get('image_index'), 0)
+        self.assertEqual(pearl.get('image_indices'), [1])
+
+        one = build_default_storyboard(None, {'images': ['a.jpg']})
+        self.assertNotIn('pearl_showcase', [s['id'] for s in one['slides']])
+
+        merged = merge_storyboard_with_property(storyboard, {'images': ['a.jpg']})
+        self.assertNotIn('pearl_showcase', [s['id'] for s in merged['slides']])
 
     def test_sync_stays_stale_when_ai_needs_review(self):
         save_draft(
@@ -363,3 +461,19 @@ class PropertyContentStudioAIFactsTests(TestCase):
             {'body': 'آپارتمان با پارکینگ دارد و نور عالی'},
         )
         self.assertNotIn('پارکینگ', data['body'])
+
+
+class PropertyContentStudioPosterHeadlineAiTests(TestCase):
+    def test_normalize_poster_headlines_clips_length(self):
+        from ai_workspace.services.property_content_studio_payload import (
+            normalize_studio_ai_payload,
+            validate_studio_ai_payload,
+        )
+        from workspace.services.property_content_studio.constants import POSTER_AD_HEADLINE_MAX_CHARS
+
+        long = 'ا' * 80
+        data = normalize_studio_ai_payload('poster_headlines', {
+            'titles': [{'style': 'کوتاه', 'text': long}],
+        })
+        self.assertTrue(validate_studio_ai_payload('poster_headlines', data))
+        self.assertLessEqual(len(data['titles'][0]['text']), POSTER_AD_HEADLINE_MAX_CHARS)

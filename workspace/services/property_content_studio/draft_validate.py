@@ -5,7 +5,11 @@ import copy
 import json
 from typing import Any, Dict, List, Optional, Tuple
 
-from workspace.services.property_content_studio.constants import DRAFT_VERSION, OUTPUT_FORMATS, POSTER_TEMPLATES
+from workspace.services.property_content_studio.constants import (
+    DRAFT_VERSION,
+    OUTPUT_FORMATS,
+    POSTER_TEMPLATES,
+)
 
 _MAX_PAYLOAD_BYTES = 512_000
 _MAX_SLIDES = 24
@@ -107,10 +111,30 @@ def _normalize_poster_config(raw: Any, template_id: str) -> Dict[str, Any]:
     for bkey in ('headline_italic', 'headline_underline', 'price_italic', 'price_underline'):
         if bkey in raw:
             out[bkey] = bool(raw.get(bkey))
-    for ckey in ('headline_color', 'price_color'):
+    for ckey in ('headline_color', 'price_color', 'brand_primary'):
         if ckey in raw:
             c = str(raw.get(ckey) or '').strip()
             out[ckey] = c if len(c) == 7 and c.startswith('#') else ''
+    if 'text_layout' in raw and isinstance(raw.get('text_layout'), dict):
+        tl_in = raw['text_layout']
+        tl_out: Dict[str, Any] = {}
+        for role in ('headline', 'meta', 'price'):
+            item = tl_in.get(role)
+            if not isinstance(item, dict):
+                continue
+            try:
+                x = float(item.get('x', 0))
+                y = float(item.get('y', 0))
+                s = float(item.get('s', item.get('scale', 100)))
+            except (TypeError, ValueError):
+                continue
+            tl_out[role] = {
+                'x': max(-55.0, min(55.0, x)),
+                'y': max(-55.0, min(55.0, y)),
+                's': max(50.0, min(180.0, s)),
+            }
+        if tl_out:
+            out['text_layout'] = tl_out
     if 'image_order' in raw and isinstance(raw.get('image_order'), list):
         order = []
         for item in raw['image_order'][:32]:
@@ -144,6 +168,14 @@ def _normalize_slide(raw: Any) -> Optional[Dict[str, Any]]:
         slide['image_indices'] = [
             max(0, _clip_int(x, 0, 64, 0)) for x in raw['image_indices'][:12]
         ]
+    if 'template_id' in raw:
+        tid = _clip_str(raw.get('template_id'), 20)
+        slide['template_id'] = tid if tid in _TEMPLATE_IDS else ''
+    if 'label' in raw:
+        slide['label'] = _clip_str(raw.get('label'), 40)
+    if 'poster' in raw and isinstance(raw.get('poster'), dict):
+        tpl = slide.get('template_id') or 'luxury'
+        slide['poster'] = _normalize_poster_config(raw.get('poster'), tpl if tpl in _TEMPLATE_IDS else 'luxury')
     return slide
 
 

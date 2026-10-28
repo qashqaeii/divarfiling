@@ -7,6 +7,8 @@ from workspace.models import CRMProperty
 from workspace.services.display import transaction_profile
 from workspace.services.formatting import format_area, format_toman
 from workspace.services.property_content_studio.constants import OUTPUT_FORMATS, POSTER_TEMPLATES
+
+_DESCRIPTION_EXCERPT_MAX = 900
 from workspace.services.property_features import feature_data_rows_for_display
 from workspace.services.property_images import normalize_external_image_url
 
@@ -123,6 +125,51 @@ def _studio_detail_chips(prop: CRMProperty, *, max_items: int = 6) -> List[str]:
     return chips
 
 
+def _description_excerpt(prop: CRMProperty, *, mask_sensitive: bool) -> str:
+    """متن توضیحی منتشرشدنی — از امکانات/توضیحات فیلد، نه یادداشت CRM."""
+    if mask_sensitive:
+        return ''
+    text = (prop.amenities or '').strip()
+    if not text:
+        return ''
+    if len(text) <= _DESCRIPTION_EXCERPT_MAX:
+        return text
+    return text[: _DESCRIPTION_EXCERPT_MAX - 1].rstrip() + '…'
+
+
+def format_divar_facts_outline(studio: Dict[str, Any]) -> str:
+    """چک‌لیست مشخصات برای کپی دیوار — فقط از payload استودیو."""
+    if not studio:
+        return ''
+    lines: List[str] = []
+    if studio.get('deal_mode'):
+        lines.append(f"نوع معامله: {studio['deal_mode']}")
+    price = studio.get('price') or {}
+    if price.get('show') and price.get('label'):
+        lines.append(f"قیمت: {price['label']}")
+    if studio.get('property_type'):
+        lines.append(f"نوع ملک: {studio['property_type']}")
+    if studio.get('area_label'):
+        lines.append(f"متراژ: {studio['area_label']}")
+    if studio.get('rooms_label'):
+        lines.append(f"اتاق: {studio['rooms_label']}")
+    if studio.get('floor_label'):
+        lines.append(f"طبقه: {studio['floor_label']}")
+    if studio.get('build_year_label'):
+        lines.append(studio['build_year_label'])
+    loc = (studio.get('location_line') or '').strip()
+    if loc:
+        lines.append(f"موقعیت: {loc}")
+    amenities = studio.get('amenities') or []
+    if amenities:
+        lines.append('امکانات: ' + ' · '.join(str(a) for a in amenities[:8]))
+    for chip in (studio.get('detail_chips') or [])[:8]:
+        piece = str(chip).strip()
+        if piece and piece not in lines:
+            lines.append(piece)
+    return '\n'.join(lines)
+
+
 def _location_line(prop: CRMProperty, *, mask_sensitive: bool) -> str:
     if mask_sensitive:
         city = (prop.city or '').strip()
@@ -173,7 +220,7 @@ def build_studio_property_payload(
         'images': images,
         'image_count': len(images),
         'cover_image': images[0] if images else '',
-        'description_excerpt': '',
+        'description_excerpt': _description_excerpt(prop, mask_sensitive=mask_sensitive),
         'file_code': f'#{prop.pk}',
         'public_share_url': (public_share_url or '').strip(),
         'has_parking': bool(prop.has_parking),

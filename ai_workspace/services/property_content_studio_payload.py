@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional
 
 from ai_workspace.services.parse import parse_json_text
 
-from workspace.services.property_content_studio.constants import DIVAR_AD_DESCRIPTION_MAX_CHARS, DIVAR_AD_TITLE_MAX_CHARS
+from workspace.services.property_content_studio.constants import (
+    DIVAR_AD_DESCRIPTION_MAX_CHARS,
+    DIVAR_AD_TITLE_MAX_CHARS,
+    POSTER_AD_HEADLINE_MAX_CHARS,
+)
 
 
 def _clip(text: str, max_len: int) -> str:
@@ -41,6 +45,20 @@ def normalize_studio_ai_payload(task: str, data: Optional[Dict[str, Any]], raw_t
             if not isinstance(item, dict):
                 continue
             text = _clip(str(item.get('text') or ''), DIVAR_AD_TITLE_MAX_CHARS)
+            if text:
+                cleaned.append({
+                    'style': str(item.get('style') or '').strip()[:40] or 'پیشنهادی',
+                    'text': text,
+                })
+        return {'titles': cleaned[:5]}
+
+    if task == 'poster_headlines':
+        titles = payload.get('titles') or []
+        cleaned = []
+        for item in titles if isinstance(titles, list) else []:
+            if not isinstance(item, dict):
+                continue
+            text = _clip(str(item.get('text') or ''), POSTER_AD_HEADLINE_MAX_CHARS)
             if text:
                 cleaned.append({
                     'style': str(item.get('style') or '').strip()[:40] or 'پیشنهادی',
@@ -106,6 +124,15 @@ def enforce_property_facts(prop, task: str, data: Optional[Dict[str, Any]]) -> D
             if text:
                 titles.append({**item, 'text': text})
         payload['titles'] = titles
+    elif task == 'poster_headlines':
+        titles = []
+        for item in payload.get('titles') or []:
+            if not isinstance(item, dict):
+                continue
+            text = _scrub_text_for_facts(prop, str(item.get('text') or ''))
+            if text:
+                titles.append({**item, 'text': text})
+        payload['titles'] = titles
     elif task == 'divar_body':
         payload['body'] = _scrub_text_for_facts(prop, str(payload.get('body') or ''))
     elif task == 'social_pack':
@@ -127,6 +154,9 @@ def validate_studio_ai_payload(task: str, data: Optional[Dict[str, Any]]) -> boo
     if not data:
         return False
     if task == 'divar_titles':
+        titles = data.get('titles') or []
+        return isinstance(titles, list) and len(titles) >= 1
+    if task == 'poster_headlines':
         titles = data.get('titles') or []
         return isinstance(titles, list) and len(titles) >= 1
     if task == 'divar_body':

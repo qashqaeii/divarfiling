@@ -141,7 +141,7 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <textarea id="pcsDivarBody" rows="10" class="pcs-divar-sheet__editor" placeholder="متن را بنویسید یا با AI بسازید…"></textarea>
+                                    <textarea id="pcsDivarBody" rows="6" class="pcs-divar-sheet__editor" placeholder="متن را بنویسید یا با AI بسازید…"></textarea>
                                     <footer class="pcs-divar-sheet__foot">
                                         <button type="button" class="pcs-divar-text-btn" id="pcsCopyDivarBundle">
                                             <i class="fas fa-layer-group" aria-hidden="true"></i>
@@ -267,28 +267,6 @@
             </div>
         </div>
 
-        <footer class="pcs-footer pcs-footer--studio" id="pcsFooter">
-            <div class="pcs-footer__bar">
-                <button type="button"
-                    class="pcs-btn pcs-btn--primary pcs-btn--glow pcs-footer__publish"
-                    id="pcsFooterPublish"
-                    aria-controls="pcsPublishSheet"
-                    aria-expanded="false"
-                    aria-haspopup="dialog">
-                    <span class="pcs-footer__publish-leading" aria-hidden="true">
-                        <i class="fas fa-paper-plane"></i>
-                    </span>
-                    <span class="pcs-footer__publish-copy">
-                        <span class="pcs-footer__publish-title">انتشار</span>
-                        <span class="pcs-footer__publish-sub">واتساپ، تلگرام، اینستاگرام و…</span>
-                    </span>
-                </button>
-                <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon pcs-footer__settings" id="pcsFooterSettings" aria-label="تنظیمات برند">
-                    <i class="fas fa-sliders" aria-hidden="true"></i>
-                </button>
-            </div>
-        </footer>
-
         <div class="pcs-editor" id="pcsEditor" hidden>
             <header class="pcs-editor__head">
                 <div class="pcs-editor__head-leading">
@@ -413,7 +391,8 @@
                 <footer class="pcs-lightbox__foot">
                     <button type="button" class="pcs-btn pcs-btn--ghost" data-pcs-lightbox-close>بستن</button>
                     <button type="button" class="pcs-btn pcs-btn--primary" id="pcsLightboxDownload">
-                        <i class="fas fa-download" aria-hidden="true"></i> دانلود این پوستر
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span class="pcs-btn__label">دانلود این پوستر</span>
                     </button>
                 </footer>
             </div>
@@ -438,94 +417,5 @@
                 <i class="fas fa-check" aria-hidden="true"></i> ذخیره در پروفایل
             </button>
         </footer>
-    </div>
-</div>
-
-<div class="pcs-settings-sheet pcs-publish-sheet" id="pcsPublishSheet" hidden aria-modal="true" role="dialog" aria-labelledby="pcsPublishSheetTitle">
-    <button type="button" class="pcs-settings-sheet__backdrop" data-pcs-publish-close aria-label="بستن"></button>
-    <div class="pcs-settings-sheet__panel pcs-publish-sheet__panel">
-        <div class="pcs-settings-sheet__grab" aria-hidden="true"></div>
-        <header class="pcs-settings-sheet__head pcs-publish-sheet__head">
-            <div class="pcs-settings-sheet__head-text">
-                <strong id="pcsPublishSheetTitle">انتشار محتوا</strong>
-                <p class="pcs-settings-sheet__sub">فایل را در شبکه‌های اجتماعی به اشتراک بگذارید</p>
-            </div>
-            <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon" data-pcs-publish-close aria-label="بستن">
-                <i class="fas fa-times" aria-hidden="true"></i>
-            </button>
-        </header>
-        <div class="pcs-publish-sheet__scroll">
-            <article class="pcs-publish-preview" aria-label="خلاصه فایل">
-                <div class="pcs-publish-preview__thumb is-empty" id="pcsPublishPropThumb" aria-hidden="true">
-                    <i class="fas fa-building"></i>
-                </div>
-                <div class="pcs-publish-preview__body">
-                    <strong class="pcs-publish-preview__title" id="pcsPublishPropTitle">—</strong>
-                    <span class="pcs-publish-preview__loc" id="pcsPublishPropLoc"></span>
-                    <p class="pcs-publish-preview__status is-missing" id="pcsPublishLinkStatus"></p>
-                </div>
-            </article>
-
-            <div class="pcs-publish-callout" id="pcsPublishCallout" hidden>
-                <p class="pcs-publish-callout__text" id="pcsPublishHint"></p>
-                <button type="button" class="pcs-btn pcs-btn--primary pcs-btn--block pcs-publish-callout__btn" id="pcsPublishCreateLink" hidden>
-                    <i class="fas fa-link" aria-hidden="true"></i>
-                    <span>ایجاد لینک عمومی</span>
-                </button>
-            </div>
-
-            <section class="pcs-publish-section" aria-labelledby="pcsPublishMessengersTitle">
-                <h3 class="pcs-publish-section__title" id="pcsPublishMessengersTitle">پیام‌رسان</h3>
-                <div class="pcs-publish-messengers" role="list">
-                    <button type="button" class="pcs-publish-messenger pcs-publish-messenger--wa" data-pcs-publish="whatsapp" role="listitem">
-                        <span class="pcs-publish-messenger__icon" aria-hidden="true"><i class="fab fa-whatsapp"></i></span>
-                        <span class="pcs-publish-messenger__label">واتساپ</span>
-                    </button>
-                    <button type="button" class="pcs-publish-messenger pcs-publish-messenger--tg" data-pcs-publish="telegram" role="listitem">
-                        <span class="pcs-publish-messenger__icon" aria-hidden="true"><i class="fab fa-telegram"></i></span>
-                        <span class="pcs-publish-messenger__label">تلگرام</span>
-                    </button>
-                    <button type="button" class="pcs-publish-messenger pcs-publish-messenger--ig" data-pcs-publish="instagram" role="listitem">
-                        <span class="pcs-publish-messenger__icon" aria-hidden="true"><i class="fab fa-instagram"></i></span>
-                        <span class="pcs-publish-messenger__label">اینستاگرام</span>
-                    </button>
-                </div>
-            </section>
-
-            <section class="pcs-publish-section" aria-labelledby="pcsPublishToolsTitle">
-                <h3 class="pcs-publish-section__title" id="pcsPublishToolsTitle">ابزار</h3>
-                <div class="pcs-publish-actions">
-                    <button type="button" class="pcs-publish-action" data-pcs-publish="copy-link">
-                        <span class="pcs-publish-action__icon" aria-hidden="true"><i class="fas fa-link"></i></span>
-                        <span class="pcs-publish-action__body">
-                            <strong>کپی لینک عمومی</strong>
-                            <span class="pcs-publish-action__sub">برای ارسال در هر برنامه</span>
-                        </span>
-                        <i class="fas fa-chevron-left pcs-publish-action__chev" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" class="pcs-publish-action" data-pcs-publish="copy-text">
-                        <span class="pcs-publish-action__icon" aria-hidden="true"><i class="fas fa-copy"></i></span>
-                        <span class="pcs-publish-action__body">
-                            <strong>کپی متن آماده</strong>
-                            <span class="pcs-publish-action__sub">متن واتساپ + لینک + هشتگ</span>
-                        </span>
-                        <i class="fas fa-chevron-left pcs-publish-action__chev" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" class="pcs-publish-action" data-pcs-publish="native" id="pcsPublishNative" hidden>
-                        <span class="pcs-publish-action__icon" aria-hidden="true"><i class="fas fa-share-from-square"></i></span>
-                        <span class="pcs-publish-action__body">
-                            <strong>اشتراک سیستمی</strong>
-                            <span class="pcs-publish-action__sub">سایر برنامه‌های نصب‌شده</span>
-                        </span>
-                        <i class="fas fa-chevron-left pcs-publish-action__chev" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </section>
-
-            <p class="pcs-publish-sheet__tip">
-                <i class="fas fa-circle-info" aria-hidden="true"></i>
-                <span>برای اینستاگرام متن کپی می‌شود؛ تصویر پوستر را از کارت‌ها دانلود کنید و در استوری یا پست بچسبانید.</span>
-            </p>
-        </div>
     </div>
 </div>

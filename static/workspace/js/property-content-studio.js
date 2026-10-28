@@ -419,23 +419,29 @@
     function sanitizePosterTextForExport(root) {
         const canvas = root?.classList?.contains('pcs-canvas') ? root : root?.querySelector?.('.pcs-canvas');
         if (!canvas) return;
-        canvas.style.unicodeBidi = 'isolate';
+        canvas.setAttribute('dir', 'rtl');
         canvas.style.direction = 'rtl';
+        canvas.style.unicodeBidi = 'plaintext';
         canvas.style.textRendering = 'auto';
-        canvas.querySelectorAll('*').forEach((el) => {
-            if (!el.style) return;
-            const tag = el.tagName;
-            if (tag === 'IMG' || tag === 'SVG') return;
-            if (el.getAttribute('dir') === 'ltr') {
+        canvas.style.fontKerning = 'normal';
+        canvas.style.fontFeatureSettings = '"liga" 1, "calt" 1, "kern" 1';
+        const textLike = canvas.querySelectorAll(
+            '[data-pcs-text-inner], [data-pcs-text-inner] *, .pcs-poster-price-value, .pcs-poster-price-value *',
+        );
+        textLike.forEach((el) => {
+            if (!el.style || el.tagName === 'IMG' || el.tagName === 'SVG') return;
+            if (el.getAttribute('dir') === 'ltr' || el.classList?.contains('pcs-ltr-dims')) {
                 el.style.unicodeBidi = 'isolate';
+                el.style.direction = 'ltr';
                 return;
             }
-            el.style.unicodeBidi = 'inherit';
+            el.setAttribute('dir', 'rtl');
+            el.style.direction = 'rtl';
+            el.style.unicodeBidi = 'plaintext';
             el.style.textRendering = 'auto';
-            const ls = el.style.letterSpacing;
-            if (ls && (ls.startsWith('-') || parseFloat(ls) < 0)) {
-                el.style.letterSpacing = '0';
-            }
+            el.style.fontKerning = 'normal';
+            el.style.fontFeatureSettings = '"liga" 1, "calt" 1, "kern" 1';
+            el.style.letterSpacing = '0';
             if (el.style.textDecorationThickness || el.style.textUnderlineOffset) {
                 el.style.textDecorationThickness = '';
                 el.style.textUnderlineOffset = '';
@@ -675,7 +681,7 @@
                 const fit = posterHeadlineFit(confUse, layout.hlModern, raw, Math.floor(boxW * 0.96), 2);
                 applySceneTextStack(headlineEl, boxH);
                 headlineEl.innerHTML = fit.lines.map((ln) => (
-                    `<div style="width:100%;line-height:1.2;letter-spacing:-0.012em;text-align:right;">${esc(ln)}</div>`
+                    `<div dir="rtl" style="width:100%;line-height:1.2;letter-spacing:0;text-align:right;direction:rtl;unicode-bidi:plaintext;">${esc(ln)}</div>`
                 )).join('');
                 headlineEl.style.fontSize = `${fit.px}px`;
                 styleSceneTextEl(headlineEl, confUse, 'headline', palette, fam);
@@ -846,13 +852,46 @@
         return host;
     }
 
+    function clonePosterConf(conf) {
+        if (!conf) return conf;
+        try {
+            return JSON.parse(JSON.stringify(conf));
+        } catch (_) {
+            return { ...conf };
+        }
+    }
+
     function posterConfForExport(tpl) {
+        return resolveExportPosterConf(tpl);
+    }
+
+    function resolveExportPosterConf(tpl) {
         const editorOpen = !$('#pcsEditor')?.hasAttribute('hidden');
         if (state.editorTemplate === tpl && state.editorBuffer && editorOpen) {
             syncLayerEditorToBuffer();
-            return { ...state.editorBuffer };
+            const conf = clonePosterConf(state.editorBuffer);
+            const liveScene = window.PCSLayerEditor?.getScene?.();
+            if (liveScene) {
+                const fmtKey = state.format || 'story';
+                const formats = posterSceneFormats(fmtKey);
+                let scene = clonePosterConf(liveScene);
+                if (g.PCSSchema?.normalizeScene) {
+                    scene = g.PCSSchema.normalizeScene(
+                        scene,
+                        scene.templateId || tpl,
+                        fmtKey,
+                        formats,
+                    );
+                }
+                if (g.PCSSchema?.applySceneCanvasFormat) {
+                    scene = g.PCSSchema.applySceneCanvasFormat(scene, fmtKey, formats);
+                }
+                conf.scene = scene;
+            }
+            return conf;
         }
-        return null;
+        const fromDraft = posterConfigFromDraft(tpl);
+        return fromDraft ? clonePosterConf(fromDraft) : null;
     }
 
     async function preparePosterExportCanvas(host, tpl, formatKey, confOverride) {
@@ -905,6 +944,7 @@
         saveStatus: 'idle',
         sessionToken: 0,
         aiInflight: false,
+        downloadInflight: false,
         libsLoaded: false,
         brandFieldsBound: false,
         visTogglesBound: false,
@@ -4457,8 +4497,19 @@
         };
     }
 
-    /** scene کالیبره با قاب PNG — فقط برای رندر پیش‌نمایش (بدون ذخیره در draft). */
-    function ensurePosterSceneForRender(conf, templateId, formatKey) {
+    /** scene کالیبره با قاب PNG — برای export از scene ذخیره‌شده استفاده می‌شود. */
+    function ensurePosterSceneForRender(conf, templateId, formatKey, renderOpts) {
+        if (renderOpts?.preserveScene && conf?.scene?.schemaVersion >= 2 && conf.scene.layers?.length) {
+            const fmtKey = formatKey || state.format || 'story';
+            const formats = posterSceneFormats(fmtKey);
+            if (g.PCSSchema?.applySceneCanvasFormat) {
+                const scene = g.PCSSchema.cloneScene
+                    ? g.PCSSchema.cloneScene(conf.scene)
+                    : clonePosterConf(conf.scene);
+                return { ...conf, scene: g.PCSSchema.applySceneCanvasFormat(scene, fmtKey, formats) };
+            }
+            return conf;
+        }
         if (!OVERLAY_POSTER_TEMPLATES.includes(templateId)) return conf;
         if (!g.PCSTemplateScenes?.resolveSceneForPreview || !g.PCSSchema) return conf;
         const ctx = buildPosterRenderContext(templateId);
@@ -4487,13 +4538,13 @@
         };
     }
 
-    function renderPosterHtml(templateId, formatKey, confOverride) {
+    function renderPosterHtml(templateId, formatKey, confOverride, renderOpts) {
         const imgs = propertyImageList();
         const fmtKey = formatKey || state.format || 'story';
         let conf = confOverride
             ? normalizePosterConfig(confOverride, imgs)
             : posterConfig(templateId);
-        conf = ensurePosterSceneForRender(conf, templateId, fmtKey);
+        conf = ensurePosterSceneForRender(conf, templateId, fmtKey, renderOpts);
         const ctx = buildPosterRenderContext(templateId);
         ctx.formatKey = fmtKey;
         ctx.formats = posterSceneFormats(fmtKey);
@@ -4525,13 +4576,33 @@
 
     function lightboxPreviewBounds(wrap) {
         const panel = wrap?.closest?.('.pcs-lightbox__panel');
-        if (!panel) return null;
+        if (!panel || !wrap) return null;
         const headH = panel.querySelector('.pcs-lightbox__head')?.offsetHeight || 52;
-        const footH = panel.querySelector('.pcs-lightbox__foot')?.offsetHeight || 48;
-        const maxPanelH = Math.min(window.innerHeight * 0.92, 880);
-        const width = Math.max(220, panel.clientWidth - 36);
-        const height = Math.max(200, maxPanelH - headH - footH - 20);
-        return { width, height };
+        const footH = panel.querySelector('.pcs-lightbox__foot')?.offsetHeight || 52;
+        const pad = 20;
+        const panelRect = panel.getBoundingClientRect();
+        const panelH = panelRect.height || panel.clientHeight || 0;
+        const panelW = panelRect.width || panel.clientWidth || 0;
+        if (panelH > headH + footH + 120) {
+            return {
+                width: Math.max(200, panelW - pad),
+                height: Math.max(180, panelH - headH - footH - pad),
+            };
+        }
+        const previewH = wrap.clientHeight || wrap.getBoundingClientRect().height;
+        const previewW = wrap.clientWidth || wrap.getBoundingClientRect().width;
+        if (previewH > 120 && previewW > 80) {
+            return {
+                width: Math.max(200, previewW - 8),
+                height: Math.max(180, previewH - 8),
+            };
+        }
+        const vhCap = Math.min(window.innerHeight * 0.88, 860);
+        const vwCap = Math.min(window.innerWidth * 0.42, 440);
+        return {
+            width: Math.max(200, vwCap - pad),
+            height: Math.max(180, vhCap - headH - footH - pad),
+        };
     }
 
     function editorPreviewBounds(wrap) {
@@ -4769,11 +4840,12 @@
             wrap.style.display = 'flex';
             wrap.style.justifyContent = 'center';
             wrap.style.alignItems = isLightbox ? 'center' : 'flex-start';
+            wrap.style.flex = isLightbox ? '1 1 auto' : '';
             wrap.style.height = isLightbox ? 'auto' : `${visualH}px`;
             wrap.style.minHeight = isLightbox ? '0' : '0';
-            wrap.style.maxHeight = isLightbox && maxH ? `${maxH}px` : 'none';
+            wrap.style.maxHeight = isLightbox ? 'none' : 'none';
             if (isLightbox) {
-                wrap.style.padding = '1rem 0.85rem 1.1rem';
+                wrap.style.padding = '0';
                 wrap.style.boxSizing = 'border-box';
             }
         }
@@ -4984,6 +5056,25 @@
         state.libsLoaded = true;
     }
 
+    function exportCanvasLooksBlank(shot) {
+        if (!shot || !shot.width || !shot.height) return true;
+        const ctx = shot.getContext('2d');
+        if (!ctx) return true;
+        const step = Math.max(40, Math.floor(Math.min(shot.width, shot.height) / 28));
+        let bright = 0;
+        let total = 0;
+        for (let y = step; y < shot.height - step; y += step) {
+            for (let x = step; x < shot.width - step; x += step) {
+                total += 1;
+                const d = ctx.getImageData(x, y, 1, 1).data;
+                if (d[3] < 6) continue;
+                const lum = 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2];
+                if (lum > 24) bright += 1;
+            }
+        }
+        return total > 0 && bright < Math.max(2, Math.floor(total * 0.015));
+    }
+
     async function rasterizeCanvas(canvas, formatKey) {
         await ensureLibs();
         await ensurePersianFonts();
@@ -4993,19 +5084,34 @@
             throw new Error(verify.message || 'تصویر آماده export نیست');
         }
         const fmt = FORMATS[formatKey] || FORMATS.story;
-        return html2canvas(canvas, {
+        const baseOpts = {
             useCORS: true,
             allowTaint: false,
             scale: 1,
             width: fmt.w,
             height: fmt.h,
-            backgroundColor: '#ffffff',
+            backgroundColor: null,
             logging: false,
             onclone: (_doc, cloned) => {
                 applyFontToSubtree(cloned);
                 sanitizePosterTextForExport(cloned);
             },
-        });
+        };
+        const host = canvas.closest('.pcs-export-host');
+        const hostLeft = host?.style.left;
+        if (host) host.style.left = '0';
+        try {
+            let shot = await html2canvas(canvas, { ...baseOpts, foreignObjectRendering: false });
+            if (exportCanvasLooksBlank(shot)) {
+                shot = await html2canvas(canvas, { ...baseOpts, foreignObjectRendering: true });
+            }
+            if (exportCanvasLooksBlank(shot)) {
+                throw new Error('خروجی تصویر خالی است — دوباره تلاش کنید');
+            }
+            return shot;
+        } finally {
+            if (host && hostLeft != null) host.style.left = hostLeft;
+        }
     }
 
     async function rasterCanvasToBlob(canvasEl) {
@@ -5112,11 +5218,14 @@
         box.classList.remove('is-ready');
         box.style.height = '';
         box.style.maxHeight = '';
+        lb.classList.remove('pcs-lightbox--story', 'pcs-lightbox--post', 'pcs-lightbox--square');
+        lb.classList.add(`pcs-lightbox--${state.format || 'story'}`);
         lb.removeAttribute('hidden');
         document.body.classList.add('pcs-lightbox-open');
         const fit = () => whenImagesReady(box, () => {
             scalePreviewCanvas(box, state.format);
             syncCanvasTypography(box, { templateId: tpl, formatKey: state.format, posterConf: posterConfig(tpl) });
+            requestAnimationFrame(() => scalePreviewCanvas(box, state.format));
         });
         requestAnimationFrame(() => requestAnimationFrame(fit));
     }
@@ -5128,18 +5237,69 @@
         if (box) box.innerHTML = '';
     }
 
+    function collectDownloadButtons(tpl, primaryBtn) {
+        const buttons = [];
+        const seen = new Set();
+        const add = (el) => {
+            if (!el || seen.has(el)) return;
+            seen.add(el);
+            buttons.push(el);
+        };
+        add(primaryBtn);
+        add($('#pcsLightboxDownload'));
+        add($('#pcsEditorDownload'));
+        if (tpl) {
+            $$(`[data-pcs-dl="${tpl}"]`).forEach(add);
+        } else {
+            $$('[data-pcs-dl]').forEach(add);
+        }
+        return buttons;
+    }
+
+    function setDownloadButtonsBusy(busy, primaryBtn, tpl) {
+        collectDownloadButtons(tpl, primaryBtn).forEach((btn) => {
+            btn.disabled = busy;
+            btn.classList.toggle('is-busy', busy);
+            btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+            const label = btn.querySelector('.pcs-btn__label') || btn.querySelector('span');
+            if (!label) return;
+            if (busy) {
+                if (btn.dataset.pcsDlLabel == null) btn.dataset.pcsDlLabel = label.textContent.trim();
+                label.textContent = 'در حال آماده‌سازی…';
+            } else if (btn.dataset.pcsDlLabel != null) {
+                label.textContent = btn.dataset.pcsDlLabel;
+            }
+        });
+    }
+
+    async function runPosterDownload(tpl, triggerBtn) {
+        if (!tpl) return;
+        if (state.downloadInflight) {
+            toast('در حال آماده‌سازی دانلود…');
+            return;
+        }
+        state.downloadInflight = true;
+        setDownloadButtonsBusy(true, triggerBtn, tpl);
+        try {
+            await downloadPoster(tpl);
+        } finally {
+            state.downloadInflight = false;
+            setDownloadButtonsBusy(false, triggerBtn, tpl);
+        }
+    }
+
     async function downloadPoster(tpl) {
         const fmt = state.format;
         let innerHtml;
         let confForExport = posterConfForExport(tpl);
         if (state.editorStorySlideId && state.editorTemplate === tpl) {
             const slide = findStorySlide(state.editorStorySlideId);
-            if (!confForExport && state.editorBuffer) confForExport = { ...state.editorBuffer };
+            if (!confForExport && state.editorBuffer) confForExport = resolveExportPosterConf(tpl);
             innerHtml = slide && confForExport
                 ? storyPreviewHtml(slide, confForExport)
-                : renderPosterHtml(tpl, fmt, confForExport);
+                : renderPosterHtml(tpl, fmt, confForExport, { preserveScene: true });
         } else {
-            innerHtml = renderPosterHtml(tpl, fmt, confForExport);
+            innerHtml = renderPosterHtml(tpl, fmt, confForExport, { preserveScene: !!confForExport });
         }
         const host = createExportHost(innerHtml, fmt);
         try {
@@ -5148,7 +5308,7 @@
             await exportCanvasElement(canvas, `property-${cfg.propertyId}-${tpl}-${state.format}.webp`, state.format);
             toast('دانلود شروع شد');
         } catch (e) {
-            toast('خطا در تولید تصویر');
+            toast(e?.message || 'خطا در تولید تصویر');
         }
         host.remove();
     }
@@ -5934,44 +6094,11 @@
         $$('.pcs-story-slide__frame').forEach((wrap) => scalePreviewCanvas(wrap, 'story'));
     }
 
-    function pcsPublicShareUrl() {
-        return state.session?.property?.public_share_url || '';
-    }
-
-    function pcsShareCaption(kind) {
-        const url = pcsPublicShareUrl();
-        const hashtags = ($('#pcsHashtags')?.value || '').trim();
-        if (kind === 'telegram') {
-            const text = ($('#pcsTelegramText')?.value || '').trim();
-            return `${text}\n${url}`.trim();
-        }
-        const text = ($('#pcsWhatsappText')?.value || state.session?.property?.title || '').trim();
-        let msg = `${text}\n${url}`.trim();
-        if (hashtags && (kind === 'instagram' || kind === 'copy-text')) {
-            msg = `${msg}\n\n${hashtags}`.trim();
-        }
-        return msg;
-    }
-
-    const publishSheetState = { returnFocus: null };
-
-    function pcsPublishUrlLabel(url) {
-        const u = String(url || '').trim();
-        if (!u) return '';
-        if (u.length <= 42) return u;
-        return `${u.slice(0, 36)}…`;
-    }
-
     async function createPublicShareLink() {
         if (!cfg.publicShareUrl) {
             toast('مسیر ایجاد لینک در دسترس نیست');
             return false;
         }
-        const btn = $('#pcsPublishCreateLink');
-        const label = btn?.querySelector('span');
-        const prev = label?.textContent;
-        if (btn) btn.disabled = true;
-        if (label) label.textContent = 'در حال ساخت…';
         try {
             const res = await fetch(cfg.publicShareUrl, {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -5983,188 +6110,11 @@
             }
             state.session.property.public_share_url = data.share_url || '';
             renderSharePanel();
-            syncPublishSheetState();
             toast('لینک عمومی ایجاد شد');
             return true;
         } catch (_) {
             toast('خطا در ایجاد لینک');
             return false;
-        } finally {
-            if (btn) btn.disabled = false;
-            if (label && prev) label.textContent = prev;
-        }
-    }
-
-    function syncPublishSheetState() {
-        const p = state.session?.property || {};
-        const url = pcsPublicShareUrl();
-        const callout = $('#pcsPublishCallout');
-        const hint = $('#pcsPublishHint');
-        const createBtn = $('#pcsPublishCreateLink');
-        const titleEl = $('#pcsPublishPropTitle');
-        const locEl = $('#pcsPublishPropLoc');
-        const thumbEl = $('#pcsPublishPropThumb');
-        const statusEl = $('#pcsPublishLinkStatus');
-        const nativeBtn = $('#pcsPublishNative');
-
-        if (titleEl) titleEl.textContent = p.title || p.headline || 'فایل ملک';
-        if (locEl) {
-            locEl.textContent = p.location_line || '';
-            locEl.hidden = !p.location_line;
-        }
-        if (thumbEl) {
-            if (p.cover_image) {
-                thumbEl.classList.remove('is-empty');
-                thumbEl.innerHTML = `<img src="${esc(p.cover_image)}" alt="">`;
-            } else {
-                thumbEl.classList.add('is-empty');
-                thumbEl.innerHTML = '<i class="fas fa-building" aria-hidden="true"></i>';
-            }
-        }
-        if (statusEl) {
-            if (url) {
-                statusEl.className = 'pcs-publish-preview__status is-ready';
-                statusEl.innerHTML = `<i class="fas fa-circle-check" aria-hidden="true"></i><span dir="ltr">${esc(pcsPublishUrlLabel(url))}</span>`;
-            } else {
-                statusEl.className = 'pcs-publish-preview__status is-missing';
-                statusEl.innerHTML = '<i class="fas fa-circle-exclamation" aria-hidden="true"></i><span>لینک عمومی فعال نیست</span>';
-            }
-        }
-        if (callout && hint) {
-            if (url) {
-                callout.hidden = true;
-                hint.textContent = '';
-            } else {
-                callout.hidden = false;
-                hint.textContent = 'برای اشتراک حرفه‌ای با مشتری، یک لینک عمومی بسازید.';
-            }
-        }
-        if (createBtn) {
-            createBtn.hidden = !!(url || !state.session?.can_create_public_share);
-        }
-        if (nativeBtn) {
-            nativeBtn.hidden = typeof navigator.share !== 'function';
-        }
-
-        const sheet = $('#pcsPublishSheet');
-        sheet?.querySelectorAll('[data-pcs-publish]').forEach((btn) => {
-            const channel = btn.getAttribute('data-pcs-publish');
-            const needsUrl = channel === 'telegram' || channel === 'copy-link';
-            const disabled = needsUrl && !url;
-            btn.disabled = disabled;
-            btn.classList.toggle('is-disabled', disabled);
-            btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
-        });
-    }
-
-    function openPublishSheet() {
-        closeSettingsSheet();
-        const sheet = $('#pcsPublishSheet');
-        const trigger = $('#pcsFooterPublish');
-        if (!sheet) return;
-        mountToBody(sheet);
-        publishSheetState.returnFocus = trigger;
-        syncPublishSheetState();
-        sheet.removeAttribute('hidden');
-        requestAnimationFrame(() => {
-            sheet.classList.add('is-open');
-            const focusTarget = sheet.querySelector('[data-pcs-publish]:not([disabled])')
-                || $('#pcsPublishCreateLink')
-                || sheet.querySelector('[data-pcs-publish-close]');
-            focusTarget?.focus?.();
-        });
-        trigger?.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('pcs-publish-open');
-    }
-
-    function closePublishSheet() {
-        const sheet = $('#pcsPublishSheet');
-        const trigger = $('#pcsFooterPublish');
-        if (!sheet || sheet.hasAttribute('hidden')) return;
-        sheet.classList.remove('is-open');
-        document.body.classList.remove('pcs-publish-open');
-        trigger?.setAttribute('aria-expanded', 'false');
-        const back = publishSheetState.returnFocus;
-        publishSheetState.returnFocus = null;
-        window.setTimeout(() => {
-            if (sheet.classList.contains('is-open')) return;
-            sheet.setAttribute('hidden', '');
-            back?.focus?.();
-        }, 280);
-    }
-
-    function runPublishAction(channel) {
-        const url = pcsPublicShareUrl();
-        if (channel === 'copy-link') {
-            if (!url) {
-                toast('لینک عمومی موجود نیست — ابتدا لینک بسازید');
-                return;
-            }
-            navigator.clipboard.writeText(url);
-            toast('لینک کپی شد');
-            closePublishSheet();
-            return;
-        }
-        if (channel === 'copy-text') {
-            const msg = pcsShareCaption('copy-text') || url;
-            if (!msg) {
-                toast('متنی برای کپی موجود نیست');
-                return;
-            }
-            navigator.clipboard.writeText(msg);
-            toast('متن اشتراک کپی شد');
-            closePublishSheet();
-            return;
-        }
-        if (channel === 'instagram') {
-            const msg = pcsShareCaption('instagram') || ($('#pcsWhatsappText')?.value || '').trim();
-            if (!msg) {
-                toast('متن کپشن در تب شبکه‌ها را تکمیل کنید');
-                return;
-            }
-            navigator.clipboard.writeText(msg);
-            toast('متن برای اینستاگرام کپی شد — در پست یا استوری پیست کنید');
-            closePublishSheet();
-            return;
-        }
-        if (channel === 'native') {
-            const text = pcsShareCaption('copy-text');
-            if (!navigator.share) {
-                if (text) {
-                    navigator.clipboard.writeText(text);
-                    toast('مرورگر اشتراک سیستمی ندارد — متن کپی شد');
-                } else {
-                    toast('اشتراک سیستمی در این مرورگر پشتیبانی نمی‌شود');
-                }
-                closePublishSheet();
-                return;
-            }
-            navigator.share({
-                title: state.session?.property?.title || 'فایل ملک',
-                text: text || undefined,
-                url: url || undefined,
-            }).catch(() => { /* cancelled */ });
-            closePublishSheet();
-            return;
-        }
-        if (channel === 'whatsapp') {
-            if (!url && !($('#pcsWhatsappText')?.value || '').trim()) {
-                toast('لینک یا متن واتساپ موجود نیست');
-                return;
-            }
-            const msg = encodeURIComponent(pcsShareCaption('whatsapp') || url);
-            window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
-            closePublishSheet();
-            return;
-        }
-        if (channel === 'telegram') {
-            if (!url) {
-                toast('لینک عمومی برای تلگرام لازم است');
-                return;
-            }
-            const msg = encodeURIComponent(pcsShareCaption('telegram') || url);
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${msg}`, '_blank', 'noopener');
-            closePublishSheet();
         }
     }
 
@@ -6208,20 +6158,15 @@
             if (on) p.removeAttribute('hidden');
             else p.setAttribute('hidden', '');
         });
+        const compactTabs = new Set(['divar', 'social', 'share']);
+        $('#pcsModal')?.classList.toggle('pcs-modal--compact', compactTabs.has(tab));
+        if (tab === 'posters') {
+            requestAnimationFrame(() => rescaleAllPreviews());
+        }
         if (state.draft) {
             state.draft.active_tab = tab;
             scheduleSave();
         }
-        syncFooterForTab(tab);
-    }
-
-    function syncFooterForTab(tab) {
-        const footer = $('#pcsFooter');
-        if (!footer) return;
-        const mob = isMobileViewport();
-        const showFooter = tab === 'posters' || tab === 'share';
-        footer.hidden = !showFooter;
-        footer.classList.toggle('pcs-footer--minimal', mob && tab !== 'posters');
     }
 
     function mountToBody(el) {
@@ -6291,8 +6236,6 @@
     function pcsOverlayRootFor(target) {
         const modal = $('#pcsModal');
         const sheet = $('#pcsSettingsSheet');
-        const publishSheet = $('#pcsPublishSheet');
-        if (publishSheet && !publishSheet.hasAttribute('hidden') && publishSheet.contains(target)) return publishSheet;
         if (sheet && !sheet.hasAttribute('hidden') && sheet.contains(target)) return sheet;
         if (modal && !modal.hasAttribute('hidden') && modal.contains(target)) return modal;
         return null;
@@ -6301,11 +6244,9 @@
     function onPcsTouchMove(e) {
         const modal = $('#pcsModal');
         const sheet = $('#pcsSettingsSheet');
-        const publishSheet = $('#pcsPublishSheet');
         const modalOpen = modal && !modal.hasAttribute('hidden');
         const sheetOpen = sheet && !sheet.hasAttribute('hidden');
-        const publishOpen = publishSheet && !publishSheet.hasAttribute('hidden');
-        if (!modalOpen && !sheetOpen && !publishOpen) return;
+        if (!modalOpen && !sheetOpen) return;
 
         const root = pcsOverlayRootFor(e.target);
         if (!root) {
@@ -6321,7 +6262,6 @@
         if (!modal) return;
         mountToBody(modal);
         mountToBody($('#pcsSettingsSheet'));
-        mountToBody($('#pcsPublishSheet'));
         closeMobileMore();
         resetStudioShellState();
         lockPageScroll();
@@ -6336,7 +6276,6 @@
     async function closeModal() {
         closePreview();
         closeSettingsSheet();
-        closePublishSheet();
         if (!$('#pcsEditor')?.hasAttribute('hidden')) {
             closeEditor();
             if (!$('#pcsEditor')?.hasAttribute('hidden')) return;
@@ -6351,7 +6290,6 @@
     const settingsSheetState = { sidebar: null, footParent: null };
 
     function openSettingsSheet() {
-        closePublishSheet();
         const inner = $('#pcsSidebarInner');
         const body = $('#pcsSettingsSheetBody');
         const sheet = $('#pcsSettingsSheet');
@@ -6514,25 +6452,28 @@
     }
 
     function commitEditorToDraft(tpl) {
-        if (!state.draft || !tpl) return;
-        updateEditorBufferFromForm(tpl);
-        if (window.PCSLayerEditor?.isActive?.()) {
+        if (!state.draft || !tpl || !state.editorBuffer) return;
+        syncLayerEditorToBuffer();
+        if (!window.PCSLayerEditor?.isActive?.()) {
+            updateEditorBufferFromForm(tpl);
+        } else {
             window.PCSLayerEditor.commitToBuffer(state.editorBuffer);
         }
+        const savedConf = clonePosterConf(state.editorBuffer);
         if (state.editorStorySlideId) {
             const slide = findStorySlide(state.editorStorySlideId);
             if (slide) {
-                slide.poster = { ...state.editorBuffer };
+                slide.poster = savedConf;
                 const imgs = propertyImageList();
-                if (slide.type === 'dual_photos' && state.editorBuffer) {
-                    slide.image_index = state.editorBuffer.primary_image_index;
-                    slide.image_indices = [emeraldStripIndex(state.editorBuffer, imgs)];
+                if (slide.type === 'dual_photos' && savedConf) {
+                    slide.image_index = savedConf.primary_image_index;
+                    slide.image_indices = [emeraldStripIndex(savedConf, imgs)];
                 }
             }
             return;
         }
         state.draft.posters = state.draft.posters || {};
-        state.draft.posters[tpl] = { ...state.editorBuffer };
+        state.draft.posters[tpl] = savedConf;
     }
 
     function clearEditorSession() {
@@ -7419,6 +7360,16 @@
                     overlayUrl: cfg.templateMeta?.[tpl]?.overlay || '',
                     onDirty: () => {
                         syncLayerEditorToBuffer();
+                        if (state.editorBuffer && state.draft) {
+                            const snap = clonePosterConf(state.editorBuffer);
+                            if (state.editorStorySlideId) {
+                                const slide = findStorySlide(state.editorStorySlideId);
+                                if (slide) slide.poster = snap;
+                            } else if (state.editorTemplate) {
+                                state.draft.posters = state.draft.posters || {};
+                                state.draft.posters[state.editorTemplate] = snap;
+                            }
+                        }
                         syncEditorDirtyFlag();
                         scheduleSave();
                     },
@@ -7595,7 +7546,11 @@
             state.editorPosterHeadlineSuggestions = incoming;
             renderEditorPosterHeadlineSuggestions(incoming);
             toast('عنوان‌های تبلیغاتی آماده است — یکی را انتخاب کنید');
-        }, [triggerBtn, $('#pcsEditHeadlineAiRefresh')].filter(Boolean));
+        }, [triggerBtn, $('#pcsEditHeadlineAiRefresh')].filter(Boolean), [{
+            el: $('#pcsEditHeadlineAiPanel'),
+            message: 'در حال پیشنهاد عنوان برای پوستر…',
+            autoShow: true,
+        }]);
     }
 
     function applyEditorPosterHeadlinePick(index) {
@@ -7650,10 +7605,71 @@
             btn.disabled = busy;
             btn.classList.toggle('is-busy', busy);
             btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+            const span = btn.querySelector('span');
+            if (!span) return;
+            if (busy) {
+                if (btn.dataset.pcsAiLabel == null) btn.dataset.pcsAiLabel = span.textContent || '';
+                span.textContent = 'در حال تولید…';
+            } else if (btn.dataset.pcsAiLabel != null) {
+                span.textContent = btn.dataset.pcsAiLabel;
+            }
         });
     }
 
-    async function runAiAction(fn, buttons) {
+    function aiPanelLoadHtml(message) {
+        const msg = esc(message || 'در حال پردازش…');
+        return `<div class="pcs-ai-panel-load" role="status" aria-live="polite">
+            <div class="pcs-ai-panel-load__visual" aria-hidden="true">
+                <span class="pcs-ai-panel-load__orb"></span>
+                <span class="pcs-ai-panel-load__orb pcs-ai-panel-load__orb--delay"></span>
+                <span class="pcs-ai-panel-load__orb pcs-ai-panel-load__orb--delay2"></span>
+            </div>
+            <p class="pcs-ai-panel-load__text">${msg}</p>
+            <span class="pcs-ai-panel-load__meta">معمولاً چند ثانیه طول می‌کشد</span>
+        </div>`;
+    }
+
+    function setAiTargetBusy(target, busy) {
+        const el = target?.el || target;
+        if (!el) return;
+        const message = target?.message || 'در حال پردازش…';
+        el.classList.toggle('is-ai-loading', !!busy);
+        el.setAttribute('aria-busy', busy ? 'true' : 'false');
+        if (busy && target?.autoShow && el.hasAttribute('hidden')) {
+            el.dataset.pcsAiPrevHidden = '1';
+            el.removeAttribute('hidden');
+        }
+        let layer = el.querySelector(':scope > .pcs-ai-panel-load');
+        if (busy) {
+            if (!layer) {
+                el.insertAdjacentHTML('beforeend', aiPanelLoadHtml(message));
+            } else {
+                const t = layer.querySelector('.pcs-ai-panel-load__text');
+                if (t) t.textContent = message;
+            }
+            return;
+        }
+        if (layer) layer.remove();
+        if (el.dataset.pcsAiPrevHidden === '1') {
+            delete el.dataset.pcsAiPrevHidden;
+            const hasContent = el.querySelector('.pcs-divar-title, .pcs-social-caption, .pcs-editor__headline-ai__chip');
+            if (!hasContent) {
+                el.setAttribute('hidden', '');
+                if (el.id === 'pcsEditHeadlineAiPanel') el.innerHTML = '';
+            }
+        }
+    }
+
+    function setAiTargetsBusy(busy, targets) {
+        const list = !targets ? [] : (Array.isArray(targets) ? targets : [targets]);
+        list.forEach((t) => {
+            if (!t) return;
+            const spec = typeof t === 'object' && t.el ? t : { el: t, message: 'در حال پردازش…' };
+            setAiTargetBusy(spec, busy);
+        });
+    }
+
+    async function runAiAction(fn, buttons, targets) {
         if (state.aiInflight) {
             toast('در حال تولید محتوا…');
             return;
@@ -7663,12 +7679,17 @@
             return;
         }
         state.aiInflight = true;
+        const modal = $('#pcsModal');
         setAiButtonsBusy(true, buttons);
+        setAiTargetsBusy(true, targets);
+        modal?.classList.add('pcs-modal--ai-busy');
         try {
             await fn();
         } finally {
             state.aiInflight = false;
             setAiButtonsBusy(false, buttons);
+            setAiTargetsBusy(false, targets);
+            modal?.classList.remove('pcs-modal--ai-busy');
         }
     }
 
@@ -7686,17 +7707,22 @@
             e.preventDefault();
 
             if (titlesBtn) {
+                try {
+                    ensureDraftAiShell();
+                    const prev = state.draft.ai.divar.titles || [];
+                    if (prev.length && !window.confirm('عنوان‌های قبلی با نتایج جدید جایگزین شوند؟')) {
+                        return;
+                    }
+                } catch (err) {
+                    toast(err.message || 'خطا');
+                    return;
+                }
                 await runAiAction(async () => {
                     try {
-                        ensureDraftAiShell();
                         const data = await aiPost('divar-titles');
                         const incoming = data.data?.titles || [];
                         if (!incoming.length) {
                             toast('عنوانی از AI دریافت نشد');
-                            return;
-                        }
-                        const prev = state.draft.ai.divar.titles || [];
-                        if (prev.length && !window.confirm('عنوان‌های قبلی با نتایج جدید جایگزین شوند؟')) {
                             return;
                         }
                         state.draft.ai.divar.titles = incoming;
@@ -7707,14 +7733,26 @@
                     } catch (err) {
                         toast(err.message || 'خطای AI');
                     }
-                }, [titlesBtn]);
+                }, [titlesBtn], [{
+                    el: $('#pcsDivarTitles'),
+                    message: 'هوش مصنوعی در حال ساخت عنوان‌هاست…',
+                }]);
                 return;
             }
 
             if (bodyBtn) {
+                try {
+                    ensureDraftAiShell();
+                    const bodyEl = $('#pcsDivarBody');
+                    if (bodyEl?.value?.trim() && !window.confirm('متن فعلی دیوار جایگزین شود؟')) {
+                        return;
+                    }
+                } catch (err) {
+                    toast(err.message || 'خطا');
+                    return;
+                }
                 await runAiAction(async () => {
                     try {
-                        ensureDraftAiShell();
                         const style = $('#pcsDivarBodyStyle')?.value || 'formal';
                         const data = await aiPost('divar-body', { style });
                         const body = data.data?.body || '';
@@ -7723,9 +7761,6 @@
                             return;
                         }
                         const bodyEl = $('#pcsDivarBody');
-                        if (bodyEl?.value?.trim() && !window.confirm('متن فعلی دیوار جایگزین شود؟')) {
-                            return;
-                        }
                         state.draft.ai.divar.body = body;
                         state.draft.ai.divar.body_style = style;
                         if (bodyEl) bodyEl.value = body;
@@ -7736,22 +7771,30 @@
                     } catch (err) {
                         toast(err.message || 'خطای AI');
                     }
-                }, [bodyBtn, $('#pcsDivarBodyStyle')]);
+                }, [bodyBtn, $('#pcsDivarBodyStyle')], [{
+                    el: document.querySelector('.pcs-divar-block--sheet .pcs-divar-sheet'),
+                    message: 'در حال نوشتن متن آگهی دیوار…',
+                }]);
                 return;
             }
 
             if (socialBtn) {
+                try {
+                    ensureDraftAiShell();
+                    const hasManual = (state.draft.ai.social.captions || []).some((c) => (c.text || '').trim())
+                        || ($('#pcsWhatsappText')?.value || '').trim()
+                        || ($('#pcsTelegramText')?.value || '').trim();
+                    if (hasManual && !window.confirm('متن‌های شبکه‌های اجتماعی جایگزین شوند؟')) {
+                        return;
+                    }
+                } catch (err) {
+                    toast(err.message || 'خطا');
+                    return;
+                }
                 await runAiAction(async () => {
                     try {
-                        ensureDraftAiShell();
                         const data = await aiPost('social');
                         const d = data.data || {};
-                        const hasManual = (state.draft.ai.social.captions || []).some((c) => (c.text || '').trim())
-                            || ($('#pcsWhatsappText')?.value || '').trim()
-                            || ($('#pcsTelegramText')?.value || '').trim();
-                        if (hasManual && !window.confirm('متن‌های شبکه‌های اجتماعی جایگزین شوند؟')) {
-                            return;
-                        }
                         state.draft.ai.social.captions = d.captions || [];
                         state.draft.ai.social.hashtags = d.hashtags || [];
                         state.draft.ai.social.whatsapp_short = d.whatsapp_short || '';
@@ -7765,7 +7808,10 @@
                     } catch (err) {
                         toast(err.message || 'خطای AI');
                     }
-                }, [socialBtn]);
+                }, [socialBtn], [{
+                    el: $('#pcsSocialCaptions'),
+                    message: 'در حال تولید کپشن و پیام شبکه‌ها…',
+                }]);
             }
         });
     }
@@ -7803,9 +7849,9 @@
         }, true);
         $$('[data-pcs-close]').forEach((el) => el.addEventListener('click', closeModal));
         $$('[data-pcs-lightbox-close]').forEach((el) => el.addEventListener('click', closePreview));
-        $('#pcsLightboxDownload')?.addEventListener('click', () => {
+        $('#pcsLightboxDownload')?.addEventListener('click', (e) => {
             const tpl = state.previewTemplate;
-            if (tpl) downloadPoster(tpl);
+            if (tpl) runPosterDownload(tpl, e.currentTarget);
         });
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'Escape') return;
@@ -7815,10 +7861,6 @@
             }
             if (!$('#pcsLightbox')?.hasAttribute('hidden')) {
                 closePreview();
-                return;
-            }
-            if (!$('#pcsPublishSheet')?.hasAttribute('hidden')) {
-                closePublishSheet();
                 return;
             }
             if (!$('#pcsSettingsSheet')?.hasAttribute('hidden')) {
@@ -7836,14 +7878,6 @@
             navigator.clipboard.writeText(`${title}\n\n${body}`.trim());
             toast('عنوان و متن کپی شد');
         });
-        $('#pcsFooterPublish')?.addEventListener('click', () => openPublishSheet());
-        $$('[data-pcs-publish-close]').forEach((el) => el.addEventListener('click', closePublishSheet));
-        $('#pcsPublishCreateLink')?.addEventListener('click', () => { createPublicShareLink(); });
-        $('#pcsPublishSheet')?.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-pcs-publish]');
-            if (!btn) return;
-            runPublishAction(btn.getAttribute('data-pcs-publish'));
-        });
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.pcs-save-brand')) return;
             e.preventDefault();
@@ -7853,13 +7887,12 @@
             const dl = e.target.closest('[data-pcs-dl]');
             const ed = e.target.closest('[data-pcs-edit]');
             const pr = e.target.closest('[data-pcs-preview]');
-            if (dl) downloadPoster(dl.getAttribute('data-pcs-dl'));
+            if (dl) runPosterDownload(dl.getAttribute('data-pcs-dl'), dl);
             if (ed) openEditor(ed.getAttribute('data-pcs-edit'));
             if (pr) openPreview(pr.getAttribute('data-pcs-preview'));
         });
         $('#pcsOpenSettings')?.addEventListener('click', openSettingsSheet);
         $('#pcsOpenSettingsHead')?.addEventListener('click', openSettingsSheet);
-        $('#pcsFooterSettings')?.addEventListener('click', openSettingsSheet);
         $$('[data-pcs-settings-close]').forEach((el) => el.addEventListener('click', closeSettingsSheet));
         $('#pcsEditorClose')?.addEventListener('click', () => closeEditor());
         $('#pcsEditorBack')?.addEventListener('click', () => closeEditor());
@@ -7871,11 +7904,18 @@
             const wasStory = !!state.editorStorySlideId;
             if (btn) btn.disabled = true;
             try {
+                syncLayerEditorToBuffer();
                 commitEditorToDraft(tpl);
                 const saved = await saveDraft();
                 if (!saved) {
                     toast('ذخیره روی سرور ناموفق بود — دوباره تلاش کنید');
                     return;
+                }
+                const persisted = state.draft?.posters?.[tpl]
+                    || (state.editorStorySlideId ? findStorySlide(state.editorStorySlideId)?.poster : null);
+                if (persisted) {
+                    state.editorSnapshot = JSON.stringify(persisted);
+                    state.editorDirty = false;
                 }
                 renderPosters();
                 renderStoryboard();
@@ -7885,12 +7925,12 @@
                 if (btn) btn.disabled = false;
             }
         });
-        $('#pcsEditorDownload')?.addEventListener('click', async () => {
+        $('#pcsEditorDownload')?.addEventListener('click', async (e) => {
             const tpl = state.editorTemplate;
             if (!tpl) return;
             updateEditorBufferFromForm(tpl);
             syncLayerEditorToBuffer();
-            await downloadPoster(tpl);
+            await runPosterDownload(tpl, e.currentTarget);
         });
         $('#pcsEditorReset')?.addEventListener('click', () => {
             const tpl = state.editorTemplate;
@@ -7925,7 +7965,6 @@
                 if ($('#pcsModal')?.hasAttribute('hidden')) return;
                 syncViewportMode();
                 rescaleAllPreviews();
-                syncFooterForTab(state.draft?.active_tab || 'posters');
                 const lbBox = $('#pcsLightboxPreview');
                 if (lbBox && !$('#pcsLightbox')?.hasAttribute('hidden')) {
                     scalePreviewCanvas(lbBox, state.format);

@@ -5,14 +5,6 @@ from typing import Any, Dict, List, Optional
 
 from workspace.models import CRMProperty
 from workspace.services.formatting import format_area
-from workspace.services.property_content_studio.adapter import (
-    _amenity_chips,
-    _build_year_label,
-    _floor_label,
-    _location_line,
-    _price_display,
-    _rooms_label,
-)
 from workspace.services.property_content_studio.constants import DEFAULT_VISIBILITY
 from workspace.services.property_features import (
     FIELDS,
@@ -82,6 +74,16 @@ def build_editor_feature_catalog(
     visibility: Optional[Dict[str, bool]] = None,
 ) -> List[Dict[str, Any]]:
     """فهرست فیلدهای ملک برای پنل ویژگی‌های ویرایشگر."""
+    # import تنبل — adapter در زمان بارگذاری ماژول feature_catalog را import می‌کند
+    from workspace.services.property_content_studio.adapter import (
+        _amenity_chips,
+        _build_year_label,
+        _floor_label,
+        _location_line,
+        _price_display,
+        _rooms_label,
+    )
+
     vis = dict(DEFAULT_VISIBILITY)
     if isinstance(visibility, dict):
         for key in vis:

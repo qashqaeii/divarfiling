@@ -32,6 +32,8 @@
         };
     }
 
+    const _FORMAT_IDS = new Set(['story', 'post', 'square']);
+
     function emptyScene(templateId, formatKey, formats) {
         return {
             schemaVersion: SCENE_SCHEMA_VERSION,
@@ -137,8 +139,6 @@
             migratedAt: raw.migratedAt || null,
         };
     }
-
-    const _FORMAT_IDS = new Set(['story', 'post', 'square']);
 
     function layerById(scene, id) {
         return (scene?.layers || []).find((l) => l.id === id) || null;

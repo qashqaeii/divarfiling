@@ -4831,6 +4831,9 @@
     function commitEditorToDraft(tpl) {
         if (!state.draft || !tpl) return;
         updateEditorBufferFromForm(tpl);
+        if (window.PCSLayerEditor?.isActive?.()) {
+            window.PCSLayerEditor.commitToBuffer(state.editorBuffer);
+        }
         if (state.editorStorySlideId) {
             const slide = findStorySlide(state.editorStorySlideId);
             if (slide) {
@@ -4848,6 +4851,7 @@
     }
 
     function clearEditorSession() {
+        window.PCSLayerEditor?.stop?.();
         state.editorBuffer = null;
         state.editorTemplate = null;
         state.editorStorySlideId = null;
@@ -5254,6 +5258,16 @@
     function refreshEditorPreview(tpl) {
         const activeTpl = tpl || state.editorTemplate;
         if (!activeTpl) return;
+        if (window.PCSLayerEditor?.isActive?.()) {
+            try {
+                updateEditorBufferFromForm(activeTpl);
+                window.PCSLayerEditor.refreshFromLegacyControls(state.editorBuffer);
+                syncEditorDirtyFlag();
+            } catch (err) {
+                console.error('pcs refreshEditorPreview (layer)', err);
+            }
+            return;
+        }
         let conf = null;
         try {
             updateEditorBufferFromForm(activeTpl);
@@ -5799,7 +5813,26 @@
         $('#pcsLoading')?.setAttribute('hidden', '');
         $('#pcsModal')?.classList.add('pcs-modal--editor');
         setEditorMobPane('preview');
-        refreshEditorPreview(tpl);
+        if (window.PCSLayerEditor) {
+            const overlayUrl = cfg.templateMeta?.[tpl]?.overlay || '';
+            window.PCSLayerEditor.start({
+                templateId: tpl,
+                formatKey: state.format,
+                posterConf: state.editorBuffer,
+                formats: {
+                    story: { width: 1080, height: 1920 },
+                    post: { width: 1080, height: 1350 },
+                    square: { width: 1080, height: 1080 },
+                },
+                property: visibleData().property,
+                images: propertyImageList(),
+                features: state.session?.property?.editor_features || [],
+                overlayUrl,
+                onDirty: () => syncEditorDirtyFlag(),
+            });
+        } else {
+            refreshEditorPreview(tpl);
+        }
     }
 
     function syncCropPresetActive(val) {
@@ -6250,4 +6283,12 @@
     } else {
         bootPcs();
     }
+
+    window.PCSBridge = {
+        esc,
+        PCS_FONTS,
+        buildCanvasHtml,
+        syncCanvasTypography,
+        scheduleEditorPreviewScale,
+    };
 })();

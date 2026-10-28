@@ -62,11 +62,16 @@ DIVAR_BODY_STYLE_GUIDES: dict[str, dict[str, str]] = {
     },
 }
 
+DEFAULT_POSTER_TEMPLATE = 'pearlescent'
+
+RETIRED_POSTER_TEMPLATE_IDS = frozenset({
+    'luxury',
+    'minimal',
+    'gallery',
+    'bold',
+})
+
 POSTER_TEMPLATES = (
-    {'id': 'luxury', 'label': 'لوکس', 'description': 'تصویر برجسته با گرادینت و تایپوگرافی شیک'},
-    {'id': 'minimal', 'label': 'مینیمال', 'description': 'پس‌زمینه روشن و چیدمان متعادل'},
-    {'id': 'gallery', 'label': 'چندتصویری', 'description': 'کلاژ از تصاویر واقعی ملک'},
-    {'id': 'bold', 'label': 'تبلیغاتی', 'description': 'عنوان و قیمت برجسته برای شبکه‌های اجتماعی'},
     {
         'id': 'pearlescent',
         'label': 'قاب استوری',
@@ -105,6 +110,8 @@ POSTER_TEMPLATES = (
     },
 )
 
+ALL_POSTER_TEMPLATE_IDS = frozenset(t['id'] for t in POSTER_TEMPLATES) | RETIRED_POSTER_TEMPLATE_IDS
+
 OUTPUT_FORMATS = {
     'story': {'label': 'استوری', 'width': 1080, 'height': 1920, 'aspect': '9/16'},
     'post': {'label': 'پست', 'width': 1080, 'height': 1350, 'aspect': '4/5'},
@@ -134,20 +141,20 @@ DRAFT_VERSION = 1
 # هویت پیش‌فرض هر اسلاید استوری‌برد (قالب + نام نمایشی + تنظیمات پوستر)
 STORY_SLIDE_IDENTITIES: dict[str, dict] = {
     'cover': {
-        'template_id': 'luxury',
-        'label': 'لوکس',
+        'template_id': 'pearlescent',
+        'label': 'قاب استوری',
         'poster': {
             'font_key': 'gulzar',
-            'headline_scale': 140,
-            'price_scale': 140,
-            'img_brightness': 115,
+            'headline_scale': 130,
+            'price_scale': 130,
+            'img_brightness': 108,
             'img_blur': 0,
             'img_opacity': 100,
         },
     },
     'specs': {
-        'template_id': 'minimal',
-        'label': 'مینیمال',
+        'template_id': 'sculpted_travertine',
+        'label': 'تراورتن',
         'poster': {
             'font_key': 'vazirmatn',
             'headline_scale': 100,
@@ -158,8 +165,8 @@ STORY_SLIDE_IDENTITIES: dict[str, dict] = {
         },
     },
     'gallery_price': {
-        'template_id': 'gallery',
-        'label': 'گالری',
+        'template_id': 'pearl_gallery',
+        'label': 'گالری مروارید',
         'poster': {
             'font_key': 'vazirmatn',
             'headline_scale': 100,
@@ -206,11 +213,11 @@ STORY_SLIDE_IDENTITIES: dict[str, dict] = {
         },
     },
     'contact': {
-        'template_id': 'bold',
-        'label': 'دعوت',
+        'template_id': 'pearlescent_ribbon',
+        'label': 'ریبون',
         'poster': {
             'font_key': 'estedad',
-            'headline_scale': 115,
+            'headline_scale': 110,
             'price_scale': 100,
             'img_brightness': 100,
             'img_blur': 0,

@@ -254,10 +254,10 @@ class PropertyContentStudioAPITests(TestCase):
         prop_payload = build_studio_property_payload(self.prop)
         storyboard = build_default_storyboard(self.prop, prop_payload)
         cover = next(s for s in storyboard['slides'] if s['id'] == 'cover')
-        self.assertEqual(cover.get('template_id'), 'luxury')
-        self.assertEqual(cover.get('label'), 'لوکس')
+        self.assertEqual(cover.get('template_id'), 'pearlescent')
+        self.assertEqual(cover.get('label'), 'قاب استوری')
         self.assertEqual(cover.get('poster', {}).get('font_key'), 'gulzar')
-        self.assertEqual(cover.get('poster', {}).get('headline_scale'), 140)
+        self.assertEqual(cover.get('poster', {}).get('headline_scale'), 130)
         for slide in storyboard['slides']:
             if slide['id'] == 'contact':
                 slide['cta'] = 'CTA دستی'

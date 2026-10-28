@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from workspace.models import CRMProperty
+from workspace.services.property_content_studio.constants import DEFAULT_POSTER_TEMPLATE
 from workspace.services.property_content_studio.brand import default_brand_from_user
 
 
@@ -55,13 +56,15 @@ def build_quality_report(prop: CRMProperty, user) -> Dict[str, Any]:
 
     ok_count = sum(1 for i in items if i['status'] == 'ok')
     score = round(100 * ok_count / max(len(items), 1))
-    suggested_template = 'minimal'
+    suggested_template = DEFAULT_POSTER_TEMPLATE
     if len(images) >= 3:
-        suggested_template = 'gallery'
+        suggested_template = 'sculptural'
+    elif len(images) >= 2:
+        suggested_template = 'pearl_gallery'
     elif prop.sale_price and prop.sale_price >= 10_000_000_000:
-        suggested_template = 'luxury'
+        suggested_template = 'pearlescent_ribbon'
     elif not images:
-        suggested_template = 'minimal'
+        suggested_template = 'pearlescent'
 
     return {
         'items': items,

@@ -32,13 +32,39 @@
         };
     }
 
+    /** Resize document canvas to output format; scale layer geometry proportionally. */
+    function applySceneCanvasFormat(scene, formatKey, formats) {
+        if (!scene) return scene;
+        const target = canvasForFormat(formatKey, formats);
+        const oldW = scene.canvas?.width || target.width;
+        const oldH = scene.canvas?.height || target.height;
+        if (oldW === target.width && oldH === target.height && scene.canvas?.format === formatKey) {
+            if (scene.canvas) scene.canvas.format = formatKey;
+            return scene;
+        }
+        const sx = target.width / oldW;
+        const sy = target.height / oldH;
+        (scene.layers || []).forEach((layer) => {
+            layer.x = Math.round(layer.x * sx);
+            layer.y = Math.round(layer.y * sy);
+            layer.width = Math.max(24, Math.round(layer.width * sx));
+            layer.height = Math.max(24, Math.round(layer.height * sy));
+        });
+        scene.canvas = {
+            width: target.width,
+            height: target.height,
+            format: formatKey || target.format,
+        };
+        return scene;
+    }
+
     const _FORMAT_IDS = new Set(['story', 'post', 'square']);
 
     function emptyScene(templateId, formatKey, formats) {
         return {
             schemaVersion: SCENE_SCHEMA_VERSION,
             canvas: canvasForFormat(formatKey, formats),
-            templateId: templateId || 'luxury',
+            templateId: templateId || 'pearlescent',
             renderMode: 'layers',
             layers: [],
             layerOrder: [],
@@ -60,10 +86,12 @@
         if (raw.fontKey) out.fontKey = String(raw.fontKey).slice(0, 24);
         if (raw.fontSize != null) out.fontSize = clamp(finiteNum(raw.fontSize, 32), 8, 200);
         if (raw.fontWeight != null) out.fontWeight = clamp(finiteNum(raw.fontWeight, 700), 400, 900);
-        if (raw.fill) out.fill = String(raw.fill).slice(0, 16);
+        if (raw.fill) out.fill = String(raw.fill).slice(0, 48);
         if (raw.align) out.align = ['left', 'center', 'right'].includes(raw.align) ? raw.align : 'right';
         if (raw.direction) out.direction = raw.direction === 'ltr' ? 'ltr' : 'rtl';
         if (raw.lineHeight != null) out.lineHeight = clamp(finiteNum(raw.lineHeight, 1.35), 0.8, 3);
+        if (raw.fontStyle === 'italic') out.fontStyle = 'italic';
+        if (raw.textDecoration === 'underline') out.textDecoration = 'underline';
         if (raw.background) out.background = String(raw.background).slice(0, 32);
         if (raw.borderRadius != null) out.borderRadius = clamp(finiteNum(raw.borderRadius, 0), 0, 999);
         if (raw.opacity != null) out.opacity = clamp(finiteNum(raw.opacity, 1), 0, 1);
@@ -72,6 +100,11 @@
         if (raw.cropPanX != null) out.cropPanX = clamp(finiteNum(raw.cropPanX, 50), 0, 100);
         if (raw.cropPanY != null) out.cropPanY = clamp(finiteNum(raw.cropPanY, 50), 0, 100);
         if (raw.cropZoom != null) out.cropZoom = clamp(finiteNum(raw.cropZoom, 1), 0.5, 3);
+        if (raw.brightness != null) out.brightness = clamp(finiteNum(raw.brightness, 100), 40, 160);
+        if (raw.blur != null) out.blur = clamp(finiteNum(raw.blur, 0), 0, 12);
+        if (raw.imgOpacity != null) out.imgOpacity = clamp(finiteNum(raw.imgOpacity, 100), 35, 100);
+        if (raw.warmth === 'warm' || raw.warmth === 'cool' || raw.warmth === 'neutral') out.warmth = raw.warmth;
+        if (raw.vignette != null) out.vignette = clamp(finiteNum(raw.vignette, 0), 0, 80);
         return out;
     }
 
@@ -102,6 +135,14 @@
         if (raw.imageIndex != null) layer.imageIndex = clamp(finiteNum(raw.imageIndex, 0), 0, 64);
         if (raw.templateRole) layer.templateRole = String(raw.templateRole).slice(0, 32);
         if (raw.hiddenLegacy) layer.hiddenLegacy = !!raw.hiddenLegacy;
+        ['x', 'y', 'width', 'height', 'rotation', 'opacity'].forEach((k) => {
+            if (!Number.isFinite(layer[k])) {
+                if (k === 'width') layer[k] = 200;
+                else if (k === 'height') layer[k] = 48;
+                else if (k === 'opacity') layer[k] = 1;
+                else layer[k] = 0;
+            }
+        });
         return layer;
     }
 
@@ -132,11 +173,12 @@
         return {
             schemaVersion: SCENE_SCHEMA_VERSION,
             canvas,
-            templateId: String(raw.templateId || templateId || 'luxury').slice(0, 32),
+            templateId: String(raw.templateId || templateId || 'pearlescent').slice(0, 32),
             renderMode: raw.renderMode === 'legacy' ? 'legacy' : 'layers',
             layers,
             layerOrder: order.slice(0, MAX_LAYERS),
             migratedAt: raw.migratedAt || null,
+            templateBuild: raw.templateBuild != null ? raw.templateBuild : null,
         };
     }
 
@@ -154,22 +196,24 @@
      */
     function textLayoutToLayerBox(layoutEntry, metrics) {
         if (!metrics) return { x: 40, y: 40, width: 400, height: 80 };
+        const baseX = finiteNum(metrics.left, finiteNum(metrics.x, 0));
+        const baseY = finiteNum(metrics.top, finiteNum(metrics.y, 0));
         const lx = finiteNum(layoutEntry?.x, 0);
         const ly = finiteNum(layoutEntry?.y, 0);
-        const elW = metrics.width || 400;
-        const elH = metrics.height || 60;
+        const elW = finiteNum(metrics.width, 400);
+        const elH = finiteNum(metrics.height, 60);
         const dx = (lx / 100) * elW;
         const dy = (ly / 100) * elH;
         return {
-            x: metrics.left + dx,
-            y: metrics.top + dy,
+            x: baseX + dx,
+            y: baseY + dy,
             width: elW,
             height: elH,
         };
     }
 
     function posterConfigToScene(conf, ctx) {
-        const templateId = ctx.templateId || 'luxury';
+        const templateId = ctx.templateId || 'pearlescent';
         const formatKey = ctx.formatKey || 'story';
         const formats = ctx.formats || {};
         if (conf?.scene && conf.scene.schemaVersion >= 2) {
@@ -202,5 +246,6 @@
         sceneToPosterPatch,
         textLayoutToLayerBox,
         canvasForFormat,
+        applySceneCanvasFormat,
     };
 }(typeof window !== 'undefined' ? window : globalThis));

@@ -1,5 +1,5 @@
 /**
- * Undo/redo for scene documents (per editor session).
+ * Undo/redo — past holds snapshots *before* each committed change.
  */
 (function (global) {
     'use strict';
@@ -10,6 +10,7 @@
             future: [],
             max: maxDepth || 60,
             mergeKey: null,
+            lastSnap: null,
         };
     }
 
@@ -17,17 +18,21 @@
         return JSON.stringify(scene);
     }
 
-    function pushHistory(hist, scene, mergeKey) {
+    /** Call at start of a gesture or before discrete edit; stores current state once. */
+    function checkpoint(hist, scene, mergeKey) {
         if (!hist) return;
         const snap = snapshot(scene);
-        if (hist.mergeKey && mergeKey && hist.mergeKey === mergeKey && hist.past.length) {
-            hist.past[hist.past.length - 1] = snap;
-        } else {
-            hist.past.push(snap);
-            if (hist.past.length > hist.max) hist.past.shift();
-        }
+        if (hist.mergeKey && mergeKey && hist.mergeKey === mergeKey) return;
+        if (hist.lastSnap === snap) return;
+        hist.past.push(snap);
+        if (hist.past.length > hist.max) hist.past.shift();
         hist.future = [];
         hist.mergeKey = mergeKey || null;
+        hist.lastSnap = snap;
+    }
+
+    function pushHistory(hist, scene, mergeKey) {
+        checkpoint(hist, scene, mergeKey);
     }
 
     function endMerge(hist) {
@@ -38,6 +43,8 @@
         if (!hist?.past.length) return null;
         hist.future.push(snapshot(currentScene));
         const prev = hist.past.pop();
+        hist.lastSnap = prev;
+        hist.mergeKey = null;
         return JSON.parse(prev);
     }
 
@@ -45,11 +52,14 @@
         if (!hist?.future.length) return null;
         hist.past.push(snapshot(currentScene));
         const next = hist.future.pop();
+        hist.lastSnap = next;
+        hist.mergeKey = null;
         return JSON.parse(next);
     }
 
     global.PCSHistory = {
         createHistory,
+        checkpoint,
         pushHistory,
         endMerge,
         undo,

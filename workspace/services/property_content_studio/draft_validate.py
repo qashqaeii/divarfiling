@@ -7,6 +7,8 @@ import math
 from typing import Any, Dict, List, Optional, Tuple
 
 from workspace.services.property_content_studio.constants import (
+    ALL_POSTER_TEMPLATE_IDS,
+    DEFAULT_POSTER_TEMPLATE,
     DRAFT_VERSION,
     OUTPUT_FORMATS,
     POSTER_TEMPLATES,
@@ -22,7 +24,8 @@ _ALLOWED_TOP_KEYS = frozenset({
     'version', 'active_tab', 'format', 'brand_override', 'posters', 'storyboard', 'ai', 'editor',
 })
 _ALLOWED_TABS = frozenset({'posters', 'divar', 'social', 'share'})
-_TEMPLATE_IDS = frozenset(t['id'] for t in POSTER_TEMPLATES)
+_TEMPLATE_IDS = ALL_POSTER_TEMPLATE_IDS
+_ACTIVE_TEMPLATE_IDS = frozenset(t['id'] for t in POSTER_TEMPLATES)
 _FORMAT_IDS = frozenset(OUTPUT_FORMATS.keys())
 _PIP_CORNERS = frozenset({'br', 'bl', 'tr', 'tl'})
 _PIP_SIZES = frozenset({'s', 'm', 'l'})
@@ -176,7 +179,7 @@ def _validate_and_normalize_scene(raw: Any, template_id: str) -> Dict[str, Any]:
 
     schema_version = _clip_int(raw.get('schemaVersion'), 1, 3, 2)
 
-    default_fmt = _clip_str(template_id, 20) or 'luxury'
+    default_fmt = _clip_str(template_id, 20) or DEFAULT_POSTER_TEMPLATE
     base_canvas = OUTPUT_FORMATS.get('story', {'width': 1080, 'height': 1920})
     canvas_in = raw.get('canvas')
     if canvas_in is not None and not isinstance(canvas_in, dict):
@@ -206,9 +209,9 @@ def _validate_and_normalize_scene(raw: Any, template_id: str) -> Dict[str, Any]:
             'format': 'story',
         }
 
-    tpl = _clip_str(raw.get('templateId') or template_id or 'luxury', 32) or 'luxury'
+    tpl = _clip_str(raw.get('templateId') or template_id or DEFAULT_POSTER_TEMPLATE, 32) or DEFAULT_POSTER_TEMPLATE
     if tpl not in _TEMPLATE_IDS:
-        tpl = 'luxury'
+        tpl = DEFAULT_POSTER_TEMPLATE
 
     layers_in = raw.get('layers')
     if layers_in is None:
@@ -254,7 +257,9 @@ def _validate_and_normalize_scene(raw: Any, template_id: str) -> Dict[str, Any]:
         if 'text' in item:
             layer['text'] = _clip_str(item.get('text'), 2000)
         if item.get('assetRef'):
-            layer['assetRef'] = _clip_str(item.get('assetRef'), 64)
+            ar = _clip_str(item.get('assetRef'), 80)
+            if ar.startswith('tpl:') or ar.startswith('/'):
+                layer['assetRef'] = ar
         if 'imageIndex' in item:
             layer['imageIndex'] = max(0, _clip_int(item.get('imageIndex'), 0, 64, 0))
         if item.get('templateRole'):
@@ -439,8 +444,11 @@ def _normalize_slide(raw: Any) -> Optional[Dict[str, Any]]:
     if 'label' in raw:
         slide['label'] = _clip_str(raw.get('label'), 40)
     if 'poster' in raw and isinstance(raw.get('poster'), dict):
-        tpl = slide.get('template_id') or 'luxury'
-        slide['poster'] = _normalize_poster_config(raw.get('poster'), tpl if tpl in _TEMPLATE_IDS else 'luxury')
+        tpl = slide.get('template_id') or DEFAULT_POSTER_TEMPLATE
+        slide['poster'] = _normalize_poster_config(
+            raw.get('poster'),
+            tpl if tpl in _TEMPLATE_IDS else DEFAULT_POSTER_TEMPLATE,
+        )
     return slide
 
 
@@ -594,7 +602,11 @@ def validate_and_merge_draft(
         if isinstance(ed, dict):
             merged['editor'] = {
                 'open': bool(ed.get('open')),
-                'template_id': _clip_str(ed.get('template_id'), 20) or 'luxury',
+                'template_id': (
+                    _clip_str(ed.get('template_id'), 20)
+                    if _clip_str(ed.get('template_id'), 20) in _ACTIVE_TEMPLATE_IDS
+                    else DEFAULT_POSTER_TEMPLATE
+                ),
             }
 
     merged['version'] = DRAFT_VERSION

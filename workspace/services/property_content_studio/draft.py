@@ -39,7 +39,7 @@ def empty_draft_payload() -> Dict[str, Any]:
                 'ctas': [],
             },
         },
-        'editor': {'open': False, 'template_id': 'luxury'},
+        'editor': {'open': False, 'template_id': 'pearlescent'},
     }
 
 

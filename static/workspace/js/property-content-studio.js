@@ -7,25 +7,28 @@
     const cfg = window.PCS_CONFIG || {};
     if (!cfg.propertyId) return;
 
+    /** PCS modules attach to globalThis/window — not Node's `global`. */
+    const g = typeof globalThis !== 'undefined' ? globalThis : window;
+
     const FORMATS = {
         story: { w: 1080, h: 1920, cls: '' },
         post: { w: 1080, h: 1350, cls: 'pcs-canvas--post' },
         square: { w: 1080, h: 1080, cls: 'pcs-canvas--square' },
     };
-    const CORE_POSTER_TEMPLATES = ['luxury', 'minimal', 'gallery', 'bold'];
+    const DEFAULT_POSTER_TEMPLATE = 'pearlescent';
     const OVERLAY_POSTER_TEMPLATES = ['pearlescent', 'pearlescent_ribbon', 'sculpted_travertine', 'sculptural', 'emerald_atelier', 'pearl_gallery'];
-    const TEMPLATES = [...CORE_POSTER_TEMPLATES, ...OVERLAY_POSTER_TEMPLATES];
+    const TEMPLATES = [...OVERLAY_POSTER_TEMPLATES];
     const TEMPLATE_META = {
-        luxury: { label: 'لوکس', icon: 'fa-gem' },
-        minimal: { label: 'مدرن', icon: 'fa-building' },
-        gallery: { label: 'کلاژ', icon: 'fa-shapes' },
-        bold: { label: 'کمپین', icon: 'fa-bolt' },
         pearlescent: { label: 'قاب استوری', icon: 'fa-layer-group' },
         pearlescent_ribbon: { label: 'ریبون مروارید', icon: 'fa-ribbon' },
         sculpted_travertine: { label: 'تراورتن طلایی', icon: 'fa-archway' },
         sculptural: { label: 'قاب عاج', icon: 'fa-palette' },
         emerald_atelier: { label: 'قاب زمرد', icon: 'fa-building-columns' },
         pearl_gallery: { label: 'گالری مروارید', icon: 'fa-gem' },
+        luxury: { label: 'لوکس (قدیمی)', icon: 'fa-gem' },
+        minimal: { label: 'مینیمال (قدیمی)', icon: 'fa-building' },
+        gallery: { label: 'چندتصویری (قدیمی)', icon: 'fa-shapes' },
+        bold: { label: 'تبلیغاتی (قدیمی)', icon: 'fa-bolt' },
     };
     const FORMAT_META = {
         story: { label: 'استوری', sub: '1080×1920', icon: 'fa-mobile-screen' },
@@ -525,7 +528,15 @@
         root.style.direction = 'rtl';
         const targets = canvas ? [canvas, ...canvas.querySelectorAll('*')] : [root, ...root.querySelectorAll('*')];
         targets.forEach((node) => {
-            if (node.style) node.style.fontFamily = family;
+            if (!node.style) return;
+            // Scene text layers set font per layer on data-pcs-text-inner — do not overwrite.
+            if (node.hasAttribute?.('data-pcs-text-inner')) return;
+            if (node.hasAttribute?.('data-pcs-layer-id')
+                && (node.getAttribute('data-pcs-layer-type') === 'text'
+                    || node.querySelector?.('[data-pcs-text-inner]'))) {
+                return;
+            }
+            node.style.fontFamily = family;
         });
     }
 
@@ -638,7 +649,12 @@
     function mergeBrand() {
         const base = state.session?.brand_effective || state.session?.brand || {};
         const ov = state.draft?.brand_override || {};
-        const out = JSON.parse(JSON.stringify(base));
+        let out;
+        try {
+            out = JSON.parse(JSON.stringify(base));
+        } catch (_) {
+            out = { ...(base || {}) };
+        }
         ['brand_name', 'consultant_name', 'contact_phone', 'instagram', 'logo_url'].forEach((k) => {
             if (ov[k]) out[k] = ov[k];
         });
@@ -658,7 +674,7 @@
 
     function usesLuxuryStoryIdentity(tpl, formatKey) {
         const fmt = formatKey || state.format;
-        return fmt === 'story' && tpl === 'luxury' && !!storySlideCatalogRef('cover').poster;
+        return fmt === 'story' && tpl === 'pearlescent' && !!storySlideCatalogRef('cover').poster;
     }
 
     function posterDisplayLabel(tpl, formatKey) {
@@ -808,8 +824,8 @@
         return normalizePosterConfig(raw, imgs);
     }
 
+    /** تنظیمات پوستر از draft — editorBuffer فقط در مسیر ویرایشگر (نه گرید/دانلود). */
     function posterConfig(tpl) {
-        if (state.editorBuffer && state.editorTemplate === tpl) return state.editorBuffer;
         return posterConfigFromDraft(tpl);
     }
 
@@ -865,7 +881,7 @@
 
     function posterGridTemplates() {
         const imgs = propertyImageList();
-        const list = [...CORE_POSTER_TEMPLATES, 'pearlescent', 'pearlescent_ribbon', 'sculpted_travertine'];
+        const list = ['pearlescent', 'pearlescent_ribbon', 'sculpted_travertine'];
         if (imgs.length >= 2) list.push('emerald_atelier', 'pearl_gallery');
         if (imgs.length > 3) list.push('sculptural');
         return list;
@@ -879,7 +895,7 @@
         const imgs = propertyImageList();
         const conf = confOverride
             ? normalizePosterConfig(confOverride, imgs)
-            : posterConfig(tpl || 'luxury');
+            : posterConfig(tpl || DEFAULT_POSTER_TEMPLATE);
         const order = (conf.image_order && conf.image_order.length) ? conf.image_order : imgs.map((_, i) => i);
         return order.filter((i) => i >= 0 && i < imgs.length).map((i) => imgs[i]);
     }
@@ -3179,6 +3195,104 @@
         return `<div class="pcs-canvas ${fmt.cls}" data-pcs-canvas data-template="${templateId}" data-font-key="${esc(conf.font_key || 'vazirmatn')}" style="width:${fmt.w}px;height:${fmt.h}px;--pcs-scale:1;${pcsTextStyle('', conf)}">${inner}</div>`;
     }
 
+    function editorFeaturesForVisibleProperty() {
+        const vis = mergeBrand().visibility || {};
+        const b = mergeBrand();
+        const raw = state.session?.property?.editor_features;
+        const list = Array.isArray(raw) ? raw : [];
+        const p = visibleData().property || {};
+        const mapped = list.map((f) => {
+            const vk = f.visibilityKey || '';
+            let value = String(f.value || '');
+            if (vk && vis[vk] === false) value = '';
+            if (f.key === 'price' && !p.price?.show) value = '';
+            if (f.key === 'location_line' && vis.neighborhood === false) value = String(p.city || '');
+            if (f.key === 'area_label' && vis.area === false) value = '';
+            if (f.key === 'rooms_label' && vis.bedrooms === false) value = '';
+            if (f.key === 'file_code' && vis.file_code === false) value = '';
+            return { ...f, value };
+        });
+        const keys = new Set(mapped.map((f) => f.key));
+        const extras = [];
+        if (!keys.has('consultant_name') && vis.consultant_name !== false) {
+            const v = String(b.consultant_name || b.brand_name || '').trim();
+            if (v) extras.push({ key: 'consultant_name', label: 'نام مشاور', value: v, visibilityKey: 'consultant_name' });
+        }
+        if (!keys.has('contact_phone') && vis.contact_phone !== false) {
+            const v = String(b.contact_phone || '').trim();
+            if (v) extras.push({ key: 'contact_phone', label: 'شماره تماس', value: v, visibilityKey: 'contact_phone' });
+        }
+        return mapped.concat(extras);
+    }
+
+    function posterSceneFormats(formatKey) {
+        const fmt = FORMATS[formatKey] || FORMATS.story;
+        return {
+            story: { width: FORMATS.story.w, height: FORMATS.story.h },
+            post: { width: FORMATS.post.w, height: FORMATS.post.h },
+            square: { width: FORMATS.square.w, height: FORMATS.square.h },
+            [formatKey]: { width: fmt.w, height: fmt.h },
+        };
+    }
+
+    /** scene کالیبره با قاب PNG — فقط برای رندر پیش‌نمایش (بدون ذخیره در draft). */
+    function ensurePosterSceneForRender(conf, templateId, formatKey) {
+        if (!OVERLAY_POSTER_TEMPLATES.includes(templateId)) return conf;
+        if (!g.PCSTemplateScenes?.resolveSceneForPreview || !g.PCSSchema) return conf;
+        const ctx = buildPosterRenderContext(templateId);
+        ctx.templateId = templateId;
+        ctx.formatKey = formatKey || state.format || 'story';
+        ctx.formats = posterSceneFormats(ctx.formatKey);
+        ctx.posterConf = conf;
+        const scene = g.PCSTemplateScenes.resolveSceneForPreview(conf, ctx);
+        if (!scene) return conf;
+        return { ...conf, scene };
+    }
+
+    function buildPosterRenderContext(templateId) {
+        const features = editorFeaturesForVisibleProperty();
+        const brand = mergeBrand();
+        return {
+            templateId,
+            formatKey: state.format,
+            property: visibleData().property,
+            images: propertyImageList(),
+            features,
+            catalogByKey: g.PCSBindings ? g.PCSBindings.catalogMap(features) : {},
+            overlayUrl: cfg.templateMeta?.[templateId]?.overlay || '',
+            brand,
+            formats: posterSceneFormats(state.format),
+        };
+    }
+
+    function renderPosterHtml(templateId, formatKey, confOverride) {
+        const imgs = propertyImageList();
+        const fmtKey = formatKey || state.format || 'story';
+        let conf = confOverride
+            ? normalizePosterConfig(confOverride, imgs)
+            : posterConfig(templateId);
+        conf = ensurePosterSceneForRender(conf, templateId, fmtKey);
+        const ctx = buildPosterRenderContext(templateId);
+        ctx.formatKey = fmtKey;
+        ctx.formats = posterSceneFormats(fmtKey);
+        ctx.posterConf = conf;
+        const sceneReady = g.PCSBindings && g.PCSAssets && g.PCSSceneRenderer;
+        if (sceneReady && g.PCSSceneRenderer.usesSceneDocument(conf.scene)) {
+            try {
+                if (g.PCSTemplateScenes?.normalizeSceneLayerOrder) {
+                    g.PCSTemplateScenes.normalizeSceneLayerOrder(conf.scene);
+                }
+                return g.PCSSceneRenderer.renderPosterHtml(templateId, fmtKey, conf, ctx);
+            } catch (err) {
+                console.error('PCS scene render fallback', templateId, err);
+            }
+        }
+        const legacyConf = confOverride
+            ? confOverride
+            : (conf.scene ? { ...posterConfigFromDraft(templateId), scene: undefined } : null);
+        return buildCanvasHtml(templateId, fmtKey, legacyConf);
+    }
+
     function isMobileViewport() {
         return window.matchMedia('(max-width: 768px)').matches;
     }
@@ -3290,6 +3404,7 @@
         state.editorPreviewViewBound = true;
 
         viewport.addEventListener('wheel', (e) => {
+            if (window.PCSLayerEditor?.isActive?.()) return;
             if (!$('#pcsEditor')?.hasAttribute('hidden')) {
                 e.preventDefault();
                 const delta = e.deltaY > 0 ? -EDITOR_PREVIEW_ZOOM_STEP : EDITOR_PREVIEW_ZOOM_STEP;
@@ -3309,6 +3424,7 @@
         };
 
         viewport.addEventListener('mousedown', (e) => {
+            if (window.PCSLayerEditor?.isActive?.()) return;
             if (e.button !== 0 || e.target.closest('button, a, input, select, textarea')) return;
             if (e.target.closest('[data-pcs-text-role], [data-pcs-text-resize]')) return;
             panning = true;
@@ -3334,6 +3450,7 @@
         let touchStartX = 0;
         let touchStartY = 0;
         viewport.addEventListener('touchstart', (e) => {
+            if (window.PCSLayerEditor?.isActive?.()) return;
             if (e.touches.length !== 1) return;
             const t = e.touches[0];
             touchId = t.identifier;
@@ -3343,6 +3460,7 @@
             panOriginY = state.editorPreviewView.panY;
         }, { passive: true });
         viewport.addEventListener('touchmove', (e) => {
+            if (window.PCSLayerEditor?.isActive?.()) return;
             const t = [...e.touches].find((x) => x.identifier === touchId);
             if (!t) return;
             state.editorPreviewView.panX = panOriginX + (t.clientX - touchStartX);
@@ -3464,7 +3582,9 @@
             wrap._pcsLastVisual = { w: visualW, h: visualH };
             updateEditorPreviewScrollSize(visualW, visualH);
             applyEditorPreviewViewTransform();
-            setupEditorTextInteraction(wrap);
+            if (!window.PCSLayerEditor?.isActive?.()) {
+                setupEditorTextInteraction(wrap);
+            }
         }
         wrap.classList.add('is-ready');
     }
@@ -3510,6 +3630,10 @@
 
     function scheduleEditorPreviewScale(wrap, formatKey) {
         if (!wrap || wrap.id !== 'pcsEditorPreview') return;
+        if (window.PCSLayerEditor?.isActive?.()) {
+            scaleLayerEditorPreview(wrap, formatKey);
+            return;
+        }
         const viewport = $('#pcsEditorPreviewViewport');
         const maxH = previewMaxHeight(formatKey, wrap) || 640;
         if (viewport) {
@@ -3529,6 +3653,63 @@
             scalePreviewCanvas(wrap, formatKey);
             wrap.classList.add('is-ready');
         }, 350);
+    }
+
+    /** Fit scene canvas inside layer-editor viewport (no legacy pan/zoom scaler side-effects). */
+    function scaleLayerEditorPreview(wrap, formatKey) {
+        if (!wrap || wrap.id !== 'pcsEditorPreview') return;
+        const viewport = $('#pcsEditorPreviewViewport');
+        const canvas = $('.pcs-canvas', wrap);
+        if (!viewport || !canvas) return;
+        const fmt = FORMATS[formatKey] || FORMATS.story;
+        const pad = 16;
+        let vw = viewport.clientWidth - pad * 2;
+        let vh = viewport.clientHeight - pad * 2;
+        if (vw < 80 || vh < 80) {
+            const rect = viewport.getBoundingClientRect();
+            vw = Math.max(80, rect.width - pad * 2);
+            vh = Math.max(120, rect.height - pad * 2);
+        }
+        let scale = Math.min(vw / fmt.w, vh / fmt.h);
+        scale = Math.max(0.06, Math.min(scale, 2.4));
+        const visualW = Math.round(fmt.w * scale);
+        const visualH = Math.round(fmt.h * scale);
+
+        viewport.style.overflow = 'auto';
+        viewport.style.display = 'flex';
+        viewport.style.alignItems = 'center';
+        viewport.style.justifyContent = 'center';
+        viewport.classList.remove('is-panning', 'is-zoomed');
+
+        wrap.style.cssText = 'margin:0;padding:8px;box-sizing:border-box;display:block;width:max-content;max-width:none;height:auto;overflow:visible;';
+
+        let scaler = wrap.querySelector('.pcs-preview-scaler');
+        if (!scaler) {
+            scaler = document.createElement('div');
+            scaler.className = 'pcs-preview-scaler pcs-preview-scaler--layer';
+            wrap.appendChild(scaler);
+        }
+        scaler.style.transform = 'none';
+        wrap.style.minWidth = '';
+        wrap.style.minHeight = '';
+        if (canvas.parentNode !== scaler) scaler.appendChild(canvas);
+
+        scaler.style.width = `${visualW}px`;
+        scaler.style.height = `${visualH}px`;
+        scaler.style.position = 'relative';
+        scaler.style.overflow = 'hidden';
+        scaler.style.flexShrink = '0';
+
+        canvas.style.width = `${fmt.w}px`;
+        canvas.style.height = `${fmt.h}px`;
+        canvas.style.transform = `scale(${scale})`;
+        canvas.style.transformOrigin = 'top left';
+        canvas.style.position = 'absolute';
+        canvas.style.left = '0';
+        canvas.style.top = '0';
+        canvas.style.margin = '0';
+
+        wrap.classList.add('is-ready', 'pcs-le-preview-scaled');
     }
 
     function bindPosterCarousel() {
@@ -3633,20 +3814,22 @@
         const grid = $('#pcsPosterGrid');
         if (!grid) return;
         grid.innerHTML = '';
+        let rendered = 0;
         posterTemplatesForSession().forEach((tpl) => {
-            const meta = resolveTemplateMeta(tpl);
-            const card = document.createElement('article');
-            card.className = `pcs-poster-card pcs-poster-card--${tpl}`;
-            const head = document.createElement('div');
-            head.className = 'pcs-poster-card__head';
-            head.innerHTML = `<span class="pcs-poster-card__badge"><i class="fas ${meta.icon}" aria-hidden="true"></i> ${esc(posterDisplayLabel(tpl, state.format))}</span>`;
-            const preview = document.createElement('div');
-            preview.className = 'pcs-poster-card__preview' + (state.format === 'post' ? ' is-post' : state.format === 'square' ? ' is-square' : '');
-            preview.innerHTML = buildCanvasHtml(tpl, state.format);
-            syncCanvasTypography(preview);
-            const foot = document.createElement('div');
-            foot.className = 'pcs-poster-card__foot';
-            foot.innerHTML = `
+            try {
+                const meta = resolveTemplateMeta(tpl);
+                const card = document.createElement('article');
+                card.className = `pcs-poster-card pcs-poster-card--${tpl}`;
+                const head = document.createElement('div');
+                head.className = 'pcs-poster-card__head';
+                head.innerHTML = `<span class="pcs-poster-card__badge"><i class="fas ${meta.icon}" aria-hidden="true"></i> ${esc(posterDisplayLabel(tpl, state.format))}</span>`;
+                const preview = document.createElement('div');
+                preview.className = 'pcs-poster-card__preview' + (state.format === 'post' ? ' is-post' : state.format === 'square' ? ' is-square' : '');
+                preview.innerHTML = renderPosterHtml(tpl, state.format);
+                syncCanvasTypography(preview);
+                const foot = document.createElement('div');
+                foot.className = 'pcs-poster-card__foot';
+                foot.innerHTML = `
                 <button type="button" class="pcs-btn pcs-btn--ghost" data-pcs-dl="${tpl}" aria-label="دانلود پوستر ${esc(meta.label)}">
                     <i class="fas fa-download" aria-hidden="true"></i><span class="pcs-btn__label">دانلود</span>
                 </button>
@@ -3656,9 +3839,16 @@
                 <button type="button" class="pcs-btn pcs-btn--soft pcs-btn--preview" data-pcs-preview="${tpl}" aria-label="پیش‌نمایش پوستر ${esc(meta.label)}">
                     <i class="fas fa-expand" aria-hidden="true"></i><span class="pcs-btn__label">پیش‌نمایش</span>
                 </button>`;
-            card.append(head, preview, foot);
-            grid.appendChild(card);
+                card.append(head, preview, foot);
+                grid.appendChild(card);
+                rendered += 1;
+            } catch (err) {
+                console.error('PCS renderPosters card', tpl, err);
+            }
         });
+        if (!rendered) {
+            grid.innerHTML = '<p class="pcs-empty-state">نمایش پوسترها ممکن نشد. صفحه را با Ctrl+F5 تازه کنید.</p>';
+        }
         const scaleAll = () => {
             grid.querySelectorAll('.pcs-poster-card__preview').forEach((el) => {
                 whenImagesReady(el, () => scalePreviewCanvas(el, state.format));
@@ -3683,7 +3873,7 @@
                 ? `${esc(fmtMeta.label)} · ${formatDimsHtml(state.format)}`
                 : '';
         }
-        box.innerHTML = buildCanvasHtml(tpl, state.format);
+        box.innerHTML = renderPosterHtml(tpl, state.format);
         syncCanvasTypography(box);
         box.classList.remove('is-ready');
         box.style.height = '';
@@ -3707,10 +3897,10 @@
         if (state.editorStorySlideId && state.editorTemplate === tpl) {
             const slide = findStorySlide(state.editorStorySlideId);
             const conf = state.editorBuffer ? { ...state.editorBuffer } : null;
-            innerHtml = slide && conf ? storyPreviewHtml(slide, conf) : buildCanvasHtml(tpl, fmt);
+            innerHtml = slide && conf ? storyPreviewHtml(slide, conf) : renderPosterHtml(tpl, fmt);
         } else {
             const conf = state.editorTemplate === tpl && state.editorBuffer ? { ...state.editorBuffer } : null;
-            innerHtml = buildCanvasHtml(tpl, fmt, conf);
+            innerHtml = renderPosterHtml(tpl, fmt, conf);
         }
         const host = createExportHost(innerHtml, fmt);
         const canvas = host.querySelector('.pcs-canvas');
@@ -3754,7 +3944,7 @@
     function storySlideIdentity(slide) {
         const catalog = cfg.storySlides || {};
         const ref = catalog[slide?.id] || {};
-        const templateId = slide?.template_id || ref.template_id || 'minimal';
+        const templateId = slide?.template_id || ref.template_id || DEFAULT_POSTER_TEMPLATE;
         const label = slide?.label || ref.label || resolveTemplateMeta(templateId).label;
         const posterMerge = { ...(ref.poster || {}), ...(slide?.poster || {}) };
         return { templateId, label, posterMerge };
@@ -3842,7 +4032,7 @@
 
     function buildStoryboardSlideHtml(slide, formatKey) {
         const fmtKey = formatKey || 'story';
-        if (!slide) return buildCanvasHtml('minimal', fmtKey);
+        if (!slide) return buildCanvasHtml(DEFAULT_POSTER_TEMPLATE, fmtKey);
         const conf = storySlideConf(slide);
         const tpl = storySlideTemplateId(slide);
         return buildCanvasHtml(tpl, fmtKey, conf, storySlideRenderOpts(slide, conf));
@@ -3980,9 +4170,12 @@
         const p = state.session?.property;
         if (!p) return;
         $('#pcsHeaderProperty')?.removeAttribute('hidden');
-        $('#pcsHeaderTitle').textContent = p.title || p.headline || '';
-        $('#pcsHeaderLocation').textContent = p.location_line || '';
-        $('#pcsHeaderPrice').textContent = p.price?.show ? p.price.label : '';
+        const titleEl = $('#pcsHeaderTitle');
+        if (titleEl) titleEl.textContent = p.title || p.headline || '';
+        const locEl = $('#pcsHeaderLocation');
+        if (locEl) locEl.textContent = p.location_line || '';
+        const priceEl = $('#pcsHeaderPrice');
+        if (priceEl) priceEl.textContent = p.price?.show ? p.price.label : '';
         const thumb = $('#pcsHeaderThumb');
         if (thumb) thumb.innerHTML = p.cover_image ? `<img src="${esc(p.cover_image)}" alt="">` : '';
         const chips = $('#pcsHeaderChips');
@@ -4434,10 +4627,15 @@
         const token = ++state.sessionToken;
         loading?.removeAttribute('hidden');
         try {
-            const res = await fetch(cfg.sessionUrl, { headers: { Accept: 'application/json' } });
-            const data = await res.json();
+            const res = await fetch(cfg.sessionUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+            let data;
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                throw new Error(res.ok ? 'پاسخ سرور نامعتبر است' : `خطای سرور (${res.status})`);
+            }
             if (token !== state.sessionToken) return;
-            if (!data.ok) throw new Error(data.error || 'خطا');
+            if (!res.ok || !data.ok) throw new Error(data.error || `خطا (${res.status})`);
             if ($('#pcsModal')?.hasAttribute('hidden')) return;
             state.session = data;
             state.draft = data.draft || {};
@@ -4460,6 +4658,9 @@
             renderSharePanel();
             setTab(state.draft.active_tab || 'posters');
             requestAnimationFrame(() => rescaleAllPreviews());
+        } catch (err) {
+            console.error('PCS loadSession', err);
+            throw err;
         } finally {
             if (token === state.sessionToken) loading?.setAttribute('hidden', '');
         }
@@ -4648,7 +4849,10 @@
         lockPageScroll();
         modal.removeAttribute('hidden');
         syncViewportMode();
-        loadSession().catch(() => toast('بارگذاری استودیو ناموفق بود'));
+        loadSession().catch((err) => {
+            console.error('PCS openModal loadSession', err);
+            toast(err?.message || 'بارگذاری استودیو ناموفق بود');
+        });
     }
 
     async function closeModal() {
@@ -4788,6 +4992,7 @@
 
     function updateEditorBufferFromForm(tpl) {
         if (!state.editorBuffer) return;
+        if (window.PCSLayerEditor?.isActive?.()) return;
         Object.assign(state.editorBuffer, readEditorForm(tpl));
         state.editorBuffer.text_layout = normalizeTextLayout(state.editorBuffer.text_layout);
         state.editorBuffer.text_layout.headline.s = 100;
@@ -5261,7 +5466,7 @@
         if (window.PCSLayerEditor?.isActive?.()) {
             try {
                 updateEditorBufferFromForm(activeTpl);
-                window.PCSLayerEditor.refreshFromLegacyControls(state.editorBuffer);
+                window.PCSLayerEditor.refreshFromLegacyControls(state.editorBuffer, state.format);
                 syncEditorDirtyFlag();
             } catch (err) {
                 console.error('pcs refreshEditorPreview (layer)', err);
@@ -5340,11 +5545,11 @@
     }
 
     function bindEditorSettingsDelegation() {
-        const pane = document.querySelector('.pcs-editor__settings-pane');
-        if (!pane || pane.dataset.pcsEditorDelegated) return;
-        pane.dataset.pcsEditorDelegated = '1';
+        const root = document.getElementById('pcsEditor');
+        if (!root || root.dataset.pcsEditorDelegated) return;
+        root.dataset.pcsEditorDelegated = '1';
 
-        pane.addEventListener('input', (e) => {
+        root.addEventListener('input', (e) => {
             if (!state.editorTemplate) return;
             const t = e.target;
             if (!t.closest('#pcsEditorControls')) return;
@@ -5357,7 +5562,7 @@
             }
         });
 
-        pane.addEventListener('change', (e) => {
+        root.addEventListener('change', (e) => {
             if (!state.editorTemplate) return;
             if (e.target.matches('[data-pcs-edit-color]')) {
                 const role = e.target.getAttribute('data-pcs-edit-color');
@@ -5376,7 +5581,7 @@
             }
         });
 
-        pane.addEventListener('click', (e) => {
+        root.addEventListener('click', (e) => {
             const tpl = state.editorTemplate;
             if (!tpl) return;
             const controls = editorControlsEl();
@@ -5708,7 +5913,39 @@
         const dlBtn = $('#pcsEditorDownload');
         if (dlBtn) dlBtn.hidden = false;
 
-        const controls = $('#pcsEditorControls');
+        const useLayerEditor = !!window.PCSLayerEditor;
+
+        $('#pcsEditor')?.removeAttribute('hidden');
+        $('#pcsLoading')?.setAttribute('hidden', '');
+        $('#pcsModal')?.classList.add('pcs-modal--editor');
+        setEditorMobPane('preview');
+
+        if (useLayerEditor) {
+            resetEditorPreviewView();
+            try {
+                window.PCSLayerEditor.start({
+                    templateId: tpl,
+                    formatKey: state.format,
+                    posterConf: state.editorBuffer,
+                    formats: {
+                        story: { width: 1080, height: 1920 },
+                        post: { width: 1080, height: 1350 },
+                        square: { width: 1080, height: 1080 },
+                    },
+                    property: visibleData().property,
+                    images: propertyImageList(),
+                    features: editorFeaturesForVisibleProperty(),
+                    brand: mergeBrand(),
+                    overlayUrl: cfg.templateMeta?.[tpl]?.overlay || '',
+                    onDirty: () => syncEditorDirtyFlag(),
+                });
+            } catch (err) {
+                console.error('PCSLayerEditor.start', err);
+                toast('خطا در ویرایشگر لایه‌ای — پیش‌نمایش ساده');
+            }
+        }
+
+        const controls = editorControlsEl();
         if (controls) {
             const headlineVal = conf.headline || defaultPropertyHeadline();
             const galleryBlock = tpl === 'gallery' && imgs.length
@@ -5759,7 +5996,7 @@
                     ${editorPrimaryPicker(imgs, conf.primary_image_index || 0)}
                 </section>`
                         : ''}
-                <section class="pcs-editor__section">
+                ${useLayerEditor ? '' : `<section class="pcs-editor__section">
                     <h4 class="pcs-editor__section-title"><i class="fas fa-crop-simple" aria-hidden="true"></i> قاب‌بندی تصویر</h4>
                     <p class="pcs-editor__section-hint">کدام بخش تصویر در کادر دیده شود${tpl === 'gallery' ? ' (روی همه تصاویر گالری)' : ''}</p>
                     <div class="pcs-editor__crop-presets" role="group" aria-label="پیش‌تنظیم قاب">
@@ -5797,10 +6034,12 @@
                     <label class="pcs-editor__range-label">اندازه قیمت <span data-pcs-range-val="price_scale">${conf.price_scale ?? 100}%</span></label>
                     <input type="range" class="pcs-editor__range" data-pcs-edit-range="price_scale" min="50" max="180" value="${conf.price_scale ?? 100}">
                     ${editorTextStyleControls(conf)}
-                </section>
+                </section>`}
                 <div class="pcs-editor__tip">
                     <i class="fas fa-lightbulb" aria-hidden="true"></i>
-                    <span>روی پیش‌نمایش، بلوک عنوان / مشخصات / قیمت را کلیک کنید؛ بکشید تا جابه‌جا شود. دستگیره گوشه برای اندازه. تب تایپوگرافی همان بخش انتخاب‌شده را ویرایش می‌کند.</span>
+                    <span>${useLayerEditor
+                        ? 'فقط فرمت، عنوان و تصویر شاخص — قاب و افکت هر تصویر با انتخاب لایهٔ تصویر؛ تایپوگرافی با انتخاب لایهٔ متن.'
+                        : 'روی پیش‌نمایش، بلوک عنوان / مشخصات / قیمت را کلیک کنید؛ بکشید تا جابه‌جا شود. دستگیره گوشه برای اندازه.'}</span>
                 </div>`;
 
             bindEditorControlEvents(tpl, controls);
@@ -5809,28 +6048,7 @@
             if (tpl === 'emerald_atelier' || tpl === 'pearl_gallery') syncEmeraldDockUi();
         }
 
-        $('#pcsEditor')?.removeAttribute('hidden');
-        $('#pcsLoading')?.setAttribute('hidden', '');
-        $('#pcsModal')?.classList.add('pcs-modal--editor');
-        setEditorMobPane('preview');
-        if (window.PCSLayerEditor) {
-            const overlayUrl = cfg.templateMeta?.[tpl]?.overlay || '';
-            window.PCSLayerEditor.start({
-                templateId: tpl,
-                formatKey: state.format,
-                posterConf: state.editorBuffer,
-                formats: {
-                    story: { width: 1080, height: 1920 },
-                    post: { width: 1080, height: 1350 },
-                    square: { width: 1080, height: 1080 },
-                },
-                property: visibleData().property,
-                images: propertyImageList(),
-                features: state.session?.property?.editor_features || [],
-                overlayUrl,
-                onDirty: () => syncEditorDirtyFlag(),
-            });
-        } else {
+        if (!useLayerEditor) {
             refreshEditorPreview(tpl);
         }
     }
@@ -6287,8 +6505,17 @@
     window.PCSBridge = {
         esc,
         PCS_FONTS,
+        FORMATS,
         buildCanvasHtml,
+        renderPosterHtml,
+        buildPosterRenderContext,
         syncCanvasTypography,
         scheduleEditorPreviewScale,
+        scaleLayerEditorPreview,
+        isMobileViewport,
+        teardownEditorTextInteraction,
+        ensurePersianFonts,
+        pcsFontFamily,
+        editorAssetFilmstrip,
     };
 })();

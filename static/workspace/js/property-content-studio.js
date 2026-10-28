@@ -791,10 +791,27 @@
         }
     }
 
+    /** After grid-style flow fit, copy computed font sizes into scene layers (editor WYSIWYG). */
+    function syncSceneTypographyFromFittedCanvas(scene, canvas) {
+        if (!scene?.layers || !canvas) return;
+        scene.layers.forEach((layer) => {
+            if (layer.type !== 'text' && layer.type !== 'bound_text') return;
+            const wrap = canvas.querySelector(`[data-pcs-layer-id="${layer.id}"]`);
+            const inner = wrap?.querySelector('[data-pcs-text-inner]');
+            if (!inner) return;
+            const fs = parseInt(inner.style.fontSize, 10);
+            if (!Number.isFinite(fs) || fs <= 0) return;
+            layer.style = layer.style || {};
+            layer.style.fontSize = fs;
+        });
+    }
+
     function syncCanvasTypography(root, opts) {
         applyFontToSubtree(root);
         const canvas = root?.classList?.contains('pcs-canvas') ? root : root?.querySelector?.('.pcs-canvas');
-        if (canvas?.dataset?.pcsSceneDriven === '1') {
+        const skipFlow = opts?.skipFlowTypography === true
+            || (typeof window !== 'undefined' && window.PCSLayerEditor?.isActive?.());
+        if (canvas?.dataset?.pcsSceneDriven === '1' && !skipFlow) {
             const tpl = canvas.dataset.template || opts?.templateId || '';
             const fmt = opts?.formatKey || formatKeyFromCanvas(canvas);
             const conf = opts?.posterConf || (tpl ? posterConfig(tpl) : null);
@@ -7998,6 +8015,7 @@
         renderPosterHtml,
         buildPosterRenderContext,
         syncCanvasTypography,
+        syncSceneTypographyFromFittedCanvas,
         fitScenePosterTypography,
         posterFormatLayout,
         scheduleEditorPreviewScale,

@@ -1167,10 +1167,13 @@
         syncInteractionSelection();
     }
 
-    function refreshPreview() {
+    function refreshPreview(opts) {
         const preview = document.getElementById('pcsEditorPreview');
         const bridge = global.PCSBridge;
         if (!preview || !bridge || !session.scene) return;
+        const bootstrapTypography = opts?.bootstrapTypography === true;
+        const rebuildScene = opts?.rebuildScene === true;
+        const skipLinkedSync = opts?.skipLinkedSync === true;
         if (bridge.buildPosterRenderContext) {
             const ctxFresh = bridge.buildPosterRenderContext(session.tpl);
             session.ctx.property = ctxFresh.property;
@@ -1180,11 +1183,20 @@
             session.ctx.brand = ctxFresh.brand || session.ctx.brand;
         }
         session.ctx.posterConf = session.posterConf;
-        Bindings.syncLinkedLayers(session.scene, session.ctx);
-        session.scene = ensureScene(session.posterConf, session.ctx);
-        syncLegacyConfToScene(session.posterConf);
+        if (!skipLinkedSync) {
+            Bindings.syncLinkedLayers(session.scene, session.ctx);
+        }
+        if (rebuildScene) {
+            session.scene = ensureScene(session.posterConf, session.ctx);
+            syncLegacyConfToScene(session.posterConf);
+        }
         session.posterConf.scene = session.scene;
-        preview.innerHTML = bridge.renderPosterHtml(session.tpl, session.formatKey, session.posterConf);
+        preview.innerHTML = bridge.renderPosterHtml(
+            session.tpl,
+            session.formatKey,
+            session.posterConf,
+            { preserveScene: true },
+        );
         const runScale = () => {
             if (bridge.scaleLayerEditorPreview) {
                 bridge.scaleLayerEditorPreview(preview, session.formatKey);
@@ -1192,14 +1204,20 @@
                 bridge.scheduleEditorPreviewScale?.(preview, session.formatKey);
             }
         };
+        const typographyOpts = {
+            templateId: session.tpl,
+            formatKey: session.formatKey,
+            posterConf: session.posterConf,
+            skipFlowTypography: !bootstrapTypography,
+        };
         runScale();
         requestAnimationFrame(() => {
             runScale();
-            bridge.syncCanvasTypography?.(preview, {
-                templateId: session.tpl,
-                formatKey: session.formatKey,
-                posterConf: session.posterConf,
-            });
+            bridge.syncCanvasTypography?.(preview, typographyOpts);
+            if (bootstrapTypography) {
+                const canvas = preview.querySelector('.pcs-canvas');
+                bridge.syncSceneTypographyFromFittedCanvas?.(session.scene, canvas);
+            }
             rebindInteraction();
             renderChrome();
             updateShellMeta();
@@ -1415,7 +1433,7 @@
         syncPanelMode();
         syncMobLayout();
         renderPanel(document.getElementById('pcsLePanelBody'));
-        refreshPreview();
+        refreshPreview({ bootstrapTypography: true });
         bindDrop(document.getElementById('pcsEditorPreviewViewport'));
         bindViewportResize();
         updateShellMeta();
@@ -1467,7 +1485,7 @@
         }
         session.posterConf.scene = session.scene;
         fitView();
-        refreshPreview();
+        refreshPreview({ rebuildScene: true, bootstrapTypography: true });
     }
 
     global.PCSLayerEditor = {

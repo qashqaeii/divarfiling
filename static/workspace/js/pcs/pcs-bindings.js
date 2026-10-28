@@ -55,6 +55,23 @@
         return '';
     }
 
+    function overlayFooterLine(name, phone) {
+        if (name && phone) return `${name}  ·  ${phone}`;
+        return phone || name || '';
+    }
+
+    /** متن نشان نوع معامله روی پوستر (نه برچسب کاتالوگ «نوع معامله: …»). */
+    function posterDealBadgeLabel(dealMode) {
+        const mode = String(dealMode || '').trim();
+        if (!mode) return '';
+        if (mode === 'فروش') return 'آگهی فروش';
+        if (mode === 'رهن و اجاره') return 'آگهی رهن و اجاره';
+        if (mode === 'اجاره') return 'آگهی اجاره';
+        if (mode === 'پیش‌فروش') return 'آگهی پیش‌فروش';
+        if (mode.startsWith('آگهی')) return mode;
+        return `آگهی ${mode}`;
+    }
+
     function bindingText(layer, ctx) {
         if (!layer) return '';
         const binding = layer.binding;
@@ -73,6 +90,10 @@
         }
         if (binding.source !== 'property' || !binding.field) {
             return String(layer.text || '');
+        }
+        if (binding.field === 'deal_mode' && layer.id === 'deal-1') {
+            const raw = String((ctx.property || {}).deal_mode || (ctx.property || {}).deal_label || '').trim();
+            return posterDealBadgeLabel(raw);
         }
         const entry = catalogEntry(binding.field, ctx);
         if (entry) {
@@ -105,11 +126,6 @@
         return { name, phone };
     }
 
-    function overlayFooterLine(name, phone) {
-        if (name && phone) return `${name}  ·  ${phone}`;
-        return phone || name || '';
-    }
-
     function syncBrandFooterLayers(scene, ctx) {
         if (!scene?.layers) return scene;
         const conf = ctx?.posterConf || {};
@@ -135,6 +151,7 @@
 
     global.PCSBindings = {
         bindingText,
+        posterDealBadgeLabel,
         featureDisplayPlain,
         featureCatalogPanelLine,
         syncBrandFooterLayers,

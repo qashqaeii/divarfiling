@@ -2407,6 +2407,13 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 'sculpted_travertine': 'fa-archway',
                 'emerald_atelier': 'fa-building-columns',
                 'pearl_gallery': 'fa-gem',
+                'burgundy_alabaster': 'fa-wine-glass',
+                'amethyst_ceramic': 'fa-gem',
+                'champagne_origami': 'fa-champagne-glasses',
+                'glacier_prism': 'fa-snowflake',
+                'mediterranean_papercut': 'fa-sun',
+                'terracotta_terrace': 'fa-house-chimney',
+                'brutalist_concrete': 'fa-cubes',
             }
             template_meta = {}
             for t in POSTER_TEMPLATES:

@@ -87,13 +87,23 @@
     }
 
     function ensureScene(conf, ctx) {
-        const base = Schema.emptyScene(ctx.templateId, ctx.formatKey, ctx.formats);
+        if (!Templates?.resolveSceneForPreview && !Templates?.buildInitialScene) {
+            throw new Error('ماژول قالب‌های PCS لود نشده — یک بار Ctrl+F5 بزنید');
+        }
         let scene;
-        if (conf?.scene && conf.scene.schemaVersion >= 2) {
-            const normalized = Schema.normalizeScene(conf.scene, ctx.templateId, ctx.formatKey, ctx.formats);
-            scene = Templates.mergeMissingTemplateLayers(normalized, conf, ctx, base);
+        if (Templates.resolveSceneForPreview) {
+            scene = Templates.resolveSceneForPreview(conf, ctx);
         } else {
-            scene = Templates.buildInitialScene(conf, ctx, base);
+            const base = Schema.emptyScene(ctx.templateId, ctx.formatKey, ctx.formats);
+            if (conf?.scene && conf.scene.schemaVersion >= 2) {
+                const normalized = Schema.normalizeScene(conf.scene, ctx.templateId, ctx.formatKey, ctx.formats);
+                scene = Templates.mergeMissingTemplateLayers(normalized, conf, ctx, base);
+            } else {
+                scene = Templates.buildInitialScene(conf, ctx, base);
+            }
+        }
+        if (scene && Schema.applySceneCanvasFormat) {
+            Schema.applySceneCanvasFormat(scene, ctx.formatKey, ctx.formats);
         }
         return Templates.normalizeSceneLayerOrder
             ? Templates.normalizeSceneLayerOrder(scene)
@@ -1171,17 +1181,29 @@
         }
         session.ctx.posterConf = session.posterConf;
         Bindings.syncLinkedLayers(session.scene, session.ctx);
+        session.scene = ensureScene(session.posterConf, session.ctx);
+        syncLegacyConfToScene(session.posterConf);
         session.posterConf.scene = session.scene;
         preview.innerHTML = bridge.renderPosterHtml(session.tpl, session.formatKey, session.posterConf);
-        bridge.syncCanvasTypography?.(preview);
-        if (bridge.scaleLayerEditorPreview) {
-            bridge.scaleLayerEditorPreview(preview, session.formatKey);
-        } else {
-            bridge.scheduleEditorPreviewScale?.(preview, session.formatKey);
-        }
-        rebindInteraction();
-        renderChrome();
-        updateShellMeta();
+        const runScale = () => {
+            if (bridge.scaleLayerEditorPreview) {
+                bridge.scaleLayerEditorPreview(preview, session.formatKey);
+            } else {
+                bridge.scheduleEditorPreviewScale?.(preview, session.formatKey);
+            }
+        };
+        runScale();
+        requestAnimationFrame(() => {
+            runScale();
+            bridge.syncCanvasTypography?.(preview, {
+                templateId: session.tpl,
+                formatKey: session.formatKey,
+                posterConf: session.posterConf,
+            });
+            rebindInteraction();
+            renderChrome();
+            updateShellMeta();
+        });
     }
 
     function bindViewportResize() {

@@ -24,7 +24,7 @@
             binding: opts?.binding || null,
             templateRole: opts?.templateRole || '',
             style: Object.assign({
-                fontKey: 'vazirmatn',
+                fontKey: opts?.fontKey || 'vazirmatn',
                 fontSize: opts?.fontSize || 32,
                 fontWeight: opts?.fontWeight || 700,
                 fill: opts?.fill || '#ffffff',
@@ -70,7 +70,7 @@
 
     const OVERLAY_TEMPLATE_IDS = [
         'pearlescent', 'pearlescent_ribbon', 'sculpted_travertine',
-        'sculptural', 'emerald_atelier', 'pearl_gallery',
+        'sculptural', 'emerald_atelier', 'pearl_gallery', 'burgundy_alabaster', 'amethyst_ceramic', 'champagne_origami', 'glacier_prism', 'mediterranean_papercut', 'terracotta_terrace', 'brutalist_concrete',
     ];
 
     function overlayCanvasBackground(templateId) {
@@ -81,6 +81,13 @@
             sculptural: '#ebe6dc',
             emerald_atelier: '#e8dcc8',
             pearl_gallery: '#0b1220',
+            burgundy_alabaster: '#f0e8de',
+            amethyst_ceramic: '#1f0f2e',
+            champagne_origami: '#121110',
+            glacier_prism: '#0a1424',
+            mediterranean_papercut: '#ebe4d6',
+            terracotta_terrace: '#e8dfd0',
+            brutalist_concrete: '#2a2a2a',
         };
         return map[templateId] || '';
     }
@@ -98,13 +105,25 @@
 
     function dealBoxFromCal(cal, px, py) {
         if (!cal?.badge) return null;
-        const w = 108;
-        const h = 44;
+        const w = Math.max(120, px(172));
+        const h = Math.max(44, py(50));
         return {
             x: px(cal.badge.cx) - w,
             y: py(cal.badge.cy),
             width: w,
             height: h,
+        };
+    }
+
+    function overlayDealCapsuleStyle() {
+        return {
+            textPreset: 'capsule',
+            background: 'linear-gradient(135deg,rgba(0,0,0,.72),rgba(0,0,0,.4))',
+            capsuleBorder: 'rgba(255,255,255,.28)',
+            borderRadius: 999,
+            align: 'center',
+            verticalAlign: 'center',
+            lineHeight: 1.1,
         };
     }
 
@@ -118,30 +137,38 @@
         };
     }
 
-    function splitTextColumnBox(textBox) {
+    function splitTextColumnBox(textBox, ratios) {
         const h = Math.max(80, textBox.height);
         const y0 = textBox.y;
+        const headR = ratios?.head ?? 0.42;
+        const metaR = ratios?.meta ?? 0.32;
+        const priceR = ratios?.price ?? 0.26;
+        const headH = Math.round(h * headR);
+        const metaH = Math.round(h * metaR);
+        const priceH = Math.max(48, h - headH - metaH);
         return {
             headline: {
                 x: textBox.x,
                 y: y0,
                 width: textBox.width,
-                height: Math.round(h * 0.38),
+                height: headH,
             },
             meta: {
                 x: textBox.x,
-                y: y0 + Math.round(h * 0.36),
+                y: y0 + headH,
                 width: textBox.width,
-                height: Math.round(h * 0.32),
+                height: metaH,
             },
             price: {
                 x: textBox.x,
-                y: y0 + Math.round(h * 0.66),
+                y: y0 + headH + metaH,
                 width: textBox.width,
-                height: Math.max(48, Math.round(h * 0.28)),
+                height: priceH,
             },
         };
     }
+
+    const OVERLAY_TEXT_SPLIT = { head: 0.44, meta: 0.3, price: 0.26 };
 
     function pearlGalleryBoxes(w, h) {
         const cal = PEARL_GALLERY_CALIBRATION;
@@ -155,7 +182,7 @@
             height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
         };
         return Object.assign(
-            splitTextColumnBox(textCol),
+            splitTextColumnBox(textCol, OVERLAY_TEXT_SPLIT),
             {
                 primaryCircle: circle(cal.primary),
                 secondaryCircle: circle(cal.secondary),
@@ -184,7 +211,7 @@
                 cy: py(c.cy),
                 d: pd(c.d * (c.inset || 0.97)),
             }));
-        return Object.assign(splitTextColumnBox(textCol), {
+        return Object.assign(splitTextColumnBox(textCol, OVERLAY_TEXT_SPLIT), {
             hero: {
                 x: px(hero.x0),
                 y: py(hero.y0),
@@ -217,7 +244,7 @@
             width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
             height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
         };
-        return Object.assign(splitTextColumnBox(textCol), {
+        return Object.assign(splitTextColumnBox(textCol, OVERLAY_TEXT_SPLIT), {
             arch: box(cal.arch),
             strip: box(cal.strip),
             footer: footerBoxFromCal(cal, px, py),
@@ -356,7 +383,7 @@
             return;
         }
 
-        if ((tpl === 'pearlescent_ribbon' || tpl === 'sculpted_travertine') && boxes.hero?.width) {
+        if ((tpl === 'pearlescent_ribbon' || tpl === 'sculpted_travertine' || tpl === 'burgundy_alabaster' || tpl === 'amethyst_ceramic' || tpl === 'champagne_origami' || tpl === 'glacier_prism' || tpl === 'mediterranean_papercut' || tpl === 'terracotta_terrace' || tpl === 'brutalist_concrete') && boxes.hero?.width) {
             const hb = boxes.hero;
             layers.push(makeImageLayer('hero-image', 'تصویر شاخص', {
                 x: hb.x,
@@ -431,7 +458,7 @@
             width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
             height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
         };
-        const split = splitTextColumnBox(textCol);
+        const split = splitTextColumnBox(textCol, OVERLAY_TEXT_SPLIT);
         return Object.assign(split, {
             hero: {
                 x: px(hero.x0),
@@ -499,6 +526,366 @@
         };
     }
 
+    const BURGUNDY_ALABASTER_SCENE_CAL = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 125, y0: 91, x1: 855, y1: 1031, focusX: 490, focusY: 500 },
+        text: { x0: 158, y0: 1092, x1: 862, y1: 1468, padX: 24, padY: 26, padEndX: 28, padEndY: 18 },
+        footer: { x0: 352, y0: 1552, x1: 872, y1: 1612 },
+        badge: { cx: 802, cy: 142 },
+        logo: { cx: 118, cy: 118, size: 54 },
+    };
+
+    function burgundyAlabasterBoxes(w, h) {
+        const cal = BURGUNDY_ALABASTER_SCENE_CAL;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const pxFn = (x) => Math.round(x * sx);
+        const pyFn = (y) => Math.round(y * sy);
+        const px = pxFn;
+        const py = pyFn;
+        const t = cal.text;
+        return {
+            hero: {
+                x: px(cal.hero.x0),
+                y: py(cal.hero.y0),
+                width: px(cal.hero.x1 - cal.hero.x0),
+                height: py(cal.hero.y1 - cal.hero.y0),
+                objX: ((cal.hero.focusX - cal.hero.x0) / (cal.hero.x1 - cal.hero.x0)) * 100,
+                objY: ((cal.hero.focusY - cal.hero.y0) / (cal.hero.y1 - cal.hero.y0)) * 100,
+            },
+            footer: footerBoxFromCal(cal, pxFn, pyFn),
+            deal: dealBoxFromCal(cal, pxFn, pyFn),
+            headline: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.45),
+            },
+            meta: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0) + py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.42),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.28),
+            },
+            price: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y1 - (t.padEndY || 0) - py((t.y1 - t.y0) * 0.22)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) * 0.18)),
+            },
+        };
+    }
+
+    const AMETHYST_CERAMIC_SCENE_CAL = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 223, y0: 112, x1: 887, y1: 1012, focusX: 555, focusY: 480 },
+        text: { x0: 108, y0: 1125, x1: 898, y1: 1455, padX: 32, padY: 22, padEndX: 36, padEndY: 18 },
+        footer: { x0: 328, y0: 1542, x1: 618, y1: 1602 },
+        badge: { cx: 812, cy: 168 },
+        logo: { cx: 108, cy: 138, size: 52 },
+    };
+
+    function amethystCeramicBoxes(w, h) {
+        const cal = AMETHYST_CERAMIC_SCENE_CAL;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const pxFn = (x) => Math.round(x * sx);
+        const pyFn = (y) => Math.round(y * sy);
+        const px = pxFn;
+        const py = pyFn;
+        const t = cal.text;
+        return {
+            hero: {
+                x: px(cal.hero.x0),
+                y: py(cal.hero.y0),
+                width: px(cal.hero.x1 - cal.hero.x0),
+                height: py(cal.hero.y1 - cal.hero.y0),
+                objX: ((cal.hero.focusX - cal.hero.x0) / (cal.hero.x1 - cal.hero.x0)) * 100,
+                objY: ((cal.hero.focusY - cal.hero.y0) / (cal.hero.y1 - cal.hero.y0)) * 100,
+            },
+            footer: footerBoxFromCal(cal, pxFn, pyFn),
+            deal: dealBoxFromCal(cal, pxFn, pyFn),
+            headline: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.45),
+            },
+            meta: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0) + py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.42),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.28),
+            },
+            price: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y1 - (t.padEndY || 0) - py((t.y1 - t.y0) * 0.22)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) * 0.18)),
+            },
+        };
+    }
+
+    const CHAMPAGNE_ORIGAMI_SCENE_CAL = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 111, y0: 116, x1: 897, y1: 1004, focusX: 504, focusY: 470 },
+        text: { x0: 175, y0: 1055, x1: 900, y1: 1475, padX: 28, padY: 22, padEndX: 32, padEndY: 18 },
+        footer: { x0: 128, y0: 1520, x1: 812, y1: 1588 },
+        badge: { cx: 798, cy: 152 },
+        logo: { cx: 102, cy: 128, size: 50 },
+    };
+
+    function champagneOrigamiBoxes(w, h) {
+        const cal = CHAMPAGNE_ORIGAMI_SCENE_CAL;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const pxFn = (x) => Math.round(x * sx);
+        const pyFn = (y) => Math.round(y * sy);
+        const px = pxFn;
+        const py = pyFn;
+        const t = cal.text;
+        return {
+            hero: {
+                x: px(cal.hero.x0),
+                y: py(cal.hero.y0),
+                width: px(cal.hero.x1 - cal.hero.x0),
+                height: py(cal.hero.y1 - cal.hero.y0),
+                objX: ((cal.hero.focusX - cal.hero.x0) / (cal.hero.x1 - cal.hero.x0)) * 100,
+                objY: ((cal.hero.focusY - cal.hero.y0) / (cal.hero.y1 - cal.hero.y0)) * 100,
+            },
+            footer: footerBoxFromCal(cal, pxFn, pyFn),
+            deal: dealBoxFromCal(cal, pxFn, pyFn),
+            headline: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.45),
+            },
+            meta: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0) + py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.42),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.28),
+            },
+            price: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y1 - (t.padEndY || 0) - py((t.y1 - t.y0) * 0.22)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) * 0.18)),
+            },
+        };
+    }
+
+    const GLACIER_PRISM_SCENE_CAL = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 118, y0: 175, x1: 858, y1: 1008, focusX: 488, focusY: 480 },
+        text: { x0: 168, y0: 1088, x1: 892, y1: 1438, padX: 28, padY: 20, padEndX: 32, padEndY: 16 },
+        footer: { x0: 142, y0: 1472, x1: 818, y1: 1538 },
+        badge: { cx: 868, cy: 148 },
+        logo: { cx: 118, cy: 138, size: 52 },
+    };
+
+    function glacierPrismBoxes(w, h) {
+        const cal = GLACIER_PRISM_SCENE_CAL;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const pxFn = (x) => Math.round(x * sx);
+        const pyFn = (y) => Math.round(y * sy);
+        const px = pxFn;
+        const py = pyFn;
+        const t = cal.text;
+        return {
+            hero: {
+                x: px(cal.hero.x0),
+                y: py(cal.hero.y0),
+                width: px(cal.hero.x1 - cal.hero.x0),
+                height: py(cal.hero.y1 - cal.hero.y0),
+                objX: ((cal.hero.focusX - cal.hero.x0) / (cal.hero.x1 - cal.hero.x0)) * 100,
+                objY: ((cal.hero.focusY - cal.hero.y0) / (cal.hero.y1 - cal.hero.y0)) * 100,
+            },
+            footer: footerBoxFromCal(cal, pxFn, pyFn),
+            deal: dealBoxFromCal(cal, pxFn, pyFn),
+            headline: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.45),
+            },
+            meta: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0) + py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.42),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)) * 0.28),
+            },
+            price: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y1 - (t.padEndY || 0) - py((t.y1 - t.y0) * 0.22)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(py((t.y1 - t.y0) * 0.18)),
+            },
+        };
+    }
+
+    const MEDITERRANEAN_PAPERCUT_SCENE_CAL = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 58, y0: 255, x1: 912, y1: 905, focusX: 485, focusY: 450 },
+        text: { x0: 138, y0: 992, x1: 878, y1: 1438, padX: 24, padY: 18, padEndX: 28, padEndY: 14 },
+        footer: { x0: 198, y0: 1526, x1: 742, y1: 1586 },
+        badge: { cx: 862, cy: 158 },
+        logo: { cx: 112, cy: 132, size: 50 },
+    };
+
+    function mediterraneanPapercutBoxes(w, h) {
+        const cal = MEDITERRANEAN_PAPERCUT_SCENE_CAL;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const pxFn = (x) => Math.round(x * sx);
+        const pyFn = (y) => Math.round(y * sy);
+        const px = pxFn;
+        const py = pyFn;
+        const t = cal.text;
+        const colH = py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0));
+        return {
+            hero: {
+                x: px(cal.hero.x0),
+                y: py(cal.hero.y0),
+                width: px(cal.hero.x1 - cal.hero.x0),
+                height: py(cal.hero.y1 - cal.hero.y0),
+                objX: ((cal.hero.focusX - cal.hero.x0) / (cal.hero.x1 - cal.hero.x0)) * 100,
+                objY: ((cal.hero.focusY - cal.hero.y0) / (cal.hero.y1 - cal.hero.y0)) * 100,
+            },
+            footer: footerBoxFromCal(cal, pxFn, pyFn),
+            deal: dealBoxFromCal(cal, pxFn, pyFn),
+            headline: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.42),
+            },
+            meta: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0) + Math.round(colH * 0.38)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.32),
+            },
+            price: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y1 - (t.padEndY || 0) - Math.round(colH * 0.24)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.22),
+            },
+        };
+    }
+
+    const TERRACOTTA_TERRACE_SCENE_CAL = {
+        refW: 940,
+        refH: 1672,
+        hero: { x0: 212, y0: 238, x1: 848, y1: 842, focusX: 530, focusY: 480 },
+        text: { x0: 162, y0: 1038, x1: 892, y1: 1505, padX: 26, padY: 16, padEndX: 30, padEndY: 12 },
+        footer: { x0: 172, y0: 1628, x1: 702, y1: 1652 },
+        badge: { cx: 852, cy: 248 },
+        logo: { cx: 118, cy: 248, size: 48 },
+    };
+
+    function terracottaTerraceBoxes(w, h) {
+        const cal = TERRACOTTA_TERRACE_SCENE_CAL;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const pxFn = (x) => Math.round(x * sx);
+        const pyFn = (y) => Math.round(y * sy);
+        const px = pxFn;
+        const py = pyFn;
+        const t = cal.text;
+        const colH = py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0));
+        return {
+            hero: {
+                x: px(cal.hero.x0),
+                y: py(cal.hero.y0),
+                width: px(cal.hero.x1 - cal.hero.x0),
+                height: py(cal.hero.y1 - cal.hero.y0),
+                objX: ((cal.hero.focusX - cal.hero.x0) / (cal.hero.x1 - cal.hero.x0)) * 100,
+                objY: ((cal.hero.focusY - cal.hero.y0) / (cal.hero.y1 - cal.hero.y0)) * 100,
+            },
+            footer: footerBoxFromCal(cal, pxFn, pyFn),
+            deal: dealBoxFromCal(cal, pxFn, pyFn),
+            headline: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.44),
+            },
+            meta: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0) + Math.round(colH * 0.4)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.28),
+            },
+            price: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y1 - (t.padEndY || 0) - Math.round(colH * 0.26)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.24),
+            },
+        };
+    }
+
+    const BRUTALIST_CONCRETE_SCENE_CAL = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 88, y0: 268, x1: 838, y1: 988, focusX: 463, focusY: 520 },
+        text: { x0: 118, y0: 1058, x1: 888, y1: 1392, padX: 28, padY: 20, padEndX: 32, padEndY: 14 },
+        footer: { x0: 118, y0: 1508, x1: 822, y1: 1568 },
+        badge: { cx: 828, cy: 208 },
+        logo: { cx: 112, cy: 188, size: 48 },
+    };
+
+    function brutalistConcreteBoxes(w, h) {
+        const cal = BRUTALIST_CONCRETE_SCENE_CAL;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const pxFn = (x) => Math.round(x * sx);
+        const pyFn = (y) => Math.round(y * sy);
+        const px = pxFn;
+        const py = pyFn;
+        const t = cal.text;
+        const colH = py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0));
+        return {
+            hero: {
+                x: px(cal.hero.x0),
+                y: py(cal.hero.y0),
+                width: px(cal.hero.x1 - cal.hero.x0),
+                height: py(cal.hero.y1 - cal.hero.y0),
+                objX: ((cal.hero.focusX - cal.hero.x0) / (cal.hero.x1 - cal.hero.x0)) * 100,
+                objY: ((cal.hero.focusY - cal.hero.y0) / (cal.hero.y1 - cal.hero.y0)) * 100,
+            },
+            footer: footerBoxFromCal(cal, pxFn, pyFn),
+            deal: dealBoxFromCal(cal, pxFn, pyFn),
+            headline: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.44),
+            },
+            meta: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y0 + (t.padY || 0) + Math.round(colH * 0.4)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.3),
+            },
+            price: {
+                x: px(t.x0 + (t.padX || 0)),
+                y: py(t.y1 - (t.padEndY || 0) - Math.round(colH * 0.24)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: Math.round(colH * 0.22),
+            },
+        };
+    }
+
     function pearlescentBoxes(w, h) {
         const sidePad = Math.round(w * (72 / 1080));
         const photoH = Math.round(0.455 * h);
@@ -543,6 +930,25 @@
             },
             deal: { x: w - sidePad - 118, y: 36, width: 108, height: 44 },
         };
+    }
+
+    function overlayMetaSummary(p, headline) {
+        const loc = String(p.location_line || p.city || '').trim();
+        const parts = [];
+        if (loc) parts.push(loc);
+        if (p.property_type && !headlineInText(headline, p.property_type)) parts.push(p.property_type);
+        if (p.area_label && !headlineInText(headline, p.area_label)) parts.push(p.area_label);
+        if (p.floor_label && !headlineInText(headline, p.floor_label) && parts.length < 3) {
+            parts.push(p.floor_label);
+        }
+        (p.detail_chips || []).some((chip) => {
+            const t = String(chip || '').trim();
+            if (!t || headlineInText(headline, t)) return false;
+            if (parts.length >= 4) return true;
+            parts.push(t);
+            return false;
+        });
+        return parts.filter(Boolean).slice(0, 4).join(' · ');
     }
 
     function headlineInText(headline, fragment) {
@@ -624,6 +1030,13 @@
         if (templateId === 'pearlescent_ribbon') return pearlescentRibbonBoxes(w, h);
         if (templateId === 'sculpted_travertine') return travertineBoxes(w, h);
         if (templateId === 'pearl_gallery') return pearlGalleryBoxes(w, h);
+        if (templateId === 'burgundy_alabaster') return burgundyAlabasterBoxes(w, h);
+        if (templateId === 'amethyst_ceramic') return amethystCeramicBoxes(w, h);
+        if (templateId === 'champagne_origami') return champagneOrigamiBoxes(w, h);
+        if (templateId === 'glacier_prism') return glacierPrismBoxes(w, h);
+        if (templateId === 'mediterranean_papercut') return mediterraneanPapercutBoxes(w, h);
+        if (templateId === 'terracotta_terrace') return terracottaTerraceBoxes(w, h);
+        if (templateId === 'brutalist_concrete') return brutalistConcreteBoxes(w, h);
         if (templateId === 'sculptural') return sculpturalTemplateBoxes(w, h);
         if (templateId === 'emerald_atelier') return emeraldTemplateBoxes(w, h);
         const pad = Math.round(w * 0.055);
@@ -660,6 +1073,54 @@
         });
     }
 
+    function overlayHeadlineFill(tpl, flags) {
+        if (flags.isEmerald) return flags.emeraldHeadInk;
+        if (flags.isPearl) return flags.pearlInk;
+        if (flags.isBurgundy) return flags.burgundyInk;
+        if (flags.isAmethyst) return flags.amethystInk;
+        if (flags.isChampagne) return flags.champagneInk;
+        if (flags.isGlacier) return flags.glacierInk;
+        if (flags.isMediterranean) return flags.medInk;
+        if (flags.isTerracotta) return flags.terraInk;
+        if (flags.isBrutalist) return flags.brutInk;
+        if (flags.isSculptural) return '#f7f4ec';
+        if (flags.isPearlescent) return flags.pearlescentInk;
+        if (tpl === 'minimal' || tpl === 'modern') return '#1e293b';
+        if (flags.isTravertine) return '#1c1917';
+        return '#ffffff';
+    }
+
+    function overlayMetaFill(tpl, flags) {
+        if (tpl === 'minimal' || tpl === 'modern') return '#334155';
+        if (flags.isEmerald) return flags.emeraldMetaInk;
+        if (flags.isRibbon) return 'rgba(248,250,252,.88)';
+        if (flags.isTravertine) return 'rgba(28,25,23,.72)';
+        if (flags.isBurgundy) return flags.burgundyMetaInk;
+        if (flags.isAmethyst) return flags.amethystMetaInk;
+        if (flags.isChampagne) return flags.champagneMetaInk;
+        if (flags.isGlacier) return flags.glacierMetaInk;
+        if (flags.isMediterranean) return flags.medMetaInk;
+        if (flags.isTerracotta) return flags.terraMetaInk;
+        if (flags.isBrutalist) return flags.brutMetaInk;
+        return 'rgba(255,255,255,.9)';
+    }
+
+    function overlayPriceFill(tpl, flags) {
+        if (flags.isPearl) return flags.pearlPriceInk;
+        if (flags.isEmerald) return flags.emeraldPriceInk;
+        if (flags.isRibbon) return '#fde68a';
+        if (flags.isPearlescent) return flags.pearlescentInk;
+        if (tpl === 'minimal' || tpl === 'modern') return '#7c3aed';
+        if (flags.isTravertine) return '#92400e';
+        if (flags.isBurgundy) return flags.burgundyPriceInk;
+        if (flags.isAmethyst) return flags.amethystPriceInk;
+        if (flags.isChampagne) return flags.champagnePriceInk;
+        if (flags.isGlacier) return flags.glacierPriceInk;
+        if (flags.isMediterranean) return flags.medPriceInk;
+        if (flags.isTerracotta) return flags.terraPriceInk;
+        if (flags.isBrutalist) return flags.brutPriceInk;
+    }
+
     function buildInitialScene(conf, ctx, baseScene) {
         const scene = Schema.normalizeScene(baseScene, ctx.templateId, ctx.formatKey, ctx.formats);
         const w = scene.canvas.width;
@@ -677,9 +1138,89 @@
         const isPearl = tpl === 'pearl_gallery';
         const isSculptural = tpl === 'sculptural';
         const isEmerald = tpl === 'emerald_atelier';
+        const isBurgundy = tpl === 'burgundy_alabaster';
+        const isAmethyst = tpl === 'amethyst_ceramic';
+        const isChampagne = tpl === 'champagne_origami';
+        const isGlacier = tpl === 'glacier_prism';
+        const isMediterranean = tpl === 'mediterranean_papercut';
+        const isTerracotta = tpl === 'terracotta_terrace';
+        const isBrutalist = tpl === 'brutalist_concrete';
         const pearlInk = '#f4f1eb';
         const pearlPriceInk = '#e8c9a8';
         const pearlescentInk = '#0a3560';
+        const emeraldHeadInk = '#122820';
+        const emeraldMetaInk = 'rgba(18,40,32,.78)';
+        const emeraldPriceInk = '#0b4d3e';
+        const burgundyInk = '#3b1229';
+        const burgundyMetaInk = 'rgba(59,18,41,.76)';
+        const burgundyPriceInk = '#7c1d3a';
+        const amethystInk = '#2d1038';
+        const amethystMetaInk = 'rgba(45,16,56,.76)';
+        const amethystPriceInk = '#6b2d7a';
+        const champagneInk = '#1f1b16';
+        const champagneMetaInk = 'rgba(31,27,22,.74)';
+        const champagnePriceInk = '#7a5c1e';
+        const glacierInk = '#f4f8fc';
+        const glacierMetaInk = 'rgba(220,232,245,.9)';
+        const glacierPriceInk = '#9fd4f0';
+        const medInk = '#0a3d42';
+        const medMetaInk = 'rgba(242,236,224,.94)';
+        const medPriceInk = '#d4b36a';
+        const medFootInk = '#0a3d42';
+        const terraInk = '#4a2c22';
+        const terraMetaInk = 'rgba(74,44,34,.78)';
+        const terraPriceInk = '#f7f0e8';
+        const terraFootInk = '#4a2c22';
+        const brutInk = '#1a1a1a';
+        const brutMetaInk = 'rgba(26,26,26,.74)';
+        const brutPriceInk = '#a34334';
+        const brutFootInk = '#d8d4cc';
+        const fontKey = conf?.font_key || ((isAmethyst || isChampagne || isGlacier || isMediterranean || isTerracotta) ? 'gulzar' : 'vazirmatn');
+        const tplFlags = {
+            isPearlescent,
+            isRibbon,
+            isTravertine,
+            isPearl,
+            isSculptural,
+            isEmerald,
+            isBurgundy,
+            isAmethyst,
+            isChampagne,
+            isGlacier,
+            isMediterranean,
+            isTerracotta,
+            isBrutalist,
+            pearlInk,
+            pearlPriceInk,
+            pearlescentInk,
+            emeraldHeadInk,
+            emeraldMetaInk,
+            emeraldPriceInk,
+            burgundyInk,
+            burgundyMetaInk,
+            burgundyPriceInk,
+            amethystInk,
+            amethystMetaInk,
+            amethystPriceInk,
+            champagneInk,
+            champagneMetaInk,
+            champagnePriceInk,
+            glacierInk,
+            glacierMetaInk,
+            glacierPriceInk,
+            medInk,
+            medMetaInk,
+            medPriceInk,
+            medFootInk,
+            terraInk,
+            terraMetaInk,
+            terraPriceInk,
+            terraFootInk,
+            brutInk,
+            brutMetaInk,
+            brutPriceInk,
+            brutFootInk,
+        };
         const layers = [];
         const order = [];
         let templateFrameLayer = null;
@@ -747,31 +1288,29 @@
             const hl = layerText('headline-1', 'عنوان', boxes.headline, {
                 text: headlineText,
                 templateRole: 'headline',
-                fontSize: Math.round(h * (tpl === 'sculpted_travertine' ? 0.034 : (isPearlescent ? 0.038 : 0.042))),
+                fontSize: Math.round(h * (tpl === 'sculpted_travertine' || isBurgundy || isAmethyst || isChampagne || isGlacier || isMediterranean || isTerracotta || isBrutalist ? 0.034 : (isPearlescent ? 0.038 : 0.042))),
                 fontWeight: conf?.headline_weight || 900,
-                fill: isPearl ? pearlInk
-                    : (isRibbon ? '#f8fafc' : (isSculptural || isEmerald ? '#f4f1eb' : (isPearlescent ? pearlescentInk
-                    : ((tpl === 'minimal' || tpl === 'modern') ? '#1e293b' : (isTravertine ? '#1c1917' : '#ffffff'))))),
+                fontKey,
+                fill: overlayHeadlineFill(tpl, tplFlags),
+                style: { align: 'right', lineHeight: 1.2, verticalAlign: 'top' },
             });
             layers.push(hl);
             order.push(hl.id);
         }
 
-        const dealLabel = String(p.deal_mode || p.deal_label || '').trim();
+        const rawDeal = String(p.deal_mode || p.deal_label || '').trim();
+        const dealLabel = global.PCSBindings?.posterDealBadgeLabel
+            ? global.PCSBindings.posterDealBadgeLabel(rawDeal)
+            : rawDeal;
         if (dealLabel && boxes.deal) {
             layers.push(layerText('deal-1', 'نوع معامله', boxes.deal, {
                 text: dealLabel,
                 bound: true,
                 binding: { source: 'property', field: 'deal_mode', mode: 'linked' },
-                fontSize: 22,
+                fontSize: Math.round(h * 0.014),
                 fontWeight: 800,
                 fill: '#ffffff',
-                style: {
-                    textPreset: 'capsule',
-                    background: '#7c3aed',
-                    borderRadius: 999,
-                    align: 'center',
-                },
+                style: overlayDealCapsuleStyle(),
             }));
             order.push('deal-1');
         }
@@ -785,22 +1324,18 @@
                     binding: { source: 'property', field: 'location_line', mode: 'linked' },
                     fontSize: 34,
                     fontWeight: 700,
+                    fontKey,
                     fill: pearlescentInk,
+                    style: { align: 'right', lineHeight: 1.35, verticalAlign: 'top' },
                 }));
                 order.push('location-1');
             }
         }
 
         const metaParts = [];
-        if (isRibbon || isTravertine || isSculptural || isEmerald || isPearl) {
-            const loc = String(p.location_line || p.city || '').trim();
-            if (loc) metaParts.push(loc);
-            if (p.property_type) metaParts.push(p.property_type);
-            if (p.area_label) metaParts.push(p.area_label);
-            (p.detail_chips || []).slice(0, 6).forEach((chip) => {
-                const t = String(chip || '').trim();
-                if (t) metaParts.push(t);
-            });
+        if (isRibbon || isTravertine || isSculptural || isEmerald || isPearl || isBurgundy || isAmethyst || isChampagne || isGlacier || isMediterranean || isTerracotta || isBrutalist) {
+            const summary = overlayMetaSummary(p, headlineText);
+            if (summary) metaParts.push(summary);
         } else if (!isPearlescent) {
             if (p.rooms_label) metaParts.push(p.rooms_label);
             if (p.area_label) metaParts.push(p.area_label);
@@ -817,18 +1352,27 @@
                 templateRole: 'meta',
                 fontSize: 28,
                 fontWeight: 800,
+                fontKey,
                 fill: pearlescentInk,
-                style: { align: 'right', lineHeight: 1.45 },
+                style: { align: 'right', lineHeight: 1.45, verticalAlign: 'top' },
             }));
             order.push('meta-1');
         } else if (metaParts.length) {
+            const metaText = metaParts.length === 1 && metaParts[0].includes(' · ')
+                ? metaParts[0]
+                : metaParts.slice(0, 4).join(' · ');
             layers.push(layerText('meta-1', 'مشخصات', boxes.meta, {
-                text: metaParts.slice(0, 4).join(' · '),
+                text: metaText,
                 templateRole: 'meta',
-                fontSize: Math.round(h * 0.019),
+                fontSize: Math.round(h * ((isMediterranean || isTerracotta) ? 0.0175 : 0.019)),
                 fontWeight: 700,
-                fill: (tpl === 'minimal' || tpl === 'modern') ? '#334155'
-                    : (isRibbon ? 'rgba(248,250,252,.88)' : (tpl === 'sculpted_travertine' ? 'rgba(28,25,23,.72)' : (isPearl || isSculptural || isEmerald ? 'rgba(244,241,235,.86)' : 'rgba(255,255,255,.9)'))),
+                fontKey,
+                fill: overlayMetaFill(tpl, tplFlags),
+                style: {
+                    align: (isMediterranean || isTerracotta) ? 'center' : 'right',
+                    lineHeight: 1.45,
+                    verticalAlign: (isMediterranean || isTerracotta) ? 'center' : 'top',
+                },
             }));
             order.push('meta-1');
         }
@@ -840,11 +1384,15 @@
                 bound: true,
                 binding: { source: 'property', field: 'price', mode: 'linked' },
                 templateRole: 'price',
-                fontSize: Math.round(h * (isPearlescent ? 0.026 : 0.028)),
+                fontSize: Math.round(h * (isPearlescent ? 0.026 : ((isMediterranean || isTerracotta) ? 0.027 : 0.028))),
                 fontWeight: conf?.price_weight || 900,
-                fill: isPearl ? pearlPriceInk
-                    : (isRibbon ? '#fde68a' : (isPearlescent ? pearlescentInk
-                    : ((tpl === 'minimal' || tpl === 'modern') ? '#7c3aed' : (isTravertine ? '#92400e' : '#ffffff')))),
+                fontKey,
+                fill: overlayPriceFill(tpl, tplFlags),
+                style: {
+                    align: (isMediterranean || isTerracotta) ? 'center' : 'right',
+                    lineHeight: 1.15,
+                    verticalAlign: (isMediterranean || isTerracotta) ? 'center' : 'top',
+                },
             }));
             order.push('price-1');
         }
@@ -865,7 +1413,7 @@
                 style: { align: 'center' },
             }));
             order.push('footer-1');
-        } else if (boxes.footer && (isRibbon || isTravertine || isSculptural || isEmerald || isPearl)) {
+        } else if (boxes.footer && (isRibbon || isTravertine || isSculptural || isEmerald || isPearl || isBurgundy || isAmethyst || isChampagne || isGlacier || isMediterranean || isTerracotta || isBrutalist)) {
             let footFill = '#64748b';
             let footSize = Math.round(h * 0.019);
             if (isRibbon) {
@@ -880,6 +1428,27 @@
             } else if (isPearl) {
                 footFill = '#1e293b';
                 footSize = Math.round(h * 0.0155);
+            } else if (isBurgundy) {
+                footFill = '#f5ebe0';
+                footSize = Math.round(h * 0.015);
+            } else if (isAmethyst) {
+                footFill = '#ede0c8';
+                footSize = Math.round(h * 0.015);
+            } else if (isChampagne) {
+                footFill = '#e8dcc8';
+                footSize = Math.round(h * 0.015);
+            } else if (isGlacier) {
+                footFill = '#1a2840';
+                footSize = Math.round(h * 0.015);
+            } else if (isMediterranean) {
+                footFill = medFootInk;
+                footSize = Math.round(h * 0.0145);
+            } else if (isTerracotta) {
+                footFill = terraFootInk;
+                footSize = Math.round(h * 0.0135);
+            } else if (isBrutalist) {
+                footFill = brutFootInk;
+                footSize = Math.round(h * 0.014);
             }
             layers.push(layerText('footer-1', 'تماس مشاور', boxes.footer, {
                 text: overlayFooterLine(brandName, phone),
@@ -911,7 +1480,7 @@
     }
 
     function layoutRevisionForTemplate(templateId) {
-        if (OVERLAY_TEMPLATE_IDS.includes(templateId)) return 7;
+        if (OVERLAY_TEMPLATE_IDS.includes(templateId)) return 12;
         return 3;
     }
 
@@ -920,6 +1489,7 @@
         if (OVERLAY_TEMPLATE_IDS.includes(templateId)) {
             if (!scene.layers.some((l) => l.id === 'template-frame')) return true;
             if (!scene.layers.some((l) => l.id === 'bg-fill')) return true;
+            if (!scene.layers.some((l) => l.id === 'hero-image')) return true;
             if (!scene.layers.some((l) => l.id === 'footer-1')) return true;
         }
         if (templateId === 'pearl_gallery') {
@@ -953,7 +1523,7 @@
         fresh.layers.forEach((layer) => {
             if (layer?.id?.startsWith('circle-image-')) layoutIds.add(layer.id);
         });
-        const overlayTpl = ['pearlescent', 'pearlescent_ribbon', 'pearl_gallery', 'sculptural', 'emerald_atelier', 'sculpted_travertine'].includes(tpl);
+        const overlayTpl = ['pearlescent', 'pearlescent_ribbon', 'pearl_gallery', 'sculptural', 'emerald_atelier', 'sculpted_travertine', 'burgundy_alabaster', 'amethyst_ceramic', 'champagne_origami', 'glacier_prism', 'mediterranean_papercut', 'terracotta_terrace', 'brutalist_concrete'].includes(tpl);
         fresh.layers.forEach((layer) => {
             const existing = scene.layers.find((l) => l.id === layer.id);
             if (existing && layoutIds.has(layer.id)) {

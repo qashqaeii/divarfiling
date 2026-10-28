@@ -29,20 +29,44 @@
         return m;
     }
 
+    function isCapsuleTextLayer(layer) {
+        const st = layer?.style || {};
+        return st.textPreset === 'capsule' || layer?.id === 'deal-1';
+    }
+
+    function capsulePaddingPx(st) {
+        const fs = st.fontSize || 22;
+        const py = Math.max(8, Math.round(fs * 0.38));
+        const px = Math.max(16, Math.round(fs * 0.78));
+        return `${py}px ${px}px`;
+    }
+
     function layerStyleCss(layer) {
         const st = layer.style || {};
+        const capsule = isCapsuleTextLayer(layer);
         let css = `position:absolute;left:${layer.x}px;top:${layer.y}px;width:${layer.width}px;height:${layer.height}px;`;
         css += `opacity:${layer.opacity != null ? layer.opacity : 1};`;
-        css += 'box-sizing:border-box;overflow:hidden;';
+        css += capsule
+            ? 'box-sizing:border-box;overflow:visible;z-index:8;'
+            : 'box-sizing:border-box;overflow:hidden;';
         if (layer.rotation) css += `transform:rotate(${layer.rotation}deg);transform-origin:center center;`;
         if (st.background) css += `background:${st.background};`;
         if (st.borderRadius) css += `border-radius:${st.borderRadius}px;`;
+        if (capsule && st.capsuleBorder) css += `border:1px solid ${st.capsuleBorder};`;
+        if (capsule) css += 'box-shadow:0 10px 28px rgba(0,0,0,.28);';
         return css;
     }
 
     function flexJustify(align) {
         if (align === 'center') return 'center';
         if (align === 'left') return 'flex-start';
+        return 'flex-end';
+    }
+
+    function flexAlign(st) {
+        const v = st.verticalAlign || st.alignItems;
+        if (v === 'top' || v === 'flex-start') return 'flex-start';
+        if (v === 'center') return 'center';
         return 'flex-end';
     }
 
@@ -57,17 +81,29 @@
         inner.style.width = '100%';
         inner.style.height = '100%';
         inner.style.display = 'flex';
-        inner.style.alignItems = 'center';
-        inner.style.justifyContent = flexJustify(st.align || 'right');
-        inner.style.padding = st.textPreset === 'capsule' ? '8px 18px' : '2px 4px';
+        inner.style.flexDirection = 'column';
+        inner.style.alignItems = 'stretch';
+        inner.style.justifyContent = flexAlign(st) === 'center' ? 'center' : 'flex-start';
+        const capsule = isCapsuleTextLayer(layer);
+        inner.style.padding = capsule ? capsulePaddingPx(st) : '2px 4px';
         inner.style.fontFamily = fontFamily(st.fontKey);
         inner.style.fontSize = `${st.fontSize || 28}px`;
         inner.style.fontWeight = String(st.fontWeight || 700);
         inner.style.color = st.fill || '#ffffff';
         inner.style.lineHeight = String(st.lineHeight || 1.35);
-        inner.style.textAlign = st.align || 'right';
-        inner.style.wordWrap = 'break-word';
-        inner.style.overflowWrap = 'anywhere';
+        inner.style.textAlign = capsule ? 'center' : (st.align || 'right');
+        if (capsule) {
+            inner.style.flexDirection = 'row';
+            inner.style.alignItems = 'center';
+            inner.style.justifyContent = 'center';
+            inner.style.whiteSpace = 'nowrap';
+            inner.style.wordWrap = 'normal';
+            inner.style.overflowWrap = 'normal';
+            node.style.overflow = 'visible';
+        } else {
+            inner.style.wordWrap = 'break-word';
+            inner.style.overflowWrap = 'anywhere';
+        }
         inner.style.fontStyle = st.fontStyle === 'italic' ? 'italic' : 'normal';
         inner.style.textDecoration = st.textDecoration === 'underline' ? 'underline' : 'none';
         node.setAttribute('dir', st.direction || 'rtl');
@@ -75,6 +111,10 @@
         else node.style.background = '';
         if (st.borderRadius != null) node.style.borderRadius = `${st.borderRadius}px`;
         else if (!st.textPreset) node.style.borderRadius = '';
+        if (capsule && st.capsuleBorder) {
+            node.style.border = `1px solid ${st.capsuleBorder}`;
+            node.style.boxShadow = '0 10px 28px rgba(0,0,0,.28)';
+        }
     }
 
     function renderTextLayer(layer, ctx) {
@@ -85,12 +125,18 @@
         const align = st.align || 'right';
         const dir = st.direction || 'rtl';
         const lh = st.lineHeight || 1.35;
-        const pad = st.textPreset === 'capsule' ? '8px 18px' : '2px 4px';
+        const capsule = isCapsuleTextLayer(layer);
+        const pad = capsule ? capsulePaddingPx(st) : '2px 4px';
         const fStyle = st.fontStyle === 'italic' ? 'font-style:italic;' : '';
         const uLine = st.textDecoration === 'underline' ? 'text-decoration:underline;' : '';
         const text = Bindings?.bindingText ? Bindings.bindingText(layer, ctx) : String(layer.text || '');
-        return `<div dir="${dir}" data-pcs-layer-id="${esc(layer.id)}" data-pcs-layer-type="text" style="${layerStyleCss(layer)}">
-            <div data-pcs-text-inner="1" style="width:100%;height:100%;display:flex;align-items:center;justify-content:${flexJustify(align)};padding:${pad};font-family:${fontFamily(st.fontKey)};font-size:${fs}px;font-weight:${fw};color:${fill};line-height:${lh};text-align:${align};word-wrap:break-word;overflow-wrap:anywhere;box-sizing:border-box;${fStyle}${uLine}">${esc(text)}</div>
+        const vAlign = flexAlign(st);
+        const stackAlign = vAlign === 'center' ? 'center' : 'flex-start';
+        const innerLayout = capsule
+            ? 'display:flex;flex-direction:row;align-items:center;justify-content:center;white-space:nowrap;word-wrap:normal;overflow-wrap:normal;text-align:center;'
+            : `display:flex;flex-direction:column;align-items:stretch;justify-content:${stackAlign};word-wrap:break-word;overflow-wrap:anywhere;text-align:${align};`;
+        return `<div dir="${dir}" data-pcs-layer-id="${esc(layer.id)}" data-pcs-layer-type="text" data-pcs-template-role="${esc(layer.templateRole || '')}" style="${layerStyleCss(layer)}">
+            <div data-pcs-text-inner="1" style="width:100%;height:100%;${innerLayout}padding:${pad};font-family:${fontFamily(st.fontKey)};font-size:${fs}px;font-weight:${fw};color:${fill};line-height:${lh};direction:${dir};unicode-bidi:plaintext;box-sizing:border-box;${fStyle}${uLine}">${esc(text)}</div>
         </div>`;
     }
 

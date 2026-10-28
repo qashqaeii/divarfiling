@@ -108,6 +108,48 @@ POSTER_TEMPLATES = (
         'description': 'قاب لوکس مروارید — دو دایره (شاخص + مکمل)',
         'overlay': 'images/Pearl Gallery luxury property story-2.webp',
     },
+    {
+        'id': 'burgundy_alabaster',
+        'label': 'گالری آلابستر بورگوندی',
+        'description': 'قاب مرمر آلابستر با لمسه بورگوندی — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Burgundy Alabaster Gallery Story Template-5.webp',
+    },
+    {
+        'id': 'amethyst_ceramic',
+        'label': 'سرامیک یاقوت بنفش',
+        'description': 'قاب سرامیک بنفش و کرم با لمسه رزگلد — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Amethyst Ceramic Luxury Property Story Template-4.webp',
+    },
+    {
+        'id': 'champagne_origami',
+        'label': 'اوریگامی شامپاین',
+        'description': 'قاب اوریگامی طلایی و شامپاین — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Champagne Origami Luxury Estate Story-5.webp',
+    },
+    {
+        'id': 'glacier_prism',
+        'label': 'منشور یخی',
+        'description': 'قاب فلزی یخی و سرمه‌ای — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Glacier prism luxury property story-1.webp',
+    },
+    {
+        'id': 'mediterranean_papercut',
+        'label': 'کاغذی مدیترانه',
+        'description': 'قاب کاغذی کرم و فیروزه‌ای با لمسه طلایی — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Mediterranean paper-cut property story template-3.webp',
+    },
+    {
+        'id': 'terracotta_terrace',
+        'label': 'تراس سفالی',
+        'description': 'قاب معماری سفالی و بژ با قوس استودیو — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Persian Real Estate Content Studio Dashboard.webp',
+    },
+    {
+        'id': 'brutalist_concrete',
+        'label': 'بتن بروتالیست',
+        'description': 'قاب بتنی و قرمز معماری بروتالیست — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Brutalist red-and-concrete real estate template-4.webp',
+    },
 )
 
 ALL_POSTER_TEMPLATE_IDS = frozenset(t['id'] for t in POSTER_TEMPLATES) | RETIRED_POSTER_TEMPLATE_IDS

@@ -16,7 +16,7 @@
         square: { w: 1080, h: 1080, cls: 'pcs-canvas--square' },
     };
     const DEFAULT_POSTER_TEMPLATE = 'pearlescent';
-    const OVERLAY_POSTER_TEMPLATES = ['pearlescent', 'pearlescent_ribbon', 'sculpted_travertine', 'sculptural', 'emerald_atelier', 'pearl_gallery'];
+    const OVERLAY_POSTER_TEMPLATES = ['pearlescent', 'pearlescent_ribbon', 'sculpted_travertine', 'sculptural', 'emerald_atelier', 'pearl_gallery', 'burgundy_alabaster', 'amethyst_ceramic', 'champagne_origami', 'glacier_prism', 'mediterranean_papercut', 'terracotta_terrace', 'brutalist_concrete'];
     const TEMPLATES = [...OVERLAY_POSTER_TEMPLATES];
     const TEMPLATE_META = {
         pearlescent: { label: 'قاب استوری', icon: 'fa-layer-group' },
@@ -25,6 +25,13 @@
         sculptural: { label: 'قاب عاج', icon: 'fa-palette' },
         emerald_atelier: { label: 'قاب زمرد', icon: 'fa-building-columns' },
         pearl_gallery: { label: 'گالری مروارید', icon: 'fa-gem' },
+        burgundy_alabaster: { label: 'گالری آلابستر بورگوندی', icon: 'fa-wine-glass' },
+        amethyst_ceramic: { label: 'سرامیک یاقوت بنفش', icon: 'fa-gem' },
+        champagne_origami: { label: 'اوریگامی شامپاین', icon: 'fa-champagne-glasses' },
+        glacier_prism: { label: 'منشور یخی', icon: 'fa-snowflake' },
+        mediterranean_papercut: { label: 'کاغذی مدیترانه', icon: 'fa-sun' },
+        terracotta_terrace: { label: 'تراس سفالی', icon: 'fa-house-chimney' },
+        brutalist_concrete: { label: 'بتن بروتالیست', icon: 'fa-cubes' },
         luxury: { label: 'لوکس (قدیمی)', icon: 'fa-gem' },
         minimal: { label: 'مینیمال (قدیمی)', icon: 'fa-building' },
         gallery: { label: 'چندتصویری (قدیمی)', icon: 'fa-shapes' },
@@ -498,8 +505,295 @@
         return `font-family:${pcsFontFamily(c)};${extra || ''}`;
     }
 
-    function syncCanvasTypography(root) {
+    function formatKeyFromCanvas(canvas) {
+        if (!canvas) return 'story';
+        if (canvas.classList.contains('pcs-canvas--post')) return 'post';
+        if (canvas.classList.contains('pcs-canvas--square')) return 'square';
+        const h = parseInt(canvas.style.height, 10) || 0;
+        if (h === 1350) return 'post';
+        if (h === 1080 && parseInt(canvas.style.width, 10) === 1080) return 'square';
+        return 'story';
+    }
+
+    function sceneTextPalette(templateId, conf) {
+        const confUse = conf || {};
+        const headlineOverride = normalizePosterHexColor(confUse.headline_color);
+        const priceOverride = normalizePosterHexColor(confUse.price_color);
+        const palettes = {
+            emerald_atelier: {
+                headline: '#122820',
+                meta: 'rgba(18,40,32,.78)',
+                price: '#0b4d3e',
+                footer: 'rgba(255,255,255,.92)',
+            },
+            sculpted_travertine: {
+                headline: '#1c1917',
+                meta: 'rgba(28,25,23,.72)',
+                price: '#92400e',
+                footer: '#faf7f2',
+            },
+            sculptural: {
+                headline: '#f7f4ec',
+                meta: 'rgba(247,244,236,.88)',
+                price: '#ffffff',
+                footer: 'rgba(255,255,255,.92)',
+                textShadow: '0 2px 12px rgba(0,0,0,.55)',
+            },
+            pearl_gallery: {
+                headline: '#f4f1eb',
+                meta: 'rgba(244,241,235,.86)',
+                price: '#e8c9a8',
+                footer: '#1e293b',
+                textShadow: '0 2px 14px rgba(0,0,0,.45)',
+            },
+            pearlescent_ribbon: {
+                headline: '#f8fafc',
+                meta: 'rgba(248,250,252,.88)',
+                price: '#fde68a',
+                footer: '#0f3d42',
+                textShadow: '0 2px 14px rgba(0,0,0,.45)',
+            },
+            pearlescent: {
+                headline: '#0a3560',
+                meta: '#0a3560',
+                price: '#0a3560',
+                footer: '#ffffff',
+            },
+            burgundy_alabaster: {
+                headline: '#3b1229',
+                meta: 'rgba(59,18,41,.76)',
+                price: '#7c1d3a',
+                footer: '#f5ebe0',
+            },
+            amethyst_ceramic: {
+                headline: '#2d1038',
+                meta: 'rgba(45,16,56,.76)',
+                price: '#6b2d7a',
+                footer: '#ede0c8',
+            },
+            champagne_origami: {
+                headline: '#1f1b16',
+                meta: 'rgba(31,27,22,.74)',
+                price: '#7a5c1e',
+                footer: '#e8dcc8',
+            },
+            glacier_prism: {
+                headline: '#f4f8fc',
+                meta: 'rgba(220,232,245,.9)',
+                price: '#9fd4f0',
+                footer: '#1a2840',
+                textShadow: '0 1px 10px rgba(0,0,0,.35)',
+            },
+            mediterranean_papercut: {
+                headline: '#0a3d42',
+                meta: 'rgba(242,236,224,.94)',
+                price: '#d4b36a',
+                footer: '#0a3d42',
+            },
+            terracotta_terrace: {
+                headline: '#4a2c22',
+                meta: 'rgba(74,44,34,.78)',
+                price: '#f7f0e8',
+                footer: '#4a2c22',
+            },
+            brutalist_concrete: {
+                headline: '#1a1a1a',
+                meta: 'rgba(26,26,26,.74)',
+                price: '#a34334',
+                footer: '#d8d4cc',
+            },
+        };
+        const base = palettes[templateId] || palettes.pearlescent;
+        return {
+            ...base,
+            headline: headlineOverride || base.headline,
+            price: priceOverride || base.price,
+        };
+    }
+
+    function applySceneTextStack(inner, boxH) {
+        inner.style.boxSizing = 'border-box';
+        inner.style.width = '100%';
+        inner.style.height = '100%';
+        inner.style.maxHeight = `${boxH}px`;
+        inner.style.display = 'flex';
+        inner.style.flexDirection = 'column';
+        inner.style.alignItems = 'stretch';
+        inner.style.justifyContent = 'flex-start';
+        inner.style.overflow = 'hidden';
+        inner.style.textAlign = 'right';
+        inner.style.direction = 'rtl';
+        inner.style.unicodeBidi = 'plaintext';
+    }
+
+    function styleSceneTextEl(el, conf, role, palette, fontFamilyCss) {
+        if (!el || !palette) return;
+        const color = role === 'meta' ? palette.meta
+            : (role === 'price' ? palette.price
+                : (role === 'footer' ? palette.footer : palette.headline));
+        el.style.fontFamily = fontFamilyCss;
+        el.style.color = color;
+        if (palette.textShadow && role !== 'footer') {
+            el.style.textShadow = palette.textShadow;
+        }
+        if (role === 'headline' || role === 'price') {
+            const weight = normalizePosterTextWeight(
+                role === 'price' ? conf?.price_weight : conf?.headline_weight,
+                900,
+            );
+            el.style.fontWeight = String(weight);
+            el.style.fontStyle = (role === 'price' ? conf?.price_italic : conf?.headline_italic) ? 'italic' : 'normal';
+            el.style.textDecoration = (role === 'price' ? conf?.price_underline : conf?.headline_underline) ? 'underline' : 'none';
+        }
+    }
+
+    function fitScenePosterTypography(root, templateId, formatKey, conf) {
+        const canvas = root?.classList?.contains('pcs-canvas') ? root : root?.querySelector?.('.pcs-canvas');
+        if (!canvas || canvas.dataset?.pcsSceneDriven !== '1') return;
+        const fmt = formatKey || formatKeyFromCanvas(canvas);
+        const layout = posterFormatLayout(fmt);
+        const h = layout.h;
+        const confUse = conf && typeof conf === 'object' ? conf : {};
+        const palette = sceneTextPalette(templateId, confUse);
+        const fam = pcsFontFamily(confUse);
+
+        const headlineEl = canvas.querySelector('[data-pcs-layer-id="headline-1"] [data-pcs-text-inner]');
+        if (headlineEl) {
+            const box = headlineEl.closest('[data-pcs-layer-id]');
+            const raw = (headlineEl.textContent || '').trim();
+            let boxW = box?.offsetWidth || 0;
+            const boxH = box?.offsetHeight || 120;
+            if (raw && boxW <= 8 && !canvas.dataset.pcsFitRetried) {
+                canvas.dataset.pcsFitRetried = '1';
+                requestAnimationFrame(() => {
+                    delete canvas.dataset.pcsFitRetried;
+                    fitScenePosterTypography(canvas, templateId, formatKey, conf);
+                });
+                return;
+            }
+            if (raw && boxW > 8) {
+                const fit = posterHeadlineFit(confUse, layout.hlModern, raw, Math.floor(boxW * 0.96), 2);
+                applySceneTextStack(headlineEl, boxH);
+                headlineEl.innerHTML = fit.lines.map((ln) => (
+                    `<div style="width:100%;line-height:1.2;letter-spacing:-0.012em;text-align:right;">${esc(ln)}</div>`
+                )).join('');
+                headlineEl.style.fontSize = `${fit.px}px`;
+                styleSceneTextEl(headlineEl, confUse, 'headline', palette, fam);
+            }
+        }
+
+        const metaEl = canvas.querySelector('[data-pcs-layer-id="meta-1"] [data-pcs-text-inner]');
+        if (metaEl) {
+            const box = metaEl.closest('[data-pcs-layer-id]');
+            const raw = (metaEl.textContent || '').trim();
+            const boxW = box?.offsetWidth || 0;
+            const boxH = box?.offsetHeight || 80;
+            if (raw) {
+                applySceneTextStack(metaEl, boxH);
+                let px = Math.round(h * 0.0165);
+                if (templateId === 'sculpted_travertine' || templateId === 'emerald_atelier' || templateId === 'burgundy_alabaster' || templateId === 'amethyst_ceramic' || templateId === 'champagne_origami' || templateId === 'glacier_prism' || templateId === 'mediterranean_papercut' || templateId === 'terracotta_terrace' || templateId === 'brutalist_concrete') px = Math.round(h * 0.016);
+                if (templateId === 'mediterranean_papercut' || templateId === 'terracotta_terrace' || templateId === 'brutalist_concrete') px = Math.round(h * 0.0175);
+                if (templateId === 'pearlescent') px = Math.max(px, 26);
+                while (px > 20 && boxW > 8 && pcsMeasureTextWidth(raw, px, confUse, 600) > boxW * 0.98) px -= 1;
+                metaEl.style.fontSize = `${px}px`;
+                metaEl.style.fontWeight = '600';
+                metaEl.style.lineHeight = '1.45';
+                styleSceneTextEl(metaEl, confUse, 'meta', palette, fam);
+                if (templateId === 'mediterranean_papercut' || templateId === 'terracotta_terrace' || templateId === 'brutalist_concrete') {
+                    metaEl.style.textAlign = 'center';
+                    metaEl.style.justifyContent = 'center';
+                    metaEl.style.alignItems = 'center';
+                }
+            }
+        }
+
+        const priceEl = canvas.querySelector('[data-pcs-layer-id="price-1"] [data-pcs-text-inner]');
+        if (priceEl) {
+            const box = priceEl.closest('[data-pcs-layer-id]');
+            const raw = (priceEl.textContent || '').trim();
+            const boxW = box?.offsetWidth || 0;
+            const boxH = box?.offsetHeight || 72;
+            if (raw && boxW > 8) {
+                applySceneTextStack(priceEl, boxH);
+                const priceCore = raw.replace(/^قیمت\s*[:：]?\s*/u, '').trim() || raw;
+                let px = posterPriceFit(confUse, layout, priceCore, Math.floor(boxW * 0.94));
+                if (templateId === 'sculptural' || templateId === 'pearl_gallery') {
+                    px = Math.min(px, Math.round(h * 0.048));
+                }
+                priceEl.style.fontSize = `${px}px`;
+                priceEl.style.lineHeight = '1.15';
+                styleSceneTextEl(priceEl, confUse, 'price', palette, fam);
+                if (templateId === 'mediterranean_papercut' || templateId === 'terracotta_terrace' || templateId === 'brutalist_concrete') {
+                    priceEl.style.textAlign = 'center';
+                    priceEl.style.justifyContent = 'center';
+                    priceEl.style.alignItems = 'center';
+                }
+            }
+        }
+
+        const footEl = canvas.querySelector('[data-pcs-layer-id="footer-1"] [data-pcs-text-inner]');
+        if (footEl) {
+            const box = footEl.closest('[data-pcs-layer-id]');
+            const boxW = box?.offsetWidth || 0;
+            const raw = (footEl.textContent || '').trim();
+            applySceneTextStack(footEl, box?.offsetHeight || 48);
+            let px = Math.round(h * (templateId === 'pearlescent_ribbon' ? 0.023 : 0.018));
+            if (templateId === 'sculpted_travertine' || templateId === 'burgundy_alabaster' || templateId === 'amethyst_ceramic' || templateId === 'champagne_origami' || templateId === 'glacier_prism' || templateId === 'mediterranean_papercut' || templateId === 'terracotta_terrace' || templateId === 'brutalist_concrete') px = Math.round(h * 0.022);
+            if (templateId === 'pearl_gallery') px = Math.round(h * 0.023);
+            while (px > 16 && raw && boxW > 8 && pcsMeasureTextWidth(raw, px, confUse, 800) > boxW * 0.96) px -= 1;
+            footEl.style.fontSize = `${px}px`;
+            footEl.style.fontWeight = '800';
+            footEl.style.lineHeight = '1.25';
+            styleSceneTextEl(footEl, confUse, 'footer', palette, fam);
+        }
+
+        const dealLayer = canvas.querySelector('[data-pcs-layer-id="deal-1"]');
+        const dealInner = dealLayer?.querySelector('[data-pcs-text-inner]');
+        if (dealLayer && dealInner) {
+            const raw = (dealInner.textContent || '').trim();
+            if (raw) {
+                dealLayer.style.overflow = 'visible';
+                dealInner.style.display = 'flex';
+                dealInner.style.flexDirection = 'row';
+                dealInner.style.alignItems = 'center';
+                dealInner.style.justifyContent = 'center';
+                dealInner.style.whiteSpace = 'nowrap';
+                dealInner.style.textAlign = 'center';
+                dealInner.style.wordWrap = 'normal';
+                dealInner.style.overflowWrap = 'normal';
+                const boxW = dealLayer.offsetWidth || 0;
+                let px = Math.round(h * 0.014);
+                if (boxW > 8) {
+                    while (px > 14 && pcsMeasureTextWidth(raw, px, confUse, 800) > boxW * 0.9) px -= 1;
+                }
+                dealInner.style.fontSize = `${px}px`;
+                dealInner.style.fontWeight = '800';
+                dealInner.style.lineHeight = '1.1';
+                dealInner.style.color = '#ffffff';
+                dealInner.style.fontFamily = fam;
+            }
+        }
+
+        const locEl = canvas.querySelector('[data-pcs-layer-id="location-1"] [data-pcs-text-inner]');
+        if (locEl && templateId === 'pearlescent') {
+            const box = locEl.closest('[data-pcs-layer-id]');
+            applySceneTextStack(locEl, box?.offsetHeight || 48);
+            locEl.style.fontSize = `${Math.round(h * 0.018)}px`;
+            locEl.style.fontWeight = '700';
+            locEl.style.color = palette.meta;
+            locEl.style.fontFamily = fam;
+        }
+    }
+
+    function syncCanvasTypography(root, opts) {
         applyFontToSubtree(root);
+        const canvas = root?.classList?.contains('pcs-canvas') ? root : root?.querySelector?.('.pcs-canvas');
+        if (canvas?.dataset?.pcsSceneDriven === '1') {
+            const tpl = canvas.dataset.template || opts?.templateId || '';
+            const fmt = opts?.formatKey || formatKeyFromCanvas(canvas);
+            const conf = opts?.posterConf || (tpl ? posterConfig(tpl) : null);
+            fitScenePosterTypography(canvas, tpl, fmt, conf);
+        }
         sanitizePosterTextForExport(root);
     }
 
@@ -551,6 +845,36 @@
         armImagesForExport(host);
         return host;
     }
+
+    function posterConfForExport(tpl) {
+        const editorOpen = !$('#pcsEditor')?.hasAttribute('hidden');
+        if (state.editorTemplate === tpl && state.editorBuffer && editorOpen) {
+            syncLayerEditorToBuffer();
+            return { ...state.editorBuffer };
+        }
+        return null;
+    }
+
+    async function preparePosterExportCanvas(host, tpl, formatKey, confOverride) {
+        await ensurePersianFonts();
+        await new Promise((resolve) => whenImagesReady(host, resolve, 12000));
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const canvas = host.querySelector('.pcs-canvas');
+        const conf = confOverride || posterConfig(tpl);
+        const root = canvas || host;
+        syncCanvasTypography(root, {
+            templateId: tpl,
+            formatKey: formatKey || state.format,
+            posterConf: conf,
+        });
+        await new Promise((r) => requestAnimationFrame(r));
+        syncCanvasTypography(root, {
+            templateId: tpl,
+            formatKey: formatKey || state.format,
+            posterConf: conf,
+        });
+        return canvas;
+    }
     const VIS_KEYS = [
         ['price', 'قیمت'], ['neighborhood', 'محله'], ['area', 'متراژ'], ['bedrooms', 'خواب'],
         ['floor', 'طبقه'], ['amenities', 'امکانات'], ['consultant_name', 'نام مشاور'],
@@ -580,7 +904,6 @@
         savePending: false,
         saveStatus: 'idle',
         sessionToken: 0,
-        exportInflight: false,
         aiInflight: false,
         libsLoaded: false,
         brandFieldsBound: false,
@@ -881,7 +1204,7 @@
 
     function posterGridTemplates() {
         const imgs = propertyImageList();
-        const list = ['pearlescent', 'pearlescent_ribbon', 'sculpted_travertine'];
+        const list = ['pearlescent', 'pearlescent_ribbon', 'sculpted_travertine', 'burgundy_alabaster', 'amethyst_ceramic', 'champagne_origami', 'glacier_prism', 'mediterranean_papercut', 'terracotta_terrace', 'brutalist_concrete'];
         if (imgs.length >= 2) list.push('emerald_atelier', 'pearl_gallery');
         if (imgs.length > 3) list.push('sculptural');
         return list;
@@ -1432,6 +1755,12 @@
     function posterBokehDots(primaryColor) {
         return `<div style="position:absolute;width:280px;height:280px;border-radius:50%;top:12%;left:-8%;background:radial-gradient(circle,${primaryRgba(primaryColor, 0.28)} 0%,transparent 68%);pointer-events:none;z-index:2;"></div>
             <div style="position:absolute;width:200px;height:200px;border-radius:50%;bottom:28%;right:-6%;background:radial-gradient(circle,rgba(212,175,55,.22) 0%,transparent 70%);pointer-events:none;z-index:2;"></div>`;
+    }
+
+    function posterDealBadgeLabelFromProperty(p) {
+        const raw = String(p?.deal_mode || p?.deal_label || '').trim();
+        const fn = g.PCSBindings?.posterDealBadgeLabel;
+        return fn ? fn(raw) : raw;
     }
 
     function dealBadgeHtml(dealLabel, primaryColor, variant) {
@@ -2228,6 +2557,892 @@
             </div>`;
     }
 
+    function burgundyAlabasterOverlayUrl() {
+        return cfg.templateMeta?.burgundy_alabaster?.overlay || '';
+    }
+
+    /** کالیبراسیون overlay (941×1672) — Burgundy Alabaster Gallery */
+    const BURGUNDY_ALABASTER_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 125, y0: 91, x1: 855, y1: 1031, focusX: 490, focusY: 500 },
+        text: { x0: 158, y0: 1092, x1: 862, y1: 1468, padX: 24, padY: 26, padEndX: 28, padEndY: 18 },
+        footer: { x0: 352, y0: 1552, x1: 872, y1: 1612 },
+        badge: { cx: 802, cy: 142 },
+        logo: { cx: 118, cy: 118, size: 54 },
+    };
+
+    function burgundyAlabasterLayoutMetrics(w, h) {
+        const cal = BURGUNDY_ALABASTER_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function burgundyDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px 9px;border-radius:999px;background:linear-gradient(145deg,rgba(212,175,106,.98) 0%,rgba(184,134,72,.94) 52%,rgba(158,108,48,.92) 100%);border:1px solid rgba(255,248,235,.55);box-shadow:0 8px 22px rgba(59,18,41,.35),inset 0 1px 0 rgba(255,255,255,.45);${pcsTextStyle('font-size:17px;line-height:1.1;color:#3b1229;font-weight:800;letter-spacing:.02em;')}">
+            <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:#5c0f2a;opacity:.75;flex-shrink:0;"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderBurgundyAlabasterPoster(ctx) {
+        const overlay = burgundyAlabasterOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = burgundyAlabasterLayoutMetrics(w, h);
+        const ink = '#3b1229';
+        const inkMuted = 'rgba(59,18,41,.76)';
+        const priceInk = '#7c1d3a';
+        const textW = Math.max(160, m.text.width);
+        const headFit = posterHeadlineFit(conf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.012em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:10px 0 0;font-size:${Math.round(h * 0.016)}px;font-weight:600;color:${inkMuted};line-height:1.5;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(conf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(conf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:12px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, conf)}
+            ${wrapPosterTextRole('meta', metaHtml, conf)}
+            ${wrapPosterTextRole('price', priceHtml, conf)}
+        </div>`;
+        const footInk = '#f5ebe0';
+        const footMuted = 'rgba(245,235,224,.88)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 14px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.015) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.022) + 'px;font-weight:900;color:' + footInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (BURGUNDY_ALABASTER_CALIBRATION.logo.size || 54) : 46;
+
+        return `
+            <div class="pcs-burgundy-alabaster-frame" style="position:absolute;inset:0;background:#f0e8de;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;border-radius:0 0 0 28px;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, conf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#44403c 0%,#1c1917 100%);"></div>`}
+                    ${posterHeroWarmth(conf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${burgundyDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function amethystCeramicOverlayUrl() {
+        return cfg.templateMeta?.amethyst_ceramic?.overlay || '';
+    }
+
+    const AMETHYST_CERAMIC_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 223, y0: 112, x1: 887, y1: 1012, focusX: 555, focusY: 480 },
+        text: { x0: 108, y0: 1125, x1: 898, y1: 1455, padX: 32, padY: 22, padEndX: 36, padEndY: 18 },
+        footer: { x0: 328, y0: 1542, x1: 618, y1: 1602 },
+        badge: { cx: 812, cy: 168 },
+        logo: { cx: 108, cy: 138, size: 52 },
+    };
+
+    function amethystCeramicLayoutMetrics(w, h) {
+        const cal = AMETHYST_CERAMIC_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function amethystDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px 9px;border-radius:999px;background:linear-gradient(145deg,rgba(232,196,154,.98) 0%,rgba(201,154,108,.94) 50%,rgba(176,122,78,.92) 100%);border:1px solid rgba(255,248,240,.55);box-shadow:0 8px 22px rgba(45,16,56,.35),inset 0 1px 0 rgba(255,255,255,.5);${pcsTextStyle('font-size:17px;line-height:1.1;color:#2d1038;font-weight:800;letter-spacing:.02em;')}">
+            <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:#4a1a5c;opacity:.7;flex-shrink:0;"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderAmethystCeramicPoster(ctx) {
+        const overlay = amethystCeramicOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = amethystCeramicLayoutMetrics(w, h);
+        const ink = '#2d1038';
+        const inkMuted = 'rgba(45,16,56,.76)';
+        const priceInk = '#6b2d7a';
+        const textW = Math.max(160, m.text.width);
+        const renderConf = { ...conf, font_key: conf?.font_key || 'gulzar' };
+        const headFit = posterHeadlineFit(renderConf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(renderConf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.012em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:10px 0 0;font-size:${Math.round(h * 0.016)}px;font-weight:600;color:${inkMuted};line-height:1.5;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(renderConf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(renderConf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:12px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, renderConf)}
+            ${wrapPosterTextRole('meta', metaHtml, renderConf)}
+            ${wrapPosterTextRole('price', priceHtml, renderConf)}
+        </div>`;
+        const footInk = '#ede0c8';
+        const footMuted = 'rgba(237,224,200,.88)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 12px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.0145) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.021) + 'px;font-weight:900;color:' + footInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (AMETHYST_CERAMIC_CALIBRATION.logo.size || 52) : 46;
+
+        return `
+            <div class="pcs-amethyst-ceramic-frame" style="position:absolute;inset:0;background:#1f0f2e;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, renderConf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#3d2a4a 0%,#1f0f2e 100%);"></div>`}
+                    ${posterHeroWarmth(renderConf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${amethystDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function champagneOrigamiOverlayUrl() {
+        return cfg.templateMeta?.champagne_origami?.overlay || '';
+    }
+
+    const CHAMPAGNE_ORIGAMI_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 111, y0: 116, x1: 897, y1: 1004, focusX: 504, focusY: 470 },
+        text: { x0: 175, y0: 1055, x1: 900, y1: 1475, padX: 28, padY: 22, padEndX: 32, padEndY: 18 },
+        footer: { x0: 128, y0: 1520, x1: 812, y1: 1588 },
+        badge: { cx: 798, cy: 152 },
+        logo: { cx: 102, cy: 128, size: 50 },
+    };
+
+    function champagneOrigamiLayoutMetrics(w, h) {
+        const cal = CHAMPAGNE_ORIGAMI_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function champagneDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px 9px;border-radius:999px;background:linear-gradient(145deg,rgba(248,228,196,.98) 0%,rgba(212,175,120,.95) 48%,rgba(184,146,88,.92) 100%);border:1px solid rgba(255,250,240,.6);box-shadow:0 8px 22px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.55);${pcsTextStyle('font-size:17px;line-height:1.1;color:#1f1b16;font-weight:800;letter-spacing:.02em;')}">
+            <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:#3d3428;opacity:.7;flex-shrink:0;"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderChampagneOrigamiPoster(ctx) {
+        const overlay = champagneOrigamiOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = champagneOrigamiLayoutMetrics(w, h);
+        const ink = '#1f1b16';
+        const inkMuted = 'rgba(31,27,22,.74)';
+        const priceInk = '#7a5c1e';
+        const textW = Math.max(160, m.text.width);
+        const renderConf = { ...conf, font_key: conf?.font_key || 'gulzar' };
+        const headFit = posterHeadlineFit(renderConf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(renderConf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.012em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:10px 0 0;font-size:${Math.round(h * 0.016)}px;font-weight:600;color:${inkMuted};line-height:1.5;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(renderConf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(renderConf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:12px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, renderConf)}
+            ${wrapPosterTextRole('meta', metaHtml, renderConf)}
+            ${wrapPosterTextRole('price', priceHtml, renderConf)}
+        </div>`;
+        const footInk = '#e8dcc8';
+        const footMuted = 'rgba(232,220,200,.88)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 16px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.0145) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.021) + 'px;font-weight:900;color:' + footInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (CHAMPAGNE_ORIGAMI_CALIBRATION.logo.size || 50) : 44;
+
+        return `
+            <div class="pcs-champagne-origami-frame" style="position:absolute;inset:0;background:#121110;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, renderConf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#3a3530 0%,#121110 100%);"></div>`}
+                    ${posterHeroWarmth(renderConf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${champagneDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function glacierPrismOverlayUrl() {
+        return cfg.templateMeta?.glacier_prism?.overlay || '';
+    }
+
+    const GLACIER_PRISM_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 118, y0: 175, x1: 858, y1: 1008, focusX: 488, focusY: 480 },
+        text: { x0: 168, y0: 1088, x1: 892, y1: 1438, padX: 28, padY: 20, padEndX: 32, padEndY: 16 },
+        footer: { x0: 142, y0: 1472, x1: 818, y1: 1538 },
+        badge: { cx: 868, cy: 148 },
+        logo: { cx: 118, cy: 138, size: 52 },
+    };
+
+    function glacierPrismLayoutMetrics(w, h) {
+        const cal = GLACIER_PRISM_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function glacierDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px 9px;border-radius:999px;background:linear-gradient(145deg,rgba(232,244,255,.98) 0%,rgba(176,210,238,.95) 48%,rgba(120,168,210,.92) 100%);border:1px solid rgba(255,255,255,.65);box-shadow:0 8px 22px rgba(8,20,36,.45),inset 0 1px 0 rgba(255,255,255,.7);${pcsTextStyle('font-size:17px;line-height:1.1;color:#0a1628;font-weight:800;letter-spacing:.02em;')}">
+            <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:#0c2340;opacity:.75;flex-shrink:0;"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderGlacierPrismPoster(ctx) {
+        const overlay = glacierPrismOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = glacierPrismLayoutMetrics(w, h);
+        const ink = '#f4f8fc';
+        const inkMuted = 'rgba(220,232,245,.9)';
+        const priceInk = '#9fd4f0';
+        const textW = Math.max(160, m.text.width);
+        const renderConf = { ...conf, font_key: conf?.font_key || 'gulzar' };
+        const headFit = posterHeadlineFit(renderConf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(renderConf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.35);';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.012em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:10px 0 0;font-size:${Math.round(h * 0.016)}px;font-weight:600;color:${inkMuted};line-height:1.5;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(renderConf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(renderConf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:12px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, renderConf)}
+            ${wrapPosterTextRole('meta', metaHtml, renderConf)}
+            ${wrapPosterTextRole('price', priceHtml, renderConf)}
+        </div>`;
+        const footInk = '#1a2840';
+        const footMuted = 'rgba(26,40,64,.78)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 16px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.0145) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.021) + 'px;font-weight:900;color:' + footInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (GLACIER_PRISM_CALIBRATION.logo.size || 52) : 46;
+
+        return `
+            <div class="pcs-glacier-prism-frame" style="position:absolute;inset:0;background:#0a1424;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, renderConf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#1a3050 0%,#0a1424 100%);"></div>`}
+                    ${posterHeroWarmth(renderConf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${glacierDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function mediterraneanPapercutOverlayUrl() {
+        return cfg.templateMeta?.mediterranean_papercut?.overlay || '';
+    }
+
+    const MEDITERRANEAN_PAPERCUT_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 58, y0: 255, x1: 912, y1: 905, focusX: 485, focusY: 450 },
+        text: { x0: 138, y0: 992, x1: 878, y1: 1438, padX: 24, padY: 18, padEndX: 28, padEndY: 14 },
+        footer: { x0: 198, y0: 1526, x1: 742, y1: 1586 },
+        badge: { cx: 862, cy: 158 },
+        logo: { cx: 112, cy: 132, size: 50 },
+    };
+
+    function mediterraneanPapercutLayoutMetrics(w, h) {
+        const cal = MEDITERRANEAN_PAPERCUT_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function mediterraneanDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px 9px;border-radius:999px;background:linear-gradient(145deg,rgba(242,236,224,.98) 0%,rgba(228,218,200,.96) 100%);border:1px solid rgba(197,160,89,.55);box-shadow:0 8px 22px rgba(10,61,66,.28),inset 0 1px 0 rgba(255,255,255,.65);${pcsTextStyle('font-size:16px;line-height:1.1;color:#0a3d42;font-weight:800;letter-spacing:.02em;')}">
+            <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:#c5a059;opacity:.85;flex-shrink:0;"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderMediterraneanPapercutPoster(ctx) {
+        const overlay = mediterraneanPapercutOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = mediterraneanPapercutLayoutMetrics(w, h);
+        const ink = '#0a3d42';
+        const inkMuted = 'rgba(242,236,224,.94)';
+        const priceInk = '#d4b36a';
+        const textW = Math.max(160, m.text.width);
+        const renderConf = { ...conf, font_key: conf?.font_key || 'gulzar' };
+        const headFit = posterHeadlineFit(renderConf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(renderConf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.22;letter-spacing:-0.01em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:8px 0 0;font-size:${Math.round(h * 0.0175)}px;font-weight:600;color:${inkMuted};line-height:1.45;text-align:center;width:100%;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(renderConf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(renderConf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:10px;width:100%;max-width:100%;overflow:hidden;text-align:center;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, renderConf)}
+            <div style="width:100%;margin-top:auto;display:flex;flex-direction:column;align-items:center;">
+                ${wrapPosterTextRole('meta', metaHtml, renderConf)}
+                ${wrapPosterTextRole('price', priceHtml, renderConf)}
+            </div>
+        </div>`;
+        const footInk = '#0a3d42';
+        const footMuted = 'rgba(10,61,66,.72)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 14px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.014) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.0195) + 'px;font-weight:900;color:' + footInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (MEDITERRANEAN_PAPERCUT_CALIBRATION.logo.size || 50) : 44;
+
+        return `
+            <div class="pcs-mediterranean-papercut-frame" style="position:absolute;inset:0;background:#ebe4d6;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, renderConf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#1a4a52 0%,#0a3d42 100%);"></div>`}
+                    ${posterHeroWarmth(renderConf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:stretch;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${mediterraneanDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function terracottaTerraceOverlayUrl() {
+        return cfg.templateMeta?.terracotta_terrace?.overlay || '';
+    }
+
+    const TERRACOTTA_TERRACE_CALIBRATION = {
+        refW: 940,
+        refH: 1672,
+        hero: { x0: 212, y0: 238, x1: 848, y1: 842, focusX: 530, focusY: 480 },
+        text: { x0: 162, y0: 1038, x1: 892, y1: 1505, padX: 26, padY: 16, padEndX: 30, padEndY: 12 },
+        footer: { x0: 172, y0: 1628, x1: 702, y1: 1652 },
+        badge: { cx: 852, cy: 248 },
+        logo: { cx: 118, cy: 248, size: 48 },
+    };
+
+    function terracottaTerraceLayoutMetrics(w, h) {
+        const cal = TERRACOTTA_TERRACE_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function terracottaDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px 9px;border-radius:999px;background:linear-gradient(145deg,rgba(181,93,61,.96) 0%,rgba(150,72,44,.94) 100%);border:1px solid rgba(247,240,232,.45);box-shadow:0 8px 22px rgba(74,44,34,.35),inset 0 1px 0 rgba(255,255,255,.25);${pcsTextStyle('font-size:16px;line-height:1.1;color:#f7f0e8;font-weight:800;letter-spacing:.02em;')}">
+            <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:#f2e8d9;opacity:.9;flex-shrink:0;"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderTerracottaTerracePoster(ctx) {
+        const overlay = terracottaTerraceOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = terracottaTerraceLayoutMetrics(w, h);
+        const ink = '#4a2c22';
+        const inkMuted = 'rgba(74,44,34,.78)';
+        const priceInk = '#f7f0e8';
+        const textW = Math.max(160, m.text.width);
+        const renderConf = { ...conf, font_key: conf?.font_key || 'gulzar' };
+        const headFit = posterHeadlineFit(renderConf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(renderConf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.22;letter-spacing:-0.01em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:8px 0 0;font-size:${Math.round(h * 0.0175)}px;font-weight:600;color:${inkMuted};line-height:1.45;text-align:center;width:100%;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(renderConf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(renderConf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:10px;width:100%;max-width:100%;overflow:hidden;text-align:center;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, renderConf)}
+            <div style="width:100%;margin-top:auto;display:flex;flex-direction:column;align-items:center;">
+                ${wrapPosterTextRole('meta', metaHtml, renderConf)}
+                ${wrapPosterTextRole('price', priceHtml, renderConf)}
+            </div>
+        </div>`;
+        const footInk = '#4a2c22';
+        const footMuted = 'rgba(74,44,34,.72)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:100%;padding:0 10px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.013) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.0185) + 'px;font-weight:900;color:' + footInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (TERRACOTTA_TERRACE_CALIBRATION.logo.size || 48) : 42;
+
+        return `
+            <div class="pcs-terracotta-terrace-frame" style="position:absolute;inset:0;background:#e8dfd0;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, renderConf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#8b4a32 0%,#4a2c22 100%);"></div>`}
+                    ${posterHeroWarmth(renderConf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:stretch;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${terracottaDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function brutalistConcreteOverlayUrl() {
+        return cfg.templateMeta?.brutalist_concrete?.overlay || '';
+    }
+
+    const BRUTALIST_CONCRETE_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 88, y0: 268, x1: 838, y1: 988, focusX: 463, focusY: 520 },
+        text: { x0: 118, y0: 1058, x1: 888, y1: 1392, padX: 28, padY: 20, padEndX: 32, padEndY: 14 },
+        footer: { x0: 118, y0: 1508, x1: 822, y1: 1568 },
+        badge: { cx: 828, cy: 208 },
+        logo: { cx: 112, cy: 188, size: 48 },
+    };
+
+    function brutalistConcreteLayoutMetrics(w, h) {
+        const cal = BRUTALIST_CONCRETE_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function brutalistDealBadgeHtml(dealLabel) {
+        if (!dealLabel) return '';
+        return `<div style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px 10px;border-radius:4px;background:linear-gradient(180deg,#b54a3a 0%,#8f3628 100%);border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 24px rgba(0,0,0,.45);${pcsTextStyle('font-size:16px;line-height:1.1;color:#f5f0ea;font-weight:800;letter-spacing:.03em;text-transform:none;')}">
+            <span aria-hidden="true" style="width:4px;height:14px;background:rgba(255,255,255,.55);flex-shrink:0;"></span>
+            <span>${esc(dealLabel)}</span>
+        </div>`;
+    }
+
+    function renderBrutalistConcretePoster(ctx) {
+        const overlay = brutalistConcreteOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = brutalistConcreteLayoutMetrics(w, h);
+        const ink = '#1a1a1a';
+        const inkMuted = 'rgba(26,26,26,.74)';
+        const priceInk = '#a34334';
+        const textW = Math.max(160, m.text.width);
+        const renderConf = { ...conf, font_key: conf?.font_key || 'vazirmatn' };
+        const headFit = posterHeadlineFit(renderConf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(renderConf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.015em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const metaLine = sculpturalMetaLine(p, metaFacts);
+        const metaHtml = metaLine
+            ? `<p style="${pcsTextStyle(`${headBlock}margin:10px 0 0;font-size:${Math.round(h * 0.0165)}px;font-weight:600;color:${inkMuted};line-height:1.5;`)}">${esc(metaLine)}</p>`
+            : '';
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(renderConf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(renderConf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:12px;width:100%;max-width:100%;overflow:hidden;border-right:4px solid #a34334;padding-right:12px;box-sizing:border-box;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.12;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterTextRole('headline', headHtml, renderConf)}
+            ${wrapPosterTextRole('meta', metaHtml, renderConf)}
+            ${wrapPosterTextRole('price', priceHtml, renderConf)}
+        </div>`;
+        const footInk = '#d8d4cc';
+        const footMuted = 'rgba(216,212,204,.78)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:100%;padding:0 14px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.0135) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.019) + 'px;font-weight:900;color:' + footInk + ';letter-spacing:.02em;')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (BRUTALIST_CONCRETE_CALIBRATION.logo.size || 48) : 42;
+
+        return `
+            <div class="pcs-brutalist-concrete-frame" style="position:absolute;inset:0;background:#2a2a2a;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, renderConf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#3a3a3a 0%,#1a1a1a 100%);"></div>`}
+                    ${posterHeroWarmth(renderConf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0);transform-origin:top right;">${brutalistDealBadgeHtml(dealLabel)}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
     function sculpturalOverlayUrl() {
         return cfg.templateMeta?.sculptural?.overlay || '';
     }
@@ -2697,6 +3912,13 @@
         if (templateId === 'sculptural') return renderSculpturalPoster(ctx);
         if (templateId === 'emerald_atelier') return renderEmeraldAtelierPoster(ctx);
         if (templateId === 'pearl_gallery') return renderPearlGalleryPoster(ctx);
+        if (templateId === 'burgundy_alabaster') return renderBurgundyAlabasterPoster(ctx);
+        if (templateId === 'amethyst_ceramic') return renderAmethystCeramicPoster(ctx);
+        if (templateId === 'champagne_origami') return renderChampagneOrigamiPoster(ctx);
+        if (templateId === 'glacier_prism') return renderGlacierPrismPoster(ctx);
+        if (templateId === 'mediterranean_papercut') return renderMediterraneanPapercutPoster(ctx);
+        if (templateId === 'terracotta_terrace') return renderTerracottaTerracePoster(ctx);
+        if (templateId === 'brutalist_concrete') return renderBrutalistConcretePoster(ctx);
         return renderCampaignPoster(ctx);
     }
 
@@ -3175,7 +4397,7 @@
         const badgeInk = textOnColor(primaryColor);
         const brandName = b.visibility?.consultant_name !== false ? (b.consultant_name || b.brand_name || '') : '';
         const phone = b.visibility?.contact_phone !== false ? (b.contact_phone || '') : '';
-        const dealLabel = p.deal_mode === 'فروش' ? 'فروش' : (p.deal_mode || 'آگهی');
+        const dealLabel = posterDealBadgeLabelFromProperty(p);
         const renderCtx = buildPosterRenderCtx(templateId, formatKey, conf, p, b, imgs, {
             primary,
             headline,
@@ -3662,6 +4884,8 @@
         const canvas = $('.pcs-canvas', wrap);
         if (!viewport || !canvas) return;
         const fmt = FORMATS[formatKey] || FORMATS.story;
+        const docW = parseInt(canvas.style.width, 10) || parseInt(canvas.getAttribute('width'), 10) || fmt.w;
+        const docH = parseInt(canvas.style.height, 10) || parseInt(canvas.getAttribute('height'), 10) || fmt.h;
         const pad = 16;
         let vw = viewport.clientWidth - pad * 2;
         let vh = viewport.clientHeight - pad * 2;
@@ -3670,10 +4894,10 @@
             vw = Math.max(80, rect.width - pad * 2);
             vh = Math.max(120, rect.height - pad * 2);
         }
-        let scale = Math.min(vw / fmt.w, vh / fmt.h);
+        let scale = Math.min(vw / docW, vh / docH);
         scale = Math.max(0.06, Math.min(scale, 2.4));
-        const visualW = Math.round(fmt.w * scale);
-        const visualH = Math.round(fmt.h * scale);
+        const visualW = Math.round(docW * scale);
+        const visualH = Math.round(docH * scale);
 
         viewport.style.overflow = 'auto';
         viewport.style.display = 'flex';
@@ -3700,8 +4924,8 @@
         scaler.style.overflow = 'hidden';
         scaler.style.flexShrink = '0';
 
-        canvas.style.width = `${fmt.w}px`;
-        canvas.style.height = `${fmt.h}px`;
+        canvas.style.width = `${docW}px`;
+        canvas.style.height = `${docH}px`;
         canvas.style.transform = `scale(${scale})`;
         canvas.style.transformOrigin = 'top left';
         canvas.style.position = 'absolute';
@@ -3826,7 +5050,7 @@
                 const preview = document.createElement('div');
                 preview.className = 'pcs-poster-card__preview' + (state.format === 'post' ? ' is-post' : state.format === 'square' ? ' is-square' : '');
                 preview.innerHTML = renderPosterHtml(tpl, state.format);
-                syncCanvasTypography(preview);
+                syncCanvasTypography(preview, { templateId: tpl, formatKey: state.format, posterConf: posterConfig(tpl) });
                 const foot = document.createElement('div');
                 foot.className = 'pcs-poster-card__foot';
                 foot.innerHTML = `
@@ -3851,7 +5075,17 @@
         }
         const scaleAll = () => {
             grid.querySelectorAll('.pcs-poster-card__preview').forEach((el) => {
-                whenImagesReady(el, () => scalePreviewCanvas(el, state.format));
+                whenImagesReady(el, () => {
+                    scalePreviewCanvas(el, state.format);
+                    const card = el.closest('.pcs-poster-card');
+                    const tplMatch = card?.className?.match(/pcs-poster-card--([a-z_0-9]+)/);
+                    const cardTpl = tplMatch ? tplMatch[1] : '';
+                    syncCanvasTypography(el, {
+                        templateId: cardTpl,
+                        formatKey: state.format,
+                        posterConf: cardTpl ? posterConfig(cardTpl) : null,
+                    });
+                });
             });
             bindPosterCarousel();
         };
@@ -3874,13 +5108,16 @@
                 : '';
         }
         box.innerHTML = renderPosterHtml(tpl, state.format);
-        syncCanvasTypography(box);
+        syncCanvasTypography(box, { templateId: tpl, formatKey: state.format, posterConf: posterConfig(tpl) });
         box.classList.remove('is-ready');
         box.style.height = '';
         box.style.maxHeight = '';
         lb.removeAttribute('hidden');
         document.body.classList.add('pcs-lightbox-open');
-        const fit = () => whenImagesReady(box, () => scalePreviewCanvas(box, state.format));
+        const fit = () => whenImagesReady(box, () => {
+            scalePreviewCanvas(box, state.format);
+            syncCanvasTypography(box, { templateId: tpl, formatKey: state.format, posterConf: posterConfig(tpl) });
+        });
         requestAnimationFrame(() => requestAnimationFrame(fit));
     }
 
@@ -3894,20 +5131,20 @@
     async function downloadPoster(tpl) {
         const fmt = state.format;
         let innerHtml;
+        let confForExport = posterConfForExport(tpl);
         if (state.editorStorySlideId && state.editorTemplate === tpl) {
             const slide = findStorySlide(state.editorStorySlideId);
-            const conf = state.editorBuffer ? { ...state.editorBuffer } : null;
-            innerHtml = slide && conf ? storyPreviewHtml(slide, conf) : renderPosterHtml(tpl, fmt);
+            if (!confForExport && state.editorBuffer) confForExport = { ...state.editorBuffer };
+            innerHtml = slide && confForExport
+                ? storyPreviewHtml(slide, confForExport)
+                : renderPosterHtml(tpl, fmt, confForExport);
         } else {
-            const conf = state.editorTemplate === tpl && state.editorBuffer ? { ...state.editorBuffer } : null;
-            innerHtml = renderPosterHtml(tpl, fmt, conf);
+            innerHtml = renderPosterHtml(tpl, fmt, confForExport);
         }
         const host = createExportHost(innerHtml, fmt);
-        const canvas = host.querySelector('.pcs-canvas');
         try {
-            await ensurePersianFonts();
-            await new Promise((resolve) => whenImagesReady(host, resolve, 10000));
-            sanitizePosterTextForExport(canvas);
+            const canvas = await preparePosterExportCanvas(host, tpl, fmt, confForExport);
+            if (!canvas) throw new Error('no canvas');
             await exportCanvasElement(canvas, `property-${cfg.propertyId}-${tpl}-${state.format}.webp`, state.format);
             toast('دانلود شروع شد');
         } catch (e) {
@@ -4501,11 +5738,24 @@
         state.saveTimer = setTimeout(() => { flushSaveDraft(); }, 800);
     }
 
+    function syncLayerEditorToBuffer() {
+        if (!window.PCSLayerEditor?.isActive?.() || !state.editorBuffer) return;
+        window.PCSLayerEditor.commitToBuffer(state.editorBuffer);
+    }
+
+    function commitOpenEditorToDraftIfNeeded() {
+        const editorEl = $('#pcsEditor');
+        if (!state.editorTemplate || !state.editorBuffer || !state.draft) return;
+        if (editorEl?.hasAttribute('hidden')) return;
+        commitEditorToDraft(state.editorTemplate);
+    }
+
     async function flushSaveDraft() {
         if (!state.draft || state.saveInflight) {
             state.savePending = true;
-            return;
+            return false;
         }
+        commitOpenEditorToDraftIfNeeded();
         const snapshotRev = state.draftDirtyRev;
         const draftPayload = collectDraftFromForm() || state.draft;
         const draftSnapshot = JSON.stringify(draftPayload);
@@ -4525,7 +5775,7 @@
             if (!res.ok || data.ok === false) {
                 setSaveStatus('failed');
                 toast(data.error || 'ذخیره پیش‌نویس ناموفق بود');
-                return;
+                return false;
             }
             const stillCurrent = snapshotRev === state.draftDirtyRev;
             if (data.draft && stillCurrent) {
@@ -4540,11 +5790,13 @@
                 state.session.property_fingerprint = data.property_fingerprint;
             }
             setSaveStatus('saved');
+            return true;
         } catch (_) {
             if (seq === state.saveSeq) {
                 setSaveStatus('failed');
                 toast('خطا در ارتباط هنگام ذخیره');
             }
+            return false;
         } finally {
             state.saveInflight = false;
             const needsAnotherSave = state.savePending || snapshotRev !== state.draftDirtyRev;
@@ -4619,7 +5871,18 @@
 
     async function saveDraft() {
         clearTimeout(state.saveTimer);
-        await flushSaveDraft();
+        markDraftDirty();
+        let ok = await flushSaveDraft();
+        let spins = 0;
+        while ((state.saveInflight || state.savePending) && spins < 120) {
+            await new Promise((r) => setTimeout(r, 25));
+            spins += 1;
+        }
+        if (state.savePending && !state.saveInflight) {
+            state.savePending = false;
+            ok = await flushSaveDraft();
+        }
+        return ok !== false && state.saveStatus !== 'failed';
     }
 
     async function loadSession() {
@@ -4671,6 +5934,240 @@
         $$('.pcs-story-slide__frame').forEach((wrap) => scalePreviewCanvas(wrap, 'story'));
     }
 
+    function pcsPublicShareUrl() {
+        return state.session?.property?.public_share_url || '';
+    }
+
+    function pcsShareCaption(kind) {
+        const url = pcsPublicShareUrl();
+        const hashtags = ($('#pcsHashtags')?.value || '').trim();
+        if (kind === 'telegram') {
+            const text = ($('#pcsTelegramText')?.value || '').trim();
+            return `${text}\n${url}`.trim();
+        }
+        const text = ($('#pcsWhatsappText')?.value || state.session?.property?.title || '').trim();
+        let msg = `${text}\n${url}`.trim();
+        if (hashtags && (kind === 'instagram' || kind === 'copy-text')) {
+            msg = `${msg}\n\n${hashtags}`.trim();
+        }
+        return msg;
+    }
+
+    const publishSheetState = { returnFocus: null };
+
+    function pcsPublishUrlLabel(url) {
+        const u = String(url || '').trim();
+        if (!u) return '';
+        if (u.length <= 42) return u;
+        return `${u.slice(0, 36)}…`;
+    }
+
+    async function createPublicShareLink() {
+        if (!cfg.publicShareUrl) {
+            toast('مسیر ایجاد لینک در دسترس نیست');
+            return false;
+        }
+        const btn = $('#pcsPublishCreateLink');
+        const label = btn?.querySelector('span');
+        const prev = label?.textContent;
+        if (btn) btn.disabled = true;
+        if (label) label.textContent = 'در حال ساخت…';
+        try {
+            const res = await fetch(cfg.publicShareUrl, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+                toast(data.error || 'ایجاد لینک ناموفق بود');
+                return false;
+            }
+            state.session.property.public_share_url = data.share_url || '';
+            renderSharePanel();
+            syncPublishSheetState();
+            toast('لینک عمومی ایجاد شد');
+            return true;
+        } catch (_) {
+            toast('خطا در ایجاد لینک');
+            return false;
+        } finally {
+            if (btn) btn.disabled = false;
+            if (label && prev) label.textContent = prev;
+        }
+    }
+
+    function syncPublishSheetState() {
+        const p = state.session?.property || {};
+        const url = pcsPublicShareUrl();
+        const callout = $('#pcsPublishCallout');
+        const hint = $('#pcsPublishHint');
+        const createBtn = $('#pcsPublishCreateLink');
+        const titleEl = $('#pcsPublishPropTitle');
+        const locEl = $('#pcsPublishPropLoc');
+        const thumbEl = $('#pcsPublishPropThumb');
+        const statusEl = $('#pcsPublishLinkStatus');
+        const nativeBtn = $('#pcsPublishNative');
+
+        if (titleEl) titleEl.textContent = p.title || p.headline || 'فایل ملک';
+        if (locEl) {
+            locEl.textContent = p.location_line || '';
+            locEl.hidden = !p.location_line;
+        }
+        if (thumbEl) {
+            if (p.cover_image) {
+                thumbEl.classList.remove('is-empty');
+                thumbEl.innerHTML = `<img src="${esc(p.cover_image)}" alt="">`;
+            } else {
+                thumbEl.classList.add('is-empty');
+                thumbEl.innerHTML = '<i class="fas fa-building" aria-hidden="true"></i>';
+            }
+        }
+        if (statusEl) {
+            if (url) {
+                statusEl.className = 'pcs-publish-preview__status is-ready';
+                statusEl.innerHTML = `<i class="fas fa-circle-check" aria-hidden="true"></i><span dir="ltr">${esc(pcsPublishUrlLabel(url))}</span>`;
+            } else {
+                statusEl.className = 'pcs-publish-preview__status is-missing';
+                statusEl.innerHTML = '<i class="fas fa-circle-exclamation" aria-hidden="true"></i><span>لینک عمومی فعال نیست</span>';
+            }
+        }
+        if (callout && hint) {
+            if (url) {
+                callout.hidden = true;
+                hint.textContent = '';
+            } else {
+                callout.hidden = false;
+                hint.textContent = 'برای اشتراک حرفه‌ای با مشتری، یک لینک عمومی بسازید.';
+            }
+        }
+        if (createBtn) {
+            createBtn.hidden = !!(url || !state.session?.can_create_public_share);
+        }
+        if (nativeBtn) {
+            nativeBtn.hidden = typeof navigator.share !== 'function';
+        }
+
+        const sheet = $('#pcsPublishSheet');
+        sheet?.querySelectorAll('[data-pcs-publish]').forEach((btn) => {
+            const channel = btn.getAttribute('data-pcs-publish');
+            const needsUrl = channel === 'telegram' || channel === 'copy-link';
+            const disabled = needsUrl && !url;
+            btn.disabled = disabled;
+            btn.classList.toggle('is-disabled', disabled);
+            btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+        });
+    }
+
+    function openPublishSheet() {
+        closeSettingsSheet();
+        const sheet = $('#pcsPublishSheet');
+        const trigger = $('#pcsFooterPublish');
+        if (!sheet) return;
+        mountToBody(sheet);
+        publishSheetState.returnFocus = trigger;
+        syncPublishSheetState();
+        sheet.removeAttribute('hidden');
+        requestAnimationFrame(() => {
+            sheet.classList.add('is-open');
+            const focusTarget = sheet.querySelector('[data-pcs-publish]:not([disabled])')
+                || $('#pcsPublishCreateLink')
+                || sheet.querySelector('[data-pcs-publish-close]');
+            focusTarget?.focus?.();
+        });
+        trigger?.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('pcs-publish-open');
+    }
+
+    function closePublishSheet() {
+        const sheet = $('#pcsPublishSheet');
+        const trigger = $('#pcsFooterPublish');
+        if (!sheet || sheet.hasAttribute('hidden')) return;
+        sheet.classList.remove('is-open');
+        document.body.classList.remove('pcs-publish-open');
+        trigger?.setAttribute('aria-expanded', 'false');
+        const back = publishSheetState.returnFocus;
+        publishSheetState.returnFocus = null;
+        window.setTimeout(() => {
+            if (sheet.classList.contains('is-open')) return;
+            sheet.setAttribute('hidden', '');
+            back?.focus?.();
+        }, 280);
+    }
+
+    function runPublishAction(channel) {
+        const url = pcsPublicShareUrl();
+        if (channel === 'copy-link') {
+            if (!url) {
+                toast('لینک عمومی موجود نیست — ابتدا لینک بسازید');
+                return;
+            }
+            navigator.clipboard.writeText(url);
+            toast('لینک کپی شد');
+            closePublishSheet();
+            return;
+        }
+        if (channel === 'copy-text') {
+            const msg = pcsShareCaption('copy-text') || url;
+            if (!msg) {
+                toast('متنی برای کپی موجود نیست');
+                return;
+            }
+            navigator.clipboard.writeText(msg);
+            toast('متن اشتراک کپی شد');
+            closePublishSheet();
+            return;
+        }
+        if (channel === 'instagram') {
+            const msg = pcsShareCaption('instagram') || ($('#pcsWhatsappText')?.value || '').trim();
+            if (!msg) {
+                toast('متن کپشن در تب شبکه‌ها را تکمیل کنید');
+                return;
+            }
+            navigator.clipboard.writeText(msg);
+            toast('متن برای اینستاگرام کپی شد — در پست یا استوری پیست کنید');
+            closePublishSheet();
+            return;
+        }
+        if (channel === 'native') {
+            const text = pcsShareCaption('copy-text');
+            if (!navigator.share) {
+                if (text) {
+                    navigator.clipboard.writeText(text);
+                    toast('مرورگر اشتراک سیستمی ندارد — متن کپی شد');
+                } else {
+                    toast('اشتراک سیستمی در این مرورگر پشتیبانی نمی‌شود');
+                }
+                closePublishSheet();
+                return;
+            }
+            navigator.share({
+                title: state.session?.property?.title || 'فایل ملک',
+                text: text || undefined,
+                url: url || undefined,
+            }).catch(() => { /* cancelled */ });
+            closePublishSheet();
+            return;
+        }
+        if (channel === 'whatsapp') {
+            if (!url && !($('#pcsWhatsappText')?.value || '').trim()) {
+                toast('لینک یا متن واتساپ موجود نیست');
+                return;
+            }
+            const msg = encodeURIComponent(pcsShareCaption('whatsapp') || url);
+            window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
+            closePublishSheet();
+            return;
+        }
+        if (channel === 'telegram') {
+            if (!url) {
+                toast('لینک عمومی برای تلگرام لازم است');
+                return;
+            }
+            const msg = encodeURIComponent(pcsShareCaption('telegram') || url);
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${msg}`, '_blank', 'noopener');
+            closePublishSheet();
+        }
+    }
+
     function renderSharePanel() {
         const grid = $('#pcsShareGrid');
         if (!grid) return;
@@ -4691,27 +6188,7 @@
             navigator.clipboard.writeText(current);
             toast('لینک کپی شد');
         });
-        $('#pcsShareCreateLink')?.addEventListener('click', async () => {
-            if (!cfg.publicShareUrl) {
-                toast('مسیر ایجاد لینک در دسترس نیست');
-                return;
-            }
-            try {
-                const res = await fetch(cfg.publicShareUrl, {
-                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                });
-                const data = await res.json();
-                if (!res.ok || !data.ok) {
-                    toast(data.error || 'ایجاد لینک ناموفق بود');
-                    return;
-                }
-                state.session.property.public_share_url = data.share_url || '';
-                renderSharePanel();
-                toast('لینک عمومی ایجاد شد');
-            } catch (_) {
-                toast('خطا در ایجاد لینک');
-            }
-        });
+        $('#pcsShareCreateLink')?.addEventListener('click', () => { createPublicShareLink(); });
         $('#pcsShareTabDivar')?.addEventListener('click', () => setTab('divar'));
     }
 
@@ -4740,13 +6217,9 @@
 
     function syncFooterForTab(tab) {
         const footer = $('#pcsFooter');
-        const dl = $('#pcsDownloadAll');
         if (!footer) return;
         const mob = isMobileViewport();
-        const showDl = tab === 'posters';
-        const showQuick = tab === 'posters' || tab === 'share';
         const showFooter = tab === 'posters' || tab === 'share';
-        if (dl) dl.hidden = !showDl;
         footer.hidden = !showFooter;
         footer.classList.toggle('pcs-footer--minimal', mob && tab !== 'posters');
     }
@@ -4818,6 +6291,8 @@
     function pcsOverlayRootFor(target) {
         const modal = $('#pcsModal');
         const sheet = $('#pcsSettingsSheet');
+        const publishSheet = $('#pcsPublishSheet');
+        if (publishSheet && !publishSheet.hasAttribute('hidden') && publishSheet.contains(target)) return publishSheet;
         if (sheet && !sheet.hasAttribute('hidden') && sheet.contains(target)) return sheet;
         if (modal && !modal.hasAttribute('hidden') && modal.contains(target)) return modal;
         return null;
@@ -4826,9 +6301,11 @@
     function onPcsTouchMove(e) {
         const modal = $('#pcsModal');
         const sheet = $('#pcsSettingsSheet');
+        const publishSheet = $('#pcsPublishSheet');
         const modalOpen = modal && !modal.hasAttribute('hidden');
         const sheetOpen = sheet && !sheet.hasAttribute('hidden');
-        if (!modalOpen && !sheetOpen) return;
+        const publishOpen = publishSheet && !publishSheet.hasAttribute('hidden');
+        if (!modalOpen && !sheetOpen && !publishOpen) return;
 
         const root = pcsOverlayRootFor(e.target);
         if (!root) {
@@ -4844,6 +6321,7 @@
         if (!modal) return;
         mountToBody(modal);
         mountToBody($('#pcsSettingsSheet'));
+        mountToBody($('#pcsPublishSheet'));
         closeMobileMore();
         resetStudioShellState();
         lockPageScroll();
@@ -4858,6 +6336,7 @@
     async function closeModal() {
         closePreview();
         closeSettingsSheet();
+        closePublishSheet();
         if (!$('#pcsEditor')?.hasAttribute('hidden')) {
             closeEditor();
             if (!$('#pcsEditor')?.hasAttribute('hidden')) return;
@@ -4872,6 +6351,7 @@
     const settingsSheetState = { sidebar: null, footParent: null };
 
     function openSettingsSheet() {
+        closePublishSheet();
         const inner = $('#pcsSidebarInner');
         const body = $('#pcsSettingsSheetBody');
         const sheet = $('#pcsSettingsSheet');
@@ -5937,7 +7417,11 @@
                     features: editorFeaturesForVisibleProperty(),
                     brand: mergeBrand(),
                     overlayUrl: cfg.templateMeta?.[tpl]?.overlay || '',
-                    onDirty: () => syncEditorDirtyFlag(),
+                    onDirty: () => {
+                        syncLayerEditorToBuffer();
+                        syncEditorDirtyFlag();
+                        scheduleSave();
+                    },
                 });
             } catch (err) {
                 console.error('PCSLayerEditor.start', err);
@@ -6333,6 +7817,14 @@
                 closePreview();
                 return;
             }
+            if (!$('#pcsPublishSheet')?.hasAttribute('hidden')) {
+                closePublishSheet();
+                return;
+            }
+            if (!$('#pcsSettingsSheet')?.hasAttribute('hidden')) {
+                closeSettingsSheet();
+                return;
+            }
             if (!$('#pcsModal')?.hasAttribute('hidden')) closeModal();
         });
         $$('.pcs-tab').forEach((t) => t.addEventListener('click', () => setTab(t.dataset.pcsTab)));
@@ -6344,23 +7836,13 @@
             navigator.clipboard.writeText(`${title}\n\n${body}`.trim());
             toast('عنوان و متن کپی شد');
         });
-        $('#pcsCopyShareLink')?.addEventListener('click', () => {
-            const url = state.session?.property?.public_share_url || '';
-            if (!url) { toast('لینک عمومی موجود نیست'); return; }
-            navigator.clipboard.writeText(url);
-            toast('لینک کپی شد');
-        });
-        $('#pcsShareWhatsapp')?.addEventListener('click', () => {
-            const text = $('#pcsWhatsappText')?.value || state.session?.property?.title || '';
-            const url = state.session?.property?.public_share_url || '';
-            const msg = encodeURIComponent(`${text}\n${url}`.trim());
-            window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
-        });
-        $('#pcsShareTelegram')?.addEventListener('click', () => {
-            const text = $('#pcsTelegramText')?.value || '';
-            const url = state.session?.property?.public_share_url || '';
-            const msg = encodeURIComponent(`${text}\n${url}`.trim());
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${msg}`, '_blank', 'noopener');
+        $('#pcsFooterPublish')?.addEventListener('click', () => openPublishSheet());
+        $$('[data-pcs-publish-close]').forEach((el) => el.addEventListener('click', closePublishSheet));
+        $('#pcsPublishCreateLink')?.addEventListener('click', () => { createPublicShareLink(); });
+        $('#pcsPublishSheet')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-pcs-publish]');
+            if (!btn) return;
+            runPublishAction(btn.getAttribute('data-pcs-publish'));
         });
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.pcs-save-brand')) return;
@@ -6375,50 +7857,6 @@
             if (ed) openEditor(ed.getAttribute('data-pcs-edit'));
             if (pr) openPreview(pr.getAttribute('data-pcs-preview'));
         });
-        $('#pcsDownloadAll')?.addEventListener('click', async () => {
-            if (state.exportInflight) return;
-            state.exportInflight = true;
-            const btn = $('#pcsDownloadAll');
-            if (btn) btn.disabled = true;
-            let okCount = 0;
-            let failCount = 0;
-            try {
-                await ensureLibs();
-                await ensurePersianFonts();
-                const zip = new JSZip();
-                for (const tpl of posterTemplatesForSession()) {
-                    const host = createExportHost(buildCanvasHtml(tpl, state.format), state.format);
-                    const canvas = host.querySelector('.pcs-canvas');
-                    try {
-                        const shot = await rasterizeCanvas(canvas, state.format);
-                        const { blob, ext } = await rasterCanvasToBlob(shot);
-                        if (!blob) throw new Error('empty blob');
-                        zip.file(`${tpl}-${state.format}.${ext}`, blob);
-                        okCount += 1;
-                    } catch (_) {
-                        failCount += 1;
-                    }
-                    host.remove();
-                }
-                if (!okCount) {
-                    toast('هیچ پوستری برای ZIP تولید نشد');
-                    return;
-                }
-                const out = await zip.generateAsync({ type: 'blob' });
-                const objUrl = URL.createObjectURL(out);
-                const a = document.createElement('a');
-                a.href = objUrl;
-                a.download = `property-${cfg.propertyId}-posters.zip`;
-                a.click();
-                URL.revokeObjectURL(objUrl);
-                toast(failCount ? `${okCount} فایل OK — ${failCount} خطا` : 'فایل ZIP آماده شد');
-            } catch (_) {
-                toast('خطا در ساخت ZIP');
-            } finally {
-                state.exportInflight = false;
-                if (btn) btn.disabled = false;
-            }
-        });
         $('#pcsOpenSettings')?.addEventListener('click', openSettingsSheet);
         $('#pcsOpenSettingsHead')?.addEventListener('click', openSettingsSheet);
         $('#pcsFooterSettings')?.addEventListener('click', openSettingsSheet);
@@ -6426,21 +7864,32 @@
         $('#pcsEditorClose')?.addEventListener('click', () => closeEditor());
         $('#pcsEditorBack')?.addEventListener('click', () => closeEditor());
         $('#pcsEditorCancel')?.addEventListener('click', () => closeEditor());
-        $('#pcsEditorSave')?.addEventListener('click', () => {
+        $('#pcsEditorSave')?.addEventListener('click', async () => {
             const tpl = state.editorTemplate;
             if (!tpl || !state.draft) return;
+            const btn = $('#pcsEditorSave');
             const wasStory = !!state.editorStorySlideId;
-            commitEditorToDraft(tpl);
-            scheduleSave();
-            renderPosters();
-            renderStoryboard();
-            closeEditor(true);
-            toast(wasStory ? 'تغییرات استوری ذخیره شد' : 'تغییرات پوستر ذخیره شد');
+            if (btn) btn.disabled = true;
+            try {
+                commitEditorToDraft(tpl);
+                const saved = await saveDraft();
+                if (!saved) {
+                    toast('ذخیره روی سرور ناموفق بود — دوباره تلاش کنید');
+                    return;
+                }
+                renderPosters();
+                renderStoryboard();
+                closeEditor(true);
+                toast(wasStory ? 'تغییرات استوری ذخیره شد' : 'تغییرات پوستر ذخیره شد');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         });
         $('#pcsEditorDownload')?.addEventListener('click', async () => {
             const tpl = state.editorTemplate;
             if (!tpl) return;
             updateEditorBufferFromForm(tpl);
+            syncLayerEditorToBuffer();
             await downloadPoster(tpl);
         });
         $('#pcsEditorReset')?.addEventListener('click', () => {
@@ -6510,6 +7959,8 @@
         renderPosterHtml,
         buildPosterRenderContext,
         syncCanvasTypography,
+        fitScenePosterTypography,
+        posterFormatLayout,
         scheduleEditorPreviewScale,
         scaleLayerEditorPreview,
         isMobileViewport,

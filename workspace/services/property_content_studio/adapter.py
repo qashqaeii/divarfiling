@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional
 from workspace.models import CRMProperty
 from workspace.services.display import transaction_profile
 from workspace.services.formatting import format_area, format_toman
-from workspace.services.property_content_studio.constants import OUTPUT_FORMATS, POSTER_TEMPLATES
+from workspace.services.property_content_studio.constants import (
+    DEFAULT_VISIBILITY,
+    OUTPUT_FORMATS,
+    POSTER_TEMPLATES,
+)
 
 _DESCRIPTION_EXCERPT_MAX = 900
 from workspace.services.property_features import feature_data_rows_for_display
@@ -197,6 +201,8 @@ def build_studio_property_payload(
     price = _price_display(prop)
     amenities = _amenity_chips(prop)
 
+    from workspace.services.property_content_studio.feature_catalog import build_editor_feature_catalog
+
     return {
         'id': prop.pk,
         'title': (prop.title or '').strip(),
@@ -228,6 +234,7 @@ def build_studio_property_payload(
         'has_elevator': bool(prop.has_elevator),
         'templates': list(POSTER_TEMPLATES),
         'formats': OUTPUT_FORMATS,
+        'editor_features': build_editor_feature_catalog(prop, DEFAULT_VISIBILITY),
     }
 
 

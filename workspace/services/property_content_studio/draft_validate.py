@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 from typing import Any, Dict, List, Optional, Tuple
 
 from workspace.services.property_content_studio.constants import (
@@ -29,6 +30,18 @@ _PIP_SHAPES = frozenset({'rounded', 'circle', 'card'})
 _PIP_BORDERS = frozenset({'light', 'brand', 'gold'})
 _WARMTH = frozenset({'neutral', 'warm', 'cool'})
 _FONT_KEYS = frozenset({'vazirmatn', 'estedad', 'lalezar', 'markazi', 'gulzar', 'parastoo'})
+_LAYER_TYPES = frozenset({
+    'text', 'bound_text', 'image', 'template_frame', 'logo', 'shape', 'group', 'decor',
+})
+_LAYER_STYLE_KEYS = frozenset({
+    'fontKey', 'fontSize', 'fontWeight', 'fill', 'align', 'direction', 'lineHeight',
+    'background', 'borderRadius', 'opacity', 'textPreset', 'objectFit', 'cropPanX',
+    'cropPanY', 'cropZoom',
+})
+_MAX_SCENE_LAYERS = 48
+_MAX_SCENE_PARENT_DEPTH = 4
+_SCENE_ALIGN = frozenset({'left', 'center', 'right'})
+_SCENE_OBJECT_FIT = frozenset({'cover', 'contain', 'fill'})
 
 
 class DraftValidationError(ValueError):
@@ -59,10 +72,240 @@ def _normalize_visibility(raw: Any) -> Dict[str, bool]:
     return out
 
 
-def _normalize_poster_config(raw: Any, template_id: str) -> Dict[str, Any]:
+def _finite_float(value: Any, *, field: str) -> float:
+    if isinstance(value, bool):
+        raise DraftValidationError(f'scene: {field} نامعتبر')
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        raise DraftValidationError(f'scene: {field} نامعتبر')
+    if not math.isfinite(n):
+        raise DraftValidationError(f'scene: {field} نامعتبر')
+    return n
+
+
+def _clip_float(value: Any, lo: float, hi: float, *, field: str) -> float:
+    n = _finite_float(value, field=field)
+    return max(lo, min(hi, n))
+
+
+def _normalize_scene_binding(raw: Any) -> Optional[Dict[str, str]]:
+    if raw is None:
+        return None
     if not isinstance(raw, dict):
+        raise DraftValidationError('scene: binding نامعتبر')
+    mode = raw.get('mode')
+    if mode not in ('linked', 'override', 'detached'):
+        mode = 'linked'
+    source = raw.get('source')
+    if source not in ('property', 'user'):
+        source = 'property'
+    field = _clip_str(raw.get('field'), 64)
+    if source == 'property' and not field:
+        return None
+    return {'source': source, 'field': field, 'mode': mode}
+
+
+def _normalize_scene_style(raw: Any) -> Dict[str, Any]:
+    if raw is None:
         return {}
+    if not isinstance(raw, dict):
+        raise DraftValidationError('scene: style نامعتبر')
     out: Dict[str, Any] = {}
+    for key in raw:
+        if key not in _LAYER_STYLE_KEYS:
+            continue
+        val = raw[key]
+        if key == 'fontKey':
+            fk = str(val or 'vazirmatn')
+            out[key] = fk if fk in _FONT_KEYS else 'vazirmatn'
+        elif key == 'fontSize':
+            out[key] = _clip_float(val, 8, 200, field='fontSize')
+        elif key == 'fontWeight':
+            out[key] = int(_clip_float(val, 400, 900, field='fontWeight'))
+        elif key == 'fill':
+            out[key] = _clip_str(val, 16)
+        elif key == 'align':
+            a = str(val or 'right')
+            out[key] = a if a in _SCENE_ALIGN else 'right'
+        elif key == 'direction':
+            out[key] = 'ltr' if val == 'ltr' else 'rtl'
+        elif key == 'lineHeight':
+            out[key] = _clip_float(val, 0.8, 3.0, field='lineHeight')
+        elif key == 'background':
+            out[key] = _clip_str(val, 32)
+        elif key == 'borderRadius':
+            out[key] = _clip_float(val, 0, 999, field='borderRadius')
+        elif key == 'opacity':
+            out[key] = _clip_float(val, 0, 1, field='style.opacity')
+        elif key == 'textPreset':
+            out[key] = _clip_str(val, 32)
+        elif key == 'objectFit':
+            fit = str(val or 'cover')
+            out[key] = fit if fit in _SCENE_OBJECT_FIT else 'cover'
+        elif key in ('cropPanX', 'cropPanY'):
+            out[key] = _clip_float(val, 0, 100, field=key)
+        elif key == 'cropZoom':
+            out[key] = _clip_float(val, 0.5, 3.0, field='cropZoom')
+    return out
+
+
+def _scene_parent_depth(layer_id: str, by_id: Dict[str, Dict[str, Any]]) -> int:
+    depth = 0
+    current = layer_id
+    seen: set[str] = set()
+    while True:
+        layer = by_id.get(current)
+        if not layer:
+            return depth
+        parent = layer.get('parentId')
+        if not parent:
+            return depth
+        if parent in seen:
+            raise DraftValidationError('scene: parentId حلقه دارد')
+        seen.add(parent)
+        depth += 1
+        if depth > _MAX_SCENE_PARENT_DEPTH:
+            raise DraftValidationError('scene: عمق parentId بیش از حد')
+        current = parent
+
+
+def _validate_and_normalize_scene(raw: Any, template_id: str) -> Dict[str, Any]:
+    if not isinstance(raw, dict):
+        raise DraftValidationError('scene نامعتبر')
+
+    schema_version = _clip_int(raw.get('schemaVersion'), 1, 3, 2)
+
+    default_fmt = _clip_str(template_id, 20) or 'luxury'
+    base_canvas = OUTPUT_FORMATS.get('story', {'width': 1080, 'height': 1920})
+    canvas_in = raw.get('canvas')
+    if canvas_in is not None and not isinstance(canvas_in, dict):
+        raise DraftValidationError('scene: canvas نامعتبر')
+    if isinstance(canvas_in, dict):
+        fmt = _clip_str(canvas_in.get('format'), 20) or 'story'
+        if fmt not in _FORMAT_IDS:
+            fmt = 'story'
+        fmt_spec = OUTPUT_FORMATS.get(fmt, base_canvas)
+        width = int(_clip_float(
+            canvas_in.get('width', fmt_spec.get('width', 1080)),
+            320,
+            4096,
+            field='canvas.width',
+        ))
+        height = int(_clip_float(
+            canvas_in.get('height', fmt_spec.get('height', 1920)),
+            320,
+            4096,
+            field='canvas.height',
+        ))
+        canvas = {'width': width, 'height': height, 'format': fmt}
+    else:
+        canvas = {
+            'width': int(base_canvas.get('width', 1080)),
+            'height': int(base_canvas.get('height', 1920)),
+            'format': 'story',
+        }
+
+    tpl = _clip_str(raw.get('templateId') or template_id or 'luxury', 32) or 'luxury'
+    if tpl not in _TEMPLATE_IDS:
+        tpl = 'luxury'
+
+    layers_in = raw.get('layers')
+    if layers_in is None:
+        layers_in = []
+    if not isinstance(layers_in, list):
+        raise DraftValidationError('scene: layers نامعتبر')
+    if len(layers_in) > _MAX_SCENE_LAYERS:
+        raise DraftValidationError('scene: layers بیش از حد')
+
+    cw = canvas['width']
+    ch = canvas['height']
+    layers: List[Dict[str, Any]] = []
+    ids: set[str] = set()
+    for item in layers_in:
+        if not isinstance(item, dict):
+            raise DraftValidationError('scene: layer نامعتبر')
+        layer_id = _clip_str(item.get('id'), 40)
+        if not layer_id:
+            raise DraftValidationError('scene: layer id نامعتبر')
+        if layer_id in ids:
+            raise DraftValidationError('scene: layer id تکراری')
+        layer_type = _clip_str(item.get('type'), 40) or 'text'
+        if layer_type not in _LAYER_TYPES:
+            raise DraftValidationError('scene: type نامعتبر')
+        parent_raw = item.get('parentId')
+        parent_id = _clip_str(parent_raw, 40) if parent_raw not in (None, '') else None
+        layer = {
+            'id': layer_id,
+            'type': layer_type,
+            'name': _clip_str(item.get('name') or layer_id, 80),
+            'visible': item.get('visible') is not False,
+            'locked': bool(item.get('locked')),
+            'parentId': parent_id,
+            'x': _clip_float(item.get('x', 0), -cw, cw * 2, field='x'),
+            'y': _clip_float(item.get('y', 0), -ch, ch * 2, field='y'),
+            'width': _clip_float(item.get('width', 200), 1, cw * 2, field='width'),
+            'height': _clip_float(item.get('height', 48), 1, ch * 2, field='height'),
+            'rotation': _clip_float(item.get('rotation', 0), -360, 360, field='rotation'),
+            'opacity': _clip_float(item.get('opacity', 1), 0, 1, field='opacity'),
+            'binding': _normalize_scene_binding(item.get('binding')),
+            'style': _normalize_scene_style(item.get('style')),
+        }
+        if 'text' in item:
+            layer['text'] = _clip_str(item.get('text'), 2000)
+        if item.get('assetRef'):
+            layer['assetRef'] = _clip_str(item.get('assetRef'), 64)
+        if 'imageIndex' in item:
+            layer['imageIndex'] = max(0, _clip_int(item.get('imageIndex'), 0, 64, 0))
+        if item.get('templateRole'):
+            layer['templateRole'] = _clip_str(item.get('templateRole'), 32)
+        ids.add(layer_id)
+        layers.append(layer)
+
+    by_id = {layer['id']: layer for layer in layers}
+    for layer in layers:
+        parent_id = layer.get('parentId')
+        if parent_id and parent_id not in by_id:
+            raise DraftValidationError('scene: parentId نامعتبر')
+        _scene_parent_depth(layer['id'], by_id)
+
+    layer_ids = [layer['id'] for layer in layers]
+    order_in = raw.get('layerOrder')
+    if order_in is None:
+        order = list(layer_ids)
+    else:
+        if not isinstance(order_in, list):
+            raise DraftValidationError('scene: layerOrder نامعتبر')
+        if len(order_in) > _MAX_SCENE_LAYERS:
+            raise DraftValidationError('scene: layerOrder بیش از حد')
+        order = []
+        for oid in order_in:
+            sid = _clip_str(oid, 40)
+            if not sid:
+                raise DraftValidationError('scene: layerOrder نامعتبر')
+            if sid not in ids:
+                raise DraftValidationError('scene: layerOrder نامعتبر')
+            if sid in order:
+                raise DraftValidationError('scene: layerOrder تکراری')
+            order.append(sid)
+        if set(order) != ids:
+            raise DraftValidationError('scene: layerOrder نامعتبر')
+
+    render_mode = 'legacy' if raw.get('renderMode') == 'legacy' else 'layers'
+    scene: Dict[str, Any] = {
+        'schemaVersion': schema_version,
+        'canvas': canvas,
+        'templateId': tpl,
+        'renderMode': render_mode,
+        'layers': layers,
+        'layerOrder': order,
+    }
+    if raw.get('migratedAt'):
+        scene['migratedAt'] = _clip_str(raw.get('migratedAt'), 40)
+    return scene
+
+
+def _normalize_poster_flat_fields(raw: Dict[str, Any], out: Dict[str, Any]) -> None:
     if 'headline' in raw:
         out['headline'] = _clip_str(raw.get('headline'), _HEADLINE_MAX)
     for key in (
@@ -140,6 +383,28 @@ def _normalize_poster_config(raw: Any, template_id: str) -> Dict[str, Any]:
         for item in raw['image_order'][:32]:
             order.append(max(0, _clip_int(item, 0, 64, 0)))
         out['image_order'] = order
+
+
+def _normalize_poster_config(raw: Any, template_id: str) -> Dict[str, Any]:
+    if not isinstance(raw, dict):
+        return {}
+    out: Dict[str, Any] = {}
+    poster_settings = raw.get('posterSettings')
+    flat: Dict[str, Any] = {}
+    if isinstance(poster_settings, dict):
+        flat.update(poster_settings)
+    for key, value in raw.items():
+        if key in ('scene', 'posterSettings'):
+            continue
+        flat[key] = value
+    _normalize_poster_flat_fields(flat, out)
+    if 'scene' in raw:
+        out['scene'] = _validate_and_normalize_scene(raw.get('scene'), template_id)
+    if isinstance(poster_settings, dict):
+        settings_out: Dict[str, Any] = {}
+        _normalize_poster_flat_fields(poster_settings, settings_out)
+        if settings_out:
+            out['posterSettings'] = settings_out
     return out
 
 

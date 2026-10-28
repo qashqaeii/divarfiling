@@ -74,10 +74,22 @@ POSTER_TEMPLATES = (
         'overlay': 'images/Pearlescent Blue Real Estate Story Template-3.webp',
     },
     {
+        'id': 'pearlescent_ribbon',
+        'label': 'ریبون مروارید',
+        'description': 'استوری لوکس با ریبون مروارید و پنل زمردی — مناسب فایل تک‌تصویر',
+        'overlay': 'images/Pearlescent ribbon luxury real estate template-4.png',
+    },
+    {
         'id': 'sculptural',
         'label': 'قاب عاج',
         'description': 'قاب استوری عاج و زیتونی — مناسب فایل‌های با چند تصویر',
         'overlay': 'images/Sculptural ivory olive real estate story template-4.webp',
+    },
+    {
+        'id': 'sculpted_travertine',
+        'label': 'تراورتن طلایی',
+        'description': 'قاب سنگ تراورتن با قوس طلایی — استوری لوکس تک‌تصویر',
+        'overlay': 'images/Sculpted travertine luxury story template.png',
     },
     {
         'id': 'emerald_atelier',

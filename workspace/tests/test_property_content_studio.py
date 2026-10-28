@@ -17,7 +17,15 @@ from workspace.services.property_content_studio.adapter import (
     format_divar_facts_outline,
 )
 from workspace.services.property_content_studio.draft import save_draft, sync_draft_with_property
-from workspace.services.property_content_studio.draft_validate import DraftValidationError, validate_and_merge_draft
+from workspace.services.property_content_studio.draft_validate import (
+    DraftValidationError,
+    _normalize_poster_config,
+    validate_and_merge_draft,
+)
+from workspace.services.property_content_studio.feature_catalog import (
+    EDITOR_FEATURE_STABLE_KEYS,
+    build_editor_feature_catalog,
+)
 from workspace.services.property_content_studio.fingerprint import property_content_fingerprint
 from workspace.services.property_content_studio.quality import build_quality_report
 from workspace.services.property_public_share import existing_property_share_for_user
@@ -399,6 +407,136 @@ class PropertyContentStudioConfidentialShareTests(TestCase):
         self.assertTrue(data['mask_sensitive'])
         self.assertEqual(data['property']['neighborhood'], '')
         self.assertNotIn('محله خاص', data['property']['location_line'])
+
+
+class PropertyContentStudioSceneAndFeatureCatalogTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='pcs_scene', password='x', phone='09120000020')
+        self.prop = CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان ۸۰ متری',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            area=80,
+            rooms='۲',
+            neighborhood='جردن',
+            city='تهران',
+            sale_price=30_000_000_000,
+            has_elevator=True,
+            has_parking=True,
+            feature_data={'جنس کف': 'سرامیک', '_location_precision': 'approximate'},
+        )
+
+    def _valid_scene(self, **overrides):
+        base = {
+            'schemaVersion': 2,
+            'canvas': {'width': 1080, 'height': 1920, 'format': 'story'},
+            'templateId': 'luxury',
+            'layers': [
+                {
+                    'id': 'headline-1',
+                    'type': 'bound_text',
+                    'name': 'عنوان',
+                    'x': 40,
+                    'y': 120,
+                    'width': 400,
+                    'height': 80,
+                    'binding': {'source': 'property', 'field': 'price', 'mode': 'linked'},
+                },
+            ],
+            'layerOrder': ['headline-1'],
+        }
+        base.update(overrides)
+        return base
+
+    def test_scene_normalization_in_poster_config(self):
+        conf = _normalize_poster_config(
+            {'headline': 'تست', 'scene': self._valid_scene()},
+            'luxury',
+        )
+        self.assertIn('scene', conf)
+        scene = conf['scene']
+        self.assertEqual(scene['schemaVersion'], 2)
+        self.assertEqual(scene['canvas']['format'], 'story')
+        self.assertEqual(len(scene['layers']), 1)
+        self.assertEqual(scene['layerOrder'], ['headline-1'])
+        self.assertEqual(conf['headline'], 'تست')
+
+    def test_poster_settings_merged_with_scene(self):
+        conf = _normalize_poster_config(
+            {
+                'posterSettings': {'headline_scale': 120},
+                'scene': self._valid_scene(),
+            },
+            'luxury',
+        )
+        self.assertEqual(conf['headline_scale'], 120)
+        self.assertIn('posterSettings', conf)
+        self.assertEqual(conf['posterSettings']['headline_scale'], 120)
+
+    def test_scene_rejects_nan_coordinates(self):
+        scene = self._valid_scene()
+        scene['layers'][0]['x'] = float('nan')
+        with self.assertRaises(DraftValidationError):
+            _normalize_poster_config({'scene': scene}, 'luxury')
+
+    def test_scene_rejects_duplicate_layer_ids(self):
+        scene = self._valid_scene()
+        scene['layers'].append(dict(scene['layers'][0]))
+        with self.assertRaises(DraftValidationError):
+            _normalize_poster_config({'scene': scene}, 'luxury')
+
+    def test_scene_rejects_layer_order_mismatch(self):
+        scene = self._valid_scene(layerOrder=['missing-id'])
+        with self.assertRaises(DraftValidationError):
+            _normalize_poster_config({'scene': scene}, 'luxury')
+
+    def test_scene_rejects_parent_cycle(self):
+        scene = self._valid_scene(
+            layers=[
+                {'id': 'a', 'type': 'group', 'name': 'A', 'parentId': 'b'},
+                {'id': 'b', 'type': 'group', 'name': 'B', 'parentId': 'a'},
+            ],
+            layerOrder=['a', 'b'],
+        )
+        with self.assertRaises(DraftValidationError):
+            _normalize_poster_config({'scene': scene}, 'luxury')
+
+    def test_editor_features_in_payload(self):
+        payload = build_studio_property_payload(self.prop)
+        features = payload['editor_features']
+        self.assertTrue(features)
+        keys = {item['key'] for item in features}
+        self.assertIn('area_label', keys)
+        self.assertIn('price', keys)
+        self.assertIn('amenity.0', keys)
+        for item in features:
+            self.assertIn('visibilityKey', item)
+            self.assertTrue(item['key'] == item['id'])
+            self.assertNotIn('_location_precision', item['key'])
+
+    def test_feature_catalog_respects_stable_keys(self):
+        catalog = build_editor_feature_catalog(self.prop, {'amenities': True})
+        for item in catalog:
+            key = item['key']
+            if key.startswith('amenity.'):
+                self.assertTrue(key[8:].isdigit())
+            else:
+                self.assertIn(key, EDITOR_FEATURE_STABLE_KEYS)
+
+    def test_feature_catalog_visibility_masks_price(self):
+        catalog = build_editor_feature_catalog(self.prop, {'price': False})
+        price_row = next(item for item in catalog if item['key'] == 'price')
+        self.assertEqual(price_row['value'], '')
+        area_row = next(item for item in catalog if item['key'] == 'area_label')
+        self.assertTrue(area_row['value'])
+
+    def test_draft_merge_accepts_poster_with_scene(self):
+        merged, _ = validate_and_merge_draft(
+            None,
+            {'posters': {'luxury': {'scene': self._valid_scene()}}},
+        )
+        self.assertIn('scene', merged['posters']['luxury'])
 
 
 class PropertyContentStudioDraftValidateTests(TestCase):

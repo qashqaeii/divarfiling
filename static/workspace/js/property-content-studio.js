@@ -13,7 +13,7 @@
         square: { w: 1080, h: 1080, cls: 'pcs-canvas--square' },
     };
     const CORE_POSTER_TEMPLATES = ['luxury', 'minimal', 'gallery', 'bold'];
-    const OVERLAY_POSTER_TEMPLATES = ['pearlescent', 'sculptural', 'emerald_atelier', 'pearl_gallery'];
+    const OVERLAY_POSTER_TEMPLATES = ['pearlescent', 'pearlescent_ribbon', 'sculpted_travertine', 'sculptural', 'emerald_atelier', 'pearl_gallery'];
     const TEMPLATES = [...CORE_POSTER_TEMPLATES, ...OVERLAY_POSTER_TEMPLATES];
     const TEMPLATE_META = {
         luxury: { label: 'لوکس', icon: 'fa-gem' },
@@ -21,6 +21,8 @@
         gallery: { label: 'کلاژ', icon: 'fa-shapes' },
         bold: { label: 'کمپین', icon: 'fa-bolt' },
         pearlescent: { label: 'قاب استوری', icon: 'fa-layer-group' },
+        pearlescent_ribbon: { label: 'ریبون مروارید', icon: 'fa-ribbon' },
+        sculpted_travertine: { label: 'تراورتن طلایی', icon: 'fa-archway' },
         sculptural: { label: 'قاب عاج', icon: 'fa-palette' },
         emerald_atelier: { label: 'قاب زمرد', icon: 'fa-building-columns' },
         pearl_gallery: { label: 'گالری مروارید', icon: 'fa-gem' },
@@ -863,7 +865,7 @@
 
     function posterGridTemplates() {
         const imgs = propertyImageList();
-        const list = [...CORE_POSTER_TEMPLATES, 'pearlescent'];
+        const list = [...CORE_POSTER_TEMPLATES, 'pearlescent', 'pearlescent_ribbon', 'sculpted_travertine'];
         if (imgs.length >= 2) list.push('emerald_atelier', 'pearl_gallery');
         if (imgs.length > 3) list.push('sculptural');
         return list;
@@ -1971,6 +1973,245 @@
             </div>`;
     }
 
+    function pearlescentRibbonOverlayUrl() {
+        return cfg.templateMeta?.pearlescent_ribbon?.overlay || '';
+    }
+
+    /** کالیبراسیون از سوراخ alpha overlay (941×1672) — Pearlescent ribbon luxury template-4 */
+    const PEARLESCENT_RIBBON_CALIBRATION = {
+        refW: 941,
+        refH: 1672,
+        hero: { x0: 206, y0: 126, x1: 885, y1: 970, focusX: 545, focusY: 460 },
+        text: { x0: 218, y0: 1010, x1: 908, y1: 1400, padX: 22, padY: 12, padEndX: 28, padEndY: 18 },
+        footer: { x0: 212, y0: 1438, x1: 862, y1: 1605 },
+        badge: { cx: 818, cy: 172 },
+        logo: { cx: 318, cy: 172, size: 54 },
+    };
+
+    function pearlescentRibbonLayoutMetrics(w, h) {
+        const cal = PEARLESCENT_RIBBON_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function renderPearlescentRibbonPoster(ctx) {
+        const overlay = pearlescentRibbonOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            primaryColor, brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = pearlescentRibbonLayoutMetrics(w, h);
+        const ink = '#f8fafc';
+        const inkMuted = 'rgba(248,250,252,.88)';
+        const priceInk = '#fde68a';
+        const textW = Math.max(160, m.text.width);
+        const headFit = posterHeadlineFit(conf, layout.hlModern, headline, Math.floor(textW * 0.95), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const textShadow = 'text-shadow:0 2px 14px rgba(0,0,0,.45);';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.18;letter-spacing:-0.015em;${headEmph}${textShadow}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const specsHtml = posterSpecsLineHtml(metaFacts, '#e2e8f0', 'dark', {
+            compact: true,
+            noMargin: true,
+            prominent: true,
+        });
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(conf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(conf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:10px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.12;${emph}${textShadow}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterHeadlineRole(headHtml, conf)}
+            ${specsHtml ? wrapPosterMetaRole(`<div style="margin-top:10px;">${specsHtml}</div>`, conf) : ''}
+            ${priceHtml ? wrapPosterPriceRole(priceHtml, conf) : ''}
+        </div>`;
+        const footInk = '#0f3d42';
+        const footMuted = 'rgba(15,61,66,.78)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;height:100%;padding:0 14px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.0155) + 'px;font-weight:800;color:' + footMuted + ';')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.023) + 'px;font-weight:900;color:' + footInk + ';')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (PEARLESCENT_RIBBON_CALIBRATION.logo.size || 54) : 46;
+
+        return `
+            <div class="pcs-pearlescent-ribbon-frame" style="position:absolute;inset:0;background:#f3ebe0;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, conf) : `<div style="width:100%;height:100%;background:linear-gradient(165deg,#1e293b 0%,#0f172a 100%);"></div>`}
+                    ${posterHeroWarmth(conf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0) scale(.84);transform-origin:top right;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
+    function sculptedTravertineOverlayUrl() {
+        return cfg.templateMeta?.sculpted_travertine?.overlay || '';
+    }
+
+    /** کالیبراسیون alpha overlay (940×1672) — Sculpted travertine luxury story */
+    const SCULPTED_TRAVERTINE_CALIBRATION = {
+        refW: 940,
+        refH: 1672,
+        hero: { x0: 112, y0: 175, x1: 826, y1: 1017, focusX: 470, focusY: 520 },
+        text: { x0: 168, y0: 1025, x1: 832, y1: 1390, padX: 26, padY: 16, padEndX: 32, padEndY: 20 },
+        footer: { x0: 148, y0: 1495, x1: 792, y1: 1625 },
+        badge: { cx: 768, cy: 228 },
+        logo: { cx: 200, cy: 228, size: 52 },
+    };
+
+    function sculptedTravertineLayoutMetrics(w, h) {
+        const cal = SCULPTED_TRAVERTINE_CALIBRATION;
+        const sx = w / cal.refW;
+        const sy = h / cal.refH;
+        const px = (x) => Math.round(x * sx);
+        const py = (y) => Math.round(y * sy);
+        const box = (b) => ({
+            left: px(b.x0),
+            top: py(b.y0),
+            width: px(b.x1 - b.x0),
+            height: py(b.y1 - b.y0),
+            objX: ((b.focusX - b.x0) / (b.x1 - b.x0)) * 100,
+            objY: ((b.focusY - b.y0) / (b.y1 - b.y0)) * 100,
+        });
+        const t = cal.text;
+        return {
+            hero: box(cal.hero),
+            text: {
+                left: px(t.x0 + (t.padX || 0)),
+                top: py(t.y0 + (t.padY || 0)),
+                width: px((t.x1 - t.x0) - (t.padX || 0) - (t.padEndX || 0)),
+                height: py((t.y1 - t.y0) - (t.padY || 0) - (t.padEndY || 0)),
+            },
+            footer: {
+                left: px(cal.footer.x0),
+                top: py(cal.footer.y0),
+                width: px(cal.footer.x1 - cal.footer.x0),
+                height: py(cal.footer.y1 - cal.footer.y0),
+            },
+            badge: { left: px(cal.badge.cx), top: py(cal.badge.cy) },
+            logo: { left: px(cal.logo.cx), top: py(cal.logo.cy) },
+        };
+    }
+
+    function renderSculptedTravertinePoster(ctx) {
+        const overlay = sculptedTravertineOverlayUrl();
+        if (!overlay) return renderPearlescentPoster(ctx);
+
+        const {
+            layout, conf, primary, cropY, headline, price, locLine,
+            primaryColor, brandName, phone, facts, dealLabel, b, p,
+        } = ctx;
+        const fmt = layout.fmt;
+        const w = fmt.w;
+        const h = fmt.h;
+        const m = sculptedTravertineLayoutMetrics(w, h);
+        const ink = '#1c1917';
+        const inkMuted = 'rgba(28,25,23,.72)';
+        const priceInk = '#92400e';
+        const textW = Math.max(160, m.text.width);
+        const headFit = posterHeadlineFit(conf, layout.hlModern, headline, Math.floor(textW * 0.94), 2);
+        const hl = headFit.px;
+        const headEmph = posterTextEmphasis(conf, 'headline', ink);
+        const headBlock = 'max-width:100%;overflow:hidden;word-wrap:break-word;overflow-wrap:anywhere;';
+        const headHtml = headFit.lines.slice(0, 2).map((ln) => `<div style="${pcsTextStyle(`${headBlock}font-size:${hl}px;line-height:1.2;letter-spacing:-0.012em;${headEmph}`)}">${esc(ln)}</div>`).join('');
+        const metaFacts = facts && typeof facts === 'object'
+            ? facts
+            : posterContentFacts(p, headline, locLine);
+        const specsHtml = posterSpecsLineHtml(metaFacts, inkMuted, 'light', {
+            compact: true,
+            noMargin: true,
+            prominent: true,
+        });
+        let priceHtml = '';
+        if (price) {
+            const px = posterPriceFit(conf, layout, price, Math.floor(textW * 0.92));
+            const emph = posterTextEmphasis(conf, 'price', priceInk);
+            priceHtml = `<div style="margin-top:12px;width:100%;max-width:100%;overflow:hidden;">
+                <span style="${pcsTextStyle(`display:block;font-size:${px}px;line-height:1.15;${emph}`)}">${esc(price)}</span>
+            </div>`;
+        }
+        const textHtml = `<div dir="rtl" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;text-align:right;unicode-bidi:plaintext;width:100%;height:100%;overflow:visible;box-sizing:border-box;">
+            ${wrapPosterHeadlineRole(headHtml, conf)}
+            ${specsHtml ? wrapPosterMetaRole(`<div style="margin-top:10px;">${specsHtml}</div>`, conf) : ''}
+            ${priceHtml ? wrapPosterPriceRole(priceHtml, conf) : ''}
+        </div>`;
+        const footInk = '#faf7f2';
+        const footMuted = 'rgba(250,247,242,.85)';
+        const footerHtml = `
+            <div dir="rtl" style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;height:100%;padding:0 16px;box-sizing:border-box;overflow:hidden;">
+                ${brandName ? `<span style="${pcsTextStyle('flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:' + Math.round(h * 0.015) + 'px;font-weight:800;color:' + footMuted + ';text-shadow:0 1px 8px rgba(0,0,0,.45);')}">${esc(brandName)}</span>` : '<span style="flex:1;"></span>'}
+                ${phone ? `<span dir="ltr" style="${pcsTextStyle('flex-shrink:0;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + Math.round(h * 0.022) + 'px;font-weight:900;color:' + footInk + ';text-shadow:0 1px 10px rgba(0,0,0,.5);')}">${esc(phone)}</span>` : ''}
+            </div>`;
+        const heroPos = `${m.hero.objX.toFixed(1)}% ${cropY}%`;
+        const logoSize = layout.isStory ? (SCULPTED_TRAVERTINE_CALIBRATION.logo.size || 52) : 44;
+
+        return `
+            <div class="pcs-sculpted-travertine-frame" style="position:absolute;inset:0;background:#e8e0d4;overflow:hidden;">
+                <div style="position:absolute;left:${m.hero.left}px;top:${m.hero.top}px;width:${m.hero.width}px;height:${m.hero.height}px;overflow:hidden;z-index:1;">
+                    ${primary ? posterImg(primary, `width:100%;height:100%;object-fit:cover;object-position:${heroPos};`, conf) : `<div style="width:100%;height:100%;background:linear-gradient(180deg,#57534e 0%,#1c1917 100%);"></div>`}
+                    ${posterHeroWarmth(conf)}
+                </div>
+                <img class="pcs-pearlescent-frame__overlay" src="${esc(overlay)}" alt="" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:2;">
+                <div style="position:absolute;left:${m.text.left}px;top:${m.text.top}px;width:${m.text.width}px;height:${m.text.height}px;z-index:3;display:flex;align-items:flex-start;justify-content:flex-start;overflow:visible;">
+                    ${textHtml}
+                </div>
+                <div style="position:absolute;left:${m.badge.left}px;top:${m.badge.top}px;z-index:4;transform:translate(-100%,0) scale(.82);transform-origin:top right;">${dealBadgeHtml(dealLabel, primaryColor, 'dark')}</div>
+                <div style="position:absolute;left:${m.logo.left}px;top:${m.logo.top}px;z-index:4;transform:translate(-50%,-50%);">${brandLogoBlock(b, logoSize)}</div>
+                <div style="position:absolute;left:${m.footer.left}px;top:${m.footer.top}px;width:${m.footer.width}px;height:${m.footer.height}px;z-index:3;display:flex;align-items:center;pointer-events:none;">
+                    ${footerHtml}
+                </div>
+            </div>`;
+    }
+
     function sculpturalOverlayUrl() {
         return cfg.templateMeta?.sculptural?.overlay || '';
     }
@@ -2435,6 +2676,8 @@
         if (templateId === 'minimal') return renderModernPoster(ctx);
         if (templateId === 'gallery') return renderCollagePoster(ctx);
         if (templateId === 'pearlescent') return renderPearlescentPoster(ctx);
+        if (templateId === 'pearlescent_ribbon') return renderPearlescentRibbonPoster(ctx);
+        if (templateId === 'sculpted_travertine') return renderSculptedTravertinePoster(ctx);
         if (templateId === 'sculptural') return renderSculpturalPoster(ctx);
         if (templateId === 'emerald_atelier') return renderEmeraldAtelierPoster(ctx);
         if (templateId === 'pearl_gallery') return renderPearlGalleryPoster(ctx);

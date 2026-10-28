@@ -2402,7 +2402,9 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 'gallery': 'fa-images',
                 'bold': 'fa-bolt',
                 'pearlescent': 'fa-layer-group',
+                'pearlescent_ribbon': 'fa-ribbon',
                 'sculptural': 'fa-palette',
+                'sculpted_travertine': 'fa-archway',
                 'emerald_atelier': 'fa-building-columns',
                 'pearl_gallery': 'fa-gem',
             }

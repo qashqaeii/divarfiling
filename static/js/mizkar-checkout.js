@@ -593,6 +593,9 @@
                     applyDiscount();
                 }
             });
+            if (discountInput.value.trim()) {
+                applyDiscount();
+            }
         }
 
         function getSelectedPaymentMethod() {

@@ -291,6 +291,9 @@ class BuyView(LoginRequiredMixin, CreateView):
             kwargs.setdefault('initial', {})['plan'] = requested_plan.pk
         if self.renewal_license and not kwargs.get('data'):
             kwargs.setdefault('initial', {})['plan'] = self.renewal_license.plan_id
+        code_from_url = (self.request.GET.get('code') or '').strip().upper()
+        if code_from_url and not kwargs.get('data'):
+            kwargs.setdefault('initial', {})['discount_code'] = code_from_url
         return kwargs
 
     def _get_requested_plan(self):
@@ -395,6 +398,16 @@ class BuyView(LoginRequiredMixin, CreateView):
             })
 
         has_previous_purchase = any(p['has_repeat_discount'] for p in plans_with_prices)
+
+        url_discount_code = (self.request.GET.get('code') or '').strip().upper()
+        url_discount_error = ''
+        url_discount_obj = None
+        if url_discount_code and self.request.user.is_authenticated:
+            from shop.services.order_discount import resolve_discount_code_for_buy
+            url_discount_obj, url_discount_error = resolve_discount_code_for_buy(
+                self.request.user,
+                url_discount_code,
+            )
         
         from shop.models import PaymentSettings
         pay_settings = PaymentSettings.load()
@@ -455,6 +468,8 @@ class BuyView(LoginRequiredMixin, CreateView):
             'renewal_license': self.renewal_license,
             'is_renewal': bool(self.renewal_license),
             'renewal_preview': renewal_preview,
+            'prefilled_discount_code': url_discount_code if url_discount_obj else '',
+            'prefilled_discount_error': url_discount_error,
         })
 
         from shop.services.plan_guards import requires_phone_verification_for_plan, verify_phone_redirect_url
@@ -538,11 +553,6 @@ class BuyView(LoginRequiredMixin, CreateView):
         
         order.save()
         
-        # افزایش تعداد استفاده کد تخفیف
-        if discount_code:
-            discount_code.used_count += 1
-            discount_code.save(update_fields=['used_count'])
-
         if order.amount <= 0:
             from shop.services.order_fulfillment import fulfill_order_after_payment
             fulfill_order_after_payment(order)

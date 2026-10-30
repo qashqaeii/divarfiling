@@ -300,10 +300,6 @@ def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = Non
             except Exception:
                 pass
             order.save()
-            if discount_code_obj:
-                DiscountCode.objects.filter(pk=discount_code_obj.pk).update(
-                    used_count=discount_code_obj.used_count + 1,
-                )
             mark_mobile_checkout(order.id)
             reused = False
 

@@ -31,6 +31,14 @@ def fulfill_order_after_payment(
             locked.paid_at = timezone.now()
             locked.save(update_fields=['status', 'paid_at'])
 
+            if locked.discount_code_id:
+                from django.db.models import F
+                from shop.models import DiscountCode
+
+                DiscountCode.objects.filter(pk=locked.discount_code_id).update(
+                    used_count=F('used_count') + 1,
+                )
+
             from affiliates.services.commission import (
                 ensure_buyer_affiliate_account,
                 record_affiliate_commission,
@@ -55,6 +63,13 @@ def fulfill_order_after_payment(
         logging.getLogger(__name__).exception('lead acquisition purchase attribution failed')
 
     license_obj = issue_license_for_paid_order(order_ref)
+
+    try:
+        from accounts.services.automation_conversion import record_order_conversion
+        record_order_conversion(order_ref)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception('automation conversion record failed')
 
     try:
         from workspace.services.agency_entitlement import (

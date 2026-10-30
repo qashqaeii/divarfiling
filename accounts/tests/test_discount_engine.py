@@ -1,4 +1,6 @@
 """تست Discount Engine."""
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
@@ -54,10 +56,22 @@ class DiscountEngineTests(TestCase):
         blocked = issue_discount(user=self.user, policy_key=POLICY_ABANDONED_CHECKOUT)
         self.assertFalse(blocked.ok)
 
-    def test_checkout_link_with_code(self):
-        link = checkout_link_with_code('DF-TEST01', order_id=42)
+    def test_checkout_link_with_uuid_order(self):
+        oid = uuid.uuid4()
+        link = checkout_link_with_code('DF-TEST01', order_id=oid)
         self.assertIn('code=DF-TEST01', link)
-        self.assertIn('42', link)
+        self.assertIn(str(oid), link)
+
+    def test_issue_discount_with_order_uuid(self):
+        sample_uuid = uuid.uuid4()
+        result = issue_discount(
+            user=self.user,
+            policy_key=POLICY_ABANDONED_CHECKOUT,
+            source_rule='pending_recovery_discount',
+            order_id=str(sample_uuid),
+        )
+        self.assertTrue(result.ok)
+        self.assertIn(str(sample_uuid), result.checkout_link)
 
     def test_update_policy_config(self):
         update_discount_policy_config(

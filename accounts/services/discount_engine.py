@@ -7,7 +7,8 @@ import string
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+import uuid
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from django.conf import settings
 from django.db import transaction
@@ -59,6 +60,7 @@ DEFAULT_POLICIES: Dict[str, Dict[str, Any]] = {
 DEFAULT_GLOBAL_SETTINGS: Dict[str, Any] = {
     'max_codes_per_user_days': 30,
     'code_prefix': 'DF',
+    'marketing_cooldown_hours': 72,
 }
 
 RULE_DISCOUNT_POLICIES: Dict[str, str] = {
@@ -162,12 +164,17 @@ def update_discount_policy_config(
     return get_discount_policy_config()
 
 
-def checkout_link_with_code(code: str, *, order_id: Optional[int] = None) -> str:
+OrderIdLike = Union[uuid.UUID, str, int, None]
+
+
+def checkout_link_with_code(code: str, *, order_id: OrderIdLike = None) -> str:
     from accounts.services.growth_links import abs_url, renewal_or_buy_landing_url
+    from shop.services.order_id_utils import parse_order_id
 
     code = (code or '').strip().upper()
-    if order_id:
-        return abs_url(f'/payment/checkout/{order_id}/?code={code}')
+    parsed = parse_order_id(order_id)
+    if parsed:
+        return abs_url(f'/payment/checkout/{parsed}/?code={code}')
     renewal = renewal_or_buy_landing_url()
     sep = '&' if '?' in renewal else '?'
     return f'{renewal}{sep}code={code}'
@@ -240,15 +247,33 @@ def issue_discount(
     policy_key: str,
     source_rule: str = '',
     source_type: str = 'automation',
-    order_id: Optional[int] = None,
+    order_id: OrderIdLike = None,
     metadata: Optional[Dict[str, Any]] = None,
+    dry_run: bool = False,
 ) -> DiscountIssueResult:
     """صدور یا بازگرداندن کد تخفیف اختصاصی."""
     from accounts.models import UserDiscountIssuance
+    from shop.services.order_id_utils import parse_order_id
 
     user_id = getattr(user, 'pk', None)
     if not user_id:
         return DiscountIssueResult(ok=False, reason='کاربر نامعتبر')
+
+    parsed_order_id = parse_order_id(order_id)
+
+    if dry_run:
+        config = get_discount_policy_config()
+        policy = config['policies'].get(policy_key) or DEFAULT_POLICIES.get(policy_key, {})
+        percent = int(policy.get('percent') or 10)
+        preview_code = f'{config["global"].get("code_prefix") or "DF"}-PREVIEW'
+        return DiscountIssueResult(
+            ok=True,
+            code=preview_code,
+            discount_percent=str(percent),
+            checkout_link=checkout_link_with_code(preview_code, order_id=parsed_order_id),
+            reused=True,
+            reason='dry_run',
+        )
 
     eligible, reason = check_eligibility(user_id=user_id, policy_key=policy_key, source_rule=source_rule)
     if not eligible:
@@ -265,7 +290,7 @@ def issue_discount(
                 discount_percent=str(int(dc.discount_value)) if dc.discount_type == 'percentage' else '',
                 discount_amount=str(int(dc.discount_value)) if dc.discount_type == 'fixed' else '',
                 discount_expiry=_format_expiry(dc.valid_until),
-                checkout_link=checkout_link_with_code(dc.code, order_id=order_id),
+                checkout_link=checkout_link_with_code(dc.code, order_id=parsed_order_id),
                 reused=True,
             )
 
@@ -309,7 +334,7 @@ def issue_discount(
         discount_percent=str(percent),
         discount_amount='',
         discount_expiry=_format_expiry(dc.valid_until),
-        checkout_link=checkout_link_with_code(dc.code, order_id=order_id),
+        checkout_link=checkout_link_with_code(dc.code, order_id=parsed_order_id),
         reused=False,
     )
 
@@ -319,8 +344,9 @@ def enrich_context_with_discount(
     *,
     rule_key: str,
     user,
-    order_id: Optional[int] = None,
+    order_id: OrderIdLike = None,
     metadata: Optional[Dict[str, Any]] = None,
+    dry_run: bool = False,
 ) -> Tuple[Dict[str, str], Optional[str]]:
     """در صورت نیاز Rule، context را با متغیرهای تخفیف غنی می‌کند."""
     policy_key = _policy_for_rule(rule_key)
@@ -333,6 +359,7 @@ def enrich_context_with_discount(
         source_rule=rule_key,
         order_id=order_id,
         metadata=metadata,
+        dry_run=dry_run,
     )
     if not result.ok:
         return context, result.reason

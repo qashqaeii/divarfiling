@@ -172,6 +172,23 @@ class PaymentCheckoutView(LoginRequiredMixin, View):
             messages.error(request, 'این سفارش قابل پرداخت نیست.')
             return redirect('dashboard')
 
+        discount_message = ''
+        code_param = (request.GET.get('code') or '').strip().upper()
+        if code_param:
+            from shop.services.order_discount import OrderDiscountError, apply_discount_code_to_pending_order
+
+            try:
+                order, _changed = apply_discount_code_to_pending_order(
+                    order,
+                    request.user,
+                    code_param,
+                    request=request,
+                )
+                if _changed:
+                    messages.success(request, 'کد تخفیف روی سفارش اعمال شد.')
+            except OrderDiscountError as exc:
+                discount_message = exc.message
+
         try:
             zibal_service.get_merchant_id()
             merchant_configured = True
@@ -183,6 +200,8 @@ class PaymentCheckoutView(LoginRequiredMixin, View):
             'pay_settings': pay_settings,
             'merchant_configured': merchant_configured,
             'amount_rial': zibal_service.toman_to_rial(order.amount),
+            'discount_message': discount_message,
+            'applied_discount_code': order.discount_code.code if order.discount_code_id else '',
         }
         return render(request, self.template_name, context)
 

@@ -1314,18 +1314,28 @@ def _process_candidate(
         execution.skipped_count += 1
         return 'deduped'
 
+    claimed = ManagementAutomationRecipient.objects.filter(
+        pk=recipient.pk,
+        status=ManagementAutomationRecipient.Status.PENDING,
+    ).update(
+        status=ManagementAutomationRecipient.Status.SENT,
+        sent_at=timezone.now(),
+    )
+    if claimed != 1:
+        execution.skipped_count += 1
+        return 'deduped'
+
+    recipient.refresh_from_db()
     ok_send, sms_log = notify_marketing(phone=phone, text=body)
-    recipient.sent_at = timezone.now()
     if ok_send:
-        recipient.status = ManagementAutomationRecipient.Status.SENT
         recipient.metadata = _safe_metadata({**recipient.metadata, 'sms_log_id': sms_log.pk})
-        recipient.save(update_fields=['status', 'sent_at', 'metadata'])
+        recipient.save(update_fields=['metadata'])
         execution.success_count += 1
         return 'success'
 
     recipient.status = ManagementAutomationRecipient.Status.FAILED
     recipient.skipped_reason = (getattr(sms_log, 'error_message', '') or 'send_failed')[:200]
-    recipient.save(update_fields=['status', 'sent_at', 'skipped_reason'])
+    recipient.save(update_fields=['status', 'skipped_reason'])
     execution.failed_count += 1
     return 'failed'
 

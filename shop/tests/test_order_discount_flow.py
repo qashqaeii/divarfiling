@@ -53,11 +53,37 @@ class OrderDiscountFlowTests(TestCase):
     def test_checkout_link_applies_code_to_uuid_order(self):
         order = self._pending_order()
         url = reverse('payment:checkout', kwargs={'order_id': order.id})
-        resp = self.client.get(f'{url}?code={self.code.code}')
-        self.assertEqual(resp.status_code, 200)
+        resp = self.client.post(url, {'discount_code': self.code.code})
+        self.assertEqual(resp.status_code, 302)
         order.refresh_from_db()
         self.assertEqual(order.discount_code_id, self.code.pk)
         self.assertEqual(int(order.amount), 90_000)
+
+    def test_get_checkout_with_code_does_not_mutate_order(self):
+        order = self._pending_order()
+        url = reverse('payment:checkout', kwargs={'order_id': order.id})
+        with patch('shop.payment_views.zibal_service.get_merchant_id', return_value='test'):
+            resp = self.client.get(f'{url}?code={self.code.code}')
+        self.assertEqual(resp.status_code, 200)
+        order.refresh_from_db()
+        self.assertIsNone(order.discount_code_id)
+        self.assertEqual(int(order.amount), 100_000)
+
+    def test_discount_blocked_after_gateway_track_id(self):
+        order = self._pending_order()
+        order.zibal_track_id = '123456789'
+        order.save(update_fields=['zibal_track_id'])
+        with self.assertRaises(OrderDiscountError) as ctx:
+            apply_discount_code_to_pending_order(order, self.user, self.code.code)
+        self.assertEqual(ctx.exception.code, 'payment_locked')
+
+    def test_single_use_code_blocks_second_pending_order(self):
+        first = self._pending_order()
+        apply_discount_code_to_pending_order(first, self.user, self.code.code)
+        second = self._pending_order()
+        with self.assertRaises(OrderDiscountError) as ctx:
+            apply_discount_code_to_pending_order(second, self.user, self.code.code)
+        self.assertEqual(ctx.exception.code, 'exhausted')
 
     def test_apply_discount_wrong_user_forbidden(self):
         order = self._pending_order(user=self.other)

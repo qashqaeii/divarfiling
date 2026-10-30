@@ -34,25 +34,39 @@ def payment_failed_idempotency_key(order_id, attempt_id: str) -> str:
     return f'payment_failed:{order_id}:{safe}'
 
 
+def is_excluded_staff_fake_or_grant_order(order: Order) -> bool:
+    """سفارش/کاربر تستی یا staff — خارج از funnel و recovery."""
+    user = getattr(order, 'user', None)
+    if user is not None and (
+        getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)
+    ):
+        return True
+    track = (getattr(order, 'zibal_track_id', None) or '').strip().upper()
+    if track.startswith('FAKE-') or track.startswith('GRANT-'):
+        return True
+    if (getattr(order, 'status', None) or '') == 'granted':
+        return True
+    return False
+
+
 def is_bi_production_order(order: Order) -> bool:
     """
-    سفارش‌های قابل‌شمارش در BI Production.
-    حذف: staff/superuser، سفارش فیک (پیشوند FAKE-)، هدیه کمپین (granted / GRANT-).
+    سفارش‌های قابل‌شمارش در BI Production (فقط paid).
     """
     if (getattr(order, 'status', None) or '') != 'paid':
         return False
-    user = getattr(order, 'user', None)
-    if user is not None and (getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)):
-        return False
-    track = (getattr(order, 'zibal_track_id', None) or '').strip().upper()
-    if track.startswith('FAKE-') or track.startswith('GRANT-'):
-        return False
-    # آینده: اگر Order فیلد/متادیتای تست گرفت
-    return True
+    return not is_excluded_staff_fake_or_grant_order(order)
 
 
 def should_emit_funnel_for_order(order: Order) -> bool:
-    return is_bi_production_order(order)
+    if is_excluded_staff_fake_or_grant_order(order):
+        return False
+    return (getattr(order, 'status', None) or '') in (
+        'pending',
+        'pending_verification',
+        'paid',
+        'failed',
+    )
 
 
 def record_plan_funnel_event(

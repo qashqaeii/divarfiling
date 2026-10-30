@@ -32,12 +32,15 @@ def fulfill_order_after_payment(
             locked.save(update_fields=['status', 'paid_at'])
 
             if locked.discount_code_id:
-                from django.db.models import F
-                from shop.models import DiscountCode
-
-                DiscountCode.objects.filter(pk=locked.discount_code_id).update(
-                    used_count=F('used_count') + 1,
+                from shop.services.discount_consumption import (
+                    DiscountCapacityError,
+                    finalize_discount_consumption,
                 )
+
+                try:
+                    finalize_discount_consumption(locked)
+                except DiscountCapacityError:
+                    raise
 
             from affiliates.services.commission import (
                 ensure_buyer_affiliate_account,

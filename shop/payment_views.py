@@ -173,19 +173,21 @@ class PaymentCheckoutView(LoginRequiredMixin, View):
             return redirect('dashboard')
 
         discount_message = ''
+        discount_preview = None
         code_param = (request.GET.get('code') or '').strip().upper()
         if code_param:
-            from shop.services.order_discount import OrderDiscountError, apply_discount_code_to_pending_order
+            from shop.services.order_discount import (
+                OrderDiscountError,
+                preview_discount_code_for_order,
+            )
 
             try:
-                order, _changed = apply_discount_code_to_pending_order(
+                discount_preview = preview_discount_code_for_order(
                     order,
                     request.user,
                     code_param,
                     request=request,
                 )
-                if _changed:
-                    messages.success(request, 'کد تخفیف روی سفارش اعمال شد.')
             except OrderDiscountError as exc:
                 discount_message = exc.message
 
@@ -201,9 +203,35 @@ class PaymentCheckoutView(LoginRequiredMixin, View):
             'merchant_configured': merchant_configured,
             'amount_rial': zibal_service.toman_to_rial(order.amount),
             'discount_message': discount_message,
+            'discount_preview': discount_preview,
             'applied_discount_code': order.discount_code.code if order.discount_code_id else '',
         }
         return render(request, self.template_name, context)
+
+    def post(self, request, order_id):
+        order = _get_payable_order(request, order_id)
+        blocked = _guard_order_plan_requirements(request, order)
+        if blocked:
+            return blocked
+
+        code_param = (request.POST.get('discount_code') or request.POST.get('code') or '').strip().upper()
+        if not code_param:
+            messages.error(request, 'کد تخفیف وارد نشده است.')
+            return redirect('payment:checkout', order_id=order.id)
+
+        from shop.services.order_discount import OrderDiscountError, apply_discount_code_to_pending_order
+
+        try:
+            apply_discount_code_to_pending_order(
+                order,
+                request.user,
+                code_param,
+                request=request,
+            )
+            messages.success(request, 'کد تخفیف روی سفارش اعمال شد.')
+        except OrderDiscountError as exc:
+            messages.error(request, exc.message)
+        return redirect('payment:checkout', order_id=order.id)
 
 
 class PaymentInitiateView(LoginRequiredMixin, View):

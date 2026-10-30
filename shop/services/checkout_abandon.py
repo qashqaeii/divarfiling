@@ -18,7 +18,7 @@ from accounts.services.plan_bi import (
 from shop.models import Order, PlanFunnelEvent
 from shop.services.plan_funnel import (
     checkout_abandon_idempotency_key,
-    is_bi_production_order,
+    is_excluded_staff_fake_or_grant_order,
     should_emit_funnel_for_order,
 )
 
@@ -242,7 +242,7 @@ def evaluate_order_for_abandon(
         result.exclude_reason = EXCLUDE_NOT_PENDING
         return result
 
-    if not is_bi_production_order(order):
+    if is_excluded_staff_fake_or_grant_order(order):
         result.exclude_reason = EXCLUDE_STAFF_OR_FAKE
         return result
 

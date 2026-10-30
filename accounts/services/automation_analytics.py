@@ -8,7 +8,11 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from accounts.models import ManagementAutomationExecution, ManagementAutomationRecipient, ManagementAutomationRule
-from accounts.services.automation_conversion import ATTRIBUTION_WINDOW_DAYS, paid_orders_queryset
+from accounts.services.automation_conversion import (
+    ATTRIBUTION_WINDOW_DAYS,
+    CONVERSION_TYPE_ASSOCIATED,
+    CONVERSION_TYPE_ATTRIBUTED,
+)
 
 
 def _execution_sent_count(execution: ManagementAutomationExecution) -> int:
@@ -45,31 +49,49 @@ def rule_stats_for_period(rule: ManagementAutomationRule, *, days: int = 30) -> 
     sent = sent_recipients.count()
     unique_users = sent_recipients.values('user_id').distinct().count()
 
-    attributed = sent_recipients.filter(converted_at__isnull=False).count()
-    associated_orders = sent_recipients.filter(
+    attributed_recipients = sent_recipients.filter(
         converted_at__isnull=False,
-        conversion_type='associated_purchase',
-    ).count()
-    attributed_orders = sent_recipients.filter(
+        conversion_type=CONVERSION_TYPE_ATTRIBUTED,
+    )
+    associated_recipients = sent_recipients.filter(
         converted_at__isnull=False,
-        conversion_type='attributed_discount',
-    ).count()
+        conversion_type=CONVERSION_TYPE_ASSOCIATED,
+    )
 
-    order_ids = []
-    for meta in sent_recipients.filter(converted_at__isnull=False).values_list('metadata', flat=True):
+    attributed_orders = attributed_recipients.count()
+    associated_orders = associated_recipients.count()
+
+    attributed_order_ids = []
+    for meta in attributed_recipients.values_list('metadata', flat=True):
         if isinstance(meta, dict) and meta.get('order_id'):
-            order_ids.append(meta['order_id'])
+            attributed_order_ids.append(meta['order_id'])
 
-    revenue = Decimal('0')
+    associated_order_ids = []
+    for meta in associated_recipients.values_list('metadata', flat=True):
+        if isinstance(meta, dict) and meta.get('order_id'):
+            associated_order_ids.append(meta['order_id'])
+
+    confirmed_revenue = Decimal('0')
+    associated_revenue = Decimal('0')
     discount_used = Decimal('0')
-    if order_ids:
+    if attributed_order_ids:
         from shop.models import Order
 
-        orders = Order.objects.filter(pk__in=order_ids, status='paid')
-        revenue = orders.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        orders = Order.objects.filter(pk__in=attributed_order_ids, status='paid')
+        confirmed_revenue = orders.aggregate(total=Sum('amount'))['total'] or Decimal('0')
         discount_used = orders.aggregate(total=Sum('discount_amount'))['total'] or Decimal('0')
+    if associated_order_ids:
+        from shop.models import Order
 
-    conversion_rate = round(100 * attributed / sent, 1) if sent else None
+        associated_revenue = (
+            Order.objects.filter(pk__in=associated_order_ids, status='paid').aggregate(
+                total=Sum('amount'),
+            )['total']
+            or Decimal('0')
+        )
+
+    converted_recipients = sent_recipients.filter(converted_at__isnull=False).count()
+    conversion_rate = round(100 * attributed_orders / sent, 1) if sent else None
 
     return {
         'days': days,
@@ -81,8 +103,9 @@ def rule_stats_for_period(rule: ManagementAutomationRule, *, days: int = 30) -> 
         'unique_recipients': unique_users,
         'associated_purchases': associated_orders,
         'attributed_purchases': attributed_orders,
-        'converted_recipients': attributed,
-        'confirmed_revenue': int(revenue),
+        'converted_recipients': converted_recipients,
+        'confirmed_revenue': int(confirmed_revenue),
+        'associated_revenue': int(associated_revenue),
         'discount_consumed': int(discount_used),
         'conversion_rate': conversion_rate,
         'attribution_window_days': ATTRIBUTION_WINDOW_DAYS,
@@ -106,25 +129,28 @@ def action_results_summary(*, days: int = 7) -> dict:
         converted_at__isnull=False,
     ).count()
 
-    order_ids = []
-    for meta in ManagementAutomationRecipient.objects.filter(
+    attributed_meta = ManagementAutomationRecipient.objects.filter(
         execution__in=executions,
         converted_at__isnull=False,
-    ).values_list('metadata', flat=True):
+        conversion_type=CONVERSION_TYPE_ATTRIBUTED,
+    ).values_list('metadata', flat=True)
+
+    order_ids = []
+    for meta in attributed_meta:
         if isinstance(meta, dict) and meta.get('order_id'):
             order_ids.append(meta['order_id'])
 
-    revenue = Decimal('0')
+    confirmed_revenue = Decimal('0')
     if order_ids:
         from shop.models import Order
 
-        revenue = (
+        confirmed_revenue = (
             Order.objects.filter(pk__in=order_ids, status='paid').aggregate(total=Sum('amount'))['total']
             or Decimal('0')
         )
 
     renewals = 0
-    purchases = converted
+    purchases = len(set(order_ids))
     if order_ids:
         from shop.models import Order
 
@@ -133,7 +159,6 @@ def action_results_summary(*, days: int = 7) -> dict:
             status='paid',
             renewal_license_id__isnull=False,
         ).count()
-        purchases = Order.objects.filter(pk__in=order_ids, status='paid').count()
 
     return {
         'days': days,
@@ -142,5 +167,5 @@ def action_results_summary(*, days: int = 7) -> dict:
         'purchases': purchases,
         'renewals': renewals,
         'attributed_conversions': converted,
-        'confirmed_revenue': int(revenue),
+        'confirmed_revenue': int(confirmed_revenue),
     }

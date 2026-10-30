@@ -37,6 +37,7 @@ from accounts.services.sms import get_sms_balance_snapshot
 from licenses.models import ClientAppEvent, License, LicenseActivation
 from shop.models import DownloadLog, Order
 from accounts.services.discount_engine import RULE_DISCOUNT_POLICIES, enrich_context_with_discount
+from shop.services.order_id_utils import parse_order_id
 from workspace.models import Customer, CustomerActivity, Dataset, Ticket
 
 User = get_user_model()
@@ -44,9 +45,14 @@ logger = logging.getLogger(__name__)
 
 TERMINAL_RECIPIENT_STATUSES = (
     ManagementAutomationRecipient.Status.SENT,
-    ManagementAutomationRecipient.Status.DRY_RUN,
     ManagementAutomationRecipient.Status.ALERT,
+)
+
+RETRYABLE_RECIPIENT_STATUSES = (
     ManagementAutomationRecipient.Status.SKIPPED,
+    ManagementAutomationRecipient.Status.FAILED,
+    ManagementAutomationRecipient.Status.DRY_RUN,
+    ManagementAutomationRecipient.Status.PENDING,
 )
 
 DEFAULT_QUIET_START = 23
@@ -61,6 +67,8 @@ SKIP_REASON_LABELS: Dict[str, str] = {
     'missing_license': 'لایسنس یافت نشد',
     'order_paid_or_gone': 'سفارش پرداخت شده',
     'user_has_paid_order': 'خرید جدید انجام شده',
+    'user_has_paid_order_after': 'پس از این سفارش پرداخت موفق ثبت شده',
+    'has_valid_access': 'دسترسی فعال دارد',
     'order_not_failed': 'پرداخت دیگر ناموفق نیست',
     'later_paid': 'پرداخت بعدی موفق بود',
     'has_license': 'لایسنس فعال دارد',
@@ -68,6 +76,7 @@ SKIP_REASON_LABELS: Dict[str, str] = {
     'launched': 'برنامه اجرا شده',
     'crm_started': 'CRM شروع شده',
     'suppressed': 'مسدود شده (suppression)',
+    'global_cooldown': 'محدودیت سراسری ۷۲ ساعته',
     'missing_order': 'سفارش یافت نشد',
 }
 
@@ -79,6 +88,73 @@ class AutomationCandidate:
     phone: str = ''
     context: Dict[str, str] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+def _crm_user_engaged(user_id: int, *, since) -> bool:
+    if CustomerActivity.objects.filter(customer__user_id=user_id, created_at__gte=since).exists():
+        return True
+    return Customer.objects.filter(user_id=user_id, updated_at__gte=since).exists()
+
+
+def _persist_recipient(
+    *,
+    rule: ManagementAutomationRule,
+    execution: ManagementAutomationExecution,
+    candidate: AutomationCandidate,
+    status: str,
+    skipped_reason: str = '',
+    sent_at=None,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> Tuple[Optional[ManagementAutomationRecipient], bool]:
+    """
+    upsert گیرنده — dedup فقط برای SENT/ALERT.
+    Returns (recipient, deduped).
+    """
+    if _trigger_already_handled(rule, candidate.trigger_key):
+        return None, True
+    payload_meta = _safe_metadata(metadata if metadata is not None else candidate.metadata)
+    recipient, _created = ManagementAutomationRecipient.objects.update_or_create(
+        rule=rule,
+        trigger_key=candidate.trigger_key,
+        defaults={
+            'execution': execution,
+            'user': candidate.user,
+            'status': status,
+            'skipped_reason': (skipped_reason or '')[:200],
+            'sent_at': sent_at,
+            'metadata': payload_meta,
+        },
+    )
+    return recipient, False
+
+
+def _filter_eligible_candidates(
+    rule: ManagementAutomationRule,
+    candidates: List[AutomationCandidate],
+    *,
+    dry_run: bool = False,
+) -> List[AutomationCandidate]:
+    """حذف dedup/revalidate/cooldown قبل از سقف batch — رفع starvation."""
+    from accounts.services.automation_contact_policy import check_global_contact_policy
+
+    eligible: List[AutomationCandidate] = []
+    for candidate in candidates:
+        if _trigger_already_handled(rule, candidate.trigger_key):
+            continue
+        ok, _reason = revalidate_candidate(rule, candidate)
+        if not ok:
+            continue
+        user_id = getattr(candidate.user, 'pk', None) or candidate.metadata.get('user_id')
+        if user_id and _user_cooldown_active(rule, user_id):
+            continue
+        if rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS and user_id:
+            allowed, _policy_reason = check_global_contact_policy(
+                rule, user_id=int(user_id), dry_run=dry_run,
+            )
+            if not allowed:
+                continue
+        eligible.append(candidate)
+    return eligible
 
 
 def _json_safe(value: Any) -> Any:
@@ -847,14 +923,22 @@ def revalidate_candidate(rule: ManagementAutomationRule, candidate: AutomationCa
         return True, ''
 
     if rule.key in ('pending_recovery', 'pending_recovery_discount'):
-        order_id = meta.get('order_id')
+        order_id = parse_order_id(meta.get('order_id'))
         if not order_id:
             return False, 'missing_order'
         order = Order.objects.filter(pk=order_id).first()
         if not order or order.status not in PENDING_ORDER_STATUSES:
             return False, 'order_paid_or_gone'
-        if order.user_id and Order.objects.filter(user_id=order.user_id, status='paid').exists():
-            return False, 'user_has_paid_order'
+        if order.user_id and Order.objects.filter(
+            user_id=order.user_id,
+            status='paid',
+            paid_at__isnull=False,
+            paid_at__gte=order.created_at,
+        ).exclude(pk=order.pk).exists():
+            return False, 'user_has_paid_order_after'
+        if order.user_id and _has_active_license(order.user_id, now=now):
+            if not order.renewal_license_id:
+                return False, 'has_valid_access'
         return True, ''
 
     if rule.key == 'failed_payment_followup':
@@ -912,7 +996,8 @@ def revalidate_candidate(rule: ManagementAutomationRule, candidate: AutomationCa
 
     if rule.key == 'dataset_no_crm':
         user_id = meta.get('user_id')
-        if user_id and Customer.objects.filter(user_id=user_id).exists():
+        cutoff = now - timedelta(days=30)
+        if user_id and _crm_user_engaged(user_id, since=cutoff):
             return False, 'crm_started'
         return True, ''
 
@@ -945,7 +1030,8 @@ def revalidate_candidate(rule: ManagementAutomationRule, candidate: AutomationCa
 
     if rule.key == 'crm_not_started_nudge':
         user_id = meta.get('user_id')
-        if user_id and Customer.objects.filter(user_id=user_id).exists():
+        cutoff = now - timedelta(days=30)
+        if user_id and _crm_user_engaged(user_id, since=cutoff):
             return False, 'crm_started'
         return True, ''
 
@@ -969,22 +1055,16 @@ def _user_cooldown_active(rule: ManagementAutomationRule, user_id: int, *, now=N
         user_id=user_id,
         status__in=(
             ManagementAutomationRecipient.Status.SENT,
-            ManagementAutomationRecipient.Status.DRY_RUN,
             ManagementAutomationRecipient.Status.ALERT,
         ),
         sent_at__gte=since,
+        execution__dry_run=False,
     ).count()
     return sent_count >= max(1, rule.max_sends_per_user)
 
 
-def _order_id_from_metadata(meta: Dict[str, Any]) -> Optional[int]:
-    raw = (meta or {}).get('order_id')
-    if not raw:
-        return None
-    try:
-        return int(raw)
-    except (TypeError, ValueError):
-        return None
+def _order_id_from_metadata(meta: Dict[str, Any]):
+    return parse_order_id((meta or {}).get('order_id'))
 
 
 def build_preview_message_context(rule: ManagementAutomationRule, candidate: AutomationCandidate) -> Tuple[Dict[str, str], List[str]]:
@@ -1026,27 +1106,31 @@ def _message_for_rule(rule: ManagementAutomationRule, context: Dict[str, str], *
     return result.message, ''
 
 
-def _maybe_apply_discount(rule: ManagementAutomationRule, candidate: AutomationCandidate) -> Tuple[Dict[str, str], str]:
+def _maybe_apply_discount(
+    rule: ManagementAutomationRule,
+    candidate: AutomationCandidate,
+    *,
+    dry_run: bool = False,
+) -> Tuple[Dict[str, str], str]:
     """صدور تخفیف در صورت نیاز Rule — (context, skip_reason)."""
     if rule.key not in RULE_DISCOUNT_POLICIES:
         return candidate.context, ''
     if not candidate.user:
         return candidate.context, 'missing_user_for_discount'
-    order_id = candidate.metadata.get('order_id')
-    try:
-        oid = int(order_id) if order_id else None
-    except (TypeError, ValueError):
-        oid = None
+    order_id = _order_id_from_metadata(candidate.metadata)
     ctx, err = enrich_context_with_discount(
         candidate.context,
         rule_key=rule.key,
         user=candidate.user,
-        order_id=oid,
+        order_id=order_id,
         metadata=candidate.metadata,
+        dry_run=dry_run,
     )
-    if err and err != 'active_exists':
+    if err and err != 'active_exists' and not dry_run:
         if not ctx.get('discount_code') and not ctx.get('code'):
             return ctx, f'discount:{err}'
+    if dry_run:
+        return ctx, ''
     if not (ctx.get('discount_code') or ctx.get('code')):
         return ctx, 'discount_not_issued'
     return ctx, ''
@@ -1068,24 +1152,22 @@ def _process_candidate(
     dry_run: bool,
 ) -> str:
     """Returns outcome: success | failed | skipped | deduped."""
+    from accounts.services.automation_contact_policy import check_global_contact_policy
+
     if _trigger_already_handled(rule, candidate.trigger_key):
         execution.skipped_count += 1
         return 'deduped'
 
     ok, reason = revalidate_candidate(rule, candidate)
     if not ok:
-        try:
-            with transaction.atomic():
-                ManagementAutomationRecipient.objects.create(
-                    execution=execution,
-                    rule=rule,
-                    user=candidate.user,
-                    trigger_key=candidate.trigger_key,
-                    status=ManagementAutomationRecipient.Status.SKIPPED,
-                    skipped_reason=reason[:200],
-                    metadata=_safe_metadata(candidate.metadata),
-                )
-        except IntegrityError:
+        _, deduped = _persist_recipient(
+            rule=rule,
+            execution=execution,
+            candidate=candidate,
+            status=ManagementAutomationRecipient.Status.SKIPPED,
+            skipped_reason=reason[:200],
+        )
+        if deduped:
             return 'deduped'
         execution.skipped_count += 1
         return 'skipped'
@@ -1100,18 +1182,14 @@ def _process_candidate(
             ManagementAutomationRecipient.Status.DRY_RUN if dry_run
             else ManagementAutomationRecipient.Status.ALERT
         )
-        try:
-            with transaction.atomic():
-                ManagementAutomationRecipient.objects.create(
-                    execution=execution,
-                    rule=rule,
-                    user=candidate.user,
-                    trigger_key=candidate.trigger_key,
-                    status=status,
-                    sent_at=timezone.now(),
-                    metadata=_safe_metadata(candidate.metadata),
-                )
-        except IntegrityError:
+        _, deduped = _persist_recipient(
+            rule=rule,
+            execution=execution,
+            candidate=candidate,
+            status=status,
+            sent_at=timezone.now(),
+        )
+        if deduped:
             execution.skipped_count += 1
             return 'deduped'
         execution.success_count += 1
@@ -1122,17 +1200,14 @@ def _process_candidate(
             ManagementAutomationRecipient.Status.DRY_RUN if dry_run
             else ManagementAutomationRecipient.Status.ALERT
         )
-        try:
-            with transaction.atomic():
-                ManagementAutomationRecipient.objects.create(
-                    execution=execution,
-                    rule=rule,
-                    trigger_key=candidate.trigger_key,
-                    status=status,
-                    sent_at=timezone.now(),
-                    metadata=_safe_metadata(candidate.metadata),
-                )
-        except IntegrityError:
+        _, deduped = _persist_recipient(
+            rule=rule,
+            execution=execution,
+            candidate=candidate,
+            status=status,
+            sent_at=timezone.now(),
+        )
+        if deduped:
             execution.skipped_count += 1
             return 'deduped'
         execution.success_count += 1
@@ -1152,20 +1227,33 @@ def _process_candidate(
         execution.skipped_count += 1
         return 'skipped'
 
+    if user_id:
+        allowed, policy_reason = check_global_contact_policy(
+            rule, user_id=int(user_id), dry_run=dry_run,
+        )
+        if not allowed:
+            _, deduped = _persist_recipient(
+                rule=rule,
+                execution=execution,
+                candidate=candidate,
+                status=ManagementAutomationRecipient.Status.SKIPPED,
+                skipped_reason=policy_reason[:200],
+            )
+            if deduped:
+                return 'deduped'
+            execution.skipped_count += 1
+            return 'skipped'
+
     purpose = _sms_purpose_for_rule(rule)
     if not is_send_allowed(phone, purpose=purpose, user=candidate.user):
-        try:
-            with transaction.atomic():
-                ManagementAutomationRecipient.objects.create(
-                    execution=execution,
-                    rule=rule,
-                    user=candidate.user,
-                    trigger_key=candidate.trigger_key,
-                    status=ManagementAutomationRecipient.Status.SKIPPED,
-                    skipped_reason='suppressed',
-                    metadata=_safe_metadata(candidate.metadata),
-                )
-        except IntegrityError:
+        _, deduped = _persist_recipient(
+            rule=rule,
+            execution=execution,
+            candidate=candidate,
+            status=ManagementAutomationRecipient.Status.SKIPPED,
+            skipped_reason='suppressed',
+        )
+        if deduped:
             return 'deduped'
         execution.skipped_count += 1
         return 'skipped'
@@ -1173,71 +1261,56 @@ def _process_candidate(
     send_context = dict(candidate.context)
     discount_skip = ''
     if rule.key in RULE_DISCOUNT_POLICIES:
-        send_context, discount_skip = _maybe_apply_discount(rule, candidate)
+        send_context, discount_skip = _maybe_apply_discount(rule, candidate, dry_run=dry_run)
         if discount_skip:
-            try:
-                with transaction.atomic():
-                    ManagementAutomationRecipient.objects.create(
-                        execution=execution,
-                        rule=rule,
-                        user=candidate.user,
-                        trigger_key=candidate.trigger_key,
-                        status=ManagementAutomationRecipient.Status.SKIPPED,
-                        skipped_reason=discount_skip[:200],
-                        metadata=_safe_metadata(candidate.metadata),
-                    )
-            except IntegrityError:
+            _, deduped = _persist_recipient(
+                rule=rule,
+                execution=execution,
+                candidate=candidate,
+                status=ManagementAutomationRecipient.Status.SKIPPED,
+                skipped_reason=discount_skip[:200],
+            )
+            if deduped:
                 return 'deduped'
             execution.skipped_count += 1
             return 'skipped'
 
     body, render_reason = _message_for_rule(rule, send_context, user=candidate.user)
     if not body:
-        try:
-            with transaction.atomic():
-                ManagementAutomationRecipient.objects.create(
-                    execution=execution,
-                    rule=rule,
-                    user=candidate.user,
-                    trigger_key=candidate.trigger_key,
-                    status=ManagementAutomationRecipient.Status.SKIPPED,
-                    skipped_reason=(render_reason or 'render_failed')[:200],
-                    metadata=_safe_metadata(candidate.metadata),
-                )
-        except IntegrityError:
+        _, deduped = _persist_recipient(
+            rule=rule,
+            execution=execution,
+            candidate=candidate,
+            status=ManagementAutomationRecipient.Status.SKIPPED,
+            skipped_reason=(render_reason or 'render_failed')[:200],
+        )
+        if deduped:
             return 'deduped'
         execution.skipped_count += 1
         return 'skipped'
 
     if dry_run:
-        try:
-            with transaction.atomic():
-                ManagementAutomationRecipient.objects.create(
-                    execution=execution,
-                    rule=rule,
-                    user=candidate.user,
-                    trigger_key=candidate.trigger_key,
-                    status=ManagementAutomationRecipient.Status.DRY_RUN,
-                    sent_at=timezone.now(),
-                    metadata=_safe_metadata({**candidate.metadata, 'body_preview': body[:200]}),
-                )
-        except IntegrityError:
+        _, deduped = _persist_recipient(
+            rule=rule,
+            execution=execution,
+            candidate=candidate,
+            status=ManagementAutomationRecipient.Status.DRY_RUN,
+            sent_at=timezone.now(),
+            metadata={**candidate.metadata, 'body_preview': body[:200]},
+        )
+        if deduped:
             execution.skipped_count += 1
             return 'deduped'
         execution.success_count += 1
         return 'success'
 
-    try:
-        with transaction.atomic():
-            recipient = ManagementAutomationRecipient.objects.create(
-                execution=execution,
-                rule=rule,
-                user=candidate.user,
-                trigger_key=candidate.trigger_key,
-                status=ManagementAutomationRecipient.Status.PENDING,
-                metadata=_safe_metadata(candidate.metadata),
-            )
-    except IntegrityError:
+    recipient, deduped = _persist_recipient(
+        rule=rule,
+        execution=execution,
+        candidate=candidate,
+        status=ManagementAutomationRecipient.Status.PENDING,
+    )
+    if deduped or not recipient:
         execution.skipped_count += 1
         return 'deduped'
 
@@ -1324,10 +1397,11 @@ def run_rule(
     )
 
     try:
-        candidates = resolve_audience(rule)
-        execution.matched_count = len(candidates)
+        raw_candidates = resolve_audience(rule)
+        execution.matched_count = len(raw_candidates)
         limit = max(1, rule.max_recipients_per_run or 50)
-        candidates = candidates[:limit]
+        eligible = _filter_eligible_candidates(rule, raw_candidates, dry_run=dry_run)
+        candidates = eligible[:limit]
 
         for candidate in candidates:
             execution.processed_count += 1

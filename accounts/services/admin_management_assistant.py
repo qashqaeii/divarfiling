@@ -1308,14 +1308,22 @@ def _last_execution_summary(rule: Optional[ManagementAutomationRule]) -> str:
     ex = rule.executions.order_by('-started_at').first()
     if not ex:
         return '—'
+    stats = _rule_stats_30d(rule)
+    revenue_note = ''
+    if stats.get('confirmed_revenue'):
+        revenue_note = f" · {stats['confirmed_revenue']:,} تومان"
     if ex.dry_run:
-        return 'آخرین: Dry Run'
+        return f'Dry Run · {ex.matched_count} Match · {ex.success_count} شبیه‌سازی'
+    sent_live = ManagementAutomationRecipient.objects.filter(
+        execution=ex,
+        status=ManagementAutomationRecipient.Status.SENT,
+    ).count()
+    if sent_live:
+        return f'{sent_live} پیامک · {stats.get("converted", 0)} تبدیل{revenue_note}'
     if ex.failed_count:
-        return f'آخرین: {ex.failed_count} خطا'
-    if ex.success_count:
-        return f'آخرین: {ex.success_count} موفق'
+        return f'{ex.failed_count} خطا · {ex.skipped_count} رد'
     if ex.matched_count:
-        return f'آخرین: {ex.matched_count} تطبیق'
+        return f'{ex.matched_count} Match · {ex.skipped_count} رد'
     return ex.get_status_display()
 
 
@@ -1402,20 +1410,9 @@ def get_automation_history(limit: int = 30) -> List[Dict[str, Any]]:
 
 
 def get_action_results_summary(days: int = 7) -> Dict[str, Any]:
-    since = timezone.now() - timedelta(days=days)
-    executions = ManagementAutomationExecution.objects.filter(
-        started_at__gte=since,
-        dry_run=False,
-        status=ManagementAutomationExecution.Status.COMPLETED,
-    )
-    messages = sum(ex.success_count for ex in executions)
-    return {
-        'days': days,
-        'messages_sent': messages,
-        'automations_run': executions.count(),
-        'purchases': 0,
-        'renewals': 0,
-    }
+    from accounts.services.automation_analytics import action_results_summary
+
+    return action_results_summary(days=days)
 
 
 def _mask_phone_for_display(phone: str) -> str:
@@ -1751,28 +1748,21 @@ def _quiet_hours_label(rule: ManagementAutomationRule) -> str:
 
 
 def _rule_stats_30d(rule: ManagementAutomationRule) -> Dict[str, int]:
-    since = timezone.now() - timedelta(days=30)
-    executions = ManagementAutomationExecution.objects.filter(
-        rule=rule,
-        started_at__gte=since,
-        dry_run=False,
-    )
-    matched = sum(ex.matched_count for ex in executions)
-    sent = sum(ex.success_count for ex in executions)
-    skipped = sum(ex.skipped_count for ex in executions)
-    failed = sum(ex.failed_count for ex in executions)
-    converted = ManagementAutomationRecipient.objects.filter(
-        rule=rule,
-        sent_at__gte=since,
-        converted_at__isnull=False,
-    ).count()
+    from accounts.services.automation_analytics import rule_stats_for_period
+
+    stats = rule_stats_for_period(rule, days=30)
     return {
-        'matched': matched,
-        'sent': sent,
-        'skipped': skipped,
-        'failed': failed,
-        'converted': converted,
-        'revenue': 0,
+        'matched': stats['matched'],
+        'sent': stats['sent'],
+        'skipped': stats['skipped'],
+        'failed': stats['failed'],
+        'converted': stats['converted_recipients'],
+        'revenue': stats['confirmed_revenue'],
+        'unique_recipients': stats['unique_recipients'],
+        'attributed_purchases': stats['attributed_purchases'],
+        'associated_purchases': stats['associated_purchases'],
+        'discount_consumed': stats['discount_consumed'],
+        'conversion_rate': stats['conversion_rate'],
     }
 
 

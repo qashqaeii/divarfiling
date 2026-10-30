@@ -12,6 +12,7 @@ from accounts.models import (
     ManagementAutomationExecution,
     ManagementAutomationRecipient,
     ManagementAutomationRule,
+    UserDiscountIssuance,
 )
 from accounts.services.admin_management_assistant import ensure_automation_rules
 from accounts.services.management_automation_runner import (
@@ -242,6 +243,73 @@ class ManagementAutomationRunnerTests(TestCase):
         self.assertTrue(in_quiet_hours(rule))
         ex = run_rule(rule, dry_run=True, force=True)
         self.assertIsNone(ex)
+
+    def test_pending_recovery_allows_after_old_paid_order(self):
+        rule = ManagementAutomationRule.objects.get(key='pending_recovery')
+        paid = Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=100_000,
+            status='paid',
+            paid_at=timezone.now() - timedelta(days=30),
+        )
+        pending = self._pending_order(self.user, hours_ago=5)
+        candidate = AutomationCandidate(
+            trigger_key=f'pending_order:{pending.pk}',
+            user=self.user,
+            phone='09120000201',
+            metadata={'order_id': str(pending.pk), 'user_id': self.user.pk},
+        )
+        ok, reason = revalidate_candidate(rule, candidate)
+        self.assertTrue(ok, msg=reason)
+        self.assertIsNotNone(paid.pk)
+
+    def test_pending_recovery_skips_after_newer_paid(self):
+        rule = ManagementAutomationRule.objects.get(key='pending_recovery')
+        pending = self._pending_order(self.user, hours_ago=5)
+        Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=100_000,
+            status='paid',
+            paid_at=timezone.now(),
+        )
+        candidate = AutomationCandidate(
+            trigger_key=f'pending_order:{pending.pk}',
+            user=self.user,
+            phone='09120000201',
+            metadata={'order_id': str(pending.pk), 'user_id': self.user.pk},
+        )
+        ok, reason = revalidate_candidate(rule, candidate)
+        self.assertFalse(ok)
+        self.assertEqual(reason, 'user_has_paid_order_after')
+
+    def test_dry_run_does_not_issue_discount_code(self):
+        rule = self._activate_rule('pending_recovery_discount')
+        order = self._pending_order(self.user, hours_ago=30)
+        before = UserDiscountIssuance.objects.count()
+        with patch('accounts.services.management_automation_runner.notify_marketing'):
+            ex = run_rule(rule, dry_run=True, force=True)
+        self.assertIsNotNone(ex)
+        self.assertEqual(UserDiscountIssuance.objects.count(), before)
+
+    def test_live_after_dry_run_can_send(self):
+        rule = self._activate_rule('pending_recovery')
+        self._pending_order(self.user, hours_ago=5)
+        ex_dry = run_rule(rule, dry_run=True, force=True)
+        self.assertIsNotNone(ex_dry)
+        with patch('accounts.services.management_automation_runner.notify_marketing') as mock_send:
+            mock_send.return_value = (True, type('L', (), {'pk': 9, 'error_message': ''})())
+            ex_live = run_rule(rule, dry_run=False, force=True)
+        self.assertIsNotNone(ex_live)
+        self.assertTrue(
+            ManagementAutomationRecipient.objects.filter(
+                rule=rule,
+                status=ManagementAutomationRecipient.Status.SENT,
+            ).exists()
+        )
 
 
 @override_settings(TIME_ZONE='Asia/Tehran')

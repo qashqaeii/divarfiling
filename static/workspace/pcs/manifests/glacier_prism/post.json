@@ -1,0 +1,306 @@
+{
+  "template_id": "glacier_prism",
+  "schema_version": 2,
+  "manifest_version": "pcs-manifest-73dd173d0e42395c",
+  "layout_revision": "73dd173d0e42395c",
+  "format": "post",
+  "canvas": {
+    "width": 1080,
+    "height": 1350
+  },
+  "overlay_path": "images/Glacier prism luxury property story-1.webp",
+  "overlay_asset_ref": "tpl:glacier_prism",
+  "background": "#0a1424",
+  "scene": {
+    "schemaVersion": 2,
+    "canvas": {
+      "width": 1080,
+      "height": 1350,
+      "format": "post"
+    },
+    "templateId": "glacier_prism",
+    "renderMode": "layers",
+    "layers": [
+      {
+        "id": "bg-fill",
+        "type": "shape",
+        "name": "پس‌زمینه",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1350,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "background": "#0a1424"
+        }
+      },
+      {
+        "id": "hero-image",
+        "type": "image",
+        "name": "تصویر شاخص",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 135,
+        "y": 141,
+        "width": 849,
+        "height": 673,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "borderRadius": 0,
+          "objectFit": "cover",
+          "cropPanX": 50,
+          "cropPanY": 50,
+          "cropZoom": 1
+        },
+        "imageIndex": 0,
+        "templateRole": "hero"
+      },
+      {
+        "id": "template-frame",
+        "type": "template_frame",
+        "name": "قاب قالب",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1350,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {},
+        "assetRef": "tpl:glacier_prism"
+      },
+      {
+        "id": "footer-1",
+        "type": "bound_text",
+        "name": "تماس مشاور",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 163,
+        "y": 1189,
+        "width": 776,
+        "height": 53,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "user",
+          "field": "contact_footer",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 20,
+          "fontWeight": 800,
+          "fill": "#1a2840",
+          "align": "right",
+          "direction": "rtl"
+        },
+        "text": "",
+        "templateRole": "footer"
+      },
+      {
+        "id": "headline-1",
+        "type": "text",
+        "name": "عنوان",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 225,
+        "y": 895,
+        "width": 762,
+        "height": 114,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "gulzar",
+          "fontSize": 57,
+          "fontWeight": 900,
+          "fill": "#0a3560",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.2
+        },
+        "text": "",
+        "templateRole": "headline"
+      },
+      {
+        "id": "deal-1",
+        "type": "bound_text",
+        "name": "نوع معامله",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 799,
+        "y": 119,
+        "width": 197,
+        "height": 44,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "deal_mode",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 19,
+          "fontWeight": 800,
+          "fill": "#ffffff",
+          "align": "center",
+          "direction": "rtl",
+          "textPreset": "capsule"
+        },
+        "text": ""
+      },
+      {
+        "id": "meta-1",
+        "type": "text",
+        "name": "مشخصات",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 225,
+        "y": 981,
+        "width": 762,
+        "height": 71,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "gulzar",
+          "fontSize": 26,
+          "fontWeight": 700,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.45
+        },
+        "text": "",
+        "templateRole": "meta"
+      },
+      {
+        "id": "price-1",
+        "type": "bound_text",
+        "name": "قیمت",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 225,
+        "y": 1098,
+        "width": 762,
+        "height": 51,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "price",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "gulzar",
+          "fontSize": 38,
+          "fontWeight": 900,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.15
+        },
+        "text": "",
+        "templateRole": "price"
+      }
+    ],
+    "layerOrder": [
+      "bg-fill",
+      "hero-image",
+      "template-frame",
+      "headline-1",
+      "meta-1",
+      "price-1",
+      "footer-1",
+      "deal-1"
+    ],
+    "migratedAt": null,
+    "templateBuild": 12
+  },
+  "image_slots": [
+    {
+      "id": "hero-image",
+      "templateRole": "hero",
+      "imageIndex": 0,
+      "x": 135,
+      "y": 141,
+      "width": 849,
+      "height": 673,
+      "zIndex": 1,
+      "style": {
+        "borderRadius": 0,
+        "objectFit": "cover",
+        "cropPanX": 50,
+        "cropPanY": 50,
+        "cropZoom": 1
+      }
+    }
+  ],
+  "layout_calibration": {
+    "hero": {
+      "x": 135,
+      "y": 141,
+      "width": 849,
+      "height": 673,
+      "objX": 50,
+      "objY": 36.61464585834334
+    }
+  },
+  "layout_boxes": {
+    "hero": {
+      "x": 135,
+      "y": 141,
+      "width": 849,
+      "height": 673,
+      "objX": 50,
+      "objY": 36.61464585834334
+    },
+    "footer": {
+      "x": 163,
+      "y": 1189,
+      "width": 776,
+      "height": 53
+    },
+    "deal": {
+      "x": 799,
+      "y": 119,
+      "width": 197,
+      "height": 44
+    },
+    "headline": {
+      "x": 225,
+      "y": 895,
+      "width": 762,
+      "height": 114
+    },
+    "meta": {
+      "x": 225,
+      "y": 981,
+      "width": 762,
+      "height": 71
+    },
+    "price": {
+      "x": 225,
+      "y": 1098,
+      "width": 762,
+      "height": 51
+    }
+  }
+}

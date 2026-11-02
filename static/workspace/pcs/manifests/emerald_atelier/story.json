@@ -1,0 +1,372 @@
+{
+  "template_id": "emerald_atelier",
+  "schema_version": 2,
+  "manifest_version": "pcs-manifest-73dd173d0e42395c",
+  "layout_revision": "73dd173d0e42395c",
+  "format": "story",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "overlay_path": "images/Emerald Atelier architectural story template-3.webp",
+  "overlay_asset_ref": "tpl:emerald_atelier",
+  "background": "#e8dcc8",
+  "scene": {
+    "schemaVersion": 2,
+    "canvas": {
+      "width": 1080,
+      "height": 1920,
+      "format": "story"
+    },
+    "templateId": "emerald_atelier",
+    "renderMode": "layers",
+    "layers": [
+      {
+        "id": "bg-fill",
+        "type": "shape",
+        "name": "پس‌زمینه",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "background": "#e8dcc8"
+        }
+      },
+      {
+        "id": "hero-image",
+        "type": "image",
+        "name": "تصویر قوس",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 163,
+        "y": 147,
+        "width": 567,
+        "height": 1017,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "borderRadius": 0,
+          "objectFit": "cover",
+          "cropPanX": 50.20242914979757,
+          "cropPanY": 44.24379232505643,
+          "cropZoom": 1
+        },
+        "imageIndex": 0,
+        "templateRole": "hero"
+      },
+      {
+        "id": "strip-image",
+        "type": "image",
+        "name": "نوار تصویر",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 797,
+        "y": 374,
+        "width": 235,
+        "height": 790,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "borderRadius": 0,
+          "objectFit": "cover",
+          "cropPanX": 50.73170731707317,
+          "cropPanY": 42.73255813953488,
+          "cropZoom": 1
+        },
+        "imageIndex": 1,
+        "templateRole": "accent"
+      },
+      {
+        "id": "template-frame",
+        "type": "template_frame",
+        "name": "قاب قالب",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {},
+        "assetRef": "tpl:emerald_atelier"
+      },
+      {
+        "id": "footer-1",
+        "type": "bound_text",
+        "name": "تماس مشاور",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 55,
+        "y": 1835,
+        "width": 969,
+        "height": 69,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "user",
+          "field": "contact_footer",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 29,
+          "fontWeight": 800,
+          "fill": "rgba(255,255,255,.92)",
+          "align": "right",
+          "direction": "rtl"
+        },
+        "text": "",
+        "templateRole": "footer"
+      },
+      {
+        "id": "headline-1",
+        "type": "text",
+        "name": "عنوان",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 179,
+        "y": 1233,
+        "width": 836,
+        "height": 158,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 81,
+          "fontWeight": 900,
+          "fill": "#0a3560",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.2
+        },
+        "text": "",
+        "templateRole": "headline"
+      },
+      {
+        "id": "deal-1",
+        "type": "bound_text",
+        "name": "نوع معامله",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 776,
+        "y": 83,
+        "width": 197,
+        "height": 57,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "deal_mode",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 27,
+          "fontWeight": 800,
+          "fill": "#ffffff",
+          "align": "center",
+          "direction": "rtl",
+          "textPreset": "capsule"
+        },
+        "text": ""
+      },
+      {
+        "id": "meta-1",
+        "type": "text",
+        "name": "مشخصات",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 179,
+        "y": 1391,
+        "width": 836,
+        "height": 107,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 36,
+          "fontWeight": 700,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.45
+        },
+        "text": "",
+        "templateRole": "meta"
+      },
+      {
+        "id": "price-1",
+        "type": "bound_text",
+        "name": "قیمت",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 179,
+        "y": 1498,
+        "width": 836,
+        "height": 93,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "price",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 54,
+          "fontWeight": 900,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.15
+        },
+        "text": "",
+        "templateRole": "price"
+      }
+    ],
+    "layerOrder": [
+      "bg-fill",
+      "hero-image",
+      "strip-image",
+      "template-frame",
+      "headline-1",
+      "meta-1",
+      "price-1",
+      "footer-1",
+      "deal-1"
+    ],
+    "migratedAt": null,
+    "templateBuild": 12
+  },
+  "image_slots": [
+    {
+      "id": "hero-image",
+      "templateRole": "hero",
+      "imageIndex": 0,
+      "x": 163,
+      "y": 147,
+      "width": 567,
+      "height": 1017,
+      "zIndex": 1,
+      "style": {
+        "borderRadius": 0,
+        "objectFit": "cover",
+        "cropPanX": 50.20242914979757,
+        "cropPanY": 44.24379232505643,
+        "cropZoom": 1
+      }
+    },
+    {
+      "id": "strip-image",
+      "templateRole": "accent",
+      "imageIndex": 1,
+      "x": 797,
+      "y": 374,
+      "width": 235,
+      "height": 790,
+      "zIndex": 2,
+      "style": {
+        "borderRadius": 0,
+        "objectFit": "cover",
+        "cropPanX": 50.73170731707317,
+        "cropPanY": 42.73255813953488,
+        "cropZoom": 1
+      }
+    }
+  ],
+  "layout_calibration": {
+    "arch": {
+      "box": {
+        "x": 163,
+        "y": 147,
+        "width": 567,
+        "height": 1017,
+        "objX": 50.20242914979757,
+        "objY": 44.24379232505643
+      },
+      "objX": 50.20242914979757,
+      "objY": 44.24379232505643
+    },
+    "strip": {
+      "box": {
+        "x": 797,
+        "y": 374,
+        "width": 235,
+        "height": 790,
+        "objX": 50.73170731707317,
+        "objY": 42.73255813953488
+      },
+      "objX": 50.73170731707317,
+      "objY": 42.73255813953488
+    }
+  },
+  "layout_boxes": {
+    "headline": {
+      "x": 179,
+      "y": 1233,
+      "width": 836,
+      "height": 158
+    },
+    "meta": {
+      "x": 179,
+      "y": 1391,
+      "width": 836,
+      "height": 107
+    },
+    "price": {
+      "x": 179,
+      "y": 1498,
+      "width": 836,
+      "height": 93
+    },
+    "arch": {
+      "x": 163,
+      "y": 147,
+      "width": 567,
+      "height": 1017,
+      "objX": 50.20242914979757,
+      "objY": 44.24379232505643
+    },
+    "strip": {
+      "x": 797,
+      "y": 374,
+      "width": 235,
+      "height": 790,
+      "objX": 50.73170731707317,
+      "objY": 42.73255813953488
+    },
+    "footer": {
+      "x": 55,
+      "y": 1835,
+      "width": 969,
+      "height": 69
+    },
+    "deal": {
+      "x": 776,
+      "y": 83,
+      "width": 197,
+      "height": 57
+    }
+  }
+}

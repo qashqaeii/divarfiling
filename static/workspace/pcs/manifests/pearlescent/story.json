@@ -1,0 +1,313 @@
+{
+  "template_id": "pearlescent",
+  "schema_version": 2,
+  "manifest_version": "pcs-manifest-73dd173d0e42395c",
+  "layout_revision": "73dd173d0e42395c",
+  "format": "story",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "overlay_path": "images/Pearlescent Blue Real Estate Story Template-3.webp",
+  "overlay_asset_ref": "tpl:pearlescent",
+  "background": "#e8f4fc",
+  "scene": {
+    "schemaVersion": 2,
+    "canvas": {
+      "width": 1080,
+      "height": 1920,
+      "format": "story"
+    },
+    "templateId": "pearlescent",
+    "renderMode": "layers",
+    "layers": [
+      {
+        "id": "bg-fill",
+        "type": "shape",
+        "name": "پس‌زمینه",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "background": "#e8f4fc"
+        }
+      },
+      {
+        "id": "hero-image",
+        "type": "image",
+        "name": "تصویر شاخص",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 874,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "borderRadius": 0,
+          "objectFit": "cover",
+          "cropPanX": 50,
+          "cropPanY": 50,
+          "cropZoom": 1
+        },
+        "imageIndex": 0,
+        "templateRole": "hero"
+      },
+      {
+        "id": "template-frame",
+        "type": "template_frame",
+        "name": "قاب قالب",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {},
+        "assetRef": "tpl:pearlescent"
+      },
+      {
+        "id": "footer-1",
+        "type": "bound_text",
+        "name": "پاورقی",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 60,
+        "y": 1686,
+        "width": 960,
+        "height": 205,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "user",
+          "field": "contact_footer",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 28,
+          "fontWeight": 800,
+          "fill": "#ffffff",
+          "align": "center",
+          "direction": "rtl"
+        },
+        "text": "مشاوره رایگان"
+      },
+      {
+        "id": "headline-1",
+        "type": "text",
+        "name": "عنوان",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 72,
+        "y": 910,
+        "width": 936,
+        "height": 218,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 73,
+          "fontWeight": 900,
+          "fill": "#0a3560",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.2
+        },
+        "text": "",
+        "templateRole": "headline"
+      },
+      {
+        "id": "deal-1",
+        "type": "bound_text",
+        "name": "نوع معامله",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 890,
+        "y": 36,
+        "width": 108,
+        "height": 44,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "deal_mode",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 27,
+          "fontWeight": 800,
+          "fill": "#ffffff",
+          "align": "center",
+          "direction": "rtl",
+          "textPreset": "capsule"
+        },
+        "text": ""
+      },
+      {
+        "id": "meta-1",
+        "type": "text",
+        "name": "مشخصات",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 72,
+        "y": 1213,
+        "width": 936,
+        "height": 280,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 36,
+          "fontWeight": 700,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.45
+        },
+        "text": "",
+        "templateRole": "meta"
+      },
+      {
+        "id": "price-1",
+        "type": "bound_text",
+        "name": "قیمت",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 72,
+        "y": 1493,
+        "width": 936,
+        "height": 171,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "price",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 54,
+          "fontWeight": 900,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.15
+        },
+        "text": "",
+        "templateRole": "price"
+      }
+    ],
+    "layerOrder": [
+      "bg-fill",
+      "hero-image",
+      "template-frame",
+      "headline-1",
+      "meta-1",
+      "price-1",
+      "footer-1",
+      "deal-1"
+    ],
+    "migratedAt": null,
+    "templateBuild": 12
+  },
+  "image_slots": [
+    {
+      "id": "hero-image",
+      "templateRole": "hero",
+      "imageIndex": 0,
+      "x": 0,
+      "y": 0,
+      "width": 1080,
+      "height": 874,
+      "zIndex": 1,
+      "style": {
+        "borderRadius": 0,
+        "objectFit": "cover",
+        "cropPanX": 50,
+        "cropPanY": 50,
+        "cropZoom": 1
+      }
+    }
+  ],
+  "layout_calibration": {
+    "hero": {
+      "x": 0,
+      "y": 0,
+      "width": 1080,
+      "height": 874
+    }
+  },
+  "layout_boxes": {
+    "background": {
+      "x": 0,
+      "y": 0,
+      "width": 1080,
+      "height": 1920
+    },
+    "hero": {
+      "x": 0,
+      "y": 0,
+      "width": 1080,
+      "height": 874
+    },
+    "headline": {
+      "x": 72,
+      "y": 910,
+      "width": 936,
+      "height": 218
+    },
+    "location": {
+      "x": 72,
+      "y": 1135,
+      "width": 936,
+      "height": 78
+    },
+    "meta": {
+      "x": 72,
+      "y": 1213,
+      "width": 936,
+      "height": 280
+    },
+    "price": {
+      "x": 72,
+      "y": 1493,
+      "width": 936,
+      "height": 171
+    },
+    "footer": {
+      "x": 60,
+      "y": 1686,
+      "width": 960,
+      "height": 205
+    },
+    "deal": {
+      "x": 890,
+      "y": 36,
+      "width": 108,
+      "height": 44
+    }
+  }
+}

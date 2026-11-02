@@ -1,0 +1,360 @@
+{
+  "template_id": "pearl_gallery",
+  "schema_version": 2,
+  "manifest_version": "pcs-manifest-73dd173d0e42395c",
+  "layout_revision": "73dd173d0e42395c",
+  "format": "post",
+  "canvas": {
+    "width": 1080,
+    "height": 1350
+  },
+  "overlay_path": "images/Pearl Gallery luxury property story-2.webp",
+  "overlay_asset_ref": "tpl:pearl_gallery",
+  "background": "#0b1220",
+  "scene": {
+    "schemaVersion": 2,
+    "canvas": {
+      "width": 1080,
+      "height": 1350,
+      "format": "post"
+    },
+    "templateId": "pearl_gallery",
+    "renderMode": "layers",
+    "layers": [
+      {
+        "id": "bg-fill",
+        "type": "shape",
+        "name": "پس‌زمینه",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1350,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "background": "#0b1220"
+        }
+      },
+      {
+        "id": "hero-image",
+        "type": "image",
+        "name": "تصویر شاخص",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 116,
+        "y": 22,
+        "width": 807,
+        "height": 807,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "borderRadius": 404,
+          "objectFit": "cover",
+          "cropPanX": 50,
+          "cropPanY": 50,
+          "cropZoom": 1
+        },
+        "imageIndex": 0,
+        "templateRole": "hero"
+      },
+      {
+        "id": "accent-image",
+        "type": "image",
+        "name": "تصویر مکمل",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 695,
+        "y": 471,
+        "width": 356,
+        "height": 356,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "borderRadius": 178,
+          "objectFit": "cover",
+          "cropPanX": 50,
+          "cropPanY": 50,
+          "cropZoom": 1
+        },
+        "imageIndex": 1,
+        "templateRole": "accent"
+      },
+      {
+        "id": "template-frame",
+        "type": "template_frame",
+        "name": "قاب قالب",
+        "visible": true,
+        "locked": true,
+        "parentId": null,
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1350,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {},
+        "assetRef": "tpl:pearl_gallery"
+      },
+      {
+        "id": "footer-1",
+        "type": "bound_text",
+        "name": "تماس مشاور",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 83,
+        "y": 1255,
+        "width": 915,
+        "height": 60,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "user",
+          "field": "contact_footer",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 21,
+          "fontWeight": 800,
+          "fill": "#1e293b",
+          "align": "right",
+          "direction": "rtl"
+        },
+        "text": "",
+        "templateRole": "footer"
+      },
+      {
+        "id": "headline-1",
+        "type": "text",
+        "name": "عنوان",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 152,
+        "y": 822,
+        "width": 772,
+        "height": 171,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 57,
+          "fontWeight": 900,
+          "fill": "#0a3560",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.2
+        },
+        "text": "",
+        "templateRole": "headline"
+      },
+      {
+        "id": "deal-1",
+        "type": "bound_text",
+        "name": "نوع معامله",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 742,
+        "y": 74,
+        "width": 198,
+        "height": 44,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "deal_mode",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 19,
+          "fontWeight": 800,
+          "fill": "#ffffff",
+          "align": "center",
+          "direction": "rtl",
+          "textPreset": "capsule"
+        },
+        "text": ""
+      },
+      {
+        "id": "meta-1",
+        "type": "text",
+        "name": "مشخصات",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 152,
+        "y": 993,
+        "width": 772,
+        "height": 117,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": null,
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 26,
+          "fontWeight": 700,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.45
+        },
+        "text": "",
+        "templateRole": "meta"
+      },
+      {
+        "id": "price-1",
+        "type": "bound_text",
+        "name": "قیمت",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 152,
+        "y": 1110,
+        "width": 772,
+        "height": 101,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "property",
+          "field": "price",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 38,
+          "fontWeight": 900,
+          "fill": "#64748b",
+          "align": "right",
+          "direction": "rtl",
+          "lineHeight": 1.15
+        },
+        "text": "",
+        "templateRole": "price"
+      }
+    ],
+    "layerOrder": [
+      "bg-fill",
+      "hero-image",
+      "accent-image",
+      "template-frame",
+      "headline-1",
+      "meta-1",
+      "price-1",
+      "footer-1",
+      "deal-1"
+    ],
+    "migratedAt": null,
+    "templateBuild": 12
+  },
+  "image_slots": [
+    {
+      "id": "hero-image",
+      "templateRole": "hero",
+      "imageIndex": 0,
+      "x": 116,
+      "y": 22,
+      "width": 807,
+      "height": 807,
+      "zIndex": 1,
+      "style": {
+        "borderRadius": 404,
+        "objectFit": "cover",
+        "cropPanX": 50,
+        "cropPanY": 50,
+        "cropZoom": 1
+      },
+      "mask": {
+        "kind": "circle",
+        "borderRadius": 404
+      }
+    },
+    {
+      "id": "accent-image",
+      "templateRole": "accent",
+      "imageIndex": 1,
+      "x": 695,
+      "y": 471,
+      "width": 356,
+      "height": 356,
+      "zIndex": 2,
+      "style": {
+        "borderRadius": 178,
+        "objectFit": "cover",
+        "cropPanX": 50,
+        "cropPanY": 50,
+        "cropZoom": 1
+      },
+      "mask": {
+        "kind": "circle",
+        "borderRadius": 178
+      }
+    }
+  ],
+  "layout_calibration": {
+    "primaryCircle": {
+      "cx": 519,
+      "cy": 425,
+      "d": 807
+    },
+    "secondaryCircle": {
+      "cx": 873,
+      "cy": 649,
+      "d": 356
+    }
+  },
+  "layout_boxes": {
+    "headline": {
+      "x": 152,
+      "y": 822,
+      "width": 772,
+      "height": 171
+    },
+    "meta": {
+      "x": 152,
+      "y": 993,
+      "width": 772,
+      "height": 117
+    },
+    "price": {
+      "x": 152,
+      "y": 1110,
+      "width": 772,
+      "height": 101
+    },
+    "primaryCircle": {
+      "cx": 519,
+      "cy": 425,
+      "d": 807
+    },
+    "secondaryCircle": {
+      "cx": 873,
+      "cy": 649,
+      "d": 356
+    },
+    "footer": {
+      "x": 83,
+      "y": 1255,
+      "width": 915,
+      "height": 60
+    },
+    "deal": {
+      "x": 742,
+      "y": 74,
+      "width": 198,
+      "height": 44
+    }
+  }
+}

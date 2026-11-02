@@ -39,8 +39,10 @@ _LAYER_TYPES = frozenset({
 _LAYER_STYLE_KEYS = frozenset({
     'fontKey', 'fontSize', 'fontWeight', 'fill', 'align', 'direction', 'lineHeight',
     'background', 'borderRadius', 'opacity', 'textPreset', 'objectFit', 'cropPanX',
-    'cropPanY', 'cropZoom',
+    'cropPanY', 'cropZoom', 'fontStyle', 'textDecoration', 'brightness', 'blur',
+    'imgOpacity', 'warmth', 'vignette', 'verticalAlign',
 })
+_BRAND_BINDING_FIELDS = frozenset({'contact_footer', 'consultant_name', 'contact_phone'})
 _MAX_SCENE_LAYERS = 48
 _MAX_SCENE_PARENT_DEPTH = 4
 _SCENE_ALIGN = frozenset({'left', 'center', 'right'})
@@ -101,9 +103,15 @@ def _normalize_scene_binding(raw: Any) -> Optional[Dict[str, str]]:
     if mode not in ('linked', 'override', 'detached'):
         mode = 'linked'
     source = raw.get('source')
-    if source not in ('property', 'user'):
+    if source not in ('property', 'user', 'brand'):
         source = 'property'
     field = _clip_str(raw.get('field'), 64)
+    if source == 'brand':
+        if field not in _BRAND_BINDING_FIELDS:
+            return None
+        return {'source': 'brand', 'field': field, 'mode': mode}
+    if source == 'user' and not field:
+        return {'source': 'user', 'field': field, 'mode': mode}
     if source == 'property' and not field:
         return None
     return {'source': source, 'field': field, 'mode': mode}
@@ -150,6 +158,28 @@ def _normalize_scene_style(raw: Any) -> Dict[str, Any]:
             out[key] = _clip_float(val, 0, 100, field=key)
         elif key == 'cropZoom':
             out[key] = _clip_float(val, 0.5, 3.0, field='cropZoom')
+        elif key == 'fontStyle':
+            if str(val) == 'italic':
+                out[key] = 'italic'
+        elif key == 'textDecoration':
+            if str(val) == 'underline':
+                out[key] = 'underline'
+        elif key == 'brightness':
+            out[key] = _clip_float(val, 40, 160, field='brightness')
+        elif key == 'blur':
+            out[key] = _clip_float(val, 0, 12, field='blur')
+        elif key == 'imgOpacity':
+            out[key] = _clip_float(val, 35, 100, field='imgOpacity')
+        elif key == 'warmth':
+            w = str(val or '')
+            if w in ('neutral', 'warm', 'cool'):
+                out[key] = w
+        elif key == 'vignette':
+            out[key] = _clip_float(val, 0, 80, field='vignette')
+        elif key == 'verticalAlign':
+            va = str(val or '')
+            if va in ('top', 'center', 'bottom'):
+                out[key] = va
     return out
 
 

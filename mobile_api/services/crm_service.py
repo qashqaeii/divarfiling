@@ -102,8 +102,11 @@ def contact_detail_payload(user, contact_id: int, *, request=None) -> Optional[d
         mobile_source_context,
     )
 
+    from workspace.services.crm_scope import can_edit_customer
+
     payload['agency_space'] = mobile_source_context(user, customer=c)
     payload['agency_space_provenance'] = mobile_provenance_for_customer(c, user)
+    payload['can_edit'] = can_edit_customer(user, c)
     return payload
 
 

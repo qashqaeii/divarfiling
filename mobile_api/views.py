@@ -2022,6 +2022,83 @@ class PropertyBulkArchiveView(APIView):
         return api_ok(payload)
 
 
+class ContactBulkArchiveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from workspace.services.crm_contact_archive import (
+            BULK_CONTACT_ARCHIVE_LIMIT,
+            bulk_archive_contacts,
+            bulk_restore_contacts,
+        )
+
+        data = _parse_body(request)
+        action = (data.get('action') or 'archive').strip().lower()
+        if action not in ('archive', 'restore'):
+            return api_error('عملیات نامعتبر است.', code='VALIDATION_ERROR')
+        raw_ids = data.get('contact_ids')
+        if not isinstance(raw_ids, list) or not raw_ids:
+            return api_error('فهرست مخاطبین الزامی است.', code='VALIDATION_ERROR')
+
+        unique_ids: list[int] = []
+        seen = set()
+        for raw in raw_ids:
+            try:
+                cid = int(raw)
+            except (TypeError, ValueError):
+                return api_error('شناسه مخاطب نامعتبر است.', code='VALIDATION_ERROR')
+            if cid in seen:
+                continue
+            seen.add(cid)
+            unique_ids.append(cid)
+        if len(unique_ids) > BULK_CONTACT_ARCHIVE_LIMIT:
+            return api_error(
+                f'حداکثر {BULK_CONTACT_ARCHIVE_LIMIT} مخاطب در هر عملیات مجاز است.',
+                code='VALIDATION_ERROR',
+            )
+
+        reason = (data.get('reason') or '').strip()
+        restore_status = (data.get('restore_status') or '').strip()
+        if action == 'restore':
+            result = bulk_restore_contacts(
+                request.user,
+                unique_ids,
+                restore_status=restore_status,
+            )
+            ok_count = result.get('restored', 0)
+            label = 'بازگردانی'
+        else:
+            result = bulk_archive_contacts(request.user, unique_ids, reason=reason)
+            ok_count = result.get('archived', 0)
+            label = 'بایگانی'
+
+        payload = {
+            'archived': result.get('archived', 0),
+            'restored': result.get('restored', 0),
+            'skipped': result.get('skipped', 0),
+            'errors': result.get('errors', 0),
+        }
+        skipped = payload['skipped']
+        errors = payload['errors']
+        payload['partial'] = bool(ok_count and (skipped or errors))
+        payload['complete'] = ok_count > 0 and not skipped and not errors
+
+        if ok_count == 0:
+            return api_error(
+                f'مخاطبی برای {label} انتخاب نشده یا دسترسی ندارید.',
+                code='VALIDATION_ERROR',
+                status=400,
+                fields=payload,
+            )
+        payload['message'] = f'{ok_count} مخاطب {label} شد.'
+        if payload['partial']:
+            payload['message'] = (
+                f'{ok_count} مخاطب {label} شد؛ '
+                f'{skipped} رد شد و {errors} خطا.'
+            )
+        return api_ok(payload)
+
+
 class PropertyContactsView(APIView):
     permission_classes = [IsAuthenticated]
 

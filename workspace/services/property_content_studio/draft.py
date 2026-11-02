@@ -5,14 +5,49 @@ import copy
 from typing import Any, Dict, Optional, Tuple
 
 from workspace.models import CRMProperty, CRMPropertyContentStudioDraft
+from workspace.services.property_content_studio.adapter import build_studio_property_payload
 from workspace.services.property_content_studio.constants import DRAFT_VERSION
 from workspace.services.property_content_studio.draft_validate import DraftValidationError, validate_and_merge_draft
-from workspace.services.property_content_studio.adapter import build_studio_property_payload
 from workspace.services.property_content_studio.fingerprint import property_content_fingerprint
 from workspace.services.property_content_studio.storyboard import (
     _draft_has_reviewable_ai,
     merge_storyboard_with_property,
 )
+
+_MASKED_DRAFT_BINDING_FIELDS = frozenset({
+    'location_line',
+    'neighborhood',
+    'file_code',
+})
+
+
+def export_draft_payload_for_access(
+    payload: Dict[str, Any],
+    *,
+    mask_sensitive: bool,
+) -> Dict[str, Any]:
+    """Safe copy for API responses — does not mutate stored draft."""
+    if not mask_sensitive or not payload:
+        return payload
+    out = copy.deepcopy(payload)
+    posters = out.get('posters')
+    if not isinstance(posters, dict):
+        return out
+    for poster_conf in posters.values():
+        if not isinstance(poster_conf, dict):
+            continue
+        scene = poster_conf.get('scene')
+        if not isinstance(scene, dict):
+            continue
+        for layer in scene.get('layers') or []:
+            if not isinstance(layer, dict):
+                continue
+            binding = layer.get('binding')
+            if not isinstance(binding, dict):
+                continue
+            if binding.get('source') == 'property' and binding.get('field') in _MASKED_DRAFT_BINDING_FIELDS:
+                layer['text'] = ''
+    return out
 
 
 def empty_draft_payload() -> Dict[str, Any]:
@@ -105,13 +140,18 @@ def save_draft(
     return merged, {'stale': stale, 'fingerprint': fp, 'synced': sync_property}
 
 
-def sync_draft_with_property(user, prop: CRMProperty) -> Dict[str, Any]:
+def sync_draft_with_property(
+    user,
+    prop: CRMProperty,
+    *,
+    mask_sensitive: bool = False,
+) -> Dict[str, Any]:
     fp = property_content_fingerprint(prop)
     draft = CRMPropertyContentStudioDraft.objects.filter(property=prop, user=user).first()
     if not draft:
         return {'stale': False, 'fingerprint': fp, 'needs_manual_review': False}
 
-    property_payload = build_studio_property_payload(prop)
+    property_payload = build_studio_property_payload(prop, mask_sensitive=mask_sensitive)
     payload = _merge_payload(draft.payload)
     payload['storyboard'] = merge_storyboard_with_property(
         payload.get('storyboard') or {},
@@ -129,7 +169,7 @@ def sync_draft_with_property(user, prop: CRMProperty) -> Dict[str, Any]:
         'stale': stale,
         'fingerprint': fp,
         'needs_manual_review': needs_manual_review,
-        'draft': payload,
+        'draft': export_draft_payload_for_access(payload, mask_sensitive=mask_sensitive),
         'property': property_payload,
     }
 

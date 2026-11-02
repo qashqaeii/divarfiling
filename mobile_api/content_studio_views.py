@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from rest_framework.negotiation import DefaultContentNegotiation
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
@@ -22,6 +23,7 @@ from workspace.services.property_content_studio.access import resolve_studio_acc
 from workspace.services.property_content_studio.brand import save_user_brand_defaults
 from workspace.services.property_content_studio.draft import (
     delete_draft,
+    export_draft_payload_for_access,
     save_draft,
     sync_draft_with_property,
 )
@@ -33,11 +35,31 @@ from workspace.services.property_content_studio.manifest import (
     enrich_property_templates_for_mobile,
     get_template_manifest,
 )
+from workspace.services.property_content_studio.constants import OUTPUT_FORMATS
 from workspace.services.property_content_studio.session import build_studio_session
 
 logger = logging.getLogger(__name__)
 
 _AI_ACTIONS = frozenset({'divar-titles', 'divar-body', 'poster-headlines', 'social'})
+_FORMAT_IDS = frozenset(OUTPUT_FORMATS.keys())
+
+
+class PCSManifestJsonNegotiation(DefaultContentNegotiation):
+    """Ignore ?format= for renderer selection — canvas format is a query param, not Accept."""
+
+    def select_renderer(self, request, renderers, format_suffix=None):
+        renderer = renderers[0]
+        return renderer, renderer.media_type
+
+
+def _canvas_format_param(request, *, default: str = 'story') -> str:
+    raw = (
+        request.query_params.get('canvas_format')
+        or request.query_params.get('output_format')
+        or request.query_params.get('format')
+        or default
+    )
+    return str(raw or default).strip().lower()
 
 
 def _resolve_property(request, property_id):
@@ -58,6 +80,11 @@ def _mobile_session_payload(user, prop, request, share_ctx) -> dict:
     data['can_edit_property'] = share_ctx.can_edit
     data['property'] = enrich_property_templates_for_mobile(data.get('property') or {}, request)
     data['templates_catalog'] = build_templates_catalog(request)
+    if share_ctx.mask_sensitive and data.get('draft'):
+        data['draft'] = export_draft_payload_for_access(
+            data['draft'],
+            mask_sensitive=True,
+        )
     return data
 
 
@@ -82,7 +109,11 @@ class PropertyContentStudioDraftView(APIView):
             return err
         body = _parse_body(request)
         if body.get('sync_property'):
-            meta = sync_draft_with_property(request.user, prop)
+            meta = sync_draft_with_property(
+                request.user,
+                prop,
+                mask_sensitive=share_ctx.mask_sensitive,
+            )
             return api_ok({
                 'draft_stale': meta['stale'],
                 'property_fingerprint': meta['fingerprint'],
@@ -196,12 +227,15 @@ class PropertyContentStudioAIView(APIView):
 class PropertyContentStudioTemplateManifestView(APIView):
     authentication_classes = [MobileJWTAuthentication]
     permission_classes = [IsAuthenticated]
+    content_negotiation_class = PCSManifestJsonNegotiation
 
     def get(self, request, property_id, template_id):
         _, _, err = _resolve_property(request, property_id)
         if err:
             return err
-        fmt = (request.query_params.get('format') or 'story').strip()
+        fmt = _canvas_format_param(request)
+        if fmt not in _FORMAT_IDS:
+            return api_error('فرمت نامعتبر است', code='VALIDATION_ERROR', status=400)
         try:
             manifest = get_template_manifest(template_id, fmt, request)
         except ManifestNotFoundError:

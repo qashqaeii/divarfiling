@@ -1,8 +1,8 @@
 {
   "template_id": "emerald_atelier",
   "schema_version": 2,
-  "manifest_version": "pcs-manifest-73dd173d0e42395c",
-  "layout_revision": "73dd173d0e42395c",
+  "manifest_version": "pcs-manifest-c1926a7a07383acb",
+  "layout_revision": "c1926a7a07383acb",
   "format": "story",
   "canvas": {
     "width": 1080,
@@ -105,35 +105,6 @@
         "assetRef": "tpl:emerald_atelier"
       },
       {
-        "id": "footer-1",
-        "type": "bound_text",
-        "name": "تماس مشاور",
-        "visible": true,
-        "locked": false,
-        "parentId": null,
-        "x": 55,
-        "y": 1835,
-        "width": 969,
-        "height": 69,
-        "rotation": 0,
-        "opacity": 1,
-        "binding": {
-          "source": "user",
-          "field": "contact_footer",
-          "mode": "linked"
-        },
-        "style": {
-          "fontKey": "vazirmatn",
-          "fontSize": 29,
-          "fontWeight": 800,
-          "fill": "rgba(255,255,255,.92)",
-          "align": "right",
-          "direction": "rtl"
-        },
-        "text": "",
-        "templateRole": "footer"
-      },
-      {
         "id": "headline-1",
         "type": "text",
         "name": "عنوان",
@@ -151,7 +122,7 @@
           "fontKey": "vazirmatn",
           "fontSize": 81,
           "fontWeight": 900,
-          "fill": "#0a3560",
+          "fill": "#122820",
           "align": "right",
           "direction": "rtl",
           "lineHeight": 1.2
@@ -184,6 +155,9 @@
           "fill": "#ffffff",
           "align": "center",
           "direction": "rtl",
+          "lineHeight": 1.1,
+          "background": "linear-gradient(135deg,rgba(0,0,",
+          "borderRadius": 999,
           "textPreset": "capsule"
         },
         "text": ""
@@ -206,12 +180,12 @@
           "fontKey": "vazirmatn",
           "fontSize": 36,
           "fontWeight": 700,
-          "fill": "#64748b",
+          "fill": "rgba(18,40,32,.78)",
           "align": "right",
           "direction": "rtl",
           "lineHeight": 1.45
         },
-        "text": "",
+        "text": "·",
         "templateRole": "meta"
       },
       {
@@ -236,13 +210,42 @@
           "fontKey": "vazirmatn",
           "fontSize": 54,
           "fontWeight": 900,
-          "fill": "#64748b",
+          "fill": "#0b4d3e",
           "align": "right",
           "direction": "rtl",
           "lineHeight": 1.15
         },
         "text": "",
         "templateRole": "price"
+      },
+      {
+        "id": "footer-1",
+        "type": "bound_text",
+        "name": "تماس مشاور",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 55,
+        "y": 1835,
+        "width": 969,
+        "height": 69,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "brand",
+          "field": "contact_footer",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 29,
+          "fontWeight": 800,
+          "fill": "rgba(255,255,255,.92)",
+          "align": "right",
+          "direction": "rtl"
+        },
+        "text": "",
+        "templateRole": "footer"
       }
     ],
     "layerOrder": [
@@ -319,54 +322,6 @@
       },
       "objX": 50.73170731707317,
       "objY": 42.73255813953488
-    }
-  },
-  "layout_boxes": {
-    "headline": {
-      "x": 179,
-      "y": 1233,
-      "width": 836,
-      "height": 158
-    },
-    "meta": {
-      "x": 179,
-      "y": 1391,
-      "width": 836,
-      "height": 107
-    },
-    "price": {
-      "x": 179,
-      "y": 1498,
-      "width": 836,
-      "height": 93
-    },
-    "arch": {
-      "x": 163,
-      "y": 147,
-      "width": 567,
-      "height": 1017,
-      "objX": 50.20242914979757,
-      "objY": 44.24379232505643
-    },
-    "strip": {
-      "x": 797,
-      "y": 374,
-      "width": 235,
-      "height": 790,
-      "objX": 50.73170731707317,
-      "objY": 42.73255813953488
-    },
-    "footer": {
-      "x": 55,
-      "y": 1835,
-      "width": 969,
-      "height": 69
-    },
-    "deal": {
-      "x": 776,
-      "y": 83,
-      "width": 197,
-      "height": 57
     }
   }
 }

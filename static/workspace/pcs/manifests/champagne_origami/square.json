@@ -1,8 +1,8 @@
 {
   "template_id": "champagne_origami",
   "schema_version": 2,
-  "manifest_version": "pcs-manifest-73dd173d0e42395c",
-  "layout_revision": "73dd173d0e42395c",
+  "manifest_version": "pcs-manifest-c1926a7a07383acb",
+  "layout_revision": "c1926a7a07383acb",
   "format": "square",
   "canvas": {
     "width": 1080,
@@ -81,35 +81,6 @@
         "assetRef": "tpl:champagne_origami"
       },
       {
-        "id": "footer-1",
-        "type": "bound_text",
-        "name": "تماس مشاور",
-        "visible": true,
-        "locked": false,
-        "parentId": null,
-        "x": 147,
-        "y": 982,
-        "width": 785,
-        "height": 44,
-        "rotation": 0,
-        "opacity": 1,
-        "binding": {
-          "source": "user",
-          "field": "contact_footer",
-          "mode": "linked"
-        },
-        "style": {
-          "fontKey": "vazirmatn",
-          "fontSize": 16,
-          "fontWeight": 800,
-          "fill": "#e8dcc8",
-          "align": "right",
-          "direction": "rtl"
-        },
-        "text": "",
-        "templateRole": "footer"
-      },
-      {
         "id": "headline-1",
         "type": "text",
         "name": "عنوان",
@@ -125,9 +96,9 @@
         "binding": null,
         "style": {
           "fontKey": "gulzar",
-          "fontSize": 45,
+          "fontSize": 37,
           "fontWeight": 900,
-          "fill": "#0a3560",
+          "fill": "#1f1b16",
           "align": "right",
           "direction": "rtl",
           "lineHeight": 1.2
@@ -160,6 +131,9 @@
           "fill": "#ffffff",
           "align": "center",
           "direction": "rtl",
+          "lineHeight": 1.1,
+          "background": "linear-gradient(135deg,rgba(0,0,",
+          "borderRadius": 999,
           "textPreset": "capsule"
         },
         "text": ""
@@ -182,12 +156,12 @@
           "fontKey": "gulzar",
           "fontSize": 21,
           "fontWeight": 700,
-          "fill": "#64748b",
+          "fill": "rgba(31,27,22,.74)",
           "align": "right",
           "direction": "rtl",
           "lineHeight": 1.45
         },
-        "text": "",
+        "text": "·",
         "templateRole": "meta"
       },
       {
@@ -212,13 +186,42 @@
           "fontKey": "gulzar",
           "fontSize": 30,
           "fontWeight": 900,
-          "fill": "#64748b",
+          "fill": "#7a5c1e",
           "align": "right",
           "direction": "rtl",
           "lineHeight": 1.15
         },
         "text": "",
         "templateRole": "price"
+      },
+      {
+        "id": "footer-1",
+        "type": "bound_text",
+        "name": "تماس مشاور",
+        "visible": true,
+        "locked": false,
+        "parentId": null,
+        "x": 147,
+        "y": 982,
+        "width": 785,
+        "height": 44,
+        "rotation": 0,
+        "opacity": 1,
+        "binding": {
+          "source": "brand",
+          "field": "contact_footer",
+          "mode": "linked"
+        },
+        "style": {
+          "fontKey": "vazirmatn",
+          "fontSize": 16,
+          "fontWeight": 800,
+          "fill": "#e8dcc8",
+          "align": "right",
+          "direction": "rtl"
+        },
+        "text": "",
+        "templateRole": "footer"
       }
     ],
     "layerOrder": [
@@ -261,46 +264,6 @@
       "height": 574,
       "objX": 50,
       "objY": 39.86486486486486
-    }
-  },
-  "layout_boxes": {
-    "hero": {
-      "x": 127,
-      "y": 75,
-      "width": 902,
-      "height": 574,
-      "objX": 50,
-      "objY": 39.86486486486486
-    },
-    "footer": {
-      "x": 147,
-      "y": 982,
-      "width": 785,
-      "height": 44
-    },
-    "deal": {
-      "x": 719,
-      "y": 98,
-      "width": 197,
-      "height": 44
-    },
-    "headline": {
-      "x": 233,
-      "y": 696,
-      "width": 763,
-      "height": 110
-    },
-    "meta": {
-      "x": 233,
-      "y": 762,
-      "width": 763,
-      "height": 69
-    },
-    "price": {
-      "x": 233,
-      "y": 902,
-      "width": 763,
-      "height": 49
     }
   }
 }

@@ -71,13 +71,25 @@
         };
     }
 
+    const BRAND_BINDING_FIELDS = new Set(['contact_footer', 'consultant_name', 'contact_phone']);
+
     function normalizeBinding(raw) {
         if (!raw || typeof raw !== 'object') return null;
         const mode = raw.mode === 'override' || raw.mode === 'detached' ? raw.mode : 'linked';
-        const source = raw.source === 'property' ? 'property' : 'user';
         const field = String(raw.field || '').slice(0, 64);
-        if (source === 'property' && !field) return null;
-        return { source, field, mode };
+        if (raw.source === 'brand') {
+            if (!BRAND_BINDING_FIELDS.has(field)) return null;
+            return { source: 'brand', field, mode };
+        }
+        if (raw.source === 'user') {
+            return { source: 'user', field, mode };
+        }
+        if (raw.source === 'property') {
+            if (!field) return null;
+            return { source: 'property', field, mode };
+        }
+        if (!field) return null;
+        return { source: 'user', field, mode };
     }
 
     function normalizeStyle(raw) {

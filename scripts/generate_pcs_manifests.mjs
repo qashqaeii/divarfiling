@@ -10,7 +10,13 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 import { fileURLToPath } from 'url';
-import { ensureStructuralLayers, extractImageSlotMetadata } from './pcs_manifest_enrich.mjs';
+import { extractImageSlotMetadata } from './pcs_manifest_enrich.mjs';
+import {
+    assertNoSentinelInManifest,
+    buildManifestGeneratorConf,
+    buildManifestGeneratorContext,
+    sanitizeManifestScene,
+} from './pcs_manifest_sanitize.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -93,37 +99,6 @@ function loadPcsSandbox() {
     return sandbox;
 }
 
-function layerText(id, name, box, opts) {
-    return {
-        id,
-        type: opts?.bound ? 'bound_text' : 'text',
-        name,
-        visible: true,
-        locked: false,
-        parentId: null,
-        x: box.x,
-        y: box.y,
-        width: box.width,
-        height: box.height,
-        rotation: 0,
-        opacity: 1,
-        text: opts?.text || '',
-        binding: opts?.binding || null,
-        templateRole: opts?.templateRole || '',
-        style: Object.assign(
-            {
-                fontKey: opts?.fontKey || 'vazirmatn',
-                fontSize: opts?.fontSize || 32,
-                fontWeight: opts?.fontWeight || 700,
-                fill: opts?.fill || '#ffffff',
-                align: 'right',
-                direction: 'rtl',
-            },
-            opts?.style || {},
-        ),
-    };
-}
-
 function main() {
     const sandbox = loadPcsSandbox();
     const Schema = sandbox.PCSSchema;
@@ -158,29 +133,26 @@ function main() {
     for (const templateId of TEMPLATE_IDS) {
         const templateDir = path.join(OUT_DIR, templateId);
         fs.mkdirSync(templateDir, { recursive: true });
+        const overlayRel = OVERLAY_BY_TEMPLATE[templateId];
         for (const [formatKey, fmt] of Object.entries(FORMATS)) {
-            const ctx = {
+            const ctx = buildManifestGeneratorContext(
                 templateId,
                 formatKey,
-                formats: FORMATS,
-                property: {},
-                brand: {},
-                images: ['', '', ''],
-                overlayUrl: `/static/${OVERLAY_BY_TEMPLATE[templateId]}`,
-            };
-            const conf = {};
+                FORMATS,
+                `/static/${overlayRel}`,
+            );
+            const conf = buildManifestGeneratorConf();
             const baseScene = Schema.emptyScene(templateId, formatKey, FORMATS);
             let scene = Scenes.buildInitialScene(conf, ctx, baseScene);
+            scene = Scenes.normalizeSceneLayerOrder(scene);
+            scene = sanitizeManifestScene(scene);
+            scene = Schema.normalizeScene(scene, templateId, formatKey, FORMATS);
+
             const w = scene.canvas.width;
             const h = scene.canvas.height;
             const boxes = Scenes.storyBoxes(templateId, w, h);
-            scene = ensureStructuralLayers(scene, templateId, boxes, h, layerText);
-            scene = Scenes.normalizeSceneLayerOrder(scene);
-            scene = Schema.normalizeScene(scene, templateId, formatKey, FORMATS);
-
             const background = Scenes.overlayCanvasBackground(templateId) || '';
-            const slotMeta = extractImageSlotMetadata(scene, boxes, templateId);
-            const overlayRel = OVERLAY_BY_TEMPLATE[templateId];
+            const slotMeta = extractImageSlotMetadata(scene, boxes);
             const manifest = {
                 template_id: templateId,
                 schema_version: 2,
@@ -197,8 +169,9 @@ function main() {
                 scene,
                 image_slots: slotMeta.image_slots,
                 layout_calibration: slotMeta.layout_calibration,
-                layout_boxes: boxes,
             };
+
+            assertNoSentinelInManifest(manifest);
 
             const outPath = path.join(templateDir, `${formatKey}.json`);
             fs.writeFileSync(outPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');

@@ -157,6 +157,10 @@ def get_template_manifest(
         raise ManifestUnavailableError('manifests not generated')
 
     raw = _load_manifest_file(tid, fmt)
+    file_version = str(raw.get('manifest_version') or '')
+    index_version = manifest_version()
+    if index_version and file_version and file_version != index_version:
+        raise ManifestNotFoundError('manifest version mismatch')
     overlay_rel = _overlay_rel_for_template(tid)
     overlay_url = absolute_static_url(request, overlay_rel) if overlay_rel else ''
 

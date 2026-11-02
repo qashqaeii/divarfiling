@@ -1591,6 +1591,15 @@ class PropertiesListView(APIView):
     def get(self, request):
         page = clamp_page(request.GET.get('page', 1))
         page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=100)
+        from workspace.services.crm_property_archive import (
+            ARCHIVE_SCOPE_ACTIVE,
+            ARCHIVE_SCOPE_ALL,
+            ARCHIVE_SCOPE_ARCHIVED,
+        )
+
+        archive_scope = (request.GET.get('archive_scope') or ARCHIVE_SCOPE_ACTIVE).strip().lower()
+        if archive_scope not in (ARCHIVE_SCOPE_ACTIVE, ARCHIVE_SCOPE_ARCHIVED, ARCHIVE_SCOPE_ALL):
+            return api_error('محدوده بایگانی نامعتبر است.', code='VALIDATION_ERROR')
         query = {
             'q': request.GET.get('q', ''),
             'deal_mode': request.GET.get('deal_mode', ''),
@@ -1599,6 +1608,7 @@ class PropertiesListView(APIView):
             'city': request.GET.get('city', ''),
             'folder_id': request.GET.get('folder_id', ''),
             'cabinet_id': request.GET.get('cabinet_id', ''),
+            'archive_scope': archive_scope,
         }
         items, meta = list_properties_paginated(
             request.user, page=page, page_size=page_size, query=query, request=request,
@@ -1889,6 +1899,127 @@ class PropertyStatusView(APIView):
         if not prop:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(property_to_dict(prop, detailed=True, request=request))
+
+
+class PropertyArchiveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        from django.db import transaction
+
+        from workspace.services.crm_property_archive import archive_property
+        from workspace.services.crm_scope import property_for_user
+
+        data = _parse_body(request)
+        reason = (data.get('reason') or '').strip()
+        prop = property_for_user(request.user, property_id)
+        if not prop or prop.deleted_at:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        try:
+            with transaction.atomic():
+                prop = property_for_user(request.user, property_id)
+                if not prop or prop.deleted_at:
+                    return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+                prop = archive_property(request.user, prop, reason=reason)
+        except PermissionError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        prop.refresh_from_db()
+        return api_ok(property_to_dict(prop, detailed=True, request=request))
+
+
+class PropertyRestoreView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        from django.db import transaction
+
+        from workspace.services.crm_property_archive import restore_property
+        from workspace.services.crm_scope import property_for_user
+
+        prop = property_for_user(request.user, property_id)
+        if not prop or prop.deleted_at:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        try:
+            with transaction.atomic():
+                prop = property_for_user(request.user, property_id)
+                if not prop or prop.deleted_at:
+                    return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+                prop = restore_property(request.user, prop)
+        except PermissionError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        prop.refresh_from_db()
+        return api_ok(property_to_dict(prop, detailed=True, request=request))
+
+
+class PropertyBulkArchiveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from workspace.services.crm_property_archive import (
+            BULK_PROPERTY_ARCHIVE_LIMIT,
+            bulk_archive_properties,
+            bulk_restore_properties,
+        )
+
+        data = _parse_body(request)
+        action = (data.get('action') or 'archive').strip().lower()
+        if action not in ('archive', 'restore'):
+            return api_error('عملیات نامعتبر است.', code='VALIDATION_ERROR')
+        raw_ids = data.get('property_ids')
+        if not isinstance(raw_ids, list) or not raw_ids:
+            return api_error('فهرست فایل‌ها الزامی است.', code='VALIDATION_ERROR')
+
+        unique_ids: list[int] = []
+        seen = set()
+        for raw in raw_ids:
+            try:
+                pid = int(raw)
+            except (TypeError, ValueError):
+                return api_error('شناسه فایل نامعتبر است.', code='VALIDATION_ERROR')
+            if pid in seen:
+                continue
+            seen.add(pid)
+            unique_ids.append(pid)
+        if len(unique_ids) > BULK_PROPERTY_ARCHIVE_LIMIT:
+            return api_error(
+                f'حداکثر {BULK_PROPERTY_ARCHIVE_LIMIT} فایل در هر عملیات مجاز است.',
+                code='VALIDATION_ERROR',
+            )
+
+        reason = (data.get('reason') or '').strip()
+        if action == 'restore':
+            result = bulk_restore_properties(request.user, unique_ids)
+            ok_count = result.get('restored', 0)
+            label = 'بازگردانی'
+        else:
+            result = bulk_archive_properties(request.user, unique_ids, reason=reason)
+            ok_count = result.get('archived', 0)
+            label = 'بایگانی'
+
+        payload = dict(result)
+        skipped = payload.get('skipped', 0)
+        errors = payload.get('errors', 0)
+        payload['partial'] = bool(ok_count and (skipped or errors))
+        payload['complete'] = ok_count > 0 and not skipped and not errors
+
+        if ok_count == 0:
+            return api_error(
+                f'فایلی برای {label} انتخاب نشده یا دسترسی ندارید.',
+                code='VALIDATION_ERROR',
+                status=400,
+                fields=payload,
+            )
+        payload['message'] = f'{ok_count} فایل {label} شد.'
+        if payload['partial']:
+            payload['message'] = (
+                f'{ok_count} فایل {label} شد؛ '
+                f'{skipped} رد شد و {errors} خطا.'
+            )
+        return api_ok(payload)
 
 
 class PropertyContactsView(APIView):

@@ -852,6 +852,7 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
 
     data['is_archived'] = is_property_archived(p)
     data['archived_at'] = p.archived_at.isoformat() if p.archived_at else None
+    data['archive_reason'] = (getattr(p, 'archive_reason', '') or '').strip()
     from workspace.services.crm_property_folders import folders_for_property
     data['folders'] = folders_for_property(p)
     if detailed:

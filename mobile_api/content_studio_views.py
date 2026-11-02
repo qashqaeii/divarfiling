@@ -36,6 +36,10 @@ from workspace.services.property_content_studio.manifest import (
     get_template_manifest,
 )
 from workspace.services.property_content_studio.constants import OUTPUT_FORMATS
+from workspace.services.property_content_studio.mobile_export import (
+    enrich_property_payload_for_mobile_export,
+    export_mobile_studio_data,
+)
 from workspace.services.property_content_studio.session import build_studio_session
 
 logger = logging.getLogger(__name__)
@@ -78,14 +82,16 @@ def _mobile_session_payload(user, prop, request, share_ctx) -> dict:
     )
     data = {key: val for key, val in session.items() if key != 'ok'}
     data['can_edit_property'] = share_ctx.can_edit
-    data['property'] = enrich_property_templates_for_mobile(data.get('property') or {}, request)
+    data['property'] = enrich_property_templates_for_mobile(
+        enrich_property_payload_for_mobile_export(
+            data.get('property') or {},
+            prop,
+            mask_sensitive=share_ctx.mask_sensitive,
+        ),
+        request,
+    )
     data['templates_catalog'] = build_templates_catalog(request)
-    if share_ctx.mask_sensitive and data.get('draft'):
-        data['draft'] = export_draft_payload_for_access(
-            data['draft'],
-            mask_sensitive=True,
-        )
-    return data
+    return export_mobile_studio_data(data, prop, mask_sensitive=share_ctx.mask_sensitive)
 
 
 class PropertyContentStudioSessionView(APIView):
@@ -114,16 +120,21 @@ class PropertyContentStudioDraftView(APIView):
                 prop,
                 mask_sensitive=share_ctx.mask_sensitive,
             )
-            return api_ok({
+            payload = {
                 'draft_stale': meta['stale'],
                 'property_fingerprint': meta['fingerprint'],
                 'needs_manual_review': meta.get('needs_manual_review', False),
                 'draft': meta.get('draft'),
                 'property': enrich_property_templates_for_mobile(
-                    meta.get('property') or {},
+                    enrich_property_payload_for_mobile_export(
+                        meta.get('property') or {},
+                        prop,
+                        mask_sensitive=share_ctx.mask_sensitive,
+                    ),
                     request,
                 ),
-            })
+            }
+            return api_ok(payload)
         payload = body.get('draft') or body.get('payload') or body
         if not isinstance(payload, dict):
             return api_error('فرمت پیش‌نویس نامعتبر است', code='VALIDATION_ERROR', status=400)
@@ -136,8 +147,13 @@ class PropertyContentStudioDraftView(APIView):
             )
         except DraftValidationError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR', status=400)
+        draft_out = export_draft_payload_for_access(
+            saved,
+            mask_sensitive=share_ctx.mask_sensitive,
+            prop=prop,
+        )
         return api_ok({
-            'draft': saved,
+            'draft': draft_out,
             'draft_stale': meta['stale'],
             'property_fingerprint': meta['fingerprint'],
         })

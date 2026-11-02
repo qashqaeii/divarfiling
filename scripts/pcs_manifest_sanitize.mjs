@@ -93,6 +93,9 @@ export function sanitizeManifestScene(scene) {
             } else if (layer.text != null) {
                 layer.text = stripSentinels(layer.text);
             }
+            if (typeof layer.text === 'string') {
+                layer.text = layer.text.replace(/(?:\s·\s)+$/g, '').replace(/^(?:\s·\s)+/g, '').trim();
+            }
         }
     }
     return scene;

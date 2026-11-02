@@ -187,6 +187,7 @@ def get_template_manifest(
         'overlay_asset_ref': raw.get('overlay_asset_ref') or f'tpl:{tid}',
         'background': raw.get('background') or '',
         'scene': scene,
+        'dynamic_content': raw.get('dynamic_content') or {},
         'image_slots': raw.get('image_slots') or [],
         'layout_calibration': raw.get('layout_calibration') or {},
     }

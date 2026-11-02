@@ -227,14 +227,17 @@ def build_studio_property_payload(
         'image_count': len(images),
         'cover_image': images[0] if images else '',
         'description_excerpt': _description_excerpt(prop, mask_sensitive=mask_sensitive),
-        'file_code': f'#{prop.pk}',
+        'file_code': '' if mask_sensitive else f'#{prop.pk}',
         'public_share_url': (public_share_url or '').strip(),
         'has_parking': bool(prop.has_parking),
         'has_storage': bool(prop.has_storage),
         'has_elevator': bool(prop.has_elevator),
         'templates': list(POSTER_TEMPLATES),
         'formats': OUTPUT_FORMATS,
-        'editor_features': build_editor_feature_catalog(prop, DEFAULT_VISIBILITY),
+        'editor_features': build_editor_feature_catalog(
+            prop,
+            {**DEFAULT_VISIBILITY, 'neighborhood': False, 'file_code': False} if mask_sensitive else DEFAULT_VISIBILITY,
+        ),
     }
 
 

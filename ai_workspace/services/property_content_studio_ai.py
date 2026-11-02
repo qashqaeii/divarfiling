@@ -130,6 +130,12 @@ def _studio_context(
         mask_sensitive=mask_sensitive,
     )
     studio = build_studio_property_payload(prop, mask_sensitive=mask_sensitive)
+    if mask_sensitive:
+        base['title'] = (prop.property_type or 'ملک').strip()[:120]
+        base['token'] = ''
+        base['tab_extra'] = ''
+        base['tab_text'] = ''
+        base['description_excerpt'] = studio.get('description_excerpt') or ''
     ctx = {
         **base,
         'studio': studio,

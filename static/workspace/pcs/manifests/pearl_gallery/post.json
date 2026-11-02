@@ -1,8 +1,8 @@
 {
   "template_id": "pearl_gallery",
   "schema_version": 2,
-  "manifest_version": "pcs-manifest-c1926a7a07383acb",
-  "layout_revision": "c1926a7a07383acb",
+  "manifest_version": "pcs-manifest-722eea0d7be6ed7b",
+  "layout_revision": "722eea0d7be6ed7b",
   "format": "post",
   "canvas": {
     "width": 1080,
@@ -128,7 +128,12 @@
           "lineHeight": 1.2
         },
         "text": "",
-        "templateRole": "headline"
+        "templateRole": "headline",
+        "contentContract": {
+          "schema_version": 1,
+          "resolver": "poster_headline",
+          "template_role": "headline"
+        }
       },
       {
         "id": "deal-1",
@@ -160,7 +165,17 @@
           "borderRadius": 999,
           "textPreset": "capsule"
         },
-        "text": ""
+        "text": "",
+        "contentContract": {
+          "schema_version": 1,
+          "resolver": "property_deal_badge",
+          "template_role": "",
+          "default_binding": {
+            "source": "property",
+            "field": "deal_mode",
+            "mode": "linked"
+          }
+        }
       },
       {
         "id": "meta-1",
@@ -186,7 +201,12 @@
           "lineHeight": 1.45
         },
         "text": "·",
-        "templateRole": "meta"
+        "templateRole": "meta",
+        "contentContract": {
+          "schema_version": 1,
+          "resolver": "overlay_meta_summary",
+          "template_role": "meta"
+        }
       },
       {
         "id": "price-1",
@@ -216,7 +236,17 @@
           "lineHeight": 1.15
         },
         "text": "",
-        "templateRole": "price"
+        "templateRole": "price",
+        "contentContract": {
+          "schema_version": 1,
+          "resolver": "property_price",
+          "template_role": "price",
+          "default_binding": {
+            "source": "property",
+            "field": "price",
+            "mode": "linked"
+          }
+        }
       },
       {
         "id": "footer-1",
@@ -245,7 +275,17 @@
           "direction": "rtl"
         },
         "text": "",
-        "templateRole": "footer"
+        "templateRole": "footer",
+        "contentContract": {
+          "schema_version": 1,
+          "resolver": "brand_contact_footer",
+          "template_role": "footer",
+          "default_binding": {
+            "source": "brand",
+            "field": "contact_footer",
+            "mode": "linked"
+          }
+        }
       }
     ],
     "layerOrder": [
@@ -261,6 +301,149 @@
     ],
     "migratedAt": null,
     "templateBuild": 12
+  },
+  "dynamic_content": {
+    "schema_version": 1,
+    "resolvers": {
+      "poster_headline": {
+        "engine": "posterHeadline",
+        "sources": [
+          {
+            "origin": "poster_conf",
+            "field": "headline"
+          },
+          {
+            "origin": "property",
+            "field": "headline"
+          }
+        ],
+        "binding_modes": [
+          "linked",
+          "override",
+          "detached"
+        ]
+      },
+      "overlay_meta_summary": {
+        "engine": "overlayMetaSummary",
+        "property_fields": [
+          "location_line",
+          "city",
+          "property_type",
+          "area_label",
+          "floor_label",
+          "detail_chips"
+        ],
+        "max_parts": 4,
+        "headline_sources": [
+          {
+            "origin": "poster_conf",
+            "field": "headline"
+          },
+          {
+            "origin": "property",
+            "field": "headline"
+          }
+        ],
+        "binding_modes": [
+          "linked",
+          "override",
+          "detached"
+        ]
+      },
+      "pearlescent_meta_lines": {
+        "engine": "pearlescentMetaLines",
+        "feature_source": "editor_features",
+        "skip_feature_keys": [
+          "location_line",
+          "price",
+          "deal_mode",
+          "file_code",
+          "area_label",
+          "rooms_label"
+        ],
+        "binding_modes": [
+          "linked",
+          "override",
+          "detached"
+        ]
+      },
+      "property_deal_badge": {
+        "engine": "posterDealBadgeLabel",
+        "binding": {
+          "source": "property",
+          "field": "deal_mode",
+          "mode": "linked"
+        }
+      },
+      "property_price": {
+        "binding": {
+          "source": "property",
+          "field": "price",
+          "mode": "linked"
+        }
+      },
+      "brand_contact_footer": {
+        "binding": {
+          "source": "brand",
+          "field": "contact_footer",
+          "mode": "linked"
+        }
+      },
+      "property_location_line": {
+        "binding": {
+          "source": "property",
+          "field": "location_line",
+          "mode": "linked"
+        }
+      }
+    },
+    "layers": {
+      "headline-1": {
+        "schema_version": 1,
+        "resolver": "poster_headline",
+        "template_role": "headline",
+        "layer_type": "text"
+      },
+      "deal-1": {
+        "schema_version": 1,
+        "resolver": "property_deal_badge",
+        "template_role": "",
+        "layer_type": "bound_text",
+        "default_binding": {
+          "source": "property",
+          "field": "deal_mode",
+          "mode": "linked"
+        }
+      },
+      "meta-1": {
+        "schema_version": 1,
+        "resolver": "overlay_meta_summary",
+        "template_role": "meta",
+        "layer_type": "text"
+      },
+      "price-1": {
+        "schema_version": 1,
+        "resolver": "property_price",
+        "template_role": "price",
+        "layer_type": "bound_text",
+        "default_binding": {
+          "source": "property",
+          "field": "price",
+          "mode": "linked"
+        }
+      },
+      "footer-1": {
+        "schema_version": 1,
+        "resolver": "brand_contact_footer",
+        "template_role": "footer",
+        "layer_type": "bound_text",
+        "default_binding": {
+          "source": "brand",
+          "field": "contact_footer",
+          "mode": "linked"
+        }
+      }
+    }
   },
   "image_slots": [
     {

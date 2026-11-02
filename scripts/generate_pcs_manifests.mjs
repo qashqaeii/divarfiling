@@ -17,6 +17,7 @@ import {
     buildManifestGeneratorContext,
     sanitizeManifestScene,
 } from './pcs_manifest_sanitize.mjs';
+import { annotateLayerContentContracts, buildDynamicContentContract } from './pcs_manifest_content_contract.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -68,6 +69,13 @@ const SOURCE_FILES = [
     'pcs-bindings.js',
 ];
 
+const GENERATOR_FILES = [
+    'scripts/generate_pcs_manifests.mjs',
+    'scripts/pcs_manifest_sanitize.mjs',
+    'scripts/pcs_manifest_enrich.mjs',
+    'scripts/pcs_manifest_content_contract.mjs',
+];
+
 function sha256File(filePath) {
     const buf = fs.readFileSync(filePath);
     return crypto.createHash('sha256').update(buf).digest('hex');
@@ -113,6 +121,9 @@ function main() {
     for (const name of SOURCE_FILES) {
         source_hashes[name] = sha256File(path.join(PCS_DIR, name));
     }
+    for (const rel of GENERATOR_FILES) {
+        source_hashes[rel] = sha256File(path.join(ROOT, rel));
+    }
     const revisionPayload = JSON.stringify(source_hashes);
     const layout_revision = crypto.createHash('sha256').update(revisionPayload).digest('hex').slice(0, 16);
     const manifest_version = `pcs-manifest-${layout_revision}`;
@@ -126,7 +137,6 @@ function main() {
         source_hashes,
         templates: TEMPLATE_IDS,
         formats: Object.keys(FORMATS),
-        generated_at: new Date().toISOString(),
         entries: [],
     };
 
@@ -147,6 +157,9 @@ function main() {
             scene = Scenes.normalizeSceneLayerOrder(scene);
             scene = sanitizeManifestScene(scene);
             scene = Schema.normalizeScene(scene, templateId, formatKey, FORMATS);
+            scene = annotateLayerContentContracts(scene, templateId);
+
+            const dynamic_content = buildDynamicContentContract(templateId, scene);
 
             const w = scene.canvas.width;
             const h = scene.canvas.height;
@@ -167,6 +180,7 @@ function main() {
                 overlay_asset_ref: Assets.templateAssetId(templateId),
                 background,
                 scene,
+                dynamic_content,
                 image_slots: slotMeta.image_slots,
                 layout_calibration: slotMeta.layout_calibration,
             };

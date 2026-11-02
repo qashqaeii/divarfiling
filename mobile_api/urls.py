@@ -141,6 +141,11 @@ urlpatterns = [
     path('crm/properties/<int:property_id>/public-share', views.PropertyPublicShareView.as_view(), name='property_public_share'),
     path('crm/properties/<int:property_id>/duplicate', views.PropertyDuplicateView.as_view(), name='property_duplicate'),
     path('crm/properties/<int:property_id>/status', views.PropertyStatusView.as_view(), name='property_status'),
+    path(
+        'crm/properties/<int:property_id>/rental-reminder',
+        views.PropertyRentalReminderView.as_view(),
+        name='property_rental_reminder',
+    ),
     path('crm/properties/<int:property_id>/archive', views.PropertyArchiveView.as_view(), name='property_archive'),
     path('crm/properties/<int:property_id>/restore', views.PropertyRestoreView.as_view(), name='property_restore'),
     path('crm/properties/bulk-archive', views.PropertyBulkArchiveView.as_view(), name='properties_bulk_archive'),

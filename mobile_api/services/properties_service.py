@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.db.models import Prefetch
 from django.utils import timezone
 
-from mobile_api.serializers import property_detail_to_dict, property_to_dict
+from mobile_api.serializers import property_detail_to_dict, property_to_dict, rental_renewal_to_mobile_dict
 from workspace.constants import CRM_PROPERTIES, PROPERTY_DEAL_MODES, PROPERTY_TX_STATUSES
 from workspace.models import CRMProperty, CRMPropertyFolderItem, Customer, CustomerActivity, CustomerDocument, PropertyContact
 from workspace.services.crm import filter_properties, link_customer_property, resolve_listing_for_property, update_property_transaction_status, upsert_property_owner, upsert_property_tenant
@@ -131,6 +131,7 @@ def get_property_detail(user, property_id: int, *, request=None) -> Optional[dic
 
     payload['agency_space'] = mobile_source_context(user, property=prop)
     payload['agency_space_provenance'] = mobile_provenance_for_property(prop, user)
+    payload['rental_renewal'] = rental_renewal_to_mobile_dict(user, prop)
     return payload
 
 

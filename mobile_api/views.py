@@ -1907,26 +1907,119 @@ class PropertyArchiveView(APIView):
     def post(self, request, property_id):
         from django.db import transaction
 
+        from mobile_api.serializers import parse_request_bool, rental_renewal_to_mobile_dict
         from workspace.services.crm_property_archive import archive_property
-        from workspace.services.crm_scope import property_for_user
+        from workspace.services.crm_property_rental_renewal import (
+            parse_contract_end_jalali,
+            property_is_rental,
+            upsert_renewal_schedule,
+        )
+        from workspace.services.crm_scope import can_edit_property, property_for_user
 
         data = _parse_body(request)
         reason = (data.get('reason') or '').strip()
         prop = property_for_user(request.user, property_id)
         if not prop or prop.deleted_at:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        if not can_edit_property(request.user, prop):
+            return api_error('امکان ویرایش این ملک را ندارید.', code='FORBIDDEN', status=403)
+        skip_date = False
+        create_reminder = True
+        if 'skip_contract_end' in data:
+            try:
+                skip_date = parse_request_bool(data.get('skip_contract_end'), default=False) or False
+            except ValueError as exc:
+                return api_error(str(exc), code='VALIDATION_ERROR')
+        if 'create_reminder' in data:
+            try:
+                parsed = parse_request_bool(data.get('create_reminder'), default=True)
+                create_reminder = True if parsed is None else parsed
+            except ValueError as exc:
+                return api_error(str(exc), code='VALIDATION_ERROR')
+        contract_raw = (data.get('contract_end_jalali') or '').strip()
         try:
             with transaction.atomic():
                 prop = property_for_user(request.user, property_id)
                 if not prop or prop.deleted_at:
                     return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+                contract_end = None
+                if property_is_rental(prop) and not skip_date and contract_raw:
+                    contract_end = parse_contract_end_jalali(contract_raw)
                 prop = archive_property(request.user, prop, reason=reason)
+                if property_is_rental(prop) and contract_end is not None:
+                    upsert_renewal_schedule(
+                        request.user,
+                        prop,
+                        contract_end,
+                        create_reminder=create_reminder,
+                    )
         except PermissionError as exc:
             return api_error(str(exc), code='FORBIDDEN', status=403)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
         prop.refresh_from_db()
-        return api_ok(property_to_dict(prop, detailed=True, request=request))
+        payload = property_to_dict(prop, detailed=True, request=request)
+        payload['rental_renewal'] = rental_renewal_to_mobile_dict(request.user, prop)
+        return api_ok(payload)
+
+
+class PropertyRentalReminderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        from django.db import transaction
+
+        from mobile_api.serializers import parse_request_bool, rental_renewal_to_mobile_dict
+        from workspace.services.crm_property_rental_renewal import (
+            parse_contract_end_jalali,
+            property_is_rental,
+            upsert_renewal_schedule,
+        )
+        from workspace.services.crm_scope import can_edit_property, property_for_user
+
+        prop = property_for_user(request.user, property_id)
+        if not prop or prop.deleted_at:
+            return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        if not can_edit_property(request.user, prop):
+            return api_error('امکان ویرایش این ملک را ندارید.', code='FORBIDDEN', status=403)
+        if not property_is_rental(prop):
+            return api_error('فقط برای فایل‌های اجاره‌ای.', code='VALIDATION_ERROR')
+
+        data = _parse_body(request)
+        contract_raw = (data.get('contract_end_jalali') or data.get('due_jalali') or '').strip()
+        if not contract_raw:
+            return api_error('تاریخ پایان قرارداد الزامی است.', code='VALIDATION_ERROR')
+        try:
+            create_reminder = parse_request_bool(data.get('create_reminder'), default=True)
+            create_reminder = True if create_reminder is None else create_reminder
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+        try:
+            contract_end = parse_contract_end_jalali(contract_raw)
+            with transaction.atomic():
+                prop = property_for_user(request.user, property_id)
+                if not prop or prop.deleted_at:
+                    return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+                upsert_renewal_schedule(
+                    request.user,
+                    prop,
+                    contract_end,
+                    create_reminder=create_reminder,
+                )
+        except PermissionError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+        prop.refresh_from_db()
+        renewal = rental_renewal_to_mobile_dict(request.user, prop)
+        return api_ok({
+            'rental_renewal': renewal,
+            'reminder_id': renewal.get('reminder_id'),
+            'contract_end_jalali': renewal.get('contract_end_jalali') or '',
+            'followup_jalali': renewal.get('followup_jalali') or '',
+        })
 
 
 class PropertyRestoreView(APIView):

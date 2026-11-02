@@ -813,6 +813,61 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False, stage_meta: Optional[Dic
     return data
 
 
+def parse_request_bool(value, *, default: Optional[bool] = None) -> Optional[bool]:
+    """تبدیل مقدار JSON به bool؛ رشتهٔ «false» نباید True شود."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        text = value.strip().lower()
+        if text in ('true', '1', 'yes', 'on'):
+            return True
+        if text in ('false', '0', 'no', 'off', ''):
+            return False
+    raise ValueError('مقدار بولی نامعتبر است')
+
+
+def rental_renewal_to_mobile_dict(user, prop: CRMProperty) -> Dict[str, Any]:
+    from workspace.services.crm_property_rental_renewal import (
+        build_renewal_panel,
+        property_is_rental,
+        suggest_contract_end_one_year_after,
+    )
+    from workspace.services.jalali_input import format_jalali_date
+
+    if not property_is_rental(prop):
+        return {
+            'is_rental': False,
+            'has_contract_end': False,
+            'contract_end_jalali': '',
+            'followup_jalali': '',
+            'suggested_contract_end_jalali': '',
+            'reminder_id': None,
+            'reminder_state': 'none',
+            'days_until_followup': None,
+            'tracking_missing': False,
+        }
+    panel = build_renewal_panel(user, prop)
+    if panel['has_contract_end']:
+        suggested_jalali = panel['contract_end_jalali']
+    else:
+        suggested_jalali = format_jalali_date(suggest_contract_end_one_year_after())
+    return {
+        'is_rental': True,
+        'has_contract_end': panel['has_contract_end'],
+        'contract_end_jalali': panel['contract_end_jalali'],
+        'followup_jalali': panel['followup_jalali'],
+        'suggested_contract_end_jalali': suggested_jalali,
+        'reminder_id': panel['reminder_id'],
+        'reminder_state': panel['reminder_state'],
+        'days_until_followup': panel['days_until_followup'],
+        'tracking_missing': panel['tracking_missing'],
+    }
+
+
 def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) -> Dict[str, Any]:
     # لیست موبایل هم باید کاور داشته باشد؛ قبلاً فقط detailed تصاویر می‌فرستاد.
     images = _property_image_urls(
@@ -875,6 +930,9 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
             'tenant_name': p.tenant_name or '',
             'tenant_phone': p.tenant_phone or '',
             'vacancy_date': vacancy_date_from_property(p),
+            'rental_contract_end_date': (
+                p.rental_contract_end_date.isoformat() if p.rental_contract_end_date else None
+            ),
             'amenities': p.amenities or '',
             'notes': p.notes or '',
             'latitude': p.latitude,

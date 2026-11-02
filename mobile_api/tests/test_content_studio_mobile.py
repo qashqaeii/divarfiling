@@ -133,3 +133,77 @@ class MobileContentStudioAPITests(APITestCase):
             data['dynamic_content']['layers']['meta-1']['resolver'],
             'overlay_meta_summary',
         )
+
+    def _share_confidential(self):
+        agency = CRMAgency.objects.create(name='A', owner=self.owner)
+        CRMAgencyMember.objects.create(agency=agency, user=self.owner, role='owner', is_active=True)
+        self.prop.agency = agency
+        self.prop.neighborhood = 'ونک'
+        self.prop.save()
+        advisor = User.objects.create_user(username='adv', password='x', phone='09120000102')
+        member = CRMAgencyMember.objects.create(agency=agency, user=advisor, role='advisor', is_active=True)
+        share_property(
+            self.owner,
+            self.prop,
+            member.pk,
+            share_mode=CRMResourceShare.SHARE_MODE_CONFIDENTIAL,
+        )
+        return _jwt_client(advisor)
+
+    def _share_collaborative(self):
+        agency = CRMAgency.objects.create(name='B', owner=self.owner)
+        CRMAgencyMember.objects.create(agency=agency, user=self.owner, role='owner', is_active=True)
+        self.prop.agency = agency
+        self.prop.neighborhood = 'ونک'
+        self.prop.save()
+        advisor = User.objects.create_user(username='coladv', password='x', phone='09120000103')
+        member = CRMAgencyMember.objects.create(agency=agency, user=advisor, role='advisor', is_active=True)
+        share_property(
+            self.owner,
+            self.prop,
+            member.pk,
+            share_mode=CRMResourceShare.SHARE_MODE_COLLABORATIVE,
+        )
+        return _jwt_client(advisor)
+
+    def test_session_confidential_masks_location_and_file_code(self):
+        client = self._share_confidential()
+        url = reverse('mobile_api:property_content_studio_session', args=[self.prop.pk])
+        res = client.get(url)
+        self.assertEqual(res.status_code, 200)
+        prop = res.json()['data']['property']
+        self.assertEqual(prop.get('file_code'), '')
+        self.assertNotIn('ونک', prop.get('location_line') or '')
+
+    def test_session_collaborative_shows_location(self):
+        client = self._share_collaborative()
+        url = reverse('mobile_api:property_content_studio_session', args=[self.prop.pk])
+        res = client.get(url)
+        self.assertEqual(res.status_code, 200)
+        prop = res.json()['data']['property']
+        self.assertTrue(prop.get('file_code'))
+        self.assertIn('ونک', prop.get('location_line') or '')
+
+    def test_draft_sync_property_masks_response_for_confidential(self):
+        client = self._share_confidential()
+        url = reverse('mobile_api:property_content_studio_draft', args=[self.prop.pk])
+        res = client.put(url, {'sync_property': True}, format='json')
+        self.assertEqual(res.status_code, 200)
+        prop = res.json()['data']['property']
+        self.assertNotIn('ونک', prop.get('location_line') or '')
+
+    def test_manifest_unavailable_503(self):
+        from unittest.mock import patch
+
+        client = _jwt_client(self.owner)
+        url = reverse(
+            'mobile_api:property_content_studio_template_manifest',
+            args=[self.prop.pk, 'pearl_gallery'],
+        )
+        with patch(
+            'workspace.services.property_content_studio.manifest.manifests_available',
+            return_value=False,
+        ):
+            res = client.get(url, {'format': 'story'})
+        self.assertEqual(res.status_code, 503)
+        self.assertEqual(res.json().get('code'), 'MANIFEST_UNAVAILABLE')

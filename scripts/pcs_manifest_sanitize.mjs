@@ -83,19 +83,39 @@ function stripSentinels(text) {
     return out.replace(/\s·\s·+/g, ' · ').replace(/^\s·\s|\s·\s$/g, '').trim();
 }
 
+function isOrphanLabelText(text) {
+    if (typeof text !== 'string' || !text.trim()) return false;
+    const t = text.trim();
+    if (/^[\s:·]+$/.test(t)) return true;
+    if (/:\s*·/.test(t)) return true;
+    if (t.includes(' ·  ·')) return true;
+    return false;
+}
+
 export function sanitizeManifestScene(scene) {
     if (!scene?.layers) return scene;
     for (const layer of scene.layers) {
-        if (layer.type === 'text' || layer.type === 'bound_text') {
-            const binding = layer.binding;
-            if (binding && binding.mode !== 'detached') {
+        if (layer.type !== 'text' && layer.type !== 'bound_text') continue;
+        const binding = layer.binding;
+        const role = layer.templateRole || '';
+        const isDynamicSlot = (
+            layer.id === 'headline-1'
+            || layer.id === 'meta-1'
+            || role === 'headline'
+            || role === 'meta'
+        );
+        if (binding && binding.mode !== 'detached') {
+            layer.text = '';
+        } else if (isDynamicSlot) {
+            layer.text = '';
+        } else if (layer.text != null) {
+            layer.text = stripSentinels(layer.text);
+            if (isOrphanLabelText(layer.text)) {
                 layer.text = '';
-            } else if (layer.text != null) {
-                layer.text = stripSentinels(layer.text);
             }
-            if (typeof layer.text === 'string') {
-                layer.text = layer.text.replace(/(?:\s·\s)+$/g, '').replace(/^(?:\s·\s)+/g, '').trim();
-            }
+        }
+        if (typeof layer.text === 'string') {
+            layer.text = layer.text.replace(/(?:\s·\s)+$/g, '').replace(/^(?:\s·\s)+/g, '').trim();
         }
     }
     return scene;

@@ -7,12 +7,12 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from workspace.models import CRMProperty, CRMPropertyContentStudioDraft, CRMResourceShare
+from workspace.services.property_content_studio.adapter import build_studio_property_payload
 from workspace.services.property_content_studio.draft import export_draft_payload_for_access, save_draft, sync_draft_with_property
 from workspace.services.property_content_studio.mobile_export import (
     collect_redact_fragments,
     enrich_property_payload_for_mobile_export,
 )
-from workspace.services.property_content_studio.adapter import build_studio_property_payload
 
 User = get_user_model()
 
@@ -93,3 +93,64 @@ class PropertyContentStudioMobileExportTests(TestCase):
     def test_collect_redact_fragments_includes_neighborhood(self):
         frags = collect_redact_fragments(self.prop)
         self.assertTrue(any('محله خاص' in f for f in frags))
+
+    def test_property_payload_sale_rent_and_sparse(self):
+        sale = build_studio_property_payload(self.prop, mask_sensitive=False)
+        self.assertTrue(sale['price']['show'])
+        self.assertIn('deal_mode', sale['price'])
+
+        rent_prop = CRMProperty.objects.create(
+            user=self.user,
+            title='اجاره',
+            property_type='آپارتمان',
+            deal_mode='رهن و اجاره',
+            deposit=500_000_000,
+            monthly_rent=20_000_000,
+            city='تهران',
+        )
+        rent = build_studio_property_payload(rent_prop, mask_sensitive=False)
+        self.assertTrue(rent['price']['show'])
+        self.assertIn('ودیعه', rent['price']['label'])
+
+        sparse = CRMProperty.objects.create(
+            user=self.user,
+            title='',
+            property_type='زمین',
+            city='اصفهان',
+        )
+        sparse_payload = build_studio_property_payload(sparse, mask_sensitive=False)
+        self.assertEqual(sparse_payload.get('area_label'), '')
+        self.assertFalse(sparse_payload['price']['show'])
+
+    def test_detached_custom_text_preserved_when_not_property_derived(self):
+        draft_payload = {
+            'posters': {
+                'pearlescent': {
+                    'scene': {
+                        'schemaVersion': 2,
+                        'layers': [
+                            {
+                                'id': 'headline-1',
+                                'type': 'text',
+                                'binding': {
+                                    'source': 'property',
+                                    'field': 'headline',
+                                    'mode': 'detached',
+                                },
+                                'text': 'عنوان سفارشی مشاور',
+                            },
+                        ],
+                        'layerOrder': ['headline-1'],
+                    },
+                },
+            },
+        }
+        exported = export_draft_payload_for_access(
+            draft_payload,
+            mask_sensitive=True,
+            prop=self.prop,
+        )
+        self.assertEqual(
+            exported['posters']['pearlescent']['scene']['layers'][0]['text'],
+            'عنوان سفارشی مشاور',
+        )

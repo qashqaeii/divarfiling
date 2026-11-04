@@ -1,96 +1,249 @@
-{% load static %}
+{% load static decor_icons %}
 <section class="df-story-chapter df-story-chapter--file" id="df-story-ch-file" aria-labelledby="df-story-ch-file-title">
-    <div class="df-story-chapter__wrap">
-        <header class="df-story-chapter__head">
-            <span class="df-story-chapter__eyebrow" data-df-a>فصل اول · قابلیت‌های ۱–۴</span>
-            <h2 class="df-story-chapter__title" data-df-a id="df-story-ch-file-title">بانک فایل خودت را بساز؛ هر ملک، سر جای خودش</h2>
-            <p class="df-story-chapter__desc" data-df-a>آگهی‌ها را روی دستگاه خودت جمع کن، در مجموعه مرتب کن و فایل‌های منتخب را در زونکن نگه دار.</p>
-        </header>
+    <div class="df-story-chapter__wrap df-story-chapter__wrap--file">
+        <div class="df-story-scrolly df-story-scrolly--file" data-df-sticky-chapter data-df-scrolly-chapter="file">
+            <div class="df-story-file-desktop">
+                <div class="df-story-file-pin">
+                    <div class="df-story-file-canvas">
+                        <div class="df-story-file-progress-corner" data-df-file-progress data-df-active="0" dir="ltr" aria-hidden="true">
+                            <span class="df-story-file-progress-corner__text"><span data-df-file-counter>۰۱</span><span class="df-story-file-progress-corner__slash"> / </span><span data-df-file-total>۰۴</span></span>
+                            <span class="df-story-file-progress-corner__meter">
+                                <i></i><i></i><i></i><i></i>
+                            </span>
+                        </div>
 
-        <div class="df-story-scrolly df-story-scrolly--file" data-df-sticky-chapter data-df-scrolly-chapter="file" data-df-stage-ratio="4/3">
-            <div class="df-story-scrolly__visual" data-df-chapter-visual data-df-tag-set="extract" data-df-active-step="0" data-df-hero-key="extract">
-                <p class="df-story-file-hint" data-df-file-hint>استخراج آگهی → ورود به مجموعه</p>
-                <div class="df-story-hero df-story-hero--open" data-df-hero>
-                    <img
-                        class="df-story-hero__img is-active"
-                        data-df-hero-img="extract"
-                        src="{% static 'images/Property listings flow into one tray-1.webp' %}"
-                        alt="استخراج آگهی با اندروید و ویندوز و ورود به مجموعهٔ فایل"
-                        width="960"
-                        height="720"
-                        decoding="async"
-                        fetchpriority="low"
-                    >
-                    <img
-                        class="df-story-hero__img"
-                        data-df-hero-img="duo"
-                        src="{% static 'images/Property card organizer with magnifier-5.webp' %}"
-                        alt="مدیریت مجموعه و زونکن"
-                        width="800"
-                        height="640"
-                        loading="lazy"
-                        decoding="async"
-                    >
-                    <img
-                        class="df-story-hero__img"
-                        data-df-hero-img="dossier"
-                        src="{% static 'images/Editable Property Dossier with Violet Pencil-2.webp' %}"
-                        alt="پروندهٔ یکپارچهٔ ملک"
-                        width="440"
-                        height="360"
-                        loading="lazy"
-                        decoding="async"
-                    >
-                    <img
-                        class="df-story-hero__img df-story-hero__img--satellite"
-                        data-df-hero-layer="cabinet"
-                        src="{% static 'images/Elegant property filing cabinet-4.webp' %}"
-                        alt=""
-                        width="320"
-                        height="280"
-                        loading="lazy"
-                        decoding="async"
-                        aria-hidden="true"
-                    >
+                        <div class="df-story-file-body">
+                        <div class="df-story-file-main">
+                            <div class="df-story-file-copy">
+                                {% include 'shop/includes/home_story/chapter_file_copy_intro.html' with head_title_id='df-story-ch-file-title' %}
+
+                                <div class="df-story-file-text-stack" data-df-file-text-stack>
+                                    <div class="df-story-file-text is-active" data-df-text-step="0" id="df-file-text-0">
+                                        <span class="df-story-file-step__kicker">قدم اول</span>
+                                        <h3 class="df-story-file-step__title">استخراج گروهی آگهی‌های دیوار</h3>
+                                        <p class="df-story-file-step__body">آگهی‌های موردنیازت را با اندروید یا ویندوز جمع کن و مجموعهٔ فایل اختصاصی بساز.</p>
+                                        <ul class="df-story-file-step__list">
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'map_pin' size='xs' %}</span><span class="df-story-file-step__list-text">انتخاب شهر و محله</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'layers' size='xs' %}</span><span class="df-story-file-step__list-text">جمع‌آوری یکجای آگهی‌ها</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'folder' size='xs' %}</span><span class="df-story-file-step__list-text">مدیریت فایل‌ها در میزکار</span></li>
+                                        </ul>
+                                        <p class="df-story-file-step__note">استخراج روی دستگاه شما انجام می‌شود</p>
+                                        <div class="df-story-file-step__actions">
+                                            {% if user.is_authenticated %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>شروع ساخت مجموعه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% else %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>شروع ساخت مجموعه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% endif %}
+                                            <a class="df-story-file-step__link" href="#h-intro-video">ببین چطور کار می‌کند</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="df-story-file-text" data-df-text-step="1" id="df-file-text-1" aria-hidden="true">
+                                        <span class="df-story-file-step__kicker">قدم دوم</span>
+                                        <h3 class="df-story-file-step__title">مدیریت مجموعه‌های فایل</h3>
+                                        <p class="df-story-file-step__body">چند مجموعه برای خرید، اجاره یا محله‌های مختلف بساز و با جستجو و فیلتر سریع به آگهیٔ درست برس.</p>
+                                        <ul class="df-story-file-step__list">
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'filter' size='xs' %}</span><span class="df-story-file-step__list-text">فیلتر و جستجوی سریع</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'layout_grid' size='xs' %}</span><span class="df-story-file-step__list-text">چند مجموعهٔ موازی</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'search' size='xs' %}</span><span class="df-story-file-step__list-text">رسیدن به آگهیٔ درست</span></li>
+                                        </ul>
+                                        <p class="df-story-file-step__note">همهٔ مجموعه‌ها در یک میزکار واحد</p>
+                                        <div class="df-story-file-step__actions">
+                                            {% if user.is_authenticated %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>ورود به مجموعه‌های فایل</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% else %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>ساخت اولین مجموعه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% endif %}
+                                            <a class="df-story-file-step__link" href="{% url 'android_tutorial' %}">ابزار استخراج اندروید و ویندوز</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="df-story-file-text" data-df-text-step="2" id="df-file-text-2" aria-hidden="true">
+                                        <span class="df-story-file-step__kicker">قدم سوم</span>
+                                        <h3 class="df-story-file-step__title">کمد و زونکن دیجیتال</h3>
+                                        <p class="df-story-file-step__body">فایل‌های منتخب را در زونکن شخصی مرتب کن؛ هنگام انتقال از فایلینگ، مقصد را همان لحظه انتخاب کن.</p>
+                                        <ul class="df-story-file-step__list">
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'storage' size='xs' %}</span><span class="df-story-file-step__list-text">زونکن‌های نام‌گذاری‌شده</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'folder' size='xs' %}</span><span class="df-story-file-step__list-text">کمد دیجیتال فایل شخصی</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'upload' size='xs' %}</span><span class="df-story-file-step__list-text">انتقال هدفمند از فایلینگ</span></li>
+                                        </ul>
+                                        <p class="df-story-file-step__note">چیدمان فایل‌ها مثل میز کار واقعی</p>
+                                        <div class="df-story-file-step__actions">
+                                            {% if user.is_authenticated %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>مدیریت زونکن‌ها</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% else %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>ساخت زونکن شخصی</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% endif %}
+                                            <a class="df-story-file-step__link" href="#h-intro-video">ببین چطور کار می‌کند</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="df-story-file-text" data-df-text-step="3" id="df-file-text-3" aria-hidden="true">
+                                        <span class="df-story-file-step__kicker">قدم چهارم</span>
+                                        <h3 class="df-story-file-step__title">مدیریت اطلاعات ملک</h3>
+                                        <p class="df-story-file-step__body">برای هر ملک یک پروندهٔ واحد: متراژ، قیمت، امکانات، عکس‌ها، یادداشت‌ها و وضعیت معامله.</p>
+                                        <ul class="df-story-file-step__list">
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'file_edit' size='xs' %}</span><span class="df-story-file-step__list-text">ویرایش جزئیات و قیمت</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'file_text' size='xs' %}</span><span class="df-story-file-step__list-text">یادداشت و وضعیت معامله</span></li>
+                                            <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'building' size='xs' %}</span><span class="df-story-file-step__list-text">تصاویر و مشخصات ملک</span></li>
+                                        </ul>
+                                        <p class="df-story-file-step__note">پروندهٔ یکپارچه برای هر فایل</p>
+                                        <div class="df-story-file-step__actions">
+                                            {% if user.is_authenticated %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>باز کردن پروندهٔ ملک</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% else %}
+                                            <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>شروع با یک فایل نمونه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                            {% endif %}
+                                            <a class="df-story-file-step__link" href="#h-intro-video">ببین چطور کار می‌کند</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="df-story-file-visual" data-df-chapter-visual data-df-tag-set="extract" data-df-active-step="0" data-df-hero-key="extract">
+                                <div class="df-story-file-art" data-df-hero>
+                                    <div class="df-story-file-art__glow" aria-hidden="true"></div>
+                                    <img class="df-story-hero__img is-active" data-df-hero-img="extract" src="{% static 'images/Property listings flow into one tray-1.webp' %}" alt="استخراج آگهی با اندروید و ویندوز" width="1254" height="1254" decoding="async" fetchpriority="low">
+                                    <img class="df-story-hero__img" data-df-hero-img="organizer" src="{% static 'images/Property card organizer with magnifier-5.webp' %}" alt="مدیریت مجموعهٔ فایل" width="1254" height="1254" loading="lazy" decoding="async">
+                                    <img class="df-story-hero__img" data-df-hero-img="binder" src="{% static 'images/Elegant property filing cabinet-4.webp' %}" alt="کمد و زونکن دیجیتال" width="1254" height="1254" loading="lazy" decoding="async">
+                                    <img class="df-story-hero__img" data-df-hero-img="dossier" src="{% static 'images/Editable Property Dossier with Violet Pencil-2.webp' %}" alt="پروندهٔ ملک" width="1254" height="1254" loading="lazy" decoding="async">
+
+                                    <span class="df-story-file-float df-story-file-float--collection">
+                                        <svg class="df-story-file-float__line" viewBox="0 0 40 40" aria-hidden="true"><path d="M2 38 Q20 8 38 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 4"/></svg>
+                                        <span class="df-story-file-float__chip">{% decor_icon 'layers' size='xs' %} <span data-df-float-a-text>مجموعهٔ فایل</span></span>
+                                    </span>
+                                    <span class="df-story-file-float df-story-file-float--ready">
+                                        <svg class="df-story-file-float__line" viewBox="0 0 40 40" aria-hidden="true"><path d="M38 38 Q20 10 4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 4"/></svg>
+                                        <span class="df-story-file-float__chip"><span class="df-story-file-float__ok" aria-hidden="true">✓</span> <span data-df-float-b-text>آمادهٔ دسته‌بندی</span></span>
+                                    </span>
+                                </div>
+                                <p class="df-story-file-platforms">
+                                    <span><i class="fab fa-android" aria-hidden="true"></i> اندروید</span>
+                                    <span><i class="fab fa-windows" aria-hidden="true"></i> ویندوز</span>
+                                </p>
+                            </div>
+                        </div>
+                        </div>
+
+                        <footer class="df-story-file-foot">
+                            <nav class="df-story-file-rail" data-df-file-timeline data-df-active="0" aria-label="مراحل فصل اول">
+                                <div class="df-story-file-rail__line" aria-hidden="true"></div>
+                                <ol class="df-story-file-rail__list">
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۱</span><span class="df-story-file-rail__label">استخراج آگهی‌ها</span></li>
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۲</span><span class="df-story-file-rail__label">مدیریت مجموعه‌ها</span></li>
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۳</span><span class="df-story-file-rail__label">کمد و زونکن</span></li>
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۴</span><span class="df-story-file-rail__label">پروندهٔ ملک</span></li>
+                                </ol>
+                            </nav>
+                            <p class="df-story-file-scroll-cue"><span class="df-story-file-scroll-cue__arrow" aria-hidden="true">↓</span> با اسکرول، مسیر فایل را دنبال کن</p>
+                        </footer>
+                    </div>
                 </div>
-                <p class="df-story-visual-caption" data-df-a>
-                    <span class="df-story-chip df-story-chip--plain">اندروید</span>
-                    <span class="df-story-chip df-story-chip--plain">ویندوز</span>
-                    <span class="df-story-caption-text">استخراج روی دستگاه شما · مدیریت در میزکار</span>
-                </p>
+
+                <div class="df-story-file-scroll-track" aria-hidden="true">
+                    <div class="df-story-scroll-segment is-active" data-df-step="0" data-df-hero-key="extract" data-df-tags="extract" data-df-float-a="مجموعهٔ فایل" data-df-float-b="آمادهٔ دسته‌بندی"></div>
+                    <div class="df-story-scroll-segment" data-df-step="1" data-df-hero-key="organizer" data-df-tags="extract" data-df-float-a="جستجو در مجموعه" data-df-float-b="فیلتر هوشمند"></div>
+                    <div class="df-story-scroll-segment" data-df-step="2" data-df-hero-key="binder" data-df-tags="binder" data-df-float-a="زونکن شخصی" data-df-float-b="کمد دیجیتال"></div>
+                    <div class="df-story-scroll-segment" data-df-step="3" data-df-hero-key="dossier" data-df-tags="binder" data-df-float-a="پروندهٔ ملک" data-df-float-b="اطلاعات یکپارچه"></div>
+                </div>
+                <div class="df-story-file-scroll-exit" data-df-file-exit aria-hidden="true"></div>
             </div>
 
-            <div class="df-story-scrolly__copy">
-                <div class="df-story-blocks df-story-blocks--file">
-                    <article class="df-story-block is-active" data-df-step="0" data-df-hero-key="extract" data-df-tags="extract" data-df-hint="استخراج آگهی → ورود به مجموعه">
-                        <div class="df-story-block__panel">
-                            <span class="df-story-block__num">۱</span>
-                            <h3 class="df-story-block__title">استخراج گروهی آگهی‌های دیوار</h3>
-                            <p class="df-story-block__text">با اپ اندروید یا ربات ویندوز، آگهی‌های موردنیازت را جمع کن و مجموعهٔ فایل اختصاصی بساز.</p>
-                        </div>
-                    </article>
-                    <article class="df-story-block" data-df-step="1" data-df-hero-key="extract" data-df-tags="extract" data-df-hint="جستجو، فیلتر و دسته‌بندی در مجموعه">
-                        <div class="df-story-block__panel">
-                            <span class="df-story-block__num">۲</span>
-                            <h3 class="df-story-block__title">مدیریت مجموعه‌های فایل</h3>
-                            <p class="df-story-block__text">دسته‌بندی، جستجو و فیلتر برای رسیدن سریع به آگهی‌های درست.</p>
-                        </div>
-                    </article>
-                    <article class="df-story-block" data-df-step="2" data-df-hero-key="duo" data-df-tags="binder" data-df-hint="زونکن و کمد برای فایل‌های منتخب">
-                        <div class="df-story-block__panel">
-                            <span class="df-story-block__num">۳</span>
-                            <h3 class="df-story-block__title">کمد و زونکن دیجیتال</h3>
-                            <p class="df-story-block__text">فایل شخصی را در زونکن مرتب کن؛ هنگام انتقال از فایلینگ، مقصد را انتخاب کن.</p>
-                        </div>
-                    </article>
-                    <article class="df-story-block" data-df-step="3" data-df-hero-key="dossier" data-df-tags="binder" data-df-hint="پروندهٔ کامل هر ملک در یکجا">
-                        <div class="df-story-block__panel">
-                            <span class="df-story-block__num">۴</span>
-                            <h3 class="df-story-block__title">مدیریت اطلاعات ملک</h3>
-                            <p class="df-story-block__text">مشخصات، قیمت، امکانات، تصاویر و وضعیت معامله در یک پروندهٔ یکپارچه.</p>
-                        </div>
-                    </article>
+            <div class="df-story-file-mobile" data-df-file-mobile>
+                <div class="df-story-file-progress-corner df-story-file-progress-corner--mobile" data-df-file-progress data-df-active="0" dir="ltr" aria-hidden="true">
+                    <span class="df-story-file-progress-corner__text"><span data-df-file-counter>۰۱</span><span class="df-story-file-progress-corner__slash"> / </span><span data-df-file-total>۰۴</span></span>
                 </div>
+                {% include 'shop/includes/home_story/chapter_file_copy_intro.html' %}
+                <article class="df-story-file-mobile-block" data-df-mobile-step="0">
+                    <div class="df-story-file-mobile-art">
+                        <img src="{% static 'images/Property listings flow into one tray-1.webp' %}" alt="استخراج آگهی" width="1254" height="1254" loading="lazy" decoding="async">
+                    </div>
+                    <span class="df-story-file-step__kicker">قدم اول</span>
+                    <h3 class="df-story-file-step__title">استخراج گروهی آگهی‌های دیوار</h3>
+                    <p class="df-story-file-step__body">آگهی‌های موردنیازت را با اندروید یا ویندوز جمع کن و مجموعهٔ فایل اختصاصی بساز.</p>
+                    <ul class="df-story-file-step__list">
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'map_pin' size='xs' %}</span><span class="df-story-file-step__list-text">انتخاب شهر و محله</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'layers' size='xs' %}</span><span class="df-story-file-step__list-text">جمع‌آوری یکجای آگهی‌ها</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'folder' size='xs' %}</span><span class="df-story-file-step__list-text">مدیریت فایل‌ها در میزکار</span></li>
+                    </ul>
+                    <p class="df-story-file-step__note">استخراج روی دستگاه شما انجام می‌شود</p>
+                    <div class="df-story-file-step__actions">
+                        {% if user.is_authenticated %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>شروع ساخت مجموعه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% else %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>شروع ساخت مجموعه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% endif %}
+                    </div>
+                    <p class="df-story-file-platforms">
+                        <span><i class="fab fa-android" aria-hidden="true"></i> اندروید</span>
+                        <span><i class="fab fa-windows" aria-hidden="true"></i> ویندوز</span>
+                    </p>
+                </article>
+                <article class="df-story-file-mobile-block" data-df-mobile-step="1">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/Property card organizer with magnifier-5.webp' %}" alt="مدیریت مجموعهٔ فایل" width="1254" height="1254" loading="lazy" decoding="async"></div>
+                    <span class="df-story-file-step__kicker">قدم دوم</span>
+                    <h3 class="df-story-file-step__title">مدیریت مجموعه‌های فایل</h3>
+                    <p class="df-story-file-step__body">چند مجموعه برای خرید، اجاره یا محله‌های مختلف بساز و با جستجو و فیلتر سریع به آگهیٔ درست برس.</p>
+                    <ul class="df-story-file-step__list">
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'filter' size='xs' %}</span><span class="df-story-file-step__list-text">فیلتر و جستجوی سریع</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'layout_grid' size='xs' %}</span><span class="df-story-file-step__list-text">چند مجموعهٔ موازی</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'search' size='xs' %}</span><span class="df-story-file-step__list-text">رسیدن به آگهیٔ درست</span></li>
+                    </ul>
+                    <p class="df-story-file-step__note">همهٔ مجموعه‌ها در یک میزکار واحد</p>
+                    <div class="df-story-file-step__actions">
+                        {% if user.is_authenticated %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>ورود به مجموعه‌های فایل</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% else %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>ساخت اولین مجموعه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% endif %}
+                    </div>
+                </article>
+                <article class="df-story-file-mobile-block" data-df-mobile-step="2">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/Elegant property filing cabinet-4.webp' %}" alt="کمد و زونکن دیجیتال" width="1254" height="1254" loading="lazy" decoding="async"></div>
+                    <span class="df-story-file-step__kicker">قدم سوم</span>
+                    <h3 class="df-story-file-step__title">کمد و زونکن دیجیتال</h3>
+                    <p class="df-story-file-step__body">فایل‌های منتخب را در زونکن شخصی مرتب کن؛ هنگام انتقال از فایلینگ، مقصد را همان لحظه انتخاب کن.</p>
+                    <ul class="df-story-file-step__list">
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'storage' size='xs' %}</span><span class="df-story-file-step__list-text">زونکن‌های نام‌گذاری‌شده</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'folder' size='xs' %}</span><span class="df-story-file-step__list-text">کمد دیجیتال فایل شخصی</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'upload' size='xs' %}</span><span class="df-story-file-step__list-text">انتقال هدفمند از فایلینگ</span></li>
+                    </ul>
+                    <p class="df-story-file-step__note">چیدمان فایل‌ها مثل میز کار واقعی</p>
+                    <div class="df-story-file-step__actions">
+                        {% if user.is_authenticated %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>مدیریت زونکن‌ها</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% else %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>ساخت زونکن شخصی</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% endif %}
+                    </div>
+                </article>
+                <article class="df-story-file-mobile-block" data-df-mobile-step="3">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/Editable Property Dossier with Violet Pencil-2.webp' %}" alt="پروندهٔ ملک" width="1254" height="1254" loading="lazy" decoding="async"></div>
+                    <span class="df-story-file-step__kicker">قدم چهارم</span>
+                    <h3 class="df-story-file-step__title">مدیریت اطلاعات ملک</h3>
+                    <p class="df-story-file-step__body">برای هر ملک یک پروندهٔ واحد: متراژ، قیمت، امکانات، عکس‌ها، یادداشت‌ها و وضعیت معامله.</p>
+                    <ul class="df-story-file-step__list">
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'file_edit' size='xs' %}</span><span class="df-story-file-step__list-text">ویرایش جزئیات و قیمت</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'file_text' size='xs' %}</span><span class="df-story-file-step__list-text">یادداشت و وضعیت معامله</span></li>
+                        <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'building' size='xs' %}</span><span class="df-story-file-step__list-text">تصاویر و مشخصات ملک</span></li>
+                    </ul>
+                    <p class="df-story-file-step__note">پروندهٔ یکپارچه برای هر فایل</p>
+                    <div class="df-story-file-step__actions">
+                        {% if user.is_authenticated %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>باز کردن پروندهٔ ملک</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% else %}
+                        <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>شروع با یک فایل نمونه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                        {% endif %}
+                    </div>
+                </article>
+                <nav class="df-story-file-rail df-story-file-rail--compact" data-df-file-timeline data-df-active="0" aria-label="مراحل فصل اول">
+                    <ol class="df-story-file-rail__list">
+                        <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۱</span><span class="df-story-file-rail__label">استخراج</span></li>
+                        <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۲</span><span class="df-story-file-rail__label">مجموعه</span></li>
+                        <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۳</span><span class="df-story-file-rail__label">زونکن</span></li>
+                        <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۰۴</span><span class="df-story-file-rail__label">پرونده</span></li>
+                    </ol>
+                </nav>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════
    Home story body — semantic theme, scoped to .df-home-story
    ═══════════════════════════════════════════════════════════ */
 
@@ -175,6 +175,28 @@ html.mk-public[data-theme="dark"] .df-home-story {
 .mk-home-page .mk-home-body .df-home-story a.df-story-btn:focus-visible {
     color: var(--df-btn-primary-text);
     background: var(--df-btn-primary-bg);
+}
+
+.mk-home-page .mk-home-body .df-home-story .df-story-file-text .df-story-block__title,
+.mk-home-page .mk-home-body .df-home-story .df-story-file-mobile .df-story-block__title {
+    color: var(--df-text);
+}
+
+.mk-home-page .mk-home-body .df-home-story .df-story-file-text .df-story-block__text,
+.mk-home-page .mk-home-body .df-home-story .df-story-file-mobile .df-story-block__text {
+    color: var(--df-text-muted);
+}
+
+.mk-home-page .mk-home-body .df-story-chapter--file .df-story-chapter__head h2.df-story-chapter__title {
+    color: var(--df-text);
+}
+
+.mk-home-page .mk-home-body .df-story-chapter--file .df-story-chapter__head p.df-story-chapter__desc {
+    color: var(--df-text-muted);
+}
+
+.mk-home-page .mk-home-body .df-home-story a.df-story-file-step__link {
+    color: var(--df-accent-text);
 }
 
 .mk-home-page .mk-home-body .df-home-story .df-story-mini-flow__step strong {
@@ -383,190 +405,7 @@ html.mk-public[data-theme="dark"] .df-home-story {
     background: linear-gradient(180deg, var(--df-accent-soft) 0%, transparent 42%);
 }
 
-/* ─── Chapter 1 · File bank scrolly (pinned stage, no rails/bg boxes) ─── */
-.df-story-chapter--file {
-    position: relative;
-}
-
-.df-story-scrolly--file .df-story-rail {
-    display: none;
-}
-
-.df-story-scrolly--file .df-story-block {
-    border: none;
-    border-bottom: none;
-    border-inline-start: none;
-    padding: 0;
-}
-
-.df-story-scrolly--file .df-story-block.is-active {
-    border-inline-start: none;
-}
-
-.df-story-file-hint {
-    margin: 0 0 0.65rem;
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: var(--df-accent-text);
-    min-height: 1.35em;
-}
-
-.df-story-scrolly--file .df-story-scrolly__visual[data-df-dir="fwd"] .df-story-file-hint,
-.df-story-scrolly--file .df-story-scrolly__visual[data-df-dir="back"] .df-story-file-hint {
-    animation: df-file-hint-swap 0.5s var(--df-ease) both;
-}
-
-@keyframes df-file-hint-swap {
-    from { opacity: 0; transform: translate3d(0, 10px, 0); }
-    to { opacity: 1; transform: none; }
-}
-
-.df-story-scrolly--file .df-story-hero--open {
-    background: none;
-    box-shadow: none;
-    max-height: min(56vh, 520px);
-}
-
-.df-story-scrolly--file .df-story-hero__img {
-    opacity: 0;
-    z-index: 1;
-    transform: translate3d(0, 22px, 0) scale(0.94);
-    transition:
-        opacity 0.5s var(--df-ease),
-        transform 0.6s var(--df-ease);
-    filter: drop-shadow(0 18px 36px rgba(26, 22, 37, 0.1));
-}
-
-.df-story-scrolly--file .df-story-hero__img.is-active {
-    opacity: 1;
-    z-index: 2;
-    transform: translate3d(0, 0, 0) scale(1);
-}
-
-.df-story-scrolly--file .df-story-scrolly__visual[data-df-dir="back"] .df-story-hero__img:not(.is-active) {
-    transform: translate3d(0, -16px, 0) scale(0.96);
-}
-
-.df-story-scrolly--file .df-story-scrolly__visual[data-df-dir="fwd"] .df-story-hero__img.is-active {
-    animation: df-file-hero-in 0.6s var(--df-ease) both;
-}
-
-@keyframes df-file-hero-in {
-    from { opacity: 0; transform: translate3d(0, 24px, 0) scale(0.93); }
-    to { opacity: 1; transform: none; }
-}
-
-.df-story-scrolly--file .df-story-hero__img--satellite {
-    width: 34%;
-    max-height: 42%;
-    inset: auto;
-    bottom: 4%;
-    inset-inline-end: 0;
-    opacity: 0;
-    z-index: 3;
-    transform: translate3d(0, 16px, 0) scale(0.9);
-    transition: opacity 0.45s var(--df-ease), transform 0.5s var(--df-ease);
-    filter: drop-shadow(0 10px 24px rgba(26, 22, 37, 0.12));
-}
-
-.df-story-scrolly--file .df-story-hero__img--satellite.is-active {
-    opacity: 1;
-    transform: none;
-}
-
-.df-story-chip--plain {
-    background: transparent;
-    border: none;
-    padding: 0;
-    min-height: auto;
-    font-weight: 600;
-    color: var(--df-text-muted);
-}
-
-.df-story-scrolly--file .df-story-scrolly__copy {
-    padding-inline-start: 0;
-}
-
-.df-story-scrolly--file .df-story-visual-caption {
-    gap: 0.25rem 0.5rem;
-}
-
-.df-story-scrolly--file .df-story-block {
-    min-height: clamp(16rem, 42vh, 22rem);
-    display: flex;
-    align-items: center;
-}
-
-@media (min-width: 992px) and (min-height: 680px) {
-    .df-story-scrolly--file {
-        align-items: stretch;
-    }
-
-    .df-story-scrolly--file .df-story-scrolly__visual {
-        position: sticky;
-        top: calc(var(--df-nav) + 0.75rem);
-        align-self: start;
-    }
-
-    .df-story-scrolly--file .df-story-block {
-        min-height: calc(100vh - var(--df-nav) - 2rem);
-        max-height: calc(100vh - var(--df-nav) - 2rem);
-    }
-}
-
-.df-story-scrolly--file .df-story-block__panel {
-    width: 100%;
-    opacity: 0;
-    transform: translate3d(0, 32px, 0);
-    transition:
-        opacity 0.45s var(--df-ease),
-        transform 0.55s var(--df-ease);
-    pointer-events: none;
-}
-
-.df-story-scrolly--file .df-story-block.is-active .df-story-block__panel {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-}
-
-.df-story-scrolly--file .df-story-block.is-before .df-story-block__panel {
-    opacity: 0;
-    transform: translate3d(0, -28px, 0);
-}
-
-.df-story-scrolly--file .df-story-block.is-after .df-story-block__panel {
-    opacity: 0;
-    transform: translate3d(0, 32px, 0);
-}
-
-.df-story-scrolly--file .df-story-block__num {
-    display: inline-block;
-    margin-bottom: 0.4rem;
-    font-size: 0.72rem;
-    font-weight: 800;
-    color: var(--df-accent-text);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .df-story-scrolly--file .df-story-hero__img,
-    .df-story-scrolly--file .df-story-hero__img--satellite,
-    .df-story-scrolly--file .df-story-block__panel,
-    .df-story-file-hint {
-        transition: none;
-        animation: none;
-        transform: none;
-        opacity: 1;
-    }
-
-    .df-story-scrolly--file .df-story-block:not(.is-active) .df-story-block__panel {
-        opacity: 0;
-    }
-
-    .df-story-scrolly--file .df-story-block.is-active .df-story-block__panel {
-        opacity: 1;
-    }
-}
+/* Chapter 1 file bank: home-story-file-chapter.css */
 
 /* Scrolly */
 .df-story-scrolly {
@@ -575,7 +414,7 @@ html.mk-public[data-theme="dark"] .df-home-story {
 }
 
 @media (min-width: 992px) and (min-height: 680px) {
-    .df-story-scrolly {
+    .df-story-scrolly:not(.df-story-scrolly--file) {
         grid-template-columns: 1fr 1fr;
         gap: clamp(2rem, 4vw, 3.5rem);
         align-items: start;
@@ -584,7 +423,7 @@ html.mk-public[data-theme="dark"] .df-home-story {
     .df-story-scrolly--reverse .df-story-scrolly__visual { order: 2; }
     .df-story-scrolly--reverse .df-story-scrolly__copy { order: 1; }
 
-    .df-story-scrolly__visual {
+    .df-story-scrolly:not(.df-story-scrolly--file) .df-story-scrolly__visual {
         position: sticky;
         top: calc(var(--df-nav) + 0.65rem);
     }
@@ -1276,19 +1115,6 @@ html.mk-public[data-theme="dark"] .df-story-start {
 
     .df-story-chapter__title--balance {
         max-width: none;
-    }
-
-    .df-story-scrolly--file .df-story-block {
-        border-inline-start-width: 0;
-    }
-
-    .df-story-scrolly--file .df-story-block.is-active {
-        border-inline-start-color: transparent;
-    }
-
-    .df-story-scrolly--file .df-story-block {
-        min-height: clamp(14rem, 38vh, 18rem);
-        max-height: none;
     }
 
     .df-story-guide-bar {

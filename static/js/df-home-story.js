@@ -76,65 +76,158 @@
     }
 
     function bindScrolly(scrolly) {
+        var isFileChapter = scrolly.getAttribute('data-df-scrolly-chapter') === 'file';
         var visual = scrolly.querySelector('[data-df-chapter-visual]');
-        var steps = scrolly.querySelectorAll('[data-df-step]');
+        var steps = isFileChapter
+            ? scrolly.querySelectorAll('.df-story-file-scroll-track [data-df-step]')
+            : scrolly.querySelectorAll('[data-df-step]');
         var rail = scrolly.querySelector('[data-df-rail-fill]');
-        if (!visual || !steps.length) return;
+        if (!steps.length) return;
+        if (!isFileChapter && !visual) return;
+        if (isFileChapter && !visual) return;
 
-        var heroImgs = visual.querySelectorAll('[data-df-hero-img]');
-        var satellite = visual.querySelector('[data-df-hero-layer]');
+        var heroImgs = visual ? visual.querySelectorAll('[data-df-hero-img]') : [];
+        var satellite = visual ? visual.querySelector('[data-df-hero-layer]') : null;
         var hintEl = scrolly.querySelector('[data-df-file-hint]');
-        var prevIndex = 0;
+        var textPanels = scrolly.querySelectorAll('[data-df-text-step]');
+        var textStack = scrolly.querySelector('[data-df-file-text-stack]');
+        var fileExitEl = isFileChapter ? scrolly.querySelector('[data-df-file-exit]') : null;
+        var fileHandoffDone = false;
+        var fileLastScrollY = window.scrollY;
+        var fileHandoffTimer = null;
+        var prevIndex = -1;
+        var faStepFmt = typeof Intl !== 'undefined'
+            ? new Intl.NumberFormat('fa-IR', { minimumIntegerDigits: 2, useGrouping: false })
+            : null;
+        var floatAText = scrolly.querySelector('[data-df-float-a-text]');
+        var floatBText = scrolly.querySelector('[data-df-float-b-text]');
+        var filePin = isFileChapter ? scrolly.querySelector('.df-story-file-pin') : null;
 
-        heroImgs.forEach(function (img) {
-            var preload = new Image();
-            preload.src = img.getAttribute('src') || '';
-        });
-        if (satellite) {
-            var preloadSat = new Image();
-            preloadSat.src = satellite.getAttribute('src') || '';
+        function formatFileStepNumber(n) {
+            if (faStepFmt) return faStepFmt.format(n);
+            return String(n).padStart(2, '0');
         }
 
-        function apply(i) {
+        function measureFileTextStack() {
+            if (!isFileChapter || !textStack) return;
+            if (!stickyMq.matches) return;
+            textStack.classList.add('is-measuring');
+            var maxH = 0;
+            textPanels.forEach(function (panel) {
+                maxH = Math.max(maxH, panel.offsetHeight);
+            });
+            textStack.classList.remove('is-measuring');
+            if (maxH > 0) {
+                textStack.style.setProperty('--df-file-stack-h', Math.ceil(maxH) + 'px');
+            }
+        }
+
+        function syncFilePinLayout() {
+            if (!isFileChapter || !filePin) return;
+            measureFileTextStack();
+            var compact = window.innerHeight < 920 || window.matchMedia('(max-height: 900px)').matches;
+            filePin.classList.toggle('df-story-file-pin--compact', compact && stickyMq.matches);
+            if (!stickyMq.matches) {
+                filePin.classList.add('df-story-file-pin--flow');
+                return;
+            }
+            filePin.classList.remove('df-story-file-pin--flow');
+            if (window.innerHeight <= 680) {
+                filePin.classList.add('df-story-file-pin--flow');
+            }
+        }
+
+        if (heroImgs.length) {
+            heroImgs.forEach(function (img) {
+                var preload = new Image();
+                preload.src = img.getAttribute('src') || '';
+            });
+        }
+
+        function scrollToNextChapter() {
+            var next = document.getElementById('df-story-ch-match');
+            if (!next) return;
+            var navEl = document.documentElement;
+            var navRaw = getComputedStyle(navEl).getPropertyValue('--h-nav-offset').trim();
+            var navPx = parseFloat(navRaw) || 72;
+            if (navRaw.indexOf('rem') !== -1) {
+                navPx = parseFloat(navRaw) * parseFloat(getComputedStyle(navEl).fontSize || '16');
+            }
+            var y = next.getBoundingClientRect().top + window.pageYOffset - navPx - 10;
+            window.scrollTo({ top: Math.max(0, y), behavior: reduced ? 'auto' : 'smooth' });
+        }
+
+        function maybeFileChapterHandoff(stepIndex) {
+            if (!isFileChapter || !stickyMq.matches || !fileExitEl || stepIndex !== steps.length - 1) {
+                if (stepIndex < steps.length - 1) fileHandoffDone = false;
+                return;
+            }
+            if (fileHandoffDone) return;
+
+            var scrollingDown = window.scrollY >= fileLastScrollY - 2;
+            fileLastScrollY = window.scrollY;
+            if (!scrollingDown) return;
+
+            var er = fileExitEl.getBoundingClientRect();
+            var lastStep = steps[steps.length - 1];
+            var lastRect = lastStep ? lastStep.getBoundingClientRect() : null;
+            var pastStepFour = lastRect && lastRect.bottom < window.innerHeight * 0.36;
+            var inExitZone = er.top < window.innerHeight * 0.72;
+            if (!pastStepFour && !inExitZone) return;
+
+            fileHandoffDone = true;
+            scrollToNextChapter();
+            if (fileHandoffTimer) window.clearTimeout(fileHandoffTimer);
+            fileHandoffTimer = window.setTimeout(function () {
+                fileHandoffDone = false;
+            }, 1400);
+        }
+
+        function applyCore(i) {
             if (i < 0 || i >= steps.length) i = 0;
 
             steps.forEach(function (step, idx) {
                 step.classList.toggle('is-active', idx === i);
-                step.classList.toggle('is-before', idx < i);
-                step.classList.toggle('is-after', idx > i);
             });
 
             var step = steps[i];
             if (!step) return;
 
-            if (i !== prevIndex) {
-                visual.setAttribute('data-df-dir', i > prevIndex ? 'fwd' : 'back');
-                prevIndex = i;
-            }
-
-            var tagSet = step.getAttribute('data-df-tags') || '';
-            if (tagSet) visual.setAttribute('data-df-tag-set', tagSet);
-            else visual.removeAttribute('data-df-tag-set');
-
-            var heroKey = step.getAttribute('data-df-hero-key') || '';
-            visual.setAttribute('data-df-hero-key', heroKey);
-            visual.setAttribute('data-df-active-step', String(i));
-
-            heroImgs.forEach(function (img) {
-                var on = img.getAttribute('data-df-hero-img') === heroKey;
-                img.classList.toggle('is-active', on);
-                if (on && img.getAttribute('alt')) {
-                    img.removeAttribute('aria-hidden');
-                } else if (!on && img.getAttribute('alt')) {
-                    img.setAttribute('aria-hidden', 'true');
+            if (visual) {
+                if (i !== prevIndex) {
+                    visual.setAttribute('data-df-dir', i > prevIndex ? 'fwd' : 'back');
                 }
-            });
 
-            if (satellite) {
-                satellite.classList.toggle('is-active', heroKey === 'duo');
+                var tagSet = step.getAttribute('data-df-tags') || '';
+                if (tagSet) visual.setAttribute('data-df-tag-set', tagSet);
+                else visual.removeAttribute('data-df-tag-set');
+
+                var heroKey = step.getAttribute('data-df-hero-key') || '';
+                visual.setAttribute('data-df-hero-key', heroKey);
+                visual.setAttribute('data-df-active-step', String(i));
+
+                heroImgs.forEach(function (img) {
+                    var onImg = img.getAttribute('data-df-hero-img') === heroKey;
+                    img.classList.toggle('is-active', onImg);
+                    img.classList.remove('is-leaving', 'is-entering');
+                    if (img.getAttribute('alt')) {
+                        img.setAttribute('aria-hidden', onImg ? 'false' : 'true');
+                    }
+                });
+
+                if (satellite) {
+                    satellite.classList.toggle('is-active', heroKey === 'binder');
+                }
+
+                visual.classList.toggle('is-linked', step.getAttribute('data-df-connect') === '1');
             }
 
-            visual.classList.toggle('is-linked', step.getAttribute('data-df-connect') === '1');
+            textPanels.forEach(function (panel, idx) {
+                var on = idx === i;
+                panel.classList.toggle('is-active', on);
+                panel.classList.remove('is-leaving', 'is-entering');
+                panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+            });
 
             if (rail) {
                 rail.style.height = (((i + 1) / steps.length) * 100) + '%';
@@ -142,14 +235,71 @@
 
             if (hintEl) {
                 hintEl.textContent = step.getAttribute('data-df-hint') || '';
+                hintEl.classList.remove('is-leaving', 'is-entering');
+            }
+
+            if (textStack) {
+                textStack.setAttribute('data-df-step-index', String(i));
+            }
+
+            scrolly.querySelectorAll('[data-df-file-progress], [data-df-file-timeline]').forEach(function (el) {
+                el.setAttribute('data-df-active', String(i));
+            });
+
+            scrolly.querySelectorAll('[data-df-file-counter]').forEach(function (el) {
+                el.textContent = formatFileStepNumber(i + 1);
+            });
+            scrolly.querySelectorAll('[data-df-file-total]').forEach(function (el) {
+                el.textContent = formatFileStepNumber(steps.length);
+            });
+
+            if (floatAText) {
+                floatAText.textContent = step.getAttribute('data-df-float-a') || '';
+            }
+            if (floatBText) {
+                floatBText.textContent = step.getAttribute('data-df-float-b') || '';
+            }
+
+            prevIndex = i;
+        }
+
+        function apply(i) {
+            if (i < 0 || i >= steps.length) i = 0;
+            if (isFileChapter && i !== prevIndex && prevIndex >= 0 && !reduced) {
+                var pin = scrolly.querySelector('.df-story-file-pin');
+                if (pin) pin.classList.add('is-switching');
+            }
+            applyCore(i);
+            if (isFileChapter && !reduced) {
+                var pinEl = scrolly.querySelector('.df-story-file-pin');
+                if (pinEl && pinEl.classList.contains('is-switching')) {
+                    window.setTimeout(function () {
+                        pinEl.classList.remove('is-switching');
+                    }, 420);
+                }
             }
         }
 
         function refresh() {
-            apply(pickScrollyStepIndex(steps));
+            if (isFileChapter && !stickyMq.matches) return;
+            var i = pickScrollyStepIndex(steps);
+            apply(i);
+            if (isFileChapter) maybeFileChapterHandoff(i);
         }
 
         apply(0);
+        if (isFileChapter) {
+            syncFilePinLayout();
+            window.requestAnimationFrame(function () {
+                syncFilePinLayout();
+            });
+            window.addEventListener('resize', syncFilePinLayout);
+            if (typeof stickyMq.addEventListener === 'function') {
+                stickyMq.addEventListener('change', syncFilePinLayout);
+            } else if (typeof stickyMq.addListener === 'function') {
+                stickyMq.addListener(syncFilePinLayout);
+            }
+        }
         refresh();
         window.addEventListener('scroll', function () { onScroll(refresh); }, { passive: true });
         window.addEventListener('resize', refresh);

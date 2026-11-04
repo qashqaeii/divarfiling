@@ -149,6 +149,20 @@ class ListingSerializerFallbackTests(TestCase):
         self.assertIsInstance(detail['linked_contacts'], list)
         self.assertFalse(detail['meta']['is_favorite'])
 
+    def test_detail_includes_normalized_location_fields(self):
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='tok-loc',
+            title='۸۰و۷۲ متر ۲ خ فول شمال مرزداران',
+            city='تهران',
+            neighborhood='مرزداران',
+            data={'مکان_خیابان': 'خ بوستان چهارم غربی', 'مکان_منطقه': 'مرزداران'},
+        )
+        detail = listing_detail_to_dict(listing)
+        self.assertEqual(detail['street'], 'خ بوستان چهارم غربی')
+        self.assertIn('خ بوستان', detail['location_summary'])
+        self.assertEqual(detail['region'], 'مرزداران')
+
     def test_detail_includes_market_benchmark(self):
         cheap = Listing.objects.create(
             dataset=self.dataset,

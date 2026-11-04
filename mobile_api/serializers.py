@@ -36,6 +36,11 @@ from workspace.services.listing_edit import (
     tenant_phone_from_listing,
 )
 from workspace.services.columns import _parse_images
+from workspace.services.display import (
+    build_listing_display_data,
+    listing_location_side_summary,
+    transaction_profile,
+)
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
 _FA_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
@@ -437,6 +442,30 @@ def dataset_to_dict(
     return payload
 
 
+def _listing_location_mobile_fields(lst: Listing) -> Dict[str, str]:
+    """موقعیت نرمال‌شده پرونده — هماهنگ با نمایش وب."""
+    tx_type = 'اجاره' if (lst.rent or lst.deposit) else ('فروش' if lst.price else '')
+    profile = transaction_profile(tx_type)
+    display = build_listing_display_data(lst, {}, transaction_type=profile['mode'])
+    out: Dict[str, str] = {}
+    street = str(display.get('خیابان') or '').strip()
+    if street:
+        out['street'] = street
+    summary = listing_location_side_summary(display)
+    if summary:
+        out['location_summary'] = summary
+    city = str(display.get('شهر') or '').strip()
+    region = str(display.get('منطقه') or '').strip()
+    neighborhood = str(display.get('محله') or '').strip()
+    if city:
+        out['city'] = city
+    if region:
+        out['region'] = region
+    if neighborhood:
+        out['neighborhood'] = neighborhood
+    return out
+
+
 def listing_to_dict(lst: Listing, *, personal_status: Optional[Dict[str, Any]] = None, retention: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     image_urls = _listing_image_urls(lst)
     thumb = image_urls[0] if image_urls else ''
@@ -477,6 +506,10 @@ def listing_to_dict(lst: Listing, *, personal_status: Optional[Dict[str, Any]] =
         payload.update(personal_status)
     if retention is not None:
         payload['retention'] = retention
+    loc = _listing_location_mobile_fields(lst)
+    summary = loc.pop('location_summary', '')
+    if summary:
+        payload['location_summary'] = summary
     return payload
 
 
@@ -565,6 +598,7 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None, personal_st
     feat = extract_listing_features(lst)
     feature_profile = build_listing_feature_profile(lst, base_feat=feat)
     listing_highlights = feature_highlights_for_listing(lst, limit=12)
+    loc_fields = _listing_location_mobile_fields(lst)
 
     base.update({
         'description': lst.description or _data_value(data, 'توضیحات', 'description') or '',
@@ -580,8 +614,8 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None, personal_st
         'vacancy_date': vacancy_date_from_listing(lst),
         'is_vacant': listing_is_vacant(lst),
         'address': address_from_listing(lst),
-        'neighborhood': lst.neighborhood or '',
-        'region': district_from_listing(lst),
+        'neighborhood': loc_fields.get('neighborhood') or lst.neighborhood or '',
+        'region': loc_fields.get('region') or district_from_listing(lst),
         'link': lst.link or '',
         'published_at': lst.published_at.isoformat() if lst.published_at else None,
         'expires_at': lst.expires_at.isoformat() if lst.expires_at else None,
@@ -592,6 +626,10 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None, personal_st
         'feature_fields': feature_fields_for_edit(lst),
         **_listing_amenity_fields(lst),
     })
+    if loc_fields.get('street'):
+        base['street'] = loc_fields['street']
+    if loc_fields.get('city'):
+        base['city'] = loc_fields['city']
     market = _listing_market_to_dict(lst)
     if market:
         base['market'] = market

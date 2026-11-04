@@ -9,6 +9,7 @@ from workspace.services.crm_matching_index import (
     bump_user_contacts_match_catalog,
     bump_user_crm_properties_match_catalog,
     bump_user_divar_listings_match_catalog,
+    bump_agency_crm_properties_match_catalog,
 )
 
 
@@ -47,6 +48,8 @@ def _dataset_match_catalog_signal(sender, instance: Dataset, **kwargs) -> None:
 def _crm_property_match_catalog_signal(sender, instance: CRMProperty, **kwargs) -> None:
     if instance.user_id:
         bump_user_crm_properties_match_catalog(int(instance.user_id))
+    if instance.agency_id:
+        bump_agency_crm_properties_match_catalog(int(instance.agency_id))
 
 
 @receiver(post_save, sender=Customer)

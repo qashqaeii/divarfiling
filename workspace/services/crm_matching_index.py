@@ -14,6 +14,7 @@ MATCH_INDEX_CACHE_TTL = 600
 MATCH_ITERATOR_CHUNK_SIZE = 500
 DIVAR_LISTINGS_CATALOG_REV_PREFIX = 'crm_match_divar_rev:'
 CRM_PROPERTIES_CATALOG_REV_PREFIX = 'crm_match_props_rev:'
+AGENCY_CRM_PROPERTIES_CATALOG_REV_PREFIX = 'crm_match_agency_props_rev:'
 CONTACTS_CATALOG_REV_PREFIX = 'crm_match_contacts_rev:'
 MATCH_CATALOG_REV_TTL = 86400 * 30
 
@@ -120,6 +121,12 @@ def bump_user_crm_properties_match_catalog(user_id: int) -> None:
     _bump_catalog_revision(CRM_PROPERTIES_CATALOG_REV_PREFIX, user_id)
 
 
+def bump_agency_crm_properties_match_catalog(agency_id: int) -> None:
+    """فایل‌های آژانس — ابطال کش تطبیق همه اعضای دارای دسترسی."""
+    if agency_id:
+        _bump_catalog_revision(AGENCY_CRM_PROPERTIES_CATALOG_REV_PREFIX, int(agency_id))
+
+
 def bump_user_contacts_match_catalog(user_id: int) -> None:
     _bump_catalog_revision(CONTACTS_CATALOG_REV_PREFIX, user_id)
 
@@ -131,7 +138,17 @@ def user_contacts_catalog_extra(user) -> str:
 
 def user_crm_properties_catalog_extra(user) -> str:
     rev = _read_catalog_revision(CRM_PROPERTIES_CATALOG_REV_PREFIX, user.pk)
-    return _catalog_token(f'pr:{rev}')
+    parts = [f'pr:{rev}']
+    from workspace.services.crm_scope import get_membership
+
+    membership = get_membership(user)
+    if membership and membership.agency_id:
+        arev = _read_catalog_revision(
+            AGENCY_CRM_PROPERTIES_CATALOG_REV_PREFIX,
+            int(membership.agency_id),
+        )
+        parts.append(f'ag:{arev}')
+    return _catalog_token(':'.join(parts))
 
 
 def user_divar_listings_catalog_extra(user, dataset_id=None) -> str:

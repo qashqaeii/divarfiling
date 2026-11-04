@@ -4,7 +4,14 @@ from __future__ import annotations
 import re
 from typing import Iterable, List, Optional, Sequence, Tuple
 
-# نام‌های جایگزین شناخته‌شده
+# سطوح تطبیق (برای امتیاز نرم و ممیزی)
+GEO_MATCH_EXACT = 'exact'
+GEO_MATCH_ALIAS = 'alias'
+GEO_MATCH_STRUCTURED = 'structured'
+GEO_MATCH_NONE = 'none'
+GEO_MATCH_UNKNOWN = 'unknown'
+
+# نام‌های جایگزین تأییدشده — بدون fuzzy عمومی
 _NEIGHBORHOOD_ALIASES = {
     'سعادت آباد': 'سعادت‌آباد',
     'سعادت اباد': 'سعادت‌آباد',
@@ -14,7 +21,19 @@ _NEIGHBORHOOD_ALIASES = {
     'نیاوران': 'نیاوران',
     'جردن': 'جردن',
     'آرژانتین': 'جردن',
+    # شیراز — املای رایج / برچسب ترکیبی (نه زیررشتهٔ نام محلهٔ دیگر)
+    'محله صیاد': 'صیاد',
+    'صیاد شیراز': 'صیاد',
+    'محله عدالت': 'عدالت',
+    'عدالت شیراز': 'عدالت',
+    'محله آپادانا': 'آپادانا',
+    'آپادانا شیراز': 'آپادانا',
 }
+
+_MAJOR_SEARCH_CITIES = frozenset({
+    'تهران', 'شیراز', 'اصفهان', 'مشهد', 'تبریز', 'کرج', 'اهواز', 'قم',
+    'رشت', 'کرمان', 'یزد', 'همدان', 'اراک', 'قزوین', 'زاهدان', 'کرمانشاه',
+})
 
 _ARABIC_TO_PERSIAN = str.maketrans({
     'ي': 'ی',
@@ -103,36 +122,98 @@ def cities_equivalent(want: str, got: str) -> bool:
     return False
 
 
-def _token_pair_equivalent(token: str, loc: str) -> bool:
-    """تطبیق محله — عمدتاً برابری قطعی پس از نرمال‌سازی."""
+def profile_identity_city(profile) -> str:
+    """شهر ثبت‌شده روی کارت مخاطب — هویتی؛ در فیلتر سخت محله استفاده نمی‌شود."""
+    return normalize_geo_text(getattr(profile, 'city', None) or '')
+
+
+def profile_search_city_hint(profile) -> str:
+    """
+    شهر هدف جستجو — فقط وقتی در areas به‌صورت صریح آمده (مثلاً «شیراز - صیاد»).
+    city هویتی مخاطب اینجا لحاظ نمی‌شود.
+    """
+    for pref in preferred_areas_from_profile(profile):
+        segments = split_location_segments(pref)
+        if len(segments) < 2:
+            continue
+        head = normalize_geo_text(segments[0])
+        if head in _MAJOR_SEARCH_CITIES:
+            return head
+    return ''
+
+
+def property_conflicts_search_city_hint(profile, property_city: str) -> bool:
+    """True اگر شهر صریح جستجو با شهر ملک ناسازگار باشد."""
+    hint = profile_search_city_hint(profile)
+    if not hint:
+        return False
+    got = normalize_geo_text(property_city or '')
+    if not got:
+        return False
+    return not cities_equivalent(hint, got)
+
+
+def _token_pair_match_level(token: str, loc: str) -> str:
+    """تطبیق دو توکن نرمال‌شده — بدون substring عمومی."""
     if not token or not loc:
-        return False
-    if token == loc:
-        return True
+        return GEO_MATCH_NONE
     if len(token) < 3 or len(loc) < 3:
-        return False
-    # پسوند/پیشوند شناخته‌شده همان محله (مثلاً پونک شمالی در جدول alias)
+        return GEO_MATCH_NONE
     if loc.startswith(token + ' ') or loc.startswith(token + '-'):
-        return False
+        return GEO_MATCH_NONE
     if token.startswith(loc + ' ') or token.startswith(loc + '-'):
-        return False
-    return False
+        return GEO_MATCH_NONE
+    if token == loc:
+        return GEO_MATCH_EXACT
+    token_canon = canonical_neighborhood_name(token) or token
+    loc_canon = canonical_neighborhood_name(loc) or loc
+    if token_canon == loc_canon:
+        return GEO_MATCH_ALIAS
+    return GEO_MATCH_NONE
+
+
+def location_token_match_level(preferred: str, location: str) -> Tuple[str, str]:
+    """
+    بهترین سطح تطبیق برای یک ترجیح و یک رشته موقعیت.
+    برمی‌گرداند: (level, برچسب خام)
+    """
+    token = canonical_neighborhood_name(preferred) or normalize_geo_text(preferred)
+    if not token:
+        return GEO_MATCH_NONE, ''
+    loc_raw = (location or '').strip()
+    if not loc_raw:
+        return GEO_MATCH_NONE, ''
+    best = GEO_MATCH_NONE
+    best_label = ''
+    segments = split_location_segments(loc_raw)
+    multi = len(segments) > 1
+    for segment in segments:
+        seg = canonical_neighborhood_name(segment) or normalize_geo_text(segment)
+        level = _token_pair_match_level(token, seg)
+        if level == GEO_MATCH_NONE:
+            continue
+        if multi and level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS):
+            level = GEO_MATCH_STRUCTURED
+        if best == GEO_MATCH_NONE or level == GEO_MATCH_EXACT:
+            best = level
+            best_label = segment.strip()
+            if best == GEO_MATCH_EXACT:
+                break
+    if best != GEO_MATCH_NONE:
+        return best, best_label
+    whole = canonical_neighborhood_name(loc_raw) or normalize_geo_text(loc_raw)
+    level = _token_pair_match_level(token, whole)
+    return level, loc_raw.strip() if level != GEO_MATCH_NONE else ''
+
+
+def _token_pair_equivalent(token: str, loc: str) -> bool:
+    return _token_pair_match_level(token, loc) != GEO_MATCH_NONE
 
 
 def location_tokens_equivalent(preferred: str, location: str) -> bool:
     """تطبیق محله — با تجزیه رشته‌های ترکیبی مثل «شیراز - محله صیاد»."""
-    token = canonical_neighborhood_name(preferred) or normalize_geo_text(preferred)
-    if not token:
-        return False
-    loc_raw = (location or '').strip()
-    if not loc_raw:
-        return False
-    for segment in split_location_segments(loc_raw):
-        seg = canonical_neighborhood_name(segment) or normalize_geo_text(segment)
-        if _token_pair_equivalent(token, seg):
-            return True
-    whole = canonical_neighborhood_name(loc_raw) or normalize_geo_text(loc_raw)
-    return _token_pair_equivalent(token, whole)
+    level, _ = location_token_match_level(preferred, location)
+    return level != GEO_MATCH_NONE
 
 
 def location_field_values(
@@ -209,20 +290,27 @@ def location_match_quality(
     """
     areas = preferred_areas_from_profile(profile)
     if not areas:
-        return 0.5, '', 'unknown'
+        return 0.5, '', GEO_MATCH_UNKNOWN
 
     fields = location_field_values(
         neighborhood, city, district, extra_values=extra_values,
     )
     if not fields:
-        return 0.15, 'موقعیت ملک نامشخص', 'unknown'
+        return 0.15, 'موقعیت ملک نامشخص', GEO_MATCH_UNKNOWN
 
-    matched, label = match_preferred_locations(
-        areas, neighborhood, city, district, extra_values=extra_values,
-    )
-    if matched:
-        return 1.0, f'محله {label or areas[0]}', 'exact'
-    return 0.15, 'محله متفاوت', 'mismatch'
+    best_level = GEO_MATCH_NONE
+    best_label = ''
+    for pref in areas:
+        for raw, _norm in fields:
+            level, label = location_token_match_level(pref, raw)
+            if level == GEO_MATCH_NONE:
+                continue
+            if best_level == GEO_MATCH_NONE or level == GEO_MATCH_EXACT:
+                best_level = level
+                best_label = label or raw.strip()
+    if best_level != GEO_MATCH_NONE:
+        return 1.0, f'محله {best_label or areas[0]}', best_level
+    return 0.15, 'محله متفاوت', GEO_MATCH_NONE
 
 
 def listing_data_location_extras(data) -> List[str]:

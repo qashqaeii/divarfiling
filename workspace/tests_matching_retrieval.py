@@ -172,3 +172,31 @@ class MatchingAreasRegressionTests(TestCase):
 class MatchingGeoCompoundTokenTests(TestCase):
     def test_compound_location_string(self):
         self.assertTrue(location_tokens_equivalent('صیاد', 'شیراز - محله صیاد'))
+
+
+class MatchingGeoSearchCityHintTests(TestCase):
+    def test_identity_city_not_used_as_search_city(self):
+        from types import SimpleNamespace
+
+        from workspace.services.crm_matching_geo import (
+            profile_identity_city,
+            profile_search_city_hint,
+            property_conflicts_search_city_hint,
+        )
+
+        profile = SimpleNamespace(
+            city='تهران',
+            areas='صیاد، عدالت',
+        )
+        self.assertEqual(profile_identity_city(profile), 'تهران')
+        self.assertEqual(profile_search_city_hint(profile), '')
+        self.assertFalse(property_conflicts_search_city_hint(profile, 'شیراز'))
+
+    def test_explicit_city_in_areas_enables_context_filter(self):
+        from types import SimpleNamespace
+
+        from workspace.services.crm_matching_geo import property_conflicts_search_city_hint
+
+        profile = SimpleNamespace(city='تهران', areas='شیراز - صیاد')
+        self.assertTrue(property_conflicts_search_city_hint(profile, 'تهران'))
+        self.assertFalse(property_conflicts_search_city_hint(profile, 'شیراز'))

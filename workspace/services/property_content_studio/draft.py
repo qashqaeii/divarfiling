@@ -15,6 +15,9 @@ from workspace.services.property_content_studio.storyboard import (
 )
 
 from workspace.services.property_content_studio.mobile_export import export_draft_payload_for_access
+
+
+def empty_draft_payload() -> Dict[str, Any]:
     return {
         'version': DRAFT_VERSION,
         'active_tab': 'posters',

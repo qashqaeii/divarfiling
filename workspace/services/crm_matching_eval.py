@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List
 
 MATCH_TIER_STRONG = 'strong'
 MATCH_TIER_ALTERNATIVE = 'alternative'
 MATCH_TIER_INSUFFICIENT = 'insufficient_info'
 MATCH_TIER_REJECTED = 'rejected'
 
-MATCH_ENGINE_VERSION = '3-shared-eval'
+MATCH_ENGINE_VERSION = '3.1-preprod-gate'
 
 _TIER_SORT_BONUS = {
     MATCH_TIER_STRONG: 2_000_000,
@@ -17,11 +17,21 @@ _TIER_SORT_BONUS = {
     MATCH_TIER_INSUFFICIENT: 0,
 }
 
+_NOTIFY_ALLOWED_TIERS = frozenset({MATCH_TIER_STRONG})
+
 
 def index_sort_score(display_score: int, tier: str) -> int:
     """امتیاز مرتب‌سازی ایندکس — سطح کیفیت بالاتر از امتیاز خام."""
     bonus = _TIER_SORT_BONUS.get(tier or MATCH_TIER_STRONG, 0)
     return int(display_score) + bonus
+
+
+def match_eligible_for_auto_notify(match: Dict[str, Any]) -> bool:
+    """اعلان خودکار فقط برای پیشنهادهای با اطمینان کافی."""
+    tier = match.get('match_tier') or MATCH_TIER_STRONG
+    if tier not in _NOTIFY_ALLOWED_TIERS:
+        return False
+    return True
 
 
 @dataclass
@@ -90,19 +100,38 @@ def _profile_has_geo_criteria(profile) -> bool:
     return bool(preferred_areas_from_profile(profile))
 
 
-def _profile_has_detail_criteria(profile) -> bool:
+def _profile_has_rooms_criteria(profile) -> bool:
+    if getattr(profile, 'rooms_min', None) is not None or getattr(profile, 'rooms_max', None) is not None:
+        return True
+    legacy = getattr(profile, 'rooms', None)
+    if legacy is None or legacy == '':
+        return False
+    return str(legacy).strip() not in ('', '-', '0')
+
+
+def _profile_has_amenity_criteria(profile) -> bool:
     return any([
-        getattr(profile, 'rooms_min', None) is not None,
-        getattr(profile, 'rooms_max', None) is not None,
-        getattr(profile, 'rooms', None),
+        bool(getattr(profile, 'want_parking', False)),
+        bool(getattr(profile, 'want_storage', False)),
+        bool(getattr(profile, 'want_elevator', False)),
+    ])
+
+
+def _profile_has_year_floor_criteria(profile) -> bool:
+    return any([
         getattr(profile, 'year_min', None) is not None,
         getattr(profile, 'year_max', None) is not None,
         getattr(profile, 'floor_min', None) is not None,
         getattr(profile, 'floor_max', None) is not None,
-        getattr(profile, 'want_parking', False),
-        getattr(profile, 'want_storage', False),
-        getattr(profile, 'want_elevator', False),
     ])
+
+
+def _profile_has_detail_criteria(profile) -> bool:
+    return (
+        _profile_has_rooms_criteria(profile)
+        or _profile_has_amenity_criteria(profile)
+        or _profile_has_year_floor_criteria(profile)
+    )
 
 
 def _profile_has_type_criteria(profile) -> bool:
@@ -115,14 +144,15 @@ def _profile_has_type_criteria(profile) -> bool:
     return bool(want and want != 'سایر')
 
 
+def _deal_criteria(profile, *, is_rent_deal: bool) -> bool:
+    return _profile_has_rent_criteria(profile) if is_rent_deal else _profile_has_sale_criteria(profile)
+
+
 def profile_evidence_completeness(profile, *, is_rent_deal: bool) -> float:
     """۰–۱: چقدر نیاز مخاطب برای تطبیق قابل اتکا است."""
     parts = 0
     total = 5
-    if is_rent_deal:
-        if _profile_has_rent_criteria(profile):
-            parts += 1
-    elif _profile_has_sale_criteria(profile):
+    if _deal_criteria(profile, is_rent_deal=is_rent_deal):
         parts += 1
     if _profile_has_geo_criteria(profile):
         parts += 1
@@ -133,6 +163,33 @@ def profile_evidence_completeness(profile, *, is_rent_deal: bool) -> float:
     if _profile_has_detail_criteria(profile):
         parts += 1
     return parts / total
+
+
+def profile_has_confident_need(profile, *, is_rent_deal: bool) -> bool:
+    """
+    آیا شواهد کافی برای ادعای تطبیق باکیفیت وجود دارد؟
+    نوع ملک به‌تنهایی، یا فقط پارکینگ/انباری، کافی نیست.
+    """
+    deal = _deal_criteria(profile, is_rent_deal=is_rent_deal)
+    geo = _profile_has_geo_criteria(profile)
+    area = _profile_has_area_criteria(profile)
+    typ = _profile_has_type_criteria(profile)
+    rooms = _profile_has_rooms_criteria(profile)
+    amenities = _profile_has_amenity_criteria(profile)
+
+    if typ and not any([deal, geo, area, rooms, amenities]):
+        return False
+    if amenities and not any([deal, geo, area, typ, rooms]):
+        return False
+    if deal:
+        return True
+    if geo and (area or typ):
+        return True
+    if area and typ:
+        return True
+    if geo and rooms:
+        return True
+    return False
 
 
 def contact_meaningful_for_property_suggestion(
@@ -150,6 +207,11 @@ def contact_meaningful_for_property_suggestion(
     if ctype not in {'سرنخ'} and ctype not in {
         'خریدار', 'متقاضی خرید', 'مستاجر', 'متقاضی اجاره', 'سرمایه‌گذار',
     }:
+        return True
+
+    if is_sale_listing and profile_has_confident_need(profile, is_rent_deal=False):
+        return True
+    if is_rent_listing and profile_has_confident_need(profile, is_rent_deal=True):
         return True
 
     has_need = False
@@ -179,6 +241,8 @@ def _dimension_is_alternative(score: float, *, has_criterion: bool) -> bool:
         return False
     if score <= 0.2:
         return False
+    if score == 0.5:
+        return False
     return True
 
 
@@ -202,34 +266,32 @@ def classify_match_tier(
 
     score = compute_match_score(dims)
     reasons = build_reasons(dims)
-
-    alt_flags = [
-        _dimension_is_alternative(
-            dims.price_s,
-            has_criterion=_profile_has_rent_criteria(profile) if is_rent_deal else _profile_has_sale_criteria(profile),
-        ),
-        _dimension_is_alternative(dims.area_s, has_criterion=_profile_has_area_criteria(profile)),
-        _dimension_is_alternative(dims.room_s, has_criterion=_profile_has_detail_criteria(profile)),
-    ]
-    is_alt = any(alt_flags)
-
     evidence = profile_evidence_completeness(profile, is_rent_deal=is_rent_deal)
-    neutral_heavy = (
-        evidence < 0.25
-        and dims.price_s == 0.5
-        and dims.area_s == 0.5
-        and dims.hood_s == 0.5
-        and dims.type_s == 0.5
-    )
 
     if prop_type_required and not prop_type_known:
         tier = MATCH_TIER_INSUFFICIENT
-    elif neutral_heavy:
+    elif not profile_has_confident_need(profile, is_rent_deal=is_rent_deal):
         tier = MATCH_TIER_INSUFFICIENT
-    elif is_alt or (dims.hood_s == 0.55 and _profile_has_geo_criteria(profile)):
-        tier = MATCH_TIER_ALTERNATIVE
     else:
-        tier = MATCH_TIER_STRONG
+        alt_flags = [
+            _dimension_is_alternative(
+                dims.price_s,
+                has_criterion=_deal_criteria(profile, is_rent_deal=is_rent_deal),
+            ),
+            _dimension_is_alternative(
+                dims.area_s,
+                has_criterion=_profile_has_area_criteria(profile),
+            ),
+            _dimension_is_alternative(
+                dims.hood_s,
+                has_criterion=_profile_has_geo_criteria(profile),
+            ),
+            _dimension_is_alternative(
+                dims.room_s,
+                has_criterion=_profile_has_rooms_criteria(profile),
+            ),
+        ]
+        tier = MATCH_TIER_ALTERNATIVE if any(alt_flags) else MATCH_TIER_STRONG
 
     return MatchEvaluation(
         eligible=True,

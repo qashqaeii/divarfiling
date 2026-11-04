@@ -47,9 +47,9 @@ _TITLE_HINTS = (
     ('آپارتمان', 'آپارتمان'),
 )
 
+# زیردسته‌های کلی (مثل «خانه و ویلا») عمداً نگاشت نمی‌شوند — نوع مشخص ساخته نمی‌شود.
 _DATASET_SUBCATEGORY_HINTS = (
     ('آپارتمان', 'آپارتمان'),
-    ('خانه و ویلا', 'ویلا'),
     ('ویلا', 'ویلا'),
     ('زمین', 'زمین'),
     ('کلنگی', 'کلنگی'),
@@ -101,11 +101,14 @@ def _structured_data_type(listing: Listing) -> Optional[str]:
 
 def _dataset_subcategory_type(listing: Listing) -> Optional[str]:
     ds = getattr(listing, 'dataset', None)
-    sub = normalize_geo_text(getattr(ds, 'subcategory', '') or '')
-    if not sub:
+    raw_sub = (getattr(ds, 'subcategory', '') or '').strip()
+    if not raw_sub:
+        return None
+    norm = normalize_geo_text(raw_sub)
+    if norm in {'خانه و ویلا', 'خانه ويلا'}:
         return None
     for token, ptype in _DATASET_SUBCATEGORY_HINTS:
-        if normalize_geo_text(token) in sub or token in sub:
+        if norm == normalize_geo_text(token):
             return ptype
     return None
 

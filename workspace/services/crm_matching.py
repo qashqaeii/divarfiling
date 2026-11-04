@@ -35,7 +35,6 @@ from workspace.services.crm_matching_prefilter import (
     apply_int_min_prefilter,
 )
 from workspace.services.crm_matching_types import (
-    PropertyTypeInference,
     infer_listing_property_type,
     infer_listing_property_type_detail,
 )
@@ -944,12 +943,8 @@ def _score_listing_with_profile(
     match_intent: str = '',
     intent_label: str = '',
 ) -> Optional[Dict[str, Any]]:
-    type_detail = (
-        infer_listing_property_type_detail(listing)
-        if prop_type is None
-        else PropertyTypeInference(prop_type, 'caller', 'high')
-    )
-    inferred = type_detail.property_type if prop_type is None else (prop_type or '')
+    type_detail = infer_listing_property_type_detail(listing)
+    inferred = (prop_type or type_detail.property_type or '').strip()
     is_rent_listing = _listing_is_rent_listing(listing)
     is_sale_listing = _listing_is_sale_listing(listing)
     rent_customer = _is_rent_profile(profile)

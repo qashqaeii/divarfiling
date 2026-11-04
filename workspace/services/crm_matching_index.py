@@ -11,6 +11,8 @@ from django.core.cache import cache
 from workspace.models import Customer
 
 MATCH_INDEX_CACHE_TTL = 600
+# v2: امتیاز ایندکس شامل bonus سطح tier است (index_sort_score)
+MATCH_INDEX_CACHE_NAMESPACE = 'v2'
 MATCH_ITERATOR_CHUNK_SIZE = 500
 DIVAR_LISTINGS_CATALOG_REV_PREFIX = 'crm_match_divar_rev:'
 CRM_PROPERTIES_CATALOG_REV_PREFIX = 'crm_match_props_rev:'
@@ -168,7 +170,10 @@ def _index_cache_key(
 ) -> str:
     ds = dataset_id or '-'
     ex = extra or '-'
-    return f'crm_match_idx:v1:{user_id}:{scope}:{scope_id}:{source}:{fingerprint}:{ds}:{ex}'
+    return (
+        f'crm_match_idx:{MATCH_INDEX_CACHE_NAMESPACE}:'
+        f'{user_id}:{scope}:{scope_id}:{source}:{fingerprint}:{ds}:{ex}'
+    )
 
 
 def invalidate_customer_match_index(user_id: int, customer_id: int) -> None:
@@ -466,7 +471,11 @@ def collect_notify_candidates(
         return f'divar:{match.get("token")}'
 
     def consider(item: Dict[str, Any]) -> None:
+        from workspace.services.crm_matching_eval import match_eligible_for_auto_notify
+
         if int(item.get('score') or 0) < min_score:
+            return
+        if not match_eligible_for_auto_notify(item):
             return
         if _match_key(item) in skip_keys:
             return

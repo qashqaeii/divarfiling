@@ -23,6 +23,7 @@ from workspace.services.crm_matching_geo import (
     listing_data_location_extras,
     listing_matching_district,
     listing_structured_location_extras,
+    listing_trusted_neighborhood,
     location_field_values,
     location_match_quality,
     location_tokens_equivalent,
@@ -974,13 +975,14 @@ def _score_listing_with_profile(
     listing_rooms = feats.get('rooms') or listing.rooms
     listing_extras = listing_structured_location_extras(listing)
     listing_district = listing_matching_district(listing)
+    trusted_neighborhood = listing_trusted_neighborhood(listing)
 
     use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
     if not _profile_criteria_eligible(
         profile,
         area=listing.area,
         prop_type=inferred,
-        neighborhood=listing.neighborhood or '',
+        neighborhood=trusted_neighborhood,
         city=listing.city or '',
         district=listing_district,
         location_extras=listing_extras,
@@ -1009,7 +1011,7 @@ def _score_listing_with_profile(
     area_s, area_note = _area_match_profile(profile, listing.area)
     hood_s, hood_note = _neighborhood_match_profile(
         profile,
-        listing.neighborhood or '',
+        trusted_neighborhood,
         listing.city or '',
         listing_district,
         extra_values=listing_extras,
@@ -1019,7 +1021,7 @@ def _score_listing_with_profile(
 
     _, _, geo_level = location_match_quality(
         profile,
-        neighborhood=listing.neighborhood or '',
+        neighborhood=trusted_neighborhood,
         city=listing.city or '',
         district=listing_district,
         extra_values=listing_extras,

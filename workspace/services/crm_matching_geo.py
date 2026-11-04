@@ -397,7 +397,14 @@ def listing_data_location_extras(data) -> List[str]:
     """سازگاری قدیمی — فقط data dict؛ برای تطبیق از listing_structured_location_extras استفاده کنید."""
     if not isinstance(data, dict):
         return []
-    return _structured_values_from_data(data, title_neighborhood_untrusted=False)
+    return _structured_values_from_data(data, title_neighborhood_untrusted=True)
+
+
+_TITLE_DERIVED_SOURCES = frozenset({
+    'title:expandable_section',
+    'title:street',
+    'title:neighborhood',
+})
 
 
 def _location_source_parts(data: dict) -> set:
@@ -405,9 +412,32 @@ def _location_source_parts(data: dict) -> set:
     return {p.strip().lower() for p in raw.split(',') if p.strip()}
 
 
+def _has_title_location_sources(sources: set) -> bool:
+    return bool(sources & _TITLE_DERIVED_SOURCES)
+
+
+def listing_trusted_neighborhood(listing) -> str:
+    """
+    ستون neighborhood فقط وقتی معتبر است که منبع عنوان‌محور نباشد.
+    (row_to_listing_fields گاهی منطقه را در neighborhood می‌گذارد — جداگانه در district.)
+    """
+    data = listing.data if isinstance(getattr(listing, 'data', None), dict) else {}
+    sources = _location_source_parts(data)
+    raw = (getattr(listing, 'neighborhood', None) or '').strip()
+    if not raw:
+        return ''
+    if _has_title_location_sources(sources):
+        return ''
+    city_norm = normalize_geo_text(getattr(listing, 'city', '') or '')
+    if city_norm and normalize_geo_text(raw) == city_norm:
+        return ''
+    return raw
+
+
 def _structured_values_from_data(data: dict, *, title_neighborhood_untrusted: bool) -> List[str]:
     out: List[str] = []
     seen: set = set()
+    sources = _location_source_parts(data)
 
     def add(val) -> None:
         text = (val or '').strip() if isinstance(val, str) else ''
@@ -423,34 +453,31 @@ def _structured_values_from_data(data: dict, *, title_neighborhood_untrusted: bo
         for key in ('مکان_محله', 'محله', 'neighborhood'):
             add(data.get(key))
 
-    for key in (
-        'منطقه', 'مکان_منطقه', 'district', 'district_persian',
-        'normalized_district', 'مکان_خیابان', 'خیابان',
-    ):
+    # منطقه ساختاریافته — نه خیابان (title:street نباید محله تلقی شود)
+    for key in ('منطقه', 'مکان_منطقه', 'district', 'district_persian', 'normalized_district'):
         add(data.get(key))
-
-    display = data.get('مکان_عنوان_نمایشی')
-    sources = _location_source_parts(data)
-    if display and sources and not sources.issubset({'title:expandable_section', 'title:street', 'title:neighborhood'}):
-        for part in split_location_segments(str(display)):
-            add(part)
 
     return out
 
 
 def listing_structured_location_extras(listing) -> List[str]:
     """
-    شواهد ساختاریافته موقعیت برای فیلتر محله — بدون استنتاج از شهر یا عنوان تبلیغاتی.
+    شواهد ساختاریافته برای فیلتر محله.
+    ingest: extract_post_location → apply_location_to_export_record → row_to_listing_fields
+    مکان_محله در Listing.data؛ ستون neighborhood اغلب از محله/مکان_منطقه alias.
     """
     data = listing.data if isinstance(getattr(listing, 'data', None), dict) else {}
     sources = _location_source_parts(data)
-    title_nb_untrusted = 'title:neighborhood' in sources
+    title_nb_untrusted = _has_title_location_sources(sources)
     extras = _structured_values_from_data(data, title_neighborhood_untrusted=title_nb_untrusted)
     if title_nb_untrusted:
-        # مکان_محله در ingest از neighborhood عنوان پر می‌شود — در این حالت قابل اتکا نیست.
         trusted_nb = normalize_geo_text(str(data.get('مکان_محله') or ''))
         if trusted_nb:
             extras = [v for v in extras if normalize_geo_text(v) != trusted_nb]
+        for key in ('محله', 'neighborhood'):
+            val = normalize_geo_text(str(data.get(key) or ''))
+            if val:
+                extras = [v for v in extras if normalize_geo_text(v) != val]
     return extras
 
 
@@ -464,13 +491,16 @@ def listing_matching_district(listing) -> str:
 
 
 def listing_location_evidence_level(listing) -> str:
-    """structured | partial | none — برای ممیزی و rank."""
-    if (listing.neighborhood or '').strip():
+    """structured | partial | none — برای ممیزی."""
+    data = listing.data if isinstance(getattr(listing, 'data', None), dict) else {}
+    sources = _location_source_parts(data)
+    if listing_trusted_neighborhood(listing):
         return 'structured'
     extras = listing_structured_location_extras(listing)
     if extras:
         return 'structured'
-    data = listing.data if isinstance(getattr(listing, 'data', None), dict) else {}
-    if _location_source_parts(data):
+    if sources:
+        return 'partial'
+    if data.get('مکان_شهر') or data.get('شهر') or (listing.city or '').strip():
         return 'partial'
     return 'none'

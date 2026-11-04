@@ -9,13 +9,19 @@ from workspace.services.crm_matching import (
     _score_listing,
     match_divar_listings,
 )
-from workspace.services.crm_matching_eval import index_sort_score
+from workspace.services.crm_matching_eval import (
+    MATCH_TIER_ALTERNATIVE,
+    MATCH_TIER_INSUFFICIENT,
+    MATCH_TIER_STRONG,
+    index_sort_score,
+)
 from workspace.services.crm_matching_geo import (
     listing_location_evidence_level,
     listing_structured_location_extras,
+    listing_trusted_neighborhood,
     location_tokens_equivalent,
 )
-from workspace.services.crm_matching_index import MATCH_INDEX_CACHE_NAMESPACE
+from workspace.services.crm_matching_index import MATCH_INDEX_CACHE_NAMESPACE, ScoredRef, _sort_refs
 
 User = get_user_model()
 
@@ -92,14 +98,113 @@ class MatchingV32StructuredLocationTests(TestCase):
             advertiser_signal=ADVERTISER_SIGNAL_GENUINE_PERSONAL,
             data={'مکان_شهر': 'آبادان'},
         )
-        self.assertEqual(listing_location_evidence_level(listing), 'none')
+        self.assertEqual(listing_location_evidence_level(listing), 'partial')
         self.assertIsNone(_score_listing(self.buyer, listing))
+
+    def test_title_expandable_plus_seo_city_does_not_trust_makan_mahalle(self):
+        listing = Listing.objects.create(
+            dataset=self.ds,
+            token='loc-mixed-src',
+            title='زمین بهارستان',
+            city='آبادان',
+            neighborhood='',
+            price=10_000_000_000,
+            area=400,
+            is_expired=False,
+            advertiser_signal=ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+            data={
+                'مکان_شهر': 'آبادان',
+                'مکان_محله': 'بهارستان',
+                'مکان_منبع_جزئیات': 'title:expandable_section,seo:city_persian',
+            },
+        )
+        self.assertNotIn('بهارستان', listing_structured_location_extras(listing))
+        self.assertEqual(listing_location_evidence_level(listing), 'partial')
+
+    def test_title_street_not_structured_neighborhood(self):
+        listing = Listing.objects.create(
+            dataset=self.ds,
+            token='loc-street',
+            title='زمین',
+            city='آبادان',
+            neighborhood='',
+            price=10_000_000_000,
+            area=400,
+            is_expired=False,
+            advertiser_signal=ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+            data={
+                'مکان_خیابان': 'امیری',
+                'مکان_منبع_جزئیات': 'title:street',
+            },
+        )
+        self.assertEqual(listing_structured_location_extras(listing), [])
+
+    def test_listing_neighborhood_column_bypasses_with_title_sources(self):
+        listing = Listing.objects.create(
+            dataset=self.ds,
+            token='loc-col-bypass',
+            title='زمین',
+            city='آبادان',
+            neighborhood='بهارستان',
+            price=10_000_000_000,
+            area=400,
+            is_expired=False,
+            advertiser_signal=ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+            data={
+                'مکان_منبع_جزئیات': 'title:expandable_section,seo:city_persian',
+            },
+        )
+        self.assertEqual(listing_trusted_neighborhood(listing), '')
+        self.assertIsNone(_score_listing(self.buyer, listing))
+
+    def test_structured_district_still_usable_with_title_sources(self):
+        listing = Listing.objects.create(
+            dataset=self.ds,
+            token='loc-district-seo',
+            title='زمین',
+            city='آبادان',
+            neighborhood='',
+            price=10_000_000_000,
+            area=400,
+            is_expired=False,
+            advertiser_signal=ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+            data={
+                'مکان_منطقه': 'امیری',
+                'مکان_منبع_جزئیات': 'title:expandable_section,seo:district_persian',
+            },
+        )
+        self.assertIn('امیری', listing_structured_location_extras(listing))
+        scored = _score_listing(self.buyer, listing)
+        self.assertIsNotNone(scored)
 
     def test_similar_name_different_city_not_equivalent(self):
         self.assertFalse(location_tokens_equivalent('امیری', 'امیری شیراز'))
 
 
 class MatchingV32RankingTests(TestCase):
+    def test_index_sort_display_score_beats_relevance_within_tier(self):
+        high_score_low_rel = index_sort_score(88, MATCH_TIER_STRONG, 0)
+        low_score_high_rel = index_sort_score(75, MATCH_TIER_STRONG, 9999)
+        self.assertGreater(high_score_low_rel, low_score_high_rel)
+
+    def test_index_sort_relevance_breaks_equal_display_score(self):
+        a = index_sort_score(80, MATCH_TIER_STRONG, 5000)
+        b = index_sort_score(80, MATCH_TIER_STRONG, 100)
+        self.assertGreater(a, b)
+
+    def test_index_sort_tier_precedes_display_score(self):
+        alt_high = index_sort_score(95, MATCH_TIER_ALTERNATIVE, 9999)
+        strong_low = index_sort_score(70, MATCH_TIER_STRONG, 0)
+        self.assertGreater(strong_low, alt_high)
+
+    def test_sort_refs_stable_item_id_tiebreak(self):
+        refs = [
+            ScoredRef(index_sort_score(80, MATCH_TIER_STRONG, 100), 10),
+            ScoredRef(index_sort_score(80, MATCH_TIER_STRONG, 100), 20),
+        ]
+        _sort_refs(refs)
+        self.assertEqual([r.item_id for r in refs], [20, 10])
+
     def setUp(self):
         self.user = User.objects.create_user(username='09129990010', phone='09129990010', password='x')
         self.ds = Dataset.objects.create(user=self.user, name='ds-rank', is_active=True, subcategory='آپارتمان')
@@ -160,5 +265,5 @@ class MatchingV32RankingTests(TestCase):
 
 
 class MatchingV32CacheNamespaceTests(TestCase):
-    def test_cache_namespace_v3(self):
-        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v3')
+    def test_cache_namespace_v4(self):
+        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v4')

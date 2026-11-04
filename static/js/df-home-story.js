@@ -11,14 +11,20 @@
     root.classList.add('js-ready');
     if (body) body.classList.add('js-story-motion', 'js-ready');
 
-    var scrollTick = false;
+    var scrollFrameQueue = [];
+    var scrollFrameScheduled = false;
 
     function onScroll(cb) {
-        if (scrollTick) return;
-        scrollTick = true;
+        scrollFrameQueue.push(cb);
+        if (scrollFrameScheduled) return;
+        scrollFrameScheduled = true;
         requestAnimationFrame(function () {
-            scrollTick = false;
-            cb();
+            scrollFrameScheduled = false;
+            var queue = scrollFrameQueue.slice();
+            scrollFrameQueue.length = 0;
+            queue.forEach(function (fn) {
+                fn();
+            });
         });
     }
 
@@ -76,22 +82,22 @@
     }
 
     function bindScrolly(scrolly) {
-        var isFileChapter = scrolly.getAttribute('data-df-scrolly-chapter') === 'file';
+        var pinTrack = scrolly.querySelector('.df-story-file-scroll-track');
+        var isPinChapter = !!pinTrack;
+        if (!isPinChapter) return;
+
         var visual = scrolly.querySelector('[data-df-chapter-visual]');
-        var steps = isFileChapter
-            ? scrolly.querySelectorAll('.df-story-file-scroll-track [data-df-step]')
-            : scrolly.querySelectorAll('[data-df-step]');
-        var rail = scrolly.querySelector('[data-df-rail-fill]');
-        if (!steps.length) return;
-        if (!isFileChapter && !visual) return;
-        if (isFileChapter && !visual) return;
+        var steps = pinTrack.querySelectorAll('[data-df-step]');
+        if (!steps.length || !visual) return;
+
+        var handoffTargetId = scrolly.getAttribute('data-df-handoff-target') || '';
 
         var heroImgs = visual ? visual.querySelectorAll('[data-df-hero-img]') : [];
         var satellite = visual ? visual.querySelector('[data-df-hero-layer]') : null;
         var hintEl = scrolly.querySelector('[data-df-file-hint]');
         var textPanels = scrolly.querySelectorAll('[data-df-text-step]');
         var textStack = scrolly.querySelector('[data-df-file-text-stack]');
-        var fileExitEl = isFileChapter ? scrolly.querySelector('[data-df-file-exit]') : null;
+        var fileExitEl = scrolly.querySelector('[data-df-file-exit]');
         var fileHandoffDone = false;
         var fileLastScrollY = window.scrollY;
         var fileHandoffTimer = null;
@@ -101,7 +107,7 @@
             : null;
         var floatAText = scrolly.querySelector('[data-df-float-a-text]');
         var floatBText = scrolly.querySelector('[data-df-float-b-text]');
-        var filePin = isFileChapter ? scrolly.querySelector('.df-story-file-pin') : null;
+        var filePin = scrolly.querySelector('.df-story-file-pin');
 
         function formatFileStepNumber(n) {
             if (faStepFmt) return faStepFmt.format(n);
@@ -156,52 +162,139 @@
             return navPx;
         }
 
+        function getPinHeightPx() {
+            var pinRaw = scrolly.style.getPropertyValue('--df-file-pin-h').trim();
+            if (!pinRaw) {
+                pinRaw = filePin ? filePin.style.getPropertyValue('--df-file-pin-h').trim() : '';
+            }
+            if (!pinRaw) {
+                pinRaw = getComputedStyle(scrolly).getPropertyValue('--df-file-pin-h').trim();
+            }
+            var pinH = parseFloat(pinRaw);
+            if (!pinH || pinH < 240) {
+                pinH = filePin && filePin.clientHeight > 240 ? filePin.clientHeight : getPinBudgetPx();
+            }
+            return pinH;
+        }
+
+        function scrollyChapterInView() {
+            var r = scrolly.getBoundingClientRect();
+            var navPx = getNavOffsetPx();
+            return r.bottom > navPx + 48 && r.top < window.innerHeight * 0.94;
+        }
+
+        function isPinStuck() {
+            if (!filePin || scrolly.classList.contains('df-story-scrolly--pin-flow')) return false;
+            var navPx = getNavOffsetPx();
+            var top = filePin.getBoundingClientRect().top;
+            return top <= navPx + 14 && top >= navPx - 6;
+        }
+
+        function pickPinChapterStepIndex() {
+            if (!steps.length) return 0;
+
+            var sRect = scrolly.getBoundingClientRect();
+            if (sRect.top > window.innerHeight * 0.55) return 0;
+            if (sRect.bottom < window.innerHeight * 0.28) return steps.length - 1;
+
+            var pinH = getPinHeightPx();
+
+            if (pinTrack && filePin && isPinStuck()) {
+                var trackTop = pinTrack.getBoundingClientRect().top;
+                var pinBottom = filePin.getBoundingClientRect().bottom;
+                var progress = (pinBottom - trackTop) / pinH;
+                var idx = Math.floor(progress - 0.08);
+                if (idx < 0) idx = 0;
+                if (idx >= steps.length) idx = steps.length - 1;
+                return idx;
+            }
+
+            var navPx = getNavOffsetPx();
+            var pinRect = filePin ? filePin.getBoundingClientRect() : null;
+            var anchor = pinRect && pinRect.height > 32
+                ? pinRect.top + pinRect.height * 0.42
+                : navPx + Math.max(120, (window.innerHeight - navPx) * 0.38);
+            var chosen = 0;
+
+            steps.forEach(function (step, i) {
+                var r = step.getBoundingClientRect();
+                if (r.height < 4) return;
+                var trigger = r.top + r.height * 0.42;
+                if (trigger <= anchor) chosen = i;
+            });
+            return chosen;
+        }
+
+        function syncScrollTrackHeight() {
+            if (!pinTrack || !filePin) return;
+            if (scrolly.classList.contains('df-story-scrolly--pin-flow')) {
+                pinTrack.style.minHeight = '';
+                steps.forEach(function (seg) { seg.style.minHeight = ''; });
+                return;
+            }
+            var pinH = getPinHeightPx();
+            steps.forEach(function (seg) {
+                seg.style.minHeight = pinH + 'px';
+            });
+            pinTrack.style.minHeight = (steps.length * pinH) + 'px';
+        }
+
         function getPinBudgetPx() {
             return Math.max(320, window.innerHeight - getNavOffsetPx() - 12);
         }
 
-        function setFileFlowMode(on) {
+        function setPinFlowMode(on) {
             if (!filePin) return;
             filePin.classList.toggle('df-story-file-pin--flow', on);
-            scrolly.classList.toggle('df-story-scrolly--file-flow', on);
+            scrolly.classList.toggle('df-story-scrolly--pin-flow', on);
         }
 
+        var syncLayoutTimer = null;
         function syncFilePinLayout() {
-            if (!isFileChapter || !filePin) return;
+            if (!filePin) return;
 
             if (!stickyMq.matches) {
                 filePin.classList.remove('df-story-file-pin--compact');
-                setFileFlowMode(true);
+                setPinFlowMode(true);
                 return;
             }
 
+            setPinFlowMode(false);
+
             var pinBudget = getPinBudgetPx();
-            filePin.style.setProperty('--df-file-pin-h', pinBudget + 'px');
+            var pinHStr = pinBudget + 'px';
+            scrolly.style.setProperty('--df-file-pin-h', pinHStr);
+            filePin.style.setProperty('--df-file-pin-h', pinHStr);
 
             filePin.classList.remove('df-story-file-pin--compact');
-
-            var useFlow = true;
-            if (pinContentFitsSticky(pinBudget, false)) {
-                useFlow = false;
-            } else if (pinContentFitsSticky(pinBudget, true)) {
+            if (!pinContentFitsSticky(pinBudget, false) && pinContentFitsSticky(pinBudget, true)) {
                 filePin.classList.add('df-story-file-pin--compact');
-                useFlow = false;
             }
 
-            setFileFlowMode(useFlow);
-
-            if (!useFlow && !verifyStickyPinFits()) {
-                filePin.classList.remove('df-story-file-pin--compact');
-                setFileFlowMode(true);
+            if (!verifyStickyPinFits()) {
+                filePin.classList.add('df-story-file-pin--compact');
             }
+
+            syncScrollTrackHeight();
+        }
+
+        function pickFileChapterStepIndex() {
+            if (!steps.length) return 0;
+            if (scrolly.classList.contains('df-story-scrolly--pin-flow') || !stickyMq.matches) {
+                return pickScrollyStepIndex(steps);
+            }
+            return pickPinChapterStepIndex();
         }
 
         function syncFilePinLayoutAndRefresh() {
-            syncFilePinLayout();
-            if (stickyMq.matches) {
-                var i = pickScrollyStepIndex(steps);
-                apply(i);
-            }
+            if (syncLayoutTimer) window.clearTimeout(syncLayoutTimer);
+            syncLayoutTimer = window.setTimeout(function () {
+                syncLayoutTimer = null;
+                syncFilePinLayout();
+                if (stickyMq.matches) {
+                    apply(pickFileChapterStepIndex());
+                }
+            }, 50);
         }
 
         if (heroImgs.length) {
@@ -215,7 +308,8 @@
         }
 
         function scrollToNextChapter() {
-            var next = document.getElementById('df-story-ch-match');
+            if (!handoffTargetId) return;
+            var next = document.getElementById(handoffTargetId);
             if (!next) return;
             var navEl = document.documentElement;
             var navRaw = getComputedStyle(navEl).getPropertyValue('--h-nav-offset').trim();
@@ -228,7 +322,7 @@
         }
 
         function maybeFileChapterHandoff(stepIndex) {
-            if (!isFileChapter || !stickyMq.matches || !fileExitEl || stepIndex !== steps.length - 1) {
+            if (!handoffTargetId || !stickyMq.matches || !fileExitEl || stepIndex !== steps.length - 1) {
                 if (stepIndex < steps.length - 1) fileHandoffDone = false;
                 return;
             }
@@ -241,9 +335,9 @@
             var er = fileExitEl.getBoundingClientRect();
             var lastStep = steps[steps.length - 1];
             var lastRect = lastStep ? lastStep.getBoundingClientRect() : null;
-            var pastStepFour = lastRect && lastRect.bottom < window.innerHeight * 0.36;
+            var pastLastStep = lastRect && lastRect.bottom < window.innerHeight * 0.36;
             var inExitZone = er.top < window.innerHeight * 0.72;
-            if (!pastStepFour && !inExitZone) return;
+            if (!pastLastStep && !inExitZone) return;
 
             fileHandoffDone = true;
             scrollToNextChapter();
@@ -306,10 +400,6 @@
                 }
             });
 
-            if (rail) {
-                rail.style.height = (((i + 1) / steps.length) * 100) + '%';
-            }
-
             if (hintEl) {
                 hintEl.textContent = step.getAttribute('data-df-hint') || '';
                 hintEl.classList.remove('is-leaving', 'is-entering');
@@ -342,12 +432,12 @@
 
         function apply(i) {
             if (i < 0 || i >= steps.length) i = 0;
-            if (isFileChapter && i !== prevIndex && prevIndex >= 0 && !reduced) {
+            if (i !== prevIndex && prevIndex >= 0 && !reduced) {
                 var pin = scrolly.querySelector('.df-story-file-pin');
                 if (pin) pin.classList.add('is-switching');
             }
             applyCore(i);
-            if (isFileChapter && !reduced) {
+            if (!reduced) {
                 var pinEl = scrolly.querySelector('.df-story-file-pin');
                 if (pinEl && pinEl.classList.contains('is-switching')) {
                     window.setTimeout(function () {
@@ -358,17 +448,23 @@
         }
 
         function refresh() {
-            if (isFileChapter && !stickyMq.matches) return;
-            var i = pickScrollyStepIndex(steps);
+            if (!scrollyChapterInView()) return;
+            var i = pickFileChapterStepIndex();
             apply(i);
-            if (isFileChapter) maybeFileChapterHandoff(i);
+            if (stickyMq.matches) {
+                maybeFileChapterHandoff(i);
+            }
         }
 
         apply(0);
-        if (isFileChapter) {
-            syncFilePinLayoutAndRefresh();
+        {
+            syncFilePinLayout();
+            syncScrollTrackHeight();
+            apply(pickFileChapterStepIndex());
             window.requestAnimationFrame(function () {
-                syncFilePinLayoutAndRefresh();
+                syncFilePinLayout();
+                syncScrollTrackHeight();
+                apply(pickFileChapterStepIndex());
             });
             window.addEventListener('resize', syncFilePinLayoutAndRefresh);
             if (typeof stickyMq.addEventListener === 'function') {

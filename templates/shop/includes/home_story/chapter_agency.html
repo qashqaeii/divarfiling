@@ -1,53 +1,126 @@
-{% load static %}
-<section class="df-story-chapter" id="df-story-ch-agency" aria-labelledby="df-story-ch-agency-title">
-    <div class="df-story-chapter__wrap">
-        <header class="df-story-chapter__head">
-            <span class="df-story-chapter__eyebrow" data-df-a>فصل پنجم · قابلیت‌های ۱۳–۱۵</span>
-            <h2 class="df-story-chapter__title" data-df-a id="df-story-ch-agency-title">از فایل‌های خودت تا تصویر بزرگ‌تر کسب‌وکارت</h2>
-        </header>
-
-        <div class="df-story-agency-stack" data-df-a>
-            <div class="df-story-agency-hero">
-                <img
-                    src="{% static 'images/Connected real estate office team-13.webp' %}"
-                    alt="فضای کاری آژانس و نقش‌های تیم"
-                    width="960"
-                    height="640"
-                    loading="lazy"
-                    decoding="async"
-                >
-                <div class="df-story-role-tags">
-                    <span>مدیر</span>
-                    <span>منشی</span>
-                    <span>مشاور</span>
+{% load static decor_icons %}
+<section class="df-story-chapter df-story-chapter--agency" id="df-story-ch-agency" aria-labelledby="df-story-ch-agency-title">
+    <div class="df-story-chapter__wrap df-story-chapter__wrap--file">
+        <div class="df-story-scrolly df-story-scrolly--file df-story-scrolly--agency" data-df-sticky-chapter data-df-scrolly-chapter="agency" data-df-step-count="3">
+            <div class="df-story-file-desktop">
+                <header class="df-story-file-head">
+                    <p class="df-story-file-chapter-label">فصل پنجم · قابلیت‌های ۱۳–۱۵</p>
+                    <h2 class="df-story-file-headline" id="df-story-ch-agency-title">از فایل‌های خودت تا<br><span class="df-story-file-headline__accent">تصویر بزرگ‌تر</span> کسب‌وکارت</h2>
+                    <p class="df-story-file-subtitle">نقشه و تحلیل، فضای تیم و دستیار راهنما — وقتی کار از یک نفر فراتر می‌رود.</p>
+                </header>
+                <div class="df-story-file-pin">
+                    <div class="df-story-file-canvas">
+                        <div class="df-story-file-progress-corner" data-df-file-progress data-df-steps="3" data-df-active="0" dir="ltr" aria-hidden="true">
+                            <span class="df-story-file-progress-corner__text"><span data-df-file-counter>۰۱</span><span class="df-story-file-progress-corner__slash"> / </span><span data-df-file-total>۰۳</span></span>
+                            <span class="df-story-file-progress-corner__meter"><i></i><i></i><i></i></span>
+                        </div>
+                        <div class="df-story-file-body">
+                            <div class="df-story-file-main">
+                                <div class="df-story-file-copy">
+                                    <div class="df-story-file-text-stack" data-df-file-text-stack>
+                                        <div class="df-story-file-text is-active" data-df-text-step="0" id="df-agency-text-0">
+                                            <span class="df-story-file-step__kicker">قدم سیزدهم</span>
+                                            <h3 class="df-story-file-step__title">نقشه و تحلیل بازار املاک</h3>
+                                            <p class="df-story-file-step__body">فایل‌های خودت را روی نقشه ببین و بر پایهٔ داده‌های مجموعه‌هایت تحلیل بگیر — نه آمار کلی و دور از کار روزانهٔ خودت.</p>
+                                            <ul class="df-story-file-step__list">
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'map_pin' size='xs' %}</span><span class="df-story-file-step__list-text">موقعیت فایل‌ها روی نقشه</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'bar_chart' size='xs' %}</span><span class="df-story-file-step__list-text">تحلیل قیمت و تراکم</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'trending_up' size='xs' %}</span><span class="df-story-file-step__list-text">مقایسه در محدودهٔ انتخابی</span></li>
+                                            </ul>
+                                            <p class="df-story-file-step__note">براساس فایل‌های واقعی شما</p>
+                                            <div class="df-story-file-step__actions">
+                                                {% if user.is_authenticated %}
+                                                <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>نمای نقشه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                                {% else %}
+                                                <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>شروع با نقشه</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="df-story-file-text" data-df-text-step="1" id="df-agency-text-1" aria-hidden="true">
+                                            <span class="df-story-file-step__kicker">قدم چهاردهم</span>
+                                            <h3 class="df-story-file-step__title">فضای کاری آژانس و مدیریت تیم</h3>
+                                            <p class="df-story-file-step__body">تیم را با نقش و سطح دسترسی مشخص مدیریت کن — مدیر، منشی و مشاور هر کدام فقط به آنچه نیاز دارند دسترسی دارند.</p>
+                                            <ul class="df-story-file-step__list">
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'team' size='xs' %}</span><span class="df-story-file-step__list-text">نقش‌ها و سطح دسترسی</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'building' size='xs' %}</span><span class="df-story-file-step__list-text">فضای مشترک آژانس</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'users' size='xs' %}</span><span class="df-story-file-step__list-text">همکاری مشاوران روی فایل</span></li>
+                                            </ul>
+                                            <p class="df-story-file-step__note">مناسب رشد از یک نفر به تیم</p>
+                                            <div class="df-story-file-step__actions">
+                                                {% if user.is_authenticated %}
+                                                <a class="df-story-file-step__link" href="{% url 'workspace:agency_hub_dashboard' %}">فضای آژانس</a>
+                                                {% else %}
+                                                <a class="df-story-file-step__link" href="{% url 'register' %}">ساخت تیم آژانس</a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="df-story-file-text" data-df-text-step="2" id="df-agency-text-2" aria-hidden="true">
+                                            <span class="df-story-file-step__kicker">قدم پانزدهم</span>
+                                            <h3 class="df-story-file-step__title">دستیار هوشمند راهنمای پلتفرم</h3>
+                                            <p class="df-story-file-step__body">هر وقت دربارهٔ امکانات سؤال داشتی، راه انجام کار را همان‌جا پیدا کن — از انتقال فایل تا تنظیمات CRM.</p>
+                                            <ul class="df-story-file-step__list">
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'sparkles' size='xs' %}</span><span class="df-story-file-step__list-text">پاسخ به سؤال‌های رایج</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'help_center' size='xs' %}</span><span class="df-story-file-step__list-text">راهنمای گام‌به‌گام</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'zap' size='xs' %}</span><span class="df-story-file-step__list-text">میانبر به بخش درست میزکار</span></li>
+                                            </ul>
+                                            <p class="df-story-file-step__note">مثال: «چطور فایل را به زونکن منتقل کنم؟»</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="df-story-file-visual" data-df-chapter-visual data-df-active-step="0" data-df-hero-key="map">
+                                    <div class="df-story-file-art" data-df-hero>
+                                        <div class="df-story-file-art__glow" aria-hidden="true"></div>
+                                        <img class="df-story-hero__img is-active" data-df-hero-img="map" src="{% static 'images/help-map-view.webp' %}" alt="نقشه فایل‌ها" width="640" height="360" decoding="async">
+                                        <img class="df-story-hero__img" data-df-hero-img="team" src="{% static 'images/Connected real estate office team-13.webp' %}" alt="تیم آژانس" width="960" height="640" loading="lazy" decoding="async">
+                                        <img class="df-story-hero__img" data-df-hero-img="guide" src="{% static 'images/Pearl AI real estate guide-15.webp' %}" alt="دستیار راهنما" width="800" height="640" loading="lazy" decoding="async">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <footer class="df-story-file-foot">
+                            <nav class="df-story-file-rail df-story-file-rail--wide" data-df-file-timeline data-df-steps="3" data-df-active="0" aria-label="مراحل فصل پنجم">
+                                <div class="df-story-file-rail__line" aria-hidden="true"></div>
+                                <ol class="df-story-file-rail__list">
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۱۳</span><span class="df-story-file-rail__label">نقشه و تحلیل</span></li>
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۱۴</span><span class="df-story-file-rail__label">فضای آژانس</span></li>
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۱۵</span><span class="df-story-file-rail__label">دستیار راهنما</span></li>
+                                </ol>
+                            </nav>
+                            <p class="df-story-file-scroll-cue"><span class="df-story-file-scroll-cue__arrow" aria-hidden="true">↓</span> با اسکرول، مقیاس کسب‌وکار را ببین</p>
+                        </footer>
+                    </div>
                 </div>
-                <article class="df-story-block df-story-block--flat">
-                    <span class="df-story-block__num">۱۴</span>
-                    <h3 class="df-story-block__title">فضای کاری آژانس و مدیریت تیم</h3>
-                    <p class="df-story-block__text">همکاری با نقش‌ها و سطح دسترسی مشخص برای مدیر، منشی و مشاوران.</p>
-                </article>
-            </div>
-
-            <div class="df-story-map-row">
-                <figure class="df-story-ui-frame df-story-ui-frame--map">
-                    <span class="df-story-sample-badge">نمایش نمونه</span>
-                    <img src="{% static 'images/help-map-view.webp' %}" alt="نقشه و موقعیت فایل‌ها در میزکار" width="640" height="360" loading="lazy" decoding="async">
-                </figure>
-                <article class="df-story-block df-story-block--flat">
-                    <span class="df-story-block__num">۱۳</span>
-                    <h3 class="df-story-block__title">نقشه و تحلیل بازار املاک</h3>
-                    <p class="df-story-block__text">موقعیت فایل‌ها روی نقشه و تحلیل بر پایهٔ داده‌های مجموعه‌های خودت.</p>
-                </article>
-            </div>
-
-            <div class="df-story-guide-bar df-story-block df-story-block--flat">
-                <img src="{% static 'images/Pearl AI real estate guide-15.webp' %}" alt="" width="72" height="72" loading="lazy" decoding="async" aria-hidden="true">
-                <div>
-                    <span class="df-story-block__num">۱۵</span>
-                    <h3 class="df-story-block__title">دستیار هوشمند راهنمای پلتفرم</h3>
-                    <p class="df-story-block__text">دربارهٔ امکانات سؤال بپرس و راه انجام کارها را پیدا کن.</p>
-                    <p class="df-story-guide-bar__q">«چطور فایل را به زونکن دلخواهم منتقل کنم؟»</p>
+                <div class="df-story-file-scroll-track" aria-hidden="true">
+                    <div class="df-story-scroll-segment is-active" data-df-step="0" data-df-hero-key="map"></div>
+                    <div class="df-story-scroll-segment" data-df-step="1" data-df-hero-key="team"></div>
+                    <div class="df-story-scroll-segment" data-df-step="2" data-df-hero-key="guide"></div>
                 </div>
+                <div class="df-story-file-scroll-exit" data-df-file-exit aria-hidden="true"></div>
+            </div>
+            <div class="df-story-file-mobile">
+                <header class="df-story-file-head">
+                    <p class="df-story-file-chapter-label">فصل پنجم · قابلیت‌های ۱۳–۱۵</p>
+                    <h2 class="df-story-file-headline">از فایل‌های خودت تا <span class="df-story-file-headline__accent">مقیاس آژانس</span></h2>
+                    <p class="df-story-file-subtitle">نقشه، تیم و دستیار راهنما — خلاصه روی موبایل.</p>
+                </header>
+                <article class="df-story-file-mobile-block">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/help-map-view.webp' %}" alt="نقشه و تحلیل" loading="lazy"></div>
+                    <span class="df-story-file-step__kicker">قدم سیزدهم</span>
+                    <h3 class="df-story-file-step__title">نقشه و تحلیل بازار</h3>
+                    <p class="df-story-file-step__body">فایل‌ها روی نقشه و تحلیل بر پایهٔ دادهٔ خودت.</p>
+                </article>
+                <article class="df-story-file-mobile-block">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/Connected real estate office team-13.webp' %}" alt="فضای آژانس" loading="lazy"></div>
+                    <span class="df-story-file-step__kicker">قدم چهاردهم</span>
+                    <h3 class="df-story-file-step__title">فضای آژانس و تیم</h3>
+                    <p class="df-story-file-step__body">نقش‌ها، دسترسی و همکاری مشاوران.</p>
+                </article>
+                <article class="df-story-file-mobile-block">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/Pearl AI real estate guide-15.webp' %}" alt="دستیار راهنما" loading="lazy"></div>
+                    <span class="df-story-file-step__kicker">قدم پانزدهم</span>
+                    <h3 class="df-story-file-step__title">دستیار هوشمند راهنما</h3>
+                    <p class="df-story-file-step__body">سؤال بپرس؛ راه انجام کار در میزکار را پیدا کن.</p>
+                </article>
             </div>
         </div>
     </div>

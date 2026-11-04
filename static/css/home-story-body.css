@@ -47,8 +47,8 @@ html.mk-public[data-theme="dark"] .df-home-story {
     --df-intro-to: var(--df-bg);
 }
 
-/* Cinema local theme (light + dark page) */
-.df-story-chapter--cinema {
+/* Cinema pin chapter uses --df-file-* tokens in home-story-chapters-pin.css */
+.df-story-chapter--cinema:not(:has(.df-story-scrolly--file)) {
     --df-c-bg: #120a1f;
     --df-c-surface: rgba(255, 255, 255, 0.06);
     --df-c-text: #fafafa;
@@ -197,6 +197,14 @@ html.mk-public[data-theme="dark"] .df-home-story {
 
 .mk-home-page .mk-home-body .df-home-story a.df-story-file-step__link {
     color: var(--df-accent-text);
+}
+
+.mk-home-page .mk-home-body .df-story-chapter--file a.df-story-file-step__link,
+.mk-home-page .mk-home-body .df-story-chapter--match a.df-story-file-step__link,
+.mk-home-page .mk-home-body .df-story-chapter--follow a.df-story-file-step__link,
+.mk-home-page .mk-home-body .df-story-chapter--cinema a.df-story-file-step__link,
+.mk-home-page .mk-home-body .df-story-chapter--agency a.df-story-file-step__link {
+    color: var(--df-file-accent);
 }
 
 .mk-home-page .mk-home-body .df-home-story .df-story-mini-flow__step strong {
@@ -407,14 +415,14 @@ html.mk-public[data-theme="dark"] .df-home-story {
 
 /* Chapter 1 file bank: home-story-file-chapter.css */
 
-/* Scrolly */
-.df-story-scrolly {
+/* Scrolly — legacy two-column chapters only (pin chapters use data-df-scrolly-chapter) */
+.df-story-scrolly:not([data-df-scrolly-chapter]) {
     display: grid;
     gap: 1.75rem;
 }
 
 @media (min-width: 992px) and (min-height: 680px) {
-    .df-story-scrolly:not(.df-story-scrolly--file) {
+    .df-story-scrolly:not([data-df-scrolly-chapter]) {
         grid-template-columns: 1fr 1fr;
         gap: clamp(2rem, 4vw, 3.5rem);
         align-items: start;
@@ -423,7 +431,7 @@ html.mk-public[data-theme="dark"] .df-home-story {
     .df-story-scrolly--reverse .df-story-scrolly__visual { order: 2; }
     .df-story-scrolly--reverse .df-story-scrolly__copy { order: 1; }
 
-    .df-story-scrolly:not(.df-story-scrolly--file) .df-story-scrolly__visual {
+    .df-story-scrolly:not([data-df-scrolly-chapter]) .df-story-scrolly__visual {
         position: sticky;
         top: calc(var(--df-nav) + 0.65rem);
     }

@@ -1,43 +1,101 @@
-{% load static %}
+{% load static decor_icons %}
 <section class="df-story-chapter df-story-chapter--cinema" id="df-story-ch-studio" aria-labelledby="df-story-ch-studio-title">
-    <div class="df-story-chapter__wrap df-story-chapter__wrap--cinema">
-        <header class="df-story-chapter__head">
-            <span class="df-story-chapter__eyebrow" data-df-a>فصل چهارم · قابلیت‌های ۱۱–۱۲</span>
-            <h2 class="df-story-chapter__title" data-df-a id="df-story-ch-studio-title">برای هر ملک، یک معرفی دیدنی بساز</h2>
-            <p class="df-story-chapter__desc" data-df-a>تصاویر و مشخصات مرتب برای مشتری؛ محتوای گرافیکی با هویت خودت در استودیو.</p>
-        </header>
-
-        <div class="df-story-cinema-layout" data-df-a data-df-studio>
-            <div class="df-story-cinema-layout__showcase">
-                <img
-                    class="df-story-cinema-layout__studio-img"
-                    src="{% static 'images/Apartment marketing poster studio-11.webp' %}"
-                    alt="استودیوی تولید محتوای معرفی ملک"
-                    width="960"
-                    height="640"
-                    loading="lazy"
-                    decoding="async"
-                >
-                <div class="df-story-cinema-layout__tags">
-                    <span>تصاویر ملک</span>
-                    <span>مشخصات مرتب</span>
-                    <span>هویت برند شما</span>
+    <div class="df-story-chapter__wrap df-story-chapter__wrap--file">
+        <div class="df-story-scrolly df-story-scrolly--file df-story-scrolly--studio" data-df-sticky-chapter data-df-scrolly-chapter="studio" data-df-handoff-target="df-story-ch-agency" data-df-step-count="2">
+            <div class="df-story-file-desktop">
+                <header class="df-story-file-head">
+                    <p class="df-story-file-chapter-label">فصل چهارم · قابلیت‌های ۱۱–۱۲</p>
+                    <h2 class="df-story-file-headline" id="df-story-ch-studio-title">برای هر ملک،<br><span class="df-story-file-headline__accent">معرفی دیدنی</span> بساز</h2>
+                    <p class="df-story-file-subtitle">تصاویر و مشخصات مرتب برای مشتری؛ محتوای گرافیکی با هویت خودت در استودیو.</p>
+                </header>
+                <div class="df-story-file-pin">
+                    <div class="df-story-file-canvas">
+                        <div class="df-story-file-progress-corner" data-df-file-progress data-df-steps="2" data-df-active="0" dir="ltr" aria-hidden="true">
+                            <span class="df-story-file-progress-corner__text"><span data-df-file-counter>۰۱</span><span class="df-story-file-progress-corner__slash"> / </span><span data-df-file-total>۰۲</span></span>
+                            <span class="df-story-file-progress-corner__meter"><i></i><i></i></span>
+                        </div>
+                        <div class="df-story-file-body">
+                            <div class="df-story-file-main df-story-file-main--visual-first">
+                                <div class="df-story-file-visual" data-df-chapter-visual data-df-studio data-df-active-step="0" data-df-hero-key="share">
+                                    <div class="df-story-file-art df-story-file-art--cinema" data-df-hero>
+                                        <div class="df-story-file-art__glow" aria-hidden="true"></div>
+                                        <img class="df-story-hero__img is-active" data-df-hero-img="share" src="{% static 'images/Property card linked to phone-12.webp' %}" alt="اشتراک ملک با یک لینک" width="480" height="360" decoding="async">
+                                        <img class="df-story-hero__img" data-df-hero-img="studio" src="{% static 'images/Apartment marketing poster studio-11.webp' %}" alt="استودیوی تولید محتوا" width="960" height="640" loading="lazy" decoding="async">
+                                    </div>
+                                </div>
+                                <div class="df-story-file-copy">
+                                    <div class="df-story-file-text-stack" data-df-file-text-stack>
+                                        <div class="df-story-file-text is-active" data-df-text-step="0" id="df-studio-text-0">
+                                            <span class="df-story-file-step__kicker">قدم یازدهم</span>
+                                            <h3 class="df-story-file-step__title">اشتراک‌گذاری ملک با یک لینک</h3>
+                                            <p class="df-story-file-step__body">یک صفحهٔ مرتب از تصاویر، قیمت و مشخصات بساز و با یک لینک برای مشتری بفرست — بدون پیام طولانی یا فایل‌های پراکنده.</p>
+                                            <ul class="df-story-file-step__list">
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'share_2' size='xs' %}</span><span class="df-story-file-step__list-text">لینک اختصاصی برای هر ملک</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'external_link' size='xs' %}</span><span class="df-story-file-step__list-text">نمای حرفه‌ای روی موبایل مشتری</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'copy' size='xs' %}</span><span class="df-story-file-step__list-text">کپی سریع در پیام‌رسان</span></li>
+                                            </ul>
+                                            <p class="df-story-file-step__note">مناسب پیگیری بعد از بازدید</p>
+                                            <div class="df-story-file-step__actions">
+                                                {% if user.is_authenticated %}
+                                                <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'workspace:home' %}"><span>اشتراک فایل</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                                {% else %}
+                                                <a class="df-story-file-cta df-story-file-cta--primary" href="{% url 'register' %}"><span>ساخت صفحهٔ ملک</span><span class="df-story-file-cta__arrow" aria-hidden="true">←</span></a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="df-story-file-text" data-df-text-step="1" id="df-studio-text-1" aria-hidden="true">
+                                            <span class="df-story-file-step__kicker">قدم دوازدهم</span>
+                                            <h3 class="df-story-file-step__title">استودیوی تولید محتوای ملک</h3>
+                                            <p class="df-story-file-step__body">پوستر، استوری و قالب‌های آماده با هویت بصری خودت — متن پیشنهادی هوش مصنوعی و خروجی آمادهٔ انتشار.</p>
+                                            <ul class="df-story-file-step__list">
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'sparkles' size='xs' %}</span><span class="df-story-file-step__list-text">متن و چیدمان پیشنهادی</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'layout_grid' size='xs' %}</span><span class="df-story-file-step__list-text">قالب‌های گرافیکی ملک</span></li>
+                                                <li><span class="df-story-file-step__icon" aria-hidden="true">{% decor_icon 'upload' size='xs' %}</span><span class="df-story-file-step__list-text">خروجی برای شبکه‌های اجتماعی</span></li>
+                                            </ul>
+                                            <p class="df-story-file-step__note">استودیوی محتوا داخل همان میزکار</p>
+                                            <div class="df-story-file-step__actions">
+                                                <a class="df-story-file-step__link" href="#h-intro-video">بیشتر دربارهٔ استودیو</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <footer class="df-story-file-foot">
+                            <nav class="df-story-file-rail df-story-file-rail--film" data-df-file-timeline data-df-steps="2" data-df-active="0" aria-label="مراحل فصل چهارم">
+                                <div class="df-story-file-rail__line" aria-hidden="true"></div>
+                                <ol class="df-story-file-rail__list">
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۱۱</span><span class="df-story-file-rail__label">لینک اشتراک</span></li>
+                                    <li class="df-story-file-rail__item"><span class="df-story-file-rail__num">۱۲</span><span class="df-story-file-rail__label">استودیو</span></li>
+                                </ol>
+                            </nav>
+                            <p class="df-story-file-scroll-cue"><span class="df-story-file-scroll-cue__arrow" aria-hidden="true">↓</span> با اسکرول، پشت صحنهٔ معرفی ملک را ببین</p>
+                        </footer>
+                    </div>
                 </div>
+                <div class="df-story-file-scroll-track" aria-hidden="true">
+                    <div class="df-story-scroll-segment is-active" data-df-step="0" data-df-hero-key="share"></div>
+                    <div class="df-story-scroll-segment" data-df-step="1" data-df-hero-key="studio"></div>
+                </div>
+                <div class="df-story-file-scroll-exit" data-df-file-exit aria-hidden="true"></div>
             </div>
-            <div class="df-story-cinema-layout__copy">
-                <article class="df-story-block df-story-block--cinema">
-                    <span class="df-story-block__num">۱۲</span>
-                    <h3 class="df-story-block__title">استودیوی تولید محتوای ملک</h3>
-                    <p class="df-story-block__text">قالب‌های گرافیکی، تصاویر، متن پیشنهادی هوش مصنوعی و هویت بصری خودت.</p>
+            <div class="df-story-file-mobile">
+                <header class="df-story-file-head">
+                    <p class="df-story-file-chapter-label">فصل چهارم · قابلیت‌های ۱۱–۱۲</p>
+                    <h2 class="df-story-file-headline">برای هر ملک، <span class="df-story-file-headline__accent">معرفی دیدنی</span> بساز</h2>
+                    <p class="df-story-file-subtitle">اشتراک با لینک و استودیوی محتوا — روی موبایل هم.</p>
+                </header>
+                <article class="df-story-file-mobile-block">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/Property card linked to phone-12.webp' %}" alt="اشتراک ملک با لینک" loading="lazy"></div>
+                    <span class="df-story-file-step__kicker">قدم یازدهم</span>
+                    <h3 class="df-story-file-step__title">اشتراک‌گذاری با یک لینک</h3>
+                    <p class="df-story-file-step__body">صفحهٔ مرتب از تصاویر و مشخصات برای ارسال سریع به مشتری.</p>
                 </article>
-                <article class="df-story-block df-story-block--cinema">
-                    <span class="df-story-block__num">۱۱</span>
-                    <h3 class="df-story-block__title">اشتراک‌گذاری ملک با یک لینک</h3>
-                    <p class="df-story-block__text">صفحهٔ مرتب از تصاویر و مشخصات برای ارسال به مشتری.</p>
-                    <figure class="df-story-ui-frame">
-                        <span class="df-story-sample-badge">نمایش نمونه</span>
-                        <img src="{% static 'images/Property card linked to phone-12.webp' %}" alt="پیش‌نمایش صفحهٔ اشتراک ملک" width="480" height="360" loading="lazy" decoding="async">
-                    </figure>
+                <article class="df-story-file-mobile-block">
+                    <div class="df-story-file-mobile-art"><img src="{% static 'images/Apartment marketing poster studio-11.webp' %}" alt="استودیوی تولید محتوا" loading="lazy"></div>
+                    <span class="df-story-file-step__kicker">قدم دوازدهم</span>
+                    <h3 class="df-story-file-step__title">استودیوی تولید محتوا</h3>
+                    <p class="df-story-file-step__body">قالب گرافیکی، متن پیشنهادی و هویت بصری خودت.</p>
                 </article>
             </div>
         </div>

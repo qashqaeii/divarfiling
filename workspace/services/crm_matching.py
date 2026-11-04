@@ -734,13 +734,18 @@ def _listing_is_genuine_owner(listing: Listing) -> bool:
 def _crm_match_compatible(customer: Customer, prop: CRMProperty) -> bool:
     if is_builder_customer(customer):
         return True
-    # متقاضی خرید/اجاره قبل از LEAD_TYPES — فقط سرنخ برای هر دو معامله آزاد است.
     if _is_rent_customer(customer):
         return _crm_property_is_rent_listing(prop)
     if _is_sale_customer(customer):
         return _crm_property_is_sale_listing(prop)
-    if customer.customer_type == 'سرنخ':
-        return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
+    from workspace.services.crm_matching_deal_intent import property_matches_customer_deal_intent
+
+    if customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+        return property_matches_customer_deal_intent(
+            customer,
+            is_rent_listing=_crm_property_is_rent_listing(prop),
+            is_sale_listing=_crm_property_is_sale_listing(prop),
+        )
     if customer.customer_type == 'مالک':
         if _profile_has_rent_criteria(customer):
             return _crm_property_is_rent_listing(prop) or _crm_property_is_sale_listing(prop)
@@ -755,8 +760,14 @@ def _listing_match_compatible(customer: Customer, listing: Listing) -> bool:
         return _listing_is_rent_listing(listing)
     if _is_sale_customer(customer):
         return _listing_is_sale_listing(listing)
-    if customer.customer_type == 'سرنخ':
-        return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
+    from workspace.services.crm_matching_deal_intent import property_matches_customer_deal_intent
+
+    if customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
+        return property_matches_customer_deal_intent(
+            customer,
+            is_rent_listing=_listing_is_rent_listing(listing),
+            is_sale_listing=_listing_is_sale_listing(listing),
+        )
     if customer.customer_type == 'مالک':
         if _profile_has_rent_criteria(customer):
             return _listing_is_rent_listing(listing) or _listing_is_sale_listing(listing)
@@ -845,9 +856,16 @@ def _score_crm_property_with_profile(
 ) -> Optional[Dict[str, Any]]:
     is_rent_listing = _crm_property_is_rent_listing(prop)
     is_sale_listing = _crm_property_is_sale_listing(prop)
-    rent_customer = _is_rent_profile(profile)
+    from workspace.services.crm_matching_deal_intent import resolve_listing_scoring_deal
 
-    use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
+    scoring_deal = resolve_listing_scoring_deal(
+        profile,
+        is_rent_listing=is_rent_listing,
+        is_sale_listing=is_sale_listing,
+    )
+    if scoring_deal is None:
+        return None
+    use_rent_price = scoring_deal == 'rent'
     if not _profile_criteria_eligible(
         profile,
         area=prop.area,
@@ -869,11 +887,7 @@ def _score_crm_property_with_profile(
     ):
         return None
 
-    if rent_customer and not is_rent_listing:
-        price_s, price_label = 0.0, ''
-    elif not rent_customer and is_rent_listing and not is_sale_listing:
-        price_s, price_label = 0.0, ''
-    elif use_rent_price:
+    if use_rent_price:
         price_s, price_label = _price_match_rent_profile(profile, prop.deposit, prop.monthly_rent)
     else:
         price_s, price_label = _price_match_sale_profile(profile, prop.sale_price)
@@ -912,6 +926,8 @@ def _score_crm_property_with_profile(
         is_rent_deal=use_rent_price,
         prop_type_known=bool((prop.property_type or '').strip()),
         prop_type_required=type_required,
+        is_rent_listing=is_rent_listing,
+        is_sale_listing=is_sale_listing,
     )
     score = evaluation.score
     reasons = evaluation.reasons
@@ -976,9 +992,18 @@ def _score_listing_with_profile(
     inferred = (prop_type or type_detail.property_type or '').strip()
     is_rent_listing = _listing_is_rent_listing(listing)
     is_sale_listing = _listing_is_sale_listing(listing)
-    rent_customer = _is_rent_profile(profile)
 
     from workspace.services.features import extract_listing_features
+    from workspace.services.crm_matching_deal_intent import resolve_listing_scoring_deal
+
+    scoring_deal = resolve_listing_scoring_deal(
+        profile,
+        is_rent_listing=is_rent_listing,
+        is_sale_listing=is_sale_listing,
+    )
+    if scoring_deal is None:
+        return None
+    use_rent_price = scoring_deal == 'rent'
     feats = extract_listing_features(listing)
     listing_floor = _parse_int_feature(feats.get('floor'))
     listing_year = _parse_int_feature(feats.get('build_year'))
@@ -988,8 +1013,6 @@ def _score_listing_with_profile(
     trusted_neighborhood = listing_trusted_neighborhood(listing) or listing_trusted_makan_mahalle(listing)
     trusted_street = listing_trusted_street(listing)
     location_hints = listing_unverified_location_hints(listing)
-
-    use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
     if not _profile_criteria_eligible(
         profile,
         area=listing.area,
@@ -1011,11 +1034,7 @@ def _score_listing_with_profile(
     ):
         return None
 
-    if rent_customer and not is_rent_listing:
-        price_s, price_label = 0.0, ''
-    elif not rent_customer and is_rent_listing and not is_sale_listing:
-        price_s, price_label = 0.0, ''
-    elif use_rent_price:
+    if use_rent_price:
         price_s, price_label = _price_match_rent_profile(profile, listing.deposit, listing.rent)
     else:
         price_s, price_label = _price_match_sale_profile(profile, listing.price)
@@ -1056,6 +1075,8 @@ def _score_listing_with_profile(
         is_rent_deal=use_rent_price,
         prop_type_known=bool(inferred),
         prop_type_required=type_required,
+        is_rent_listing=is_rent_listing,
+        is_sale_listing=is_sale_listing,
     )
     evaluation.property_type_confidence = type_detail.confidence
     evaluation.property_type_source = type_detail.source
@@ -1163,11 +1184,9 @@ def _crm_match_candidates_filtered_qs(customer: Customer, user):
         if sql_hi is not None:
             qs = qs.filter(sale_price__lte=sql_hi)
     elif customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
-        qs = qs.filter(
-            Q(deal_mode__in=['فروش', 'پیش‌فروش'], sale_price__gt=0)
-            | Q(deal_mode__in=['رهن و اجاره', 'اجاره'], deposit__gt=0)
-            | Q(deal_mode__in=['رهن و اجاره', 'اجاره'], monthly_rent__gt=0)
-        )
+        from workspace.services.crm_matching_deal_intent import apply_lead_deal_intent_crm_sql
+
+        qs = apply_lead_deal_intent_crm_sql(qs, customer, tol=tol)
 
     allowed = _profile_allowed_property_types(customer)
     if allowed:
@@ -1213,11 +1232,9 @@ def _divar_match_candidates_filtered_qs(customer: Customer, user, *, dataset_id=
         if sql_hi is not None:
             qs = qs.filter(price__lte=sql_hi)
     elif customer.customer_type in LEAD_TYPES or customer.customer_type == 'سرنخ':
-        qs = qs.filter(
-            Q(price__gt=0)
-            | Q(deposit__gt=0)
-            | Q(rent__gt=0)
-        )
+        from workspace.services.crm_matching_deal_intent import apply_lead_deal_intent_divar_sql
+
+        qs = apply_lead_deal_intent_divar_sql(qs, customer, tol=tol)
 
     qs = apply_area_min_prefilter(qs, customer.min_area, tol)
     qs = apply_area_max_prefilter(qs, customer.max_area, tol)

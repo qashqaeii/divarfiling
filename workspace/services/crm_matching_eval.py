@@ -9,7 +9,7 @@ MATCH_TIER_ALTERNATIVE = 'alternative'
 MATCH_TIER_INSUFFICIENT = 'insufficient_info'
 MATCH_TIER_REJECTED = 'rejected'
 
-MATCH_ENGINE_VERSION = '3.3.1-geo-evidence'
+MATCH_ENGINE_VERSION = '3.3.2-deal-intent'
 
 from workspace.services.crm_matching_geo import (  # noqa: E402 — shared geo contract
     LOC_STATUS_DIFFERENT,
@@ -59,6 +59,10 @@ def match_eligible_for_auto_notify(match: Dict[str, Any]) -> bool:
     loc = (match.get('location_match_status') or '').strip()
     if loc and loc not in _LOC_STRONG_NOTIFY:
         return False
+    if match.get('deal_intent_supported') is False:
+        return False
+    if match.get('deal_financial_strong') is False:
+        return False
     return True
 
 
@@ -94,6 +98,8 @@ class MatchEvaluation:
     location_match_status: str = ''
     location_confidence: str = ''
     location_match_reason: str = ''
+    deal_intent_supported: bool = True
+    deal_financial_strong: bool = True
 
 
 def compute_match_score(d: DimensionScores) -> int:
@@ -273,7 +279,7 @@ def _dimension_is_alternative(score: float, *, has_criterion: bool) -> bool:
     if score >= 0.99:
         return False
     if score <= 0.2:
-        return False
+        return has_criterion
     if score == 0.5:
         return False
     return True
@@ -287,6 +293,8 @@ def classify_match_tier(
     is_rent_deal: bool,
     prop_type_known: bool,
     prop_type_required: bool,
+    is_rent_listing: bool = False,
+    is_sale_listing: bool = False,
 ) -> MatchEvaluation:
     if not eligible:
         return MatchEvaluation(
@@ -300,6 +308,24 @@ def classify_match_tier(
     score = compute_match_score(dims)
     reasons = build_reasons(dims)
     evidence = profile_evidence_completeness(profile, is_rent_deal=is_rent_deal)
+
+    from workspace.services.crm_matching_deal_intent import (
+        deal_prevents_strong_tier,
+        property_matches_customer_deal_intent,
+    )
+
+    deal_supported = property_matches_customer_deal_intent(
+        profile,
+        is_rent_listing=is_rent_listing,
+        is_sale_listing=is_sale_listing,
+    )
+    deal_strong = not deal_prevents_strong_tier(
+        profile,
+        dims,
+        is_rent_deal=is_rent_deal,
+        is_rent_listing=is_rent_listing,
+        is_sale_listing=is_sale_listing,
+    )
 
     if prop_type_required and not prop_type_known:
         tier = MATCH_TIER_INSUFFICIENT
@@ -332,6 +358,8 @@ def classify_match_tier(
         }
         if geo_weak and _profile_has_geo_criteria(profile):
             tier = MATCH_TIER_ALTERNATIVE
+        elif not deal_strong:
+            tier = MATCH_TIER_ALTERNATIVE
         elif any(alt_flags):
             tier = MATCH_TIER_ALTERNATIVE
         else:
@@ -351,6 +379,8 @@ def classify_match_tier(
         location_match_status=dims.location_match_status or '',
         location_confidence=dims.location_confidence or '',
         location_match_reason=loc_reason,
+        deal_intent_supported=deal_supported,
+        deal_financial_strong=deal_strong,
     )
 
 
@@ -367,4 +397,6 @@ def evaluation_to_result_fields(ev: MatchEvaluation) -> Dict[str, Any]:
         'location_match_status': ev.location_match_status or '',
         'location_confidence': ev.location_confidence or '',
         'location_match_reason': ev.location_match_reason or '',
+        'deal_intent_supported': ev.deal_intent_supported,
+        'deal_financial_strong': ev.deal_financial_strong,
     }

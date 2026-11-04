@@ -272,4 +272,4 @@ class MatchingV32RankingTests(TestCase):
 
 class MatchingV32CacheNamespaceTests(TestCase):
     def test_cache_namespace_v5(self):
-        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v5')
+        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v6')

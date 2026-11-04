@@ -41,7 +41,7 @@ from workspace.services.crm_matching_geo import (
 )
 from workspace.services.crm_matching import _parse_int_feature
 
-MATCH_AUDIT_ENGINE_VERSION = '3.3.1-geo-evidence-readonly'
+MATCH_AUDIT_ENGINE_VERSION = '3.3.2-deal-intent-readonly'
 
 
 def _audit_meta(

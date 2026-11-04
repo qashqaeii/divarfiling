@@ -1,6 +1,20 @@
 {% load static %}
-<section class="h-intro-feature" id="h-intro-video" aria-label="ویدیوی معرفی فایلینگ دیوار">
+<section class="h-intro-feature df-story-video-section" id="h-intro-video" aria-label="ویدیوی معرفی فایلینگ دیوار">
+    {% if intro_video %}
+    <div class="df-story-video-section__head">
+        <div class="df-story-chapter__wrap">
+            <h2 class="df-story-video-section__title" data-df-a>یک نگاه به میزکار، قبل از شروع</h2>
+            <p class="df-story-video-section__lead" data-df-a>ویدیوی کوتاه معرفی — پخش با انتخاب تو.</p>
+        </div>
+    </div>
     <div class="container h-intro-feature__player">
         {% include 'includes/intro_video_showcase.html' with intro_video_skin='marketing' %}
     </div>
+    {% else %}
+    <div class="df-story-video-section__anchor-only">
+        <div class="df-story-chapter__wrap">
+            <p class="df-story-video-section__lead">برای آشنایی بیشتر، <a href="{% url 'education' %}">مرکز آموزش</a> را ببین.</p>
+        </div>
+    </div>
+    {% endif %}
 </section>

@@ -1,0 +1,29 @@
+<section class="h-final-cta h-final-cta--story" aria-labelledby="h-final-cta-title">
+    <div class="h-final-cta__glow" aria-hidden="true"></div>
+    <div class="container h-final-cta__inner mk-reveal df-story-reveal df-story-reveal--init">
+        <h2 class="h-final-cta__title" id="h-final-cta-title">فایل بعدی، مشتری بعدی، پیگیری بعدی؛ همه در یک میزکار</h2>
+        <p class="h-final-cta__desc">حسابت را بساز و اولین بخش از کار روزانه‌ات را منظم کن.</p>
+        <div class="h-final-cta__actions">
+            {% if user.is_authenticated %}
+            <a href="{% url 'workspace:home' %}" class="h-final-cta__btn h-final-cta__btn--primary">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                ورود به میزکار
+            </a>
+            {% else %}
+            <a href="{% url 'register' %}" class="h-final-cta__btn h-final-cta__btn--primary">
+                <i class="fas fa-rocket" aria-hidden="true"></i>
+                شروع کار
+            </a>
+            {% endif %}
+            {% if bot_product %}
+            <a href="{% url 'product_detail' slug=bot_product.slug %}" class="h-final-cta__btn h-final-cta__btn--ghost">
+                دانلود اپ و ربات
+            </a>
+            {% else %}
+            <a href="{% url 'android_tutorial' %}" class="h-final-cta__btn h-final-cta__btn--ghost">
+                دانلود اپ و ربات
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>

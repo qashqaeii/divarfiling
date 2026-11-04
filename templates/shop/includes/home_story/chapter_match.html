@@ -1,0 +1,67 @@
+{% load static %}
+<section class="df-story-chapter df-story-chapter--match" id="df-story-ch-match" aria-labelledby="df-story-ch-match-title">
+    <div class="df-story-chapter__wrap">
+        <header class="df-story-chapter__head df-story-chapter__head--center">
+            <span class="df-story-chapter__eyebrow" data-df-a>فصل دوم · قابلیت‌های ۵–۷</span>
+            <h2 class="df-story-chapter__title df-story-chapter__title--balance" data-df-a id="df-story-ch-match-title">نیاز مشتری را بشناس؛ فایل مناسب را پیشنهاد بده</h2>
+            <p class="df-story-chapter__desc" data-df-a>از ثبت مخاطب و ترجیحات تا دیدن گزینه‌های مناسب — یک مسیر واحد برای انتخاب هدفمند.</p>
+        </header>
+
+        <div class="df-story-scrolly df-story-scrolly--reverse" data-df-sticky-chapter data-df-stage-ratio="5/4">
+            <div class="df-story-scrolly__visual" data-df-chapter-visual data-df-tag-set="budget">
+                <div class="df-story-hero df-story-hero--swap" data-df-hero>
+                    <img
+                        class="df-story-hero__img is-active"
+                        data-df-hero-img="prefs"
+                        src="{% static 'images/Customer preferences panel with heart bookmark-6.webp' %}"
+                        alt="ثبت بودجه، محله و ترجیحات مشتری"
+                        width="800"
+                        height="640"
+                        decoding="async"
+                    >
+                    <img
+                        class="df-story-hero__img"
+                        data-df-hero-img="match"
+                        src="{% static 'images/Customer-to-property match-7.webp' %}"
+                        alt="پیشنهاد ملک براساس نیاز مشتری"
+                        width="800"
+                        height="640"
+                        loading="lazy"
+                        decoding="async"
+                    >
+                    <span class="df-story-float df-story-float--a" data-df-float="budget">بودجه</span>
+                    <span class="df-story-float df-story-float--b" data-df-float="hood">محله</span>
+                    <span class="df-story-float df-story-float--c" data-df-float="area">متراژ</span>
+                    <span class="df-story-float df-story-float--d" data-df-float="suggest">گزینه‌های پیشنهادی</span>
+                    <span class="df-story-hero__link" aria-hidden="true"></span>
+                </div>
+            </div>
+
+            <div class="df-story-scrolly__copy">
+                <div class="df-story-rail" aria-hidden="true"><i data-df-rail-fill></i></div>
+                <div class="df-story-blocks">
+                    <article class="df-story-block" data-df-step="0" data-df-hero-key="prefs" data-df-tags="budget">
+                        <span class="df-story-block__num">۵</span>
+                        <h3 class="df-story-block__title">مدیریت مخاطبان و مشتریان</h3>
+                        <p class="df-story-block__text">تماس، مشخصات و سوابق ارتباط با مشتریان و مالکان در یکجا.</p>
+                    </article>
+                    <article class="df-story-block" data-df-step="1" data-df-hero-key="prefs" data-df-tags="hood">
+                        <span class="df-story-block__num">۶</span>
+                        <h3 class="df-story-block__title">ثبت نیاز و ترجیحات مشتری</h3>
+                        <p class="df-story-block__text">بودجه، شهر، محله، متراژ و ویژگی‌های ملک برای هر مشتری.</p>
+                    </article>
+                    <article class="df-story-block df-story-block--cta" data-df-step="2" data-df-hero-key="match" data-df-tags="suggest" data-df-connect="1">
+                        <span class="df-story-block__num">۷</span>
+                        <h3 class="df-story-block__title">پیشنهاد هوشمند ملک به مشتری</h3>
+                        <p class="df-story-block__text">گزینه‌ها از فایل شخصی و مجموعه‌های استخراج‌شده، براساس ترجیحات ثبت‌شده.</p>
+                        {% if user.is_authenticated %}
+                        <a class="df-story-btn df-story-btn--primary" href="{% url 'workspace:crm_contacts' %}?open=drawer-contact">شروع ثبت مشتری</a>
+                        {% else %}
+                        <a class="df-story-btn df-story-btn--primary" href="{% url 'register' %}">شروع ثبت مشتری</a>
+                        {% endif %}
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

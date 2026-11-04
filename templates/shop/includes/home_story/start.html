@@ -1,0 +1,39 @@
+<section class="df-story-start" id="df-story-start" aria-labelledby="df-story-start-title">
+    <div class="df-story-chapter__wrap">
+        <header class="df-story-chapter__head df-story-chapter__head--center">
+            <span class="df-story-chapter__eyebrow df-a" data-df-a>شروع کار</span>
+            <h2 class="df-story-chapter__title df-a" data-df-a id="df-story-start-title">از اولین فایل شروع کن</h2>
+            <p class="df-story-chapter__desc df-a" data-df-a>سه قدم کوتاه تا میزکار منظم؛ ابزار استخراج را هر وقت لازم شد فعال کن.</p>
+        </header>
+
+        <ol class="df-story-start__steps df-a" data-df-a>
+            <li class="df-story-start__step">
+                <strong>۱. حساب بساز</strong>
+                <span>ثبت‌نام رایگان برای میزکار وب و CRM.</span>
+            </li>
+            <li class="df-story-start__step">
+                <strong>۲. اولین مشتری یا ملک را ثبت کن</strong>
+                <span>مخاطب، فایل شخصی یا مجموعه را در همان حساب شروع کن.</span>
+            </li>
+            <li class="df-story-start__step">
+                <strong>۳. ابزارهای موردنیازت را فعال کن</strong>
+                <span>اپ اندروید یا ربات ویندوز برای استخراج؛ لایسنس برای فایلینگ عمیق، تحلیل و نقشه.</span>
+            </li>
+        </ol>
+
+        <div class="df-story-start__paths df-a" data-df-a>
+            {% if user.is_authenticated %}
+            <a class="df-story-start__btn df-story-start__btn--primary" href="{% url 'workspace:home' %}">شروع کار با میزکار</a>
+            {% else %}
+            <a class="df-story-start__btn df-story-start__btn--primary" href="{% url 'register' %}">شروع کار با میزکار</a>
+            {% endif %}
+            <a class="df-story-start__btn df-story-start__btn--ghost" href="{% url 'android_tutorial' %}">مشاهدهٔ ابزارهای اندروید و ویندوز</a>
+        </div>
+
+        <p class="df-story-start__note df-a" data-df-a>
+            CRM، مخاطبین، معاملات، فایل شخصی، یادآور، تقویم، قالب پیام، اتوماسیون و مدیریت تیم در میزکار وب بدون لایسنس در دسترس است.
+            فایلینگ مجموعهٔ دیوار، تحلیل چندلایه، نقشه و برخی قابلیت‌های پیشرفته با لایسنس ربات فعال می‌شوند.
+            جزئیات پلن‌ها را در <a href="{% url 'license_guide' %}">راهنمای لایسنس</a> ببین.
+        </p>
+    </div>
+</section>

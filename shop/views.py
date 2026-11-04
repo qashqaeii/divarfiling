@@ -71,7 +71,7 @@ class HomeView(TemplateView):
             '@type': 'SoftwareApplication',
             'name': get_site_name(),
             'applicationCategory': 'BusinessApplication',
-            'operatingSystem': 'Windows, Web',
+            'operatingSystem': 'Windows, Web, Android',
             'description': context['meta_description'],
             'url': site_url,
             'inLanguage': 'fa-IR',

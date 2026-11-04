@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=93">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=17">
 <link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=34">
-<link rel="stylesheet" href="{% static 'css/home-intel-theme.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/home-story-body.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/home-mobile.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'css/mk-intro-video-showcase.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
@@ -160,56 +160,17 @@
 
 <div class="mk-home-body">
 
-{# ─── آمار لایو ─── #}
-<section class="h-stats h-stats--strip" aria-label="آمار زنده پلتفرم">
-    <div class="container">
-        <div class="h-stats__strip mk-reveal">
-            <div class="h-stats__meta">
-                <span class="h-stats__live">
-                    <span class="h-stats__live-dot" aria-hidden="true"></span>
-                    <span>سیگنال پلتفرم</span>
-                </span>
-                {% if stats.uptime_label %}
-                <span class="h-stats__uptime">
-                    <i class="fas fa-clock" aria-hidden="true"></i> {{ stats.uptime_label }}
-                </span>
-                {% endif %}
-            </div>
-            <div class="h-stats__grid" role="list">
-                <article class="h-stats__item" role="listitem">
-                    <span class="h-stats__val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
-                    <span class="h-stats__lbl">کاربر فعال</span>
-                </article>
-                <span class="h-stats__sep" aria-hidden="true"></span>
-                <article class="h-stats__item" role="listitem">
-                    <span class="h-stats__val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
-                    <span class="h-stats__lbl">خرید موفق</span>
-                </article>
-                <span class="h-stats__sep" aria-hidden="true"></span>
-                <article class="h-stats__item" role="listitem">
-                    <span class="h-stats__val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
-                    <span class="h-stats__lbl">لایسنس فعال</span>
-                </article>
-                <span class="h-stats__sep" aria-hidden="true"></span>
-                <article class="h-stats__item" role="listitem">
-                    <span class="h-stats__val h-stats__val--static">{{ stats.satisfaction_rate }}<small>%</small></span>
-                    <span class="h-stats__lbl">رضایت کاربران</span>
-                </article>
-            </div>
-        </div>
-    </div>
-</section>
+<div class="df-home-story" data-df-home-story>
+{% include 'shop/includes/home_story/body.html' %}
+</div>
 
 {% include 'shop/includes/home_intro_video.html' %}
 
-{% include 'shop/includes/home_intelligence.html' %}
-{% include 'shop/includes/home_compare.html' %}
-{% include 'shop/includes/home_flow.html' %}
+{% include 'shop/includes/home_story/start.html' %}
 
+{% include 'shop/includes/home_story/faq.html' %}
 
-{% include 'shop/includes/home_faq.html' %}
-
-{% include 'shop/includes/home_final_cta.html' %}
+{% include 'shop/includes/home_story/final_cta.html' %}
 
 </div>{# /.mk-home-body #}
 
@@ -231,6 +192,6 @@
 
 {% block extra_js %}
 <script src="{% static 'js/mizkar-home.js' %}?v=16" defer></script>
-<script src="{% static 'js/home-story.js' %}?v=15" defer></script>
+<script src="{% static 'js/df-home-story.js' %}?v=7" defer></script>
 {% if intro_video and intro_video.can_embed %}<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>{% endif %}
 {% endblock %}

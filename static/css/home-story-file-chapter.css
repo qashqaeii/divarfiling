@@ -602,29 +602,73 @@
 
 .df-story-file-rail {
     position: relative;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.65rem;
+    padding: 1.1rem 1.15rem 0.95rem;
+    border-radius: 1rem;
+    border: 1px solid color-mix(in srgb, var(--df-file-accent) 12%, var(--df-file-line));
+    background:
+        linear-gradient(165deg, color-mix(in srgb, var(--df-file-accent) 5%, var(--df-file-surface)) 0%, var(--df-file-surface) 48%, color-mix(in srgb, var(--df-file-bg) 88%, var(--df-file-surface)) 100%);
+    box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 65%, transparent) inset,
+        0 12px 32px -26px color-mix(in srgb, var(--df-file-accent) 22%, transparent);
 }
 
 .df-story-file-rail__line {
     position: absolute;
-    top: 0.85rem;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--df-file-line);
+    top: calc(1.1rem + 1.05rem);
+    left: 1.35rem;
+    right: 1.35rem;
+    height: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--df-file-muted) 14%, transparent);
+    overflow: hidden;
+    z-index: 0;
+}
+
+.df-story-file-rail__line::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 25%;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        var(--df-file-accent),
+        color-mix(in srgb, var(--df-file-accent) 72%, #c4b5fd)
+    );
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-df-file-timeline][data-df-active="0"] .df-story-file-rail__line::after {
+    width: 25%;
+}
+
+[data-df-file-timeline][data-df-active="1"] .df-story-file-rail__line::after {
+    width: 50%;
+}
+
+[data-df-file-timeline][data-df-active="2"] .df-story-file-rail__line::after {
+    width: 75%;
+}
+
+[data-df-file-timeline][data-df-active="3"] .df-story-file-rail__line::after {
+    width: 100%;
 }
 
 .df-story-file-rail__list {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 0.15rem 0 0;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
+    gap: 0.35rem;
+    position: relative;
+    z-index: 1;
 }
 
 .df-story-file-rail__item + .df-story-file-rail__item {
-    border-inline-start: 1px solid var(--df-file-line);
+    border-inline-start: none;
 }
 
 .df-story-file-rail__item {
@@ -632,8 +676,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0 0.35rem;
+    gap: 0.55rem;
+    padding: 0 0.25rem;
     text-align: center;
 }
 
@@ -641,25 +685,42 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.65rem;
-    height: 1.65rem;
+    width: 2.125rem;
+    height: 2.125rem;
     border-radius: 999px;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 800;
+    font-variant-numeric: tabular-nums;
     color: var(--df-file-muted);
     background: var(--df-file-rail-num-bg);
-    border: 1px solid var(--df-file-line);
-    z-index: 1;
-    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    border: 2px solid color-mix(in srgb, var(--df-file-muted) 18%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--df-file-text) 4%, transparent);
+    transition:
+        background 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease,
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .df-story-file-rail__label {
-    font-size: 0.72rem;
+    display: block;
+    max-width: 9.5rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.4;
     color: var(--df-file-muted);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, font-weight 0.3s ease;
+}
+
+/* مراحل گذشته — دایرهٔ پررنگ‌تر */
+[data-df-file-timeline][data-df-active="1"] .df-story-file-rail__item:nth-child(1) .df-story-file-rail__num,
+[data-df-file-timeline][data-df-active="2"] .df-story-file-rail__item:nth-child(-n+2) .df-story-file-rail__num,
+[data-df-file-timeline][data-df-active="3"] .df-story-file-rail__item:nth-child(-n+3) .df-story-file-rail__num {
+    background: color-mix(in srgb, var(--df-file-accent) 18%, var(--df-file-rail-num-bg));
+    border-color: color-mix(in srgb, var(--df-file-accent) 45%, transparent);
+    color: var(--df-file-accent);
 }
 
 [data-df-file-timeline][data-df-active="0"] .df-story-file-rail__item:nth-child(1) .df-story-file-rail__num,
@@ -669,16 +730,44 @@
     background: var(--df-file-accent);
     border-color: var(--df-file-accent);
     color: #fff;
+    transform: scale(1.06);
+    box-shadow:
+        0 0 0 4px var(--df-file-accent-soft),
+        0 10px 24px -8px color-mix(in srgb, var(--df-file-accent) 45%, transparent);
 }
 
 [data-df-file-timeline][data-df-active="0"] .df-story-file-rail__item:nth-child(1) .df-story-file-rail__label,
 [data-df-file-timeline][data-df-active="1"] .df-story-file-rail__item:nth-child(2) .df-story-file-rail__label,
 [data-df-file-timeline][data-df-active="2"] .df-story-file-rail__item:nth-child(3) .df-story-file-rail__label,
 [data-df-file-timeline][data-df-active="3"] .df-story-file-rail__item:nth-child(4) .df-story-file-rail__label {
-    color: var(--df-file-accent);
+    color: var(--df-file-text);
     font-weight: 800;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    text-decoration: none;
+}
+
+[data-df-file-timeline][data-df-active="0"] .df-story-file-rail__item:nth-child(1) .df-story-file-rail__label::after,
+[data-df-file-timeline][data-df-active="1"] .df-story-file-rail__item:nth-child(2) .df-story-file-rail__label::after,
+[data-df-file-timeline][data-df-active="2"] .df-story-file-rail__item:nth-child(3) .df-story-file-rail__label::after,
+[data-df-file-timeline][data-df-active="3"] .df-story-file-rail__item:nth-child(4) .df-story-file-rail__label::after {
+    content: "";
+    display: block;
+    width: 1.35rem;
+    height: 0.2rem;
+    margin: 0.4rem auto 0;
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        var(--df-file-accent),
+        color-mix(in srgb, var(--df-file-accent) 55%, transparent)
+    );
+}
+
+html.mk-public[data-theme="dark"] .df-story-file-rail {
+    box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 6%, transparent) inset,
+        0 16px 40px -28px rgba(0, 0, 0, 0.45);
+    background:
+        linear-gradient(165deg, color-mix(in srgb, var(--df-file-accent) 8%, var(--df-file-surface)) 0%, var(--df-file-surface) 55%, #0f1524 100%);
 }
 
 .df-story-file-scroll-cue {
@@ -962,13 +1051,32 @@ html.mk-public[data-theme="dark"] .df-story-chapter--file {
         object-fit: contain;
     }
 
-    .df-story-file-rail--compact .df-story-file-rail__list {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
+    .df-story-file-rail--compact {
+        padding: 0.85rem 0.75rem;
+        border-radius: 0.85rem;
     }
 
-    .df-story-file-rail--compact .df-story-file-rail__line,
-    .df-story-file-rail--compact .df-story-file-rail__item::after {
+    .df-story-file-rail--compact .df-story-file-rail__list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem 0.5rem;
+    }
+
+    .df-story-file-rail--compact .df-story-file-rail__line {
+        display: none;
+    }
+
+    .df-story-file-rail--compact .df-story-file-rail__num {
+        width: 1.85rem;
+        height: 1.85rem;
+        font-size: 0.7rem;
+    }
+
+    .df-story-file-rail--compact .df-story-file-rail__label {
+        font-size: 0.7rem;
+        max-width: none;
+    }
+
+    .df-story-file-rail--compact .df-story-file-rail__label::after {
         display: none;
     }
 
@@ -985,9 +1093,11 @@ html.mk-public[data-theme="dark"] .df-story-chapter--file {
 @media (prefers-reduced-motion: reduce) {
     .df-story-chapter--file .df-story-file-text,
     .df-story-chapter--file .df-story-hero__img,
-    .df-story-chapter--file .df-story-file-scroll-cue__arrow {
+    .df-story-chapter--file .df-story-file-scroll-cue__arrow,
+    .df-story-chapter--file .df-story-file-rail__line::after,
+    .df-story-chapter--file .df-story-file-rail__num {
         animation: none !important;
-        transition: opacity 0.2s ease;
+        transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
         transform: none;
     }
 }

@@ -124,6 +124,13 @@ function main() {
     for (const rel of GENERATOR_FILES) {
         source_hashes[rel] = sha256File(path.join(ROOT, rel));
     }
+    const staticRoot = path.join(ROOT, 'static');
+    for (const [templateId, overlayRel] of Object.entries(OVERLAY_BY_TEMPLATE)) {
+        const overlayPath = path.join(staticRoot, overlayRel);
+        if (fs.existsSync(overlayPath)) {
+            source_hashes[`overlay/${templateId}`] = sha256File(overlayPath);
+        }
+    }
     const revisionPayload = JSON.stringify(source_hashes);
     const layout_revision = crypto.createHash('sha256').update(revisionPayload).digest('hex').slice(0, 16);
     const manifest_version = `pcs-manifest-${layout_revision}`;

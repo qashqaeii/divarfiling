@@ -67,10 +67,27 @@ def _price_display(prop: CRMProperty) -> Dict[str, Any]:
     return {'show': False, 'label': '', 'deal_mode': prop.deal_mode or ''}
 
 
+def confidential_studio_title(prop: CRMProperty) -> str:
+    """عنوان نمایشی برای اشتراک محرمانه — بدون محله/آدرس خام در title."""
+    ptype = (prop.property_type or 'ملک').strip()
+    city = (prop.city or '').strip()
+    if city:
+        return f'{ptype} — {city}'
+    return ptype
+
+
 def _headline(prop: CRMProperty, *, mask_sensitive: bool = False) -> str:
     title = (prop.title or '').strip()
     if mask_sensitive:
-        return title or prop.property_type or 'ملک'
+        parts: List[str] = []
+        if prop.area:
+            parts.append(f'{format_area(prop.area)}')
+        rooms = _rooms_label(prop.rooms or '')
+        if rooms:
+            parts.append(rooms)
+        if parts:
+            return '، '.join(parts)
+        return confidential_studio_title(prop)
     parts = []
     if prop.area:
         parts.append(f'{format_area(prop.area)}')
@@ -203,9 +220,15 @@ def build_studio_property_payload(
 
     from workspace.services.property_content_studio.feature_catalog import build_editor_feature_catalog
 
+    display_title = (
+        confidential_studio_title(prop)
+        if mask_sensitive
+        else (prop.title or '').strip()
+    )
+
     return {
         'id': prop.pk,
-        'title': (prop.title or '').strip(),
+        'title': display_title,
         'headline': _headline(prop, mask_sensitive=mask_sensitive),
         'property_type': prop.property_type or '',
         'deal_mode': prop.deal_mode or '',

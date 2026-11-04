@@ -25,8 +25,10 @@ class PropertyContentStudioAIContextMaskTests(TestCase):
 
     def test_studio_context_masks_title_token_and_notes_paths(self):
         ctx = _studio_context(self.user, self.prop, 'divar_titles', mask_sensitive=True)
-        self.assertNotEqual(ctx.get('title'), self.prop.title)
+        self.assertNotIn('محله مخفی', ctx.get('title') or '')
+        self.assertNotIn(self.prop.title, ctx.get('title') or '')
         self.assertEqual(ctx.get('token'), '')
         self.assertEqual(ctx.get('tab_extra'), '')
         self.assertEqual(ctx.get('tab_text'), '')
         self.assertNotIn('محله مخفی', ctx.get('studio', {}).get('location_line') or '')
+        self.assertNotIn('محله مخفی', ctx.get('studio', {}).get('title') or '')

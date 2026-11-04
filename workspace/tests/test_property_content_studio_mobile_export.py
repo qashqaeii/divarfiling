@@ -154,3 +154,50 @@ class PropertyContentStudioMobileExportTests(TestCase):
             exported['posters']['pearlescent']['scene']['layers'][0]['text'],
             'عنوان سفارشی مشاور',
         )
+
+    def test_confidential_title_and_headline_hide_neighborhood_in_raw_title(self):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان ۱۲۰ متری ونک',
+            property_type='آپارتمان',
+            neighborhood='ونک',
+            city='تهران',
+            area=120,
+        )
+        masked = build_studio_property_payload(prop, mask_sensitive=True)
+        self.assertNotIn('ونک', masked['title'])
+        self.assertNotIn('ونک', masked['headline'])
+        self.assertIn('تهران', masked['title'])
+
+    def test_detached_redacts_when_text_contains_neighborhood(self):
+        draft_payload = {
+            'posters': {
+                'pearlescent': {
+                    'scene': {
+                        'schemaVersion': 2,
+                        'layers': [
+                            {
+                                'id': 'headline-1',
+                                'type': 'text',
+                                'binding': {
+                                    'source': 'property',
+                                    'field': 'headline',
+                                    'mode': 'detached',
+                                },
+                                'text': 'فروش در ونک',
+                            },
+                        ],
+                        'layerOrder': ['headline-1'],
+                    },
+                },
+            },
+        }
+        exported = export_draft_payload_for_access(
+            draft_payload,
+            mask_sensitive=True,
+            prop=self.prop,
+        )
+        self.assertEqual(
+            exported['posters']['pearlescent']['scene']['layers'][0]['text'],
+            '',
+        )

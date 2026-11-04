@@ -31,6 +31,11 @@ class ManifestUnavailableError(RuntimeError):
     pass
 
 
+class ManifestVersionMismatchError(ManifestUnavailableError):
+    """File manifest_version differs from index — client must refresh catalog."""
+    pass
+
+
 @lru_cache(maxsize=1)
 def _load_index() -> Dict[str, Any]:
     index_path = _MANIFESTS_ROOT / 'index.json'
@@ -68,7 +73,14 @@ def _static_root() -> Path:
     return Path(settings.BASE_DIR) / 'static'
 
 
-def absolute_static_url(request, rel_path: str) -> str:
+def _cache_bust_static_url(url: str, revision: str) -> str:
+    if not url or not revision:
+        return url
+    sep = '&' if '?' in url else '?'
+    return f'{url}{sep}v={revision}'
+
+
+def absolute_static_url(request, rel_path: str, *, revision: str = '') -> str:
     rel = (rel_path or '').strip().lstrip('/')
     if not rel:
         return ''
@@ -76,8 +88,9 @@ def absolute_static_url(request, rel_path: str) -> str:
         return ''
     url = static(rel)
     if request:
-        return request.build_absolute_uri(url)
-    return url
+        url = request.build_absolute_uri(url)
+    rev = revision or layout_revision()
+    return _cache_bust_static_url(url, rev)
 
 
 def _overlay_rel_for_template(template_id: str) -> str:
@@ -90,6 +103,7 @@ def _overlay_rel_for_template(template_id: str) -> str:
 def build_templates_catalog(request) -> List[Dict[str, Any]]:
     """Metadata for all active templates (mobile session)."""
     ver = manifest_version()
+    rev = layout_revision()
     out: List[Dict[str, Any]] = []
     for row in POSTER_TEMPLATES:
         tid = row['id']
@@ -98,7 +112,7 @@ def build_templates_catalog(request) -> List[Dict[str, Any]]:
             'template_id': tid,
             'label': row.get('label') or '',
             'description': row.get('description') or '',
-            'overlay_url': absolute_static_url(request, overlay_rel) if overlay_rel else '',
+            'overlay_url': absolute_static_url(request, overlay_rel, revision=rev) if overlay_rel else '',
             'supported_formats': list(_FORMAT_IDS),
             'manifest_version': ver,
         }
@@ -109,6 +123,7 @@ def build_templates_catalog(request) -> List[Dict[str, Any]]:
 def enrich_property_templates_for_mobile(property_payload: Dict[str, Any], request) -> Dict[str, Any]:
     out = dict(property_payload)
     ver = manifest_version()
+    rev = layout_revision()
     templates: List[Dict[str, Any]] = []
     for row in out.get('templates') or []:
         if not isinstance(row, dict):
@@ -118,7 +133,7 @@ def enrich_property_templates_for_mobile(property_payload: Dict[str, Any], reque
         templates.append({
             **row,
             'template_id': tid,
-            'overlay_url': absolute_static_url(request, overlay_rel) if overlay_rel else '',
+            'overlay_url': absolute_static_url(request, overlay_rel, revision=rev) if overlay_rel else '',
             'supported_formats': list(_FORMAT_IDS),
             'manifest_version': ver,
         })
@@ -160,9 +175,9 @@ def get_template_manifest(
     file_version = str(raw.get('manifest_version') or '')
     index_version = manifest_version()
     if index_version and file_version and file_version != index_version:
-        raise ManifestNotFoundError('manifest version mismatch')
+        raise ManifestVersionMismatchError('manifest version mismatch')
     overlay_rel = _overlay_rel_for_template(tid)
-    overlay_url = absolute_static_url(request, overlay_rel) if overlay_rel else ''
+    overlay_url = absolute_static_url(request, overlay_rel, revision=layout_revision()) if overlay_rel else ''
 
     scene = raw.get('scene')
     if isinstance(scene, dict):

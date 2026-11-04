@@ -11,6 +11,7 @@ from django.test import SimpleTestCase
 from workspace.services.property_content_studio.constants import POSTER_TEMPLATES, OUTPUT_FORMATS
 from workspace.services.property_content_studio.manifest import (
     ManifestNotFoundError,
+    ManifestVersionMismatchError,
     get_template_manifest,
     manifest_version,
 )
@@ -154,6 +155,6 @@ class PCSManifestCatalogTests(SimpleTestCase):
                     'manifest_version': 'pcs-manifest-fileonly',
                 },
             ):
-                with self.assertRaises(ManifestNotFoundError):
+                with self.assertRaises(ManifestVersionMismatchError):
                     get_template_manifest('pearlescent', 'story', request=None)
         manifest_mod.clear_manifest_cache()

@@ -31,6 +31,7 @@ from workspace.services.property_content_studio.draft_validate import DraftValid
 from workspace.services.property_content_studio.manifest import (
     ManifestNotFoundError,
     ManifestUnavailableError,
+    ManifestVersionMismatchError,
     build_templates_catalog,
     enrich_property_templates_for_mobile,
     get_template_manifest,
@@ -256,6 +257,12 @@ class PropertyContentStudioTemplateManifestView(APIView):
             manifest = get_template_manifest(template_id, fmt, request)
         except ManifestNotFoundError:
             return api_error('قالب یا فرمت نامعتبر است', code='NOT_FOUND', status=404)
+        except ManifestVersionMismatchError:
+            return api_error(
+                'نسخه Manifest با سرور هماهنگ نیست؛ دوباره بارگذاری کنید.',
+                code='MANIFEST_VERSION_MISMATCH',
+                status=503,
+            )
         except ManifestUnavailableError as exc:
             return api_error(str(exc), code='MANIFEST_UNAVAILABLE', status=503)
         return api_ok(manifest)

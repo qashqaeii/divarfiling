@@ -26,18 +26,19 @@ _STRAY_DOT_SEP = re.compile(r'(?:\s·\s)+$|^(?:\s·\s)+')
 
 
 def collect_redact_fragments(prop: CRMProperty) -> List[str]:
-    """Substrings that must not appear in confidential mobile responses."""
+    """Substrings derived from confidential property fields (not user detached copy).
+
+    Policy: redact draft text that contains these fragments; preserve detached text
+    that does not echo neighborhood, address, or full location_line.
+    """
     fragments: Set[str] = set()
     if prop.neighborhood:
         fragments.add(str(prop.neighborhood).strip())
     if prop.address:
         fragments.add(str(prop.address).strip())
-    title = (prop.title or '').strip()
-    if title:
-        fragments.add(title)
     full = build_studio_property_payload(prop, mask_sensitive=False)
     masked = build_studio_property_payload(prop, mask_sensitive=True)
-    for key in ('neighborhood', 'location_line', 'file_code', 'headline'):
+    for key in ('neighborhood', 'location_line', 'file_code'):
         a = str(full.get(key) or '').strip()
         b = str(masked.get(key) or '').strip()
         if a and a != b:
@@ -45,6 +46,13 @@ def collect_redact_fragments(prop: CRMProperty) -> List[str]:
     loc_full = str(full.get('location_line') or '').strip()
     if loc_full:
         fragments.add(loc_full)
+    raw_title = (prop.title or '').strip()
+    if raw_title and prop.neighborhood and prop.neighborhood in raw_title:
+        fragments.add(raw_title)
+    unmasked_headline = str(full.get('headline') or '').strip()
+    masked_headline = str(masked.get('headline') or '').strip()
+    if unmasked_headline and unmasked_headline != masked_headline:
+        fragments.add(unmasked_headline)
     fragments.add(f'#{prop.pk}')
     return sorted((f for f in fragments if len(f) >= 2), key=len, reverse=True)
 
@@ -81,11 +89,12 @@ def _redact_layer_text(layer: Dict[str, Any], fragments: List[str]) -> None:
         if mode == 'linked':
             layer['text'] = ''
             return
-        if mode == 'override' and _text_leaks_sensitive(layer.get('text'), fragments):
-            layer['text'] = ''
-            return
-        if mode == 'detached' and _text_leaks_sensitive(layer.get('text'), fragments):
-            layer['text'] = ''
+        if mode in ('override', 'detached'):
+            text = str(layer.get('text') or '')
+            if _text_leaks_sensitive(text, fragments):
+                layer['text'] = ''
+            else:
+                layer['text'] = _clean_stray_separators(text)
             return
     elif layer.get('text') is not None:
         if _text_leaks_sensitive(layer.get('text'), fragments):

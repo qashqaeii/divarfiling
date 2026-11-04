@@ -146,8 +146,15 @@ def build(
     bench = _benchmark_block(benchmark)
     description = tab_text or tab_extra
 
+    if mask_sensitive:
+        from workspace.services.property_content_studio.adapter import confidential_studio_title
+
+        safe_title = confidential_studio_title(prop)
+    else:
+        safe_title = prop.title or ''
+
     return {
-        'title': prop.title or '',
+        'title': safe_title,
         'token': prop.token or '',
         'deal_mode': prop.deal_mode or '',
         'price_label': _price_label(prop),

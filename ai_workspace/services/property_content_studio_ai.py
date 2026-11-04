@@ -131,7 +131,9 @@ def _studio_context(
     )
     studio = build_studio_property_payload(prop, mask_sensitive=mask_sensitive)
     if mask_sensitive:
-        base['title'] = (prop.property_type or 'ملک').strip()[:120]
+        from workspace.services.property_content_studio.adapter import confidential_studio_title
+
+        base['title'] = confidential_studio_title(prop)[:120]
         base['token'] = ''
         base['tab_extra'] = ''
         base['tab_text'] = ''

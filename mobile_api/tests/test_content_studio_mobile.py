@@ -174,6 +174,8 @@ class MobileContentStudioAPITests(APITestCase):
         prop = res.json()['data']['property']
         self.assertEqual(prop.get('file_code'), '')
         self.assertNotIn('ونک', prop.get('location_line') or '')
+        self.assertNotIn('ونک', prop.get('title') or '')
+        self.assertNotIn('ونک', prop.get('headline') or '')
 
     def test_session_collaborative_shows_location(self):
         client = self._share_collaborative()
@@ -207,3 +209,26 @@ class MobileContentStudioAPITests(APITestCase):
             res = client.get(url, {'format': 'story'})
         self.assertEqual(res.status_code, 503)
         self.assertEqual(res.json().get('code'), 'MANIFEST_UNAVAILABLE')
+
+    def test_manifest_version_mismatch_503(self):
+        from unittest.mock import patch
+
+        from workspace.services.property_content_studio import manifest as manifest_mod
+
+        client = _jwt_client(self.owner)
+        url = reverse(
+            'mobile_api:property_content_studio_template_manifest',
+            args=[self.prop.pk, 'pearl_gallery'],
+        )
+        with patch.object(manifest_mod, 'manifest_version', return_value='pcs-manifest-indexonly'):
+            with patch.object(
+                manifest_mod,
+                '_load_manifest_file',
+                return_value={
+                    'scene': {'layers': [], 'layerOrder': []},
+                    'manifest_version': 'pcs-manifest-fileonly',
+                },
+            ):
+                res = client.get(url, {'format': 'story'})
+        self.assertEqual(res.status_code, 503)
+        self.assertEqual(res.json().get('code'), 'MANIFEST_VERSION_MISMATCH')

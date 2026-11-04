@@ -31,8 +31,13 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-home-body {
     --df-btn-ghost-border: rgba(148, 163, 184, 0.22);
 }
 
-/* Pin-scrolly needs overflow: visible on ancestors; mk-home clips .main-content horizontally */
+/* Pin-scrolly: clip on ancestors breaks position:sticky (home-v2 clips .mk-home-body) */
+.mk-home-page .main-content,
 .mk-home-page .main-content:has(.df-home-story) {
+    overflow: visible;
+}
+
+.mk-home-page .mk-home-body {
     overflow: visible;
 }
 

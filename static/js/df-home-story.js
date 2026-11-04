@@ -6,7 +6,7 @@
 
     var body = document.querySelector('.mk-home-body');
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var stickyMq = window.matchMedia('(min-width: 992px) and (min-height: 680px)');
+    var stickyMq = window.matchMedia('(min-width: 992px)');
 
     root.classList.add('js-ready');
     if (body) body.classList.add('js-story-motion', 'js-ready');
@@ -558,11 +558,17 @@
         io.observe(cinema);
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initStoryModules);
+    } else {
+        initStoryModules();
+    }
+
+    function initStoryModules() {
         initReveal();
         initPath();
         root.querySelectorAll('[data-df-sticky-chapter]').forEach(bindScrolly);
         initFollow();
         initStudio();
-    });
+    }
 })();

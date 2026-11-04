@@ -434,9 +434,7 @@ def evaluate_soft_location_match(
             geo_level=GEO_MATCH_UNKNOWN,
         )
 
-    nb_fields = location_field_values(
-        neighborhood, '', '', extra_values=extra_values,
-    )
+    nb_fields = location_field_values(neighborhood, '', '', extra_values=None)
     nb_level, nb_label = _best_match_level_for_prefs(profile, nb_fields, property_city=city)
     if nb_level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS):
         return GeographicMatchResult(
@@ -445,14 +443,6 @@ def evaluate_soft_location_match(
             reason=f'محله {nb_label or areas[0]}',
             hood_s=1.0,
             geo_level=nb_level,
-        )
-    if nb_level == GEO_MATCH_STRUCTURED:
-        return GeographicMatchResult(
-            status=LOC_STATUS_DISTRICT,
-            confidence='medium',
-            reason=f'محدوده {nb_label or district or areas[0]}',
-            hood_s=0.82,
-            geo_level=GEO_MATCH_STRUCTURED,
         )
 
     dist_fields = location_field_values('', '', district, extra_values=extra_values)
@@ -484,7 +474,7 @@ def evaluate_soft_location_match(
     hints = [str(h).strip() for h in (unverified_hints or []) if str(h).strip()]
     if hints:
         hint_fields = location_field_values('', '', '', extra_values=hints)
-        hint_level, hint_label = _best_match_level_for_prefs(
+        hint_level, _hint_label = _best_match_level_for_prefs(
             profile, hint_fields, property_city=city,
         )
         if hint_level != GEO_MATCH_NONE:
@@ -578,14 +568,29 @@ def listing_trusted_neighborhood(listing) -> str:
 
 
 def listing_trusted_street(listing) -> str:
-    """خیابان با منبع غیرعنوان — title:street به‌تنهایی معتبر نیست."""
+    """
+    خیابان فقط با منبع مستقل — وجود seo:city یا filter:province به‌تنهایی کافی نیست.
+    اگر title:street در منابع باشد، خیابان همچنان عنوان‌محور است.
+    """
     data = listing.data if isinstance(getattr(listing, 'data', None), dict) else {}
     sources = _location_source_parts(data)
     raw = str(data.get('مکان_خیابان') or data.get('خیابان') or '').strip()
     if not raw:
         return ''
+    if 'title:street' in sources:
+        return ''
     if not sources or sources <= _TITLE_DERIVED_SOURCES:
         return ''
+    return raw
+
+
+def listing_trusted_makan_mahalle(listing) -> str:
+    """مکان_محله ساختاریافته — بدون منابع title:*."""
+    data = listing.data if isinstance(getattr(listing, 'data', None), dict) else {}
+    sources = _location_source_parts(data)
+    if _has_title_location_sources(sources):
+        return ''
+    raw = str(data.get('مکان_محله') or '').strip()
     return raw
 
 
@@ -635,6 +640,31 @@ def _structured_values_from_data(data: dict, *, title_neighborhood_untrusted: bo
         add(data.get(key))
 
     return out
+
+
+def _district_values_from_data(data: dict) -> List[str]:
+    out: List[str] = []
+    seen: set = set()
+
+    def add(val) -> None:
+        text = (val or '').strip() if isinstance(val, str) else ''
+        if not text:
+            return
+        norm = normalize_geo_text(text)
+        if not norm or norm in seen:
+            return
+        seen.add(norm)
+        out.append(text)
+
+    for key in ('منطقه', 'مکان_منطقه', 'district', 'district_persian', 'normalized_district'):
+        add(data.get(key))
+    return out
+
+
+def listing_structured_district_extras(listing) -> List[str]:
+    """فقط منطقه ساختاریافته — نه مکان_محله."""
+    data = listing.data if isinstance(getattr(listing, 'data', None), dict) else {}
+    return _district_values_from_data(data)
 
 
 def listing_structured_location_extras(listing) -> List[str]:

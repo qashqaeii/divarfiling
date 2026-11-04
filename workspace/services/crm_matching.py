@@ -24,7 +24,9 @@ from workspace.services.crm_matching_geo import (
     listing_matching_district,
     listing_structured_location_extras,
     listing_trusted_neighborhood,
+    listing_trusted_makan_mahalle,
     listing_trusted_street,
+    listing_structured_district_extras,
     listing_unverified_location_hints,
     location_field_values,
     evaluate_soft_location_match,
@@ -981,9 +983,9 @@ def _score_listing_with_profile(
     listing_floor = _parse_int_feature(feats.get('floor'))
     listing_year = _parse_int_feature(feats.get('build_year'))
     listing_rooms = feats.get('rooms') or listing.rooms
-    listing_extras = listing_structured_location_extras(listing)
+    listing_extras = listing_structured_district_extras(listing)
     listing_district = listing_matching_district(listing)
-    trusted_neighborhood = listing_trusted_neighborhood(listing)
+    trusted_neighborhood = listing_trusted_neighborhood(listing) or listing_trusted_makan_mahalle(listing)
     trusted_street = listing_trusted_street(listing)
     location_hints = listing_unverified_location_hints(listing)
 

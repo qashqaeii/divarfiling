@@ -9,7 +9,7 @@ MATCH_TIER_ALTERNATIVE = 'alternative'
 MATCH_TIER_INSUFFICIENT = 'insufficient_info'
 MATCH_TIER_REJECTED = 'rejected'
 
-MATCH_ENGINE_VERSION = '3.3-soft-geo'
+MATCH_ENGINE_VERSION = '3.3.1-geo-evidence'
 
 from workspace.services.crm_matching_geo import (  # noqa: E402 — shared geo contract
     LOC_STATUS_DIFFERENT,

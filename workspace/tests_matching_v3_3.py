@@ -19,10 +19,13 @@ from workspace.services.crm_matching_eval import (
 )
 from workspace.services.crm_matching_geo import (
     LOC_STATUS_DIFFERENT,
+    LOC_STATUS_DISTRICT,
     LOC_STATUS_EXACT,
     LOC_STATUS_HINT,
+    LOC_STATUS_STREET,
     LOC_STATUS_UNKNOWN,
     evaluate_soft_location_match,
+    listing_trusted_street,
 )
 
 User = get_user_model()
@@ -229,3 +232,137 @@ class MatchingV33SoftGeoTests(TestCase):
         )
         matches = match_crm_properties(self.buyer, self.user)
         self.assertGreaterEqual(len(matches), 1)
+
+
+class MatchingV331GeoEvidenceAccuracyTests(TestCase):
+    """V3.3.1 — provenance محله/منطقه/خیابان."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='09127771001', phone='09127771001', password='x')
+        self.ds = Dataset.objects.create(user=self.user, name='ds-v331', is_active=True, subcategory='زمین')
+        self.buyer = Customer.objects.create(
+            user=self.user,
+            name='خریدار دقت',
+            phone='09127771002',
+            customer_type='خریدار',
+            budget_min=8_000_000_000,
+            budget_max=20_000_000_000,
+            min_area=300,
+            max_area=600,
+            areas='امیری',
+            property_type='زمین',
+        )
+
+    def _listing(self, **kwargs):
+        defaults = dict(
+            dataset=self.ds,
+            title='فروش زمین',
+            city='آبادان',
+            price=10_000_000_000,
+            area=400,
+            is_expired=False,
+            advertiser_signal=ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+        )
+        defaults.update(kwargs)
+        return Listing.objects.create(**defaults)
+
+    def test_mixed_provenance_title_street_not_trusted(self):
+        listing = self._listing(
+            token='v331-mixed-st',
+            neighborhood='',
+            data={
+                'مکان_شهر': 'آبادان',
+                'مکان_خیابان': 'امیری',
+                'مکان_منبع_جزئیات': (
+                    'filter:province,seo:city_persian,title:expandable_section,title:street'
+                ),
+            },
+        )
+        self.assertEqual(listing_trusted_street(listing), '')
+        scored = _score_listing(self.buyer, listing)
+        self.assertIsNotNone(scored)
+        self.assertNotEqual(scored['location_match_status'], LOC_STATUS_STREET)
+        self.assertEqual(scored['location_match_status'], LOC_STATUS_HINT)
+
+    def test_structured_district_only_is_compatible_district(self):
+        listing = self._listing(
+            token='v331-dist-only',
+            neighborhood='',
+            data={
+                'مکان_منطقه': 'امیری',
+                'مکان_منبع_جزئیات': 'seo:city_persian,seo:district_persian',
+            },
+        )
+        scored = _score_listing(self.buyer, listing)
+        self.assertIsNotNone(scored)
+        self.assertEqual(scored['location_match_status'], LOC_STATUS_DISTRICT)
+        self.assertNotEqual(scored['location_match_status'], LOC_STATUS_EXACT)
+
+    def test_trusted_makan_mahalle_is_exact_neighborhood(self):
+        listing = self._listing(
+            token='v331-mahalle',
+            neighborhood='',
+            data={
+                'مکان_محله': 'امیری',
+                'مکان_منبع_جزئیات': 'seo:city_persian,seo:district_persian',
+            },
+        )
+        scored = _score_listing(self.buyer, listing)
+        self.assertEqual(scored['location_match_status'], LOC_STATUS_EXACT)
+        self.assertEqual(scored['match_tier'], MATCH_TIER_STRONG)
+
+    def test_legacy_windows_no_location_fields_unknown(self):
+        listing = self._listing(token='v331-legacy', neighborhood='', city='آبادان', data={})
+        scored = _score_listing(self.buyer, listing)
+        self.assertEqual(scored['location_match_status'], LOC_STATUS_UNKNOWN)
+
+    def test_exact_neighborhood_ranks_above_district_and_hint(self):
+        exact = self._listing(
+            token='v331-rank-exact',
+            neighborhood='',
+            data={
+                'مکان_محله': 'امیری',
+                'مکان_منبع_جزئیات': 'seo:district_persian',
+            },
+        )
+        district = self._listing(
+            token='v331-rank-dist',
+            neighborhood='',
+            data={
+                'مکان_منطقه': 'امیری',
+                'مکان_منبع_جزئیات': 'seo:district_persian',
+            },
+        )
+        hint = self._listing(
+            token='v331-rank-hint',
+            neighborhood='',
+            data={
+                'مکان_محله': 'امیری',
+                'مکان_منبع_جزئیات': 'title:neighborhood,title:expandable_section',
+            },
+        )
+        s_exact = _score_listing(self.buyer, exact)
+        s_dist = _score_listing(self.buyer, district)
+        s_hint = _score_listing(self.buyer, hint)
+        self.assertGreater(s_exact['score'], s_dist['score'])
+        self.assertGreater(s_dist['score'], s_hint['score'])
+        self.assertGreater(s_exact['relevance_rank'], s_dist['relevance_rank'])
+
+    def test_evaluate_precedence_unknown_before_different(self):
+        geo = evaluate_soft_location_match(
+            self.buyer,
+            neighborhood='',
+            city='آبادان',
+            district='',
+            extra_values=None,
+        )
+        self.assertEqual(geo.status, LOC_STATUS_UNKNOWN)
+
+        geo_diff = evaluate_soft_location_match(
+            self.buyer,
+            neighborhood='کوت عبدالله',
+            city='آبادان',
+            district='',
+            extra_values=None,
+        )
+        self.assertEqual(geo_diff.status, LOC_STATUS_DIFFERENT)

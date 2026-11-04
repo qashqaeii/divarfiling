@@ -5,7 +5,7 @@ from django.test import TestCase
 from workspace.models import Customer, Dataset, Listing
 from workspace.services.advertiser_signal import ADVERTISER_SIGNAL_GENUINE_PERSONAL
 from workspace.services.crm_matching import match_divar_listings
-from workspace.services.crm_matching_types import infer_listing_property_type
+from workspace.services.crm_matching_types import infer_listing_property_type, infer_listing_property_type_detail
 
 User = get_user_model()
 
@@ -28,6 +28,14 @@ class ListingPropertyTypeInferenceTests(TestCase):
     def test_unknown_title_not_default_apartment(self):
         listing = Listing(dataset=self.ds, token='unk-1', title='فروش فوری', data={})
         self.assertEqual(infer_listing_property_type(listing), '')
+
+    def test_dataset_subcategory_used_when_data_empty(self):
+        self.ds.subcategory = 'آپارتمان'
+        self.ds.save(update_fields=['subcategory'])
+        listing = Listing(dataset=self.ds, token='apt-ds', title='فروش فوری', data={})
+        detail = infer_listing_property_type_detail(listing)
+        self.assertEqual(detail.property_type, 'آپارتمان')
+        self.assertEqual(detail.source, 'dataset_subcategory')
 
 
 class LandBuyerDoesNotGetAmbiguousListing(TestCase):

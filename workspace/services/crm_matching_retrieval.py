@@ -119,12 +119,15 @@ def collect_property_contact_matches(
     prop_id = int(prop.pk)
 
     def _build() -> List[ScoredRef]:
+        from workspace.services.crm_matching_eval import index_sort_score
+
         refs: List[ScoredRef] = []
         qs = _customer_match_candidates_filtered_qs(prop, user).order_by('pk')
         for cust in qs.iterator(chunk_size=MATCH_ITERATOR_CHUNK_SIZE):
             item = _score_customer_for_property(cust, prop)
             if item:
-                refs.append(ScoredRef(int(item['score']), int(cust.pk)))
+                tier = str(item.get('match_tier') or 'strong')
+                refs.append(ScoredRef(index_sort_score(int(item['score']), tier), int(cust.pk)))
         return refs
 
     cache_key = _index_cache_key(

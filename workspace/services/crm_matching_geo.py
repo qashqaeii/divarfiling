@@ -56,8 +56,13 @@ _LOCATION_PREFIXES = (
     'بخش ',
 )
 
+# جداکنندهٔ متن موقعیت — نقطه فقط وقتی جداکننده است، نه اعشار
 _SEGMENT_SPLIT_RE = re.compile(
-    r'[,،؛|\-/–—]+|\s+و\s+',
+    r'[,،؛|\-/–—\n]+|(?<![0-9۰-۹])\.(?![0-9۰-۹])|\s+و\s+',
+)
+
+_AREA_LIST_SPLIT_RE = re.compile(
+    r'[,،;\n|/]+|(?<![0-9۰-۹])\.(?![0-9۰-۹])',
 )
 
 
@@ -86,6 +91,11 @@ def strip_location_prefix(text: str) -> str:
     for prefix in _LOCATION_PREFIXES:
         if raw.startswith(prefix):
             raw = raw[len(prefix):].strip()
+    # «محدوده ی معلم» / «محدوده‌ی صیاد»
+    if raw.startswith('ی '):
+        raw = raw[2:].strip()
+    elif raw.startswith('ي '):
+        raw = raw[2:].strip()
     return raw
 
 
@@ -107,8 +117,13 @@ def split_location_segments(text: str) -> List[str]:
 def parse_preferred_areas(areas_text: str) -> List[str]:
     if not areas_text:
         return []
-    parts = re.split(r'[,،;\n|/]+', areas_text)
-    return [p.strip() for p in parts if p.strip()]
+    parts = _AREA_LIST_SPLIT_RE.split(areas_text)
+    out: List[str] = []
+    for p in parts:
+        chunk = strip_location_prefix(p.strip())
+        if chunk:
+            out.append(chunk)
+    return out
 
 
 @dataclass(frozen=True)

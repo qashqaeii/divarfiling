@@ -17,5 +17,8 @@ class MatchingGeoPrecisionTests(TestCase):
     def test_compound_shiraz_sayyad(self):
         self.assertTrue(location_tokens_equivalent('صیاد', 'شیراز - محله صیاد'))
 
+    def test_dot_separated_preferences_match(self):
+        self.assertTrue(location_tokens_equivalent('عدالت', 'عدالت'))
+
     def test_exact_match(self):
         self.assertTrue(location_tokens_equivalent('آپادانا', 'آپادانا'))

@@ -38,7 +38,7 @@ from workspace.services.features import extract_listing_features
 from workspace.services.crm_matching_geo import listing_data_location_extras
 from workspace.services.crm_matching import _parse_int_feature
 
-MATCH_AUDIT_ENGINE_VERSION = '2-readonly-sample'
+MATCH_AUDIT_ENGINE_VERSION = '3-shared-eval-readonly'
 
 
 def _audit_meta(

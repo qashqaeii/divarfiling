@@ -34,7 +34,20 @@ from workspace.services.crm_matching_prefilter import (
     apply_int_max_prefilter,
     apply_int_min_prefilter,
 )
-from workspace.services.crm_matching_types import infer_listing_property_type
+from workspace.services.crm_matching_types import (
+    PropertyTypeInference,
+    infer_listing_property_type,
+    infer_listing_property_type_detail,
+)
+from workspace.services.crm_matching_eval import (
+    DimensionScores,
+    MATCH_TIER_INSUFFICIENT,
+    classify_match_tier,
+    compute_match_score,
+    contact_meaningful_for_property_suggestion,
+    evaluation_to_result_fields,
+    index_sort_score,
+)
 from workspace.services.customer_search_property_types import customer_search_property_types_restricted
 from workspace.services.formatting import format_toman
 
@@ -735,8 +748,11 @@ def _listing_match_compatible(customer: Customer, listing: Listing) -> bool:
 
 
 def _compute_score(*, price_s: float, area_s: float, hood_s: float, type_s: float, room_s: float) -> int:
-    total = price_s * 0.40 + hood_s * 0.25 + area_s * 0.15 + type_s * 0.10 + room_s * 0.10
-    return min(100, max(0, int(round(total * 100))))
+    return compute_match_score(
+        DimensionScores(
+            price_s=price_s, area_s=area_s, hood_s=hood_s, type_s=type_s, room_s=room_s,
+        ),
+    )
 
 
 def _builder_supply_profile(customer: Customer):
@@ -799,6 +815,10 @@ def _infer_listing_property_type(listing: Listing) -> str:
     return infer_listing_property_type(listing)
 
 
+def _listing_type_inference(listing: Listing):
+    return infer_listing_property_type_detail(listing)
+
+
 def _score_crm_property_with_profile(
     profile,
     prop: CRMProperty,
@@ -852,10 +872,36 @@ def _score_crm_property_with_profile(
     type_s, type_note = _property_type_match_profile(profile, prop.property_type)
     room_s, room_note = _rooms_match_profile(profile, prop.rooms)
 
-    score = _compute_score(
-        price_s=price_s, area_s=area_s, hood_s=hood_s, type_s=type_s, room_s=room_s,
+    _, _, geo_level = location_match_quality(
+        profile,
+        neighborhood=prop.neighborhood or '',
+        city=prop.city or '',
+        district=prop.district or '',
     )
-    reasons = [n for n in (price_label, area_note, hood_note, type_note, room_note) if n]
+    dims = DimensionScores(
+        price_s=price_s,
+        area_s=area_s,
+        hood_s=hood_s,
+        type_s=type_s,
+        room_s=room_s,
+        price_label=price_label,
+        area_note=area_note,
+        hood_note=hood_note,
+        type_note=type_note,
+        room_note=room_note,
+        geo_level=geo_level,
+    )
+    type_required = _profile_allowed_property_types(profile) is not None
+    evaluation = classify_match_tier(
+        profile,
+        dims,
+        eligible=True,
+        is_rent_deal=use_rent_price,
+        prop_type_known=bool((prop.property_type or '').strip()),
+        prop_type_required=type_required,
+    )
+    score = evaluation.score
+    reasons = evaluation.reasons
 
     result = {
         'source': 'crm',
@@ -882,6 +928,7 @@ def _score_crm_property_with_profile(
     if match_intent:
         result['match_intent'] = match_intent
         result['intent_label'] = intent_label
+    result.update(evaluation_to_result_fields(evaluation))
     return result
 
 
@@ -897,7 +944,12 @@ def _score_listing_with_profile(
     match_intent: str = '',
     intent_label: str = '',
 ) -> Optional[Dict[str, Any]]:
-    inferred = prop_type or _infer_listing_property_type(listing)
+    type_detail = (
+        infer_listing_property_type_detail(listing)
+        if prop_type is None
+        else PropertyTypeInference(prop_type, 'caller', 'high')
+    )
+    inferred = type_detail.property_type if prop_type is None else (prop_type or '')
     is_rent_listing = _listing_is_rent_listing(listing)
     is_sale_listing = _listing_is_sale_listing(listing)
     rent_customer = _is_rent_profile(profile)
@@ -951,10 +1003,39 @@ def _score_listing_with_profile(
     type_s, type_note = _property_type_match_profile(profile, inferred)
     room_s, room_note = _rooms_match_profile(profile, listing_rooms)
 
-    score = _compute_score(
-        price_s=price_s, area_s=area_s, hood_s=hood_s, type_s=type_s, room_s=room_s,
+    _, _, geo_level = location_match_quality(
+        profile,
+        neighborhood=listing.neighborhood or '',
+        city=listing.city or '',
+        district='',
+        extra_values=listing_extras,
     )
-    reasons = [n for n in (price_label, area_note, hood_note, type_note, room_note) if n]
+    dims = DimensionScores(
+        price_s=price_s,
+        area_s=area_s,
+        hood_s=hood_s,
+        type_s=type_s,
+        room_s=room_s,
+        price_label=price_label,
+        area_note=area_note,
+        hood_note=hood_note,
+        type_note=type_note,
+        room_note=room_note,
+        geo_level=geo_level,
+    )
+    type_required = _profile_allowed_property_types(profile) is not None
+    evaluation = classify_match_tier(
+        profile,
+        dims,
+        eligible=True,
+        is_rent_deal=use_rent_price,
+        prop_type_known=bool(inferred),
+        prop_type_required=type_required,
+    )
+    evaluation.property_type_confidence = type_detail.confidence
+    evaluation.property_type_source = type_detail.source
+    score = evaluation.score
+    reasons = evaluation.reasons
 
     display_neighborhood = listing.neighborhood or ''
     areas_pref = preferred_areas_from_profile(profile)
@@ -992,6 +1073,7 @@ def _score_listing_with_profile(
     if match_intent:
         result['match_intent'] = match_intent
         result['intent_label'] = intent_label
+    result.update(evaluation_to_result_fields(evaluation))
     return result
 
 
@@ -1203,7 +1285,8 @@ def _match_builder_group(
                 intent_label=meta['intent_label'],
             )
             if item and int(item.get('score') or 0) >= min_score:
-                refs.append(ScoredRef(int(item['score']), int(prop.pk)))
+                tier = str(item.get('match_tier') or 'strong')
+                refs.append(ScoredRef(index_sort_score(int(item['score']), tier), int(prop.pk)))
         return refs
 
     crm_key = _index_cache_key(
@@ -1238,7 +1321,8 @@ def _match_builder_group(
                     intent_label=meta['intent_label'],
                 )
                 if item and int(item.get('score') or 0) >= divar_min:
-                    refs.append(ScoredRef(int(item['score']), int(listing.pk)))
+                    tier = str(item.get('match_tier') or 'strong')
+                    refs.append(ScoredRef(index_sort_score(int(item['score']), tier), int(listing.pk)))
             return refs
 
         divar_key = _index_cache_key(
@@ -1564,6 +1648,8 @@ def _customer_match_card(customer: Customer, score_item: Dict[str, Any]) -> Dict
         'active_channels': list(getattr(customer, 'active_channels', None) or []),
         'social_links': dict(getattr(customer, 'social_links', None) or {}),
         'can_suggest': True,
+        'match_tier': score_item.get('match_tier') or 'strong',
+        'evidence_completeness': score_item.get('evidence_completeness'),
     }
 
 
@@ -1622,11 +1708,21 @@ def _score_customer_for_property(
     if not _crm_match_compatible(customer, prop):
         return None
 
+    if not contact_meaningful_for_property_suggestion(
+        customer,
+        is_rent_listing=_crm_property_is_rent_listing(prop),
+        is_sale_listing=_crm_property_is_sale_listing(prop),
+    ):
+        return None
+
     if is_builder_customer(customer):
         scored = _score_builder_customer_for_property(customer, prop)
     else:
         scored = _score_crm_property(customer, prop)
     if not scored:
+        return None
+
+    if scored.get('match_tier') == MATCH_TIER_INSUFFICIENT:
         return None
 
     tuning = _match_tuning(customer)

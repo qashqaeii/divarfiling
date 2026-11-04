@@ -231,6 +231,7 @@ def build_crm_index(customer: Customer, user, *, min_score: int) -> List[ScoredR
         _crm_match_compatible,
         _score_crm_property,
     )
+    from workspace.services.crm_matching_eval import index_sort_score
 
     refs: List[ScoredRef] = []
     qs = _crm_match_candidates_filtered_qs(customer, user).order_by('pk')
@@ -242,7 +243,8 @@ def build_crm_index(customer: Customer, user, *, min_score: int) -> List[ScoredR
             continue
         score = int(item.get('score') or 0)
         if score >= min_score:
-            refs.append(ScoredRef(score, int(prop.pk)))
+            tier = str(item.get('match_tier') or 'strong')
+            refs.append(ScoredRef(index_sort_score(score, tier), int(prop.pk)))
     return refs
 
 
@@ -259,6 +261,7 @@ def build_divar_index(
         _listing_match_compatible,
         _score_listing,
     )
+    from workspace.services.crm_matching_eval import index_sort_score
 
     refs: List[ScoredRef] = []
     qs = _divar_match_candidates_filtered_qs(
@@ -274,7 +277,8 @@ def build_divar_index(
             continue
         score = int(item.get('score') or 0)
         if score >= min_score:
-            refs.append(ScoredRef(score, int(listing.pk)))
+            tier = str(item.get('match_tier') or 'strong')
+            refs.append(ScoredRef(index_sort_score(score, tier), int(listing.pk)))
     return refs
 
 

@@ -5302,13 +5302,21 @@ function initContactAsideFolds() {
         folds.forEach(fold => {
             const keepOpen = fold.classList.contains('crm-contact-side-card--followup')
                 || fold.classList.contains('crm-contact-side-card--deals')
-                || fold.classList.contains('crm-contact-side-card--warn');
+                || fold.classList.contains('crm-contact-side-card--warn')
+                || fold.classList.contains('crm-contact-side-card--prefs');
             fold.open = keepOpen;
         });
     };
 
     apply();
     window.matchMedia('(max-width: 768px)').addEventListener('change', apply);
+
+    root.querySelectorAll('.crm-contact-side-card--prefs.crm-contact-side-fold').forEach(fold => {
+        fold.open = true;
+        fold.addEventListener('toggle', () => {
+            if (!fold.open) fold.open = true;
+        });
+    });
 
     root.querySelectorAll('.crm-contact-side-fold .crm-contact-prefs-edit').forEach(btn => {
         btn.addEventListener('click', e => {

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Iterable, List, Optional, Sequence, Tuple
 
 # سطوح تطبیق (برای امتیاز نرم و ممیزی)
@@ -110,6 +111,40 @@ def parse_preferred_areas(areas_text: str) -> List[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
+@dataclass(frozen=True)
+class AreaPreference:
+    """یک ترجیح محله — با شهر هدف اختیاری (مثلاً شیراز + صیاد)."""
+    raw: str
+    neighborhood: str
+    city_hint: str = ''
+
+
+def parse_area_preference(area_text: str) -> AreaPreference:
+    raw = (area_text or '').strip()
+    if not raw:
+        return AreaPreference(raw='', neighborhood='')
+    segments = split_location_segments(raw)
+    if len(segments) >= 2:
+        head = normalize_geo_text(segments[0])
+        if head in _MAJOR_SEARCH_CITIES:
+            tail = strip_location_prefix(segments[-1].strip())
+            return AreaPreference(raw=raw, neighborhood=tail or segments[-1].strip(), city_hint=head)
+    return AreaPreference(raw=raw, neighborhood=raw)
+
+
+def area_preferences_from_profile(profile) -> List[AreaPreference]:
+    return [parse_area_preference(p) for p in preferred_areas_from_profile(profile)]
+
+
+def _property_city_matches_hint(city_hint: str, property_city: str) -> bool:
+    if not city_hint:
+        return True
+    got = normalize_geo_text(property_city or '')
+    if not got:
+        return True
+    return cities_equivalent(city_hint, got)
+
+
 def cities_equivalent(want: str, got: str) -> bool:
     a = canonical_neighborhood_name(want) or normalize_geo_text(want)
     b = canonical_neighborhood_name(got) or normalize_geo_text(got)
@@ -132,25 +167,21 @@ def profile_search_city_hint(profile) -> str:
     شهر هدف جستجو — فقط وقتی در areas به‌صورت صریح آمده (مثلاً «شیراز - صیاد»).
     city هویتی مخاطب اینجا لحاظ نمی‌شود.
     """
-    for pref in preferred_areas_from_profile(profile):
-        segments = split_location_segments(pref)
-        if len(segments) < 2:
-            continue
-        head = normalize_geo_text(segments[0])
-        if head in _MAJOR_SEARCH_CITIES:
-            return head
+    for pref in area_preferences_from_profile(profile):
+        if pref.city_hint:
+            return pref.city_hint
     return ''
 
 
 def property_conflicts_search_city_hint(profile, property_city: str) -> bool:
-    """True اگر شهر صریح جستجو با شهر ملک ناسازگار باشد."""
-    hint = profile_search_city_hint(profile)
-    if not hint:
+    """True اگر همه ترجیحات دارای city_hint با شهر ملک ناسازگار باشند."""
+    prefs = [p for p in area_preferences_from_profile(profile) if p.city_hint]
+    if not prefs:
         return False
     got = normalize_geo_text(property_city or '')
     if not got:
         return False
-    return not cities_equivalent(hint, got)
+    return all(not cities_equivalent(p.city_hint, got) for p in prefs)
 
 
 def _token_pair_match_level(token: str, loc: str) -> str:
@@ -253,15 +284,45 @@ def match_preferred_locations(
     district: str = '',
     extra_values: Optional[Sequence[str]] = None,
 ) -> Tuple[bool, str]:
-    """OR روی محله‌های ترجیحی — یکی کافی است."""
+    """OR روی محله‌های ترجیحی — شهر و محله در ترجیح ترکیبی جداگانه."""
     fields = location_field_values(
         neighborhood, city, district, extra_values=extra_values,
     )
     if not fields or not preferred:
         return False, ''
-    for pref in preferred:
+    for raw_pref in preferred:
+        pref = parse_area_preference(raw_pref)
+        if not _property_city_matches_hint(pref.city_hint, city):
+            continue
+        hood = pref.neighborhood or raw_pref
         for raw, _norm in fields:
-            if location_tokens_equivalent(pref, raw):
+            if location_tokens_equivalent(hood, raw):
+                return True, raw.strip()
+    return False, ''
+
+
+def match_area_preferences_for_property(
+    profile,
+    neighborhood: str = '',
+    city: str = '',
+    district: str = '',
+    extra_values: Optional[Sequence[str]] = None,
+) -> Tuple[bool, str]:
+    """همان منطق فیلتر سخت — OR روی AreaPreference."""
+    prefs = area_preferences_from_profile(profile)
+    if not prefs:
+        return True, ''
+    fields = location_field_values(
+        neighborhood, city, district, extra_values=extra_values,
+    )
+    if not fields:
+        return False, ''
+    for pref in prefs:
+        if not _property_city_matches_hint(pref.city_hint, city):
+            continue
+        hood = pref.neighborhood or pref.raw
+        for raw, _norm in fields:
+            if location_tokens_equivalent(hood, raw):
                 return True, raw.strip()
     return False, ''
 
@@ -300,9 +361,13 @@ def location_match_quality(
 
     best_level = GEO_MATCH_NONE
     best_label = ''
-    for pref in areas:
+    for raw_pref in areas:
+        pref = parse_area_preference(raw_pref)
+        if not _property_city_matches_hint(pref.city_hint, city):
+            continue
+        hood = pref.neighborhood or raw_pref
         for raw, _norm in fields:
-            level, label = location_token_match_level(pref, raw)
+            level, label = location_token_match_level(hood, raw)
             if level == GEO_MATCH_NONE:
                 continue
             if best_level == GEO_MATCH_NONE or level == GEO_MATCH_EXACT:

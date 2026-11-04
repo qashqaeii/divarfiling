@@ -168,6 +168,70 @@ class MatchingAreasRegressionTests(TestCase):
         self.assertEqual(len(data['crm_matches']), 10)
         self.assertTrue(data['crm_has_more'])
 
+    def test_compound_area_matches_property_city_and_neighborhood(self):
+        buyer = Customer.objects.create(
+            **self.base_kwargs,
+            areas='شیراز - صیاد',
+        )
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='صیاد شیراز',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=15_000_000_000,
+            neighborhood='صیاد',
+            city='شیراز',
+            area=120,
+        )
+        CRMProperty.objects.create(
+            user=self.user,
+            title='صیاد تهران',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=15_000_000_000,
+            neighborhood='صیاد',
+            city='تهران',
+            area=120,
+        )
+        data = get_customer_matches(buyer, self.user, divar_enabled=False, paginate=False)
+        ids = {m['property_id'] for m in data['crm_matches']}
+        self.assertIn(prop.pk, ids)
+        self.assertEqual(len(ids), 1)
+
+    def test_multi_city_compound_areas_or_matching(self):
+        buyer = Customer.objects.create(
+            **self.base_kwargs,
+            areas='شیراز - صیاد، تهران - ونک',
+        )
+        shiraz = CRMProperty.objects.create(
+            user=self.user,
+            title='ش',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=15_000_000_000,
+            neighborhood='صیاد',
+            city='شیراز',
+            area=100,
+        )
+        tehran = CRMProperty.objects.create(
+            user=self.user,
+            title='ت',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=15_000_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=100,
+        )
+        data = get_customer_matches(buyer, self.user, divar_enabled=False, paginate=False)
+        ids = {m['property_id'] for m in data['crm_matches']}
+        self.assertIn(shiraz.pk, ids)
+        self.assertIn(tehran.pk, ids)
+
 
 class MatchingGeoCompoundTokenTests(TestCase):
     def test_compound_location_string(self):

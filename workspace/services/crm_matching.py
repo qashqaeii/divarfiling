@@ -26,7 +26,7 @@ from workspace.services.crm_matching_geo import (
     location_tokens_equivalent,
     match_preferred_locations,
     preferred_areas_from_profile,
-    property_conflicts_search_city_hint,
+    match_area_preferences_for_property,
 )
 from workspace.services.crm_matching_prefilter import (
     apply_area_max_prefilter,
@@ -272,16 +272,17 @@ def _profile_neighborhood_eligible(
     if not areas:
         return True
 
-    if property_conflicts_search_city_hint(profile, city):
-        return False
-
     if not location_field_values(
         neighborhood, city, district, extra_values=extra_values,
     ):
         return False
 
-    matched, _ = match_preferred_locations(
-        areas, neighborhood, city, district, extra_values=extra_values,
+    matched, _ = match_area_preferences_for_property(
+        profile,
+        neighborhood=neighborhood,
+        city=city,
+        district=district,
+        extra_values=extra_values,
     )
     return matched
 

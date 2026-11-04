@@ -4,13 +4,31 @@ from __future__ import annotations
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from workspace.models import CRMProperty, Customer, Dataset, Listing
+from workspace.models import CRMProperty, CRMResourceShare, Customer, Dataset, Listing
 from workspace.services.crm_matching_index import (
     bump_user_contacts_match_catalog,
     bump_user_crm_properties_match_catalog,
     bump_user_divar_listings_match_catalog,
     bump_agency_crm_properties_match_catalog,
 )
+
+
+def _invalidate_match_catalog_for_share(share: CRMResourceShare) -> None:
+    if share.shared_with_id:
+        bump_user_crm_properties_match_catalog(int(share.shared_with_id))
+        bump_user_contacts_match_catalog(int(share.shared_with_id))
+    if share.owner_id:
+        bump_user_crm_properties_match_catalog(int(share.owner_id))
+    if share.agency_id:
+        bump_agency_crm_properties_match_catalog(int(share.agency_id))
+    if share.property_id:
+        owner_id = (
+            CRMProperty.objects.filter(pk=share.property_id)
+            .values_list('user_id', flat=True)
+            .first()
+        )
+        if owner_id:
+            bump_user_crm_properties_match_catalog(int(owner_id))
 
 
 def _listing_owner_user_id(listing: Listing) -> int | None:
@@ -57,3 +75,9 @@ def _crm_property_match_catalog_signal(sender, instance: CRMProperty, **kwargs) 
 def _customer_match_catalog_signal(sender, instance: Customer, **kwargs) -> None:
     if instance.user_id:
         bump_user_contacts_match_catalog(int(instance.user_id))
+
+
+@receiver(post_save, sender=CRMResourceShare)
+@receiver(post_delete, sender=CRMResourceShare)
+def _resource_share_match_catalog_signal(sender, instance: CRMResourceShare, **kwargs) -> None:
+    _invalidate_match_catalog_for_share(instance)

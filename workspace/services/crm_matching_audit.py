@@ -1,4 +1,4 @@
-"""ممیزی read-only موتور تطبیق — بدون PII."""
+"""ممیزی read-only موتور تطبیق — بدون تغییر کش یا rebuild ایندex."""
 from __future__ import annotations
 
 import json
@@ -6,13 +6,22 @@ import time
 from collections import Counter
 from typing import Any, Dict, List, Optional
 
+from django.conf import settings
+from django.utils import timezone
+
 from workspace.models import Customer
 from workspace.services.crm_matching import (
     _crm_match_candidates_filtered_qs,
     _crm_match_compatible,
+    _crm_property_is_rent_listing,
+    _crm_property_is_sale_listing,
     _divar_match_candidates_filtered_qs,
     _infer_listing_property_type,
+    _is_rent_customer,
+    _is_rent_profile,
     _listing_is_genuine_owner,
+    _listing_is_rent_listing,
+    _listing_is_sale_listing,
     _listing_match_compatible,
     _match_tuning,
     _profile_allowed_property_types,
@@ -25,11 +34,34 @@ from workspace.services.crm_matching import (
     _score_listing,
     is_builder_customer,
 )
-from workspace.services.crm_matching_retrieval import (
-    build_crm_index,
-    build_divar_index,
-    collect_customer_match_results,
-)
+from workspace.services.features import extract_listing_features
+from workspace.services.crm_matching_geo import listing_data_location_extras
+from workspace.services.crm_matching import _parse_int_feature
+
+MATCH_AUDIT_ENGINE_VERSION = '2-readonly-sample'
+
+
+def _audit_meta(
+    *,
+    crm_sample_cap: int,
+    divar_sample_cap: int,
+) -> Dict[str, Any]:
+    cache_backend = settings.CACHES.get('default', {}).get('BACKEND', '')
+    return {
+        'engine_version': MATCH_AUDIT_ENGINE_VERSION,
+        'generated_at': timezone.now().isoformat(),
+        'cache_backend_class': cache_backend.rsplit('.', 1)[-1] if cache_backend else '',
+        'touches_match_index_cache': False,
+        'crm_sample_cap': crm_sample_cap,
+        'divar_sample_cap': divar_sample_cap,
+    }
+
+
+def _crm_budget_is_rent(customer: Customer, prop) -> bool:
+    is_rent_listing = _crm_property_is_rent_listing(prop)
+    is_sale_listing = _crm_property_is_sale_listing(prop)
+    rent_customer = _is_rent_profile(customer)
+    return is_rent_listing and (rent_customer or not is_sale_listing)
 
 
 def _crm_eligibility_reason(customer: Customer, prop) -> Optional[str]:
@@ -64,7 +96,7 @@ def _crm_eligibility_reason(customer: Customer, prop) -> Optional[str]:
         sale_price=prop.sale_price,
         deposit=prop.deposit,
         rent=prop.monthly_rent,
-        is_rent=False,
+        is_rent=_crm_budget_is_rent(customer, prop),
     ):
         return 'budget_out_of_range'
     return None
@@ -73,15 +105,145 @@ def _crm_eligibility_reason(customer: Customer, prop) -> Optional[str]:
 def _divar_eligibility_reason(customer: Customer, listing) -> Optional[str]:
     if not _listing_is_genuine_owner(listing):
         return 'not_genuine_owner'
-    inferred = _infer_listing_property_type(listing)
     if not _listing_match_compatible(customer, listing):
-        if not _profile_property_type_eligible(customer, inferred):
-            allowed = _profile_allowed_property_types(customer)
-            if allowed and not inferred:
-                return 'property_type_unknown'
-            return 'property_type_or_deal_incompatible'
-        return 'location_or_criteria'
+        return 'deal_or_status_incompatible'
+    inferred = _infer_listing_property_type(listing)
+    if not _profile_property_type_eligible(customer, inferred):
+        allowed = _profile_allowed_property_types(customer)
+        if allowed and not inferred:
+            return 'property_type_unknown'
+        return 'property_type_mismatch'
+
+    feats = extract_listing_features(listing)
+    listing_floor = _parse_int_feature(feats.get('floor'))
+    listing_year = _parse_int_feature(feats.get('build_year'))
+    listing_rooms = feats.get('rooms') or listing.rooms
+    listing_extras = listing_data_location_extras(listing.data)
+
+    if not _profile_neighborhood_eligible(
+        customer,
+        neighborhood=listing.neighborhood or '',
+        city=listing.city or '',
+        district='',
+        extra_values=listing_extras,
+    ):
+        return 'location_hard_filter'
+    if not _profile_area_eligible(customer, listing.area):
+        return 'area_out_of_range'
+    if not _profile_detail_eligible(
+        customer,
+        rooms=listing_rooms,
+        build_year=listing_year,
+        floor=listing_floor,
+        has_parking=feats.get('parking'),
+        has_storage=feats.get('storage'),
+        has_elevator=feats.get('elevator'),
+    ):
+        return 'detail_preference'
+
+    is_rent_listing = _listing_is_rent_listing(listing)
+    is_sale_listing = _listing_is_sale_listing(listing)
+    rent_customer = _is_rent_profile(customer)
+    use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
+    if not _profile_budget_eligible(
+        customer,
+        sale_price=listing.price,
+        deposit=listing.deposit,
+        rent=listing.rent,
+        is_rent=use_rent_price,
+    ):
+        return 'budget_out_of_range'
     return None
+
+
+def _scan_crm_sample(
+    customer: Customer,
+    user,
+    *,
+    min_score: int,
+    sample_cap: int,
+) -> Dict[str, Any]:
+    qs = _crm_match_candidates_filtered_qs(customer, user)
+    sql_total = qs.count()
+    drop = Counter()
+    scores: List[int] = []
+    eligible_ids: List[int] = []
+    examined = 0
+
+    for prop in qs.order_by('pk').iterator(chunk_size=200):
+        examined += 1
+        reason = _crm_eligibility_reason(customer, prop)
+        if reason:
+            drop[reason] += 1
+        else:
+            item = _score_crm_property(customer, prop)
+            if not item:
+                drop['score_pipeline_none'] += 1
+            else:
+                score = int(item.get('score') or 0)
+                scores.append(score)
+                if score >= min_score:
+                    eligible_ids.append(int(prop.pk))
+                else:
+                    drop['below_min_score'] += 1
+        if examined >= sample_cap:
+            break
+
+    return {
+        'sql_candidates_total': sql_total,
+        'rows_examined': examined,
+        'sample_complete': examined >= sql_total,
+        'removed_reasons_in_sample': dict(drop),
+        'score_distribution_in_sample': _score_histogram(scores),
+        'eligible_ids_in_sample': eligible_ids,
+        'eligible_count_in_sample': len(eligible_ids),
+    }
+
+
+def _scan_divar_sample(
+    customer: Customer,
+    user,
+    *,
+    min_score: int,
+    sample_cap: int,
+    dataset_id=None,
+) -> Dict[str, Any]:
+    qs = _divar_match_candidates_filtered_qs(customer, user, dataset_id=dataset_id)
+    sql_total = qs.count()
+    drop = Counter()
+    scores: List[int] = []
+    eligible_keys: List[str] = []
+    examined = 0
+
+    for listing in qs.order_by('pk').iterator(chunk_size=200):
+        examined += 1
+        reason = _divar_eligibility_reason(customer, listing)
+        if reason:
+            drop[reason] += 1
+        else:
+            item = _score_listing(customer, listing)
+            if not item:
+                drop['score_pipeline_none'] += 1
+            else:
+                score = int(item.get('score') or 0)
+                scores.append(score)
+                key = str(listing.token or listing.pk)
+                if score >= min_score:
+                    eligible_keys.append(key)
+                else:
+                    drop['below_min_score'] += 1
+        if examined >= sample_cap:
+            break
+
+    return {
+        'sql_candidates_total': sql_total,
+        'rows_examined': examined,
+        'sample_complete': examined >= sql_total,
+        'removed_reasons_in_sample': dict(drop),
+        'score_distribution_in_sample': _score_histogram(scores),
+        'eligible_tokens_in_sample': eligible_keys,
+        'eligible_count_in_sample': len(eligible_keys),
+    }
 
 
 def audit_customer_matches(
@@ -90,106 +252,59 @@ def audit_customer_matches(
     *,
     divar_enabled: bool = True,
     dataset_id=None,
-    crm_sample_cap: int = 2000,
-    divar_sample_cap: int = 2000,
+    crm_sample_cap: int = 500,
+    divar_sample_cap: int = 500,
 ) -> Dict[str, Any]:
-    """گزارش مرحله‌ای برای یک مخاطب — read-only."""
+    """گزارش نمونه‌ای — read-only، بدون کش."""
     tuning = _match_tuning(customer)
     crm_min = tuning['crm_min_score']
     divar_min = tuning['divar_min_score']
 
     t0 = time.perf_counter()
-    crm_qs = _crm_match_candidates_filtered_qs(customer, user)
-    crm_sql = crm_qs.count()
-    crm_drop = Counter()
-    crm_scores: List[int] = []
-    crm_eligible_ids: List[int] = []
-
-    for prop in crm_qs.order_by('pk').iterator(chunk_size=500):
-        reason = _crm_eligibility_reason(customer, prop)
-        if reason:
-            crm_drop[reason] += 1
-            continue
-        item = _score_crm_property(customer, prop)
-        if not item:
-            crm_drop['score_pipeline_none'] += 1
-            continue
-        score = int(item.get('score') or 0)
-        crm_scores.append(score)
-        if score >= crm_min:
-            crm_eligible_ids.append(int(prop.pk))
-        else:
-            crm_drop['below_min_score'] += 1
-        if sum(crm_drop.values()) + len(crm_scores) >= crm_sample_cap:
-            break
-
-    divar_sql = 0
-    divar_drop = Counter()
-    divar_scores: List[int] = []
-    divar_eligible_tokens: List[str] = []
+    crm_block = _scan_crm_sample(
+        customer, user, min_score=crm_min, sample_cap=max(1, int(crm_sample_cap)),
+    )
+    divar_block: Dict[str, Any] = {
+        'sql_candidates_total': 0,
+        'rows_examined': 0,
+        'sample_complete': True,
+        'removed_reasons_in_sample': {},
+        'score_distribution_in_sample': {},
+        'eligible_tokens_in_sample': [],
+        'eligible_count_in_sample': 0,
+    }
     if divar_enabled and not is_builder_customer(customer):
-        div_qs = _divar_match_candidates_filtered_qs(customer, user, dataset_id=dataset_id)
-        divar_sql = div_qs.count()
-        for listing in div_qs.order_by('pk').iterator(chunk_size=500):
-            reason = _divar_eligibility_reason(customer, listing)
-            if reason:
-                divar_drop[reason] += 1
-                continue
-            item = _score_listing(customer, listing)
-            if not item:
-                divar_drop['score_pipeline_none'] += 1
-                continue
-            score = int(item.get('score') or 0)
-            divar_scores.append(score)
-            if score >= divar_min:
-                divar_eligible_tokens.append(str(listing.token or listing.pk))
-            else:
-                divar_drop['below_min_score'] += 1
-            if sum(divar_drop.values()) + len(divar_scores) >= divar_sample_cap:
-                break
-
-    index_crm = build_crm_index(customer, user, min_score=crm_min)
-    index_divar = (
-        build_divar_index(customer, user, min_score=divar_min, dataset_id=dataset_id)
-        if divar_enabled and not is_builder_customer(customer)
-        else []
-    )
-
-    payload = collect_customer_match_results(
-        customer,
-        user,
-        divar_enabled=divar_enabled,
-        dataset_id=dataset_id,
-        crm_min_score=crm_min,
-        divar_min_score=divar_min,
-        page_size=1_000_000,
-        rebuild_index=True,
-    )
+        divar_block = _scan_divar_sample(
+            customer,
+            user,
+            min_score=divar_min,
+            sample_cap=max(1, int(divar_sample_cap)),
+            dataset_id=dataset_id,
+        )
 
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
+    meta = _audit_meta(crm_sample_cap=crm_sample_cap, divar_sample_cap=divar_sample_cap)
+    meta['elapsed_ms'] = elapsed_ms
+    meta['customer_id'] = customer.pk
+    meta['viewer_user_id'] = user.pk
 
     return {
-        'customer_id': customer.pk,
-        'customer_type': customer.customer_type,
-        'areas': customer.areas or '',
-        'budget_min': customer.budget_min,
-        'budget_max': customer.budget_max,
-        'crm_sql_candidates': crm_sql,
-        'crm_eligible_count': len(crm_eligible_ids),
-        'crm_index_count': len(index_crm),
-        'crm_display_total': payload.get('crm_total_count'),
-        'crm_removed_reasons': dict(crm_drop),
-        'crm_score_distribution': _score_histogram(crm_scores),
-        'crm_eligible_sample_ids': crm_eligible_ids[:50],
-        'divar_sql_candidates': divar_sql,
-        'divar_eligible_count': len(divar_eligible_tokens),
-        'divar_index_count': len(index_divar),
-        'divar_display_total': payload.get('divar_total_count'),
-        'divar_removed_reasons': dict(divar_drop),
-        'divar_score_distribution': _score_histogram(divar_scores),
-        'total_display_count': payload.get('total_count'),
+        'audit_meta': meta,
+        'customer_summary': {
+            'customer_id': customer.pk,
+            'customer_type': customer.customer_type,
+            'areas': customer.areas or '',
+            'budget_min': customer.budget_min,
+            'budget_max': customer.budget_max,
+            'is_rent_customer': _is_rent_customer(customer),
+        },
         'min_scores': {'crm': crm_min, 'divar': divar_min},
-        'elapsed_ms_cold_sample': elapsed_ms,
+        'crm': crm_block,
+        'divar': divar_block,
+        'disclaimer': (
+            'آمار eligible و دلایل حذف فقط روی نمونه بررسی‌شده است مگر sample_complete=true. '
+            'sql_candidates_total تعداد کل پس از prefilter SQL است.'
+        ),
     }
 
 
@@ -209,21 +324,65 @@ def _score_histogram(scores: List[int]) -> Dict[str, int]:
     return dict(buckets)
 
 
+def compare_match_snapshots(
+    before: Dict[str, Any],
+    after: Dict[str, Any],
+) -> Dict[str, Any]:
+    """مقایسه دو snapshot — فقط روی نمونه‌های بررسی‌شده در هر طرف."""
+    b_crm = before.get('crm') or {}
+    a_crm = after.get('crm') or {}
+    b_div = before.get('divar') or {}
+    a_div = after.get('divar') or {}
+
+    b_ids = set(b_crm.get('eligible_ids_in_sample') or [])
+    a_ids = set(a_crm.get('eligible_ids_in_sample') or [])
+    b_tok = set(b_div.get('eligible_tokens_in_sample') or [])
+    a_tok = set(a_div.get('eligible_tokens_in_sample') or [])
+
+    same_sample_scope = (
+        b_crm.get('rows_examined') == a_crm.get('rows_examined')
+        and b_crm.get('sql_candidates_total') == a_crm.get('sql_candidates_total')
+        and b_crm.get('sample_complete') == a_crm.get('sample_complete')
+    )
+
+    return {
+        'before_meta': before.get('audit_meta'),
+        'after_meta': after.get('audit_meta'),
+        'same_crm_sample_scope': same_sample_scope,
+        'crm_sql_total_before': b_crm.get('sql_candidates_total'),
+        'crm_sql_total_after': a_crm.get('sql_candidates_total'),
+        'crm_rows_examined_before': b_crm.get('rows_examined'),
+        'crm_rows_examined_after': a_crm.get('rows_examined'),
+        'crm_eligible_in_sample_before': b_crm.get('eligible_count_in_sample'),
+        'crm_eligible_in_sample_after': a_crm.get('eligible_count_in_sample'),
+        'crm_ids_only_in_before_sample': sorted(b_ids - a_ids),
+        'crm_ids_only_in_after_sample': sorted(a_ids - b_ids),
+        'crm_ids_in_both_samples': len(b_ids & a_ids),
+        'divar_eligible_in_sample_before': b_div.get('eligible_count_in_sample'),
+        'divar_eligible_in_sample_after': a_div.get('eligible_count_in_sample'),
+        'divar_tokens_only_in_before_sample': sorted(b_tok - a_tok),
+        'divar_tokens_only_in_after_sample': sorted(a_tok - b_tok),
+        'disclaimer': (
+            'این diff فقط شناسه‌های واجد شرایط داخل نمونه هر snapshot را مقایسه می‌کند؛ '
+            'جایگزین اسکن کامل نیست.'
+        ),
+    }
+
+
 def compare_match_id_sets(
     before: Dict[str, Any],
     after: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """مقایسه دو خروجی audit — مثلاً snapshot قبل/بعد."""
+    """سازگاری با snapshotهای قدیمی (v1)."""
+    if before.get('crm') or after.get('crm'):
+        return compare_match_snapshots(before, after)
     b_crm = set(before.get('crm_eligible_sample_ids') or [])
     a_crm = set(after.get('crm_eligible_sample_ids') or [])
     return {
-        'crm_only_before': sorted(b_crm - a_crm),
-        'crm_only_after': sorted(a_crm - b_crm),
-        'crm_intersection': len(b_crm & a_crm),
-        'crm_total_before': before.get('crm_eligible_count'),
-        'crm_total_after': after.get('crm_eligible_count'),
-        'divar_total_before': before.get('divar_eligible_count'),
-        'divar_total_after': after.get('divar_eligible_count'),
+        'legacy_v1_compare': True,
+        'crm_ids_only_in_before_sample': sorted(b_crm - a_crm),
+        'crm_ids_only_in_after_sample': sorted(a_crm - b_crm),
+        'disclaimer': 'snapshot قدیمی — فقط زیرمجموعه ۵۰تایی',
     }
 
 

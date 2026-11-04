@@ -171,10 +171,63 @@ html.mk-public[data-theme="dark"] .h-stats__strip {
     padding: var(--section-space-md) 0;
 }
 
+.mk-home-page .h-intro-showcase {
+    scroll-margin-top: calc(var(--h-nav-offset, 4.5rem) + 0.75rem);
+    padding: clamp(1.75rem, 4vw, 2.75rem) 0 clamp(2rem, 4.5vw, 3rem);
+    --h-intro-showcase-bg: linear-gradient(180deg, #faf7ff 0%, #fff 42%, #fff 100%);
+    --h-intro-showcase-border: rgba(120, 40, 245, 0.08);
+    --h-intro-fallback-bg: #fff;
+    --h-intro-fallback-border: rgba(120, 40, 245, 0.22);
+    --h-intro-fallback-text: #625d70;
+    --h-intro-fallback-link: #7828f5;
+    background: var(--h-intro-showcase-bg);
+    border-bottom: 1px solid var(--h-intro-showcase-border);
+}
+
+.mk-home-page .h-intro-feature__player {
+    max-width: min(1180px, 100%);
+}
+
+.mk-home-page .h-intro-showcase__fallback {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    border-radius: 1rem;
+    border: 1px dashed var(--h-intro-fallback-border);
+    background: var(--h-intro-fallback-bg);
+}
+
+.mk-home-page .h-intro-showcase__fallback-text {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--h-intro-fallback-text);
+}
+
+.mk-home-page .h-intro-showcase__fallback a {
+    color: var(--h-intro-fallback-link);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.mk-home-page .h-intro-showcase__fallback a:hover {
+    text-decoration: underline;
+}
+
 .h-intro-feature__player .mk-intro-vid--marketing {
     margin: 0;
-    border: none;
-    box-shadow: 0 28px 70px -40px rgba(79, 70, 229, 0.22);
+}
+
+html.mk-public[data-theme="dark"] .mk-home-page .h-intro-showcase {
+    --h-intro-showcase-bg: linear-gradient(180deg, rgba(18, 24, 38, 0.95) 0%, #0b1220 55%, #0b1220 100%);
+    --h-intro-showcase-border: rgba(148, 163, 184, 0.12);
+    --h-intro-fallback-bg: #121826;
+    --h-intro-fallback-border: rgba(148, 163, 184, 0.22);
+    --h-intro-fallback-text: #94a3b8;
+    --h-intro-fallback-link: #c4b5fd;
+    color-scheme: dark;
+}
+
+html.mk-public[data-theme="light"] .mk-home-page .h-intro-showcase {
+    color-scheme: light;
 }
 
 /* ─── Story — editorial scrollytelling ─── */

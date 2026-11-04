@@ -3,6 +3,9 @@
     <div class="df-story-chapter__wrap df-story-chapter__wrap--file">
         <div class="df-story-scrolly df-story-scrolly--file" data-df-sticky-chapter data-df-scrolly-chapter="file">
             <div class="df-story-file-desktop">
+                <header class="df-story-file-head">
+                    {% include 'shop/includes/home_story/chapter_file_copy_intro.html' with head_title_id='df-story-ch-file-title' %}
+                </header>
                 <div class="df-story-file-pin">
                     <div class="df-story-file-canvas">
                         <div class="df-story-file-progress-corner" data-df-file-progress data-df-active="0" dir="ltr" aria-hidden="true">
@@ -15,8 +18,6 @@
                         <div class="df-story-file-body">
                         <div class="df-story-file-main">
                             <div class="df-story-file-copy">
-                                {% include 'shop/includes/home_story/chapter_file_copy_intro.html' with head_title_id='df-story-ch-file-title' %}
-
                                 <div class="df-story-file-text-stack" data-df-file-text-stack>
                                     <div class="df-story-file-text is-active" data-df-text-step="0" id="df-file-text-0">
                                         <span class="df-story-file-step__kicker">قدم اول</span>

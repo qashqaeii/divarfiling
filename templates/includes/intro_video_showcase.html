@@ -4,11 +4,10 @@
          aria-labelledby="mk-intro-vid-title-{{ intro_video_skin|default:'ws' }}"
          {% if intro_video_skin == 'workspace' %}data-tour="workspace-intro-video" data-help-tour="workspace-intro-video"{% endif %}>
     <div class="mk-intro-vid__ambient" aria-hidden="true"></div>
-    {% if intro_video_skin == 'marketing' %}<div class="container">{% endif %}
     <div class="mk-intro-vid__inner">
         <div class="mk-intro-vid__copy">
             <p class="mk-intro-vid__kicker">
-                <span class="mk-intro-vid__kicker-icon" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+                <span class="mk-intro-vid__kicker-icon" aria-hidden="true"><i class="fas fa-circle-play"></i></span>
                 {% if intro_video.completed %}
                 <span>آموزش اول · تماشا شده</span>
                 {% else %}
@@ -19,9 +18,9 @@
             <p class="mk-intro-vid__lead">{{ intro_video.video.description }}</p>
 
             <ul class="mk-intro-vid__points" aria-label="در این ویدیو">
-                <li><i class="fas fa-compass" aria-hidden="true"></i><span>می‌فهمید فایلینگ دیوار دقیقاً چه کاری انجام می‌دهد</span></li>
-                <li><i class="fas fa-layer-group" aria-hidden="true"></i><span>استخراج، فایلینگ، CRM و تحلیل در یک میزکار یکپارچه</span></li>
-                <li><i class="fas fa-route" aria-hidden="true"></i><span>مسیر بعدی برای شروع حرفه‌ای روشن می‌شود</span></li>
+                <li><span class="mk-intro-vid__point-icon" aria-hidden="true"><i class="fas fa-compass"></i></span><span>می‌فهمید فایلینگ دیوار دقیقاً چه کاری انجام می‌دهد</span></li>
+                <li><span class="mk-intro-vid__point-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span><span>استخراج، فایلینگ، CRM و تحلیل در یک میزکار یکپارچه</span></li>
+                <li><span class="mk-intro-vid__point-icon" aria-hidden="true"><i class="fas fa-route"></i></span><span>مسیر بعدی برای شروع حرفه‌ای روشن می‌شود</span></li>
             </ul>
 
             <div class="mk-intro-vid__actions">
@@ -64,6 +63,5 @@
             </div>
         </div>
     </div>
-    {% if intro_video_skin == 'marketing' %}</div>{% endif %}
 </section>
 {% endif %}

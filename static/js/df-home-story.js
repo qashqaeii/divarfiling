@@ -108,38 +108,108 @@
             return String(n).padStart(2, '0');
         }
 
-        function measureFileTextStack() {
-            if (!isFileChapter || !textStack) return;
-            if (!stickyMq.matches) return;
-            textStack.classList.add('is-measuring');
-            var maxH = 0;
-            textPanels.forEach(function (panel) {
-                maxH = Math.max(maxH, panel.offsetHeight);
-            });
-            textStack.classList.remove('is-measuring');
-            if (maxH > 0) {
-                textStack.style.setProperty('--df-file-stack-h', Math.ceil(maxH) + 'px');
+        function measureChapterBlockHeight(withCompact) {
+            if (!filePin) return 0;
+            var bodyEl = filePin.querySelector('.df-story-file-body');
+            var footEl = filePin.querySelector('.df-story-file-foot');
+            var canvas = filePin.querySelector('.df-story-file-canvas');
+            if (!bodyEl || !footEl) return 0;
+
+            filePin.classList.toggle('df-story-file-pin--compact', !!withCompact);
+            filePin.classList.add('df-story-file-pin--flow');
+
+            var gapRaw = canvas ? getComputedStyle(canvas).gap : '0';
+            var gap = parseFloat(gapRaw) || 24;
+            var total = Math.ceil(bodyEl.scrollHeight + footEl.scrollHeight + gap);
+
+            filePin.classList.remove('df-story-file-pin--flow');
+            return total;
+        }
+
+        function pinContentFitsSticky(pinBudget, withCompact) {
+            var need = measureChapterBlockHeight(withCompact);
+            return need > 0 && need <= pinBudget - 32;
+        }
+
+        function verifyStickyPinFits() {
+            if (!filePin || filePin.classList.contains('df-story-file-pin--flow')) return true;
+            var bodyEl = filePin.querySelector('.df-story-file-body');
+            var footEl = filePin.querySelector('.df-story-file-foot');
+            var canvas = filePin.querySelector('.df-story-file-canvas');
+            if (!bodyEl || !footEl || !canvas) return true;
+            var gapRaw = getComputedStyle(canvas).gap;
+            var gap = parseFloat(gapRaw) || 24;
+            var need = bodyEl.scrollHeight + footEl.scrollHeight + gap;
+            return need <= filePin.clientHeight + 2;
+        }
+
+        function getNavOffsetPx() {
+            var navEl = document.documentElement;
+            var navRaw = getComputedStyle(navEl).getPropertyValue('--h-nav-offset').trim();
+            if (!navRaw) {
+                navRaw = getComputedStyle(document.documentElement).getPropertyValue('--df-file-nav').trim();
             }
+            var navPx = parseFloat(navRaw) || 72;
+            if (navRaw.indexOf('rem') !== -1) {
+                navPx = parseFloat(navRaw) * parseFloat(getComputedStyle(navEl).fontSize || '16');
+            }
+            return navPx;
+        }
+
+        function getPinBudgetPx() {
+            return Math.max(320, window.innerHeight - getNavOffsetPx() - 12);
+        }
+
+        function setFileFlowMode(on) {
+            if (!filePin) return;
+            filePin.classList.toggle('df-story-file-pin--flow', on);
+            scrolly.classList.toggle('df-story-scrolly--file-flow', on);
         }
 
         function syncFilePinLayout() {
             if (!isFileChapter || !filePin) return;
-            measureFileTextStack();
-            var compact = window.innerHeight < 920 || window.matchMedia('(max-height: 900px)').matches;
-            filePin.classList.toggle('df-story-file-pin--compact', compact && stickyMq.matches);
+
             if (!stickyMq.matches) {
-                filePin.classList.add('df-story-file-pin--flow');
+                filePin.classList.remove('df-story-file-pin--compact');
+                setFileFlowMode(true);
                 return;
             }
-            filePin.classList.remove('df-story-file-pin--flow');
-            if (window.innerHeight <= 680) {
-                filePin.classList.add('df-story-file-pin--flow');
+
+            var pinBudget = getPinBudgetPx();
+            filePin.style.setProperty('--df-file-pin-h', pinBudget + 'px');
+
+            filePin.classList.remove('df-story-file-pin--compact');
+
+            var useFlow = true;
+            if (pinContentFitsSticky(pinBudget, false)) {
+                useFlow = false;
+            } else if (pinContentFitsSticky(pinBudget, true)) {
+                filePin.classList.add('df-story-file-pin--compact');
+                useFlow = false;
+            }
+
+            setFileFlowMode(useFlow);
+
+            if (!useFlow && !verifyStickyPinFits()) {
+                filePin.classList.remove('df-story-file-pin--compact');
+                setFileFlowMode(true);
+            }
+        }
+
+        function syncFilePinLayoutAndRefresh() {
+            syncFilePinLayout();
+            if (stickyMq.matches) {
+                var i = pickScrollyStepIndex(steps);
+                apply(i);
             }
         }
 
         if (heroImgs.length) {
             heroImgs.forEach(function (img) {
                 var preload = new Image();
+                preload.onload = function () {
+                    syncFilePinLayoutAndRefresh();
+                };
                 preload.src = img.getAttribute('src') || '';
             });
         }
@@ -227,6 +297,13 @@
                 panel.classList.toggle('is-active', on);
                 panel.classList.remove('is-leaving', 'is-entering');
                 panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+                if ('inert' in panel) {
+                    if (on) {
+                        panel.removeAttribute('inert');
+                    } else {
+                        panel.setAttribute('inert', '');
+                    }
+                }
             });
 
             if (rail) {
@@ -289,15 +366,20 @@
 
         apply(0);
         if (isFileChapter) {
-            syncFilePinLayout();
+            syncFilePinLayoutAndRefresh();
             window.requestAnimationFrame(function () {
-                syncFilePinLayout();
+                syncFilePinLayoutAndRefresh();
             });
-            window.addEventListener('resize', syncFilePinLayout);
+            window.addEventListener('resize', syncFilePinLayoutAndRefresh);
             if (typeof stickyMq.addEventListener === 'function') {
-                stickyMq.addEventListener('change', syncFilePinLayout);
+                stickyMq.addEventListener('change', syncFilePinLayoutAndRefresh);
             } else if (typeof stickyMq.addListener === 'function') {
-                stickyMq.addListener(syncFilePinLayout);
+                stickyMq.addListener(syncFilePinLayoutAndRefresh);
+            }
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(function () {
+                    syncFilePinLayoutAndRefresh();
+                });
             }
         }
         refresh();

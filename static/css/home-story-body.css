@@ -31,6 +31,11 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-home-body {
     --df-btn-ghost-border: rgba(148, 163, 184, 0.22);
 }
 
+/* Pin-scrolly needs overflow: visible on ancestors; mk-home clips .main-content horizontally */
+.mk-home-page .main-content:has(.df-home-story) {
+    overflow: visible;
+}
+
 .df-home-story {
     --df-intro-from: #1a0f2e;
     --df-intro-to: var(--df-bg);
@@ -40,6 +45,7 @@ html.mk-public[data-theme="dark"] .mk-home-page .mk-home-body {
     --df-section-y: clamp(3rem, 7vw, 5rem);
     color: var(--df-text);
     background: var(--df-bg);
+    overflow-x: clip;
 }
 
 html.mk-public[data-theme="dark"] .df-home-story {

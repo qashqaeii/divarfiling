@@ -477,6 +477,7 @@
                     syncFilePinLayoutAndRefresh();
                 });
             }
+            window.addEventListener('load', syncFilePinLayoutAndRefresh, { once: true });
         }
         refresh();
         window.addEventListener('scroll', function () { onScroll(refresh); }, { passive: true });

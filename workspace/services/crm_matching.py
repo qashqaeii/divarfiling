@@ -21,6 +21,8 @@ from workspace.services.advertiser_signal import (
 )
 from workspace.services.crm_matching_geo import (
     listing_data_location_extras,
+    listing_matching_district,
+    listing_structured_location_extras,
     location_field_values,
     location_match_quality,
     location_tokens_equivalent,
@@ -47,6 +49,7 @@ from workspace.services.crm_matching_eval import (
     evaluation_to_result_fields,
     index_sort_score,
 )
+from workspace.services.crm_matching_rank import compute_relevance_rank
 from workspace.services.customer_search_property_types import customer_search_property_types_restricted
 from workspace.services.formatting import format_toman
 
@@ -901,6 +904,20 @@ def _score_crm_property_with_profile(
     )
     score = evaluation.score
     reasons = evaluation.reasons
+    evaluation.property_type_confidence = 'high' if (prop.property_type or '').strip() else 'none'
+    evaluation.property_type_source = 'crm'
+    relevance_rank = compute_relevance_rank(
+        profile,
+        dims,
+        evaluation,
+        is_rent_deal=use_rent_price,
+        sale_price=prop.sale_price,
+        deposit=prop.deposit,
+        rent=prop.monthly_rent,
+        area=prop.area,
+        property_type_confidence=evaluation.property_type_confidence,
+        published_at=getattr(prop, 'updated_at', None),
+    )
 
     result = {
         'source': 'crm',
@@ -928,6 +945,7 @@ def _score_crm_property_with_profile(
         result['match_intent'] = match_intent
         result['intent_label'] = intent_label
     result.update(evaluation_to_result_fields(evaluation))
+    result['relevance_rank'] = relevance_rank
     return result
 
 
@@ -954,7 +972,8 @@ def _score_listing_with_profile(
     listing_floor = _parse_int_feature(feats.get('floor'))
     listing_year = _parse_int_feature(feats.get('build_year'))
     listing_rooms = feats.get('rooms') or listing.rooms
-    listing_extras = listing_data_location_extras(listing.data)
+    listing_extras = listing_structured_location_extras(listing)
+    listing_district = listing_matching_district(listing)
 
     use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
     if not _profile_criteria_eligible(
@@ -963,7 +982,7 @@ def _score_listing_with_profile(
         prop_type=inferred,
         neighborhood=listing.neighborhood or '',
         city=listing.city or '',
-        district='',
+        district=listing_district,
         location_extras=listing_extras,
         rooms=listing_rooms,
         build_year=listing_year,
@@ -992,7 +1011,7 @@ def _score_listing_with_profile(
         profile,
         listing.neighborhood or '',
         listing.city or '',
-        '',
+        listing_district,
         extra_values=listing_extras,
     )
     type_s, type_note = _property_type_match_profile(profile, inferred)
@@ -1002,7 +1021,7 @@ def _score_listing_with_profile(
         profile,
         neighborhood=listing.neighborhood or '',
         city=listing.city or '',
-        district='',
+        district=listing_district,
         extra_values=listing_extras,
     )
     dims = DimensionScores(
@@ -1031,6 +1050,18 @@ def _score_listing_with_profile(
     evaluation.property_type_source = type_detail.source
     score = evaluation.score
     reasons = evaluation.reasons
+    relevance_rank = compute_relevance_rank(
+        profile,
+        dims,
+        evaluation,
+        is_rent_deal=use_rent_price,
+        sale_price=listing.price,
+        deposit=listing.deposit,
+        rent=listing.rent,
+        area=listing.area,
+        property_type_confidence=type_detail.confidence,
+        published_at=getattr(listing, 'published_at', None),
+    )
 
     display_neighborhood = listing.neighborhood or ''
     areas_pref = preferred_areas_from_profile(profile)
@@ -1069,6 +1100,7 @@ def _score_listing_with_profile(
         result['match_intent'] = match_intent
         result['intent_label'] = intent_label
     result.update(evaluation_to_result_fields(evaluation))
+    result['relevance_rank'] = relevance_rank
     return result
 
 
@@ -1281,7 +1313,10 @@ def _match_builder_group(
             )
             if item and int(item.get('score') or 0) >= min_score:
                 tier = str(item.get('match_tier') or 'strong')
-                refs.append(ScoredRef(index_sort_score(int(item['score']), tier), int(prop.pk)))
+                refs.append(ScoredRef(
+                    index_sort_score(int(item['score']), tier, int(item.get('relevance_rank') or 0)),
+                    int(prop.pk),
+                ))
         return refs
 
     crm_key = _index_cache_key(
@@ -1317,7 +1352,10 @@ def _match_builder_group(
                 )
                 if item and int(item.get('score') or 0) >= divar_min:
                     tier = str(item.get('match_tier') or 'strong')
-                    refs.append(ScoredRef(index_sort_score(int(item['score']), tier), int(listing.pk)))
+                    refs.append(ScoredRef(
+                        index_sort_score(int(item['score']), tier, int(item.get('relevance_rank') or 0)),
+                        int(listing.pk),
+                    ))
             return refs
 
         divar_key = _index_cache_key(

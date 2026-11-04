@@ -127,7 +127,10 @@ def collect_property_contact_matches(
             item = _score_customer_for_property(cust, prop)
             if item:
                 tier = str(item.get('match_tier') or 'strong')
-                refs.append(ScoredRef(index_sort_score(int(item['score']), tier), int(cust.pk)))
+                refs.append(ScoredRef(
+                    index_sort_score(int(item['score']), tier, int(item.get('relevance_rank') or 0)),
+                    int(cust.pk),
+                ))
         return refs
 
     cache_key = _index_cache_key(

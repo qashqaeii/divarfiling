@@ -11,8 +11,8 @@ from django.core.cache import cache
 from workspace.models import Customer
 
 MATCH_INDEX_CACHE_TTL = 600
-# v2: امتیاز ایندکس شامل bonus سطح tier است (index_sort_score)
-MATCH_INDEX_CACHE_NAMESPACE = 'v2'
+# v3: bonus سطح tier + relevance_rank برای شکستن تساوی امتیاز
+MATCH_INDEX_CACHE_NAMESPACE = 'v3'
 MATCH_ITERATOR_CHUNK_SIZE = 500
 DIVAR_LISTINGS_CATALOG_REV_PREFIX = 'crm_match_divar_rev:'
 CRM_PROPERTIES_CATALOG_REV_PREFIX = 'crm_match_props_rev:'
@@ -249,7 +249,7 @@ def build_crm_index(customer: Customer, user, *, min_score: int) -> List[ScoredR
         score = int(item.get('score') or 0)
         if score >= min_score:
             tier = str(item.get('match_tier') or 'strong')
-            refs.append(ScoredRef(index_sort_score(score, tier), int(prop.pk)))
+            refs.append(ScoredRef(index_sort_score(score, tier, int(item.get('relevance_rank') or 0)), int(prop.pk)))
     return refs
 
 
@@ -283,7 +283,7 @@ def build_divar_index(
         score = int(item.get('score') or 0)
         if score >= min_score:
             tier = str(item.get('match_tier') or 'strong')
-            refs.append(ScoredRef(index_sort_score(score, tier), int(listing.pk)))
+            refs.append(ScoredRef(index_sort_score(score, tier, int(item.get('relevance_rank') or 0)), int(listing.pk)))
     return refs
 
 

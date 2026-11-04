@@ -35,10 +35,10 @@ from workspace.services.crm_matching import (
     is_builder_customer,
 )
 from workspace.services.features import extract_listing_features
-from workspace.services.crm_matching_geo import listing_data_location_extras
+from workspace.services.crm_matching_geo import listing_matching_district, listing_structured_location_extras
 from workspace.services.crm_matching import _parse_int_feature
 
-MATCH_AUDIT_ENGINE_VERSION = '3.1-preprod-gate-readonly'
+MATCH_AUDIT_ENGINE_VERSION = '3.2-location-rank-readonly'
 
 
 def _audit_meta(
@@ -118,13 +118,14 @@ def _divar_eligibility_reason(customer: Customer, listing) -> Optional[str]:
     listing_floor = _parse_int_feature(feats.get('floor'))
     listing_year = _parse_int_feature(feats.get('build_year'))
     listing_rooms = feats.get('rooms') or listing.rooms
-    listing_extras = listing_data_location_extras(listing.data)
+    listing_extras = listing_structured_location_extras(listing)
+    listing_district = listing_matching_district(listing)
 
     if not _profile_neighborhood_eligible(
         customer,
         neighborhood=listing.neighborhood or '',
         city=listing.city or '',
-        district='',
+        district=listing_district,
         extra_values=listing_extras,
     ):
         return 'location_hard_filter'

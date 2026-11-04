@@ -9,7 +9,7 @@ MATCH_TIER_ALTERNATIVE = 'alternative'
 MATCH_TIER_INSUFFICIENT = 'insufficient_info'
 MATCH_TIER_REJECTED = 'rejected'
 
-MATCH_ENGINE_VERSION = '3.1-preprod-gate'
+MATCH_ENGINE_VERSION = '3.2-location-rank'
 
 _TIER_SORT_BONUS = {
     MATCH_TIER_STRONG: 2_000_000,
@@ -17,13 +17,16 @@ _TIER_SORT_BONUS = {
     MATCH_TIER_INSUFFICIENT: 0,
 }
 
+_RELEVANCE_SORT_CAP = 9999
+
 _NOTIFY_ALLOWED_TIERS = frozenset({MATCH_TIER_STRONG})
 
 
-def index_sort_score(display_score: int, tier: str) -> int:
-    """امتیاز مرتب‌سازی ایندکس — سطح کیفیت بالاتر از امتیاز خام."""
+def index_sort_score(display_score: int, tier: str, relevance_rank: int = 0) -> int:
+    """امتیاز مرتب‌سازی ایندکس — tier و relevance بدون تغییر score نمایشی."""
     bonus = _TIER_SORT_BONUS.get(tier or MATCH_TIER_STRONG, 0)
-    return int(display_score) + bonus
+    rel = min(_RELEVANCE_SORT_CAP, max(0, int(relevance_rank or 0)))
+    return int(display_score) + bonus + rel
 
 
 def match_eligible_for_auto_notify(match: Dict[str, Any]) -> bool:

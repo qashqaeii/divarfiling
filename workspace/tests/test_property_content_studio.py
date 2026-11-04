@@ -575,6 +575,76 @@ class PropertyContentStudioDraftValidateTests(TestCase):
         self.assertEqual(merged['posters']['luxury']['headline'], 'جدید')
         self.assertNotIn('pip_enabled', merged['posters']['luxury'])
 
+    def test_scene_preserves_content_contract(self):
+        scene = {
+            'schemaVersion': 2,
+            'canvas': {'width': 1080, 'height': 1920, 'format': 'story'},
+            'templateId': 'pearlescent',
+            'layers': [{
+                'id': 'headline-1',
+                'type': 'text',
+                'name': 'عنوان',
+                'x': 1,
+                'y': 2,
+                'width': 100,
+                'height': 40,
+                'contentContract': {
+                    'schema_version': 1,
+                    'resolver': 'poster_headline',
+                    'template_role': 'headline',
+                },
+            }],
+            'layerOrder': ['headline-1'],
+        }
+        conf = _normalize_poster_config({'scene': scene}, 'pearlescent')
+        layer = conf['scene']['layers'][0]
+        self.assertEqual(layer['contentContract']['resolver'], 'poster_headline')
+
+    def test_poster_scenes_per_format_round_trip(self):
+        story = {
+            'schemaVersion': 2,
+            'canvas': {'width': 1080, 'height': 1920, 'format': 'story'},
+            'templateId': 'pearlescent',
+            'layers': [{'id': 'a', 'type': 'text', 'name': 'A', 'x': 1, 'y': 1, 'width': 10, 'height': 10}],
+            'layerOrder': ['a'],
+        }
+        post = {
+            'schemaVersion': 2,
+            'canvas': {'width': 1080, 'height': 1350, 'format': 'post'},
+            'templateId': 'pearlescent',
+            'layers': [{'id': 'a', 'type': 'text', 'name': 'A', 'x': 9, 'y': 9, 'width': 10, 'height': 10}],
+            'layerOrder': ['a'],
+        }
+        merged, _ = validate_and_merge_draft(
+            None,
+            {'posters': {'pearlescent': {'scenes': {'story': story, 'post': post}}}},
+        )
+        scenes = merged['posters']['pearlescent']['scenes']
+        self.assertEqual(scenes['story']['layers'][0]['x'], 1)
+        self.assertEqual(scenes['post']['layers'][0]['x'], 9)
+
+    def test_scene_style_keeps_linear_gradient(self):
+        scene = {
+            'schemaVersion': 2,
+            'canvas': {'width': 1080, 'height': 1920, 'format': 'story'},
+            'templateId': 'pearlescent',
+            'layers': [{
+                'id': 'bg',
+                'type': 'shape',
+                'name': 'bg',
+                'x': 0,
+                'y': 0,
+                'width': 10,
+                'height': 10,
+                'style': {'background': 'linear-gradient(135deg,rgba(0,0,0,0.2),rgba(255,255,255,0.9))'},
+            }],
+            'layerOrder': ['bg'],
+        }
+        conf = _normalize_poster_config({'scene': scene}, 'pearlescent')
+        bg = conf['scene']['layers'][0]['style']['background']
+        self.assertIn('linear-gradient', bg)
+        self.assertIn('rgba', bg)
+
 
 class PropertyContentStudioQualityTests(TestCase):
     def test_quality_warns_short_notes(self):

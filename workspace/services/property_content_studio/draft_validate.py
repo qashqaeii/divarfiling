@@ -117,6 +117,41 @@ def _normalize_scene_binding(raw: Any) -> Optional[Dict[str, str]]:
     return {'source': source, 'field': field, 'mode': mode}
 
 
+def _sanitize_css_paint(val: Any, *, max_len: int) -> str:
+    s = str(val or '').strip()
+    if not s:
+        return ''
+    if len(s) > max_len:
+        s = s[:max_len]
+    lower = s.lower()
+    if 'url(' in lower or ';' in s or '<' in s:
+        raise DraftValidationError('scene: style نامعتبر')
+    if lower.startswith('linear-gradient'):
+        return s
+    if s.startswith('#') and 4 <= len(s) <= 9:
+        return s
+    if lower.startswith('rgba(') or lower.startswith('rgb('):
+        return s
+    return _clip_str(s, min(max_len, 32))
+
+
+def _normalize_content_contract(raw: Any) -> Optional[Dict[str, Any]]:
+    if not isinstance(raw, dict):
+        return None
+    resolver = _clip_str(raw.get('resolver'), 64)
+    if not resolver:
+        return None
+    out: Dict[str, Any] = {
+        'schema_version': max(1, _clip_int(raw.get('schema_version'), 1, 9, 1)),
+        'resolver': resolver,
+        'template_role': _clip_str(raw.get('template_role'), 32),
+    }
+    binding = _normalize_scene_binding(raw.get('default_binding'))
+    if binding:
+        out['default_binding'] = binding
+    return out
+
+
 def _normalize_scene_style(raw: Any) -> Dict[str, Any]:
     if raw is None:
         return {}
@@ -135,7 +170,7 @@ def _normalize_scene_style(raw: Any) -> Dict[str, Any]:
         elif key == 'fontWeight':
             out[key] = int(_clip_float(val, 400, 900, field='fontWeight'))
         elif key == 'fill':
-            out[key] = _clip_str(val, 16)
+            out[key] = _sanitize_css_paint(val, max_len=96)
         elif key == 'align':
             a = str(val or 'right')
             out[key] = a if a in _SCENE_ALIGN else 'right'
@@ -144,7 +179,7 @@ def _normalize_scene_style(raw: Any) -> Dict[str, Any]:
         elif key == 'lineHeight':
             out[key] = _clip_float(val, 0.8, 3.0, field='lineHeight')
         elif key == 'background':
-            out[key] = _clip_str(val, 32)
+            out[key] = _sanitize_css_paint(val, max_len=220)
         elif key == 'borderRadius':
             out[key] = _clip_float(val, 0, 999, field='borderRadius')
         elif key == 'opacity':
@@ -294,6 +329,9 @@ def _validate_and_normalize_scene(raw: Any, template_id: str) -> Dict[str, Any]:
             layer['imageIndex'] = max(0, _clip_int(item.get('imageIndex'), 0, 64, 0))
         if item.get('templateRole'):
             layer['templateRole'] = _clip_str(item.get('templateRole'), 32)
+        cc = _normalize_content_contract(item.get('contentContract'))
+        if cc:
+            layer['contentContract'] = cc
         ids.add(layer_id)
         layers.append(layer)
 
@@ -420,6 +458,20 @@ def _normalize_poster_flat_fields(raw: Dict[str, Any], out: Dict[str, Any]) -> N
         out['image_order'] = order
 
 
+def _normalize_poster_scenes(raw: Any, template_id: str) -> Dict[str, Any]:
+    if not isinstance(raw, dict):
+        return {}
+    out: Dict[str, Any] = {}
+    for fmt in OUTPUT_FORMATS.keys():
+        if fmt not in raw:
+            continue
+        scene_raw = raw.get(fmt)
+        if scene_raw is None:
+            continue
+        out[fmt] = _validate_and_normalize_scene(scene_raw, template_id)
+    return out
+
+
 def _normalize_poster_config(raw: Any, template_id: str) -> Dict[str, Any]:
     if not isinstance(raw, dict):
         return {}
@@ -429,10 +481,14 @@ def _normalize_poster_config(raw: Any, template_id: str) -> Dict[str, Any]:
     if isinstance(poster_settings, dict):
         flat.update(poster_settings)
     for key, value in raw.items():
-        if key in ('scene', 'posterSettings'):
+        if key in ('scene', 'posterSettings', 'scenes'):
             continue
         flat[key] = value
     _normalize_poster_flat_fields(flat, out)
+    if 'scenes' in raw:
+        scenes = _normalize_poster_scenes(raw.get('scenes'), template_id)
+        if scenes:
+            out['scenes'] = scenes
     if 'scene' in raw:
         out['scene'] = _validate_and_normalize_scene(raw.get('scene'), template_id)
     if isinstance(poster_settings, dict):

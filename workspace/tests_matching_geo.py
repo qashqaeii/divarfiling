@@ -38,7 +38,7 @@ class MatchingGeoCityTests(TestCase):
             areas='ونک',
         )
 
-    def test_wrong_neighborhood_excluded_when_area_preference_set(self):
+    def test_wrong_neighborhood_is_alternative_not_excluded(self):
         CRMProperty.objects.create(
             user=self.user,
             title='زعفرانیه',
@@ -51,7 +51,9 @@ class MatchingGeoCityTests(TestCase):
             area=100,
         )
         matches = match_crm_properties(self.buyer, self.user)
-        self.assertEqual(matches, [])
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]['location_match_status'], 'location_different')
+        self.assertEqual(matches[0]['match_tier'], 'alternative')
 
     def test_identity_city_does_not_block_when_areas_empty(self):
         self.buyer.areas = ''

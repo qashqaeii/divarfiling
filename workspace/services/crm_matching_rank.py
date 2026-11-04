@@ -11,6 +11,12 @@ from workspace.services.crm_matching_geo import (
     GEO_MATCH_ALIAS,
     GEO_MATCH_EXACT,
     GEO_MATCH_STRUCTURED,
+    LOC_STATUS_DIFFERENT,
+    LOC_STATUS_DISTRICT,
+    LOC_STATUS_EXACT,
+    LOC_STATUS_HINT,
+    LOC_STATUS_STREET,
+    LOC_STATUS_UNKNOWN,
 )
 
 _RELEVANCE_CAP = 9999
@@ -26,6 +32,15 @@ _GEO_LEVEL_RANK = {
     GEO_MATCH_EXACT: 2400,
     GEO_MATCH_ALIAS: 2000,
     GEO_MATCH_STRUCTURED: 1600,
+}
+
+_LOCATION_STATUS_RANK = {
+    LOC_STATUS_EXACT: 2600,
+    LOC_STATUS_DISTRICT: 1900,
+    LOC_STATUS_STREET: 1500,
+    LOC_STATUS_UNKNOWN: 250,
+    LOC_STATUS_HINT: 120,
+    LOC_STATUS_DIFFERENT: 0,
 }
 
 
@@ -89,7 +104,11 @@ def compute_relevance_rank(
 
     rank += int(round((evaluation.evidence_completeness or 0) * 600))
 
-    rank += _GEO_LEVEL_RANK.get(dims.geo_level or '', 0)
+    loc_status = getattr(dims, 'location_match_status', '') or ''
+    if loc_status in _LOCATION_STATUS_RANK:
+        rank += _LOCATION_STATUS_RANK[loc_status]
+    else:
+        rank += _GEO_LEVEL_RANK.get(dims.geo_level or '', 0)
     rank += _TYPE_CONF_RANK.get(property_type_confidence or 'none', 0)
 
     if dims.price_s >= 0.99:

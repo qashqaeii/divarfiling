@@ -350,7 +350,7 @@ class MatchingV3IndexCacheTests(TestCase):
             source='crm',
             fingerprint='testfp',
         )
-        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v4')
+        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v5')
         refs, from_cache = get_or_build_index(key, lambda: build_crm_index(buyer, user, min_score=25))
         self.assertFalse(from_cache)
         self.assertGreaterEqual(len(refs), 1)

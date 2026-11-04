@@ -9,7 +9,23 @@ MATCH_TIER_ALTERNATIVE = 'alternative'
 MATCH_TIER_INSUFFICIENT = 'insufficient_info'
 MATCH_TIER_REJECTED = 'rejected'
 
-MATCH_ENGINE_VERSION = '3.2.1-sort-provenance'
+MATCH_ENGINE_VERSION = '3.3-soft-geo'
+
+from workspace.services.crm_matching_geo import (  # noqa: E402 — shared geo contract
+    LOC_STATUS_DIFFERENT,
+    LOC_STATUS_DISTRICT,
+    LOC_STATUS_EXACT,
+    LOC_STATUS_HINT,
+    LOC_STATUS_STREET,
+    LOC_STATUS_UNKNOWN,
+)
+
+_LOC_STRONG_NOTIFY = frozenset({
+    LOC_STATUS_EXACT,
+    LOC_STATUS_DISTRICT,
+    LOC_STATUS_STREET,
+    '',
+})
 
 # ترتیب lexicographic: tier → display_score → relevance (هر پله جدا از بعدی)
 _TIER_SORT_BASE = {
@@ -40,6 +56,9 @@ def match_eligible_for_auto_notify(match: Dict[str, Any]) -> bool:
     tier = match.get('match_tier') or MATCH_TIER_STRONG
     if tier not in _NOTIFY_ALLOWED_TIERS:
         return False
+    loc = (match.get('location_match_status') or '').strip()
+    if loc and loc not in _LOC_STRONG_NOTIFY:
+        return False
     return True
 
 
@@ -56,6 +75,8 @@ class DimensionScores:
     type_note: str = ''
     room_note: str = ''
     geo_level: str = ''
+    location_match_status: str = ''
+    location_confidence: str = ''
 
 
 @dataclass
@@ -70,6 +91,9 @@ class MatchEvaluation:
     property_type_confidence: str = ''
     property_type_source: str = ''
     is_alternative: bool = False
+    location_match_status: str = ''
+    location_confidence: str = ''
+    location_match_reason: str = ''
 
 
 def compute_match_score(d: DimensionScores) -> int:
@@ -300,8 +324,22 @@ def classify_match_tier(
                 has_criterion=_profile_has_rooms_criteria(profile),
             ),
         ]
-        tier = MATCH_TIER_ALTERNATIVE if any(alt_flags) else MATCH_TIER_STRONG
+        geo_status = (dims.location_match_status or '').strip()
+        geo_weak = geo_status in {
+            LOC_STATUS_UNKNOWN,
+            LOC_STATUS_DIFFERENT,
+            LOC_STATUS_HINT,
+        }
+        if geo_weak and _profile_has_geo_criteria(profile):
+            tier = MATCH_TIER_ALTERNATIVE
+        elif any(alt_flags):
+            tier = MATCH_TIER_ALTERNATIVE
+        else:
+            tier = MATCH_TIER_STRONG
 
+    loc_reason = ''
+    if dims.hood_note:
+        loc_reason = dims.hood_note
     return MatchEvaluation(
         eligible=True,
         tier=tier,
@@ -310,6 +348,9 @@ def classify_match_tier(
         evidence_completeness=evidence,
         geo_confidence=dims.geo_level or '',
         is_alternative=tier == MATCH_TIER_ALTERNATIVE,
+        location_match_status=dims.location_match_status or '',
+        location_confidence=dims.location_confidence or '',
+        location_match_reason=loc_reason,
     )
 
 
@@ -323,4 +364,7 @@ def evaluation_to_result_fields(ev: MatchEvaluation) -> Dict[str, Any]:
         'property_type_confidence': ev.property_type_confidence,
         'property_type_source': ev.property_type_source,
         'is_alternative_match': ev.is_alternative,
+        'location_match_status': ev.location_match_status or '',
+        'location_confidence': ev.location_confidence or '',
+        'location_match_reason': ev.location_match_reason or '',
     }

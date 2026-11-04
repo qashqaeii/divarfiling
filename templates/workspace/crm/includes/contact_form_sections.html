@@ -183,7 +183,7 @@
 
     <div data-panel="prefs" class="crm-form-panel" hidden>
         <p class="crm-panel-channels-note" data-crm-panel-channels-note aria-live="polite"></p>
-        <p class="crm-form-hint" id="crmPrefsHint">نوع ملک، متراژ و محله‌های مورد نظر</p>
+        <p class="crm-form-hint" id="crmPrefsHint">نوع ملک، متراژ و اولویت محله (پیشنهادها را محدود نمی‌کند)</p>
         <div class="crm-builder-sell-prefs crm-builder-section hidden">
             <h4 class="crm-builder-section-title" id="crmPrefsBuilderTitle">مشخصات واحد فروش (آپارتمان)</h4>
         </div>
@@ -232,7 +232,7 @@
             {% crm_field form.year_max 'سال ساخت تا' 'crm-prefs-year' %}
             {% crm_field form.floor_min 'طبقه از' 'crm-prefs-floor' %}
             {% crm_field form.floor_max 'طبقه تا' 'crm-prefs-floor' %}
-            {% crm_contact_areas_picker form 'areas' 'محله‌های مورد نظر' 'crm-field-full crm-prefs-location' dataset_neighborhoods %}
+            {% crm_contact_areas_picker form 'areas' 'اولویت محله‌ها' 'crm-field-full crm-prefs-location' dataset_neighborhoods %}
         </div>
         <div class="crm-prefs-amenities crm-prefs-amenities-block">
             <span class="crm-label">امکانات ضروری</span>

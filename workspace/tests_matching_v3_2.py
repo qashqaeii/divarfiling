@@ -83,7 +83,9 @@ class MatchingV32StructuredLocationTests(TestCase):
         )
         extras = listing_structured_location_extras(listing)
         self.assertNotIn('بهارستان', extras)
-        self.assertIsNone(_score_listing(self.buyer, listing))
+        scored = _score_listing(self.buyer, listing)
+        self.assertIsNotNone(scored)
+        self.assertEqual(scored.get('location_match_status'), 'location_unverified_hint')
 
     def test_city_only_listing_stays_rejected(self):
         listing = Listing.objects.create(
@@ -99,7 +101,9 @@ class MatchingV32StructuredLocationTests(TestCase):
             data={'مکان_شهر': 'آبادان'},
         )
         self.assertEqual(listing_location_evidence_level(listing), 'partial')
-        self.assertIsNone(_score_listing(self.buyer, listing))
+        scored = _score_listing(self.buyer, listing)
+        self.assertIsNotNone(scored)
+        self.assertEqual(scored.get('location_match_status'), 'location_unknown')
 
     def test_title_expandable_plus_seo_city_does_not_trust_makan_mahalle(self):
         listing = Listing.objects.create(
@@ -155,7 +159,9 @@ class MatchingV32StructuredLocationTests(TestCase):
             },
         )
         self.assertEqual(listing_trusted_neighborhood(listing), '')
-        self.assertIsNone(_score_listing(self.buyer, listing))
+        scored = _score_listing(self.buyer, listing)
+        self.assertIsNotNone(scored)
+        self.assertNotEqual(scored.get('match_tier'), 'strong')
 
     def test_structured_district_still_usable_with_title_sources(self):
         listing = Listing.objects.create(
@@ -265,5 +271,5 @@ class MatchingV32RankingTests(TestCase):
 
 
 class MatchingV32CacheNamespaceTests(TestCase):
-    def test_cache_namespace_v4(self):
-        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v4')
+    def test_cache_namespace_v5(self):
+        self.assertEqual(MATCH_INDEX_CACHE_NAMESPACE, 'v5')

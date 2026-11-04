@@ -24,11 +24,14 @@ from workspace.services.crm_matching_geo import (
     listing_matching_district,
     listing_structured_location_extras,
     listing_trusted_neighborhood,
+    listing_trusted_street,
+    listing_unverified_location_hints,
     location_field_values,
-    location_match_quality,
+    evaluate_soft_location_match,
     location_tokens_equivalent,
     match_preferred_locations,
     preferred_areas_from_profile,
+    property_conflicts_search_city_hint,
     match_area_preferences_for_property,
 )
 from workspace.services.crm_matching_prefilter import (
@@ -276,6 +279,11 @@ def _match_preferred_locations(
     return match_preferred_locations(preferred, neighborhood, city, district)
 
 
+def _profile_search_city_eligible(profile, city: str = '') -> bool:
+    """فیلتر سخت فقط برای شهر هدف صریح در areas — نه city هویتی مخاطب."""
+    return not property_conflicts_search_city_hint(profile, city or '')
+
+
 def _profile_neighborhood_eligible(
     profile,
     neighborhood: str = '',
@@ -283,16 +291,21 @@ def _profile_neighborhood_eligible(
     district: str = '',
     extra_values: Optional[List[str]] = None,
 ) -> bool:
-    """فیلتر سخت محله — فقط بر اساس areas ترجیح جستجو (OR روی محله‌ها)."""
+    """سازگاری API — دیگر فیلتر حذف قطعی نیست؛ همیشه True."""
+    return True
+
+
+def _profile_neighborhood_matches_preference(
+    profile,
+    neighborhood: str = '',
+    city: str = '',
+    district: str = '',
+    extra_values: Optional[List[str]] = None,
+) -> bool:
+    """آیا ملک با یکی از محله‌های ترجیحی هم‌پوشانی دارد — برای ممیزی."""
     areas = preferred_areas_from_profile(profile)
     if not areas:
         return True
-
-    if not location_field_values(
-        neighborhood, city, district, extra_values=extra_values,
-    ):
-        return False
-
     matched, _ = match_area_preferences_for_property(
         profile,
         neighborhood=neighborhood,
@@ -411,16 +424,10 @@ def _profile_criteria_eligible(
     rent: Optional[int] = None,
     is_rent: bool = False,
 ) -> bool:
-    """فیلتر سخت: بودجه، متراژ، نوع، محله و جزئیات ترجیحات باید سازگار باشند."""
+    """فیلتر سخت: بودجه، متراژ، نوع، شهر هدف صریح و جزئیات ترجیحات."""
     if not _profile_property_type_eligible(profile, prop_type):
         return False
-    if not _profile_neighborhood_eligible(
-        profile,
-        neighborhood=neighborhood,
-        city=city,
-        district=district,
-        extra_values=location_extras,
-    ):
+    if not _profile_search_city_eligible(profile, city):
         return False
     if not _profile_area_eligible(profile, area):
         return False
@@ -465,15 +472,19 @@ def _neighborhood_match_profile(
     city: str,
     district: str = '',
     extra_values: Optional[List[str]] = None,
-) -> Tuple[float, str]:
-    score, note, _quality = location_match_quality(
+    trusted_street: str = '',
+    unverified_hints: Optional[List[str]] = None,
+) -> Tuple[float, str, 'GeographicMatchResult']:
+    geo = evaluate_soft_location_match(
         profile,
         neighborhood=neighborhood,
         city=city,
         district=district,
         extra_values=extra_values,
+        trusted_street=trusted_street,
+        unverified_hints=unverified_hints,
     )
-    return score, note
+    return geo.hood_s, geo.reason, geo
 
 
 def _rooms_match_profile(profile, rooms: str) -> Tuple[float, str]:
@@ -571,7 +582,8 @@ def _area_match(customer: Customer, area: Optional[float]) -> Tuple[float, str]:
 
 
 def _neighborhood_match(customer: Customer, neighborhood: str, city: str) -> Tuple[float, str]:
-    return _neighborhood_match_profile(customer, neighborhood, city)
+    hood_s, hood_note, _geo = _neighborhood_match_profile(customer, neighborhood, city)
+    return hood_s, hood_note
 
 
 def _rooms_match(customer: Customer, rooms: str) -> Tuple[float, str]:
@@ -865,7 +877,7 @@ def _score_crm_property_with_profile(
         price_s, price_label = _price_match_sale_profile(profile, prop.sale_price)
 
     area_s, area_note = _area_match_profile(profile, prop.area)
-    hood_s, hood_note = _neighborhood_match_profile(
+    hood_s, hood_note, geo = _neighborhood_match_profile(
         profile,
         prop.neighborhood or '',
         prop.city or '',
@@ -875,12 +887,6 @@ def _score_crm_property_with_profile(
     type_s, type_note = _property_type_match_profile(profile, prop.property_type)
     room_s, room_note = _rooms_match_profile(profile, prop.rooms)
 
-    _, _, geo_level = location_match_quality(
-        profile,
-        neighborhood=prop.neighborhood or '',
-        city=prop.city or '',
-        district=prop.district or '',
-    )
     dims = DimensionScores(
         price_s=price_s,
         area_s=area_s,
@@ -892,7 +898,9 @@ def _score_crm_property_with_profile(
         hood_note=hood_note,
         type_note=type_note,
         room_note=room_note,
-        geo_level=geo_level,
+        geo_level=geo.geo_level,
+        location_match_status=geo.status,
+        location_confidence=geo.confidence,
     )
     type_required = _profile_allowed_property_types(profile) is not None
     evaluation = classify_match_tier(
@@ -976,6 +984,8 @@ def _score_listing_with_profile(
     listing_extras = listing_structured_location_extras(listing)
     listing_district = listing_matching_district(listing)
     trusted_neighborhood = listing_trusted_neighborhood(listing)
+    trusted_street = listing_trusted_street(listing)
+    location_hints = listing_unverified_location_hints(listing)
 
     use_rent_price = is_rent_listing and (rent_customer or not is_sale_listing)
     if not _profile_criteria_eligible(
@@ -1009,23 +1019,18 @@ def _score_listing_with_profile(
         price_s, price_label = _price_match_sale_profile(profile, listing.price)
 
     area_s, area_note = _area_match_profile(profile, listing.area)
-    hood_s, hood_note = _neighborhood_match_profile(
+    hood_s, hood_note, geo = _neighborhood_match_profile(
         profile,
         trusted_neighborhood,
         listing.city or '',
         listing_district,
         extra_values=listing_extras,
+        trusted_street=trusted_street,
+        unverified_hints=location_hints,
     )
     type_s, type_note = _property_type_match_profile(profile, inferred)
     room_s, room_note = _rooms_match_profile(profile, listing_rooms)
 
-    _, _, geo_level = location_match_quality(
-        profile,
-        neighborhood=trusted_neighborhood,
-        city=listing.city or '',
-        district=listing_district,
-        extra_values=listing_extras,
-    )
     dims = DimensionScores(
         price_s=price_s,
         area_s=area_s,
@@ -1037,7 +1042,9 @@ def _score_listing_with_profile(
         hood_note=hood_note,
         type_note=type_note,
         room_note=room_note,
-        geo_level=geo_level,
+        geo_level=geo.geo_level,
+        location_match_status=geo.status,
+        location_confidence=geo.confidence,
     )
     type_required = _profile_allowed_property_types(profile) is not None
     evaluation = classify_match_tier(
@@ -1685,6 +1692,9 @@ def _customer_match_card(customer: Customer, score_item: Dict[str, Any]) -> Dict
         'can_suggest': True,
         'match_tier': score_item.get('match_tier') or 'strong',
         'evidence_completeness': score_item.get('evidence_completeness'),
+        'location_match_status': score_item.get('location_match_status') or '',
+        'location_confidence': score_item.get('location_confidence') or '',
+        'location_match_reason': score_item.get('location_match_reason') or '',
     }
 
 

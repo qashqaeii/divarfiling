@@ -11,8 +11,8 @@ from django.core.cache import cache
 from workspace.models import Customer
 
 MATCH_INDEX_CACHE_TTL = 600
-# v4: کلید sort lexicographic (tier → score → relevance)
-MATCH_INDEX_CACHE_NAMESPACE = 'v4'
+# v5: خروجی soft geo + فیلدهای location_match_*
+MATCH_INDEX_CACHE_NAMESPACE = 'v5'
 MATCH_ITERATOR_CHUNK_SIZE = 500
 DIVAR_LISTINGS_CATALOG_REV_PREFIX = 'crm_match_divar_rev:'
 CRM_PROPERTIES_CATALOG_REV_PREFIX = 'crm_match_props_rev:'

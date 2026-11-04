@@ -28,7 +28,6 @@ from workspace.services.crm_matching import (
     _profile_area_eligible,
     _profile_budget_eligible,
     _profile_detail_eligible,
-    _profile_neighborhood_eligible,
     _profile_property_type_eligible,
     _score_crm_property,
     _score_listing,
@@ -42,7 +41,7 @@ from workspace.services.crm_matching_geo import (
 )
 from workspace.services.crm_matching import _parse_int_feature
 
-MATCH_AUDIT_ENGINE_VERSION = '3.2.1-sort-provenance-readonly'
+MATCH_AUDIT_ENGINE_VERSION = '3.3-soft-geo-readonly'
 
 
 def _audit_meta(
@@ -76,13 +75,10 @@ def _crm_eligibility_reason(customer: Customer, prop) -> Optional[str]:
         if allowed and not (prop.property_type or '').strip():
             return 'property_type_unknown'
         return 'property_type_mismatch'
-    if not _profile_neighborhood_eligible(
-        customer,
-        neighborhood=prop.neighborhood or '',
-        city=prop.city or '',
-        district=prop.district or '',
-    ):
-        return 'location_hard_filter'
+    from workspace.services.crm_matching import _profile_search_city_eligible
+
+    if not _profile_search_city_eligible(customer, prop.city or ''):
+        return 'search_city_mismatch'
     if not _profile_area_eligible(customer, prop.area):
         return 'area_out_of_range'
     if not _profile_detail_eligible(
@@ -122,18 +118,11 @@ def _divar_eligibility_reason(customer: Customer, listing) -> Optional[str]:
     listing_floor = _parse_int_feature(feats.get('floor'))
     listing_year = _parse_int_feature(feats.get('build_year'))
     listing_rooms = feats.get('rooms') or listing.rooms
-    listing_extras = listing_structured_location_extras(listing)
-    listing_district = listing_matching_district(listing)
-    trusted_nb = listing_trusted_neighborhood(listing)
 
-    if not _profile_neighborhood_eligible(
-        customer,
-        neighborhood=trusted_nb,
-        city=listing.city or '',
-        district=listing_district,
-        extra_values=listing_extras,
-    ):
-        return 'location_hard_filter'
+    from workspace.services.crm_matching import _profile_search_city_eligible
+
+    if not _profile_search_city_eligible(customer, listing.city or ''):
+        return 'search_city_mismatch'
     if not _profile_area_eligible(customer, listing.area):
         return 'area_out_of_range'
     if not _profile_detail_eligible(

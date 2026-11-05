@@ -817,6 +817,17 @@ def _merge_flatten_passthrough_into_records(
             records[i][key] = val
 
 
+def _sync_street_technical_keys_in_record(record: Dict[str, Any]) -> None:
+    """ستون نمایشی خیابان → کلید فنی مکان_خیابان برای Import Django."""
+    tech = str(record.get("مکان_خیابان") or "").strip()
+    disp = str(record.get("خیابان") or "").strip()
+    if tech and tech not in ("-", "—"):
+        return
+    if not disp or disp in ("-", "—", "nan", "None"):
+        return
+    record["مکان_خیابان"] = disp
+
+
 GEO_COORD_EXCEL_COLUMNS = ("عرض جغرافیایی", "طول جغرافیایی")
 GEO_COORD_TEXT_FORMAT = "@"
 
@@ -2659,6 +2670,8 @@ def export_rows_to_records(
                 continue
             records[i][key] = val
     _merge_flatten_passthrough_into_records(records, rows)
+    for rec in records:
+        _sync_street_technical_keys_in_record(rec)
     return records
 
 

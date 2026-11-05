@@ -517,6 +517,46 @@ class DivarLocationExtractTest(SimpleTestCase):
         self.assertEqual(loc['district'], 'المهدی')
         self.assertEqual(loc['street'], 'خ سلمان فارسی')
 
+    def test_gorgan_kooche_abbrev_niayesh(self):
+        loc = extract_post_location(_detail_with_headline(
+            '۲ هفته پیش در گرگان، ک نیایش چهارم',
+            city_persian='گرگان',
+            district_persian='',
+        ))
+        self.assertEqual(loc['street'], 'ک نیایش چهارم')
+
+    def test_k_dot_kooche_abbrev(self):
+        loc = extract_post_location(_detail_with_headline(
+            'پریروز در رشت، ک. گلسار شمالی',
+            city_persian='رشت',
+            district_persian='',
+        ))
+        self.assertEqual(loc['street'], 'ک. گلسار شمالی')
+
+    def test_kamarbandi_not_single_k_abbrev(self):
+        loc = extract_post_location(_detail_with_headline(
+            'دیروز در تهران، کمربندی شرقی',
+            city_persian='تهران',
+            district_persian='',
+        ))
+        self.assertIsNone(loc['neighborhood'])
+        self.assertEqual(loc['street'], 'کمربندی شرقی')
+
+    def test_kamarbandi_in_title_only_not_street(self):
+        detail = _detail_with_headline(
+            'پریروز در تهران، نزدیک مترو',
+            city_persian='تهران',
+            district_persian='',
+        )
+        detail['sections'][0]['widgets'][0]['data']['title'] = 'پریروز در تهران'
+        widgets = detail['sections'][0]['widgets']
+        widgets.insert(0, {
+            'widget_type': 'LEGEND_TITLE_ROW',
+            'data': {'title': 'آپارتمان کنار کمربندی شرقی', 'subtitle': ''},
+        })
+        loc = extract_post_location(detail)
+        self.assertIsNone(loc['street'])
+
     def test_token_mismatch_skips_location_merge(self):
         self.assertFalse(location_tokens_agree('tokA', {'webengage': {'token': 'tokB'}}, 'tokA'))
 

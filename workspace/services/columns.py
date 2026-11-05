@@ -350,6 +350,8 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
 
     raw_data = {str(col): row[col] for col in df.columns}
     data = assert_json_serializable(enrich_listing_schedule_data(raw_data))
+    from workspace.services.listing_street_data import sync_street_keys_in_listing_data
+    data = sync_street_keys_in_listing_data(data)
 
     title = _safe_str(row[cols['title']]) if cols['title'] else ''
     description = _safe_str(row[cols['description']]) if cols['description'] else ''

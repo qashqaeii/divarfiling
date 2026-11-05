@@ -1,4 +1,4 @@
-"""استخراج موقعیت (شامل خیابان) از JSON خام posts-v2 — قرارداد مشترک با mobile_api."""
+"""استخراج موقعیت (شامل خیابان) از JSON خام posts-v2 — قرارداد مشترک با Django mobile_api."""
 from __future__ import annotations
 
 import re
@@ -29,6 +29,7 @@ _STREET_RE = re.compile(
     r'خیابان[\s\u200c]+|'
     r'کوچه[\s\u200c]+|'
     r'ک(?:\.|[\s\u200c]+)|'
+    r'کوی[\s\u200c]+|'
     r'کمربندی[\s\u200c]+|'
     r'بلوار[\s\u200c]+|'
     r'جاده[\s\u200c]+|'
@@ -140,6 +141,13 @@ def _parse_headline_parts(
     city: str,
     district: str,
 ) -> Dict[str, Optional[str]]:
+    """
+    Parse location segments from Divar TITLE line after city.
+
+    - One segment after city (and not district-only): street
+    - Two segments: neighborhood + street (unless first segment equals seo district → street only)
+    - Explicit «محله …» parts set neighborhood; district_persian duplicates are not street/neighborhood
+    """
     out: Dict[str, Optional[str]] = {
         'city': None,
         'district': None,
@@ -153,24 +161,47 @@ def _parse_headline_parts(
     if city and remaining and _labels_equal(remaining[0], city):
         remaining.pop(0)
 
-    has_street_part = any(_looks_like_street(p) for p in remaining)
-
+    segments: List[str] = []
     for part in remaining:
         if district and _labels_equal(part, district):
             continue
         nb = _extract_neighborhood_part(part)
         if nb:
-            out['neighborhood'] = normalize_location_label(nb)
+            if not out.get('neighborhood'):
+                out['neighborhood'] = normalize_location_label(nb)
             continue
-        if _looks_like_street(part):
-            out['street'] = part.strip()
+        cleaned = (part or '').strip()
+        if not cleaned or _is_vague_location_fragment(cleaned):
             continue
-        if (
-            has_street_part
-            and not out.get('neighborhood')
-            and not _is_vague_location_fragment(part)
-        ):
-            out['neighborhood'] = normalize_location_label(part)
+        segments.append(cleaned)
+
+    if not segments:
+        return out
+
+    if len(segments) == 1:
+        only = segments[0]
+        if district and _labels_equal(only, district):
+            return out
+        out['street'] = only
+        return out
+
+    if len(segments) == 2:
+        first, second = segments[0], segments[1]
+        if district and _labels_equal(first, district):
+            out['street'] = second
+            return out
+        if not out.get('neighborhood'):
+            out['neighborhood'] = normalize_location_label(first)
+        out['street'] = second
+        return out
+
+    out['street'] = segments[-1]
+    if not out.get('neighborhood'):
+        for seg in segments[:-1]:
+            if district and _labels_equal(seg, district):
+                continue
+            out['neighborhood'] = normalize_location_label(seg)
+            break
     return out
 
 

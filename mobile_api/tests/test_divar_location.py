@@ -560,6 +560,43 @@ class DivarLocationExtractTest(SimpleTestCase):
     def test_token_mismatch_skips_location_merge(self):
         self.assertFalse(location_tokens_agree('tokA', {'webengage': {'token': 'tokB'}}, 'tokA'))
 
+    def test_title_single_segment_is_street_abadan_kooy(self):
+        loc = extract_post_location(_detail_with_headline(
+            '۲ ساعت پیش در آبادان، کوی فرهنگیان',
+            city_persian='آبادان',
+            district_persian='',
+        ))
+        _assert_location(
+            self, loc,
+            city='آبادان', district=None, neighborhood=None, street='کوی فرهنگیان',
+        )
+
+    @staticmethod
+    def _title_line_cases():
+        return [
+            ('هفته پیش در آبادان، بلوار بهارستان', 'آبادان', '', None, 'بلوار بهارستان'),
+            ('۷ ساعت پیش در آبادان، خ ولایت ۴', 'آبادان', '', None, 'خ ولایت ۴'),
+            ('۲ هفته پیش در آبادان، خ یکم', 'آبادان', '', None, 'خ یکم'),
+            ('۲ ساعت پیش در آبادان، خ تخت جمشید ۱ شرقی', 'آبادان', '', None, 'خ تخت جمشید ۱ شرقی'),
+            ('۱۱ ساعت پیش در آبادان، خ مهرآباد چهارم شرقی', 'آبادان', '', None, 'خ مهرآباد چهارم شرقی'),
+            ('۲ ساعت پیش در آبادان، کوی فرهنگیان', 'آبادان', '', None, 'کوی فرهنگیان'),
+            ('نیم ساعت پیش در گرگان، خ صیاد بیست و ششم', 'گرگان', '', None, 'خ صیاد بیست و ششم'),
+            ('هفته پیش در تهران، مطهری، خ روحی', 'تهران', '', 'مطهری', 'خ روحی'),
+            ('لحظاتی پیش در تهران، جیحون، خ دامپزشکی', 'تهران', '', 'جیحون', 'خ دامپزشکی'),
+            ('دقایقی پیش در تهران، مسعودیه، خ فلسطین شرقی', 'تهران', '', 'مسعودیه', 'خ فلسطین شرقی'),
+            ('دقایقی پیش در تهران، شهرآرا، خ اکبریان آذر', 'تهران', '', 'شهرآرا', 'خ اکبریان آذر'),
+        ]
+
+    def test_title_line_street_vs_neighborhood_contract(self):
+        for title, city, district, neighborhood, street in self._title_line_cases():
+            with self.subTest(title=title):
+                loc = extract_post_location(_detail_with_headline(
+                    title, city_persian=city, district_persian=district,
+                ))
+                self.assertEqual(loc.get('city'), city)
+                self.assertEqual(loc.get('neighborhood'), neighborhood)
+                self.assertEqual(loc.get('street'), street)
+
 
 class DivarLocationFlattenIngestTest(TestCase):
     def _ingest(self, user, token: str, detail: dict):

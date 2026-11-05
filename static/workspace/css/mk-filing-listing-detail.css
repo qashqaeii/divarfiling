@@ -20,6 +20,132 @@
     }
 }
 
+/* ── بخش مکان: متادیتا در یک ردیف + نقشه تمام‌عرض ── */
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-list {
+    display: contents;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-row {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.3rem 0.6rem;
+    margin: 0;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
+    background: var(--ws-surface);
+    box-shadow: 0 1px 0 color-mix(in srgb, #fff 50%, transparent) inset;
+    grid-template-columns: unset;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key {
+    font-size: 0.62rem;
+    font-weight: 650;
+    color: var(--ws-text-muted);
+    white-space: nowrap;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key::after {
+    content: '\00a0·';
+    font-weight: 400;
+    opacity: 0.45;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-val {
+    font-size: 0.72rem;
+    font-weight: 750;
+    color: var(--ws-text);
+    text-align: start;
+    line-height: 1.3;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) .ws-ld-dossier-h {
+    margin-bottom: 0;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-embed {
+    width: 100%;
+    margin: 0;
+    min-width: 0;
+}
+
+/* یک باکس واحد برای نقشه — بدون قاب تودرتو */
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-canvas {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+    padding: 0;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-canvas .ws-ld-location-map-wrap {
+    margin-top: 0;
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 12%, var(--ws-border));
+    border-radius: 11px;
+    overflow: hidden;
+    background: var(--ws-surface);
+    box-shadow: 0 1px 8px rgba(15, 23, 42, 0.04);
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-head {
+    padding: 0.35rem 0.5rem;
+    gap: 0.35rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+    border-radius: 0;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-canvas .ws-ld-location-map-stage {
+    border-radius: 0;
+    background: color-mix(in srgb, var(--ws-border) 18%, #eef1f5);
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-title {
+    display: none;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-head-main {
+    display: flex;
+    align-items: center;
+    min-height: 0;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-basemap-toggle {
+    min-height: 1.85rem;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.62rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-stage,
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map,
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map.leaflet-container {
+    height: clamp(210px, 24vw, 300px) !important;
+    min-height: 210px !important;
+    max-height: 300px !important;
+    width: 100% !important;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger {
+    display: none;
+}
+
 /* ── Desktop: تب پرونده (dossier) — grid + key/value + map ── */
 @media (min-width: 768px) {
     .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-h {
@@ -105,53 +231,6 @@
 
     .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) {
         grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
-        grid-template-rows: auto auto;
-        gap: 0.35rem 1rem;
-        align-items: start;
-    }
-
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) .ws-ld-dossier-h {
-        grid-column: 1 / -1;
-        margin-bottom: 0.35rem;
-    }
-
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) .ws-field-list {
-        grid-column: 1;
-        grid-row: 2;
-        align-self: start;
-    }
-
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-embed {
-        grid-column: 2;
-        grid-row: 2;
-        margin: 0;
-        min-width: 0;
-        width: 100%;
-    }
-
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas {
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid var(--ws-border-light);
-    }
-
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-head-main {
-        display: block;
-    }
-
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-stage,
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map,
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map.leaflet-container {
-        height: clamp(220px, 28vw, 320px) !important;
-        min-height: 220px !important;
-        max-height: 320px !important;
-        width: 100% !important;
-    }
-
-    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger {
-        display: none;
     }
 
     .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--text,

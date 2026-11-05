@@ -5051,34 +5051,75 @@ function initDealsMobileFilters() {
 }
 
 function initCRMPropertyAdvFilters() {
-    const toggle = document.getElementById('crmPropAdvToggle');
-    const toggleMob = document.getElementById('crmPropAdvToggleMob');
     const panel = document.getElementById('crmPropAdvPanel');
-    if (panel && panel.dataset.advBound !== '1') {
-        panel.dataset.advBound = '1';
-        const setOpen = (open) => {
-            [toggle, toggleMob].forEach((btn) => {
-                if (!btn) return;
-                btn.classList.toggle('is-open', open);
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
-            panel.classList.toggle('is-open', open);
-            if (open) panel.removeAttribute('hidden');
-            else panel.setAttribute('hidden', '');
-        };
-        [toggle, toggleMob].forEach((btn) => {
-            btn?.addEventListener('click', () => {
-                setOpen(!panel.classList.contains('is-open'));
-            });
-        });
-    }
-
+    const advBlock = document.getElementById('crmPropAdvBlock');
     const form = document.getElementById('crmPropertyFilters');
     const sheetToggle = document.getElementById('crmFilesFilterToggle');
     const sheet = document.getElementById('crmFilesFilterSheet');
+    const deskToggle = document.getElementById('crmPropDeskFilterToggle');
+    const deskPanel = document.getElementById('crmPropDeskFilterPanel');
+    const deskClose = document.getElementById('crmPropDeskFilterClose');
+    const searchInput = document.getElementById('crmPropSearchInput');
+    const searchClear = document.getElementById('crmPropSearchClear');
+    const rootEl = document.documentElement;
+
+    if (panel && panel.dataset.advBound !== '1') {
+        panel.dataset.advBound = '1';
+        panel.classList.add('is-open');
+        panel.removeAttribute('hidden');
+    }
+
+    const mq = window.matchMedia('(max-width: 768px)');
+
+    const syncAdvPlacement = () => {
+        const moveTarget = advBlock || panel;
+        if (!moveTarget || !form) return;
+        const deskBody = document.getElementById('crmPropDeskFilterPanelBody');
+        const mobBody = document.getElementById('crmPropMobFilterPanelBody');
+        const mobile = mq.matches;
+        if (mobile && mobBody) {
+            mobBody.appendChild(moveTarget);
+        } else if (deskBody) {
+            deskBody.appendChild(moveTarget);
+        }
+    };
+
+    const setDeskPanel = (open) => {
+        if (!deskPanel || !deskToggle || mq.matches) return;
+        deskPanel.hidden = !open;
+        deskPanel.classList.toggle('is-open', open);
+        deskToggle.classList.toggle('is-open', open);
+        deskToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (!open) {
+            deskToggle.focus({ preventScroll: true });
+        }
+    };
+
+    if (deskToggle && deskPanel && deskToggle.dataset.bound !== '1') {
+        deskToggle.dataset.bound = '1';
+        deskToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (mq.matches) return;
+            setDeskPanel(deskPanel.hidden);
+        });
+        deskClose?.addEventListener('click', () => setDeskPanel(false));
+        deskPanel.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        document.addEventListener('click', (e) => {
+            if (mq.matches || deskPanel.hidden) return;
+            if (e.target.closest('#crmPropDeskFilterPanel') || e.target.closest('#crmPropDeskFilterToggle')) return;
+            setDeskPanel(false);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !deskPanel.hidden) {
+                setDeskPanel(false);
+            }
+        });
+    }
+
     if (form && sheetToggle && sheet && sheetToggle.dataset.bound !== '1') {
         sheetToggle.dataset.bound = '1';
-        const mq = window.matchMedia('(max-width: 768px)');
         const setSheet = (open) => {
             if (!mq.matches) {
                 sheet.classList.remove('is-open');
@@ -5086,6 +5127,7 @@ function initCRMPropertyAdvFilters() {
                 sheetToggle.setAttribute('aria-expanded', 'false');
                 sheetToggle.classList.remove('is-open');
                 document.body.classList.remove('crm-files-filter-open');
+                rootEl.classList.remove('crm-prop-filter-scroll-lock');
                 return;
             }
             sheet.classList.toggle('is-open', open);
@@ -5093,6 +5135,13 @@ function initCRMPropertyAdvFilters() {
             sheetToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
             document.body.classList.toggle('crm-files-filter-open', open);
+            rootEl.classList.toggle('crm-prop-filter-scroll-lock', open);
+            if (open) {
+                const scrollEl = sheet.querySelector('.crm-files-mob-filter-body');
+                scrollEl?.scrollTo({ top: 0 });
+            } else {
+                sheetToggle.focus({ preventScroll: true });
+            }
         };
         sheetToggle.addEventListener('click', () => {
             if (!mq.matches) return;
@@ -5110,6 +5159,7 @@ function initCRMPropertyAdvFilters() {
         }, true);
         form.addEventListener('submit', () => {
             if (mq.matches) setSheet(false);
+            else setDeskPanel(false);
         });
         const syncSelectDisabled = () => {
             const mobile = mq.matches;
@@ -5119,16 +5169,32 @@ function initCRMPropertyAdvFilters() {
             form.querySelectorAll('.crm-files-mob-select').forEach((sel) => {
                 sel.disabled = !mobile;
             });
-            const sheetBody = sheet.querySelector('.crm-files-mob-filter-body');
-            if (panel && sheetBody) {
-                if (mobile) sheetBody.appendChild(panel);
-                else form.appendChild(panel);
-            }
+            syncAdvPlacement();
             if (!mobile) setSheet(false);
+            else setDeskPanel(false);
         };
         if (typeof mq.addEventListener === 'function') mq.addEventListener('change', syncSelectDisabled);
         else if (typeof mq.addListener === 'function') mq.addListener(syncSelectDisabled);
         syncSelectDisabled();
+    } else if (form) {
+        syncAdvPlacement();
+        if (typeof mq.addEventListener === 'function') mq.addEventListener('change', syncAdvPlacement);
+    }
+
+    if (searchInput && searchClear && searchClear.dataset.bound !== '1') {
+        searchClear.dataset.bound = '1';
+        const syncClear = () => {
+            const has = Boolean(searchInput.value && searchInput.value.trim());
+            searchClear.hidden = !has;
+        };
+        searchInput.addEventListener('input', syncClear);
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            syncClear();
+            searchInput.focus();
+            form?.requestSubmit();
+        });
+        syncClear();
     }
 
     const menuRoot = document.querySelector('.crm-files-mobile');

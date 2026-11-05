@@ -1761,6 +1761,142 @@ def property_advanced_filter_count(params: dict) -> int:
     return sum(1 for key in PROPERTY_ADV_FILTER_KEYS if str(params.get(key) or '').strip())
 
 
+def _property_list_query_pairs(request, *, omit=frozenset()):
+    skip = {'page', 'partial', 'drawer', *omit}
+    pairs = []
+    for key, value in request.GET.items():
+        if key in skip or not str(value or '').strip():
+            continue
+        pairs.append((key, value))
+    return pairs
+
+
+def build_property_list_filter_chips(request) -> list:
+    """Chipهای فیلتر فعال — URL حذف تک‌فیلتر با حفظ بقیه query."""
+    from urllib.parse import urlencode
+
+    def href_without(*keys):
+        pairs = _property_list_query_pairs(request, omit=frozenset(keys))
+        if not pairs:
+            view = request.GET.get('view', 'grid') or 'grid'
+            return f'?view={view}'
+        return '?' + urlencode(pairs, doseq=True)
+
+    chips = []
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        short = q if len(q) <= 42 else f'{q[:39]}…'
+        chips.append({'label': f'جستجو: {short}', 'href': href_without('q')})
+
+    deal = request.GET.get('deal_mode', '').strip()
+    if deal:
+        chips.append({'label': f'معامله: {deal}', 'href': href_without('deal_mode')})
+
+    tx = request.GET.get('transaction_status', '').strip()
+    if tx:
+        chips.append({'label': f'وضعیت: {tx}', 'href': href_without('transaction_status')})
+
+    ptype = request.GET.get('property_type', '').strip()
+    if ptype:
+        chips.append({'label': f'نوع: {ptype}', 'href': href_without('property_type')})
+
+    pub = request.GET.get('publish_status', '').strip()
+    if pub:
+        chips.append({'label': f'انتشار: {pub}', 'href': href_without('publish_status')})
+
+    city = request.GET.get('city', '').strip()
+    if city:
+        chips.append({'label': f'شهر: {city}', 'href': href_without('city')})
+
+    folder_id = request.GET.get('folder_id', '').strip()
+    if folder_id:
+        chips.append({'label': 'زونکن انتخاب‌شده', 'href': href_without('folder_id')})
+
+    cabinet_id = request.GET.get('cabinet_id', '').strip()
+    if cabinet_id:
+        chips.append({'label': 'کمد انتخاب‌شده', 'href': href_without('cabinet_id')})
+
+    scope = (request.GET.get('archive_scope') or '').strip().lower()
+    if scope and scope not in ('active', ''):
+        scope_labels = {'archived': 'بایگانی', 'all': 'همه فایل‌ها'}
+        chips.append({
+            'label': f'محدوده: {scope_labels.get(scope, scope)}',
+            'href': href_without('archive_scope'),
+        })
+
+    parking = request.GET.get('parking', '').strip()
+    if parking in ('0', '1'):
+        chips.append({
+            'label': f'پارکینگ: {"دارد" if parking == "1" else "ندارد"}',
+            'href': href_without('parking'),
+        })
+    storage = request.GET.get('storage', '').strip()
+    if storage in ('0', '1'):
+        chips.append({
+            'label': f'انباری: {"دارد" if storage == "1" else "ندارد"}',
+            'href': href_without('storage'),
+        })
+    elevator = request.GET.get('elevator', '').strip()
+    if elevator in ('0', '1'):
+        chips.append({
+            'label': f'آسانسور: {"دارد" if elevator == "1" else "ندارد"}',
+            'href': href_without('elevator'),
+        })
+    rooms = request.GET.get('rooms', '').strip()
+    if rooms:
+        chips.append({'label': f'{rooms} خواب', 'href': href_without('rooms')})
+
+    area_min = request.GET.get('area_min', '').strip()
+    area_max = request.GET.get('area_max', '').strip()
+    if area_min or area_max:
+        chips.append({
+            'label': f'متراژ {area_min or "…"}–{area_max or "…"}',
+            'href': href_without('area_min', 'area_max'),
+        })
+    price_min = request.GET.get('price_min', '').strip()
+    price_max = request.GET.get('price_max', '').strip()
+    if price_min or price_max:
+        chips.append({
+            'label': f'مبلغ {price_min or "…"}–{price_max or "…"}',
+            'href': href_without('price_min', 'price_max'),
+        })
+    year_min = request.GET.get('year_min', '').strip()
+    year_max = request.GET.get('year_max', '').strip()
+    if year_min or year_max:
+        chips.append({
+            'label': f'سال ساخت {year_min or "…"}–{year_max or "…"}',
+            'href': href_without('year_min', 'year_max'),
+        })
+    age_max = request.GET.get('age_max', '').strip()
+    if age_max:
+        chips.append({'label': f'سن بنا ≤ {age_max}', 'href': href_without('age_max')})
+
+    return chips
+
+
+def property_list_toolbar_filter_count(request) -> int:
+    return len(build_property_list_filter_chips(request))
+
+
+def property_list_clear_filters_href(request) -> str:
+    """حذف فیلترها با حفظ view، محدوده بایگانی، کمد/زونکن."""
+    from urllib.parse import urlencode
+
+    pairs = []
+    view = request.GET.get('view', 'grid') or 'grid'
+    pairs.append(('view', view))
+    scope = (request.GET.get('archive_scope') or '').strip()
+    if scope and scope.lower() not in ('', 'active'):
+        pairs.append(('archive_scope', scope))
+    cabinet_id = request.GET.get('cabinet_id', '').strip()
+    if cabinet_id:
+        pairs.append(('cabinet_id', cabinet_id))
+    folder_id = request.GET.get('folder_id', '').strip()
+    if folder_id:
+        pairs.append(('folder_id', folder_id))
+    return '?' + urlencode(pairs)
+
+
 BULK_PROPERTY_DELETE_LIMIT = 100
 
 

@@ -31,7 +31,12 @@
 
     .crm-files-mobile .crm-files-filter-primary {
         gap: 0.4rem;
-        padding-top: 0.25rem;
+        padding-top: 0;
+    }
+
+    .crm-files-mobile.crm-properties-page .crm-files-filters {
+        padding: 0;
+        border: 0;
     }
 
     .crm-files-mobile .crm-files-search {
@@ -63,24 +68,30 @@
     }
 
     /* ── #144–146 Filing nav → compact chip rails ── */
+    .crm-files-mobile.crm-properties-page .crm-shell-body {
+        gap: 0.42rem;
+    }
+
+    .crm-files-mobile .crm-shell-body .crm-properties-layout__filing > .crm-filing-nav,
     .crm-files-mobile .crm-shell-body > .crm-filing-nav {
-        margin: 0.35rem 0 0.25rem;
-        padding: 0.55rem 0.6rem 0.65rem;
-        border-radius: 16px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 62%, transparent);
-        background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-surface-2));
-        box-shadow: 0 3px 14px rgba(15, 23, 42, 0.04);
+        margin: 0;
+        padding: 0.38rem 0.45rem 0.42rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 58%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 94%, var(--ws-surface-2));
+        box-shadow: none;
     }
 
     .crm-files-mobile .crm-filing-nav__summary {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0.35rem;
     }
 
     .crm-files-mobile .crm-filing-nav__summary-meta {
-        flex: 1 1 100%;
-        justify-content: flex-start;
-        order: 3;
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        order: 0;
+        min-width: 0;
     }
 
     .crm-files-mobile .crm-filing-nav__panel > .crm-filing-nav__search {

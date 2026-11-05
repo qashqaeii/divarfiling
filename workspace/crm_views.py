@@ -116,6 +116,7 @@ from workspace.services.crm import (
     get_recent_properties, get_upcoming_reminders, global_search,
     link_customer_property, log_activity, log_phone_call, log_status_change,
     advance_recurring_reminder, primary_owner_contact, property_advanced_filter_count,
+    build_property_list_filter_chips, property_list_clear_filters_href, property_list_toolbar_filter_count,
     property_follow_up_state, recent_activities,
     schedule_follow_up, schedule_property_follow_up, set_next_follow_up, sync_follow_up_from_reminder,
     update_customer_status, update_property_transaction_status, reorder_property_pipeline,
@@ -1770,6 +1771,9 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ))
         ctx['advanced_filter_count'] = property_advanced_filter_count(self.request.GET)
         ctx['filters_open'] = bool(ctx['advanced_filter_count']) or self.request.GET.get('adv') == '1'
+        ctx['property_filter_chips'] = build_property_list_filter_chips(self.request)
+        ctx['property_toolbar_filter_count'] = property_list_toolbar_filter_count(self.request)
+        ctx['property_filters_clear_href'] = property_list_clear_filters_href(self.request)
         ctx['pipeline'] = get_property_pipeline(user, self.request.GET, per_column=60)
         ctx['pipeline_interactive'] = True
         ctx['tx_status_url_template'] = reverse(

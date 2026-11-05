@@ -17,7 +17,8 @@
 }
 
 .crm-files-pro-v2 .crm-shell-body > .crm-zonkan,
-.crm-files-pro-v2 .crm-shell-body > .crm-filing-nav {
+.crm-files-pro-v2 .crm-shell-body > .crm-filing-nav,
+.crm-files-pro-v2 .crm-shell-body .crm-properties-layout__filing > .crm-filing-nav {
     margin: 0.4rem 0 0.28rem;
     padding: 0.48rem 0.55rem 0.55rem;
     border-radius: 12px;
@@ -25,6 +26,47 @@
     background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
     box-shadow: 0 1px 2px color-mix(in srgb, var(--ws-text) 4%, transparent);
     flex-shrink: 0;
+}
+
+.crm-properties-page.crm-files-pro-v2 .crm-shell-body .crm-properties-layout__filing > .crm-filing-nav {
+    margin: 0;
+    padding: 0.32rem 0.45rem 0.38rem;
+    border-radius: 10px;
+    box-shadow: none;
+    background: color-mix(in srgb, var(--ws-surface-2) 22%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--ws-border) 58%, transparent);
+}
+
+.crm-properties-page.crm-files-pro-v2 .crm-filing-nav__summary {
+    min-height: 1.85rem;
+    padding: 0.05rem 0;
+}
+
+.crm-properties-page.crm-files-pro-v2 .crm-filing-nav__summary-meta {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.crm-properties-page.crm-files-pro-v2 .crm-filing-nav__summary-hint,
+.crm-properties-page.crm-files-pro-v2 .crm-filing-nav__summary-pill {
+    max-width: min(42vw, 11rem);
+}
+
+.crm-properties-page.crm-files-pro-v2 .crm-filing-nav__disclosure[open] > .crm-filing-nav__summary {
+    margin-bottom: 0.28rem;
+    padding-bottom: 0.28rem;
+}
+
+.crm-properties-page.crm-files-pro-v2 .crm-filing-nav .crm-zonkan-card--compact {
+    min-width: 6.75rem;
+    max-width: 8.75rem;
+    padding: 0.32rem 0.42rem;
+    border-radius: 9px;
+}
+
+.crm-properties-page.crm-files-pro-v2 .crm-filing-nav .crm-zonkan__rail {
+    max-height: 4.75rem;
+    gap: 0.28rem;
 }
 
 /* ── Unified filing nav (کمد + زونکن) ── */

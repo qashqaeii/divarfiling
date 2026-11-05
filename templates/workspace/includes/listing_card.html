@@ -43,17 +43,9 @@
         {% endif %}
         <div class="mk-lcard-cover-top mk-lcard-native__cover-meta">
             {% include 'workspace/includes/listing_advertiser_pill.html' %}
-            {% with badge=score|ws_value_badge %}
-            {% if badge == 'below' %}
-            <span class="mk-lcard-cover-value mk-lcard-cover-value--below">زیر بازار</span>
-            {% elif badge == 'above' %}
-            <span class="mk-lcard-cover-value mk-lcard-cover-value--above">بالای بازار</span>
-            {% elif badge == 'fair' %}
-            <span class="mk-lcard-cover-value mk-lcard-cover-value--fair">متعارف</span>
-            {% endif %}
-            {% endwith %}
         </div>
         {% include 'workspace/includes/listing_image_auth_badge.html' with auth_class='mk-img-auth--cover' %}
+        {% if listing.images %}{% include 'workspace/includes/listing_card_market_insight.html' with mode='cover' %}{% endif %}
     </div>
 
     <div class="mk-lcard-body mk-lcard-native__panel">
@@ -95,6 +87,8 @@
             <strong class="mk-lcard-native__price is-muted">—</strong>
             {% endif %}
         </div>
+
+        {% if not listing.images %}{% include 'workspace/includes/listing_card_market_insight.html' with mode='inline' %}{% endif %}
 
         <ul class="mk-lcard-native__rail" aria-label="مشخصات">
             {% if listing.area %}

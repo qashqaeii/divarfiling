@@ -1,0 +1,23 @@
+{% load workspace_tags %}
+{% with vp=score|ws_value_presentation %}
+{% if vp %}
+{% if mode == 'cover' %}
+<div class="mk-lcard-cover-bottom" aria-hidden="false">
+    <span class="mk-lcard-market mk-lcard-market--cover mk-lcard-market--{{ vp.tier }}" title="{{ vp.detail_label }}">
+        <i class="fas {{ vp.icon }} mk-lcard-market__ico" aria-hidden="true"></i>
+        <span class="mk-lcard-market__line">{% if vp.percent %}{{ vp.percent }}٪ {% endif %}{{ vp.short_label }}</span>
+    </span>
+</div>
+{% elif mode == 'inline' %}
+<div class="mk-lcard-market-row" aria-label="ارزش نسبت به بازار">
+    <span class="mk-lcard-market mk-lcard-market--inline mk-lcard-market--{{ vp.tier }}" title="{{ vp.detail_label }}">
+        <span class="mk-lcard-market__icon" aria-hidden="true"><i class="fas {{ vp.icon }}"></i></span>
+        <span class="mk-lcard-market__copy">
+            {% if vp.percent %}<strong class="mk-lcard-market__pct">{{ vp.percent }}٪</strong>{% endif %}
+            <span class="mk-lcard-market__label">{{ vp.short_label }}</span>
+        </span>
+    </span>
+</div>
+{% endif %}
+{% endif %}
+{% endwith %}

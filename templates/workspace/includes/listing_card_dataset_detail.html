@@ -1,5 +1,5 @@
 {% load humanize workspace_tags %}
-{% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.token lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token ret=listing_retention_map|dict_get:listing.token %}
+{% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token ret=listing_retention_map|dict_get:listing.token %}
 <article class="mk-lcard mk-lcard-native mk-lcard--ds-detail-mob{% if not listing.images %} mk-lcard--ds-detail-mob-no-photo{% endif %}" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
     <div class="mk-lcard-cover mk-lcard-native__media{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}{% if listing.images %} mk-lcard-cover--lightbox{% endif %}"{% if listing.images %} data-ws-gallery{% endif %}>
         {% if listing.images %}
@@ -55,6 +55,7 @@
         </div>
         {% endif %}
         {% include 'workspace/includes/listing_image_auth_badge.html' with auth_class='mk-img-auth--cover' %}
+        {% if listing.images %}{% include 'workspace/includes/listing_card_market_insight.html' with mode='cover' %}{% endif %}
     </div>
 
     <div class="mk-lcard-body mk-lcard-native__content">
@@ -107,6 +108,8 @@
             <strong class="mk-lcard-native__price is-muted">—</strong>
             {% endif %}
         </div>
+
+        {% if not listing.images %}{% include 'workspace/includes/listing_card_market_insight.html' with mode='inline' %}{% endif %}
 
         <ul class="mk-lcard-native__rail" aria-label="مشخصات">
             {% if listing.area %}

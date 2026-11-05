@@ -320,6 +320,53 @@ def ws_value_badge(score):
 
 
 @register.filter
+def ws_value_presentation(score):
+    """برچسب ارزش نسبت به بازار — هم‌تراز اپ موبایل (آیکن + درصد + متن)."""
+    if score is None:
+        return None
+    try:
+        s = float(score)
+        if s != s:
+            return None
+    except (TypeError, ValueError):
+        return None
+
+    from workspace.services.display import market_tier_from_score
+    from workspace.services.jalali_input import to_persian_digits
+
+    tier = market_tier_from_score(s)
+    if tier == 'unknown':
+        return None
+
+    pct_int = abs(int(round(s))) if abs(s) >= 0.5 else None
+    pct_fa = to_persian_digits(str(pct_int)) if pct_int else None
+
+    if tier == 'under':
+        short = 'زیر بازار'
+        detail = f'{pct_fa}٪ زیر بازار' if pct_fa else short
+        icon = 'fa-arrow-trend-down'
+        css_tier = 'under'
+    elif tier == 'over':
+        short = 'بالای بازار'
+        detail = f'{pct_fa}٪ بالای بازار' if pct_fa else short
+        icon = 'fa-arrow-trend-up'
+        css_tier = 'over'
+    else:
+        short = 'متعادل'
+        detail = f'{short} · {pct_fa}٪ اختلاف' if pct_fa else short
+        icon = 'fa-scale-balanced'
+        css_tier = 'fair'
+
+    return {
+        'tier': css_tier,
+        'short_label': short,
+        'detail_label': detail,
+        'percent': pct_fa,
+        'icon': icon,
+    }
+
+
+@register.filter
 def feature_icon(label):
     """آیکون Font Awesome مناسب برای برچسب ویژگی / امکان / مشخصه."""
     from workspace.services.listing_features import _icon_for_key

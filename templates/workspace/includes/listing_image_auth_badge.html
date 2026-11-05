@@ -1,11 +1,11 @@
 {% if feat.image_authenticity == 'real' %}
-<span class="mk-img-auth mk-img-auth--real{% if auth_class %} {{ auth_class }}{% endif %}" title="تصویرها برای همین ملک است">
+<span class="mk-img-auth mk-img-auth--real{% if auth_class %} {{ auth_class }}{% endif %}" title="تصاویر برای همین ملک ثبت شده — عکس واقعی">
     <i class="fa-solid fa-images" aria-hidden="true"></i>
-    <span>واقعی</span>
+    <span>عکس واقعی</span>
 </span>
 {% elif feat.image_authenticity == 'fake' %}
-<span class="mk-img-auth mk-img-auth--fake{% if auth_class %} {{ auth_class }}{% endif %}" title="تصویرها برای همین ملک نیست — احتمالاً نمونه یا فیک">
+<span class="mk-img-auth mk-img-auth--fake{% if auth_class %} {{ auth_class }}{% endif %}" title="تصاویر نمونه یا تزئینی — لزوماً مربوط به همین ملک نیست">
     <i class="fa-solid fa-images" aria-hidden="true"></i>
-    <span>فیک</span>
+    <span>عکس تزئینی</span>
 </span>
 {% endif %}

@@ -1,32 +1,63 @@
 {% load workspace_tags static %}
-<section class="crm-filing-nav" aria-label="سازمان‌دهی فایل‌های شخصی">
-    <header class="crm-filing-nav__head">
-        <h2 class="crm-filing-nav__title">کمد و زونکن</h2>
-        <label class="crm-filing-nav__search">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            <input type="text"
-                   role="searchbox"
-                   name="crm_filing_nav_filter_q"
-                   data-filing-nav-search
-                   placeholder="جستجو…"
-                   value=""
-                   autocomplete="off"
-                   autocorrect="off"
-                   autocapitalize="off"
-                   spellcheck="false"
-                   data-lpignore="true"
-                   data-1p-ignore="true"
-                   data-form-type="other"
-                   readonly
-                   inputmode="search"
-                   enterkeyhint="search"
-                   aria-label="جستجوی کمد یا زونکن">
-        </label>
-    </header>
-    <p class="crm-filing-nav__search-empty" data-filing-nav-search-empty hidden>موردی با این عبارت پیدا نشد.</p>
+<section class="crm-filing-nav"
+         data-crm-filing-nav
+         aria-label="سازمان‌دهی فایل‌های شخصی"
+         {% if active_cabinet_id or active_folder_id %}data-filing-nav-filtered="1"{% endif %}>
+    <details class="crm-filing-nav__disclosure"
+             data-filing-nav-details
+             {% if active_cabinet_id or active_folder_id %}open{% endif %}>
+        <summary class="crm-filing-nav__summary">
+            <span class="crm-filing-nav__summary-leading">
+                <span class="crm-filing-nav__summary-ico" aria-hidden="true"><i class="fas fa-box-archive"></i></span>
+                <span class="crm-filing-nav__summary-title">کمد و زونکن</span>
+            </span>
+            <span class="crm-filing-nav__summary-meta">
+                {% if active_cabinet_id %}
+                    {% for cabinet in property_cabinets %}
+                        {% if active_cabinet_id == cabinet.id|stringformat:'s' %}
+                            <span class="crm-filing-nav__summary-pill crm-filing-nav__summary-pill--cabinet">{{ cabinet.name }}</span>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {% if active_folder_id %}
+                    {% for folder in property_folders %}
+                        {% if active_folder_id == folder.id|stringformat:'s' %}
+                            <span class="crm-filing-nav__summary-pill crm-filing-nav__summary-pill--folder">{{ folder.name }}</span>
+                        {% endif %}
+                    {% endfor %}
+                {% elif not active_cabinet_id %}
+                    <span class="crm-filing-nav__summary-hint">همه فایل‌ها</span>
+                {% endif %}
+            </span>
+            <span class="crm-filing-nav__summary-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+        </summary>
+        <div class="crm-filing-nav__panel">
+            <label class="crm-filing-nav__search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text"
+                       role="searchbox"
+                       name="crm_filing_nav_filter_q"
+                       data-filing-nav-search
+                       placeholder="جستجو…"
+                       value=""
+                       autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       spellcheck="false"
+                       data-lpignore="true"
+                       data-1p-ignore="true"
+                       data-form-type="other"
+                       readonly
+                       inputmode="search"
+                       enterkeyhint="search"
+                       aria-label="جستجوی کمد یا زونکن">
+            </label>
+            <p class="crm-filing-nav__search-empty" data-filing-nav-search-empty hidden>موردی با این عبارت پیدا نشود.</p>
 
-    {% include 'workspace/crm/includes/property_cabinets_tier.html' %}
-    {% include 'workspace/crm/includes/property_folders_tier.html' %}
+            {% include 'workspace/crm/includes/property_cabinets_tier.html' %}
+            {% include 'workspace/crm/includes/property_folders_tier.html' %}
+        </div>
+    </details>
 </section>
 
 {% include 'workspace/crm/includes/property_cabinets_modals.html' %}

@@ -5820,6 +5820,40 @@ function initCRMPropertyFilingNavSearch(root) {
     }
 }
 
+function initCRMPropertyFilingNavDisclosure(root) {
+    const scope = root || document;
+    const nav = scope.querySelector('[data-crm-filing-nav]');
+    const details = nav?.querySelector('[data-filing-nav-details]');
+    if (!nav || !details || details.dataset.filingDisclosureBound === '1') return;
+    details.dataset.filingDisclosureBound = '1';
+
+    const storageKey = 'crm_filing_nav_open';
+    const filtered = nav.getAttribute('data-filing-nav-filtered') === '1';
+
+    function syncExpandedClass() {
+        nav.classList.toggle('is-expanded', details.open);
+    }
+
+    if (!filtered) {
+        try {
+            const stored = localStorage.getItem(storageKey);
+            if (stored === '1') details.open = true;
+            else if (stored === '0') details.open = false;
+            else details.open = false;
+        } catch (_e) {
+            details.open = false;
+        }
+    }
+
+    syncExpandedClass();
+    details.addEventListener('toggle', () => {
+        syncExpandedClass();
+        try {
+            localStorage.setItem(storageKey, details.open ? '1' : '0');
+        } catch (_e) { /* ignore */ }
+    });
+}
+
 function initCRMPropertyFilingDragDrop(root) {
     const scope = root || document;
     const nav = scope.querySelector('.crm-filing-nav');
@@ -6747,6 +6781,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMPropertyFolders(document);
     initCRMPropertyCabinets(document);
     initCRMPropertyFilingNavSearch(document);
+    initCRMPropertyFilingNavDisclosure(document);
     initCRMPropertyFilingDragDrop(document);
     initCRMPropertyDuplicate();
     initCRMPropertyFolderPicker(document);

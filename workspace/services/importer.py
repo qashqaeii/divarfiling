@@ -421,6 +421,9 @@ def _incoming_money_is_textual(fields: dict, attr: str) -> bool:
     return False
 
 
+_MERGE_PROTECT_IF_OLD_NONEMPTY = frozenset({'مکان_خیابان', 'خیابان'})
+
+
 def _merge_listing_data(old: dict | None, new: dict | None) -> dict:
     merged = dict(old or {})
     for key, val in (new or {}).items():
@@ -429,8 +432,12 @@ def _merge_listing_data(old: dict | None, new: dict | None) -> dict:
         s = str(val).strip()
         if s in ('', '-', '—', 'nan', 'None'):
             continue
+        if key in _MERGE_PROTECT_IF_OLD_NONEMPTY:
+            old_s = str(merged.get(key) or '').strip()
+            if old_s and old_s not in ('-', '—', 'nan', 'None'):
+                continue
         merged[key] = val
-    return merge_listing_schedule_data(old, new)
+    return merge_listing_schedule_data(merged, new)
 
 
 def _has_explicit_publish_in_data(data: dict | None) -> bool:

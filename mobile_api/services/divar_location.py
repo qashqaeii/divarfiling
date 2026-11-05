@@ -29,6 +29,21 @@ _STREET_RE = re.compile(
     re.UNICODE,
 )
 _NEIGHBORHOOD_PREFIX = 'محله '
+_VAGUE_LOCATION_RE = re.compile(
+    r'^(?:نزدیک\s+|حد\s*فاصل\s+|مجاور\s+|روبرو\s+|کنار\s+)',
+    re.UNICODE,
+)
+
+
+def _is_vague_location_fragment(part: str) -> bool:
+    s = (part or '').strip()
+    if not s:
+        return True
+    if _VAGUE_LOCATION_RE.match(s):
+        return True
+    if 'مترو' in s and len(s) < 30:
+        return True
+    return False
 
 
 def _safe_get(d: Any, path: List[str]) -> Any:
@@ -128,6 +143,8 @@ def _parse_headline_parts(
     if city and remaining and _labels_equal(remaining[0], city):
         remaining.pop(0)
 
+    has_street_part = any(_looks_like_street(p) for p in remaining)
+
     for part in remaining:
         if district and _labels_equal(part, district):
             continue
@@ -138,6 +155,12 @@ def _parse_headline_parts(
         if _looks_like_street(part):
             out['street'] = part.strip()
             continue
+        if (
+            has_street_part
+            and not out.get('neighborhood')
+            and not _is_vague_location_fragment(part)
+        ):
+            out['neighborhood'] = normalize_location_label(part)
     return out
 
 
@@ -291,7 +314,10 @@ NEW_MOBILE_LOCATION_COLUMNS = frozenset({
 
 MOBILE_LOCATION_DATA_KEYS = NEW_MOBILE_LOCATION_COLUMNS
 
-_EXISTING_LISTING_STRIP_DATA_KEYS = MOBILE_LOCATION_DATA_KEYS | frozenset({
+# خیابان خالی در آگهی موجود قابل تکمیل است؛ سایر کلیدهای موقعیت strip می‌شوند.
+_EXISTING_LISTING_STRIP_DATA_KEYS = (
+    MOBILE_LOCATION_DATA_KEYS - frozenset({'مکان_خیابان'})
+) | frozenset({
     'مکان_شهر',
     'مکان_منطقه',
     'مکان_آدرس',

@@ -468,6 +468,54 @@ class DivarLocationExtractTest(SimpleTestCase):
             district_persian='',
         ))
         self.assertIsNone(loc['district'])
+        self.assertIsNone(loc['neighborhood'])
+
+    def test_real_divar_ad_gorgan_asayesh_11(self):
+        loc = extract_post_location(_detail_with_headline(
+            '۱۴ ساعت پیش در گرگان، خ آسایش ۱۱',
+            city_persian='گرگان',
+            district_persian='',
+        ))
+        self.assertEqual(loc['city'], 'گرگان')
+        self.assertEqual(loc['street'], 'خ آسایش ۱۱')
+        self.assertIsNone(loc['neighborhood'])
+
+    def test_real_divar_ad_gorgan_22_bahman(self):
+        loc = extract_post_location(_detail_with_headline(
+            'پریروز در گرگان، خ بیست و دو بهمن غربی',
+            city_persian='گرگان',
+            district_persian='',
+        ))
+        self.assertEqual(loc['street'], 'خ بیست و دو بهمن غربی')
+
+    def test_real_divar_ad_tehran_afsariyeh(self):
+        loc = extract_post_location(_detail_with_headline(
+            'هفته پیش در تهران، افسریه جنوبی، خ عنابستانی',
+            city_persian='تهران',
+            district_persian='افسریه جنوبی',
+        ))
+        self.assertEqual(loc['district'], 'افسریه جنوبی')
+        self.assertEqual(loc['street'], 'خ عنابستانی')
+        self.assertIsNone(loc['neighborhood'])
+
+    def test_real_divar_ad_tehran_ahangaran_farahani(self):
+        loc = extract_post_location(_detail_with_headline(
+            'دیروز در تهران، آهنگران (سراسیاب دولاب)، خ شهرابی فراهانی',
+            city_persian='تهران',
+            district_persian='',
+        ))
+        self.assertEqual(loc['city'], 'تهران')
+        self.assertEqual(loc['neighborhood'], 'آهنگران (سراسیاب دولاب)')
+        self.assertEqual(loc['street'], 'خ شهرابی فراهانی')
+
+    def test_real_divar_ad_tehran_mahdi_salman(self):
+        loc = extract_post_location(_detail_with_headline(
+            '۱ ساعت پیش در تهران، المهدی، خ سلمان فارسی',
+            city_persian='تهران',
+            district_persian='المهدی',
+        ))
+        self.assertEqual(loc['district'], 'المهدی')
+        self.assertEqual(loc['street'], 'خ سلمان فارسی')
 
     def test_token_mismatch_skips_location_merge(self):
         self.assertFalse(location_tokens_agree('tokA', {'webengage': {'token': 'tokB'}}, 'tokA'))
@@ -543,7 +591,7 @@ class DivarLocationFlattenIngestTest(TestCase):
 
     def test_empty_neighborhood_old_listing_unchanged(self):
         user = User.objects.create_user(username='09131000004', password='x')
-        first = self._ingest(user, 'empty-old', SAMPLE_CHALUS)
+        first = self._ingest(user, 'empty-old', _tehran_sample())
         listing = first.dataset.listings.get(token='empty-old')
         listing.neighborhood = ''
         listing.data = {}
@@ -552,7 +600,20 @@ class DivarLocationFlattenIngestTest(TestCase):
         self._ingest(user, 'empty-old', _tehran_sample())
         listing.refresh_from_db()
         self.assertEqual(listing.neighborhood, '')
-        self.assertEqual(listing.data, {})
+        self.assertEqual(listing.data.get('مکان_خیابان'), 'خ میثاق دوم')
+        self.assertNotIn('مکان_شهر', listing.data)
+
+    def test_existing_listing_empty_street_backfilled_on_reingest(self):
+        user = User.objects.create_user(username='09131000010', password='x')
+        first = self._ingest(user, 'fill-st', SAMPLE_CHALUS)
+        listing = first.dataset.listings.get(token='fill-st')
+        listing.data = {'اجاره_ماهانه_عدد': 15_000_000}
+        listing.save(update_fields=['data'])
+
+        self._ingest(user, 'fill-st', SAMPLE_CHALUS)
+        listing.refresh_from_db()
+        self.assertEqual(listing.data.get('مکان_خیابان'), 'خ دریای شرقی ۱')
+        self.assertEqual(listing.data.get('اجاره_ماهانه_عدد'), 15_000_000)
 
     def test_token_matching_not_index(self):
         user = User.objects.create_user(username='09131000005', password='x')

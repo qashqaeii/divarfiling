@@ -625,6 +625,27 @@ def _append_shared_listing_export_columns(
     result_df["تصویر نقشه"] = combine_excel_and_source("تصویر نقشه", "نقشه_تصویر")
 
 
+def _append_street_export_column(
+    result_df: Any,
+    df: Any,
+    get_col,
+    combine_excel_and_source,
+) -> None:
+    """ستون نمایشی خیابان — کلید فنی مکان_خیابان در passthrough حفظ می‌شود."""
+    if "خیابان" in df.columns and "مکان_خیابان" in df.columns:
+        result_df["خیابان"] = combine_excel_and_source("خیابان", "مکان_خیابان", "-")
+    elif "خیابان" in df.columns:
+        result_df["خیابان"] = combine_excel_and_source("خیابان", "مکان_خیابان", "-")
+    elif "مکان_خیابان" in df.columns:
+        result_df["خیابان"] = get_col("مکان_خیابان")
+    else:
+        try:
+            import pandas as pd
+            result_df["خیابان"] = pd.Series(["-"] * len(df))
+        except Exception:
+            pass
+
+
 def _flatten_passthrough_payload(raw: Dict[str, Any]) -> Dict[str, Any]:
     out: Dict[str, Any] = {}
     for key, val in (raw or {}).items():
@@ -2321,6 +2342,10 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     else:
         out["ویژگی_ها_و_امکانات"] = ""
 
+    from divar_location import apply_location_to_export_record, extract_post_location
+
+    apply_location_to_export_record(out, extract_post_location(detail))
+
     return out
 
 
@@ -2919,6 +2944,8 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         result_df["محله"] = combine_excel_and_source("محله", "district_persian")
     else:
         result_df["محله"] = get_col("مکان_منطقه") if "مکان_منطقه" in df.columns else get_col("district_persian")
+
+    _append_street_export_column(result_df, df, get_col, combine_excel_and_source)
     
     # 10. متراژ
     if "متراژ" in df.columns:
@@ -3217,7 +3244,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
     sell_column_order = [
         "شناسه", "عنوان", "لینک", "شماره تماس",
         *SHARED_SCHEDULE_EXPORT_COLUMNS,
-        "دسته‌بندی", "شهر", "محله", "آدرس", "متراژ", "ساخت", "اتاق", "طبقه",
+        "دسته‌بندی", "شهر", "محله", "خیابان", "آدرس", "متراژ", "ساخت", "اتاق", "طبقه",
         "قیمت", "قیمت هر متر",
         "آسانسور", "پارکینگ", "انباری",
         *FEATURE_EXCEL_COLUMNS,
@@ -3616,6 +3643,8 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
         result_df["محله"] = combine_excel_and_source("محله", "district_persian")
     else:
         result_df["محله"] = get_col("مکان_منطقه") if "مکان_منطقه" in df.columns else get_col("district_persian")
+
+    _append_street_export_column(result_df, df, get_col, combine_excel_and_source)
     
     # 5. دسته‌بندی / آدرس / رسانه مشترک
     _append_shared_listing_export_columns(result_df, df, get_col, combine_excel_and_source)
@@ -4014,7 +4043,7 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     column_order = [
         "شناسه", "عنوان", "لینک", "شماره تماس",
         *SHARED_SCHEDULE_EXPORT_COLUMNS,
-        "دسته‌بندی", "شهر", "محله", "آدرس", "متراژ", "ساخت", "اتاق", "طبقه",
+        "دسته‌بندی", "شهر", "محله", "خیابان", "آدرس", "متراژ", "ساخت", "اتاق", "طبقه",
         "آسانسور", "پارکینگ", "انباری",
         *FEATURE_EXCEL_COLUMNS,
         "ودیعه", "اجاره ماهانه", "ودیعه و اجاره",

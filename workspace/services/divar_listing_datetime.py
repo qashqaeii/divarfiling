@@ -182,6 +182,10 @@ def merge_listing_schedule_data(old: Optional[dict], new: Optional[dict]) -> dic
     for key, val in enriched.items():
         if val is None or _is_empty_value(val):
             continue
+        if key in ('مکان_خیابان', 'خیابان'):
+            old_st = str(merged.get(key) or '').strip()
+            if old_st and old_st not in ('-', '—', 'nan', 'None'):
+                continue
         if key in (SHAMSI_KEY_LAST_BUMPED, DATA_KEY_LAST_BUMPED_AT) and not explicit_bump:
             continue
         if key in (SHAMSI_KEY_LAST_UPDATED, DATA_KEY_LAST_UPDATED_AT) and not explicit_updated:

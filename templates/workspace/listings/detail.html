@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ld-mobile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/advertiser-analysis.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=29">
@@ -42,7 +42,7 @@
     </div>
     {% endif %}
 
-    <header class="crm-prop-hero crm-prop-hero--{% if tx.is_sale %}sale{% elif tx.show_deposit and not tx.is_sale %}deposit{% elif tx.is_rent %}rent{% else %}default{% endif %}" aria-label="خلاصه آگهی">
+    <header class="crm-prop-hero crm-prop-hero--dossier-compact crm-prop-hero--{% if tx.is_sale %}sale{% elif tx.show_deposit and not tx.is_sale %}deposit{% elif tx.is_rent %}rent{% else %}default{% endif %}" aria-label="خلاصه آگهی">
         <span class="ws-ld-hero-ribbon" aria-hidden="true"></span>
         <div class="ws-ld-hero-mesh" aria-hidden="true"></div>
         <div class="crm-prop-hero-ambient" aria-hidden="true">
@@ -152,31 +152,41 @@
                 </div>
 
                 <div class="crm-prop-hero-content">
-                    <div class="crm-prop-hero-status-row">
-                        <span class="crm-prop-badge crm-prop-badge--type">آگهی دیوار</span>
-                        {% include 'workspace/includes/listing_advertiser_analysis.html' %}
-                        {% if meta.is_favorite %}<span class="crm-prop-badge crm-prop-badge--deal">علاقه‌مند</span>{% endif %}
-                        {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--personal" title="این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.">به فایل‌های شخصی اضافه شده</span>{% endif %}
-                        {% if listing.is_expired %}<span class="crm-prop-badge ws-ld-badge-expired">منقضی</span>{% endif %}
-                        {% if listing.published_at %}
-                        <span class="crm-prop-badge" title="تاریخ ایجاد آگهی در دیوار">
-                            <i class="fas fa-calendar-plus" aria-hidden="true"></i>
-                            ایجاد در دیوار: {{ listing.published_at|ws_jalali_datetime }}
-                        </span>
-                        {% endif %}
-                        {% if feat.is_vacant %}
-                        <span class="crm-prop-badge ws-ld-badge-vacant" title="ملک در حال حاضر تخلیه است">
-                            <i class="fas fa-door-open" aria-hidden="true"></i> تخلیه
-                        </span>
-                        {% endif %}
-                        {% if feat.vacancy_date %}
-                        <span class="crm-prop-badge" title="تاریخ تخلیه / آماده تحویل">
-                            <i class="fas fa-calendar-check" aria-hidden="true"></i> تخلیه: {{ feat.vacancy_date }}
-                        </span>
-                        {% endif %}
-                    </div>
+                    <div class="crm-prop-hero-intro">
+                        <div class="crm-prop-hero-headline">
+                            <h1 class="crm-prop-hero-title">{{ listing.title }}</h1>
+                            {% if location_side_summary or listing.neighborhood or listing.city %}
+                            <p class="crm-prop-hero-subloc">
+                                <i class="fas fa-location-dot" aria-hidden="true"></i>
+                                {% if location_side_summary %}{{ location_side_summary }}{% else %}{% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
 
-                    <h1 class="crm-prop-hero-title">{{ listing.title }}</h1>
+                        <div class="crm-prop-hero-status-row">
+                            <span class="crm-prop-badge crm-prop-badge--type">آگهی دیوار</span>
+                            {% include 'workspace/includes/listing_advertiser_analysis.html' %}
+                            {% if meta.is_favorite %}<span class="crm-prop-badge crm-prop-badge--deal">علاقه‌مند</span>{% endif %}
+                            {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--personal" title="این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.">به فایل‌های شخصی اضافه شده</span>{% endif %}
+                            {% if listing.is_expired %}<span class="crm-prop-badge ws-ld-badge-expired">منقضی</span>{% endif %}
+                            {% if listing.published_at %}
+                            <span class="crm-prop-badge crm-prop-badge--meta" title="تاریخ ایجاد آگهی در دیوار">
+                                <i class="fas fa-calendar-plus" aria-hidden="true"></i>
+                                {{ listing.published_at|ws_jalali_datetime }}
+                            </span>
+                            {% endif %}
+                            {% if feat.is_vacant %}
+                            <span class="crm-prop-badge ws-ld-badge-vacant" title="ملک در حال حاضر تخلیه است">
+                                <i class="fas fa-door-open" aria-hidden="true"></i> تخلیه
+                            </span>
+                            {% endif %}
+                            {% if feat.vacancy_date %}
+                            <span class="crm-prop-badge crm-prop-badge--meta" title="تاریخ تخلیه / آماده تحویل">
+                                <i class="fas fa-calendar-check" aria-hidden="true"></i> {{ feat.vacancy_date }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
 
                     <div class="crm-prop-hero-chips">
                         {% if location_side_summary or listing.neighborhood or listing.city %}
@@ -199,7 +209,7 @@
                             <i class="fas fa-user-tie" aria-hidden="true"></i>مالک: {{ owner_name }}
                         </span>
                         {% endif %}
-                        <span class="crm-prop-hero-chip"><i class="fas fa-database" aria-hidden="true"></i>{{ dataset.name|truncatechars:24 }}</span>
+                        <span class="crm-prop-hero-chip crm-prop-hero-chip--dataset"><i class="fas fa-database" aria-hidden="true"></i>{{ dataset.name|truncatechars:24 }}</span>
                     </div>
 
                     <div class="crm-prop-hero-board" aria-label="قیمت و مشخصات کلیدی">
@@ -282,46 +292,46 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {% if dossier_amenities or benchmark.verdict %}
-            <div class="crm-prop-hero-amenities">
-                {% if dossier_amenities %}
-                <span class="crm-prop-hero-amenities-lbl"><i class="fas fa-sparkles"></i> امکانات</span>
-                <div class="crm-prop-hero-amenity-icons" aria-label="امکانات ملک">
-                    {% for item in dossier_amenities %}
-                    <span class="crm-files-amenity crm-prop-hero-amenity{% if item.state == 'yes' or item.state == 'neutral' %} is-on{% else %} is-off{% endif %}{% if not item.is_core %} is-extra{% endif %}"
-                          data-tip="{{ item.tip }}"
-                          aria-label="{{ item.tip }}"
-                          tabindex="0">
-                        <i class="fas {{ item.icon }}" aria-hidden="true"></i>
-                    </span>
-                    {% endfor %}
+                    {% if dossier_amenities or benchmark.verdict %}
+                    <div class="crm-prop-hero-foot">
+                        {% if dossier_amenities %}
+                        <div class="crm-prop-hero-amenity-icons" aria-label="امکانات ملک">
+                            {% for item in dossier_amenities %}
+                            <span class="crm-files-amenity crm-prop-hero-amenity{% if item.state == 'yes' or item.state == 'neutral' %} is-on{% else %} is-off{% endif %}{% if not item.is_core %} is-extra{% endif %}"
+                                  data-tip="{{ item.tip }}"
+                                  aria-label="{{ item.tip }}"
+                                  tabindex="0">
+                                <i class="fas {{ item.icon }}" aria-hidden="true"></i>
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if benchmark.verdict %}
+                        <div class="crm-prop-hero-tags ws-ld-hero-bench"
+                             title="{% if benchmark.price_per_sqm_fmt %}این آگهی: {{ benchmark.price_per_sqm_fmt }}{% endif %}{% if benchmark.market_median_fmt %} · میانه: {{ benchmark.market_median_fmt }}{% endif %}">
+                            <span class="ws-ld-bench-compact crm-prop-tag crm-prop-tag--hl">
+                                <i class="fas fa-scale-balanced" aria-hidden="true"></i>
+                                <span class="ws-ld-bench-compact__verdict">{{ benchmark.verdict }}</span>
+                                {% if benchmark.diff_pct is not None %}
+                                <span class="ws-ld-bench-compact__pct" dir="ltr">{{ benchmark.diff_pct|ws_pct }}</span>
+                                {% endif %}
+                            </span>
+                            {% if benchmark.price_per_sqm_fmt %}
+                            <span class="crm-prop-tag ws-ld-bench-stat">این آگهی: {{ benchmark.price_per_sqm_fmt }}</span>
+                            {% endif %}
+                            {% if benchmark.market_median_fmt %}
+                            <span class="crm-prop-tag ws-ld-bench-stat">میانه: {{ benchmark.market_median_fmt }}</span>
+                            {% endif %}
+                            {% if benchmark.note %}
+                            <span class="crm-prop-tag ws-ld-bench-note ws-ld-bench-stat">{{ benchmark.note }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
-                {% if benchmark.verdict %}
-                <div class="crm-prop-hero-tags ws-ld-hero-bench" title="مقایسه با بازار">
-                    <span class="crm-prop-tag crm-prop-tag--hl">
-                        <i class="fas fa-scale-balanced" aria-hidden="true"></i>
-                        {{ benchmark.verdict }}
-                    </span>
-                    {% if benchmark.price_per_sqm_fmt %}
-                    <span class="crm-prop-tag">این آگهی: {{ benchmark.price_per_sqm_fmt }}</span>
-                    {% endif %}
-                    {% if benchmark.market_median_fmt %}
-                    <span class="crm-prop-tag">میانه: {{ benchmark.market_median_fmt }}</span>
-                    {% endif %}
-                    {% if benchmark.diff_pct is not None %}
-                    <span class="crm-prop-tag">اختلاف: {{ benchmark.diff_pct|ws_pct }}</span>
-                    {% endif %}
-                    {% if benchmark.note %}
-                    <span class="crm-prop-tag ws-ld-bench-note">{{ benchmark.note }}</span>
-                    {% endif %}
-                </div>
-                {% endif %}
             </div>
-            {% endif %}
         </div>
 
         <div class="ws-ld-mob-keyfacts" aria-label="خلاصه آگهی">

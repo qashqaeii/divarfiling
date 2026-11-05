@@ -3,12 +3,12 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=200">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=19">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=20">
 {% endblock %}
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=24">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=17">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-theme-dark.css' %}?v=1">
 {% endblock %}
 
@@ -18,11 +18,11 @@
 {% block content %}
 <div class="mk-page mk-hub mk-hub-pro ws-home ws-home-pro wsh-dashboard wsh-dashboard--mob3" id="wsHome">
 
+    {% include 'includes/announcements.html' with notice_layout='workspace-top' %}
+
     {% include 'workspace/includes/home/workspace_header.html' %}
 
     {% include 'workspace/includes/home/workspace_agency_panel.html' %}
-
-    {% include 'includes/announcements.html' with notice_layout='inline' %}
 
     {% if not has_bot_license %}
     {% include 'workspace/includes/home/workspace_app_downloads.html' %}

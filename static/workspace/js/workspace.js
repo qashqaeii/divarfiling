@@ -1232,13 +1232,7 @@ function clearWorkspaceSearchPhoneAutofill(input) {
 
 function bindWorkspaceGlobalSearchAutofillGuard(input) {
     if (!input) return;
-    guardWorkspaceSearchInputAutofill(input, 'mk_workspace_global_search_q');
-    const userEdited = { current: !!input.value.trim() };
-    input.addEventListener('input', () => { userEdited.current = true; });
-
-    function sweep() {
-        if (userEdited.current) return;
-        if (!clearWorkspaceSearchPhoneAutofill(input)) return;
+    bindWorkspaceSearchInputPhoneAutofillGuard(input, 'mk_workspace_global_search_q', () => {
         const results = document.getElementById('crmSearchResults');
         if (results) {
             results.hidden = true;
@@ -1249,6 +1243,20 @@ function bindWorkspaceGlobalSearchAutofillGuard(input) {
         if (clearBtn) clearBtn.hidden = true;
         const loadingEl = document.getElementById('crmSearchLoading');
         if (loadingEl) loadingEl.hidden = true;
+    });
+}
+
+/** جلوگیری از autofill موبایل/پسوردمنیجر روی فیلدهای جستجوی غیرتماس */
+function bindWorkspaceSearchInputPhoneAutofillGuard(input, fieldName, onCleared) {
+    if (!input) return;
+    guardWorkspaceSearchInputAutofill(input, fieldName || 'mk_workspace_filter_q');
+    const userEdited = { current: !!input.value.trim() };
+    input.addEventListener('input', () => { userEdited.current = true; });
+
+    function sweep() {
+        if (userEdited.current) return;
+        if (!clearWorkspaceSearchPhoneAutofill(input)) return;
+        if (typeof onCleared === 'function') onCleared();
     }
 
     sweep();
@@ -4106,6 +4114,10 @@ function initListingAddPersonal() {
     const loadingEl = modal?.querySelector('[data-ws-personal-place-loading]');
     const folderSearchInput = modal?.querySelector('[data-ws-personal-folder-search]');
     const folderEmptyEl = modal?.querySelector('[data-ws-personal-folder-empty]');
+
+    if (folderSearchInput && typeof bindWorkspaceSearchInputPhoneAutofillGuard === 'function') {
+        bindWorkspaceSearchInputPhoneAutofillGuard(folderSearchInput, 'ws_personal_folder_filter_q');
+    }
 
     let cabinetFilter = 'all';
     let folderSearchQuery = '';

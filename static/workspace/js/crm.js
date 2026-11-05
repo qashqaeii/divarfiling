@@ -5814,6 +5814,10 @@ function initCRMPropertyFilingNavSearch(root) {
 
     input.addEventListener('input', applyFilter);
     input.addEventListener('search', applyFilter);
+
+    if (typeof bindWorkspaceSearchInputPhoneAutofillGuard === 'function') {
+        bindWorkspaceSearchInputPhoneAutofillGuard(input, 'crm_filing_nav_filter_q', applyFilter);
+    }
 }
 
 function initCRMPropertyFilingDragDrop(root) {

@@ -3,6 +3,6 @@
 {% if listing.neighborhood or listing.city or listing_street %}
 <p class="{{ location_class|default:'mk-lcard-native__loc' }}">
     <i class="fas fa-location-dot" aria-hidden="true"></i>
-    <span>{% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:neighborhood_max }}{% if listing.city or listing_street %}، {% endif %}{% endif %}{% if listing.city %}{{ listing.city|truncatechars:city_max }}{% endif %}{% if listing_street %}{% if listing.city %}، {% elif listing.neighborhood %}، {% endif %}{{ listing_street|truncatechars:street_max }}{% endif %}</span>
+    <span>{% if listing.neighborhood %}{% if neighborhood_max %}{{ listing.neighborhood|truncatechars:neighborhood_max }}{% else %}{{ listing.neighborhood|truncatechars:18 }}{% endif %}{% if listing.city or listing_street %}، {% endif %}{% endif %}{% if listing.city %}{% if city_max %}{{ listing.city|truncatechars:city_max }}{% else %}{{ listing.city|truncatechars:14 }}{% endif %}{% endif %}{% if listing_street %}{% if listing.city %}، {% elif listing.neighborhood %}، {% endif %}{% if street_max %}{{ listing_street|truncatechars:street_max }}{% else %}{{ listing_street|truncatechars:22 }}{% endif %}{% endif %}</span>
 </p>
 {% endif %}

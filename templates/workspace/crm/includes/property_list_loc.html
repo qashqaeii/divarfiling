@@ -3,6 +3,6 @@
 {% if p.neighborhood or p.city or prop_street %}
 <p class="{{ loc_class|default:'crm-files-card-loc' }}">
     <i class="fas fa-location-dot" aria-hidden="true"></i>
-    {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}<span class="crm-files-card-loc-sep">·</span>{{ p.city }}{% endif %}{% if prop_street %}<span class="crm-files-card-loc-sep">·</span>{{ prop_street|truncatechars:street_max|default:28 }}{% endif %}
+    {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}<span class="crm-files-card-loc-sep">·</span>{{ p.city }}{% endif %}{% if prop_street %}<span class="crm-files-card-loc-sep">·</span>{{ prop_street|truncatechars:28 }}{% endif %}
 </p>
 {% endif %}

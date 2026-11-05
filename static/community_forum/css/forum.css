@@ -46,6 +46,9 @@
   --cf-composer-min: 44px;
   --cf-mobile-nav: 56px;
   --cf-mobile-top: 52px;
+  --cf-canvas: transparent;
+  --cf-chrome-bg: color-mix(in srgb, var(--ws-surface, #fff) 86%, transparent);
+  --cf-card-surface: color-mix(in srgb, var(--ws-surface, #fff) 90%, transparent);
   direction: rtl;
   display: flex;
   flex-direction: column;
@@ -54,7 +57,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  background: var(--ws-surface, #fff);
+  background: var(--cf-canvas);
 }
 
 @media (min-width: 1024px) {
@@ -71,6 +74,8 @@ body.ws-body--forum .ws-content:has(.cf-page),
   max-width: none !important;
   width: 100% !important;
   margin: 0 !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 
 @media (max-width: 768px) {
@@ -96,7 +101,9 @@ body.ws-body--forum .ws-content:has(.cf-page),
   min-height: var(--cf-header-h);
   padding: 6px 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 65%, transparent);
-  background: var(--ws-surface, #fff);
+  background: var(--cf-chrome-bg);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
 }
 
 @media (max-width: 1023px) {
@@ -314,7 +321,7 @@ body.ws-body--forum .ws-content:has(.cf-page),
   border-radius: 14px;
   font-size: 0.8rem;
   line-height: 1.55;
-  background: var(--ws-surface, #fff);
+  background: var(--cf-card-surface);
   border: 1px solid color-mix(in srgb, var(--cf-accent) 18%, var(--ws-border, #e2e8f0));
   box-shadow: 0 6px 18px color-mix(in srgb, var(--cf-accent) 6%, transparent);
   overflow: hidden;
@@ -416,8 +423,8 @@ body.ws-body--forum .ws-content:has(.cf-page),
   border-bottom: 1px solid color-mix(in srgb, var(--cf-accent) 14%, var(--ws-border, #e2e8f0));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--cf-accent) 7%, var(--ws-surface, #fff)) 0%,
-    var(--ws-surface, #fff) 100%
+    color-mix(in srgb, var(--cf-accent) 7%, var(--cf-card-surface)) 0%,
+    color-mix(in srgb, var(--cf-card-surface) 92%, transparent) 100%
   );
   box-shadow: 0 4px 14px color-mix(in srgb, var(--cf-accent) 5%, transparent);
   z-index: 2;
@@ -562,7 +569,9 @@ body.ws-body--forum .ws-content:has(.cf-page),
   flex-shrink: 0;
   padding: 8px 14px;
   border-bottom: 1px solid var(--ws-border, rgba(15, 23, 42, 0.06));
-  background: var(--ws-surface, #fff);
+  background: var(--cf-chrome-bg);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
 }
 
 .cf-search__bar {
@@ -637,7 +646,7 @@ body.ws-body--forum .ws-content:has(.cf-page),
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px 14px 8px;
-  background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface, #fff));
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1415,7 +1424,9 @@ html[data-theme="dark"] .cf-more-menu {
   flex-shrink: 0;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 65%, transparent);
-  background: var(--ws-surface, #fff);
+  background: var(--cf-chrome-bg);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
 }
 
 @media (max-width: 1023px) {
@@ -2453,12 +2464,18 @@ html[data-theme="dark"] .cf-welcome__mark {
 html[data-theme="dark"] .cf-page {
   --cf-bubble-other: rgba(255, 255, 255, 0.06);
   --cf-bubble-mine: color-mix(in srgb, var(--cf-accent) 22%, rgba(255, 255, 255, 0.04));
+  --cf-chrome-bg: color-mix(in srgb, var(--ws-surface) 82%, transparent);
+  --cf-card-surface: color-mix(in srgb, var(--ws-surface) 86%, transparent);
 }
 
 html[data-theme="dark"] .cf-header,
 html[data-theme="dark"] .cf-composer-wrap,
 html[data-theme="dark"] .cf-search {
-  background: var(--ws-surface, #0f172a);
+  background: var(--cf-chrome-bg);
+}
+
+html[data-theme="dark"] .cf-messages {
+  background: transparent;
 }
 
 html[data-theme="dark"] .cf-composer__input {

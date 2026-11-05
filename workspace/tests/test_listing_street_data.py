@@ -5,8 +5,11 @@ import pandas as pd
 from workspace.services.columns import row_to_listing_fields
 from workspace.services.listing_street_data import (
     listing_street_backfill_plan,
+    listing_street_for_display,
     sync_street_keys_in_listing_data,
 )
+from workspace.services.crm_property_share import location_display
+from workspace.models import CRMProperty
 
 
 class ListingStreetDataTest(SimpleTestCase):
@@ -42,3 +45,16 @@ class ListingStreetDataTest(SimpleTestCase):
         }])
         fields = row_to_listing_fields(df.iloc[0], df)
         self.assertEqual(fields['data'].get('مکان_خیابان'), 'خ آسایش ۱۱')
+
+    def test_listing_street_for_display(self):
+        class _Listing:
+            data = {'مکان_خیابان': 'خ شهدای نفت'}
+
+        self.assertEqual(listing_street_for_display(_Listing()), 'خ شهدای نفت')
+
+    def test_location_display_includes_street(self):
+        prop = CRMProperty(city='آبادان', feature_data={'خیابان': 'خ شهدای نفت'})
+        self.assertEqual(
+            location_display(prop, mask=False),
+            'آبادان · خ شهدای نفت',
+        )

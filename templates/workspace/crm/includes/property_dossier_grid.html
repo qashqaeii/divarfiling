@@ -156,6 +156,13 @@
                 <dd>{{ property.city }}</dd>
             </div>
             {% endif %}
+            {% property_street_display property as prop_street %}
+            {% if prop_street %}
+            <div>
+                <dt><i class="fas {{ 'خیابان'|feature_icon }}" aria-hidden="true"></i> خیابان</dt>
+                <dd>{{ prop_street }}</dd>
+            </div>
+            {% endif %}
             {% if property.district %}
             <div>
                 <dt><i class="fas {{ 'منطقه'|feature_icon }}" aria-hidden="true"></i> منطقه</dt>

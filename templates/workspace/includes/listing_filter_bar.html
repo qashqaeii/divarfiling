@@ -2,8 +2,8 @@
     {% if dataset_ids_param %}
     <input type="hidden" name="dataset_ids" value="{{ dataset_ids_param }}">
     {% endif %}
-    {% if listing_view_mode == 'table' or listing_view_mode == 'grid' %}
-    <input type="hidden" name="view" value="{{ listing_view_mode }}">
+    {% if listing_view_mode == 'table' %}
+    <input type="hidden" name="view" value="table">
     {% endif %}
     <div class="mk-filter-primary">
         <div class="ws-mob-search-bar ws-mob-search-bar--listing">

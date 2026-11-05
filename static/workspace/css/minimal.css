@@ -9737,20 +9737,19 @@ html[data-theme="dark"] .mk-adv-tag--disguised .mk-adv-label { color: #fda4af; }
 .mk-listing-cards-shell { display: none; }
 
 /* View modes */
-.mk-listing-panel[data-list-view="grid"] .mk-listing-cards-shell {
+.mk-listing-panel[data-list-view="grid"] .mk-listing-cards-shell,
+.mk-listing-panel[data-list-view="auto"] .mk-listing-cards-shell {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
     gap: 1rem;
     padding: 1rem 1.1rem 1.25rem;
 }
 
-.mk-listing-panel[data-list-view="grid"] .mk-listing-table-desk { display: none !important; }
+.mk-listing-panel[data-list-view="grid"] .mk-listing-table-desk,
+.mk-listing-panel[data-list-view="auto"] .mk-listing-table-desk { display: none !important; }
 
 .mk-listing-panel[data-list-view="table"] .mk-listing-cards-shell { display: none !important; }
 .mk-listing-panel[data-list-view="table"] .mk-listing-table-desk { display: block; }
-
-.mk-listing-panel[data-list-view="auto"] .mk-listing-cards-shell { display: none; }
-.mk-listing-panel[data-list-view="auto"] .mk-listing-table-desk { display: block; }
 
 /* ─── Listing cards — photo-forward pro cards ─── */
 .mk-lcard {

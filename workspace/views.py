@@ -211,8 +211,10 @@ def _dataset_filter_qs(request):
 def _dataset_page_query(request):
     filters = _dataset_filter_params(request)
     params = {k: v for k, v in filters.items() if v and k != 'view'}
-    view = filters.get('view') or 'auto'
-    if view not in ('table', 'auto'):
+    view = filters.get('view') or 'grid'
+    if view == 'auto':
+        view = 'grid'
+    if view == 'table':
         params['view'] = view
     return params
 
@@ -654,22 +656,24 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
             for lst in ctx['listings']
         }
         listing_view = self.request.GET.get('view', '').strip()
+        if listing_view == 'auto':
+            listing_view = 'grid'
         if listing_view not in ('table', 'grid'):
-            listing_view = 'auto'
+            listing_view = 'grid'
         ctx['listing_view_mode'] = listing_view
         base_filter = {
             k: v for k, v in filters.items()
             if v not in ('', None) and k != 'sort'
         }
         ctx['filter_qs_noview'] = urlencode(base_filter)
-        if listing_view in ('table', 'grid'):
+        if listing_view == 'table':
             base_filter['view'] = listing_view
         ctx['filter_qs'] = urlencode(base_filter)
         ctx['page_query'] = {
             k: str(v) for k, v in filters.items()
             if v not in ('', None)
         }
-        if listing_view in ('table', 'grid'):
+        if listing_view == 'table':
             ctx['page_query']['view'] = listing_view
         ctx['rename_form'] = DatasetRenameForm(instance=dataset)
         ctx['open_modal'] = self.request.GET.get('open', '')
@@ -865,11 +869,13 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
             if v not in ('', None) and k != 'sort'
         )
         listing_view = self.request.GET.get('view', '').strip()
+        if listing_view == 'auto':
+            listing_view = 'grid'
         if listing_view not in ('table', 'grid'):
-            listing_view = 'auto'
+            listing_view = 'grid'
         ctx['listing_view_mode'] = listing_view
         ctx['filter_qs_noview'] = urlencode(filter_pairs)
-        if listing_view in ('table', 'grid'):
+        if listing_view == 'table':
             filter_pairs = list(filter_pairs) + [('view', listing_view)]
         ctx['filter_qs'] = urlencode(filter_pairs)
         ctx['page_query'] = {
@@ -879,7 +885,7 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
                 if v not in ('', None)
             },
         }
-        if listing_view in ('table', 'grid'):
+        if listing_view == 'table':
             ctx['page_query']['view'] = listing_view
         page_tokens = [lst.token for lst in ctx['listings']]
         metas = ListingMeta.objects.filter(

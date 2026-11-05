@@ -35,15 +35,15 @@
         <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-times"></i></button>
     </div>
 
-    <section class="fl-panel fl-dd-panel mk-listing-panel" data-list-view="{{ listing_view_mode|default:'auto' }}" data-fl-tour="filing-detail-listings">
+    <section class="fl-panel fl-dd-panel mk-listing-panel" data-list-view="{{ listing_view_mode|default:'grid' }}" data-fl-tour="filing-detail-listings">
         <header class="fl-panel__head">
             <div class="fl-panel__title">
                 <h2>لیست آگهی‌ها</h2>
                 <span class="fl-panel__count">{{ filtered_count|intcomma }} ردیف · ابتدا شخصی، سپس مشاور</span>
             </div>
             <div class="mk-filing-view-toggle mk-listing-view-toggle" role="group" aria-label="نحوه نمایش">
-                <a href="?{% if filter_qs_noview %}{{ filter_qs_noview }}&{% endif %}view=table" class="mk-filing-view-btn mk-filing-view-btn--table{% if listing_view_mode == 'table' or listing_view_mode == 'auto' %} is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-                <a href="?{% if filter_qs_noview %}{{ filter_qs_noview }}&{% endif %}view=grid" class="mk-filing-view-btn mk-filing-view-btn--grid{% if listing_view_mode == 'grid' %} is-active{% endif %}" title="کارت"><i class="fas fa-th-large" aria-hidden="true"></i></a>
+                <a href="?{% if filter_qs_noview %}{{ filter_qs_noview }}&{% endif %}view=table" class="mk-filing-view-btn mk-filing-view-btn--table{% if listing_view_mode == 'table' %} is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                <a href="?{% if filter_qs_noview %}{{ filter_qs_noview }}&{% endif %}view=grid" class="mk-filing-view-btn mk-filing-view-btn--grid{% if listing_view_mode != 'table' %} is-active{% endif %}" title="کارت"><i class="fas fa-th-large" aria-hidden="true"></i></a>
             </div>
         </header>
 

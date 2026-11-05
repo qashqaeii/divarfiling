@@ -62,12 +62,7 @@
             <h3 class="mk-lcard-title mk-lcard-native__title">
                 <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
             </h3>
-            {% if listing.neighborhood or listing.city %}
-            <p class="mk-lcard-native__meta">
-                <i class="fas fa-location-dot" aria-hidden="true"></i>
-                <span>{% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:24 }}{% if listing.city %}، {% endif %}{% endif %}{% if listing.city %}{{ listing.city|truncatechars:18 }}{% endif %}</span>
-            </p>
-            {% endif %}
+            {% include 'workspace/includes/listing_card_location.html' with location_class='mk-lcard-native__meta' neighborhood_max=24 city_max=18 street_max=24 %}
         </div>
 
         <div class="mk-lcard-native__pricebox">

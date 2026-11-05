@@ -324,3 +324,15 @@ def feature_icon(label):
     """آیکون Font Awesome مناسب برای برچسب ویژگی / امکان / مشخصه."""
     from workspace.services.listing_features import _icon_for_key
     return _icon_for_key(label)
+
+
+@register.simple_tag
+def listing_street_display(listing):
+    from workspace.services.listing_street_data import listing_street_for_display
+    return listing_street_for_display(listing)
+
+
+@register.simple_tag
+def property_street_display(prop):
+    from workspace.services.listing_street_data import property_street_for_display
+    return property_street_for_display(prop)

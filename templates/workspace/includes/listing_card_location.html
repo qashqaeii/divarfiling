@@ -1,0 +1,8 @@
+{% load workspace_tags %}
+{% listing_street_display listing as listing_street %}
+{% if listing.neighborhood or listing.city or listing_street %}
+<p class="{{ location_class|default:'mk-lcard-native__loc' }}">
+    <i class="fas fa-location-dot" aria-hidden="true"></i>
+    <span>{% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:neighborhood_max }}{% if listing.city or listing_street %}، {% endif %}{% endif %}{% if listing.city %}{{ listing.city|truncatechars:city_max }}{% endif %}{% if listing_street %}{% if listing.city %}، {% elif listing.neighborhood %}، {% endif %}{{ listing_street|truncatechars:street_max }}{% endif %}</span>
+</p>
+{% endif %}

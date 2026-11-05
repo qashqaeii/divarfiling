@@ -57,6 +57,8 @@ def build_property_share_context(user, prop: CRMProperty) -> PropertyShareContex
 
 
 def location_display(prop: CRMProperty, *, mask: bool) -> str:
+    from workspace.services.listing_street_data import property_street_for_display
+
     if mask:
         parts = [p for p in (prop.city, prop.district) if p]
         return ' · '.join(parts) if parts else 'محدوده عمومی (محرمانه)'
@@ -68,6 +70,11 @@ def location_display(prop: CRMProperty, *, mask: bool) -> str:
     text = ' — '.join(chunks) if chunks else ''
     if prop.district:
         text = f'{text} ({prop.district})' if text else prop.district
+    street = property_street_for_display(prop)
+    if street:
+        street_norm = street.strip()
+        if street_norm and street_norm not in text:
+            text = f'{text} · {street_norm}' if text else street_norm
     return text or '—'
 
 

@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 .wsh-dashboard {
-    --wsh-gap: 0.65rem;
+    --wsh-gap: 0.75rem;
     --wsh-card-radius: 14px;
     --wsh-card-pad: 0.85rem;
     gap: var(--wsh-gap);
@@ -2828,13 +2828,22 @@
     --wsh-agency-tint: color-mix(in srgb, #7c3aed 14%, #111827);
 }
 
+[data-theme="dark"] .wsh-agency__content {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--wsh-agency-tint) 90%, var(--ws-bg)) 0%,
+        var(--wsh-agency-surface) 42%
+    );
+}
+
+[data-theme="dark"] .wsh-agency__chip--role {
+    background: color-mix(in srgb, var(--wsh-agency-tint) 75%, var(--ws-bg));
+    border-color: color-mix(in srgb, var(--wsh-agency-purple) 28%, transparent);
+    color: #e9d5ff;
+}
+
 [data-theme="dark"] .wsh-agency__link {
     background: color-mix(in srgb, var(--ws-surface-2, #1f2937) 90%, #111827);
     border-color: var(--ws-border, rgba(255, 255, 255, 0.1));
     color: var(--wsh-agency-ink);
-}
-
-[data-theme="dark"] .wsh-agency__chip--role {
-    background: color-mix(in srgb, #7c3aed 18%, #111827);
-    color: #e9d5ff;
 }

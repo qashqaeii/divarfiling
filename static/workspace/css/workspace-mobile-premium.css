@@ -300,13 +300,12 @@
         display: none !important;
     }
 
-    /* Native SaaS canvas — flat, no heavy gradients */
-    body.ws-body .ws-main,
+    /* Native SaaS canvas — shells transparent; Mainworkspacebg lives on .ws-main */
     .ws-content,
     .crm-app,
     .mk-page,
     .crm-page-chrome {
-        background: var(--ws-mob-canvas) !important;
+        background: transparent !important;
         background-image: none !important;
     }
 
@@ -3240,4 +3239,77 @@
     ):active {
         transform: none !important;
     }
+}
+
+/* ═══ Workspace canvas — transparent shells (Mainworkspacebg on .ws-main) ═══ */
+body.ws-body .ws-content {
+    background-color: transparent;
+    background-image: none;
+}
+
+body.ws-body :is(
+    .crm-app,
+    .crm-app--shell-full,
+    .crm-app--today,
+    .crm-app--today-full,
+    .crm-app--contacts-full,
+    .crm-main,
+    .crm-page-chrome,
+    .crm-shell-page,
+    .crm-shell-body,
+    .crm-contacts-workspace,
+    .crm-contacts-layout,
+    .crm-contacts-main,
+    .crm-properties-layout,
+    .crm-files-pro,
+    .crm-queue-app,
+    .crm-today-pro,
+    .crm-today-mobile,
+    .mk-page,
+    .mk-hub,
+    .mk-hub-pro,
+    .ws-home,
+    .ws-home-pro,
+    .wsh-dashboard,
+    .mk-filing-datasets
+) {
+    background-color: transparent;
+    background-image: none;
+}
+
+@media (min-width: 769px) {
+    body.ws-body .ws-content:has(.crm-app--shell-full) {
+        padding: 1.25rem 1.5rem 1.5rem;
+    }
+}
+
+[data-theme="dark"] body.ws-body .ws-content,
+[data-theme="dark"] body.ws-body :is(
+    .crm-app,
+    .crm-app--shell-full,
+    .crm-app--today,
+    .crm-app--today-full,
+    .crm-app--contacts-full,
+    .crm-main,
+    .crm-page-chrome,
+    .crm-shell-page,
+    .crm-shell-body,
+    .crm-contacts-workspace,
+    .crm-contacts-layout,
+    .crm-contacts-main,
+    .crm-properties-layout,
+    .crm-files-pro,
+    .crm-queue-app,
+    .crm-today-pro,
+    .crm-today-mobile,
+    .mk-page,
+    .mk-hub,
+    .mk-hub-pro,
+    .ws-home,
+    .ws-home-pro,
+    .wsh-dashboard,
+    .mk-filing-datasets
+) {
+    background-color: transparent;
+    background-image: none;
 }

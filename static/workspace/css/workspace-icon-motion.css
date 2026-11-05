@@ -790,3 +790,39 @@ body.ws-body .crm-contacts-mob-act--secondary:active :is(.fa-comment, i) {
         animation: none !important;
     }
 }
+
+/* Workspace canvas — transparent shells (Mainworkspacebg on .ws-main) */
+body.ws-body .ws-content {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+body.ws-body :is(
+    .mk-page,
+    .mk-hub,
+    .mk-hub-pro,
+    .ws-home,
+    .ws-home-pro,
+    .wsh-dashboard,
+    .crm-app,
+    .crm-app--shell-full,
+    .crm-app--today,
+    .crm-app--today-full,
+    .crm-app--contacts-full,
+    .crm-main,
+    .crm-page-chrome,
+    .crm-shell-page,
+    .crm-shell-body,
+    .crm-contacts-workspace,
+    .crm-contacts-layout,
+    .crm-contacts-main,
+    .crm-properties-layout,
+    .crm-files-pro,
+    .crm-queue-app,
+    .crm-today-pro,
+    .crm-today-mobile,
+    .mk-filing-datasets
+) {
+    background-color: transparent !important;
+    background-image: none !important;
+}

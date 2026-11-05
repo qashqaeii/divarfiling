@@ -422,3 +422,11 @@ body.ws-body .ws-home .kpi-strip.ws-home-metrics {
         grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     }
 }
+
+/* Dark — KPI bar is not a full-bleed canvas; let .ws-main bg show in gaps */
+[data-theme="dark"] body.ws-body .crm-page-chrome > .kpi-strip.crm-dash-kpis,
+[data-theme="dark"] body.ws-body .crm-page-chrome > .kpi-strip.crm-deals-kpis {
+    background: var(--ws-canvas-chrome-bg, color-mix(in srgb, var(--ws-surface) 72%, transparent));
+    border-color: color-mix(in srgb, var(--ws-border) 55%, transparent);
+    box-shadow: none;
+}

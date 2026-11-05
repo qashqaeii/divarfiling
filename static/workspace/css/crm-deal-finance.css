@@ -8,6 +8,22 @@
   --fin-gold-soft: #fef3c7;
   --fin-rose: #be123c;
   --fin-rose-soft: #ffe4e6;
+  --fin-surface: #ffffff;
+  --fin-surface-muted: #f8fafc;
+  --fin-surface-soft: #f1f5f9;
+  --fin-border: #e2e8f0;
+  --fin-text: #0f172a;
+  --fin-text-secondary: #334155;
+  --fin-muted: #64748b;
+  --fin-split-track: #f1f5f9;
+  --fin-bar-total: #cbd5e1;
+  --fin-paid-bg: #ecfdf5;
+  --fin-partial-bg: #fffbeb;
+  --fin-unpaid-bg: #fff1f2;
+  --fin-waived-bg: #f1f5f9;
+  --fin-success: #15803d;
+  --fin-preview-bg: linear-gradient(180deg, #f0fdfa, #fff);
+  --fin-preview-border: #99f6e4;
   font-family: inherit;
 }
 
@@ -17,7 +33,7 @@
 
 .crm-fin-desk-sub {
   margin: 4px 0 0;
-  color: var(--crm-muted, #64748b);
+  color: var(--fin-muted, var(--crm-muted, #64748b));
   font-size: 0.85rem;
 }
 
@@ -33,9 +49,9 @@
   flex: 0 0 auto;
   border-radius: 999px;
   padding: 8px 14px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  color: var(--fin-text-secondary);
   font-weight: 700;
   font-size: 0.82rem;
   text-decoration: none;
@@ -96,8 +112,8 @@
 }
 
 .crm-fin-kpi {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
   border-radius: 16px;
   padding: 12px 14px;
 }
@@ -105,7 +121,7 @@
 .crm-fin-kpi em {
   display: block;
   font-style: normal;
-  color: #64748b;
+  color: var(--fin-muted);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -115,12 +131,12 @@
   margin-top: 6px;
   font-size: 0.98rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--fin-text);
   font-variant-numeric: tabular-nums;
 }
 
 .crm-fin-kpi--net strong { color: var(--fin-advisor); }
-.crm-fin-kpi--in strong { color: #15803d; }
+.crm-fin-kpi--in strong { color: var(--fin-success); }
 .crm-fin-kpi--out strong { color: var(--fin-rose); }
 
 .crm-fin-grid {
@@ -131,8 +147,8 @@
 }
 
 .crm-fin-panel {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
   border-radius: 20px;
   padding: 16px;
 }
@@ -140,11 +156,12 @@
 .crm-fin-panel-head h2 {
   margin: 0;
   font-size: 1.02rem;
+  color: var(--fin-text);
 }
 
 .crm-fin-panel-head p {
   margin: 4px 0 14px;
-  color: #64748b;
+  color: var(--fin-muted);
   font-size: 0.8rem;
 }
 
@@ -153,7 +170,7 @@
   height: 14px;
   border-radius: 999px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--fin-split-track);
 }
 
 .crm-fin-split i,
@@ -174,6 +191,7 @@
   gap: 8px;
   font-size: 0.84rem;
   font-weight: 700;
+  color: var(--fin-text);
 }
 
 .crm-fin-split-legend span {
@@ -203,15 +221,16 @@
   gap: 10px;
   border-radius: 14px;
   padding: 10px 12px;
-  background: #f8fafc;
+  background: var(--fin-surface-muted);
+  color: var(--fin-text);
 }
 
-.crm-fin-payout-item strong { display: block; font-size: 0.86rem; }
-.crm-fin-payout-item em { font-style: normal; color: #64748b; font-size: 0.74rem; }
-.crm-fin-payout-item.is-paid { background: #ecfdf5; }
-.crm-fin-payout-item.is-partial { background: #fffbeb; }
-.crm-fin-payout-item.is-unpaid { background: #fff1f2; }
-.crm-fin-payout-item.is-waived { background: #f1f5f9; }
+.crm-fin-payout-item strong { display: block; font-size: 0.86rem; color: var(--fin-text); }
+.crm-fin-payout-item em { font-style: normal; color: var(--fin-muted); font-size: 0.74rem; }
+.crm-fin-payout-item.is-paid { background: var(--fin-paid-bg); }
+.crm-fin-payout-item.is-partial { background: var(--fin-partial-bg); }
+.crm-fin-payout-item.is-unpaid { background: var(--fin-unpaid-bg); }
+.crm-fin-payout-item.is-waived { background: var(--fin-waived-bg); }
 
 .crm-fin-months {
   display: grid;
@@ -245,15 +264,15 @@
   border-radius: 999px 999px 4px 4px;
 }
 
-.crm-fin-month-bars .is-total { background: #cbd5e1; }
+.crm-fin-month-bars .is-total { background: var(--fin-bar-total); }
 .crm-fin-month-bars .is-advisor { background: var(--fin-advisor); }
 
-.crm-fin-month strong { font-size: 0.72rem; }
-.crm-fin-month em { font-style: normal; font-size: 0.68rem; color: #64748b; }
+.crm-fin-month strong { font-size: 0.72rem; color: var(--fin-text); }
+.crm-fin-month em { font-style: normal; font-size: 0.68rem; color: var(--fin-muted); }
 
 .crm-fin-months-legend {
   margin: 12px 0 0;
-  color: #64748b;
+  color: var(--fin-muted);
   font-size: 0.78rem;
   display: flex;
   gap: 14px;
@@ -268,7 +287,7 @@
   margin-left: 6px;
 }
 
-.crm-fin-months-legend .is-total { background: #cbd5e1; }
+.crm-fin-months-legend .is-total { background: var(--fin-bar-total); }
 .crm-fin-months-legend .is-advisor { background: var(--fin-advisor); }
 
 .crm-fin-forecast-grid {
@@ -278,15 +297,16 @@
 }
 
 .crm-fin-forecast-grid article {
-  background: #f8fafc;
+  background: var(--fin-surface-muted);
   border-radius: 14px;
   padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--fin-border) 65%, transparent);
 }
 
 .crm-fin-forecast-grid em {
   display: block;
   font-style: normal;
-  color: #64748b;
+  color: var(--fin-muted);
   font-size: 0.75rem;
 }
 
@@ -294,6 +314,7 @@
   display: block;
   margin-top: 6px;
   font-size: 0.95rem;
+  color: var(--fin-text);
 }
 
 .crm-fin-table-wrap { overflow-x: auto; }
@@ -301,27 +322,37 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.86rem;
+  color: var(--fin-text);
 }
 
 .crm-fin-table th,
 .crm-fin-table td {
   text-align: right;
   padding: 10px 8px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--fin-border);
   white-space: nowrap;
+}
+
+.crm-fin-table th {
+  color: var(--fin-muted);
+  font-weight: 700;
 }
 
 .crm-fin-table td em {
   display: block;
   font-style: normal;
-  color: #64748b;
+  color: var(--fin-muted);
   font-size: 0.75rem;
 }
 
 .crm-fin-table a {
-  color: #0f172a;
+  color: var(--fin-text);
   font-weight: 800;
   text-decoration: none;
+}
+
+.crm-fin-table a:hover {
+  color: var(--fin-agency);
 }
 
 .crm-fin-table .is-advisor { color: var(--fin-advisor); font-weight: 800; }
@@ -346,11 +377,11 @@
 }
 
 .crm-fin-empty i { font-size: 1.6rem; color: var(--fin-advisor); }
-.crm-fin-empty h3 { margin: 10px 0 6px; }
-.crm-fin-empty p { color: #64748b; margin-bottom: 14px; }
+.crm-fin-empty h3 { margin: 10px 0 6px; color: var(--fin-text); }
+.crm-fin-empty p { color: var(--fin-muted); margin-bottom: 14px; }
 
 .crm-fin-fieldset {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--fin-border);
   border-radius: 14px;
   padding: 12px;
   margin: 0 0 12px;
@@ -362,6 +393,7 @@
   padding: 0 6px;
   font-weight: 800;
   font-size: 0.82rem;
+  color: var(--fin-text);
 }
 
 .crm-deal-finance-card .crm-fin-mini-grid {
@@ -372,19 +404,26 @@
 }
 
 .crm-fin-mini {
-  background: #f8fafc;
+  background: var(--fin-surface-muted);
   border-radius: 12px;
   padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--fin-border) 55%, transparent);
 }
 
 .crm-fin-mini em {
   display: block;
   font-style: normal;
-  color: #64748b;
+  color: var(--fin-muted);
   font-size: 0.72rem;
 }
 
-.crm-fin-mini strong { display: block; margin-top: 4px; font-size: 0.86rem; }
+.crm-fin-mini strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.86rem;
+  color: var(--fin-text);
+}
+
 .crm-fin-mini.is-advisor strong { color: var(--fin-advisor); }
 .crm-fin-mini.is-agency strong { color: var(--fin-agency); }
 
@@ -400,15 +439,16 @@
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--fin-text-secondary);
 }
 
 .crm-fin-preview {
-  background: linear-gradient(180deg, #f0fdfa, #fff);
-  border: 1px solid #99f6e4;
+  background: var(--fin-preview-bg);
+  border: 1px solid var(--fin-preview-border);
   border-radius: 16px;
   padding: 12px;
   margin-bottom: 12px;
+  color: var(--fin-text);
 }
 
 .crm-fin-preview ul {
@@ -426,6 +466,61 @@
 }
 
 .crm-fin-span-2 { grid-column: 1 / -1; }
+
+/* ─── Dark theme ─── */
+[data-theme="dark"] .crm-fin-page {
+  --fin-surface: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+  --fin-surface-muted: color-mix(in srgb, var(--ws-surface-2) 72%, transparent);
+  --fin-surface-soft: color-mix(in srgb, var(--ws-surface) 58%, transparent);
+  --fin-border: color-mix(in srgb, var(--ws-border) 95%, transparent);
+  --fin-text: var(--ws-text);
+  --fin-text-secondary: var(--ws-text-secondary);
+  --fin-muted: var(--ws-text-muted);
+  --fin-split-track: color-mix(in srgb, var(--ws-border) 50%, transparent);
+  --fin-bar-total: color-mix(in srgb, var(--ws-text-muted) 42%, transparent);
+  --fin-paid-bg: color-mix(in srgb, #10b981 18%, transparent);
+  --fin-partial-bg: color-mix(in srgb, #f59e0b 16%, transparent);
+  --fin-unpaid-bg: color-mix(in srgb, #f43f5e 16%, transparent);
+  --fin-waived-bg: color-mix(in srgb, var(--ws-surface-2) 55%, transparent);
+  --fin-success: #4ade80;
+  --fin-rose: #fb7185;
+  --fin-preview-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--fin-advisor) 14%, transparent),
+    var(--fin-surface)
+  );
+  --fin-preview-border: color-mix(in srgb, var(--fin-advisor) 38%, transparent);
+}
+
+[data-theme="dark"] .crm-fin-page .crm-deals-desk-header.crm-dash-bar {
+  background: var(--fin-surface);
+  border-color: var(--fin-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .crm-fin-hero-card {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .crm-fin-status.is-paid {
+  background: color-mix(in srgb, #22c55e 22%, transparent);
+  color: #86efac;
+}
+
+[data-theme="dark"] .crm-fin-status.is-partial {
+  background: color-mix(in srgb, #f59e0b 22%, transparent);
+  color: #fcd34d;
+}
+
+[data-theme="dark"] .crm-fin-status.is-unpaid {
+  background: color-mix(in srgb, #f43f5e 22%, transparent);
+  color: #fda4af;
+}
+
+[data-theme="dark"] .crm-fin-status.is-waived {
+  background: color-mix(in srgb, var(--ws-text-muted) 22%, transparent);
+  color: var(--ws-text-secondary);
+}
 
 @media (min-width: 900px) {
   .crm-fin-hero { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -448,7 +543,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 6px;
     padding: 10px 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--fin-border);
   }
   .crm-fin-table td {
     border: 0;
@@ -456,4 +551,8 @@
     white-space: normal;
   }
   .crm-fin-table td:first-child { grid-column: 1 / -1; }
+
+  [data-theme="dark"] .crm-fin-page.crm-deals-mobile.crm-page-chrome {
+    background: transparent;
+  }
 }

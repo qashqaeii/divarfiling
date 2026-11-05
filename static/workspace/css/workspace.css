@@ -71,6 +71,19 @@ html {
 
 [data-theme="dark"] {
     color-scheme: dark;
+    --ws-main-bg-layer: var(--ws-main-bg-image-dark);
+    --ws-main-bg-dark-overlay: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ws-bg) 52%, transparent) 0%,
+        color-mix(in srgb, var(--ws-bg) 68%, transparent) 50%,
+        color-mix(in srgb, var(--ws-bg) 82%, transparent) 100%
+    );
+    --ds-glass: rgba(10, 15, 30, 0.84);
+    --ws-canvas-chrome-bg: color-mix(in srgb, var(--ws-surface) 72%, transparent);
+}
+
+[data-theme="dark"] body.ws-body::before {
+    opacity: 0.08;
 }
 
 [data-theme="cheerful"] {
@@ -369,6 +382,49 @@ body.ws-body::before {
     display: flex; flex-direction: column; min-height: 100vh;
     min-width: 0; max-width: 100%; overflow-x: hidden;
     position: relative; z-index: 1;
+    --ws-main-bg-image: url("../images/Mainworkspacebg.webp");
+    --ws-main-bg-image-dark: url("../images/workspacedarkBackground.webp");
+    --ws-main-bg-layer: var(--ws-main-bg-image);
+    /* Light: paint on .ws-main box (scroll height). Dark: fixed layer via ::before */
+    --ws-main-bg-size: 100% 100%;
+    --ws-main-bg-position: center center;
+    background-color: #f7f9ff;
+    background-image: var(--ws-main-bg-layer);
+    background-position: var(--ws-main-bg-position);
+    background-size: var(--ws-main-bg-size);
+    background-repeat: no-repeat;
+    background-origin: border-box;
+    background-clip: border-box;
+}
+
+[data-theme="dark"] .ws-main {
+    background-color: var(--ws-bg);
+    background-image: none;
+}
+
+/* Dark canvas — fixed to main column viewport (same framing as light, no stretch on scroll) */
+[data-theme="dark"] .ws-main::before {
+    content: "";
+    position: fixed;
+    z-index: 0;
+    pointer-events: none;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: var(--ws-sidebar-w);
+    background-color: var(--ws-bg);
+    background-image: var(--ws-main-bg-dark-overlay), var(--ws-main-bg-image-dark);
+    background-position: var(--ws-main-bg-position), var(--ws-main-bg-position);
+    background-size: var(--ws-main-bg-size), var(--ws-main-bg-size);
+    background-repeat: no-repeat;
+    background-origin: border-box;
+    background-clip: border-box;
+    filter: saturate(0.82) brightness(0.76);
+}
+
+[data-theme="dark"] .ws-main > * {
+    position: relative;
+    z-index: 1;
 }
 
 .ws-topbar {
@@ -607,12 +663,24 @@ body.ws-body::before {
         overflow-x: clip;
     }
     body.ws-body .ws-main {
-        background:
-            radial-gradient(ellipse 90% 55% at 50% -8%, rgba(124, 58, 237, 0.07), transparent 58%),
-            var(--ws-bg);
+        background-color: #f7f9ff;
+        background-image: var(--ws-main-bg-image);
+        background-position: var(--ws-main-bg-position);
+        background-size: var(--ws-main-bg-size);
+        background-repeat: no-repeat;
     }
     [data-theme="dark"] body.ws-body .ws-main {
-        background: var(--ws-bg);
+        background-color: var(--ws-bg);
+        background-image: none;
+    }
+    [data-theme="dark"] body.ws-body .ws-main::before {
+        right: 0;
+    }
+    [data-theme="dark"] .ws-mobile-topbar {
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+    }
+    [data-theme="dark"] .ws-bottom-nav {
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
     }
     .ws-status-bar {
         display: none;

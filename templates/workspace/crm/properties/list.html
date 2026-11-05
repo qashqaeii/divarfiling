@@ -11,7 +11,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=11">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=16">
 {% endblock %}
 
 {% block ws_surface_css %}
@@ -100,33 +100,38 @@
 
     <section class="crm-files-mob-kpis" aria-label="آمار فایل‌ها">
         <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}" class="crm-files-mob-kpi{% if not request.GET.deal_mode and not request.GET.transaction_status and not request.GET.publish_status and not request.GET.q %} is-active{% endif %}">
+            <i class="fas fa-layer-group crm-files-mob-kpi-ico" aria-hidden="true"></i>
             <span class="crm-files-mob-kpi-val">{{ stats.total }}</span>
             <span class="crm-files-mob-kpi-lbl">کل</span>
         </a>
         <a href="?deal_mode={{ 'فروش'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--sale{% if request.GET.deal_mode == 'فروش' %} is-active{% endif %}">
+            <i class="fas fa-tag crm-files-mob-kpi-ico" aria-hidden="true"></i>
             <span class="crm-files-mob-kpi-val">{{ stats.sale }}</span>
             <span class="crm-files-mob-kpi-lbl">فروش</span>
         </a>
         <a href="?deal_mode={{ 'رهن و اجاره'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--rent{% if request.GET.deal_mode == 'رهن و اجاره' %} is-active{% endif %}">
+            <i class="fas fa-key crm-files-mob-kpi-ico" aria-hidden="true"></i>
             <span class="crm-files-mob-kpi-val">{{ stats.rent }}</span>
             <span class="crm-files-mob-kpi-lbl">اجاره</span>
         </a>
         <a href="?transaction_status={{ 'فعال'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--active{% if request.GET.transaction_status == 'فعال' %} is-active{% endif %}">
+            <i class="fas fa-circle-check crm-files-mob-kpi-ico" aria-hidden="true"></i>
             <span class="crm-files-mob-kpi-val">{{ stats.active }}</span>
             <span class="crm-files-mob-kpi-lbl">فعال</span>
         </a>
         <a href="?publish_status={{ 'منتشرشده'|urlencode }}&view={{ view_mode }}" class="crm-files-mob-kpi crm-files-mob-kpi--pub{% if request.GET.publish_status == 'منتشرشده' %} is-active{% endif %}">
+            <i class="fas fa-arrow-up-from-bracket crm-files-mob-kpi-ico" aria-hidden="true"></i>
             <span class="crm-files-mob-kpi-val">{{ stats.published }}</span>
             <span class="crm-files-mob-kpi-lbl">منتشر</span>
         </a>
     </section>
 
     <section class="kpi-strip kpi-strip--compact kpi-strip--5 crm-dash-kpis crm-files-kpi-strip" aria-label="آمار فایل‌ها">
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.total label='کل' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' accent=1 value=stats.sale label='فروش' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.rent label='اجاره' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.active label='فعال' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.published label='منتشر' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-files-kpi--total' fa='fa-layer-group' value=stats.total label='کل' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-files-kpi--sale' fa='fa-tag' accent=1 value=stats.sale label='فروش' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-files-kpi--rent' fa='fa-key' value=stats.rent label='اجاره' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-files-kpi--active' fa='fa-circle-check' value=stats.active label='فعال' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-files-kpi--pub' fa='fa-arrow-up-from-bracket' value=stats.published label='منتشر' %}
     </section>
 
     {% if smart_command.enabled %}

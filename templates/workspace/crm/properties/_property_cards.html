@@ -23,12 +23,7 @@
         {% endwith %}
         <div class="crm-files-mcard__head crm-properties-card__head-text">
             <h3 class="crm-files-card-title">{{ p.title }}</h3>
-            {% if p.neighborhood or p.city %}
-            <p class="crm-files-card-loc">
-                <i class="fas fa-location-dot" aria-hidden="true"></i>
-                {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}<span class="crm-files-card-loc-sep">·</span>{{ p.city }}{% endif %}
-            </p>
-            {% endif %}
+            {% include 'workspace/crm/includes/property_list_loc.html' %}
         </div>
     </header>
 
@@ -104,27 +99,35 @@
     </div>
 
     <footer class="crm-files-card-foot crm-files-mcard__valueband">
-        <div class="crm-files-card-actions">
-            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-act crm-files-card-act--primary">مشاهده</a>
-            <a href="{% url 'workspace:crm_property_edit' p.id %}" class="crm-files-card-act" title="ویرایش">ویرایش</a>
-            <button type="button" class="crm-files-card-act" data-crm-prop-duplicate="{{ p.id }}" aria-label="کپی فایل">
-                <i class="fas fa-copy" aria-hidden="true"></i><span>کپی فایل</span>
+        <div class="crm-files-card-actionbar" role="toolbar" aria-label="عملیات فایل">
+            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-ico crm-files-card-ico--primary" data-tip="مشاهده پرونده" aria-label="مشاهده پرونده">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'workspace:crm_property_edit' p.id %}" class="crm-files-card-ico" data-tip="ویرایش ملک" aria-label="ویرایش ملک">
+                <i class="fas fa-pen" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="crm-files-card-ico" data-crm-prop-duplicate="{{ p.id }}" data-tip="کپی فایل" aria-label="کپی فایل">
+                <i class="fas fa-copy" aria-hidden="true"></i>
             </button>
             {% if property_folders %}
-            <button type="button" class="crm-files-card-act crm-files-card-act--folder" data-prop-folder-assign="{{ p.id }}" title="افزودن به زونکن">
-                <i class="fas fa-folder-plus" aria-hidden="true"></i> زونکن
+            <button type="button" class="crm-files-card-ico" data-prop-folder-assign="{{ p.id }}" data-tip="افزودن به زونکن" aria-label="افزودن به زونکن">
+                <i class="fas fa-folder-plus" aria-hidden="true"></i>
             </button>
             {% endif %}
-            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-act" title="اشتراک فایل">اشتراک</a>
-            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-act" title="اتصال به مخاطب">مخاطب</a>
-        </div>
-        <div class="crm-files-card-meta">
-            {% if p.contact_count %}<span class="crm-files-meta-chip" title="مخاطب مرتبط"><i class="fas fa-users" aria-hidden="true"></i>{{ p.contact_count }}</span>{% endif %}
+            <a href="{% url 'workspace:crm_property_detail' p.id %}?share=1" class="crm-files-card-ico" data-tip="اشتراک با مشتری" aria-label="اشتراک با مشتری">
+                <i class="fas fa-share-nodes" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'workspace:crm_property_detail' p.id %}?tab=contacts" class="crm-files-card-ico" data-tip="مخاطبین مرتبط" aria-label="مخاطبین مرتبط">
+                <i class="fas fa-user-group" aria-hidden="true"></i>
+            </a>
             {% if p.phone %}
-            <a href="tel:{{ p.phone }}" class="crm-files-meta-chip crm-files-meta-chip--phone" dir="ltr" title="تماس">
-                <i class="fas fa-phone" aria-hidden="true"></i><span>{{ p.phone }}</span>
+            <a href="tel:{{ p.phone }}" class="crm-files-card-ico crm-files-card-ico--phone" data-tip="تماس" aria-label="تماس {{ p.phone }}" dir="ltr">
+                <i class="fas fa-phone" aria-hidden="true"></i>
             </a>
             {% endif %}
+        </div>
+        <div class="crm-files-card-meta crm-files-card-meta--sub">
+            {% if p.contact_count %}<span class="crm-files-meta-chip" title="مخاطب مرتبط"><i class="fas fa-users" aria-hidden="true"></i>{{ p.contact_count }}</span>{% endif %}
             <span class="crm-files-pub crm-files-pub--{{ p.publish_status }}" title="{{ p.publish_status }}"></span>
             <time datetime="{{ p.updated_at|date:'c' }}"><i class="fas fa-clock" aria-hidden="true"></i>{{ p.updated_at|ws_jalali }}</time>
         </div>

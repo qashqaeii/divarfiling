@@ -9,10 +9,11 @@
             <span class="crm-ft-prop-type crm-properties-table__type-icon" title="{{ p.property_type }}"><i class="fas {{ p.property_type|crm_property_type_icon }}" aria-hidden="true"></i></span>
             <span class="crm-ft-prop-text crm-properties-table__prop-text">
                 <strong class="crm-properties-table__prop-title">{{ p.title }}</strong>
-                {% if p.neighborhood or p.city %}
+                {% property_street_display p as prop_street %}
+                {% if p.neighborhood or p.city or prop_street %}
                 <em class="crm-properties-table__prop-loc">
                     <i class="fas fa-location-dot" aria-hidden="true"></i>
-                    {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}{% if p.neighborhood %} · {% endif %}{{ p.city }}{% endif %}
+                    {% if p.neighborhood %}{{ p.neighborhood }}{% endif %}{% if p.city %}{% if p.neighborhood %} · {% endif %}{{ p.city }}{% endif %}{% if prop_street %}{% if p.neighborhood or p.city %} · {% endif %}{{ prop_street|truncatechars:28 }}{% endif %}
                 </em>
                 {% endif %}
                 {% if p.owner_name %}<span class="crm-ft-owner crm-properties-table__prop-owner"><i class="fas fa-user-tie" aria-hidden="true"></i>{{ p.owner_name }}</span>{% endif %}

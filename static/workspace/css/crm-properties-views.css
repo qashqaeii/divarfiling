@@ -100,11 +100,6 @@
     gap: 0.32rem;
 }
 
-.crm-properties-page .crm-properties-card .crm-files-card-act {
-    padding: 0.28rem 0.42rem;
-    font-size: 0.62rem;
-}
-
 /* ── Table view: desktop professional layout ── */
 @media (min-width: 769px) {
     .crm-properties-page.crm-files-pro--table .crm-properties-table-wrap {
@@ -1062,5 +1057,153 @@
     .crm-properties-page .crm-files-archive-tab.is-active .crm-files-archive-tab__ico,
     .crm-contacts-pro .crm-files-archive-tab.is-active .crm-files-archive-tab__ico {
         transform: translateY(-1px);
+    }
+}
+
+/* ── Property cards: icon action bar ── */
+.crm-properties-page .crm-files-card-actionbar {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.2rem;
+    width: 100%;
+    position: relative;
+    z-index: 6;
+}
+
+.crm-properties-page .crm-files-card-ico {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 2.35rem;
+    height: 2.1rem;
+    margin-inline: auto;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+    color: var(--ws-text-secondary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    line-height: 1;
+    transition:
+        border-color 0.14s ease,
+        color 0.14s ease,
+        background 0.14s ease,
+        transform 0.14s ease,
+        box-shadow 0.14s ease;
+}
+
+.crm-properties-page button.crm-files-card-ico {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    font: inherit;
+    padding: 0;
+}
+
+.crm-properties-page .crm-files-card-ico i {
+    pointer-events: none;
+}
+
+.crm-properties-page .crm-files-card-ico:hover,
+.crm-properties-page .crm-files-card-ico:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--ws-primary) 38%, var(--ws-border));
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 12%, transparent);
+}
+
+.crm-properties-page .crm-files-card-ico--primary {
+    background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--ws-primary) 32%, var(--ws-border));
+    color: var(--ws-primary);
+}
+
+.crm-properties-page .crm-files-card-ico--phone {
+    color: #059669;
+    border-color: color-mix(in srgb, #059669 28%, var(--ws-border));
+    background: color-mix(in srgb, #059669 8%, var(--ws-surface));
+}
+
+.crm-properties-page .crm-files-card-ico--phone:hover,
+.crm-properties-page .crm-files-card-ico--phone:focus-visible {
+    color: #047857;
+    border-color: color-mix(in srgb, #059669 40%, var(--ws-border));
+    background: color-mix(in srgb, #059669 12%, var(--ws-surface));
+    box-shadow: 0 3px 10px color-mix(in srgb, #059669 14%, transparent);
+}
+
+.crm-properties-page .crm-files-card-ico[data-tip] {
+    cursor: pointer;
+}
+
+.crm-properties-page .crm-files-card-ico[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 7px);
+    right: 50%;
+    transform: translateX(50%) translateY(4px);
+    padding: 0.3rem 0.55rem;
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 0.65rem;
+    font-weight: 650;
+    line-height: 1.35;
+    border-radius: 7px;
+    white-space: nowrap;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.28);
+}
+
+.crm-properties-page .crm-files-card-ico[data-tip]:hover::after,
+.crm-properties-page .crm-files-card-ico[data-tip]:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(50%) translateY(0);
+}
+
+.crm-properties-page .crm-files-card-meta--sub {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    width: 100%;
+    margin-top: 0.2rem;
+    padding-top: 0.28rem;
+    border-top: 1px dashed color-mix(in srgb, var(--ws-border) 55%, transparent);
+    font-size: 0.54rem;
+}
+
+@media (max-width: 768px) {
+    .crm-properties-page.crm-files-mobile .crm-files-card-actionbar {
+        gap: 0.28rem;
+        padding: 0.05rem 0.1rem 0;
+    }
+
+    .crm-properties-page.crm-files-mobile .crm-files-card-ico {
+        flex: 1 1 0;
+        max-width: none;
+        height: 2.35rem;
+        border-radius: 12px;
+        font-size: 0.84rem;
+    }
+
+    .crm-properties-page.crm-files-mobile .crm-files-card-meta--sub {
+        justify-content: space-between;
+        border-top: none;
+        padding-top: 0.15rem;
+        margin-top: 0.35rem;
     }
 }

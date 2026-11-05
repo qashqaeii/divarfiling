@@ -367,6 +367,9 @@ def build_property_amenity_dossier_items(
         key = (label or '').strip()
         if not key or key in seen or len(key) > 48:
             return
+        from workspace.services.listing_street_data import is_location_field_label
+        if is_location_field_label(key):
+            return
         seen.add(key)
         display = (value or '').strip() or ('دارد' if state == 'yes' else ('ندارد' if state == 'no' else '—'))
         items.append({

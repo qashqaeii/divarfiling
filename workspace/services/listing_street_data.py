@@ -5,6 +5,16 @@ from typing import Any, Dict, Tuple
 
 _STREET_EMPTY = frozenset({'', '-', '—', 'nan', 'none', 'null'})
 
+# برچسب‌های موقعیت — در باکس «امکانات» نمایش داده نمی‌شوند
+LOCATION_FIELD_LABELS = frozenset({
+    'خیابان', 'شهر', 'محله', 'منطقه', 'استان', 'آدرس',
+    'مکان_خیابان', 'مکان_شهر', 'مکان_محله', 'مکان_منطقه', 'مکان_استان', 'مکان_آدرس',
+})
+
+
+def is_location_field_label(label: str) -> bool:
+    return (label or '').strip() in LOCATION_FIELD_LABELS
+
 
 def normalize_street_storage_value(val: Any) -> str:
     s = str(val or '').strip()
@@ -33,12 +43,44 @@ def listing_street_for_display(listing) -> str:
     return normalize_street_storage_value(data.get('مکان_خیابان'))
 
 
-def property_street_for_display(prop) -> str:
-    """خیابان ذخیره‌شده روی فایل شخصی (feature_data)."""
+def _street_from_amenities_text(text: str) -> str:
+    import re
+
+    for token in re.split(r'[\n،,|]+', str(text or '').strip()):
+        raw = token.strip()
+        if not raw or ':' not in raw:
+            continue
+        label, _, val = raw.partition(':')
+        if label.strip() != 'خیابان':
+            continue
+        street = normalize_street_storage_value(val)
+        if street:
+            return street
+    return ''
+
+
+def property_street_for_display(prop, *, user=None) -> str:
+    """خیابان فایل شخصی — feature_data، متن امکانات، یا آگهی منبع."""
     fd = getattr(prop, 'feature_data', None) or {}
-    if not isinstance(fd, dict):
-        return ''
-    return normalize_street_storage_value(fd.get('خیابان') or fd.get('مکان_خیابان'))
+    if isinstance(fd, dict):
+        street = normalize_street_storage_value(fd.get('خیابان') or fd.get('مکان_خیابان'))
+        if street:
+            return street
+
+    street = _street_from_amenities_text(getattr(prop, 'amenities', None) or '')
+    if street:
+        return street
+
+    owner = user or getattr(prop, 'user', None)
+    if owner is not None:
+        from workspace.services.crm import resolve_listing_for_property
+
+        listing = resolve_listing_for_property(owner, prop)
+        if listing is not None:
+            street = listing_street_for_display(listing)
+            if street:
+                return street
+    return ''
 
 
 def listing_street_backfill_plan(data: Dict[str, Any] | None) -> Tuple[bool, str]:

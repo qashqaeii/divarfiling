@@ -70,7 +70,7 @@ def location_display(prop: CRMProperty, *, mask: bool) -> str:
     text = ' — '.join(chunks) if chunks else ''
     if prop.district:
         text = f'{text} ({prop.district})' if text else prop.district
-    street = property_street_for_display(prop)
+    street = property_street_for_display(prop, user=getattr(prop, 'user', None))
     if street:
         street_norm = street.strip()
         if street_norm and street_norm not in text:

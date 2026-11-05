@@ -929,6 +929,11 @@ def property_from_listing(user, listing) -> CRMProperty:
     platform, external_id = DIVAR_SOURCE_PLATFORM, str(listing.token or '').strip()
     feature_data = extract_feature_data_from_listing_data(merged_data)
     feature_data.update(listing_location_metadata(listing))
+    from workspace.services.listing_street_data import listing_street_for_display
+
+    listing_street = listing_street_for_display(listing)
+    if listing_street:
+        feature_data['خیابان'] = listing_street
     listing_address = address_from_listing(listing)
     filing_notes = filing_notes_for_personal_property(user, listing)
     return CRMProperty.objects.create(
@@ -978,6 +983,10 @@ def sync_listing_address_and_notes_to_property(user, listing, prop: CRMProperty)
         address_from_listing,
         filing_notes_for_personal_property,
     )
+    from workspace.services.listing_street_data import (
+        listing_street_for_display,
+        normalize_street_storage_value,
+    )
 
     update_fields: list[str] = []
     listing_address = address_from_listing(listing)
@@ -989,6 +998,14 @@ def sync_listing_address_and_notes_to_property(user, listing, prop: CRMProperty)
     if filing_notes and (prop.notes or '').strip() != filing_notes:
         prop.notes = filing_notes
         update_fields.append('notes')
+
+    listing_street = listing_street_for_display(listing)
+    if listing_street:
+        fd = dict(prop.feature_data or {})
+        if normalize_street_storage_value(fd.get('خیابان')) != listing_street:
+            fd['خیابان'] = listing_street
+            prop.feature_data = fd
+            update_fields.append('feature_data')
 
     if update_fields:
         update_fields.append('updated_at')

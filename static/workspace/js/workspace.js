@@ -4104,9 +4104,30 @@ function initListingAddPersonal() {
     const modalFolderIdInput = modalForm?.querySelector('[data-ws-personal-folder-id]');
     const noneBtn = modal?.querySelector('[data-ws-personal-folder-choice=""]');
     const loadingEl = modal?.querySelector('[data-ws-personal-place-loading]');
+    const folderSearchInput = modal?.querySelector('[data-ws-personal-folder-search]');
+    const folderEmptyEl = modal?.querySelector('[data-ws-personal-folder-empty]');
 
     let cabinetFilter = 'all';
+    let folderSearchQuery = '';
     let placeData = { folders: [], cabinets: [] };
+
+    function normalizePlaceSearch(val) {
+        return String(val || '')
+            .trim()
+            .toLowerCase()
+            .replace(/\u200c/g, '')
+            .replace(/\s+/g, ' ');
+    }
+
+    function folderMatchesSearch(folder, q) {
+        if (!q) return true;
+        const hay = normalizePlaceSearch([
+            folder.name,
+            folder.cabinet?.name,
+            folder.description,
+        ].filter(Boolean).join(' '));
+        return hay.includes(q);
+    }
 
     function setPersonalPlaceLoading(on) {
         if (loadingEl) {
@@ -4142,8 +4163,18 @@ function initListingAddPersonal() {
         return folders.filter((f) => String(f.cabinet_id || f.cabinet?.id || '') === cid);
     }
 
+    function visibleFolders() {
+        const q = normalizePlaceSearch(folderSearchQuery);
+        const folders = placeData.folders || [];
+        if (q) {
+            return folders.filter((f) => folderMatchesSearch(f, q));
+        }
+        return foldersForCabinet(cabinetFilter);
+    }
+
     function renderCabinetFilters() {
         if (!cabinetFiltersEl) return;
+        const searching = !!normalizePlaceSearch(folderSearchQuery);
         const cabinets = placeData.cabinets || [];
         const hasUncategorized = (placeData.folders || []).some(
             (f) => !f.cabinet_id && !(f.cabinet && f.cabinet.id),
@@ -4153,7 +4184,11 @@ function initListingAddPersonal() {
             cabinetFiltersEl.innerHTML = '';
             return;
         }
-        cabinetFiltersEl.hidden = false;
+        cabinetFiltersEl.hidden = searching;
+        if (searching) {
+            cabinetFiltersEl.innerHTML = '';
+            return;
+        }
         const chips = [
             { id: 'all', label: 'همه زونکن‌ها' },
             ...cabinets.map((c) => ({ id: String(c.id), label: c.name })),
@@ -4173,7 +4208,7 @@ function initListingAddPersonal() {
 
     function renderFolderList() {
         if (!folderListEl) return;
-        const visible = foldersForCabinet(cabinetFilter);
+        const visible = visibleFolders();
         folderListEl.innerHTML = visible.map((folder) => {
             const icon = wsEscapeHtml(folder.icon || 'fa-folder');
             const color = wsEscapeHtml(folder.color || '#6366f1');
@@ -4187,6 +4222,10 @@ function initListingAddPersonal() {
                 <span class="ws-ld-personal-place__tick" aria-hidden="true"><i class="fas fa-check"></i></span>
             </button></li>`;
         }).join('');
+        if (folderEmptyEl) {
+            const q = normalizePlaceSearch(folderSearchQuery);
+            folderEmptyEl.hidden = !(q && visible.length === 0);
+        }
         folderListEl.querySelectorAll('[data-ws-personal-folder-choice]').forEach((btn) => {
             btn.addEventListener('click', () => {
                 setSelectedFolder(btn.getAttribute('data-ws-personal-folder-choice'));
@@ -4203,6 +4242,8 @@ function initListingAddPersonal() {
     function renderPlacePicker(data) {
         placeData = data;
         cabinetFilter = 'all';
+        folderSearchQuery = '';
+        if (folderSearchInput) folderSearchInput.value = '';
         if (!placeSection) return;
         const hasFolders = (data.folders || []).length > 0;
         placeSection.hidden = false;
@@ -4292,6 +4333,12 @@ function initListingAddPersonal() {
     }
 
     noneBtn?.addEventListener('click', () => setSelectedFolder(''));
+
+    folderSearchInput?.addEventListener('input', () => {
+        folderSearchQuery = folderSearchInput.value || '';
+        renderCabinetFilters();
+        renderFolderList();
+    });
 
     modalForm?.addEventListener('submit', (e) => {
         if (modalForm.dataset.personalSkipIntercept === '1') return;

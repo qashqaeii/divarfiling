@@ -21,10 +21,19 @@
                     <span>در حال بارگذاری زونکن‌ها…</span>
                 </p>
                 <div class="ws-ld-personal-place" data-ws-personal-place>
-                    <p class="ws-ld-personal-place__label">زونکن (اختیاری)</p>
+                    <label class="ws-ld-personal-place__search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search"
+                               data-ws-personal-folder-search
+                               placeholder="جستجوی زونکن…"
+                               autocomplete="off"
+                               enterkeyhint="search"
+                               aria-label="جستجو در زونکن‌ها">
+                    </label>
                     <div class="ws-ld-personal-place__filters" data-ws-personal-cabinet-filters hidden role="tablist" aria-label="فیلتر کمد"></div>
                     <div class="ws-ld-personal-place__scroll">
                         <ul class="ws-ld-personal-place__list" data-ws-personal-folder-list role="list"></ul>
+                        <p class="ws-ld-personal-place__empty" data-ws-personal-folder-empty hidden>زونکنی با این عبارت پیدا نشد.</p>
                     </div>
                     <button type="button" class="ws-ld-personal-place__none is-selected" data-ws-personal-folder-choice="" aria-pressed="true">
                         <span class="ws-ld-personal-place__accent" aria-hidden="true"></span>
@@ -35,10 +44,6 @@
                         </span>
                         <span class="ws-ld-personal-place__tick" aria-hidden="true"><i class="fas fa-check"></i></span>
                     </button>
-                    <p class="ws-ld-personal-place__hint">
-                        <i class="fas fa-hand-pointer" aria-hidden="true"></i>
-                        یک زونکن انتخاب کنید یا بدون مجموعه ادامه دهید.
-                    </p>
                 </div>
             </div>
             <div class="ws-modal-foot ws-ld-personal-modal__foot">

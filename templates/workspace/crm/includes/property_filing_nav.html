@@ -1,21 +1,18 @@
 {% load workspace_tags static %}
 <section class="crm-filing-nav" aria-label="سازمان‌دهی فایل‌های شخصی">
     <header class="crm-filing-nav__head">
-        <div class="crm-filing-nav__intro">
-            <h2 class="crm-filing-nav__title">سازمان‌دهی فایل‌ها</h2>
-            <p class="crm-filing-nav__hint">کمد برای گروه‌بندی · زونکن برای فیلتر سریع</p>
-        </div>
-        <div class="crm-filing-nav__legend" aria-hidden="true">
-            <span class="crm-filing-nav__legend-pill crm-filing-nav__legend-pill--cabinet">
-                <i class="fas fa-box-archive" aria-hidden="true"></i>
-                <span>کمد</span>
-            </span>
-            <span class="crm-filing-nav__legend-pill crm-filing-nav__legend-pill--folder">
-                <i class="fas fa-folder-open" aria-hidden="true"></i>
-                <span>زونکن</span>
-            </span>
-        </div>
+        <h2 class="crm-filing-nav__title">کمد و زونکن</h2>
+        <label class="crm-filing-nav__search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="search"
+                   data-filing-nav-search
+                   placeholder="جستجو…"
+                   autocomplete="off"
+                   enterkeyhint="search"
+                   aria-label="جستجوی کمد یا زونکن">
+        </label>
     </header>
+    <p class="crm-filing-nav__search-empty" data-filing-nav-search-empty hidden>موردی با این عبارت پیدا نشد.</p>
 
     {% include 'workspace/crm/includes/property_cabinets_tier.html' %}
     {% include 'workspace/crm/includes/property_folders_tier.html' %}

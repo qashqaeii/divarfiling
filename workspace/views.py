@@ -101,58 +101,18 @@ class WorkspaceHomeView(WorkspaceLoginMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         user = self.request.user
-        today = timezone.now().date()
-        datasets_qs = Dataset.objects.filter(user=user, is_active=True)
-
-        ctx['data_stats'] = {
-            'datasets': datasets_qs.count(),
-            'listings': Listing.objects.filter(dataset__user=user, dataset__is_active=True).count(),
-            'sale': datasets_qs.filter(transaction_type__icontains='فروش').count(),
-            'rent': datasets_qs.filter(transaction_type__icontains='اجاره').count(),
-        }
-        ctx['crm_stats'] = get_dashboard_stats(user)
-        ctx['charts_json'] = json.dumps(build_dashboard_charts(user), ensure_ascii=False)
-        ctx['active_dataset'] = datasets_qs.order_by('-updated_at', '-created_at').first()
-        ctx['recent_datasets'] = _attach_dataset_covers(
-            datasets_qs.annotate(listing_count=Count('listings'))
-            .order_by('-updated_at', '-created_at')[:8]
-        )
-        pipeline = get_pipeline_data(user, per_column=3)
-        ctx['pipeline'] = pipeline
-        ctx['pipeline_max'] = max((col['count'] for col in pipeline), default=1) or 1
-        ctx['recent_properties'] = get_recent_properties(user, 4)
-        ctx['upcoming_reminders'] = get_upcoming_reminders(user, 6)
-        ctx['recent_contacts'] = get_recent_contacts(user, 5)
-        ctx['due_contacts'] = customers_qs(user).filter(
-            next_follow_up=today,
-            status__in=['جدید', 'در حال پیگیری'],
-        ).order_by('next_follow_up')[:6]
-        ctx['overdue_contacts'] = get_overdue_contacts(user, 8)
-        ctx['communication_stats'] = get_communication_stats(user)
-        ctx['crm_statuses'] = CRM_STATUSES
+        from workspace.services.workspace_home_dashboard import build_workspace_home_dashboard
+        ctx.update(build_workspace_home_dashboard(user))
         ctx['settings'] = get_or_create_settings(user)
-        ctx['has_bot_license'] = has_active_bot_license(user)
         ctx['open_modal'] = self.request.GET.get('open', '')
-        from workspace.services.home_nba import build_home_nba
-        ctx['home_nba'] = build_home_nba(
-            user,
-            crm_nav_counts={
-                'today_overdue': ctx['crm_stats']['overdue_followups'],
-                'today_due': ctx['crm_stats']['due_today'],
-            },
-            datasets_qs=datasets_qs,
-            has_bot_license=ctx['has_bot_license'],
-            contact_count=ctx['crm_stats']['total_contacts'],
-            dataset_count=ctx['data_stats']['datasets'],
-        )
-        ctx['home_is_empty'] = (
-            not ctx['crm_stats']['total_contacts']
-            and not ctx['crm_stats']['total_properties']
-            and not ctx['data_stats']['datasets']
-            and not ctx['home_nba']
-        )
-        from workspace.services.workspace_agency_home import build_workspace_agency_panel
-        ctx['workspace_agency_panel'] = build_workspace_agency_panel(user)
+        from workspace.services.crm_smart_command import inject_smart_command_context
+        inject_smart_command_context(ctx, self.request, 'today')
+        if not (ctx.get('smart_command') or {}).get('enabled'):
+            for action in ctx.get('home_quick_actions') or []:
+                if action.get('key') == 'ai':
+                    action['url'] = reverse('workspace:crm_today')
+                    action['is_anchor'] = False
+                    break
         return ctx
 
 

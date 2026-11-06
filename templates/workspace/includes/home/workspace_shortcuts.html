@@ -1,20 +1,16 @@
-<nav class="wsh-shortcuts" aria-label="میانبرهای میزکار" data-help-tour="workspace-shortcuts" data-tour="workspace-shortcuts">
-    <ul class="wsh-shortcuts__list">
-        {% if has_bot_license %}
-        <li><button type="button" class="wsh-shortcut" data-modal-open="modal-upload" title="آپلود فایل"><span class="wsh-shortcut__icon" data-tone="purple"><i class="fas fa-cloud-arrow-up"></i></span><span class="wsh-shortcut__label">آپلود</span></button></li>
-        <li><a href="{% url 'workspace:dataset_list' %}" class="wsh-shortcut" title="فایلینگ"><span class="wsh-shortcut__icon" data-tone="blue"><i class="fas fa-folder"></i></span><span class="wsh-shortcut__label">فایلینگ</span></a></li>
-        {% if active_dataset %}
-        <li><a href="{% url 'workspace:dataset_analyze' active_dataset.id %}" class="wsh-shortcut" title="تحلیل بازار"><span class="wsh-shortcut__icon" data-tone="green"><i class="fas fa-chart-line"></i></span><span class="wsh-shortcut__label">تحلیل</span></a></li>
-        <li><a href="{% url 'workspace:dataset_map' active_dataset.id %}" class="wsh-shortcut" title="نقشه"><span class="wsh-shortcut__icon" data-tone="cyan"><i class="fas fa-map-location-dot"></i></span><span class="wsh-shortcut__label">نقشه</span></a></li>
-        {% endif %}
-        <li><a href="{% url 'workspace:tools' %}" class="wsh-shortcut" title="ابزار"><span class="wsh-shortcut__icon" data-tone="amber"><i class="fas fa-calculator"></i></span><span class="wsh-shortcut__label">ابزار</span></a></li>
-        {% else %}
-        <li><a href="{% url 'workspace:upgrade' %}?feature=upload" class="wsh-shortcut" title="آپلود"><span class="wsh-shortcut__icon" data-tone="purple"><i class="fas fa-lock"></i></span><span class="wsh-shortcut__label">آپلود</span></a></li>
-        <li><a href="{% url 'workspace:upgrade' %}?feature=datasets" class="wsh-shortcut" title="فایلینگ"><span class="wsh-shortcut__icon" data-tone="blue"><i class="fas fa-lock"></i></span><span class="wsh-shortcut__label">فایلینگ</span></a></li>
-        {% endif %}
-        <li><a href="{% url 'workspace:crm_dashboard' %}" class="wsh-shortcut" title="مدیریت مشتری"><span class="wsh-shortcut__icon" data-tone="violet"><i class="fas fa-users"></i></span><span class="wsh-shortcut__label">مدیریت مشتری</span></a></li>
-        <li><a href="{% url 'workspace:crm_today' %}" class="wsh-shortcut" title="کارهای امروز"><span class="wsh-shortcut__icon" data-tone="indigo"><i class="fas fa-list-check"></i></span><span class="wsh-shortcut__label">امروز</span></a></li>
-        <li><a href="{% url 'workspace:crm_calendar' %}" class="wsh-shortcut" title="تقویم"><span class="wsh-shortcut__icon" data-tone="green"><i class="fas fa-calendar-days"></i></span><span class="wsh-shortcut__label">تقویم</span></a></li>
-        <li><a href="{% url 'workspace:support_list' %}" class="wsh-shortcut" title="پشتیبانی"><span class="wsh-shortcut__icon" data-tone="teal"><i class="fas fa-headset"></i></span><span class="wsh-shortcut__label">پشتیبانی</span></a></li>
+<nav class="wsh2-quick" aria-label="دسترسی‌های سریع" data-tour="workspace-shortcuts">
+    <header class="wsh2-quick__head">
+        <h2>دسترسی سریع</h2>
+        <p>شروع کار بعدی</p>
+    </header>
+    <ul class="wsh2-quick__list">
+        {% for action in home_quick_actions %}
+        <li>
+            <a href="{{ action.url }}" class="wsh2-quick__item" data-tone="{{ action.tone }}" title="{{ action.label }}"{% if action.is_anchor %} data-wsh2-anchor="1"{% endif %}>
+                <span class="wsh2-quick__icon" aria-hidden="true"><i class="fas {{ action.icon }}"></i></span>
+                <span class="wsh2-quick__label">{{ action.label }}</span>
+            </a>
+        </li>
+        {% endfor %}
     </ul>
 </nav>

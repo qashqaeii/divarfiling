@@ -1,80 +1,59 @@
-{% load workspace_tags crm_tags %}
-{% if overdue_contacts or due_contacts %}
-<section class="wsh-card wsh-queue" aria-label="کارهای امروز و پیگیری معوق" data-tour="workspace-today-queue">
-    <header class="wsh-card__head wsh-card__head--tight wsh-queue__head">
-        <div class="wsh-card__title">
-            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+<section class="wsh2-panel wsh2-today" aria-label="مرکز اقدامات امروز" data-tour="workspace-today-queue">
+    <header class="wsh2-panel__head">
+        <div class="wsh2-panel__title">
+            <span class="wsh2-panel__icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
             <div>
-                <h2>امروز و معوق</h2>
-                {% if crm_stats.overdue_followups or crm_stats.due_today %}
-                <span class="wsh-card__sub wsh-queue__head-stats">
-                    {% if crm_stats.overdue_followups %}<span class="wsh-queue__stat wsh-queue__stat--warn">{{ crm_stats.overdue_followups }} معوق</span>{% endif %}
-                    {% if crm_stats.due_today %}<span class="wsh-queue__stat">{{ crm_stats.due_today }} امروز</span>{% endif %}
-                </span>
-                {% endif %}
+                <h2>اقدامات امروز</h2>
+                <p class="wsh2-panel__sub">
+                    {% if home_today_center.stats.total %}
+                    <span class="wsh2-chip">{{ home_today_center.stats.total }} اقدام</span>
+                    {% endif %}
+                    {% if home_today_center.stats.overdue %}<span class="wsh2-chip wsh2-chip--warn">{{ home_today_center.stats.overdue }} معوق</span>{% endif %}
+                    {% if home_today_center.stats.today %}<span class="wsh2-chip">{{ home_today_center.stats.today }} امروز</span>{% endif %}
+                </p>
             </div>
         </div>
-        <a href="{% url 'workspace:crm_today' %}" class="wsh-card__link wsh-queue__head-link">صف کار</a>
+        <a href="{{ home_today_center.all_url }}" class="wsh2-panel__link">همه اقدامات</a>
     </header>
 
-    <div class="wsh-queue__body">
-        {% if overdue_contacts %}
-        <div class="wsh-queue__group" data-tone="warn">
-            <div class="wsh-queue__group-head">
-                <h3 class="wsh-queue__group-title"><i class="fas fa-clock" aria-hidden="true"></i> پیگیری معوق</h3>
-            </div>
-            <ul class="wsh-queue__list wsh-queue__list--dense{% if overdue_contacts|length > 4 %} wsh-queue__list--scroll{% endif %}">
-                {% for c in overdue_contacts %}
-                <li class="wsh-queue__row">
-                    <span class="wsh-queue__accent" aria-hidden="true"></span>
-                    <a href="{% url 'workspace:crm_detail' c.id %}" class="wsh-queue__main">
-                        <span class="wsh-queue__name">{{ c.name|truncatechars:32 }}</span>
-                        <span class="wsh-queue__meta">
-                            {% if c.next_follow_up %}<time class="wsh-queue__date" datetime="{{ c.next_follow_up|date:'Y-m-d' }}">{{ c.next_follow_up|ws_jalali_date }}</time>{% endif %}
-                            {% if c.status %}<span class="wsh-queue__status">{{ c.status }}</span>{% endif %}
-                        </span>
-                    </a>
-                    {% if c.phone %}
-                    <a href="tel:{{ c.phone }}" class="wsh-queue__act wsh-queue__act--call" aria-label="تماس با {{ c.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
-                    {% else %}
-                    <span class="wsh-queue__act wsh-queue__act--muted" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        {% if due_contacts %}
-        <div class="wsh-queue__group" data-tone="today">
-            <div class="wsh-queue__group-head">
-                <h3 class="wsh-queue__group-title"><i class="fas fa-sun" aria-hidden="true"></i> پیگیری امروز</h3>
-            </div>
-            <ul class="wsh-queue__list wsh-queue__list--dense">
-                {% for c in due_contacts %}
-                <li class="wsh-queue__row">
-                    <span class="wsh-queue__accent" aria-hidden="true"></span>
-                    <a href="{% url 'workspace:crm_detail' c.id %}" class="wsh-queue__main">
-                        <span class="wsh-queue__name">{{ c.name|truncatechars:32 }}</span>
-                        <span class="wsh-queue__meta">
-                            {% if c.phone %}<span class="wsh-queue__phone" dir="ltr">{{ c.phone }}</span>{% endif %}
-                            {% if c.status %}<span class="wsh-queue__status">{{ c.status }}</span>{% endif %}
-                        </span>
-                    </a>
-                    {% if c.phone %}
-                    <a href="tel:{{ c.phone }}" class="wsh-queue__act wsh-queue__act--call" aria-label="تماس با {{ c.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
-                    {% else %}
-                    <span class="wsh-queue__act wsh-queue__act--muted" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-    </div>
-
-    <footer class="wsh-queue__foot">
-        <a href="{% url 'workspace:crm_today' %}" class="wsh-queue__foot-link">مشاهده همه در صف کار <i class="fas fa-arrow-left" aria-hidden="true"></i></a>
+    {% if home_today_center.items %}
+    <ul class="wsh2-today__list">
+        {% for item in home_today_center.items %}
+        <li class="wsh2-today__row wsh2-today__row--{{ item.urgency }}">
+            <span class="wsh2-today__accent" aria-hidden="true"></span>
+            <span class="wsh2-today__kind" title="{{ item.meta_label }}" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+            <a href="{{ item.url }}" class="wsh2-today__main">
+                <span class="wsh2-today__name">{{ item.title|truncatechars:40 }}</span>
+                <span class="wsh2-today__meta">
+                    <em>{{ item.meta_label }}</em>
+                    {% if item.urgency == 'overdue' %}<span class="wsh2-today__urgent">معوق</span>{% endif %}
+                    {% if item.subtitle %}<span>{{ item.subtitle|truncatechars:28 }}</span>{% endif %}
+                </span>
+            </a>
+            {% if item.can_call %}
+            <a href="tel:{{ item.phone }}" class="wsh2-today__act" aria-label="تماس با {{ item.title }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
+            {% else %}
+            <a href="{{ item.url }}" class="wsh2-today__act wsh2-today__act--go" aria-label="باز کردن"><i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    <footer class="wsh2-panel__foot">
+        <a href="{{ home_today_center.all_url }}">
+            {% if home_today_center.has_more %}
+            مشاهده همه اقدامات ({{ home_today_center.stats.total }})
+            {% else %}
+            مشاهده همه اقدامات
+            {% endif %}
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        </a>
     </footer>
+    {% else %}
+    <div class="wsh2-empty">
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
+        <p>کار فوری برای امروز ندارید</p>
+        <span>می‌توانید یادآوری جدید بسازید یا مخاطب پیگیری کنید.</span>
+        <a href="{% url 'workspace:crm_reminders' %}?open=drawer-reminder" class="wsh2-empty__cta">ثبت یادآوری</a>
+    </div>
+    {% endif %}
 </section>
-{% endif %}

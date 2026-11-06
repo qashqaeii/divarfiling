@@ -1,80 +1,63 @@
 {% load humanize %}
-<section class="wsh-kpi" aria-label="شاخص‌های کلیدی" data-help-tour="workspace-kpis" data-tour="workspace-kpis">
-    <header class="wsh-kpi__head">
-        <h2 class="wsh-kpi__head-title">شاخص‌های روز</h2>
-        <p class="wsh-kpi__head-sub">ورود سریع به بخش‌های اصلی</p>
-    </header>
-
-    {% url 'workspace:crm_contacts' as kpi_contacts_url %}
-    {% url 'workspace:crm_properties' as kpi_properties_url %}
-    {% url 'workspace:crm_today' as kpi_today_url %}
-    {% url 'workspace:crm_reminders' as kpi_reminders_url %}
-
-    <div class="wsh-kpi__stack">
-        <a href="{{ kpi_today_url }}" class="wsh-kpi__lead wsh-kpi__card{% if crm_stats.overdue_followups %} is-warn{% endif %}" data-tone="amber">
-            <span class="wsh-kpi__lead-main">
-                <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
-                <span class="wsh-kpi__lead-copy">
-                    <span class="wsh-kpi__value">{{ crm_stats.due_today|intcomma }}</span>
-                    <span class="wsh-kpi__label">کارهای امروز</span>
-                    {% if crm_stats.overdue_followups %}
-                    <span class="wsh-kpi__sub">{{ crm_stats.overdue_followups|intcomma }} پیگیری عقب‌افتاده</span>
-                    {% endif %}
+<section class="fl-kpi-pro fl-kpi-pro--home wsh2-kpi wsh2-body__kpi" aria-label="شاخص‌های کلیدی" data-tour="workspace-kpis">
+    <a href="{{ home_kpi.links.today }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero{% if home_kpi.overdue %} is-alert{% endif %}">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-list-check"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">کارهای امروز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ home_kpi.today_work|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if home_kpi.today_work %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--overdue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ home_kpi.overdue_share }}"
+                aria-label="سهم معوق {{ home_kpi.overdue_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ home_kpi.overdue_share }}%;"></i>
                 </span>
-            </span>
-            <span class="wsh-kpi__lead-go" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
-        </a>
-
-        <div class="wsh-kpi__panel">
-            <h3 class="wsh-kpi__panel-title">CRM</h3>
-            <div class="wsh-kpi__grid wsh-kpi__grid--crm">
-                <a href="{{ kpi_contacts_url }}" class="wsh-kpi__card wsh-kpi__card--cell" data-tone="indigo">
-                    <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
-                    <span class="wsh-kpi__value">{{ crm_stats.total_contacts|intcomma }}</span>
-                    <span class="wsh-kpi__label">مخاطبین</span>
-                </a>
-                <a href="{{ kpi_properties_url }}" class="wsh-kpi__card wsh-kpi__card--cell" data-tone="violet">
-                    <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
-                    <span class="wsh-kpi__value">{{ crm_stats.total_properties|intcomma }}</span>
-                    <span class="wsh-kpi__label">فایل شخصی</span>
-                </a>
-                <a href="{{ kpi_reminders_url }}" class="wsh-kpi__card wsh-kpi__card--cell" data-tone="rose">
-                    <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
-                    <span class="wsh-kpi__value">{{ crm_stats.active_reminders|intcomma }}</span>
-                    <span class="wsh-kpi__label">یادآور</span>
-                </a>
             </div>
-        </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ home_kpi.hero_meta }}</p>
+        </footer>
+    </a>
 
-        {% if has_bot_license %}
-        {% url 'workspace:dataset_list' as kpi_filing_url %}
-        {% with kpi_sale_url=kpi_filing_url|add:'?tx=sale' kpi_rent_url=kpi_filing_url|add:'?tx=rent' %}
-        <div class="wsh-kpi__panel">
-            <h3 class="wsh-kpi__panel-title">فایلینگ دیوار</h3>
-            <div class="wsh-kpi__grid wsh-kpi__grid--filing">
-                <a href="{{ kpi_filing_url }}" class="wsh-kpi__card wsh-kpi__card--cell" data-tone="purple">
-                    <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
-                    <span class="wsh-kpi__value">{{ data_stats.datasets|intcomma }}</span>
-                    <span class="wsh-kpi__label">فایلینگ</span>
-                </a>
-                <a href="{{ kpi_filing_url }}" class="wsh-kpi__card wsh-kpi__card--cell" data-tone="blue">
-                    <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-database"></i></span>
-                    <span class="wsh-kpi__value">{{ data_stats.listings|intcomma }}</span>
-                    <span class="wsh-kpi__label">آگهی</span>
-                </a>
-                <a href="{{ kpi_sale_url }}" class="wsh-kpi__card wsh-kpi__card--cell" data-tone="green">
-                    <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-tag"></i></span>
-                    <span class="wsh-kpi__value">{{ data_stats.sale|intcomma }}</span>
-                    <span class="wsh-kpi__label">فروش</span>
-                </a>
-                <a href="{{ kpi_rent_url }}" class="wsh-kpi__card wsh-kpi__card--cell" data-tone="cyan">
-                    <span class="wsh-kpi__icon" aria-hidden="true"><i class="fas fa-house"></i></span>
-                    <span class="wsh-kpi__value">{{ data_stats.rent|intcomma }}</span>
-                    <span class="wsh-kpi__label">اجاره</span>
-                </a>
-            </div>
-        </div>
-        {% endwith %}
-        {% endif %}
-    </div>
+    <a href="{{ home_kpi.links.contacts }}" class="fl-kpi-pro__card fl-kpi-pro__card--contacts">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">مخاطبین فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not home_kpi.active_contacts %} is-empty{% endif %}">{{ home_kpi.active_contacts|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta">{{ home_kpi.contacts_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ home_kpi.links.properties }}" class="fl-kpi-pro__card fl-kpi-pro__card--properties">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">فایل‌های شخصی فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not home_kpi.active_properties %} is-empty{% endif %}">{{ home_kpi.active_properties|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta">{{ home_kpi.properties_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{% if home_kpi.stale_deals %}{{ home_kpi.links.deals_stale }}{% else %}{{ home_kpi.links.deals }}{% endif %}" class="fl-kpi-pro__card fl-kpi-pro__card--deals{% if home_kpi.stale_deals %} is-warn{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">معاملات فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not home_kpi.active_deals %} is-empty{% endif %}">{{ home_kpi.active_deals|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta">{{ home_kpi.deals_meta }}</p>
+        </footer>
+    </a>
 </section>

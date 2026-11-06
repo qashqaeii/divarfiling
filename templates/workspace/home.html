@@ -3,20 +3,22 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=200">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=17">
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=24">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=25">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-theme-dark.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-home-dashboard-v2.css' %}?v=3">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
 {% block mobile_bar_title %}میزکار{% endblock %}
 
 {% block content %}
-<div class="mk-page mk-hub mk-hub-pro ws-home ws-home-pro wsh-dashboard wsh-dashboard--mob3" id="wsHome">
+<div class="mk-page mk-filing-datasets ws-home-v2" id="wsHome">
 
     {% include 'includes/announcements.html' with notice_layout='workspace-top' %}
 
@@ -25,99 +27,88 @@
     {% include 'workspace/includes/home/workspace_agency_panel.html' %}
 
     {% if not has_bot_license %}
-    {% include 'workspace/includes/home/workspace_app_downloads.html' %}
+    <details class="wsh2-downloads">
+        <summary class="wsh2-downloads__summary">
+            <span><i class="fas fa-download" aria-hidden="true"></i> دانلود نرم‌افزارها</span>
+            <i class="fas fa-chevron-down wsh2-downloads__chev" aria-hidden="true"></i>
+        </summary>
+        <div class="wsh2-downloads__body">
+            {% include 'workspace/includes/home/workspace_app_downloads.html' %}
+        </div>
+    </details>
     {% endif %}
 
     {% if home_is_empty %}
-    <section class="wsh-start" aria-label="شروع کار" data-help-tour="workspace-actions" data-tour="workspace-start">
-        <p class="wsh-start__title">می‌خواهید از کجا شروع کنید؟</p>
-        <div class="wsh-start__grid">
-            <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="wsh-start__card">
-                <span class="wsh-start__icon" data-tone="indigo"><i class="fas fa-user" aria-hidden="true"></i></span>
-                <span class="wsh-start__text"><strong>مخاطب دارم</strong><em>ثبت مخاطب و نیاز</em></span>
+    <section class="wsh2-start" aria-label="شروع کار" data-tour="workspace-start">
+        <p class="wsh2-start__title">می‌خواهید از کجا شروع کنید؟</p>
+        <div class="wsh2-start__grid">
+            <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="wsh2-start__card">
+                <span class="wsh2-start__icon" data-tone="indigo"><i class="fas fa-user" aria-hidden="true"></i></span>
+                <span class="wsh2-start__text"><strong>مخاطب دارم</strong><em>ثبت مخاطب و نیاز</em></span>
             </a>
             {% if has_bot_license %}
-            <a href="{% url 'workspace:dataset_list' %}" class="wsh-start__card">
-                <span class="wsh-start__icon" data-tone="blue"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></span>
-                <span class="wsh-start__text"><strong>می‌خواهم فایل پیدا کنم</strong><em>ورود به فایلینگ</em></span>
+            <a href="{% url 'workspace:dataset_list' %}" class="wsh2-start__card">
+                <span class="wsh2-start__icon" data-tone="blue"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></span>
+                <span class="wsh2-start__text"><strong>می‌خواهم فایل پیدا کنم</strong><em>ورود به فایلینگ</em></span>
             </a>
             {% else %}
-            <a href="{% url 'workspace:crm_properties' %}" class="wsh-start__card">
-                <span class="wsh-start__icon" data-tone="violet"><i class="fas fa-folder" aria-hidden="true"></i></span>
-                <span class="wsh-start__text"><strong>کار با فایل‌های شخصی</strong><em>ثبت ملک</em></span>
+            <a href="{% url 'workspace:crm_properties' %}" class="wsh2-start__card">
+                <span class="wsh2-start__icon" data-tone="violet"><i class="fas fa-folder" aria-hidden="true"></i></span>
+                <span class="wsh2-start__text"><strong>کار با فایل‌های شخصی</strong><em>ثبت ملک</em></span>
             </a>
             {% endif %}
-            <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="wsh-start__card">
-                <span class="wsh-start__icon" data-tone="purple"><i class="fas fa-building" aria-hidden="true"></i></span>
-                <span class="wsh-start__text"><strong>فایل شخصی دارم</strong><em>ثبت ملک</em></span>
+            <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="wsh2-start__card">
+                <span class="wsh2-start__icon" data-tone="purple"><i class="fas fa-building" aria-hidden="true"></i></span>
+                <span class="wsh2-start__text"><strong>فایل شخصی دارم</strong><em>ثبت ملک</em></span>
             </a>
         </div>
     </section>
     {% else %}
-        {% if home_nba %}
-        <section class="wsh-nba" aria-label="اقدام‌های پیشنهادی" data-tour="workspace-nba">
-            {% for action in home_nba %}
-            <a href="{{ action.url }}" class="ws-home-alert{% if action.tone != 'warn' %} ws-home-alert--info{% endif %}" role="status">
-                {% if action.tone == 'warn' %}<span class="ws-home-alert__pulse" aria-hidden="true"></span>{% endif %}
-                <span class="ws-home-alert__icon" aria-hidden="true"><i class="fas {% if action.key == 'overdue' %}fa-clock{% elif action.key == 'matches' %}fa-house{% elif action.key == 'new_filing' %}fa-folder-open{% elif action.key == 'agency_inbox' %}fa-users{% else %}fa-list-check{% endif %}"></i></span>
-                <span class="ws-home-alert__body">
-                    <span class="ws-home-alert__title"><em class="ws-home-alert__count">{{ action.count }}</em> {{ action.title }}</span>
-                    <span class="ws-home-alert__desc">{{ action.desc }}</span>
-                </span>
-                <span class="ws-home-alert__cta">{{ action.cta }} <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-            </a>
-            {% endfor %}
-        </section>
-        {% else %}
-        <section class="wsh-nba-success" aria-label="وضعیت امروز">
-            <p><i class="fas fa-check-circle" aria-hidden="true"></i> کار فوری باقی نمانده — از میانبرها شروع کنید.</p>
-        </section>
+
+    <div class="wsh2-body">
+        {% include 'workspace/includes/home/workspace_kpi.html' %}
+
+        {% if support_nav_counts.unread_replies %}
+        <a href="{% url 'workspace:support_list' %}" class="wsh2-alert wsh2-body__alert" role="status">
+            <span class="wsh2-alert__icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
+            <span class="wsh2-alert__body">
+                <strong>{{ support_nav_counts.unread_replies }} پاسخ جدید پشتیبانی</strong>
+                <span>تیکت‌های پشتیبانی منتظر مشاهده‌اند</span>
+            </span>
+            <span class="wsh2-alert__cta">مشاهده <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+        </a>
         {% endif %}
 
-        {% include 'workspace/includes/home/workspace_quick_actions.html' %}
-        {% include 'workspace/includes/home/workspace_kpi.html' %}
-        {% include 'workspace/includes/home/workspace_today_queue.html' %}
-    {% endif %}
+        <div class="wsh2-main-grid wsh2-body__main">
+            {% include 'workspace/includes/home/workspace_today_queue.html' %}
+            {% include 'workspace/includes/home/workspace_opportunities.html' %}
+        </div>
 
-    {% if support_nav_counts.unread_replies %}
-    <a href="{% url 'workspace:support_list' %}" class="ws-home-alert ws-home-alert--info" role="status">
-        <span class="ws-home-alert__icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
-        <span class="ws-home-alert__body">
-            <span class="ws-home-alert__kicker">پشتیبانی</span>
-            <span class="ws-home-alert__title"><em class="ws-home-alert__count">{{ support_nav_counts.unread_replies }}</em> پاسخ جدید دارید</span>
-            <span class="ws-home-alert__desc">تیکت‌های پشتیبانی منتظر مشاهده‌اند</span>
-        </span>
-        <span class="ws-home-alert__cta">مشاهده <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-    </a>
-    {% endif %}
+        <div class="wsh2-body__quick">
+            {% include 'workspace/includes/home/workspace_shortcuts.html' %}
+        </div>
 
-    {% if not home_is_empty %}
-    {% include 'workspace/includes/home/workspace_shortcuts.html' %}
+        <details class="wsh2-analytics wsh2-body__analytics" data-wsh2-analytics open>
+            <summary class="wsh2-analytics__summary">
+                <span><i class="fas fa-chart-line" aria-hidden="true"></i> روند و قیف معاملات</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="wsh2-secondary-grid">
+                {% include 'workspace/includes/home/workspace_trend.html' %}
+                {% include 'workspace/includes/home/workspace_pipeline.html' %}
+            </div>
+        </details>
 
-    <div class="wsh-mid-grid" data-tour="workspace-panels-mid">
-        {% include 'workspace/includes/home/workspace_reminders.html' %}
-        {% include 'workspace/includes/home/workspace_latest_files.html' %}
+        <div class="wsh2-lower-grid wsh2-body__lower">
+            {% include 'workspace/includes/home/workspace_recent_activity.html' %}
+            {% if smart_command.enabled %}
+            <div class="wsh2-smart" id="wsHomeSmartCommand">
+                {% include 'workspace/crm/includes/crm_smart_command.html' %}
+            </div>
+            {% endif %}
+        </div>
     </div>
 
-    <details class="wsh-insights" data-tour="workspace-insights">
-        <summary class="wsh-insights__summary">
-            <span class="wsh-insights__summary-title"><i class="fas fa-chart-line" aria-hidden="true"></i> گزارش‌ها و تحلیل</span>
-            <span class="wsh-insights__summary-hint">قیف CRM، روند فعالیت و بیشتر</span>
-        </summary>
-        <div class="wsh-insights__body">
-            <div class="wsh-lower-grid">
-                {% include 'workspace/includes/home/workspace_pipeline.html' %}
-                {% include 'workspace/includes/home/workspace_contact_status.html' %}
-                {% include 'workspace/includes/home/workspace_trend.html' %}
-            </div>
-            <div class="wsh-lower-grid wsh-lower-grid--2" data-tour="workspace-panels-lower">
-                {% include 'workspace/includes/home/workspace_recent_properties.html' %}
-                {% include 'workspace/includes/home/workspace_channels.html' %}
-            </div>
-        </div>
-    </details>
-
-    {% include 'workspace/includes/home/workspace_footer_status.html' %}
     {% endif %}
 
 </div>
@@ -126,5 +117,5 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>window.wsCharts = {{ charts_json|safe }}; window.wsChartsHub = true;</script>
-<script src="{% static 'workspace/js/home.js' %}?v=10"></script>
+<script src="{% static 'workspace/js/home.js' %}?v=12"></script>
 {% endblock %}

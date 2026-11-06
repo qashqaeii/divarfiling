@@ -1,0 +1,39 @@
+<section class="wsh2-panel wsh2-ops" aria-label="فرصت‌های مهم" data-tour="workspace-opportunities">
+    <header class="wsh2-panel__head">
+        <div class="wsh2-panel__title">
+            <span class="wsh2-panel__icon" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+            <div>
+                <h2>فرصت‌های مهم</h2>
+                <p class="wsh2-panel__sub">تطبیق، پیگیری و معاملات نیازمند توجه</p>
+            </div>
+        </div>
+        <a href="{% url 'workspace:crm_contacts' %}?match_alerts=1" class="wsh2-panel__link">تطبیق‌ها</a>
+    </header>
+
+    {% if home_opportunities.items %}
+    <ul class="wsh2-ops__list">
+        {% for item in home_opportunities.items %}
+        <li>
+            <a href="{{ item.url }}" class="wsh2-ops__card wsh2-ops__card--{{ item.tone }}" title="{{ item.desc }}">
+                <span class="wsh2-ops__icon" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+                <span class="wsh2-ops__body">
+                    {% if item.kind_label %}<span class="wsh2-ops__kind">{{ item.kind_label }}</span>{% endif %}
+                    <strong>
+                        {% if item.count %}<em>{{ item.count }}</em> {% endif %}{{ item.title|truncatechars:32 }}
+                    </strong>
+                    <span>{{ item.desc|truncatechars:42 }}</span>
+                </span>
+                <span class="wsh2-ops__cta">{{ item.cta }} <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="wsh2-empty">
+        <i class="fas fa-seedling" aria-hidden="true"></i>
+        <p>فرصت فعالی نیست</p>
+        <span>با ثبت مخاطب و فایل، پیشنهادهای واقعی اینجا ظاهر می‌شوند.</span>
+        <a href="{% url 'workspace:crm_contacts' %}" class="wsh2-empty__cta">مخاطبین</a>
+    </div>
+    {% endif %}
+</section>

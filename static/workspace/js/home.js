@@ -15,13 +15,36 @@
     }
 
     function initGreeting() {
-        const textEl = document.getElementById('wsHomeGreeting');
-        const iconEl = document.getElementById('wsHomeGreetingIcon');
         const meta = greetingMeta(new Date().getHours());
+        const textEl = document.getElementById('wsHomeGreeting');
+        const textMob = document.getElementById('wsHomeGreetingMob');
+        const iconEl = document.getElementById('wsHomeGreetingIcon');
         if (textEl) textEl.textContent = meta.text;
+        if (textMob) textMob.textContent = meta.text;
         if (iconEl) {
-            iconEl.className = `wsh-hero__greeting-icon fas ${meta.icon} is-${meta.tone}`;
+            iconEl.className = `wsh2-header__greet-icon fas ${meta.icon} is-${meta.tone}`;
         }
+        const mobAvatarIcon = document.querySelector('.wsh2-mob-header .wsh2-header__avatar i');
+        if (mobAvatarIcon) {
+            mobAvatarIcon.className = `fas ${meta.icon} is-${meta.tone}`;
+        }
+    }
+
+    function initQuickAnchors() {
+        document.querySelectorAll('[data-wsh2-anchor="1"]').forEach((link) => {
+            link.addEventListener('click', (e) => {
+                const href = link.getAttribute('href') || '';
+                if (!href.startsWith('#')) return;
+                const target = document.querySelector(href);
+                if (!target) return;
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const input = target.querySelector('textarea, input');
+                if (input) {
+                    try { input.focus({ preventScroll: true }); } catch (err) { input.focus(); }
+                }
+            });
+        });
     }
 
     function initHomeCharts() {
@@ -396,12 +419,17 @@
     }
 
     function initInsightsDisclosure() {
-        const el = document.querySelector('.wsh-insights');
-        if (!el) return;
+        const targets = [
+            ...document.querySelectorAll('.wsh-insights, [data-wsh2-analytics]'),
+        ];
+        if (!targets.length) return;
         const mq = window.matchMedia('(min-width: 768px)');
         const sync = () => {
-            if (mq.matches) el.setAttribute('open', '');
-            else el.removeAttribute('open');
+            targets.forEach((el) => {
+                if (mq.matches) el.setAttribute('open', '');
+                else el.removeAttribute('open');
+            });
+            resizeHomeCharts();
         };
         sync();
         if (typeof mq.addEventListener === 'function') {
@@ -409,10 +437,15 @@
         } else if (typeof mq.addListener === 'function') {
             mq.addListener(sync);
         }
+        targets.forEach((el) => {
+            el.addEventListener('toggle', () => {
+                if (el.open) resizeHomeCharts();
+            });
+        });
     }
 
     function initReveal() {
-        const root = document.querySelector('.wsh-dashboard');
+        const root = document.querySelector('.ws-home-v2') || document.querySelector('.wsh-dashboard');
         if (!root) return;
         requestAnimationFrame(() => root.classList.add('is-ready'));
     }
@@ -429,6 +462,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         initGreeting();
+        initQuickAnchors();
         initGlobalSearch();
         initReminderTabs();
         initFilesTxTabs();

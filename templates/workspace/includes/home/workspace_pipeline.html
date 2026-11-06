@@ -1,29 +1,37 @@
-{% load crm_tags %}
-<section class="wsh-card wsh-pipeline" data-help-tour="workspace-pipeline" aria-label="قیف وضعیت">
-    <header class="wsh-card__head">
-        <div class="wsh-card__title">
-            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-filter"></i></span>
-            <h2>قیف وضعیت</h2>
+<section class="wsh2-panel wsh2-funnel" aria-label="وضعیت قیف معاملات" data-tour="workspace-pipeline">
+    <header class="wsh2-panel__head">
+        <div class="wsh2-panel__title">
+            <span class="wsh2-panel__icon" aria-hidden="true"><i class="fas fa-filter"></i></span>
+            <div>
+                <h2>قیف معاملات</h2>
+                <p class="wsh2-panel__sub">
+                    {% if home_deal_funnel.active %}{{ home_deal_funnel.active }} فعال{% if home_deal_funnel.stale %} · {{ home_deal_funnel.stale }} نیازمند پیگیری{% endif %}{% else %}خلاصه مراحل واقعی{% endif %}
+                </p>
+            </div>
         </div>
-        <a href="{% url 'workspace:crm_contacts' %}?view=pipeline" class="wsh-card__link">کانبان</a>
+        <a href="{{ home_deal_funnel.url }}" class="wsh2-panel__link">قیف کامل</a>
     </header>
-    <ul class="wsh-pipeline__list">
-        {% for col in pipeline %}
+
+    {% if home_deal_funnel.rows %}
+    <ul class="wsh2-funnel__list">
+        {% for row in home_deal_funnel.rows %}
         <li>
-            <a href="{% url 'workspace:crm_contacts' %}?status={{ col.status|urlencode }}" class="wsh-pipeline__row">
-                <span class="wsh-pipeline__dot" style="background:{{ col.status|crm_status_dot }}"></span>
-                <span class="wsh-pipeline__name">{{ col.status }}</span>
-                <span class="wsh-pipeline__bar" aria-hidden="true"><i style="width:{% if crm_stats.total_contacts %}{% widthratio col.count crm_stats.total_contacts 100 %}{% else %}0{% endif %}%"></i></span>
-                <span class="wsh-pipeline__meta">
-                    <strong>{{ col.count }}</strong>
-                    {% if crm_stats.total_contacts %}<em>{% widthratio col.count crm_stats.total_contacts 100 %}٪</em>{% endif %}
+            <a href="{{ home_deal_funnel.url }}?stage={{ row.label|urlencode }}" class="wsh2-funnel__row">
+                <span class="wsh2-funnel__name">{{ row.label }}</span>
+                <span class="wsh2-funnel__bar" aria-hidden="true"><i style="width:{{ row.pct }}%"></i></span>
+                <span class="wsh2-funnel__meta">
+                    <strong>{{ row.count }}</strong>
+                    <em>{{ row.pct }}٪</em>
                 </span>
             </a>
         </li>
-        {% empty %}
-        <li class="wsh-empty wsh-empty--inline">
-            <p>داده‌ای ثبت نشده</p>
-        </li>
         {% endfor %}
     </ul>
+    {% else %}
+    <div class="wsh2-empty">
+        <i class="fas fa-handshake" aria-hidden="true"></i>
+        <p>هنوز معامله فعالی ندارید.</p>
+        <a href="{% url 'workspace:crm_deal_create' %}" class="wsh2-empty__cta">ثبت معامله</a>
+    </div>
+    {% endif %}
 </section>

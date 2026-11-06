@@ -1,32 +1,90 @@
 {% load static crm_tags %}
-<header class="wsh-hero" data-help-tour="workspace-hero" data-tour="workspace-hero" aria-label="خلاصه میزکار">
-    <div class="wsh-hero__decor" aria-hidden="true" style="--wsh-hero-bg-image: url('{% static 'images/workspace-header.webp' %}')"></div>
+<div class="wsh2-top" data-tour="workspace-hero">
+    <div class="wsh2-top__surface">
+        <header class="wsh2-header" aria-label="خلاصه میزکار">
+            <div class="wsh2-header__identity">
+                <span class="wsh2-header__avatar" aria-hidden="true">
+                    <i class="wsh2-header__greet-icon fas fa-sun is-noon" id="wsHomeGreetingIcon"></i>
+                </span>
+                <div class="wsh2-header__copy">
+                    <h1 class="wsh2-header__greet">
+                        <span id="wsHomeGreeting">سلام</span><span class="wsh2-header__greet-sep" aria-hidden="true">،</span>
+                        <span class="wsh2-header__name">{{ request.user.get_full_name|default:request.user.username }}</span>
+                    </h1>
+                    <p class="wsh2-header__sub">
+                        <span class="wsh2-header__meta-chip wsh2-header__date">
+                            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                            <span>{{ today_jalali }}</span>
+                        </span>
+                        {% if home_day_status %}
+                        <span class="wsh2-header__meta-chip wsh2-header__status wsh2-header__status--{{ home_day_status.tone }}" title="{{ home_day_status.label }}">
+                            <i class="fas {% if home_day_status.tone == 'ok' %}fa-check-circle{% elif home_day_status.tone == 'warn' %}fa-exclamation-circle{% else %}fa-circle-info{% endif %}" aria-hidden="true"></i>
+                            <span class="wsh2-header__status-full">{{ home_day_status.label }}</span>
+                            <span class="wsh2-header__status-short">{{ home_day_status.short }}</span>
+                        </span>
+                        {% endif %}
+                        {% if bot_license_display.active %}
+                        <span class="wsh2-header__meta-chip wsh2-header__pill wsh2-header__pill--ok{% if bot_license_display.expiring_soon %} is-warn{% endif %}" title="{{ bot_license_display.label }}">
+                            <i class="fas fa-key" aria-hidden="true"></i>
+                            <span>{% if bot_license_display.unlimited %}لایسنس فعال{% elif bot_license_display.days_remaining != None %}{{ bot_license_display.days_remaining|to_persian_digits }} روز{% else %}لایسنس فعال{% endif %}</span>
+                        </span>
+                        {% elif bot_license_display.pending %}
+                        <a href="{% url 'license_guide' %}" class="wsh2-header__meta-chip wsh2-header__pill wsh2-header__pill--warn" title="{{ bot_license_display.label }}">
+                            <i class="fas fa-key" aria-hidden="true"></i><span>فعال‌سازی</span>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'workspace:upgrade' %}" class="wsh2-header__meta-chip wsh2-header__pill" title="{{ bot_license_display.label }}">
+                            <i class="fas fa-lock" aria-hidden="true"></i><span>لایسنس</span>
+                        </a>
+                        {% endif %}
+                    </p>
+                    {% if home_is_empty %}
+                    <p class="wsh2-header__hint">برای شروع، یکی از گزینه‌های پایین را انتخاب کنید.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
 
-    <div class="wsh-hero__content">
-        <h1 class="wsh-hero__greet">
-            <i class="wsh-hero__greeting-icon fas fa-sun is-noon" id="wsHomeGreetingIcon" aria-hidden="true"></i>
-            <span id="wsHomeGreeting">سلام</span><span class="wsh-hero__greet-sep" aria-hidden="true">،</span>
-            <span class="wsh-hero__title">{{ request.user.get_full_name|default:request.user.username }}</span>
-        </h1>
-        <p class="wsh-hero__meta">
-            <span class="wsh-hero__date"><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ today_jalali }}</span>
-            {% if bot_license_display.active %}
-            <span class="wsh-hero__pill wsh-hero__pill--ok{% if bot_license_display.expiring_soon %} is-warn{% endif %}" title="{{ bot_license_display.label }}">
-                <i class="fas fa-key" aria-hidden="true"></i>
-                {% if bot_license_display.unlimited %}فعال{% elif bot_license_display.days_remaining != None %}{{ bot_license_display.days_remaining|to_persian_digits }} روز{% else %}فعال{% endif %}
-            </span>
-            {% elif bot_license_display.pending %}
-            <a href="{% url 'license_guide' %}" class="wsh-hero__pill wsh-hero__pill--warn" title="{{ bot_license_display.label }}"><i class="fas fa-key" aria-hidden="true"></i> فعال‌سازی</a>
-            {% else %}
-            <a href="{% url 'workspace:upgrade' %}" class="wsh-hero__pill" title="{{ bot_license_display.label }}"><i class="fas fa-lock" aria-hidden="true"></i> لایسنس</a>
-            {% endif %}
-        </p>
-        {% if home_is_empty %}
-        <p class="wsh-hero__hint">برای شروع، یکی از گزینه‌های پایین را انتخاب کنید.</p>
-        {% endif %}
-    </div>
+        <header class="wsh2-mob-header" aria-label="خلاصه میزکار موبایل">
+            <div class="wsh2-mob-header__top">
+                <div class="wsh2-mob-header__identity">
+                    <span class="wsh2-header__avatar wsh2-header__avatar--sm" aria-hidden="true">
+                        <i class="fas fa-sparkles"></i>
+                    </span>
+                    <div>
+                        <p class="wsh2-mob-header__greet">
+                            <span id="wsHomeGreetingMob">سلام</span>،
+                            <strong>{{ request.user.get_full_name|default:request.user.username|truncatechars:18 }}</strong>
+                        </p>
+                        <p class="wsh2-mob-header__meta">
+                            <span>{{ today_jalali }}</span>
+                            {% if home_day_status %}
+                            <span class="wsh2-mob-header__status wsh2-mob-header__status--{{ home_day_status.tone }}">{{ home_day_status.short }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ home_notif.url|default:'/workspace/crm/reminders/' }}" class="wsh2-mob-header__notif" aria-label="اعلان‌ها">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    {% if home_notif.overdue or home_notif.reminders %}
+                    <span class="wsh2-header__notif-badge">{% if home_notif.overdue %}{{ home_notif.overdue }}{% else %}{{ home_notif.reminders }}{% endif %}</span>
+                    {% endif %}
+                </a>
+            </div>
+        </header>
 
-    <div class="wsh-hero__search">
-        {% include 'workspace/includes/home/workspace_search.html' %}
+        <div class="wsh2-toolbar" role="toolbar" aria-label="جستجو و اعلان‌ها">
+            <div class="wsh2-toolbar__search">
+                {% include 'workspace/includes/home/workspace_search.html' %}
+            </div>
+            <a href="{{ home_notif.url|default:'/workspace/crm/reminders/' }}" class="wsh2-header__notif wsh2-toolbar__notif" title="یادآورها و اعلان‌ها" aria-label="یادآورها و اعلان‌ها">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                {% if home_notif.overdue %}
+                <span class="wsh2-header__notif-badge" aria-label="{{ home_notif.overdue }} مورد معوق">{{ home_notif.overdue }}</span>
+                {% elif home_notif.reminders %}
+                <span class="wsh2-header__notif-badge wsh2-header__notif-badge--soft" aria-label="{{ home_notif.reminders }} یادآور فعال">{{ home_notif.reminders }}</span>
+                {% endif %}
+            </a>
+        </div>
     </div>
-</header>
+</div>

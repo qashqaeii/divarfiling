@@ -1,0 +1,37 @@
+{% load workspace_tags %}
+<section class="wsh2-panel wsh2-activity" aria-label="فعالیت‌های اخیر" data-tour="workspace-recent-activity">
+    <header class="wsh2-panel__head">
+        <div class="wsh2-panel__title">
+            <span class="wsh2-panel__icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+            <div>
+                <h2>فعالیت‌های اخیر</h2>
+                <p class="wsh2-panel__sub">آخرین اقدامات مرتبط</p>
+            </div>
+        </div>
+        <a href="{% url 'workspace:crm_contacts' %}" class="wsh2-panel__link">مخاطبین</a>
+    </header>
+
+    {% if home_recent_activities %}
+    <ul class="wsh2-activity__list">
+        {% for act in home_recent_activities %}
+        <li>
+            <a href="{{ act.url }}" class="wsh2-activity__row">
+                <span class="wsh2-activity__type">{{ act.type|default:"فعالیت" }}</span>
+                <span class="wsh2-activity__body">
+                    <strong>{{ act.title|truncatechars:40 }}</strong>
+                    {% if act.desc %}<span>{{ act.desc|truncatechars:64 }}</span>{% endif %}
+                </span>
+                {% if act.when %}
+                <time class="wsh2-activity__time" datetime="{{ act.when|date:'c' }}">{{ act.when|timesince }}</time>
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="wsh2-empty">
+        <i class="fas fa-inbox" aria-hidden="true"></i>
+        <p>هنوز فعالیتی ثبت نشده است.</p>
+    </div>
+    {% endif %}
+</section>

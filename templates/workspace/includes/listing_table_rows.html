@@ -1,6 +1,7 @@
 {% load humanize workspace_tags %}
 {% for listing in listings %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token ret=listing_retention_map|dict_get:listing.token %}
+{% listing_street_display listing as listing_street %}
 <tr class="mk-listing-row" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
     <td class="mk-col-title listing-col-title" data-label="">
         <div class="mk-listing-title-cell">
@@ -30,6 +31,12 @@
                 {% endif %}
             </div>
         </div>
+    </td>
+    <td class="mk-col-nb listing-col-neighborhood listing-col-street" data-label="خیابان">
+        <span class="mk-nb-cell" title="{{ listing_street }}">
+            {% if listing_street %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}
+            <span class="mk-cell-clip">{{ listing_street|default:"—"|truncatechars:18 }}</span>
+        </span>
     </td>
     {% if show_dataset_column %}
     <td class="mk-col-dataset listing-col-dataset" data-label="پوشه استخراج">
@@ -82,17 +89,8 @@
     <td class="mk-col-amenity listing-col-features" data-label="امکانات">
         {% amenity_icons feat %}
     </td>
-    <td class="mk-col-publisher listing-col-owner" data-label="آگهی‌دهنده">
-        {% include 'workspace/includes/listing_advertiser_pill.html' %}
-    </td>
     <td class="mk-col-date mk-date listing-col-created" data-label="ایجاد در دیوار" data-sort-value="{% if listing.published_at %}{{ listing.published_at|date:'U' }}{% else %}0{% endif %}">
         {% if listing.published_at %}{{ listing.published_at|ws_jalali }}{% else %}<span class="mk-muted">—</span>{% endif %}
-    </td>
-    <td class="mk-col-nb listing-col-neighborhood" data-label="محله">
-        <span class="mk-nb-cell" title="{{ listing.neighborhood }}">
-            {% if listing.neighborhood %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}
-            <span class="mk-cell-clip">{{ listing.neighborhood|default:"—"|truncatechars:18 }}</span>
-        </span>
     </td>
     <td class="mk-col-value listing-col-value" data-label="ارزش">
         {% with badge=score|ws_value_badge %}
@@ -152,7 +150,7 @@
 </tr>
 {% endwith %}
 {% empty %}
-<tr><td colspan="{% if show_dataset_column %}14{% else %}13{% endif %}" class="mk-table-empty-cell">
+<tr><td colspan="{% if show_dataset_column %}12{% else %}11{% endif %}" class="mk-table-empty-cell">
     <div class="mk-table-empty">
         <span class="mk-empty-icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
         <p>آگهی‌ای با این فیلترها یافت نشد</p>

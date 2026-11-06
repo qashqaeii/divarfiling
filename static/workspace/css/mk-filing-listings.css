@@ -4,6 +4,13 @@
    UI only — no business logic
    ═══════════════════════════════════════════════════════════ */
 
+/* Location pin — map-marker red (Font Awesome fa-location-dot) */
+.mk-filing-listings-pro .mk-lcard-native__loc > .fa-location-dot,
+.mk-filing-listings-pro .mk-lcard-native__meta > .fa-location-dot {
+    color: var(--ws-danger, #EF4444);
+    opacity: 1;
+}
+
 @media (min-width: 769px) {
     .mk-filing-listings-pro.mk-page {
         gap: 0.75rem;
@@ -320,10 +327,12 @@
         min-width: 0;
     }
 
-    .mk-filing-listings-pro .mk-listing-panel[data-list-view="grid"] .mk-lcard-native__loc i {
+    .mk-filing-listings-pro .mk-listing-panel[data-list-view="grid"] .mk-lcard-native__loc i,
+    .mk-filing-listings-pro .mk-listing-panel[data-list-view="grid"] .mk-lcard-native__meta i {
         flex-shrink: 0;
         font-size: 0.58rem !important;
-        color: color-mix(in srgb, var(--ws-primary) 70%, var(--ws-text-muted)) !important;
+        color: var(--ws-danger, #EF4444) !important;
+        opacity: 1;
     }
 
     .mk-filing-listings-pro .mk-listing-panel[data-list-view="grid"] .mk-lcard-native__loc span {

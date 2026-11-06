@@ -78,20 +78,20 @@
 
 .mk-data-table-listings--compact .listing-col-owner,
 .mk-data-table-listings--compact .mk-col-w-pub {
-    width: 6.1rem;
-    min-width: 5.7rem;
+    display: none;
 }
 
 .mk-data-table-listings--compact .listing-col-created,
 .mk-data-table-listings--compact .mk-col-w-date {
-    width: 5.1rem;
-    min-width: 4.85rem;
+    width: 7.75rem;
+    min-width: 7.5rem;
 }
 
 .mk-data-table-listings--compact .listing-col-neighborhood,
+.mk-data-table-listings--compact .listing-col-street,
 .mk-data-table-listings--compact .mk-col-w-nb {
-    width: 5.6rem;
-    min-width: 5.1rem;
+    width: 7.25rem;
+    min-width: 6.75rem;
 }
 
 .mk-data-table-listings--compact .listing-col-value,
@@ -150,13 +150,16 @@
 
 .mk-data-table-listings--compact .listing-col-created {
     text-align: center;
-    padding-inline: 0.28rem;
+    padding-inline: 0.4rem;
     font-size: 0.72rem;
     color: var(--ws-text-muted);
+    overflow: hidden;
 }
 
-.mk-data-table-listings--compact .listing-col-neighborhood {
-    padding-inline: 0.32rem;
+.mk-data-table-listings--compact .listing-col-neighborhood,
+.mk-data-table-listings--compact .listing-col-street {
+    padding-inline: 0.4rem;
+    overflow: hidden;
 }
 
 .mk-data-table-listings--compact .listing-col-value {
@@ -306,9 +309,20 @@
     font-size: 0.7rem;
 }
 
-.mk-data-table-listings--compact .listing-col-neighborhood .mk-nb-cell {
+.mk-data-table-listings--compact .listing-col-neighborhood .mk-nb-cell,
+.mk-data-table-listings--compact .listing-col-street .mk-nb-cell {
     gap: 0.22rem;
     font-size: 0.72rem;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.mk-data-table-listings--compact .listing-col-neighborhood .mk-cell-clip,
+.mk-data-table-listings--compact .listing-col-street .mk-cell-clip {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 /* Row actions */

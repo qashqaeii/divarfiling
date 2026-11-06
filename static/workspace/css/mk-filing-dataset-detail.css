@@ -61,9 +61,13 @@
     display: grid;
     place-items: center;
     border-radius: 11px;
-    font-size: 0.62rem;
-    font-weight: 900;
-    letter-spacing: 0.02em;
+    font-size: 1rem;
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+}
+.mk-filing-dataset-detail .fl-dd-header__format i {
+    line-height: 1;
 }
 .mk-filing-dataset-detail .fl-dd-header__text { min-width: 0; flex: 1; }
 .mk-filing-dataset-detail .fl-dd-header__title-row {
@@ -118,13 +122,54 @@
     background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
     border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
 }
-.mk-filing-dataset-detail .fl-dd-chip--loc i { color: var(--ws-primary); opacity: 0.85; }
+.mk-filing-dataset-detail .fl-dd-chip--loc i { color: var(--ws-danger, #EF4444); opacity: 1; }
 .mk-filing-dataset-detail .fl-dd-chip--muted { color: var(--ws-text-muted); }
 .mk-filing-dataset-detail .fl-dd-chip--filter {
     color: var(--ws-primary);
     border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
     background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
 }
+
+/* Compact advertiser mix — lives in header, not a separate card */
+.mk-filing-dataset-detail .fl-dd-header__mix {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    margin-top: 0.55rem;
+    max-width: 22rem;
+    min-width: min(100%, 11rem);
+}
+.mk-filing-dataset-detail .fl-dd-header__mix-track {
+    height: 0.35rem;
+    margin: 0;
+}
+.mk-filing-dataset-detail .fl-dd-header__mix-pcts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.65rem;
+}
+.mk-filing-dataset-detail .fl-dd-header__mix-pct {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.mk-filing-dataset-detail .fl-dd-header__mix-pct em {
+    font-style: normal;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text-secondary);
+}
+.mk-filing-dataset-detail .fl-dd-header__mix-pct .mk-ds-mix-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+}
+
 .mk-filing-dataset-detail .fl-dd-header__actions {
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -135,24 +180,9 @@
     background: color-mix(in srgb, #fef2f2 55%, var(--ws-surface)) !important;
 }
 
-/* ─── KPI + mix ─── */
+/* ─── KPI ─── */
 .mk-filing-dataset-detail .fl-dd-kpi { margin: 0; }
-.mk-filing-dataset-detail .fl-dd-mix {
-    padding: 0.55rem 0.75rem 0.65rem;
-    border-radius: 12px;
-    border: 1px solid var(--ws-border);
-    background: var(--ws-surface);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-}
-.mk-filing-dataset-detail .fl-dd-mix .mk-ds-mix-track { margin-bottom: 0.45rem; }
-.mk-filing-dataset-detail .fl-dd-mix .mk-ds-mix-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem 0.75rem;
-    font-size: 0.62rem;
-    font-weight: 700;
-    color: var(--ws-text-muted);
-}
+.mk-filing-dataset-detail .fl-dd-mix { display: none !important; }
 
 /* ─── Filter shell ─── */
 .mk-filing-dataset-detail .fl-dd-filter {
@@ -212,8 +242,7 @@
             color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-bg, #f8fafc));
     }
     .mk-filing-dataset-detail .fl-dd-header,
-    .mk-filing-dataset-detail .fl-dd-kpi,
-    .mk-filing-dataset-detail .fl-dd-mix { display: none !important; }
+    .mk-filing-dataset-detail .fl-dd-kpi { display: none !important; }
 
     .mk-filing-dataset-detail .fl-dd-mob-header {
         display: block;

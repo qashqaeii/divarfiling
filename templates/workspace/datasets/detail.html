@@ -7,15 +7,15 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=21">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=4">
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/listing-table-compact.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listings.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/listing-table-compact.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listings.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=21">
 {% endblock %}
 
 {% block content %}
@@ -55,30 +55,28 @@
             <table class="mk-data-table mk-data-table-listings mk-data-table-listings--pro mk-data-table-listings--compact">
                 <colgroup>
                     <col class="mk-col-w-title listing-col-title">
+                    <col class="mk-col-w-nb listing-col-neighborhood">
                     {% if tx.show_price %}<col class="mk-col-w-money listing-col-price">{% endif %}
                     {% if tx.show_deposit %}<col class="mk-col-w-money listing-col-deposit">{% endif %}
                     {% if tx.show_rent %}<col class="mk-col-w-money listing-col-rent">{% endif %}
                     <col class="mk-col-w-area listing-col-area">
                     <col class="mk-col-w-specs listing-col-specs">
                     <col class="mk-col-w-amenity listing-col-features">
-                    <col class="mk-col-w-pub listing-col-owner">
                     <col class="mk-col-w-date listing-col-created">
-                    <col class="mk-col-w-nb listing-col-neighborhood">
                     <col class="mk-col-w-value listing-col-value">
                     <col class="mk-col-w-actions listing-col-actions">
                 </colgroup>
                 <thead>
                     <tr>
                         <th class="mk-col-title listing-col-title"><a href="{% ws_sort_url filters 'title' filters.sort filter_qs %}" class="mk-sort-th">عنوان {% if filters.sort == 'title' %}↑{% elif filters.sort == '-title' %}↓{% endif %}</a></th>
+                        <th class="mk-col-nb listing-col-neighborhood listing-col-street">خیابان</th>
                         {% if tx.show_price %}<th class="mk-col-money listing-col-price"><a href="{% ws_sort_url filters 'price' filters.sort filter_qs %}" class="mk-sort-th">قیمت {% if filters.sort == 'price' %}↑{% elif filters.sort == '-price' %}↓{% endif %}</a></th>{% endif %}
                         {% if tx.show_deposit %}<th class="mk-col-money listing-col-deposit"><a href="{% ws_sort_url filters 'deposit' filters.sort filter_qs %}" class="mk-sort-th">ودیعه {% if filters.sort == 'deposit' %}↑{% elif filters.sort == '-deposit' %}↓{% endif %}</a></th>{% endif %}
                         {% if tx.show_rent %}<th class="mk-col-money listing-col-rent"><a href="{% ws_sort_url filters 'rent' filters.sort filter_qs %}" class="mk-sort-th">اجاره {% if filters.sort == 'rent' %}↑{% elif filters.sort == '-rent' %}↓{% endif %}</a></th>{% endif %}
                         <th class="mk-col-num listing-col-area"><a href="{% ws_sort_url filters 'area' filters.sort filter_qs %}" class="mk-sort-th">متر {% if filters.sort == 'area' %}↑{% elif filters.sort == '-area' %}↓{% endif %}</a></th>
                         <th class="mk-col-specs listing-col-specs">مشخصات</th>
                         <th class="mk-col-amenity listing-col-features">امکانات</th>
-                        <th class="mk-col-publisher listing-col-owner"><a href="{% ws_sort_url filters 'business_type' filters.sort filter_qs %}" class="mk-sort-th">آگهی‌دهنده {% if filters.sort == 'business_type' %}↑{% elif filters.sort == '-business_type' %}↓{% endif %}</a></th>
                         <th class="mk-col-date listing-col-created" title="ایجاد در دیوار"><a href="{% ws_sort_url filters 'published_at' filters.sort filter_qs %}" class="mk-sort-th">ایجاد {% if filters.sort == 'published_at' %}↑{% elif filters.sort == '-published_at' %}↓{% endif %}</a></th>
-                        <th class="mk-col-nb listing-col-neighborhood"><a href="{% ws_sort_url filters 'neighborhood' filters.sort filter_qs %}" class="mk-sort-th">محله {% if filters.sort == 'neighborhood' %}↑{% elif filters.sort == '-neighborhood' %}↓{% endif %}</a></th>
                         <th class="mk-col-value listing-col-value" title="مقایسه با ارزش بازار — زیر / میان / بالا">ارزش</th>
                         <th class="mk-col-actions listing-col-actions" aria-label="عملیات"></th>
                     </tr>

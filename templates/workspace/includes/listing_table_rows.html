@@ -32,7 +32,7 @@
             </div>
         </div>
     </td>
-    {% with loc_label=listing_street|default:listing.neighborhood %}
+    {% with loc_label=listing_street|default:listing.neighborhood|default:listing.city %}
     <td class="mk-col-nb listing-col-neighborhood listing-col-street" data-label="خیابان/منطقه">
         <span class="mk-nb-cell" title="{{ loc_label }}">
             {% if loc_label %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}

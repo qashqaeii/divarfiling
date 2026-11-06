@@ -1,0 +1,30 @@
+{# Active filter chips — removable. Expects view_mode in context. #}
+{% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due or request.GET.match_alerts == '1' %}
+<div class="ws-filters__active crm-contacts-active-chips" aria-label="فیلترهای فعال">
+    {% if request.GET.customer_type %}
+    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}{% if archive_scope and archive_scope != 'active' %}&archive_scope={{ archive_scope }}{% endif %}" class="ws-filters__active-chip crm-contacts-mob-chip">
+        <span>{{ request.GET.customer_type }}</span><i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+    {% if request.GET.status %}
+    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}{% if archive_scope and archive_scope != 'active' %}&archive_scope={{ archive_scope }}{% endif %}" class="ws-filters__active-chip crm-contacts-mob-chip">
+        <span>{{ request.GET.status }}</span><i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+    {% if request.GET.priority %}
+    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}{% if archive_scope and archive_scope != 'active' %}&archive_scope={{ archive_scope }}{% endif %}" class="ws-filters__active-chip crm-contacts-mob-chip">
+        <span>{{ request.GET.priority }}</span><i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+    {% if request.GET.due %}
+    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if archive_scope and archive_scope != 'active' %}&archive_scope={{ archive_scope }}{% endif %}" class="ws-filters__active-chip crm-contacts-mob-chip">
+        <span>{% if request.GET.due == 'action' %}نیازمند اقدام{% elif request.GET.due == 'today' %}امروز{% elif request.GET.due == 'overdue' %}معوق{% elif request.GET.due == 'unscheduled' %}بدون پیگیری{% else %}بدون تاریخ{% endif %}</span><i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+    {% if request.GET.match_alerts == '1' %}
+    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}{% if archive_scope and archive_scope != 'active' %}&archive_scope={{ archive_scope }}{% endif %}" class="ws-filters__active-chip crm-contacts-mob-chip">
+        <span>فایل پیشنهادی</span><i class="fas fa-times" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}

@@ -224,25 +224,7 @@
     color: #fff;
 }
 
-/* ── Filter bar (minimal) ── */
-.ct-dash-filter-card {
-    border: 1px solid color-mix(in srgb, var(--ct-dash-border) 80%, transparent);
-    border-radius: 12px;
-    background: var(--ct-dash-surface);
-    box-shadow: none;
-    margin-bottom: 0.75rem;
-    overflow: hidden;
-}
-.ct-dash-filter-card--minimal {
-    padding: 0;
-}
-.ct-dash-filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.55rem 0.65rem;
-}
+/* ── Filter bar (legacy selectors kept inert; premium lives in contracts-dashboard-filters.css) ── */
 .ct-dash-filter-card__head,
 .ct-dash-filter-card__title,
 .ct-dash-filter-card__body,
@@ -250,60 +232,6 @@
 .ct-dash-field,
 .ct-dash-field__label {
     display: none;
-}
-.ct-dash-search {
-    position: relative;
-    display: flex;
-    align-items: center;
-    flex: 1 1 14rem;
-    min-width: 0;
-}
-.ct-dash-search > i {
-    position: absolute;
-    inset-inline-start: 0.7rem;
-    color: var(--ct-dash-muted);
-    font-size: 0.75rem;
-    pointer-events: none;
-}
-.ct-dash-search .crm-input {
-    width: 100%;
-    padding-inline-start: 2rem;
-    min-height: 2.2rem;
-    border-radius: 9px;
-    font-size: 0.8125rem;
-}
-.ct-dash-filter-select,
-.ct-dash-filter-bar .crm-select {
-    flex: 0 1 8.5rem;
-    min-width: 7.5rem;
-    min-height: 2.2rem;
-    border-radius: 9px;
-    font-size: 0.8125rem;
-}
-.ct-dash-filter-actions {
-    display: inline-flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    margin-inline-start: auto;
-}
-.ct-dash-filter-actions .crm-dash-act {
-    min-height: 2.2rem;
-    padding: 0.35rem 0.75rem;
-    font-size: 0.78rem;
-}
-.ct-dash-filter-actions .crm-dash-act--ghost {
-    background: transparent;
-    border: 1px solid var(--ct-dash-border);
-    color: var(--ct-dash-muted);
-}
-.ct-dash-filter-actions .crm-dash-act--ghost:hover {
-    border-color: var(--ct-dash-primary);
-    color: var(--ct-dash-primary);
-    background: var(--ws-primary-soft, #faf5ff);
 }
 
 /* ── Alert bar ── */
@@ -651,15 +579,6 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 1100px) {
-    .ct-dash-filter-bar {
-        gap: 0.4rem;
-    }
-    .ct-dash-filter-select,
-    .ct-dash-filter-bar .crm-select {
-        flex: 1 1 8rem;
-    }
-}
 
 @media (max-width: 960px) {
     .crm-contracts-dashboard .kpi-strip.ct-dash-kpis.kpi-strip--4 {
@@ -684,26 +603,6 @@
     .ct-dash-quick::-webkit-scrollbar { display: none; }
     .ct-dash-quick__tab {
         flex-shrink: 0;
-    }
-    .ct-dash-filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0.55rem;
-    }
-    .ct-dash-search,
-    .ct-dash-filter-select,
-    .ct-dash-filter-bar .crm-select {
-        flex: 1 1 auto;
-        width: 100%;
-        min-width: 0;
-    }
-    .ct-dash-filter-actions {
-        margin-inline-start: 0;
-        width: 100%;
-    }
-    .ct-dash-filter-actions .crm-dash-act {
-        flex: 1;
-        justify-content: center;
     }
     .ct-dash-list-head {
         flex-direction: column;

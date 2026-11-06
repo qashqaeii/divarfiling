@@ -457,7 +457,8 @@
         box-shadow: none !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-primary {
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-primary,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__rail {
         position: sticky;
         top: 0;
         z-index: 48;
@@ -466,6 +467,13 @@
         background: color-mix(in srgb, var(--ws-bg, var(--ws-surface)) 92%, transparent);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__main {
+        gap: 0.4rem;
     }
 
     .ws-filing-mob-dl.mk-filing-dataset-detail .ws-filing-retention-policy--compact {

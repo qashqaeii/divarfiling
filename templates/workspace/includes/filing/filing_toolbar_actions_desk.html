@@ -1,16 +1,16 @@
-<div class="fl-toolbar__actions fl-toolbar__actions--desk">
+<div class="ws-filters__actions fl-toolbar__actions fl-toolbar__actions--desk">
     <button type="submit" class="fl-toolbar__apply">
         <i class="fas fa-filter" aria-hidden="true"></i>
-        <span>اعمال فیلترها</span>
+        <span>اعمال</span>
     </button>
     {% if has_filters %}
-    <a href="{% url 'workspace:dataset_list' %}{% if view_mode != 'auto' %}?view={{ view_mode }}{% endif %}" class="fl-toolbar__clear" title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
-        <i class="fas fa-times" aria-hidden="true"></i>
+    <a href="{% url 'workspace:dataset_list' %}{% if view_mode != 'auto' %}?view={{ view_mode }}{% endif %}" class="ws-filters__clear fl-toolbar__clear" title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
+        <i class="fas fa-times" aria-hidden="true"></i><span>پاک‌سازی</span>
     </a>
     {% endif %}
-    <div class="fl-toolbar__view" role="group" aria-label="نمایش">
+    <div class="ws-filters__view fl-toolbar__view" role="group" aria-label="نمایش">
         <span class="fl-toolbar__view-label">نمایش</span>
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="fl-toolbar__view-btn{% if view_mode == 'table' or view_mode == 'auto' %} is-active{% endif %}" title="جدول" aria-label="نمای جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="fl-toolbar__view-btn{% if view_mode == 'grid' %} is-active{% endif %}" title="کارت" aria-label="نمای کارت"><i class="fas fa-th-large" aria-hidden="true"></i></a>
+        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="ws-filters__view-btn fl-toolbar__view-btn{% if view_mode == 'table' or view_mode == 'auto' %} is-active{% endif %}" title="جدول" aria-label="نمای جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="ws-filters__view-btn fl-toolbar__view-btn{% if view_mode == 'grid' %} is-active{% endif %}" title="کارت" aria-label="نمای کارت"><i class="fas fa-th-large" aria-hidden="true"></i></a>
     </div>
 </div>

@@ -189,6 +189,20 @@ def ws_sort_url(filters, field, current_sort='', filter_qs=''):
     return '?' + '&'.join(parts)
 
 
+@register.simple_tag(takes_context=True)
+def ws_query_without(context, *omit_keys):
+    """Querystring فعلی بدون کلیدهای داده‌شده (و بدون page) — برای چیپ حذف فیلتر."""
+    request = context.get('request')
+    if request is None:
+        return ''
+    params = request.GET.copy()
+    for key in omit_keys:
+        if key in params:
+            del params[key]
+    params.pop('page', None)
+    return params.urlencode()
+
+
 @register.inclusion_tag('workspace/includes/amenity_icons.html')
 def amenity_icons(features):
     return {'feat': features or {}}

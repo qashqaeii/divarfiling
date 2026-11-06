@@ -82,7 +82,8 @@ from workspace.services.listing_edit import (
 from workspace.services.filters import (
     active_filter_count, advanced_filter_count, apply_advertiser_signal_filter,
     apply_amenity_filters, apply_listing_filters, apply_value_filter,
-    default_listing_sort, get_neighborhoods, needs_advertiser_signal_filter,
+    default_listing_sort, get_neighborhoods, get_streets, get_streets_qs,
+    needs_advertiser_signal_filter, needs_listing_post_filters,
     get_neighborhoods_qs, parse_filter_params, sort_queryset,
 )
 from workspace.services.formatting import format_toman
@@ -719,9 +720,7 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
                 pass
             value_map[int(r['listing_id'])] = float(score)
 
-        needs_post = any(filters.get(k) for k in (
-            'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
-        )) or needs_advertiser_signal_filter(filters)
+        needs_post = needs_listing_post_filters(filters)
         if needs_post:
             filtered = list(qs)
             if needs_advertiser_signal_filter(filters):
@@ -747,6 +746,8 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
         ctx['advanced_filter_count'] = advanced_filter_count(filters)
         ctx['filters_open'] = self.request.GET.get('filters_open') == '1'
         ctx['neighborhoods'] = get_neighborhoods(dataset)
+        ctx['streets'] = get_streets(dataset)
+        ctx['street_names'] = [s['name'] for s in ctx['streets']]
         ctx['total_count'] = dataset.listings.count()
         ctx['filtered_count'] = paginator.count
         ctx['value_map'] = value_map
@@ -937,9 +938,7 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
 
         value_map = _value_map_for_datasets(datasets)
 
-        needs_post = any(filters.get(k) for k in (
-            'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
-        )) or needs_advertiser_signal_filter(filters)
+        needs_post = needs_listing_post_filters(filters)
         if needs_post:
             filtered = list(qs)
             if needs_advertiser_signal_filter(filters):
@@ -965,6 +964,8 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
         ctx['advanced_filter_count'] = advanced_filter_count(filters)
         ctx['filters_open'] = self.request.GET.get('filters_open') == '1'
         ctx['neighborhoods'] = get_neighborhoods_qs(base_qs)
+        ctx['streets'] = get_streets_qs(base_qs)
+        ctx['street_names'] = [s['name'] for s in ctx['streets']]
         ctx['total_count'] = base_qs.count()
         ctx['filtered_count'] = paginator.count
         ctx['value_map'] = value_map
@@ -1046,6 +1047,17 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
         ctx['show_dataset_column'] = True
         # سازگاری با includeهایی که هنوز dataset می‌خواهند (مثلاً لینک خالی)
         ctx['dataset'] = datasets[0]
+        from workspace.services.dataset_detail_kpi import build_dataset_detail_insight_kpis
+        ctx.update(
+            build_dataset_detail_insight_kpis(
+                listings_qs=Listing.objects.filter(dataset__in=datasets),
+                tx=tx,
+                total_count=total,
+                genuine_count=ctx['genuine_personal_count'],
+                genuine_pct=ctx['genuine_personal_pct'],
+            )
+        )
+        ctx['stats_sheet_title'] = 'آمار ترکیب'
         if not ListingMeta.objects.filter(user=self.request.user, is_favorite=True).exists():
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, self.request.user, 'listings_empty')
@@ -1639,9 +1651,7 @@ def _filter_listings_queryset_for_map(base_qs, datasets, request, *, value_map=N
             _value_map_for_datasets(datasets) if filters.get('value') else {}
         )
 
-    needs_post = any(filters.get(k) for k in (
-        'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value',
-    )) or needs_advertiser_signal_filter(filters)
+    needs_post = needs_listing_post_filters(filters)
     if needs_post:
         filtered = list(qs)
         if needs_advertiser_signal_filter(filters):

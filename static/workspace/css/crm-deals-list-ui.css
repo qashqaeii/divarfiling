@@ -70,6 +70,14 @@
     backdrop-filter: none;
 }
 
+/* Premium language owns chrome via crm-deals-list-controls.css */
+.crm-deals-page .crm-deals-filters--pro.crm-page-filters {
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
 .crm-deals-page .crm-deals-filters-toolbar {
     display: flex;
     align-items: center;
@@ -157,7 +165,7 @@
 
 /* ── Desktop: single horizontal row ── */
 @media (min-width: 769px) {
-    .crm-deals-page .crm-deals-filters.crm-page-filters {
+    .crm-deals-page .crm-deals-filters.crm-page-filters:not(.crm-deals-filters--pro) {
         display: block;
         padding: 0.42rem 0.55rem;
         border-radius: 12px;
@@ -338,7 +346,7 @@
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
-    .crm-deals-page .crm-deals-filters.crm-page-filters {
+    .crm-deals-page .crm-deals-filters.crm-page-filters:not(.crm-deals-filters--pro) {
         padding: 0.45rem 0.55rem;
         border-radius: 14px;
         border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);

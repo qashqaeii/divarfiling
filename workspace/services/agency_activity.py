@@ -24,8 +24,11 @@ EVENT_SPACE_ITEM_PUBLISHED = 'space_item_published'
 
 OBJECT_TYPE_LABELS = {
     'customer': 'مخاطب',
+    'customer_activity': 'مخاطب',
     'property': 'فایل',
+    'property_visit': 'بازدید ملک',
     'deal': 'معامله',
+    'deal_followup': 'معامله',
     'contract': 'قرارداد',
     'dataset': 'فایلینگ',
 }
@@ -35,25 +38,32 @@ def object_type_label(object_type: str) -> str:
     key = (object_type or '').strip().lower()
     if not key:
         return ''
-    return OBJECT_TYPE_LABELS.get(key, key)
+    return OBJECT_TYPE_LABELS.get(key, '')
 
 
 EVENT_TYPE_LABELS = {
     EVENT_CONTACT_CREATED: 'مخاطب جدید',
     EVENT_PROPERTY_CREATED: 'فایل شخصی جدید',
-    EVENT_DATASET_CREATED: 'Dataset جدید',
+    EVENT_DATASET_CREATED: 'فایلینگ جدید',
     EVENT_EXTRACTION_COMPLETED: 'استخراج تکمیل شد',
     EVENT_DEAL_CREATED: 'معامله جدید',
     EVENT_DEAL_STAGE_CHANGED: 'تغییر مرحله معامله',
-    EVENT_FOLLOW_UP: 'پیگیری',
-    EVENT_CALL: 'تماس',
-    EVENT_VISIT: 'بازدید',
+    EVENT_FOLLOW_UP: 'پیگیری مشتری',
+    EVENT_CALL: 'تماس با مشتری',
+    EVENT_VISIT: 'بازدید ملک',
     EVENT_CONTRACT_CREATED: 'قرارداد جدید',
     EVENT_LICENSE_ASSIGNED: 'تخصیص لایسنس',
     EVENT_LICENSE_UNASSIGNED: 'لغو لایسنس',
     EVENT_ADVISOR_DATA_EXPORT: 'خروجی داده مشاور',
     EVENT_SPACE_ITEM_PUBLISHED: 'انتشار در فضای آژانس',
 }
+
+
+def event_type_label(event_type: str) -> str:
+    key = (event_type or '').strip()
+    if not key:
+        return 'رویداد'
+    return EVENT_TYPE_LABELS.get(key, key.replace('_', ' '))
 
 
 def emit_agency_activity(

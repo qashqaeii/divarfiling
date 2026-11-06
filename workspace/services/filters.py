@@ -84,6 +84,7 @@ def parse_filter_params_from_mapping(g) -> Dict[str, Any]:
         'token': str(get('token', '') or '').strip(),
         'desc': str(get('desc', '') or '').strip(),
         'neighborhood': str(get('neighborhood', '') or '').strip(),
+        'street': str(get('street', '') or '').strip(),
         'rooms': rooms,
         'tag': str(get('tag', '') or ''),
         'consultant': str(get('consultant', '') or ''),
@@ -131,15 +132,28 @@ _TOKEN_CONFUSION_PAIRS: Tuple[Tuple[str, str], ...] = (
 )
 
 
+def _normalize_search_text(val: str) -> str:
+    """فقط ارقام فارسی/عربی → لاتین؛ فاصله برای جستجوی عنوان/خیابان حفظ می‌شود."""
+    s = (val or '').strip()
+    for i, d in enumerate('۰۱۲۳۴۵۶۷۸۹'):
+        s = s.replace(d, str(i))
+    for i, d in enumerate('٠١٢٣٤٥٦٧٨٩'):
+        s = s.replace(d, str(i))
+    return s
+
+
 def normalize_listing_search_query(raw: str) -> str:
-    """استخراج شناسه دیوار از لینک یا متن جستجو."""
+    """استخراج شناسه دیوار از لینک، یا متن آزاد جستجو (با حفظ فاصله)."""
     q = str(raw or '').strip()
     if not q:
         return ''
     m = _DIVAR_TOKEN_IN_URL.search(q)
     if m:
         return _normalize_numeric_str(m.group(1))
-    return _normalize_numeric_str(q)
+    compact = _normalize_numeric_str(q)
+    if _looks_like_divar_token(compact):
+        return compact
+    return _normalize_search_text(q)
 
 
 def _looks_like_divar_token(term: str) -> bool:
@@ -181,13 +195,17 @@ def token_field_search_q(term: str) -> Q:
 
 
 def listing_search_q(term: str) -> Q:
-    """جستجوی متن آزاد: عنوان، شناسه آگهی، لینک دیوار."""
+    """جستجوی متن آزاد: عنوان، شناسه، لینک، محله، شهر، خیابان."""
     q = normalize_listing_search_query(term)
     if not q:
         return Q()
     return (
         Q(title__icontains=q)
         | Q(link__icontains=q)
+        | Q(neighborhood__icontains=q)
+        | Q(city__icontains=q)
+        | Q(data__مکان_خیابان__icontains=q)
+        | Q(data__خیابان__icontains=q)
         | token_field_search_q(q)
     )
 
@@ -201,6 +219,7 @@ def apply_listing_filters(qs: QuerySet, filters: Dict, user) -> QuerySet:
         qs = qs.filter(description__icontains=filters['desc'])
     if filters.get('neighborhood'):
         qs = qs.filter(neighborhood__icontains=filters['neighborhood'])
+    # street — در apply_street_filter (نرمال‌سازی مکان_خیابان / خیابان)
     # rooms — در apply_rooms_filter (هم‌راستا با extract_listing_features)
 
     if filters.get('area_min') is not None:
@@ -271,9 +290,27 @@ def apply_rooms_filter(listings: List, rooms_filter: str) -> List:
     ]
 
 
+def apply_street_filter(listings: List, street: str) -> List:
+    """فیلتر خیابان با نرمال‌سازی همان منطق نمایش کارت."""
+    from workspace.services.listing_street_data import (
+        listing_street_for_display,
+        normalize_street_storage_value,
+    )
+
+    needle = normalize_street_storage_value(street)
+    if not needle:
+        return listings
+    return [
+        lst for lst in listings
+        if listing_street_for_display(lst) == needle
+    ]
+
+
 def apply_amenity_filters(listings: List, filters: Dict) -> List:
     """فیلتر امکانات، سال ساخت و اتاق (از data JSON)."""
     result = list(listings)
+    if filters.get('street'):
+        result = apply_street_filter(result, filters['street'])
     if filters.get('rooms'):
         result = apply_rooms_filter(result, filters['rooms'])
     for key in ('elevator', 'parking', 'storage'):
@@ -331,6 +368,43 @@ def get_neighborhoods_qs(listings_qs: QuerySet) -> List[str]:
         .distinct()
         .order_by('neighborhood')[:80]
     )
+
+
+def get_streets(dataset) -> List[Dict[str, Any]]:
+    return get_streets_qs(dataset.listings.all())
+
+
+def get_streets_qs(listings_qs: QuerySet, *, limit: int = 80) -> List[Dict[str, Any]]:
+    """خیابان‌های یکتا با تعداد آگهی از Listing.data (مکان_خیابان / خیابان)."""
+    from workspace.services.listing_street_data import (
+        normalize_street_storage_value,
+        sync_street_keys_in_listing_data,
+    )
+
+    counts: Dict[str, int] = {}
+    for data in listings_qs.values_list('data', flat=True).iterator(chunk_size=400):
+        if not isinstance(data, dict):
+            continue
+        synced = sync_street_keys_in_listing_data(data)
+        street = normalize_street_storage_value(synced.get('مکان_خیابان'))
+        if street:
+            counts[street] = counts.get(street, 0) + 1
+    items = [
+        {'name': name, 'count': count}
+        for name, count in counts.items()
+    ]
+    items.sort(key=lambda row: row['name'])
+    return items[:limit]
+
+
+_LISTING_POST_FILTER_KEYS = frozenset({
+    'rooms', 'elevator', 'parking', 'storage', 'year_min', 'year_max', 'value', 'street',
+})
+
+
+def needs_listing_post_filters(filters: Dict) -> bool:
+    """آیا بعد از queryset باید فیلتر پایتون (امکانات/خیابان/ارزش/…) اعمال شود؟"""
+    return any(filters.get(k) for k in _LISTING_POST_FILTER_KEYS) or needs_advertiser_signal_filter(filters)
 
 
 def get_user_dataset_neighborhoods(
@@ -494,11 +568,13 @@ def active_filter_count(filters: Dict) -> int:
     return n
 
 
-_BASIC_FILTER_KEYS = frozenset({'q', 'neighborhood', 'consultant', 'sort', 'page', 'filters_open'})
+_BASIC_FILTER_KEYS = frozenset({
+    'q', 'neighborhood', 'street', 'consultant', 'sort', 'page', 'filters_open',
+})
 
 
 def advanced_filter_count(filters: Dict) -> int:
-    """تعداد فیلترهای داخل پنل بازشونده (غیر از جستجو و محله و آگهی‌دهنده)."""
+    """تعداد فیلترهای داخل پنل بازشونده (غیر از جستجو و فیلترهای ریل اصلی)."""
     n = 0
     for k, v in filters.items():
         if k in _BASIC_FILTER_KEYS:

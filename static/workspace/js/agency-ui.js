@@ -386,9 +386,11 @@
     var roleF = document.getElementById('agencyMemberRoleFilter');
     var licenseF = document.getElementById('agencyMemberLicenseFilter');
     var sortF = document.getElementById('agencyMemberSort');
-    var clearBtn = document.getElementById('agencyMemberFilterClear');
+    var clearBtns = document.querySelectorAll('[data-agency-members-filter-reset]');
+    var searchClear = document.getElementById('agencyMemberSearchClear');
     var badge = document.getElementById('agencyMemberFilterBadge');
     var empty = document.getElementById('agencyMembersFilterEmpty');
+    var openBtn = document.getElementById('agencyMemberFilterOpen');
     if (!search) return;
 
     guardMemberSearchInput(search);
@@ -409,9 +411,11 @@
     }
 
     function updateClearBtn() {
-      if (clearBtn) clearBtn.hidden = !hasActiveFilters();
+      var active = hasActiveFilters();
+      var n = activeFilterCount();
+      clearBtns.forEach(function (btn) { btn.hidden = !active; });
+      if (searchClear) searchClear.hidden = !String(search.value || '').trim();
       if (badge) {
-        var n = activeFilterCount();
         if (n > 0) {
           badge.hidden = false;
           badge.textContent = String(n);
@@ -419,6 +423,7 @@
           badge.hidden = true;
         }
       }
+      if (openBtn) openBtn.classList.toggle('is-active', n > 0);
     }
 
     function checkEmpty() {
@@ -451,10 +456,22 @@
     function resetFilters() {
       userEdited = false;
       search.value = '';
-      if (statusF) statusF.value = '';
-      if (roleF) roleF.value = '';
-      if (licenseF) licenseF.value = '';
-      if (sortF) sortF.value = 'name';
+      if (statusF) {
+        statusF.value = '';
+        statusF.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (roleF) {
+        roleF.value = '';
+        roleF.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (licenseF) {
+        licenseF.value = '';
+        licenseF.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (sortF) {
+        sortF.value = 'name';
+        sortF.dispatchEvent(new Event('change', { bubbles: true }));
+      }
       filterMembers();
       search.focus();
     }
@@ -475,7 +492,17 @@
     if (roleF) roleF.addEventListener('change', filterMembers);
     if (licenseF) licenseF.addEventListener('change', filterMembers);
     if (sortF) sortF.addEventListener('change', filterMembers);
-    if (clearBtn) clearBtn.addEventListener('click', resetFilters);
+    clearBtns.forEach(function (btn) {
+      btn.addEventListener('click', resetFilters);
+    });
+    if (searchClear) {
+      searchClear.addEventListener('click', function () {
+        userEdited = true;
+        search.value = '';
+        filterMembers();
+        search.focus();
+      });
+    }
 
     search.value = '';
     filterMembers();

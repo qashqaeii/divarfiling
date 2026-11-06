@@ -5,260 +5,41 @@
 {% block mobile_bar_title %}آگهی‌های چند فایل{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/ws-ds-mobile.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-analyze-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-listing-filters.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=2">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-table-compact.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listings.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=22">
 {% endblock %}
 
 {% block content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
-<div class="mk-page mk-filing-page mk-listing-page mk-multi-listings-page ws-ds-mobile">
+<div class="mk-page mk-filing-pro mk-filing-mobile mk-filing-datasets mk-filing-dataset-detail mk-filing-listings-pro mk-listing-page mk-multi-listings-page ws-ds-mobile ws-filing-mob-dl">
 
-    <section class="mk-ds-command mk-ds-command--{{ tx.mode|default:'other' }} mk-multi-hero" aria-label="خلاصه انتخاب">
-        <div class="ws-ds-mob-stage" aria-hidden="true">
-            <span class="ws-ds-mob-stage__glow"></span>
-            <span class="ws-ds-mob-stage__grid"></span>
-            <span class="ws-ds-mob-stage__ribbon"></span>
-        </div>
+    {% include 'workspace/includes/filing/filing_multi_listings_header.html' %}
+    {% include 'workspace/includes/filing/filing_dataset_detail_kpi.html' %}
+    {% include 'workspace/includes/filing/filing_multi_file_layers.html' %}
 
-        <div class="mk-ds-mobile-shell">
-            <header class="mk-ds-mobile-bar">
-                <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-mobile-back" aria-label="بازگشت به فایلینگ">
-                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                </a>
-                <h1 class="mk-ds-mobile-title">مقایسه {{ dataset_count }} فایل</h1>
-                <a href="{% url 'workspace:multi_map' %}?{% if filter_qs_noview %}{{ filter_qs_noview }}{% else %}dataset_ids={{ dataset_ids_param }}{% endif %}" class="mk-ds-mobile-primary mk-multi-cta" title="نقشه آگهی‌ها">
-                    <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                    <span>نقشه</span>
-                </a>
-            </header>
-
-            <div class="mk-ds-mobile-meta">
-                <span class="mk-ds-mobile-meta-count{% if is_listing_filtered %} is-filtered{% endif %}">
-                    <strong>{{ filtered_count|intcomma }}</strong>
-                    <span class="mk-ds-mobile-meta-sep">از</span>
-                    {{ total_count|intcomma }}
-                    <span class="mk-ds-mobile-meta-lbl">{% if is_listing_filtered %}فیلترشده{% else %}آگهی{% endif %}</span>
-                </span>
-                <span class="mk-ds-mobile-meta-chip mk-multi-layer-chip">
-                    <i class="fas fa-layer-group" aria-hidden="true"></i>{{ dataset_count }} لایه
-                </span>
-                <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
-                {% if filter_count %}<span class="mk-ds-mobile-meta-chip mk-ds-mobile-meta-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
-            </div>
-
-            <div class="ws-ds-mob-quick" aria-label="میانبرها">
-                <button type="button" class="ws-ds-mob-quick__chip ws-ds-mob-quick__chip--primary" data-ds-filter-jump>
-                    <i class="fas fa-sliders" aria-hidden="true"></i> فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}
-                </button>
-                <a href="{% url 'workspace:multi_map' %}?{% if filter_qs_noview %}{{ filter_qs_noview }}{% else %}dataset_ids={{ dataset_ids_param }}{% endif %}" class="ws-ds-mob-quick__chip">
-                    <i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه
-                </a>
-                <button type="button" class="ws-ds-mob-quick__chip" data-ds-filter-jump>
-                    <i class="fas fa-search" aria-hidden="true"></i> جستجو
-                </button>
-                <a href="{% url 'workspace:dataset_list' %}" class="ws-ds-mob-quick__chip">
-                    <i class="fas fa-folder-open" aria-hidden="true"></i> فایلینگ
-                </a>
-            </div>
-
-            <div class="mk-multi-file-rail" aria-label="فایل‌های انتخاب‌شده">
-                {% for ds in datasets %}
-                <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-multi-file-chip" style="--i: {{ forloop.counter0 }};" title="{{ ds.name }}">
-                    <span class="mk-multi-file-chip__idx" aria-hidden="true">{{ forloop.counter }}</span>
-                    <span class="mk-multi-file-chip__body">
-                        <span class="mk-multi-file-chip__name">{{ ds.name|truncatechars:20 }}</span>
-                        <span class="mk-multi-file-chip__meta">
-                            {% if ds.city %}{{ ds.city|truncatechars:10 }} · {% endif %}{{ ds.row_count|intcomma }} آگهی
-                        </span>
-                    </span>
-                </a>
-                {% endfor %}
-            </div>
-
-            <details class="mk-ds-mobile-stats">
-                <summary class="mk-ds-mobile-stats-toggle"><i class="fas fa-chart-pie" aria-hidden="true"></i> آمار ترکیب</summary>
-                <div class="mk-ds-mobile-stats-body">
-                    <div class="mk-ds-mobile-kpis">
-                        <div class="mk-ds-mobile-kpi"><strong>{{ filtered_count|intcomma }}</strong><span>در نمایش</span></div>
-                        <div class="mk-ds-mobile-kpi"><strong>{{ total_count|intcomma }}</strong><span>کل آگهی</span></div>
-                        <div class="mk-ds-mobile-kpi"><strong>{{ consultant_count|intcomma }}</strong><span>مشاور {{ consultant_pct }}٪</span></div>
-                        <div class="mk-ds-mobile-kpi"><strong>{{ personal_count|intcomma }}</strong><span>شخصی {{ personal_pct }}٪</span></div>
-                    </div>
-                    {% if total_count %}
-                    <div class="mk-ds-mix mk-ds-mix--compact" aria-label="ترکیب آگهی‌دهنده">
-                        <div class="mk-ds-mix-track" role="presentation" style="grid-template-columns: {% if genuine_personal_count %}{{ genuine_personal_count }}fr {% endif %}{% if disguised_consultant_count %}{{ disguised_consultant_count }}fr {% endif %}{% if personal_other_count %}{{ personal_other_count }}fr {% endif %}{% if consultant_count %}{{ consultant_count }}fr{% endif %};">
-                            {% if genuine_personal_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-genuine"></span>{% endif %}
-                            {% if disguised_consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-disguised"></span>{% endif %}
-                            {% if personal_other_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-personal"></span>{% endif %}
-                            {% if consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-consultant"></span>{% endif %}
-                        </div>
-                        <div class="mk-ds-mix-legend">
-                            {% if genuine_personal_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-genuine" aria-hidden="true"></i>مالک</span>{% endif %}
-                            {% if disguised_consultant_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-disguised" aria-hidden="true"></i>پنهان</span>{% endif %}
-                            <span><i class="mk-ds-mix-dot mk-ds-mix-dot-consultant" aria-hidden="true"></i>مشاور</span>
-                            {% if personal_other_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-personal" aria-hidden="true"></i>شخصی</span>{% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </details>
-        </div>
-
-        <div class="mk-ds-command-desk">
-            <div class="mk-ds-command-top">
-                <nav class="mk-ds-crumb" aria-label="مسیر">
-                    <a href="{% url 'workspace:dataset_list' %}" class="mk-ds-crumb-link mk-ds-crumb-back">
-                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                        <span>فایلینگ</span>
-                    </a>
-                    <span class="mk-ds-crumb-sep mk-ds-crumb-sep--desk" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                    <span class="mk-ds-crumb-current mk-ds-crumb-sep--desk">آگهی‌های چند فایل</span>
-                </nav>
-                <div class="mk-ds-command-actions" role="toolbar" aria-label="عملیات">
-                    <a href="{% url 'workspace:multi_map' %}?{% if filter_qs_noview %}{{ filter_qs_noview }}{% else %}dataset_ids={{ dataset_ids_param }}{% endif %}" class="mk-ds-action mk-ds-action-cta mk-multi-cta" title="نقشه آگهی‌ها">
-                        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                        <span>نقشه</span>
-                    </a>
-                    <div class="mk-ds-action-group" role="group" aria-label="فیلتر">
-                        <button type="button" class="mk-ds-action" data-ds-filter-jump title="فیلتر آگهی‌ها">
-                            <i class="fas fa-sliders" aria-hidden="true"></i>
-                            <span>فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mk-ds-command-main">
-                <div class="mk-ds-command-identity">
-                    <div class="mk-ds-command-icon mk-multi-hero-icon" aria-hidden="true">
-                        <i class="fas fa-layer-group"></i>
-                        <em class="mk-multi-hero-icon__count">{{ dataset_count }}</em>
-                    </div>
-                    <div class="mk-ds-command-text">
-                        <div class="mk-ds-command-title-row">
-                            <h1 class="mk-ds-command-title">آگهی‌های {{ dataset_count }} فایل</h1>
-                            <span class="mk-ds-coverage{% if is_listing_filtered %} is-filtered{% endif %}"
-                                  title="{% if is_listing_filtered %}نمایش فیلترشده{% else %}همه آگهی‌ها{% endif %}"
-                                  aria-label="{{ filtered_count|intcomma }} از {{ total_count|intcomma }} آگهی">
-                                <span class="mk-ds-coverage-bar" style="--mk-filter-pct: {{ filter_pct }};" aria-hidden="true"></span>
-                                <strong>{{ filtered_count|intcomma }}</strong>
-                                <span class="mk-ds-coverage-sep">از</span>
-                                <span>{{ total_count|intcomma }}</span>
-                                <span class="mk-ds-coverage-lbl">{% if is_listing_filtered %}فیلترشده{% else %}همه آگهی{% endif %}</span>
-                            </span>
-                        </div>
-                        <div class="mk-ds-command-chips">
-                            <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
-                            <span class="mk-ds-chip"><i class="fas fa-layer-group" aria-hidden="true"></i>{{ dataset_count }} لایه فایل</span>
-                            <span class="mk-ds-chip"><i class="fas fa-list" aria-hidden="true"></i>{{ filtered_count|intcomma }} در نمایش</span>
-                            {% if filter_count %}<span class="mk-ds-chip mk-ds-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mk-ds-insight" aria-label="آمار ترکیب">
-                <div class="mk-ds-mix mk-ds-mix--insight" aria-label="ترکیب آگهی‌دهنده">
-                    <div class="mk-ds-mix-head">
-                        <span class="mk-ds-mix-title">ترکیب آگهی‌دهنده</span>
-                        <span class="mk-ds-mix-counts">
-                            {% if total_count %}
-                            {% if genuine_personal_count %}{{ genuine_personal_count|intcomma }} مالک واقعی{% if disguised_consultant_count or consultant_count or personal_other_count %} · {% endif %}{% endif %}
-                            {% if disguised_consultant_count %}{{ disguised_consultant_count|intcomma }} مشاور پنهان{% if consultant_count or personal_other_count %} · {% endif %}{% endif %}
-                            {{ consultant_count|intcomma }} مشاور{% if personal_other_count %} · {{ personal_other_count|intcomma }} شخصی{% endif %}
-                            {% else %}
-                            بدون آگهی
-                            {% endif %}
-                        </span>
-                    </div>
-                    {% if total_count %}
-                    <div class="mk-ds-mix-track" role="presentation" style="grid-template-columns: {% if genuine_personal_count %}{{ genuine_personal_count }}fr {% endif %}{% if disguised_consultant_count %}{{ disguised_consultant_count }}fr {% endif %}{% if personal_other_count %}{{ personal_other_count }}fr {% endif %}{% if consultant_count %}{{ consultant_count }}fr{% endif %};">
-                        {% if genuine_personal_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-genuine" title="مالک واقعی {{ genuine_personal_count|intcomma }} · {{ genuine_personal_pct }}٪"></span>{% endif %}
-                        {% if disguised_consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-disguised" title="مشاور پنهان {{ disguised_consultant_count|intcomma }} · {{ disguised_consultant_pct }}٪"></span>{% endif %}
-                        {% if personal_other_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-personal" title="شخصی {{ personal_other_count|intcomma }} · {{ personal_other_pct }}٪"></span>{% endif %}
-                        {% if consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-consultant" title="مشاور {{ consultant_count|intcomma }} · {{ consultant_pct }}٪"></span>{% endif %}
-                    </div>
-                    {% else %}
-                    <div class="mk-ds-mix-track mk-ds-mix-track--empty" role="presentation" aria-hidden="true"></div>
-                    {% endif %}
-                    <div class="mk-ds-mix-legend">
-                        {% if genuine_personal_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-genuine" aria-hidden="true"></i>مالک واقعی</span>{% endif %}
-                        {% if disguised_consultant_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-disguised" aria-hidden="true"></i>مشاور پنهان</span>{% endif %}
-                        <span><i class="mk-ds-mix-dot mk-ds-mix-dot-consultant" aria-hidden="true"></i>مشاور</span>
-                        {% if personal_other_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-personal" aria-hidden="true"></i>شخصی</span>{% endif %}
-                    </div>
-                </div>
-                <div class="mk-ds-metrics">
-                    <div class="mk-ds-metric">
-                        <strong>{{ filtered_count|intcomma }}</strong>
-                        <span>در نمایش</span>
-                    </div>
-                    <div class="mk-ds-metric">
-                        <strong>{{ total_count|intcomma }}</strong>
-                        <span>کل آگهی</span>
-                    </div>
-                    <div class="mk-ds-metric">
-                        <strong>{{ dataset_count }}</strong>
-                        <span>فایل</span>
-                    </div>
-                    <div class="mk-ds-metric">
-                        <strong>{{ consultant_count|intcomma }}</strong>
-                        <span>مشاور <em>{{ consultant_pct }}٪</em></span>
-                    </div>
-                    {% if filter_count %}
-                    <div class="mk-ds-metric mk-ds-metric--accent">
-                        <strong>{{ filter_count }}</strong>
-                        <span>فیلتر فعال</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="mk-multi-file-stack" aria-label="فایل‌های انتخاب‌شده">
-                <div class="mk-multi-file-stack__head">
-                    <span class="mk-multi-file-stack__title"><i class="fas fa-layer-group" aria-hidden="true"></i> لایه‌های فایل</span>
-                    <span class="mk-multi-file-stack__hint">برای باز کردن هر فایل روی آن کلیک کنید</span>
-                </div>
-                <div class="mk-multi-file-stack__grid">
-                    {% for ds in datasets %}
-                    <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-multi-file-card" style="--i: {{ forloop.counter0 }};" title="{{ ds.name }}">
-                        <span class="mk-multi-file-card__idx" aria-hidden="true">{{ forloop.counter }}</span>
-                        <span class="mk-multi-file-card__body">
-                            <span class="mk-multi-file-card__name">{{ ds.name|truncatechars:36 }}</span>
-                            <span class="mk-multi-file-card__meta">
-                                {% if ds.city %}<i class="fas fa-location-dot" aria-hidden="true"></i>{{ ds.city }}{% if ds.district %} · {{ ds.district }}{% endif %} · {% endif %}
-                                <strong>{{ ds.row_count|intcomma }}</strong> آگهی
-                                {% if ds.transaction_type %} · {{ ds.transaction_type }}{% endif %}
-                            </span>
-                        </span>
-                        <i class="fas fa-chevron-left mk-multi-file-card__go" aria-hidden="true"></i>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="mk-filter-shell fl-dd-filter" id="wsFilterShell">
+    <section class="ws-filters ws-filters--rail fl-listing-filters fl-dd-filter mk-filter-shell" id="wsFilterShell" aria-label="جستجو و فیلتر آگهی‌ها" data-fl-tour="filing-multi-filter">
         {% include 'workspace/includes/listing_filter_bar.html' with filter_form_action=filter_form_action %}
     </section>
 
-    <section class="ws-glass-panel mk-panel mk-panel-flush mk-listing-panel" data-list-view="{{ listing_view_mode|default:'grid' }}">
-        <header class="ws-glass-head mk-panel-head mk-panel-head-table">
-            <div class="mk-panel-head-text">
+    <section class="fl-panel fl-dd-panel mk-listing-panel" data-list-view="{{ listing_view_mode|default:'grid' }}" data-fl-tour="filing-multi-listings">
+        <header class="fl-panel__head">
+            <div class="fl-panel__title">
                 <h2>لیست آگهی‌ها</h2>
-                <span class="mk-panel-count">{{ filtered_count|intcomma }} آگهی دیوار<span class="mk-panel-count-sep"> · </span><span class="mk-panel-count-hint">ستون پوشه استخراج مشخص می‌کند آگهی از کدام استخراج است</span></span>
+                <span class="fl-panel__count">{{ filtered_count|intcomma }} آگهی · ستون فایل مشخص می‌کند آگهی از کدام استخراج است</span>
             </div>
             <div class="mk-filing-view-toggle mk-listing-view-toggle" role="group" aria-label="نحوه نمایش">
                 <a href="?{% if filter_qs_noview %}{{ filter_qs_noview }}&{% endif %}view=table" class="mk-filing-view-btn mk-filing-view-btn--table{% if listing_view_mode == 'table' %} is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
@@ -311,26 +92,7 @@
         {% mk_pagination page_obj page_query aria_label="صفحه‌بندی آگهی‌ها" %}
     </section>
 
-    <nav class="ws-ds-mob-dock" aria-label="عملیات سریع موبایل">
-        <div class="ws-ds-mob-dock__inner">
-            <button type="button" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--filter{% if filter_count %} has-active{% endif %}" data-ds-filter-jump title="فیلتر آگهی‌ها">
-                <i class="fas fa-sliders" aria-hidden="true"></i>
-                <span>فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}</span>
-            </button>
-            <a href="{% url 'workspace:multi_map' %}?{% if filter_qs_noview %}{{ filter_qs_noview }}{% else %}dataset_ids={{ dataset_ids_param }}{% endif %}" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--map" title="نقشه آگهی‌ها">
-                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                <span>نقشه</span>
-            </a>
-            <a href="{% url 'workspace:dataset_list' %}" class="ws-ds-mob-dock__btn" title="بازگشت به فایلینگ">
-                <i class="fas fa-folder-open" aria-hidden="true"></i>
-                <span>فایلینگ</span>
-            </a>
-            <button type="button" class="ws-ds-mob-dock__btn ws-ds-mob-dock__btn--primary" data-ds-filter-jump title="جستجو و فیلتر">
-                <i class="fas fa-search" aria-hidden="true"></i>
-                <span>جستجو</span>
-            </button>
-        </div>
-    </nav>
+    {% include 'workspace/includes/filing/filing_dataset_detail_stats_sheet.html' %}
 </div>
 {% endblock %}
 
@@ -341,23 +103,29 @@
 {% block extra_js %}
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/listing-cards.js' %}?v=1"></script>
-<script src="{% static 'workspace/js/filing-mobile.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=10"></script>
+<script src="{% static 'workspace/js/ws-page-filters.js' %}?v=4"></script>
 <script>
 (function () {
     const advToggle = document.getElementById('wsAdvToggle');
+    const advToggleMob = document.getElementById('wsAdvToggleMob');
     const advPanel = document.getElementById('wsAdvPanel');
     const filtersOpenField = document.getElementById('filtersOpenField');
     const filterShell = document.getElementById('wsFilterShell');
+    const desktop = window.matchMedia('(min-width: 768px)');
 
     function setFilterPanel(open) {
-        if (!advPanel || !advToggle) return;
+        if (!advPanel) return;
         if (open) {
             advPanel.removeAttribute('hidden');
         } else {
             advPanel.setAttribute('hidden', '');
         }
-        advToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         advPanel.classList.toggle('is-open', open);
+        advToggle?.classList.toggle('is-open', open);
+        advToggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        advToggleMob?.classList.toggle('is-open', open);
+        advToggleMob?.setAttribute('aria-expanded', open ? 'true' : 'false');
         filterShell?.classList.toggle('mk-filter-shell-open', open);
         filterShell?.classList.toggle('fl-dd-filter-open', open);
         if (filtersOpenField) filtersOpenField.value = open ? '1' : '0';
@@ -366,17 +134,26 @@
         }
     }
 
+    advToggle?.addEventListener('click', function () {
+        setFilterPanel(advPanel.hidden);
+    });
+    advToggleMob?.addEventListener('click', function (e) {
+        if (!desktop.matches) {
+            e.preventDefault();
+            setFilterPanel(!filterShell?.classList.contains('fl-dd-filter-open'));
+            return;
+        }
+        setFilterPanel(advPanel.hidden);
+    });
     window.__wsCloseFilingFilter = function () {
         setFilterPanel(false);
     };
 
-    advToggle?.addEventListener('click', function () {
-        setFilterPanel(advPanel.hidden);
-    });
-    document.getElementById('wsAdvToggleMob')?.addEventListener('click', function () {
-        setFilterPanel(advPanel.hidden);
-    });
-    if (advPanel && !advPanel.hidden) setFilterPanel(true);
+    if (desktop.matches) {
+        if (advPanel && !advPanel.hidden) setFilterPanel(true);
+    } else {
+        setFilterPanel(false);
+    }
 
     initListingEdit({
         editUrlTemplate: '/workspace/datasets/__DATASET__/listings/__LISTING__/edit/',
@@ -401,6 +178,16 @@
     document.querySelectorAll('[data-ds-filter-jump]').forEach(function (btn) {
         btn.addEventListener('click', function () { jumpToFilters(true); });
     });
+
+    const multiMore = document.getElementById('mkMultiMobileMore');
+    if (multiMore) {
+        multiMore.addEventListener('toggle', function () {
+            if (!multiMore.open) return;
+            document.querySelectorAll('.fl-dd-mob-more[open]').forEach(function (other) {
+                if (other !== multiMore) other.removeAttribute('open');
+            });
+        });
+    }
 })();
 </script>
 {% include 'workspace/academy/includes/academy_assets_js.html' %}

@@ -11,14 +11,16 @@
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=13">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-stages-drawer.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-journey.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-path.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-mobile-closure.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-mobile-closure.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-controls.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -61,7 +63,7 @@
     {% endif %}
 
     <div class="crm-shell-body crm-deals-body">
-        <form method="get" class="crm-deals-filters crm-page-filters" id="crmDealFilters">
+        <form method="get" class="ws-filters ws-filters--rail crm-deals-filters crm-deals-filters--pro crm-page-filters" id="crmDealFilters">
             <input type="hidden" name="view" value="{{ view_mode }}">
             {% if request.GET.bucket %}<input type="hidden" name="bucket" value="{{ request.GET.bucket }}">{% endif %}
 
@@ -87,9 +89,10 @@
                         </div>
                     </details>
                 </div>
-                <label class="crm-deals-search crm-deals-search--mob-row">
+                <label class="ws-filters__search crm-deals-search crm-deals-search--mob-row">
                     <i class="fas fa-search" aria-hidden="true"></i>
-                    <input type="search" name="q" value="{{ request.GET.q }}" class="crm-deals-q-mob" placeholder="جستجو در معاملات…" autocomplete="off" aria-label="جستجو در معاملات">
+                    <input type="search" value="{{ request.GET.q }}" class="crm-deals-q-mob" id="crmDealsSearchMob" placeholder="جستجو در معاملات…" autocomplete="off" aria-label="جستجو در معاملات" data-deals-search-mirror="mob">
+                    <button type="button" class="ws-filters__search-clear" id="crmDealsSearchMobClear" data-ws-clear-bound="1" data-bound="1" aria-label="پاک کردن جستجو"{% if not request.GET.q %} hidden{% endif %}><i class="fas fa-times" aria-hidden="true"></i></button>
                 </label>
                 <div class="crm-deals-mob-toolbar-actions">
                     <button type="button" class="crm-deals-mob-new-deal" data-drawer-open="drawer-deal" title="معامله جدید" aria-label="معامله جدید">
@@ -97,14 +100,15 @@
                         <span class="crm-deals-mob-new-deal__label">معامله جدید</span>
                     </button>
                     <button type="button"
-                            class="crm-deals-mob-filter-open"
+                            class="ws-filters__filter-btn crm-deals-mob-filter-open{% if request.GET.stage or request.GET.sort and request.GET.sort != '-updated_at' %} is-active{% endif %}"
                             id="crmDealsFilterOpen"
                             aria-expanded="false"
                             aria-controls="crmDealsFilterPanel"
                             title="فیلترها"
                             aria-label="فیلترها">
-                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        <i class="fas fa-sliders" aria-hidden="true"></i>
                         <span class="crm-deals-mob-filter-open__label">فیلترها</span>
+                        {% if request.GET.stage or request.GET.sort and request.GET.sort != '-updated_at' %}<span class="ws-filters__filter-badge" aria-hidden="true"></span>{% endif %}
                         {% if request.GET.sort and request.GET.sort != '-updated_at' %}<em class="crm-deals-mob-filter-count" aria-label="۱ فیلتر فعال">{{ 1|to_persian_digits }}</em>{% endif %}
                     </button>
                     <div class="crm-deals-view-toggle crm-deals-view-toggle--mob crm-deals-view-segment" role="tablist" aria-label="نمای نمایش">
@@ -178,40 +182,77 @@
                 {% endif %}
             </div>
 
-            <div class="crm-deals-desk-filter-row">
-                <label class="crm-deals-search crm-deals-search--desk">
-                    {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی معامله، مخاطب یا ملک..." autocomplete="off" aria-label="جستجو" class="crm-deals-q-desk">
+            <div class="ws-filters__rail crm-deals-desk-filter-row">
+                <label class="ws-filters__search crm-deals-search crm-deals-search--desk">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی معامله، مخاطب یا ملک…" autocomplete="off" aria-label="جستجو در معاملات" class="crm-deals-q-desk" id="crmDealsSearchInput" data-deals-search-mirror="desk" data-ws-search-debounce="420">
+                    <button type="button" class="ws-filters__search-clear" id="crmDealsSearchClear" data-ws-clear-bound="1" data-bound="1" aria-label="پاک کردن جستجو"{% if not request.GET.q %} hidden{% endif %}><i class="fas fa-times" aria-hidden="true"></i></button>
                 </label>
-                <details class="crm-deals-filter-expand{% if request.GET.stage or request.GET.sort %} is-active{% endif %}" id="crmDealsFilterDetails" open>
-                    <summary class="crm-deals-mob-filter-trigger" id="crmDealsFilterToggle" aria-hidden="true"></summary>
-                    <div class="crm-deals-filters-group crm-deals-desk-filter-fields" id="crmDealsFilterDeskFields">
-                        <select name="stage" class="crm-deals-select crm-deals-select--stage crm-deals-desk-select" aria-label="مرحله" onchange="this.form.submit()">
-                            <option value="">همه مراحل</option>
-                            {% for s in deal_stages %}<option value="{{ s }}" {% if request.GET.stage == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-                        </select>
-                        <select name="sort" class="crm-deals-select crm-deals-select--sort crm-deals-desk-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
-                            <option value="-updated_at" {% if request.GET.sort == '-updated_at' or not request.GET.sort %}selected{% endif %}>جدیدترین</option>
-                            <option value="updated_at" {% if request.GET.sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
-                            <option value="-value" {% if request.GET.sort == '-value' %}selected{% endif %}>بیشترین ارزش</option>
-                            <option value="value" {% if request.GET.sort == 'value' %}selected{% endif %}>کمترین ارزش</option>
-                            <option value="expected_close_date" {% if request.GET.sort == 'expected_close_date' %}selected{% endif %}>نزدیک‌ترین بستن</option>
-                            <option value="-expected_close_date" {% if request.GET.sort == '-expected_close_date' %}selected{% endif %}>دورترین بستن</option>
-                            <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>عنوان A-Z</option>
-                        </select>
-                    </div>
-                </details>
-                <div class="crm-deals-filter-actions">
+
+                <div class="ws-filters__fields crm-deals-filters-group crm-deals-desk-filter-fields{% if request.GET.stage or request.GET.sort and request.GET.sort != '-updated_at' %} is-filtered{% endif %}" id="crmDealsFilterDeskFields">
+                    <select name="stage" class="ws-filters__select crm-deals-select crm-deals-select--stage crm-deals-desk-select{% if request.GET.stage %} is-active{% endif %}" aria-label="مرحله" onchange="this.form.submit()">
+                        <option value="">مرحله</option>
+                        {% for s in deal_stages %}<option value="{{ s }}" {% if request.GET.stage == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                    </select>
+                    <select name="sort" class="ws-filters__select crm-deals-select crm-deals-select--sort crm-deals-desk-select{% if request.GET.sort and request.GET.sort != '-updated_at' %} is-active{% endif %}" aria-label="مرتب‌سازی" onchange="this.form.submit()">
+                        <option value="-updated_at" {% if request.GET.sort == '-updated_at' or not request.GET.sort %}selected{% endif %}>جدیدترین</option>
+                        <option value="updated_at" {% if request.GET.sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
+                        <option value="-value" {% if request.GET.sort == '-value' %}selected{% endif %}>بیشترین ارزش</option>
+                        <option value="value" {% if request.GET.sort == 'value' %}selected{% endif %}>کمترین ارزش</option>
+                        <option value="expected_close_date" {% if request.GET.sort == 'expected_close_date' %}selected{% endif %}>نزدیک‌ترین بستن</option>
+                        <option value="-expected_close_date" {% if request.GET.sort == '-expected_close_date' %}selected{% endif %}>دورترین بستن</option>
+                        <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
+                    </select>
+                </div>
+
+                <div class="ws-filters__actions crm-deals-filter-actions">
                     {% include 'workspace/crm/includes/saved_filters.html' %}
-                    {% if request.GET.q or request.GET.stage or request.GET.bucket %}
-                    <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر"><i class="fas fa-times" aria-hidden="true"></i></a>
+                    {% if request.GET.q or request.GET.stage or request.GET.bucket or request.GET.sort and request.GET.sort != '-updated_at' %}
+                    <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="ws-filters__clear" title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
+                        <i class="fas fa-times" aria-hidden="true"></i><span>پاک‌سازی</span>
+                    </a>
                     {% endif %}
-                    <div class="crm-deals-view-toggle crm-deals-view-toggle--desk" role="tablist" aria-label="نمای نمایش">
-                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                    <div class="ws-filters__view crm-deals-view-toggle crm-deals-view-toggle--desk" role="tablist" aria-label="نمای نمایش">
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="ws-filters__view-btn crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول" aria-label="نمای جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="ws-filters__view-btn crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="نمای کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
+
+            <nav class="ws-filters__chips crm-deals-quick crm-deals-quick--desk" aria-label="فیلتر سریع وضعیت">
+                <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
+                   class="ws-filters__chip crm-deals-quick-btn{% if not request.GET.bucket %} is-active{% endif %}">همه</a>
+                <a href="?view={{ view_mode }}&bucket=active{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
+                   class="ws-filters__chip crm-deals-quick-btn{% if request.GET.bucket == 'active' %} is-active{% endif %}">فعال</a>
+                <a href="?view={{ view_mode }}&bucket=closed{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
+                   class="ws-filters__chip crm-deals-quick-btn{% if request.GET.bucket == 'closed' %} is-active{% endif %}">بسته‌شده</a>
+                <a href="?view={{ view_mode }}&bucket=lost{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
+                   class="ws-filters__chip crm-deals-quick-btn{% if request.GET.bucket == 'lost' %} is-active{% endif %}">از دست رفته</a>
+            </nav>
+
+            {% if request.GET.q or request.GET.stage or request.GET.bucket or request.GET.sort and request.GET.sort != '-updated_at' %}
+            <div class="ws-filters__active crm-deals-active-chips" aria-label="فیلترهای فعال">
+                {% if request.GET.q %}
+                <a href="?{% ws_query_without 'q' %}" class="ws-filters__active-chip" title="حذف جستجو"><i class="fas fa-search" aria-hidden="true"></i> {{ request.GET.q|truncatechars:20 }} <span aria-hidden="true">×</span></a>
+                {% endif %}
+                {% if request.GET.stage %}
+                <a href="?{% ws_query_without 'stage' %}" class="ws-filters__active-chip" title="حذف مرحله"><i class="fas fa-flag" aria-hidden="true"></i> {{ request.GET.stage }} <span aria-hidden="true">×</span></a>
+                {% endif %}
+                {% if request.GET.bucket == 'active' %}
+                <a href="?{% ws_query_without 'bucket' %}" class="ws-filters__active-chip" title="حذف وضعیت">فعال <span aria-hidden="true">×</span></a>
+                {% elif request.GET.bucket == 'closed' %}
+                <a href="?{% ws_query_without 'bucket' %}" class="ws-filters__active-chip" title="حذف وضعیت">بسته‌شده <span aria-hidden="true">×</span></a>
+                {% elif request.GET.bucket == 'lost' %}
+                <a href="?{% ws_query_without 'bucket' %}" class="ws-filters__active-chip" title="حذف وضعیت">از دست رفته <span aria-hidden="true">×</span></a>
+                {% elif request.GET.bucket == 'stale' %}
+                <a href="?{% ws_query_without 'bucket' %}" class="ws-filters__active-chip" title="حذف وضعیت">نیاز به پیگیری <span aria-hidden="true">×</span></a>
+                {% endif %}
+                {% if request.GET.sort and request.GET.sort != '-updated_at' %}
+                <a href="?{% ws_query_without 'sort' %}" class="ws-filters__active-chip" title="حذف مرتب‌سازی">مرتب‌سازی <span aria-hidden="true">×</span></a>
+                {% endif %}
+                <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="ws-filters__active-chip mk-filter-chip--reset">پاک کردن همه</a>
+            </div>
+            {% endif %}
 
             <div class="crm-deals-mob-filter-sheet" id="crmDealsFilterSheet" aria-hidden="true">
                 <div class="crm-deals-mob-filter-backdrop" data-deals-filter-close tabindex="-1" aria-hidden="true"></div>
@@ -242,7 +283,7 @@
                                 <option value="value" {% if request.GET.sort == 'value' %}selected{% endif %}>کمترین ارزش</option>
                                 <option value="expected_close_date" {% if request.GET.sort == 'expected_close_date' %}selected{% endif %}>نزدیک‌ترین بستن</option>
                                 <option value="-expected_close_date" {% if request.GET.sort == '-expected_close_date' %}selected{% endif %}>دورترین بستن</option>
-                                <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>عنوان A-Z</option>
+                                <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
                             </select>
                         </label>
                     </div>
@@ -254,17 +295,6 @@
             </div>
             </div>
         </form>
-
-        <nav class="crm-deals-quick crm-deals-quick--desk" aria-label="فیلتر سریع">
-            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
-               class="crm-deals-quick-btn{% if not request.GET.bucket %} is-active{% endif %}">همه</a>
-            <a href="?view={{ view_mode }}&bucket=active{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
-               class="crm-deals-quick-btn{% if request.GET.bucket == 'active' %} is-active{% endif %}">فعال</a>
-            <a href="?view={{ view_mode }}&bucket=closed{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
-               class="crm-deals-quick-btn{% if request.GET.bucket == 'closed' %} is-active{% endif %}">بسته‌شده</a>
-            <a href="?view={{ view_mode }}&bucket=lost{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
-               class="crm-deals-quick-btn{% if request.GET.bucket == 'lost' %} is-active{% endif %}">از دست رفته</a>
-        </nav>
 
         {% if deal_stages %}
         <section class="crm-deal-path crm-deal-path--desk" aria-labelledby="crmDealPathTitle">
@@ -293,18 +323,6 @@
                 {% endfor %}
             </nav>
         </section>
-        {% endif %}
-
-        {% if request.GET.q or request.GET.stage or request.GET.bucket %}
-        <div class="crm-deals-active-filters crm-deals-active-filters--desk" role="status">
-            <span>
-                {% if request.GET.q %}<em>جستجو</em>{% endif %}
-                {% if request.GET.stage %}<em>مرحله</em>{% endif %}
-                {% if request.GET.bucket %}<em>وضعیت</em>{% endif %}
-                — فیلتر فعال
-            </span>
-            <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="crm-dash-act">پاک کردن همه</a>
-        </div>
         {% endif %}
 
         {% if view_mode == 'pipeline' %}
@@ -585,8 +603,97 @@
 
 {% block crm_js %}
 <script src="{% static 'workspace/js/crm-stage-transition.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/ws-page-filters.js' %}?v=5"></script>
 <script>
 window.crmDealStageUrlTemplate = "{{ deal_stage_url_template }}";
 window.crmDealStagesUrl = "{% url 'workspace:crm_deal_stages' %}";
+(function () {
+    var form = document.getElementById('crmDealFilters');
+    if (!form) return;
+    var desk = document.getElementById('crmDealsSearchInput');
+    var mob = document.getElementById('crmDealsSearchMob');
+    var deskClear = document.getElementById('crmDealsSearchClear');
+    var mobClear = document.getElementById('crmDealsSearchMobClear');
+    var deskMq = window.matchMedia('(min-width: 769px)');
+    var timer = null;
+
+    function syncClear(input, btn) {
+        if (!input || !btn) return;
+        btn.hidden = !String(input.value || '').trim();
+    }
+
+    function mirror(from, to) {
+        if (!from || !to) return;
+        to.value = from.value;
+        syncClear(desk, deskClear);
+        syncClear(mob, mobClear);
+    }
+
+    function disableHiddenControls() {
+        var deskMode = deskMq.matches;
+        form.querySelectorAll('.crm-deals-desk-select').forEach(function (el) {
+            el.disabled = !deskMode;
+        });
+        form.querySelectorAll('.crm-deals-mob-select').forEach(function (el) {
+            el.disabled = deskMode;
+        });
+        if (desk) desk.disabled = false;
+        if (mob) mob.removeAttribute('name');
+    }
+
+    function submitSearch() {
+        if (mob && desk && !deskMq.matches) desk.value = mob.value;
+        if (form.requestSubmit) form.requestSubmit();
+        else form.submit();
+    }
+
+    if (desk && mob) {
+        desk.addEventListener('input', function () {
+            mirror(desk, mob);
+            if (timer) window.clearTimeout(timer);
+            timer = window.setTimeout(submitSearch, 420);
+        });
+        mob.addEventListener('input', function () {
+            mirror(mob, desk);
+            if (timer) window.clearTimeout(timer);
+            timer = window.setTimeout(submitSearch, 420);
+        });
+        desk.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (timer) window.clearTimeout(timer);
+            submitSearch();
+        });
+        mob.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (timer) window.clearTimeout(timer);
+            submitSearch();
+        });
+    }
+
+    function bindClear(btn, input, other) {
+        if (!btn || !input) return;
+        btn.addEventListener('click', function () {
+            input.value = '';
+            if (other) other.value = '';
+            syncClear(desk, deskClear);
+            syncClear(mob, mobClear);
+            submitSearch();
+        });
+    }
+    bindClear(deskClear, desk, mob);
+    bindClear(mobClear, mob, desk);
+    syncClear(desk, deskClear);
+    syncClear(mob, mobClear);
+
+    form.addEventListener('submit', function () {
+        disableHiddenControls();
+        if (mob && desk && !deskMq.matches) desk.value = mob.value;
+    });
+    disableHiddenControls();
+    if (deskMq.addEventListener) deskMq.addEventListener('change', disableHiddenControls);
+    else if (deskMq.addListener) deskMq.addListener(disableHiddenControls);
+})();
 </script>
 {% endblock %}

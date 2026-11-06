@@ -672,3 +672,24 @@ def contact_followup_mob(follow_date, today):
     if follow_date == today:
         return {'tone': 'today', 'label': 'امروز پیگیری', 'sublabel': jalali}
     return {'tone': 'future', 'label': jalali, 'sublabel': ''}
+
+
+@register.simple_tag
+def property_followup_cell(follow_date, today):
+    """وضعیت پیگیری ملک برای نمای جدولی مشاور."""
+    from workspace.services.jalali_input import format_jalali_date, to_persian_digits
+
+    empty = {'tone': 'none', 'label': 'بدون پیگیری', 'date': ''}
+    if not follow_date or not today:
+        return empty
+    jalali = to_persian_digits(format_jalali_date(follow_date) or '')
+    if follow_date < today:
+        days = (today - follow_date).days
+        if days <= 1:
+            label = 'دیروز' if days == 1 else 'معوق'
+        else:
+            label = f'{to_persian_digits(days)} روز معوق'
+        return {'tone': 'overdue', 'label': label, 'date': jalali}
+    if follow_date == today:
+        return {'tone': 'today', 'label': 'امروز', 'date': jalali}
+    return {'tone': 'upcoming', 'label': jalali, 'date': jalali}

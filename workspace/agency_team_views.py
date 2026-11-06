@@ -166,12 +166,15 @@ class AgencyHubActivityView(AgencyTeamPerformanceRequiredMixin, _AgencyHubTeamBa
                 ).user_id
             except Exception:
                 actor_user_id = None
+        event_type = (self.request.GET.get('event_type') or '').strip()
         ctx['events'] = build_activity_feed(
             self.request.user,
             advisor_id=actor_user_id,
-            event_type=self.request.GET.get('event_type', ''),
+            event_type=event_type,
         )
-        ctx['event_type_filter'] = self.request.GET.get('event_type', '')
+        ctx['event_type_filter'] = event_type
+        from workspace.services.agency_activity import EVENT_TYPE_LABELS
+        ctx['event_type_options'] = list(EVENT_TYPE_LABELS.items())
         return ctx
 
 

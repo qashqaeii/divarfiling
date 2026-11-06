@@ -1814,6 +1814,7 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         for prop in ctx.get('properties') or []:
             prop.card_amenities = build_property_amenity_dossier_items(prop)
             prop.folder_badges = folders_for_property(prop)
+        ctx['today'] = timezone.now().date()
         if self.request.GET.get('partial') == '1':
             return ctx
         from workspace.services.crm_property_archive import (

@@ -370,7 +370,7 @@
     margin: 0;
 }
 
-/* ─── Toolbar — Premium filter bar ─── */
+/* ─── Toolbar — Premium filter bar (ws-filters language) ─── */
 .mk-filing-datasets .fl-toolbar__form.mk-filter-form,
 .mk-filing-datasets .fl-toolbar__form.mk-filing-filter {
     display: block;
@@ -378,10 +378,12 @@
     gap: 0;
 }
 
-.mk-filing-datasets .fl-toolbar {
-    --fl-toolbar-h: 38px;
+.mk-filing-datasets .fl-toolbar.ws-filters {
+    --fl-toolbar-h: 2.5rem;
     --fl-toolbar-gap: 0.5rem;
-    --fl-toolbar-pad: 0.75rem 0.9rem;
+    --fl-toolbar-pad: 0.6rem 0.7rem;
+    --ws-filters-h: 2.5rem;
+    --ws-filters-h-sm: 2.5rem;
     width: 100%;
     max-width: none;
     box-sizing: border-box;
@@ -391,10 +393,31 @@
     padding: var(--fl-toolbar-pad);
     background: var(--ws-surface);
     border: 1px solid color-mix(in srgb, var(--ws-border) 78%, transparent);
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow:
-        0 1px 2px rgba(15, 23, 42, 0.03),
-        0 4px 14px rgba(15, 23, 42, 0.03);
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 0 0 1px color-mix(in srgb, #fff 60%, transparent) inset;
+    overflow: visible;
+}
+
+.mk-filing-datasets .fl-toolbar {
+    --fl-toolbar-h: 2.5rem;
+    --fl-toolbar-gap: 0.5rem;
+    --fl-toolbar-pad: 0.6rem 0.7rem;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: var(--fl-toolbar-pad);
+    background: var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 78%, transparent);
+    border-radius: 16px;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 0 0 1px color-mix(in srgb, #fff 60%, transparent) inset;
+    overflow: visible;
 }
 
 .mk-filing-datasets .fl-toolbar__form {
@@ -411,39 +434,44 @@
 }
 
 /* Search */
+.mk-filing-datasets .fl-toolbar__search.ws-filters__search,
 .mk-filing-datasets .fl-toolbar__search {
     flex: 1 1 14rem;
     min-width: 0;
+    max-width: none;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
     height: var(--fl-toolbar-h);
-    padding: 0 0.75rem;
+    padding: 0 0.85rem;
     margin: 0;
-    border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--ws-surface-2) 65%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--ws-surface-2) 96%, #fff);
     color: var(--ws-text-muted);
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    transition: border-color 0.14s, box-shadow 0.14s, background 0.14s, color 0.14s;
     cursor: text;
 }
 
 .mk-filing-datasets .fl-toolbar__search:focus-within {
-    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--ws-primary) 32%, var(--ws-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent);
     background: var(--ws-surface);
+    color: var(--ws-primary);
 }
 
 .mk-filing-datasets .fl-toolbar__search-icon {
     display: inline-grid;
     place-items: center;
-    width: 1rem;
+    width: auto;
     flex-shrink: 0;
     font-size: 0.72rem;
-    color: var(--ws-text-muted);
+    opacity: 0.7;
+    color: inherit;
 }
 
 .mk-filing-datasets .fl-toolbar__search:focus-within .fl-toolbar__search-icon {
+    opacity: 1;
     color: var(--ws-primary);
 }
 
@@ -454,8 +482,8 @@
     height: 100%;
     border: none;
     background: transparent;
-    font-size: 0.78rem;
-    font-weight: 550;
+    font-size: 0.8rem;
+    font-weight: 500;
     color: var(--ws-text);
     outline: none;
     font-family: inherit;
@@ -463,7 +491,8 @@
 
 .mk-filing-datasets .fl-toolbar__search input::placeholder {
     color: var(--ws-text-muted);
-    font-weight: 450;
+    font-weight: 500;
+    opacity: 0.85;
 }
 
 .mk-filing-datasets .fl-toolbar__mob-toggle { display: none; }
@@ -486,67 +515,83 @@
     min-width: 0;
 }
 
+.mk-filing-datasets .fl-toolbar__filters.ws-filters__fields,
 .mk-filing-datasets .fl-toolbar__filters {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
-    flex: 1 1 auto;
+    gap: 0.4rem;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
     min-width: 0;
+    overflow: visible;
 }
 
 .mk-filing-datasets .fl-toolbar__field {
     position: relative;
-    flex: 1 1 0;
+    flex: 0 0 auto;
     min-width: 7.5rem;
-    max-width: 10.5rem;
+    max-width: 10.75rem;
     display: flex;
     align-items: center;
+    overflow: visible;
 }
 
 .mk-filing-datasets .fl-toolbar__field-icon {
-    position: absolute;
-    inset-inline-start: 0.6rem;
-    z-index: 1;
-    display: inline-grid;
-    place-items: center;
-    width: 0.85rem;
-    font-size: 0.62rem;
-    color: var(--ws-text-muted);
-    pointer-events: none;
+    display: none;
 }
 
-.mk-filing-datasets .fl-toolbar__select {
+.mk-filing-datasets .fl-toolbar__field .ws-filters-dd {
     width: 100%;
+    min-width: 7.5rem;
+    max-width: 10.75rem;
+}
+
+.mk-filing-datasets .fl-toolbar__select.ws-filters__select,
+.mk-filing-datasets .fl-toolbar__select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 7.5rem;
+    max-width: 10.75rem;
     height: var(--fl-toolbar-h);
-    padding-inline-start: 1.75rem;
-    padding-inline-end: 1.65rem;
+    padding-block: 0;
+    padding-inline: 0.75rem 1.9rem;
     border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
-    border-radius: 10px;
-    background: var(--ws-surface);
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--ws-text);
+    border-radius: 11px;
+    background-color: color-mix(in srgb, var(--ws-surface-2) 96%, #fff);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.72rem center;
+    background-size: 10px 6px;
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--ws-text-secondary);
     font-family: inherit;
     cursor: pointer;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2394a3b8' d='M2 3.5 5 6.5 8 3.5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: left 0.55rem center;
-    transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-[dir="rtl"] .mk-filing-datasets .fl-toolbar__select {
-    background-position: right 0.55rem center;
+    -webkit-appearance: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: border-color 0.12s, box-shadow 0.12s, background-color 0.12s, color 0.12s;
 }
 
 .mk-filing-datasets .fl-toolbar__select:hover {
+    background-color: var(--ws-surface);
     border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+    color: var(--ws-text);
 }
 
-.mk-filing-datasets .fl-toolbar__select:focus {
+.mk-filing-datasets .fl-toolbar__select:focus,
+.mk-filing-datasets .fl-toolbar__select.is-active {
     outline: none;
-    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent);
+}
+
+.mk-filing-datasets .fl-toolbar__select.is-active {
+    background-color: color-mix(in srgb, var(--ws-primary) 8%, #fff);
+    color: var(--ws-primary);
+    box-shadow: none;
 }
 
 /* Actions cluster */
@@ -694,46 +739,77 @@
     border-color: color-mix(in srgb, #ef4444 30%, var(--ws-border));
 }
 
-/* Desktop / tablet toolbar — single full-width row */
+/* Desktop / tablet toolbar — ws-filters rail composition */
 @media (min-width: 769px) {
     .mk-filing-datasets .fl-toolbar {
-        --fl-toolbar-h: 42px;
-        --fl-toolbar-gap: 0.5rem;
-        --fl-toolbar-pad: 0.5rem 0.75rem;
-        --fl-toolbar-filter-col: minmax(5.25rem, 7rem);
+        --fl-toolbar-h: 2.5rem;
+        --fl-toolbar-gap: 0.55rem;
+        --fl-toolbar-pad: 0.6rem 0.7rem;
+    }
+
+    /*
+      ws-filters--rail sets display:flex on the SECTION.
+      That shrink-wraps the form to content and leaves a dead gap
+      on the far left — actions never reach the rail edge.
+      Force a full-width column shell, then flex the inner row.
+    */
+    .mk-filing-datasets .fl-toolbar.ws-filters--rail {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
     }
 
     .mk-filing-datasets .fl-toolbar__form {
+        display: block;
         width: 100%;
         max-width: none;
         min-width: 0;
+        overflow: visible;
     }
 
     .mk-filing-datasets .fl-toolbar__row {
-        display: grid;
-        grid-template-columns:
-            minmax(0, 1fr)
-            var(--fl-toolbar-filter-col)
-            var(--fl-toolbar-filter-col)
-            var(--fl-toolbar-filter-col)
-            auto;
+        display: flex;
+        flex-wrap: nowrap;
         align-items: center;
-        gap: var(--fl-toolbar-gap);
+        justify-content: flex-start;
+        gap: 0.55rem 0.65rem;
         width: 100%;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    /* Filters only — do not eat free space */
+    .mk-filing-datasets .fl-toolbar__desk {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 0 0 auto;
+        min-width: 0;
+        width: auto;
+    }
+
+    .mk-filing-datasets .fl-toolbar__filters--desk {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex: 0 0 auto;
         min-width: 0;
     }
 
-    .mk-filing-datasets .fl-toolbar__desk,
-    .mk-filing-datasets .fl-toolbar__filters--desk {
-        display: contents;
+    .mk-filing-datasets .fl-toolbar__spacer {
+        display: none !important;
     }
 
     .mk-filing-datasets .fl-toolbar__search {
-        width: 100%;
-        min-width: 0;
-        max-width: none;
+        flex: 0 1 18rem;
+        width: auto;
+        min-width: 12rem;
+        max-width: 22rem;
         height: var(--fl-toolbar-h);
-        flex: unset;
     }
 
     .mk-filing-datasets .fl-toolbar__filters--mob {
@@ -741,56 +817,82 @@
     }
 
     .mk-filing-datasets .fl-toolbar__field {
-        min-width: 0;
-        max-width: none;
-        width: 100%;
-        flex: unset;
+        min-width: 7.5rem;
+        max-width: 10.75rem;
+        width: auto;
+        flex: 0 0 auto;
     }
 
     .mk-filing-datasets .fl-toolbar__select {
         width: 100%;
         height: var(--fl-toolbar-h);
-        font-size: 0.72rem;
-        border-radius: 10px;
+        font-size: 0.78rem;
+        border-radius: 11px;
     }
 
-    .mk-filing-datasets .fl-toolbar__actions--desk {
+    /* Apply + view — pin to far inline-end (left in RTL) */
+    .mk-filing-datasets .fl-toolbar__actions--desk,
+    .mk-filing-datasets .fl-toolbar .ws-filters__actions.fl-toolbar__actions--desk {
         display: flex !important;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: 0.4rem;
         flex-wrap: nowrap;
-        min-width: 0;
+        flex: 0 0 auto;
+        margin: 0 !important;
+        margin-inline-start: auto !important;
         padding: 0;
-        margin: 0;
         border: none;
     }
 
     .mk-filing-datasets .fl-toolbar__apply {
         height: var(--fl-toolbar-h);
-        padding: 0 0.75rem;
-        font-size: 0.72rem;
-        border-radius: 10px;
+        padding: 0 0.85rem;
+        font-size: 0.78rem;
+        border-radius: 11px;
     }
 
-    .mk-filing-datasets .fl-toolbar__clear {
-        width: var(--fl-toolbar-h);
+    .mk-filing-datasets .fl-toolbar__clear.ws-filters__clear {
+        width: auto;
+        min-width: auto;
         height: var(--fl-toolbar-h);
-        border-radius: 10px;
+        min-height: var(--fl-toolbar-h);
+        padding: 0 0.75rem;
+        border-radius: 11px;
+        gap: 0.3rem;
+    }
+
+    .mk-filing-datasets .fl-toolbar__clear.ws-filters__clear span {
+        display: inline;
     }
 
     .mk-filing-datasets .fl-toolbar__view {
         height: var(--fl-toolbar-h);
-        border-radius: 10px;
+        padding: 0.2rem;
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--ws-surface-2) 80%, transparent);
     }
 
     .mk-filing-datasets .fl-toolbar__view-btn {
-        height: calc(var(--fl-toolbar-h) - 0.35rem);
+        width: 2.1rem;
+        height: 2.1rem;
+        border-radius: 8px;
+    }
+
+    .mk-filing-datasets .fl-toolbar__view-btn.is-active {
+        background: var(--ws-surface);
+        color: var(--ws-primary);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
     }
 
     .mk-filing-datasets .fl-toolbar__mob-actions,
     .mk-filing-datasets .fl-toolbar__row > .ws-filing-hub-filter-sheet {
         display: none !important;
+    }
+
+    .mk-filing-datasets .fl-toolbar__chips.ws-filters__active {
+        margin-top: 0.45rem;
+        padding-top: 0.45rem;
     }
 
     /* Neutralize legacy grid on sheet (workspace-polish) */
@@ -805,21 +907,12 @@
 @media (min-width: 1100px) {
     .mk-filing-datasets .fl-toolbar {
         --fl-toolbar-gap: 0.65rem;
-        --fl-toolbar-filter-col: minmax(6rem, 8.25rem);
     }
 }
 
 @media (min-width: 769px) and (max-width: 1023px) {
     .mk-filing-datasets .fl-toolbar {
-        --fl-toolbar-filter-col: minmax(4.5rem, 6.25rem);
-    }
-
-    .mk-filing-datasets .fl-toolbar__field-icon {
-        display: none;
-    }
-
-    .mk-filing-datasets .fl-toolbar__select {
-        padding-inline-start: 0.5rem;
+        --fl-toolbar-gap: 0.45rem;
     }
 
     .mk-filing-datasets .fl-toolbar__apply span {

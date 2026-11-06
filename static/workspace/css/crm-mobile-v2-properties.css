@@ -11,8 +11,10 @@
         gap: 0;
     }
 
+    /* Match KPI / page gutter — no second horizontal inset after KPIs */
+    .crm-files-mobile.crm-properties-page .crm-shell-body,
     .crm-files-mobile .crm-shell-body {
-        padding-inline: 0.65rem;
+        padding-inline: 0 !important;
         gap: 0.5rem;
     }
 
@@ -70,6 +72,8 @@
     /* ── #144–146 Filing nav → compact chip rails ── */
     .crm-files-mobile.crm-properties-page .crm-shell-body {
         gap: 0.42rem;
+        padding-inline: 0 !important;
+        padding-bottom: 0.75rem;
     }
 
     .crm-files-mobile .crm-shell-body .crm-properties-layout__filing > .crm-filing-nav,

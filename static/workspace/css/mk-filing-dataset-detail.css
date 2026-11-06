@@ -173,17 +173,16 @@
 .mk-filing-dataset-detail .fl-kpi-pro.fl-dd-kpi { margin: 0 0 0.9rem; }
 .mk-filing-dataset-detail .fl-dd-mix { display: none !important; }
 
-/* ─── Filter shell ─── */
-.mk-filing-dataset-detail .fl-dd-filter {
+/* ─── Filter shell — chrome owned by ws-filters / fl-listing-filters ─── */
+.mk-filing-dataset-detail .fl-dd-filter.fl-listing-filters {
+    margin-bottom: 0.85rem;
+}
+.mk-filing-dataset-detail .fl-dd-filter:not(.fl-listing-filters) {
     padding: 0.65rem 0.75rem;
     border-radius: 12px;
     border: 1px solid var(--ws-border);
     background: var(--ws-surface);
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-}
-.mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open {
-    border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
 }
 
 /* ─── Listings panel ─── */
@@ -575,20 +574,35 @@
 
     /* ── Sticky filter bar ── */
     .mk-filing-dataset-detail .mk-filter-primary__fields,
-    .mk-filing-dataset-detail .mk-filter-actions--desk {
+    .mk-filing-dataset-detail .mk-filter-actions--desk,
+    .mk-filing-dataset-detail .fl-listing-filters__fields,
+    .mk-filing-dataset-detail .fl-listing-filters__actions {
         display: none !important;
     }
 
-    .mk-filing-dataset-detail .mk-filter-primary {
+    .mk-filing-dataset-detail .mk-filter-primary,
+    .mk-filing-dataset-detail .fl-listing-filters__rail {
         display: block !important;
     }
 
-    .mk-filing-dataset-detail .mk-filter-bar-listing {
+    .mk-filing-dataset-detail .mk-filter-bar-listing,
+    .mk-filing-dataset-detail .fl-listing-filters__form {
         padding: 0 !important;
         gap: 0 !important;
     }
 
-    .mk-filing-dataset-detail .fl-dd-filter {
+    .mk-filing-dataset-detail .fl-dd-filter.fl-listing-filters {
+        position: sticky;
+        top: calc(2.5rem + env(safe-area-inset-top, 0px));
+        z-index: 28;
+        margin-inline: 0.65rem;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-filter:not(.fl-listing-filters) {
         position: sticky;
         top: calc(2.5rem + env(safe-area-inset-top, 0px));
         z-index: 28;

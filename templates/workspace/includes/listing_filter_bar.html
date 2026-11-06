@@ -1,55 +1,110 @@
-<form method="get" class="mk-filter-bar mk-filter-bar-listing" id="wsFilterForm"{% if filter_form_action %} action="{{ filter_form_action }}"{% endif %}>
+{% load workspace_tags %}
+<form method="get" class="fl-listing-filters__form mk-filter-bar mk-filter-bar-listing" id="wsFilterForm"{% if filter_form_action %} action="{{ filter_form_action }}"{% endif %}>
     {% if dataset_ids_param %}
     <input type="hidden" name="dataset_ids" value="{{ dataset_ids_param }}">
     {% endif %}
     {% if listing_view_mode == 'table' %}
     <input type="hidden" name="view" value="table">
     {% endif %}
-    <div class="mk-filter-primary">
-        <div class="ws-mob-search-bar ws-mob-search-bar--listing">
-            <label class="mk-filter-search mk-filter-search-grow ws-mob-search-bar__search">
-                {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو عنوان یا شناسه دیوار…" autocomplete="off" aria-label="جستجو عنوان یا شناسه دیوار" enterkeyhint="search">
-                {% if filters.q %}
-                <button type="button" class="ws-mob-search-bar__clear" data-filing-search-clear aria-label="پاک کردن جستجو">
-                    <i class="fas fa-xmark" aria-hidden="true"></i>
+
+    <div class="ws-filters__rail fl-listing-filters__rail mk-filter-primary">
+        <div class="fl-listing-filters__main ws-mob-search-bar ws-mob-search-bar--listing">
+            <label class="ws-filters__search fl-listing-filters__search mk-filter-search mk-filter-search-grow ws-mob-search-bar__search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" name="q" value="{{ filters.q }}" placeholder="{% if streets %}عنوان، شناسه یا خیابان…{% else %}جستجو عنوان یا شناسه دیوار…{% endif %}" autocomplete="off" aria-label="جستجو در آگهی‌ها" enterkeyhint="search" id="wsListingSearchInput" data-ws-search-debounce="420">
+                <button type="button" class="ws-filters__search-clear ws-mob-search-bar__clear" data-filing-search-clear aria-label="پاک کردن جستجو"{% if not filters.q %} hidden{% endif %}>
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
-                {% endif %}
             </label>
-            <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--filter{% if filter_count %} has-active{% endif %}" id="wsAdvToggleMob" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
+
+            <button type="button"
+                    class="ws-filters__filter-btn fl-listing-filters__mob-btn fl-listing-filters__mob-btn--filter ws-mob-search-bar__btn ws-mob-search-bar__btn--filter{% if filter_count %} has-active is-active{% endif %}"
+                    id="wsAdvToggleMob"
+                    aria-expanded="{% if filters_open %}true{% else %}false{% endif %}"
+                    aria-controls="wsAdvPanel"
+                    title="فیلتر">
                 <i class="fas fa-sliders" aria-hidden="true"></i>
-                <span>فیلتر</span>
-                {% if filter_count %}<em class="ws-mob-search-bar__badge" aria-label="{{ filter_count }} فیلتر فعال">{{ filter_count }}</em>{% endif %}
+                <span class="fl-listing-filters__mob-btn-label">فیلتر</span>
+                {% if filter_count %}<em class="ws-mob-search-bar__badge fl-listing-filters__mob-badge" aria-label="{{ filter_count }} فیلتر فعال">{{ filter_count }}</em>{% endif %}
+                {% if filter_count %}<span class="ws-filters__filter-badge" aria-hidden="true"></span>{% endif %}
             </button>
-            <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--sort" id="wsMobSortFocus" aria-label="مرتب‌سازی">
+
+            <button type="button"
+                    class="ws-filters__filter-btn fl-listing-filters__mob-btn fl-listing-filters__mob-btn--sort ws-mob-search-bar__btn ws-mob-search-bar__btn--sort"
+                    id="wsMobSortFocus"
+                    aria-label="مرتب‌سازی"
+                    title="مرتب‌سازی">
                 <i class="fas fa-arrow-down-wide-short" aria-hidden="true"></i>
-                <span>مرتب</span>
+                <span class="fl-listing-filters__mob-btn-label">مرتب</span>
             </button>
-        </div>
-        <div class="mk-filter-primary__fields">
-        <select name="neighborhood" class="mk-filter-select mk-filter-select--neighborhood" aria-label="محله">
-            <option value="">همه محله‌ها</option>
-            {% for nb in neighborhoods %}<option value="{{ nb }}" {% if filters.neighborhood == nb %}selected{% endif %}>{{ nb }}</option>{% endfor %}
-        </select>
-        <select name="consultant" class="mk-filter-select mk-filter-select-narrow" aria-label="آگهی‌دهنده">
-            <option value="">آگهی‌دهنده</option>
-            <option value="1" {% if filters.consultant == '1' %}selected{% endif %}>مشاور</option>
-            <option value="genuine_personal" {% if filters.consultant == 'genuine_personal' %}selected{% endif %}>مالک واقعی</option>
-            <option value="disguised_consultant" {% if filters.consultant == 'disguised_consultant' %}selected{% endif %}>مشاور پنهان</option>
-            <option value="0" {% if filters.consultant == '0' %}selected{% endif %}>شخصی</option>
-        </select>
-        </div>
-        <div class="mk-filter-actions mk-filter-actions--desk">
-            <button type="button" class="mk-filter-toggle" id="wsAdvToggle" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
-                {% include 'includes/icon_slot.html' with decor='filter' size='inline' only %}
-                <span>فیلتر پیشرفته</span>
-                {% if advanced_filter_count %}<span class="mk-filter-badge">{{ advanced_filter_count }}</span>{% endif %}
-                <i class="fas fa-chevron-down mk-filter-chevron" aria-hidden="true"></i>
-            </button>
-            <button type="submit" class="mk-filter-apply">اعمال</button>
-            {% if filter_count and filter_reset_url %}
-            <a href="{{ filter_reset_url }}" class="mk-filter-reset" title="پاک کردن همه فیلترها"><i class="fas fa-times" aria-hidden="true"></i></a>
-            {% endif %}
+
+            <div class="ws-filters__fields fl-listing-filters__fields mk-filter-primary__fields{% if filters.neighborhood or filters.street or filters.consultant %} is-filtered{% endif %}">
+                {% if neighborhoods or filters.neighborhood %}
+                <select name="neighborhood" class="ws-filters__select mk-filter-select mk-filter-select--neighborhood{% if filters.neighborhood %} is-active{% endif %}" aria-label="محله" onchange="this.form.submit()">
+                    <option value="">محله</option>
+                    {% if filters.neighborhood and filters.neighborhood not in neighborhoods %}
+                    <option value="{{ filters.neighborhood }}" selected>{{ filters.neighborhood }}</option>
+                    {% endif %}
+                    {% for nb in neighborhoods %}<option value="{{ nb }}" {% if filters.neighborhood == nb %}selected{% endif %}>{{ nb }}</option>{% endfor %}
+                </select>
+                {% endif %}
+                {% if streets or filters.street %}
+                <select name="street" class="ws-filters__select mk-filter-select mk-filter-select--street{% if filters.street %} is-active{% endif %}" aria-label="خیابان" onchange="this.form.submit()">
+                    <option value="">خیابان{% if streets %} ({{ streets|length }}){% endif %}</option>
+                    {% for st in streets %}<option value="{{ st.name }}" {% if filters.street == st.name %}selected{% endif %}>{{ st.name }} ({{ st.count }} مورد)</option>{% endfor %}
+                    {% if filters.street and filters.street not in street_names %}<option value="{{ filters.street }}" selected>{{ filters.street }}</option>{% endif %}
+                </select>
+                {% endif %}
+                <select name="consultant" class="ws-filters__select mk-filter-select mk-filter-select-narrow{% if filters.consultant %} is-active{% endif %}" aria-label="آگهی‌دهنده" onchange="this.form.submit()">
+                    <option value="">آگهی‌دهنده</option>
+                    <option value="1" {% if filters.consultant == '1' %}selected{% endif %}>مشاور</option>
+                    <option value="genuine_personal" {% if filters.consultant == 'genuine_personal' %}selected{% endif %}>مالک واقعی</option>
+                    <option value="disguised_consultant" {% if filters.consultant == 'disguised_consultant' %}selected{% endif %}>مشاور پنهان</option>
+                    <option value="0" {% if filters.consultant == '0' %}selected{% endif %}>شخصی</option>
+                </select>
+                <select name="sort" class="ws-filters__select mk-filter-select fl-listing-filters__sort--desk{% if filters.sort and filters.sort != '-published_at' %} is-active{% endif %}" aria-label="مرتب‌سازی" onchange="this.form.submit()">
+                    <option value="-published_at" {% if filters.sort == '-published_at' or not filters.sort %}selected{% endif %}>جدیدترین</option>
+                    <option value="published_at" {% if filters.sort == 'published_at' %}selected{% endif %}>قدیمی‌ترین</option>
+                    {% if tx.show_price %}
+                    <option value="-price" {% if filters.sort == '-price' %}selected{% endif %}>بیشترین قیمت</option>
+                    <option value="price" {% if filters.sort == 'price' %}selected{% endif %}>کمترین قیمت</option>
+                    {% endif %}
+                    {% if tx.show_deposit %}
+                    <option value="-deposit" {% if filters.sort == '-deposit' %}selected{% endif %}>بیشترین ودیعه</option>
+                    <option value="deposit" {% if filters.sort == 'deposit' %}selected{% endif %}>کمترین ودیعه</option>
+                    {% endif %}
+                    {% if tx.show_rent %}
+                    <option value="-rent" {% if filters.sort == '-rent' %}selected{% endif %}>بیشترین اجاره</option>
+                    <option value="rent" {% if filters.sort == 'rent' %}selected{% endif %}>کمترین اجاره</option>
+                    {% endif %}
+                    <option value="-area" {% if filters.sort == '-area' %}selected{% endif %}>بیشترین متراژ</option>
+                    <option value="area" {% if filters.sort == 'area' %}selected{% endif %}>کمترین متراژ</option>
+                    {% if streets %}<option value="title" {% if filters.sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>{% endif %}
+                </select>
+            </div>
+
+            <div class="ws-filters__actions fl-listing-filters__actions mk-filter-actions mk-filter-actions--desk">
+                <button type="button"
+                        class="ws-filters__filter-btn fl-listing-filters__adv-btn mk-filter-toggle{% if filters_open %} is-open is-active{% endif %}"
+                        id="wsAdvToggle"
+                        aria-expanded="{% if filters_open %}true{% else %}false{% endif %}"
+                        aria-controls="wsAdvPanel"
+                        title="فیلترهای پیشرفته">
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    <span>پیشرفته</span>
+                    {% if advanced_filter_count %}<span class="ws-filters__filter-badge mk-filter-badge" aria-hidden="true"></span><span class="fl-listing-filters__adv-count">{{ advanced_filter_count }}</span>{% endif %}
+                </button>
+                <button type="submit" class="ws-filters__apply fl-listing-filters__apply mk-filter-apply">
+                    <i class="fas fa-filter" aria-hidden="true"></i>
+                    <span>اعمال</span>
+                </button>
+                {% if filter_count and filter_reset_url %}
+                <a href="{{ filter_reset_url }}" class="ws-filters__clear fl-listing-filters__clear mk-filter-reset" title="پاک کردن همه فیلترها" aria-label="پاک کردن فیلترها">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    <span>پاک‌سازی</span>
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -255,24 +310,38 @@
     </div>
 
     {% if filter_count %}
-    <div class="mk-filter-active" aria-label="فیلترهای فعال">
-        {% if filters.q %}<span class="mk-filter-chip">جستجو: {{ filters.q|truncatechars:20 }}</span>{% endif %}
-        {% if filters.neighborhood %}<span class="mk-filter-chip">محله: {{ filters.neighborhood }}</span>{% endif %}
-        {% if filters.consultant == '1' %}<span class="mk-filter-chip">مشاور</span>{% elif filters.consultant == 'genuine_personal' %}<span class="mk-filter-chip">مالک واقعی</span>{% elif filters.consultant == 'disguised_consultant' %}<span class="mk-filter-chip">مشاور پنهان</span>{% elif filters.consultant == '0' %}<span class="mk-filter-chip">شخصی</span>{% endif %}
-        {% if filters.elevator == '1' %}<span class="mk-filter-chip">آسانسور</span>{% endif %}
-        {% if filters.parking == '1' %}<span class="mk-filter-chip">پارکینگ</span>{% endif %}
-        {% if filters.storage == '1' %}<span class="mk-filter-chip">انباری</span>{% endif %}
-        {% if filters.value == 'below' %}<span class="mk-filter-chip">زیر بازار</span>{% elif filters.value == 'fair' %}<span class="mk-filter-chip">متعارف</span>{% elif filters.value == 'above' %}<span class="mk-filter-chip">بالای بازار</span>{% endif %}
-        {% if advanced_filter_count %}<span class="mk-filter-chip mk-filter-chip-muted">+{{ advanced_filter_count }} فیلتر دیگر</span>{% endif %}
+    <div class="ws-filters__active fl-listing-filters__chips mk-filter-active" aria-label="فیلترهای فعال">
+        {% if filters.q %}
+        <a href="?{% ws_query_without 'q' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف جستجو"><i class="fas fa-search" aria-hidden="true"></i> {{ filters.q|truncatechars:20 }} <span aria-hidden="true">×</span></a>
+        {% endif %}
+        {% if filters.neighborhood %}
+        <a href="?{% ws_query_without 'neighborhood' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف محله"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ filters.neighborhood }} <span aria-hidden="true">×</span></a>
+        {% endif %}
+        {% if filters.street %}
+        <a href="?{% ws_query_without 'street' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف خیابان"><i class="fas fa-road" aria-hidden="true"></i> {{ filters.street|truncatechars:24 }} <span aria-hidden="true">×</span></a>
+        {% endif %}
+        {% if filters.consultant == '1' %}
+        <a href="?{% ws_query_without 'consultant' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف آگهی‌دهنده">مشاور <span aria-hidden="true">×</span></a>
+        {% elif filters.consultant == 'genuine_personal' %}
+        <a href="?{% ws_query_without 'consultant' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف آگهی‌دهنده">مالک واقعی <span aria-hidden="true">×</span></a>
+        {% elif filters.consultant == 'disguised_consultant' %}
+        <a href="?{% ws_query_without 'consultant' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف آگهی‌دهنده">مشاور پنهان <span aria-hidden="true">×</span></a>
+        {% elif filters.consultant == '0' %}
+        <a href="?{% ws_query_without 'consultant' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف آگهی‌دهنده">شخصی <span aria-hidden="true">×</span></a>
+        {% endif %}
+        {% if filters.elevator == '1' %}<a href="?{% ws_query_without 'elevator' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف">آسانسور <span aria-hidden="true">×</span></a>{% endif %}
+        {% if filters.parking == '1' %}<a href="?{% ws_query_without 'parking' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف">پارکینگ <span aria-hidden="true">×</span></a>{% endif %}
+        {% if filters.storage == '1' %}<a href="?{% ws_query_without 'storage' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف">انباری <span aria-hidden="true">×</span></a>{% endif %}
+        {% if filters.value == 'below' %}<a href="?{% ws_query_without 'value' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف">زیر بازار <span aria-hidden="true">×</span></a>{% elif filters.value == 'fair' %}<a href="?{% ws_query_without 'value' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف">متعارف <span aria-hidden="true">×</span></a>{% elif filters.value == 'above' %}<a href="?{% ws_query_without 'value' %}" class="ws-filters__active-chip mk-filter-chip fl-listing-filters__chip--dismiss" title="حذف">بالای بازار <span aria-hidden="true">×</span></a>{% endif %}
+        {% if advanced_filter_count %}<span class="ws-filters__active-chip mk-filter-chip mk-filter-chip-muted">+{{ advanced_filter_count }} فیلتر دیگر</span>{% endif %}
         {% if filter_reset_url %}
-        <a href="{{ filter_reset_url }}" class="mk-filter-chip mk-filter-chip--reset">پاک کردن همه</a>
+        <a href="{{ filter_reset_url }}" class="ws-filters__active-chip mk-filter-chip mk-filter-chip--reset">پاک کردن همه</a>
         {% endif %}
     </div>
     {% endif %}
 
     {% include 'workspace/includes/filing/filing_mobile_sort_sheet.html' %}
 
-    <input type="hidden" name="sort" value="{{ filters.sort }}">
     <input type="hidden" name="filters_open" id="filtersOpenField" value="{% if filters_open %}1{% else %}0{% endif %}">
 </form>
 <script>
@@ -316,5 +385,35 @@
         };
         inp.addEventListener('change', sync);
     });
+
+    var searchInput = document.getElementById('wsListingSearchInput');
+    if (searchInput) {
+        var searchClear = form.querySelector('.ws-filters__search-clear[data-filing-search-clear]');
+        var initialQ = String(searchInput.value || '').trim();
+        var debounceMs = parseInt(searchInput.getAttribute('data-ws-search-debounce') || '420', 10);
+        var timer = null;
+        var syncClear = function () {
+            if (!searchClear) return;
+            searchClear.hidden = !String(searchInput.value || '').trim();
+        };
+        var submitSearch = function () {
+            var next = String(searchInput.value || '').trim();
+            if (next === initialQ) return;
+            if (form.requestSubmit) form.requestSubmit();
+            else form.submit();
+        };
+        searchInput.addEventListener('input', function () {
+            syncClear();
+            if (timer) window.clearTimeout(timer);
+            timer = window.setTimeout(submitSearch, debounceMs);
+        });
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (timer) window.clearTimeout(timer);
+            submitSearch();
+        });
+        syncClear();
+    }
 })();
 </script>

@@ -8,15 +8,17 @@
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-listing-filters.css' %}?v=3">
 {% endblock %}
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-table-compact.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listings.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=21">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=22">
 {% endblock %}
 
 {% block content %}
@@ -25,7 +27,7 @@
     {% include 'workspace/includes/filing/filing_dataset_detail_header.html' %}
     {% include 'workspace/includes/filing/filing_dataset_detail_kpi.html' %}
 
-    <section class="fl-dd-filter mk-filter-shell" id="wsFilterShell" data-fl-tour="filing-detail-filter">
+    <section class="ws-filters ws-filters--rail fl-listing-filters fl-dd-filter mk-filter-shell" id="wsFilterShell" aria-label="جستجو و فیلتر آگهی‌ها" data-fl-tour="filing-detail-filter">
         {% include 'workspace/includes/listing_filter_bar.html' %}
     </section>
 
@@ -173,6 +175,7 @@
 <script src="{% static 'workspace/js/listing-cards.js' %}?v=1"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 <script src="{% static 'workspace/js/filing-mobile.js' %}?v=10"></script>
+<script src="{% static 'workspace/js/ws-page-filters.js' %}?v=4"></script>
 <script>
 (function () {
     const advToggle = document.getElementById('wsAdvToggle');

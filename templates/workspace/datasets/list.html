@@ -5,7 +5,8 @@
 {% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=44">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=11">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
@@ -317,6 +318,7 @@
     syncHubListHead();
 })();
 </script>
+<script src="{% static 'workspace/js/ws-page-filters.js' %}?v=4"></script>
 <script src="{% static 'workspace/js/filing-mobile.js' %}?v=14"></script>
 <script src="{% static 'workspace/js/filing-help.js' %}?v=4"></script>
 {% if ai_enabled and has_bot_license %}

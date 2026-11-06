@@ -5253,6 +5253,24 @@ function initContactsMobileFilters() {
     const openBtn = document.getElementById('crmContactsFilterOpen');
     if (!form || !sheet || !openBtn) return;
 
+    const searchInput = document.getElementById('crmContactsSearchInput');
+    const searchClear = document.getElementById('crmContactsSearchClear');
+    if (searchInput && searchClear && searchClear.dataset.bound !== '1') {
+        searchClear.dataset.bound = '1';
+        const syncSearchClear = () => {
+            searchClear.hidden = !String(searchInput.value || '').trim();
+        };
+        searchInput.addEventListener('input', syncSearchClear);
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            syncSearchClear();
+            searchInput.focus({ preventScroll: true });
+            if (form.requestSubmit) form.requestSubmit();
+            else form.submit();
+        });
+        syncSearchClear();
+    }
+
     const mq = window.matchMedia('(max-width: 768px)');
 
     const setOpen = (open) => {

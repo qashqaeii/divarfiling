@@ -236,7 +236,12 @@
         min-height: 3.6rem;
     }
 
-    .agency-members-filter {
+    /* Premium members filter chrome lives in agency-members-filters.css */
+    .agency-members-manage .agency-panel--flush {
+        margin-top: 0;
+    }
+
+    .agency-members-filter:not(.agency-members-filter--pro) {
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-areas:
@@ -246,141 +251,6 @@
         gap: 0.4rem;
         padding: 0.45rem 0.55rem;
         margin-bottom: 0.35rem !important;
-    }
-
-    .agency-members-manage .agency-panel--flush {
-        margin-top: 0;
-    }
-
-    .agency-members-filter .agency-filter-bar__search {
-        grid-area: search;
-        min-width: 0;
-    }
-
-    .agency-members-filter__open {
-        grid-area: filter;
-    }
-
-    .agency-members-filter__backdrop,
-    .agency-members-filter__panel {
-        grid-area: sheet;
-    }
-
-    .agency-members-manage .agency-filter-bar.agency-members-filter {
-        margin-bottom: 0.35rem !important;
-    }
-
-    .agency-members-manage .agency-panel--flush {
-        margin-top: 0;
-    }
-
-    .agency-members-filter__open {
-        flex: 0 0 auto;
-        min-height: 2.65rem;
-        gap: 0.35rem;
-        position: relative;
-    }
-
-    .agency-members-filter__badge {
-        font-style: normal;
-        font-size: 0.62rem;
-        font-weight: 800;
-        min-width: 1.1rem;
-        height: 1.1rem;
-        padding: 0 0.25rem;
-        border-radius: 999px;
-        background: #7c3aed;
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .agency-members-filter__panel {
-        display: none;
-    }
-
-    .agency-members-filter__backdrop {
-        display: none;
-    }
-
-    body.agency-members-filter-open .agency-members-filter__backdrop {
-        display: block;
-        position: fixed;
-        inset: 0;
-        z-index: 198;
-        border: 0;
-        margin: 0;
-        padding: 0;
-        background: rgba(15, 23, 42, 0.42);
-    }
-
-    body.agency-members-filter-open .agency-members-filter__panel {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        inset: auto 0 0 0;
-        z-index: 199;
-        max-height: min(88dvh, 520px);
-        border-radius: 18px 18px 0 0;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
-        background: var(--ws-surface, #fff);
-        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.14);
-        transform: translateY(0);
-    }
-
-    .agency-members-filter__head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.65rem 0.85rem;
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-    }
-
-    .agency-members-filter__title {
-        margin: 0;
-        font-size: 0.92rem;
-        font-weight: 800;
-    }
-
-    .agency-members-filter__close {
-        border: 0;
-        background: transparent;
-        padding: 0.35rem;
-        color: var(--ws-text-muted, #64748b);
-    }
-
-    .agency-members-filter__body {
-        padding: 0.65rem 0.85rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.55rem;
-        overflow-y: auto;
-    }
-
-    .agency-members-filter__field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .agency-members-filter__label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: var(--ws-text-muted, #64748b);
-    }
-
-    .agency-members-filter__foot {
-        display: flex;
-        gap: 0.45rem;
-        padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-    }
-
-    .agency-members-filter__foot .crm-btn {
-        flex: 1;
-        min-height: 2.75rem;
-        justify-content: center;
     }
 
     body.agency-members-filter-open {
@@ -742,16 +612,12 @@
         display: none;
     }
 
-    .agency-activity-page__filters.agency-filter-bar {
+    .agency-activity-page__filters.agency-filter-bar:not(.agency-activity-filters--pro) {
         flex-direction: column;
         align-items: stretch;
         gap: 0.4rem;
         margin-bottom: 0.5rem;
         padding: 0.5rem 0.6rem;
-    }
-
-    .agency-activity-page__filters .agency-filter-bar__search {
-        flex: 0 0 auto;
     }
 
     .agency-activity-page__filter-actions {
@@ -761,13 +627,7 @@
         align-items: center;
     }
 
-    .agency-activity-page__filter-actions .crm-btn-primary {
-        flex: 1 1 auto;
-        justify-content: center;
-        min-height: 2.65rem;
-    }
-
-    .agency-activity-page__timeline.agency-panel--timeline {
+    .agency-activity-page__timeline.agency-panel--timeline:not(.agency-activity-page__timeline--pro) {
         padding: 0.25rem 0.55rem 0.35rem;
         border-radius: 14px;
     }
@@ -840,30 +700,30 @@
 }
 
 @media (min-width: 768px) {
-    .agency-members-filter__open,
-    .agency-members-filter__backdrop {
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__open,
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__backdrop {
         display: none !important;
     }
 
-    .agency-members-filter__panel {
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__panel {
         display: contents !important;
     }
 
-    .agency-members-filter__head,
-    .agency-members-filter__foot,
-    .agency-members-filter__label {
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__head,
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__foot,
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__label {
         display: none !important;
     }
 
-    .agency-members-filter__body {
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__body {
         display: contents !important;
     }
 
-    .agency-members-filter__field {
+    .agency-members-filter:not(.agency-members-filter--pro) .agency-members-filter__field {
         display: contents;
     }
 
-    .agency-members-filter {
+    .agency-members-filter:not(.agency-members-filter--pro) {
         flex-wrap: wrap;
     }
 

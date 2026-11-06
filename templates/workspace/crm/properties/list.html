@@ -13,13 +13,14 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=11">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=18">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-list-controls.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=21">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-list-controls.css' %}?v=5">
 {% endblock %}
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile-premium.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -157,78 +158,85 @@
         </section>
 
         <div class="crm-properties-layout__toolbar">
-        <form method="get" class="crm-files-filters crm-files-filters--pro crm-page-filters" id="crmPropertyFilters">
+        <form method="get" class="ws-filters ws-filters--rail crm-files-filters crm-files-filters--pro crm-page-filters crm-prop-toolbar" id="crmPropertyFilters">
             <input type="hidden" name="view" value="{{ view_mode }}">
             {% if archive_scope and archive_scope != 'active' %}<input type="hidden" name="archive_scope" value="{{ archive_scope }}">{% endif %}
             {% if active_cabinet_id %}<input type="hidden" name="cabinet_id" value="{{ active_cabinet_id }}" id="crmPropCabinetId">{% endif %}
             {% if active_folder_id %}<input type="hidden" name="folder_id" value="{{ active_folder_id }}" id="crmPropFolderId">{% endif %}
 
-            <div class="crm-prop-toolbar">
+            <div class="ws-filters__rail crm-prop-toolbar__rail">
                 <div class="crm-prop-toolbar__main">
-                    <div class="crm-prop-toolbar__row crm-prop-toolbar__row--search">
-                        <label class="crm-prop-toolbar__search crm-files-search">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی فایل، شهر، محله، شناسه..." autocomplete="off" aria-label="جستجو در فایل‌ها" id="crmPropSearchInput">
-                            <button type="button" class="crm-prop-search-clear" id="crmPropSearchClear" aria-label="پاک کردن جستجو"{% if not request.GET.q %} hidden{% endif %}><i class="fas fa-times" aria-hidden="true"></i></button>
-                        </label>
+                    <label class="ws-filters__search crm-prop-toolbar__search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی فایل، شهر، محله، شناسه..." autocomplete="off" aria-label="جستجو در فایل‌ها" id="crmPropSearchInput">
+                        <button type="button" class="ws-filters__search-clear" id="crmPropSearchClear" aria-label="پاک کردن جستجو"{% if not request.GET.q %} hidden{% endif %}><i class="fas fa-times" aria-hidden="true"></i></button>
+                    </label>
+
+                    <button type="button"
+                            class="ws-filters__filter-btn crm-prop-toolbar__filter-btn crm-prop-toolbar__filter-btn--mob crm-files-mob-filter-trigger{% if property_toolbar_filter_count %} is-active{% endif %}"
+                            id="crmFilesFilterToggle"
+                            aria-expanded="false"
+                            aria-controls="crmFilesFilterPanel"
+                            title="فیلتر"
+                            aria-label="فیلتر">
+                        <i class="fas fa-sliders" aria-hidden="true"></i>
+                        <span class="crm-prop-toolbar__filter-btn-text">فیلتر{% if property_toolbar_filter_count %}<em class="crm-files-mob-filter-badge">{{ property_toolbar_filter_count }}</em>{% endif %}</span>
+                        {% if property_toolbar_filter_count %}<span class="ws-filters__filter-badge" aria-hidden="true"></span>{% endif %}
+                    </button>
+
+                    <div class="ws-filters__fields crm-prop-toolbar__fields{% if request.GET.deal_mode or request.GET.transaction_status or request.GET.property_type or request.GET.publish_status %} is-filtered{% endif %}">
+                        <select name="deal_mode" class="ws-filters__select crm-files-select crm-files-desk-select{% if request.GET.deal_mode %} is-active{% endif %}" aria-label="معامله" onchange="this.form.submit()">
+                            <option value="">معامله</option>
+                            {% for d in deal_modes %}<option value="{{ d }}" {% if request.GET.deal_mode == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+                        </select>
+                        <select name="transaction_status" class="ws-filters__select crm-files-select crm-files-desk-select{% if request.GET.transaction_status %} is-active{% endif %}" aria-label="وضعیت" onchange="this.form.submit()">
+                            <option value="">وضعیت</option>
+                            {% for s in tx_statuses %}<option value="{{ s }}" {% if request.GET.transaction_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                        </select>
+                        <select name="property_type" class="ws-filters__select crm-files-select crm-files-desk-select{% if request.GET.property_type %} is-active{% endif %}" aria-label="نوع" onchange="this.form.submit()">
+                            <option value="">نوع</option>
+                            {% for p in property_types %}<option value="{{ p }}" {% if request.GET.property_type == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                        </select>
+                        <select name="publish_status" class="ws-filters__select crm-files-select crm-files-desk-select{% if request.GET.publish_status %} is-active{% endif %}" aria-label="انتشار" onchange="this.form.submit()">
+                            <option value="">انتشار</option>
+                            {% for s in publish_statuses %}<option value="{{ s }}" {% if request.GET.publish_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                        </select>
+                        <select name="sort" class="ws-filters__select crm-files-select crm-files-desk-select crm-prop-toolbar__sort-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
+                            <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>جدیدترین</option>
+                            <option value="updated_at" {% if sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
+                            <option value="-sale_price" {% if sort == '-sale_price' %}selected{% endif %}>گران‌ترین</option>
+                            <option value="sale_price" {% if sort == 'sale_price' %}selected{% endif %}>ارزان‌ترین</option>
+                            <option value="-area" {% if sort == '-area' %}selected{% endif %}>بزرگ‌ترین متراژ</option>
+                            <option value="title" {% if sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
+                        </select>
                     </div>
-                    <div class="crm-prop-toolbar__row crm-prop-toolbar__row--controls">
-                        <div class="crm-prop-filter-desk-anchor">
+
+                    <div class="crm-prop-filter-desk-anchor crm-prop-toolbar__more">
                         <button type="button"
-                                class="crm-prop-toolbar__filter-btn crm-prop-toolbar__filter-btn--desk{% if property_toolbar_filter_count %} is-active{% endif %}"
+                                class="ws-filters__filter-btn crm-prop-toolbar__filter-btn crm-prop-toolbar__filter-btn--desk{% if filters_open %} is-active{% endif %}"
                                 id="crmPropDeskFilterToggle"
                                 aria-expanded="false"
-                                aria-controls="crmPropDeskFilterPanel">
+                                aria-controls="crmPropDeskFilterPanel"
+                                title="فیلترهای پیشرفته">
                             <i class="fas fa-sliders" aria-hidden="true"></i>
-                            <span>فیلترها{% if property_toolbar_filter_count %}<em class="crm-prop-toolbar__filter-count">({{ property_toolbar_filter_count }})</em>{% endif %}</span>
+                            <span>پیشرفته</span>
                         </button>
                         <div class="crm-prop-filter-desk" id="crmPropDeskFilterPanel" hidden>
                     <div class="crm-prop-filter-desk__panel" role="dialog" aria-modal="false" aria-labelledby="crmPropDeskFilterTitle">
                         <header class="crm-prop-filter-desk__head">
                             <div class="crm-prop-filter-desk__head-main">
                                 <i class="fas fa-sliders" aria-hidden="true"></i>
-                                <h2 id="crmPropDeskFilterTitle" class="crm-prop-filter-desk__title">فیلتر فایل‌ها</h2>
-                                {% if property_toolbar_filter_count %}<span class="crm-prop-filter-desk__count">{{ property_toolbar_filter_count }}</span>{% endif %}
+                                <h2 id="crmPropDeskFilterTitle" class="crm-prop-filter-desk__title">فیلترهای پیشرفته</h2>
                             </div>
                             <button type="button" class="crm-prop-filter-desk__close" id="crmPropDeskFilterClose" aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </header>
                         <div class="crm-prop-filter-desk__scroll" id="crmPropDeskFilterScroll">
                         <div class="crm-prop-filter-desk__body" id="crmPropDeskFilterPanelBody">
-                            <div class="crm-prop-filter-desk__grid">
-                                <label class="crm-prop-filter-desk__field">
-                                    <span class="crm-prop-filter-desk__label">نوع معامله</span>
-                                    <select name="deal_mode" class="crm-files-select crm-files-desk-select" aria-label="معامله">
-                                        <option value="">همه معاملات</option>
-                                        {% for d in deal_modes %}<option value="{{ d }}" {% if request.GET.deal_mode == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
-                                    </select>
-                                </label>
-                                <label class="crm-prop-filter-desk__field">
-                                    <span class="crm-prop-filter-desk__label">وضعیت فایل</span>
-                                    <select name="transaction_status" class="crm-files-select crm-files-desk-select" aria-label="وضعیت">
-                                        <option value="">همه وضعیت‌ها</option>
-                                        {% for s in tx_statuses %}<option value="{{ s }}" {% if request.GET.transaction_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-                                    </select>
-                                </label>
-                                <label class="crm-prop-filter-desk__field">
-                                    <span class="crm-prop-filter-desk__label">نوع ملک</span>
-                                    <select name="property_type" class="crm-files-select crm-files-desk-select" aria-label="نوع">
-                                        <option value="">همه انواع</option>
-                                        {% for p in property_types %}<option value="{{ p }}" {% if request.GET.property_type == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
-                                    </select>
-                                </label>
-                                <label class="crm-prop-filter-desk__field">
-                                    <span class="crm-prop-filter-desk__label">وضعیت انتشار</span>
-                                    <select name="publish_status" class="crm-files-select crm-files-desk-select" aria-label="انتشار">
-                                        <option value="">همه انتشار</option>
-                                        {% for s in publish_statuses %}<option value="{{ s }}" {% if request.GET.publish_status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-                                    </select>
-                                </label>
-                            </div>
                             <div class="crm-prop-filter-desk__saved">
                                 {% include 'workspace/crm/includes/saved_filters.html' %}
                             </div>
                             <div id="crmPropAdvBlock" class="crm-prop-filter-adv-block">
-                            <details class="crm-prop-filter-adv" id="crmPropAdvDisclosure"{% if filters_open %} open{% endif %}>
+                            <details class="crm-prop-filter-adv" id="crmPropAdvDisclosure" open>
                                 <summary class="crm-prop-filter-adv__summary">
                                     <span class="crm-prop-filter-adv__summary-text">فیلترهای پیشرفته</span>
                                     <i class="fas fa-chevron-down crm-prop-filter-adv__chevron" aria-hidden="true"></i>
@@ -322,54 +330,44 @@
                     </div>
                         </div>
                         </div>
-                        <button type="button"
-                                class="crm-prop-toolbar__filter-btn crm-prop-toolbar__filter-btn--mob crm-files-mob-filter-trigger{% if property_toolbar_filter_count %} is-active{% endif %}"
-                                id="crmFilesFilterToggle"
-                                aria-expanded="false"
-                                aria-controls="crmFilesFilterPanel">
-                            <i class="fas fa-sliders" aria-hidden="true"></i>
-                            <span>فیلتر{% if property_toolbar_filter_count %}<em class="crm-files-mob-filter-badge">{{ property_toolbar_filter_count }}</em>{% endif %}</span>
-                        </button>
-                        <label class="crm-prop-toolbar__sort crm-prop-toolbar__sort--desk">
-                            <span class="crm-prop-toolbar__sort-label">مرتب‌سازی</span>
-                            <select name="sort" class="crm-files-select crm-files-desk-select crm-prop-toolbar__sort-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
-                                <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>جدیدترین</option>
-                                <option value="updated_at" {% if sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
-                                <option value="-sale_price" {% if sort == '-sale_price' %}selected{% endif %}>گران‌ترین</option>
-                                <option value="sale_price" {% if sort == 'sale_price' %}selected{% endif %}>ارزان‌ترین</option>
-                                <option value="-area" {% if sort == '-area' %}selected{% endif %}>بزرگ‌ترین متراژ</option>
-                                <option value="title" {% if sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
-                            </select>
-                        </label>
-                        <label class="crm-prop-toolbar__sort crm-prop-toolbar__sort--mob">
-                            <span class="crm-prop-toolbar__sort-label">مرتب</span>
-                            <select name="sort" class="crm-files-select crm-files-mob-select crm-prop-toolbar__sort-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
-                                <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>جدیدترین</option>
-                                <option value="updated_at" {% if sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
-                                <option value="-sale_price" {% if sort == '-sale_price' %}selected{% endif %}>گران‌ترین</option>
-                                <option value="sale_price" {% if sort == 'sale_price' %}selected{% endif %}>ارزان‌ترین</option>
-                                <option value="-area" {% if sort == '-area' %}selected{% endif %}>بزرگ‌ترین متراژ</option>
-                                <option value="title" {% if sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
-                            </select>
-                        </label>
-                        <div class="crm-prop-toolbar__views crm-files-view-toggle" role="group" aria-label="نمای نمایش">
-                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="crm-files-view-btn {% if view_mode == 'grid' %}is-active{% endif %}" title="کارت" aria-label="کارت"><i class="fas fa-grip" aria-hidden="true"></i></a>
-                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-files-view-btn {% if view_mode == 'table' %}is-active{% endif %}" title="جدول" aria-label="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
-                            <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-files-view-btn" title="نقشه" aria-label="نقشه"><i class="fas fa-map-location-dot" aria-hidden="true"></i></a>
+
+                    <label class="crm-prop-toolbar__sort crm-prop-toolbar__sort--mob">
+                        <span class="crm-prop-toolbar__sort-label">مرتب</span>
+                        <select name="sort" class="ws-filters__select crm-files-select crm-files-mob-select crm-prop-toolbar__sort-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
+                            <option value="-updated_at" {% if sort == '-updated_at' %}selected{% endif %}>جدیدترین</option>
+                            <option value="updated_at" {% if sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
+                            <option value="-sale_price" {% if sort == '-sale_price' %}selected{% endif %}>گران‌ترین</option>
+                            <option value="sale_price" {% if sort == 'sale_price' %}selected{% endif %}>ارزان‌ترین</option>
+                            <option value="-area" {% if sort == '-area' %}selected{% endif %}>بزرگ‌ترین متراژ</option>
+                            <option value="title" {% if sort == 'title' %}selected{% endif %}>عنوان (الفبا)</option>
+                        </select>
+                    </label>
+
+                    <div class="ws-filters__actions crm-prop-toolbar__actions">
+                        {% if property_filter_chips %}
+                        <a href="{{ property_filters_clear_href }}" class="ws-filters__clear" title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
+                            <i class="fas fa-times" aria-hidden="true"></i><span>پاک‌سازی</span>
+                        </a>
+                        {% endif %}
+                        <div class="ws-filters__view crm-prop-toolbar__views" role="group" aria-label="نمای نمایش">
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="ws-filters__view-btn {% if view_mode == 'grid' %}is-active{% endif %}" title="کارت" aria-label="کارت"><i class="fas fa-grip" aria-hidden="true"></i></a>
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="ws-filters__view-btn {% if view_mode == 'table' %}is-active{% endif %}" title="جدول" aria-label="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="ws-filters__view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                            <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="ws-filters__view-btn" title="نقشه" aria-label="نقشه"><i class="fas fa-map-location-dot" aria-hidden="true"></i></a>
                         </div>
                     </div>
                 </div>
+            </div>
 
                 {% if property_filter_chips %}
-                <div class="crm-prop-toolbar__chips" aria-label="فیلترهای فعال">
+                <div class="ws-filters__active crm-prop-toolbar__chips" aria-label="فیلترهای فعال">
                     {% for chip in property_filter_chips %}
-                    <a href="{{ chip.href }}" class="crm-prop-filter-chip">
+                    <a href="{{ chip.href }}" class="ws-filters__active-chip crm-prop-filter-chip">
                         <span>{{ chip.label }}</span>
                         <i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                     {% endfor %}
-                    <a href="{{ property_filters_clear_href }}" class="crm-prop-filter-chips-clear">پاک‌کردن فیلترها</a>
+                    <a href="{{ property_filters_clear_href }}" class="ws-filters__active-clear crm-prop-filter-chips-clear">پاک‌کردن فیلترها</a>
                 </div>
                 {% endif %}
 
@@ -455,17 +453,17 @@
              data-view="table"
              data-has-next="{% if page_obj.has_next %}1{% else %}0{% endif %}"
              {% if page_obj.has_next %}data-next-page="{{ page_obj.next_page_number }}"{% endif %}>
-            <table class="crm-ft crm-properties-table">
+            <table class="crm-ft crm-properties-table crm-properties-table--advisor">
                 <thead>
                     <tr>
                         <th class="crm-ft-th-check" aria-label="انتخاب"></th>
                         <th class="crm-ft-th-prop crm-properties-table__th--prop">ملک</th>
                         <th class="crm-properties-table__th--deal">معامله</th>
-                        <th class="crm-properties-table__th--stage">مرحله</th>
+                        <th class="crm-properties-table__th--stage">وضعیت</th>
                         <th class="crm-properties-table__th--specs">مشخصات</th>
                         <th class="crm-properties-table__th--price">قیمت</th>
-                        <th class="crm-ft-th-num crm-properties-table__th--contact">مخاطب</th>
-                        <th class="crm-ft-th-time crm-properties-table__th--time">بروزرسانی</th>
+                        <th class="crm-properties-table__th--owner">مالک / تماس</th>
+                        <th class="crm-properties-table__th--followup">پیگیری</th>
                         <th class="crm-ft-th-actions crm-properties-table__th--actions" aria-label="عملیات"></th>
                     </tr>
                 </thead>
@@ -595,6 +593,7 @@ window.crmPropertyBulkDeleteUrl = '{% url "workspace:crm_properties_bulk_delete"
 window.crmPropertyBulkArchiveUrl = '{% url "workspace:crm_properties_bulk_archive" %}';
 window.crmPropertyArchiveScope = '{{ archive_scope|default:"active" }}';
 </script>
+<script src="{% static 'workspace/js/ws-page-filters.js' %}?v=4"></script>
 {% if view_mode != 'pipeline' %}
 <script src="{% static 'workspace/js/crm-properties-list.js' %}?v=1"></script>
 {% endif %}

@@ -1,0 +1,183 @@
+/* Contracts dashboard filters — ws-filters premium language */
+
+.crm-contracts-dashboard .ct-dash-filters--pro.ws-filters {
+    margin: 0 0 0.85rem;
+    overflow: visible;
+}
+
+@media (min-width: 769px) {
+    .crm-contracts-dashboard .ct-dash-filters--pro.ws-filters--rail {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.55rem 0.65rem;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.6rem 0.7rem;
+        border-radius: var(--ws-filters-radius, 16px);
+        border: 1px solid var(--ws-filters-border, color-mix(in srgb, var(--ws-border, #e2e8f0) 78%, transparent));
+        background: var(--ws-surface, #fff);
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.04),
+            0 0 0 1px color-mix(in srgb, #fff 60%, transparent) inset;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-rail.ws-filters__rail {
+        display: contents;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-search.ws-filters__search {
+        flex: 1 1 14rem;
+        min-width: 12rem;
+        max-width: 24rem;
+        height: var(--ws-filters-h, 2.5rem);
+        min-height: var(--ws-filters-h, 2.5rem);
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-fields.ws-filters__fields {
+        display: flex;
+        flex: 0 1 auto;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-fields .ws-filters__select {
+        min-width: 7.5rem;
+        max-width: 11rem;
+        height: var(--ws-filters-h, 2.5rem);
+        min-height: var(--ws-filters-h, 2.5rem);
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ws-filters-dd {
+        min-width: 7.5rem;
+        max-width: 11rem;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ws-filters-dd__trigger {
+        height: var(--ws-filters-h, 2.5rem);
+        min-height: var(--ws-filters-h, 2.5rem);
+        border-radius: var(--ws-filters-control-radius, 11px);
+        font-size: 0.78rem;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-actions.ws-filters__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex: 0 0 auto;
+        margin-inline-start: auto;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ws-filters__clear {
+        height: var(--ws-filters-h, 2.5rem);
+        min-height: var(--ws-filters-h, 2.5rem);
+        padding: 0 0.75rem;
+        border-radius: var(--ws-filters-control-radius, 11px);
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-active-chips.ws-filters__active {
+        display: flex;
+        order: 10;
+        flex: 1 0 100%;
+        margin-top: 0.15rem;
+        padding: 0.45rem 0.1rem 0.05rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 50%, transparent);
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-active-chips .ws-filters__active-chip {
+        text-decoration: none;
+        gap: 0.35rem;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-active-chips .ws-filters__active-chip span[aria-hidden="true"] {
+        opacity: 0.55;
+        font-weight: 800;
+    }
+}
+
+@media (max-width: 768px) {
+    .crm-contracts-dashboard .ct-dash-filters--pro.ws-filters--rail {
+        display: block;
+        margin: 0 0 0.65rem;
+        padding: 0.55rem 0.75rem;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-rail.ws-filters__rail {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-search.ws-filters__search {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        height: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-fields.ws-filters__fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-fields .ws-filters__select {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        min-height: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-filter-actions.ws-filters__actions {
+        margin-inline-start: 0;
+        width: 100%;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ws-filters__clear {
+        width: 100%;
+        justify-content: center;
+        min-height: 2.5rem;
+        border-radius: 12px;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filters--pro .ct-dash-active-chips.ws-filters__active {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.45rem;
+        padding-top: 0.45rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 45%, transparent);
+    }
+}
+
+[data-theme="dark"] .crm-contracts-dashboard .ct-dash-filters--pro.ws-filters--rail {
+    background: var(--ws-surface);
+    border-color: var(--ws-border);
+    box-shadow: none;
+}

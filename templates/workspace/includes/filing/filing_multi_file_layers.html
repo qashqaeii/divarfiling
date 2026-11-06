@@ -1,0 +1,33 @@
+{% load humanize %}
+<section class="fl-multi-layers" aria-label="فایل‌های انتخاب‌شده">
+    <header class="fl-multi-layers__head">
+        <div class="fl-multi-layers__title-wrap">
+            <span class="fl-multi-layers__icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+            <div>
+                <h2 class="fl-multi-layers__title">لایه‌های فایل</h2>
+                <p class="fl-multi-layers__hint">{{ dataset_count|intcomma }} پوشه استخراج انتخاب‌شده · برای باز کردن هر فایل روی آن کلیک کنید</p>
+            </div>
+        </div>
+        <a href="{% url 'workspace:dataset_list' %}" class="fl-multi-layers__edit">
+            <i class="fas fa-pen-to-square" aria-hidden="true"></i>
+            <span>تغییر انتخاب</span>
+        </a>
+    </header>
+
+    <div class="fl-multi-layers__rail" role="list">
+        {% for ds in datasets %}
+        <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-multi-layers__card" role="listitem" style="--i: {{ forloop.counter0 }};" title="{{ ds.name }}">
+            <span class="fl-multi-layers__idx" aria-hidden="true">{{ forloop.counter }}</span>
+            <span class="fl-multi-layers__body">
+                <span class="fl-multi-layers__name">{{ ds.name|truncatechars:36 }}</span>
+                <span class="fl-multi-layers__meta">
+                    {% if ds.city %}<i class="fas fa-location-dot" aria-hidden="true"></i>{{ ds.city }}{% if ds.district %} · {{ ds.district }}{% endif %} · {% endif %}
+                    <strong>{{ ds.row_count|intcomma }}</strong> آگهی
+                    {% if ds.transaction_type %} · {{ ds.transaction_type }}{% endif %}
+                </span>
+            </span>
+            <i class="fas fa-chevron-left fl-multi-layers__go" aria-hidden="true"></i>
+        </a>
+        {% endfor %}
+    </div>
+</section>

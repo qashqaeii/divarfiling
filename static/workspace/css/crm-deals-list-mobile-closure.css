@@ -949,23 +949,19 @@
         display: none !important;
     }
 
-    .crm-deals-desk-filter-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.45rem;
-        width: 100%;
-        padding: 0.42rem 0.55rem;
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
-        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface));
-        box-sizing: border-box;
+    /* Premium rail owns desk chrome via crm-deals-list-controls.css */
+    .crm-deals-page .crm-deals-filters--pro .crm-deals-desk-filter-row {
+        display: contents;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
     }
 
-    .crm-deals-page .crm-deals-search--desk {
-        flex: 0 1 220px;
-        min-width: 0;
-        max-width: 240px;
+    .crm-deals-page .crm-deals-filters--pro .crm-deals-search--desk {
+        flex: 1 1 14rem;
+        min-width: 12rem;
+        max-width: 22rem;
     }
 
     .crm-deals-page .crm-deals-q-mob {

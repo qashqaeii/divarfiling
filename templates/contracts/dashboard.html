@@ -9,8 +9,10 @@
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-dashboard.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-contracts.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-dashboard.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-dashboard-filters.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-contracts.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -116,41 +118,62 @@
             </a>
         </nav>
 
-        <section class="ct-dash-filter-card ct-dash-filter-card--minimal" aria-label="جستجو و فیلتر">
-            <form method="get" class="ct-dash-filter-bar">
-                {% if filter_deal %}<input type="hidden" name="deal" value="{{ filter_deal.pk }}">{% endif %}
-                {% if request.GET.focus %}<input type="hidden" name="focus" value="{{ request.GET.focus }}">{% endif %}
+        {% url 'workspace:contracts_dashboard' as contracts_clear_url %}
+        <form method="get" class="ws-filters ws-filters--rail ct-dash-filters ct-dash-filters--pro crm-page-filters" id="ctContractFilters" aria-label="جستجو و فیلتر">
+            {% if filter_deal %}<input type="hidden" name="deal" value="{{ filter_deal.pk }}">{% endif %}
+            {% if request.GET.focus %}<input type="hidden" name="focus" value="{{ request.GET.focus }}">{% endif %}
 
-                <div class="ct-dash-search">
+            <div class="ws-filters__rail ct-dash-filter-rail">
+                <label class="ws-filters__search ct-dash-search">
                     <i class="fas fa-search" aria-hidden="true"></i>
-                    <input type="search" id="ctContractSearch" name="q" value="{{ request.GET.q }}" placeholder="جستجو شماره، معامله، مخاطب..." class="crm-input" autocomplete="off" aria-label="جستجو">
+                    <input type="search" id="ctContractSearch" name="q" value="{{ request.GET.q }}" placeholder="جستجو شماره، معامله، مخاطب…" autocomplete="off" aria-label="جستجو در قراردادها" data-ws-search-debounce="420">
+                    <button type="button" class="ws-filters__search-clear" id="ctContractSearchClear" data-ws-clear-bound="1" data-bound="1" aria-label="پاک کردن جستجو"{% if not request.GET.q %} hidden{% endif %}><i class="fas fa-times" aria-hidden="true"></i></button>
+                </label>
+
+                <div class="ws-filters__fields ct-dash-filter-fields{% if request.GET.status or request.GET.type %} is-filtered{% endif %}">
+                    <select id="ctContractStatus" name="status" class="ws-filters__select ct-dash-filter-select{% if request.GET.status %} is-active{% endif %}" aria-label="وضعیت" onchange="this.form.submit()">
+                        <option value="">وضعیت</option>
+                        {% for key, label in contract_statuses %}
+                        <option value="{{ key }}"{% if request.GET.status == key %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="ctContractType" name="type" class="ws-filters__select ct-dash-filter-select{% if request.GET.type %} is-active{% endif %}" aria-label="نوع قرارداد" onchange="this.form.submit()">
+                        <option value="">نوع</option>
+                        {% for key, label in contract_types %}
+                        <option value="{{ key }}"{% if request.GET.type == key %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <select id="ctContractStatus" name="status" class="crm-select ct-dash-filter-select" aria-label="وضعیت">
-                    <option value="">همه وضعیت‌ها</option>
-                    {% for key, label in contract_statuses %}
-                    <option value="{{ key }}"{% if request.GET.status == key %} selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <select id="ctContractType" name="type" class="crm-select ct-dash-filter-select" aria-label="نوع قرارداد">
-                    <option value="">همه انواع</option>
-                    {% for key, label in contract_types %}
-                    <option value="{{ key }}"{% if request.GET.type == key %} selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <div class="ct-dash-filter-actions">
-                    <button type="submit" class="crm-dash-act crm-dash-act--primary">
-                        <i class="fas fa-check" aria-hidden="true"></i>
-                        <span>اعمال</span>
-                    </button>
+
+                <div class="ws-filters__actions ct-dash-filter-actions">
                     {% if request.GET.q or request.GET.status or request.GET.type or request.GET.focus %}
-                    <a href="{% url 'workspace:contracts_dashboard' %}{% if filter_deal %}?deal={{ filter_deal.pk }}{% endif %}" class="crm-dash-act crm-dash-act--ghost" title="پاک کردن فیلترها">
-                        <i class="fas fa-xmark" aria-hidden="true"></i>
-                        <span>پاک</span>
+                    <a href="{{ contracts_clear_url }}{% if filter_deal %}?deal={{ filter_deal.pk }}{% endif %}" class="ws-filters__clear" title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
+                        <i class="fas fa-times" aria-hidden="true"></i><span>پاک‌سازی</span>
                     </a>
                     {% endif %}
                 </div>
-            </form>
-        </section>
+            </div>
+
+            {% if request.GET.q or request.GET.status or request.GET.type or request.GET.focus %}
+            <div class="ws-filters__active ct-dash-active-chips" aria-label="فیلترهای فعال">
+                {% if request.GET.q %}
+                <a href="?{% ws_query_without 'q' %}" class="ws-filters__active-chip" title="حذف جستجو"><i class="fas fa-search" aria-hidden="true"></i> {{ request.GET.q|truncatechars:20 }} <span aria-hidden="true">×</span></a>
+                {% endif %}
+                {% if request.GET.status %}
+                <a href="?{% ws_query_without 'status' %}" class="ws-filters__active-chip" title="حذف وضعیت"><i class="fas fa-flag" aria-hidden="true"></i>{% for key, label in contract_statuses %}{% if request.GET.status == key %} {{ label }}{% endif %}{% endfor %} <span aria-hidden="true">×</span></a>
+                {% endif %}
+                {% if request.GET.type %}
+                <a href="?{% ws_query_without 'type' %}" class="ws-filters__active-chip" title="حذف نوع"><i class="fas fa-file-signature" aria-hidden="true"></i>{% for key, label in contract_types %}{% if request.GET.type == key %} {{ label }}{% endif %}{% endfor %} <span aria-hidden="true">×</span></a>
+                {% endif %}
+                {% if request.GET.focus == 'active' %}
+                <a href="?{% ws_query_without 'focus' %}" class="ws-filters__active-chip" title="حذف وضعیت سریع">فعال <span aria-hidden="true">×</span></a>
+                {% elif request.GET.focus == 'needs' %}
+                <a href="?{% ws_query_without 'focus' %}" class="ws-filters__active-chip" title="حذف وضعیت سریع">نیازمند اقدام <span aria-hidden="true">×</span></a>
+                {% endif %}
+                <a href="{{ contracts_clear_url }}{% if filter_deal %}?deal={{ filter_deal.pk }}{% endif %}" class="ws-filters__active-chip mk-filter-chip--reset">پاک کردن همه</a>
+            </div>
+            {% endif %}
+        </form>
 
         {% if stats.needs_action %}
         <div class="ct-dash-alert" role="status">
@@ -317,6 +340,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'workspace/js/ws-page-filters.js' %}?v=5"></script>
 <script>
 (function () {
     document.querySelectorAll('.ct-dash-row-menu').forEach(function (wrap) {
@@ -335,6 +359,43 @@
             w.classList.remove('is-open');
         });
     });
+
+    var form = document.getElementById('ctContractFilters');
+    var input = document.getElementById('ctContractSearch');
+    var clearBtn = document.getElementById('ctContractSearchClear');
+    if (!form || !input) return;
+    var timer = null;
+    var delay = parseInt(input.getAttribute('data-ws-search-debounce') || '420', 10) || 420;
+
+    function syncClear() {
+        if (!clearBtn) return;
+        clearBtn.hidden = !String(input.value || '').trim();
+    }
+
+    function submitSearch() {
+        if (form.requestSubmit) form.requestSubmit();
+        else form.submit();
+    }
+
+    input.addEventListener('input', function () {
+        syncClear();
+        if (timer) window.clearTimeout(timer);
+        timer = window.setTimeout(submitSearch, delay);
+    });
+    input.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        if (timer) window.clearTimeout(timer);
+        submitSearch();
+    });
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            input.value = '';
+            syncClear();
+            submitSearch();
+        });
+    }
+    syncClear();
 })();
 </script>
 {% endblock %}

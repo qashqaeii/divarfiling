@@ -95,8 +95,11 @@ _HUB_EVENT_TONES = {
 
 _OBJECT_TYPE_LABELS = {
     'customer': 'مخاطب',
+    'customer_activity': 'مخاطب',
     'property': 'فایل',
+    'property_visit': 'بازدید ملک',
     'deal': 'معامله',
+    'deal_followup': 'معامله',
     'contract': 'قرارداد',
     'dataset': 'فایلینگ',
 }
@@ -291,4 +294,61 @@ def agency_hub_object_label(object_type):
     key = (object_type or '').strip().lower()
     if not key:
         return ''
-    return _OBJECT_TYPE_LABELS.get(key, key)
+    return _OBJECT_TYPE_LABELS.get(key, '')
+
+
+@register.filter
+def agency_hub_event_label(event_type):
+    """Persian label for AgencyActivityEvent.event_type."""
+    from workspace.services.agency_activity import event_type_label
+
+    key = (event_type or '').strip()
+    if not key:
+        return 'رویداد'
+    mapped = event_type_label(key)
+    if mapped != key.replace('_', ' '):
+        return mapped
+    return _EVENT_KEY_LABELS.get(key, mapped)
+
+
+@register.filter
+def agency_hub_event_title(ev):
+    """Premium Persian title for a hub timeline row."""
+    if not ev:
+        return 'رویداد'
+    et = (getattr(ev, 'event_type', None) or '').strip()
+    meta = getattr(ev, 'metadata', None) or {}
+    atype = (meta.get('activity_type') or meta.get('type') or '').strip()
+    followup = _FOLLOWUP_LABELS.get(atype, atype)
+
+    if et in ('follow_up', 'call', 'visit'):
+        if et == 'call' or followup in ('تماس',):
+            return 'تماس با مشتری'
+        if et == 'visit' or followup in ('بازدید',):
+            return 'بازدید ملک'
+        if followup in ('جلسه',):
+            return 'جلسه پیگیری'
+        if followup in ('واتساپ', 'پیامک', 'ایمیل', 'یادداشت'):
+            return f'{followup} با مشتری'
+        if et == 'follow_up':
+            return 'پیگیری مشتری'
+    return agency_hub_event_label(et)
+
+
+@register.filter
+def agency_hub_event_detail(ev):
+    """Optional secondary Persian detail (name/title from metadata)."""
+    if not ev:
+        return ''
+    meta = getattr(ev, 'metadata', None) or {}
+    for key in ('name', 'title', 'kind_label'):
+        val = (meta.get(key) or '').strip()
+        if val:
+            return val[:80]
+    stage_to = (meta.get('to') or '').strip()
+    stage_from = (meta.get('from') or '').strip()
+    if stage_to:
+        if stage_from:
+            return f'{stage_from} ← {stage_to}'
+        return stage_to
+    return ''

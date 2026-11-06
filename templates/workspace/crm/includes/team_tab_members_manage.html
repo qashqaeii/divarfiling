@@ -18,61 +18,81 @@
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="صندلی آزاد" value=members_dashboard.seats.available|default:0 icon="chair" tone="green" %}
     </div>
 
-    <div class="agency-filter-bar agency-members-filter" id="agencyMembersToolbar">
-        <div class="agency-filter-bar__search">
-            <i class="fas fa-search agency-filter-bar__search-icon" aria-hidden="true"></i>
-            <input type="text" role="searchbox" class="agency-filter-bar__input" id="agencyMemberSearch" name="agency_member_q" placeholder="جستجو نام یا موبایل..." aria-label="جستجو عضو" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" readonly value="">
-        </div>
-        <button type="button" class="agency-members-filter__open crm-btn crm-btn-ghost crm-btn-sm" id="agencyMemberFilterOpen" aria-expanded="false" aria-controls="agencyMemberFilterPanel">
-            <i class="fas fa-sliders" aria-hidden="true"></i>
-            <span>فیلتر</span>
-            <em class="agency-members-filter__badge" id="agencyMemberFilterBadge" hidden aria-label="فیلتر فعال"></em>
-        </button>
-        <button type="button" class="agency-members-filter__backdrop" id="agencyMemberFilterBackdrop" tabindex="-1" aria-hidden="true" data-agency-members-filter-close></button>
-        <div class="agency-members-filter__panel" id="agencyMemberFilterPanel" role="dialog" aria-modal="true" aria-labelledby="agencyMemberFilterTitle">
-            <header class="agency-members-filter__head">
-                <h3 class="agency-members-filter__title" id="agencyMemberFilterTitle">فیلتر اعضا</h3>
-                <button type="button" class="agency-members-filter__close" data-agency-members-filter-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
-            </header>
-            <div class="agency-members-filter__body">
-                <label class="agency-members-filter__field">
-                    <span class="agency-members-filter__label">وضعیت</span>
-                    <select class="agency-filter-bar__select" id="agencyMemberStatusFilter" aria-label="فیلتر وضعیت">
-                        <option value="">همه وضعیت‌ها</option>
-                        <option value="active">عضو فعال</option>
-                        <option value="pending">در انتظار پذیرش</option>
-                    </select>
-                </label>
-                <label class="agency-members-filter__field">
-                    <span class="agency-members-filter__label">نقش</span>
-                    <select class="agency-filter-bar__select" id="agencyMemberRoleFilter" aria-label="فیلتر نقش">
-                        <option value="">همه نقش‌ها</option>
-                        <option value="advisor">مشاور</option>
-                        <option value="secretary">منشی</option>
-                        <option value="manager">مدیر (legacy)</option>
-                    </select>
-                </label>
-                <label class="agency-members-filter__field">
-                    <span class="agency-members-filter__label">لایسنس استخراج</span>
-                    <select class="agency-filter-bar__select" id="agencyMemberLicenseFilter" aria-label="فیلتر لایسنس">
-                        <option value="">همه</option>
-                        <option value="licensed">دارای لایسنس</option>
-                        <option value="unlicensed">بدون لایسنس</option>
-                        <option value="not_required">بدون نیاز به لایسنس</option>
-                    </select>
-                </label>
-                <label class="agency-members-filter__field">
-                    <span class="agency-members-filter__label">مرتب‌سازی</span>
-                    <select class="agency-filter-bar__select" id="agencyMemberSort" aria-label="مرتب‌سازی">
-                        <option value="name">مرتب‌سازی: نام</option>
-                        <option value="recent">مرتب‌سازی: جدیدترین</option>
-                    </select>
-                </label>
+    <div class="ws-filters ws-filters--rail agency-filter-bar agency-members-filter agency-members-filter--pro" id="agencyMembersToolbar" role="search" aria-label="جستجو و فیلتر اعضا">
+        <div class="ws-filters__rail agency-members-filter__rail">
+            <label class="ws-filters__search agency-filter-bar__search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" role="searchbox" class="agency-filter-bar__input" id="agencyMemberSearch" name="agency_member_q" placeholder="جستجو نام یا موبایل…" aria-label="جستجو عضو" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" readonly value="">
+                <button type="button" class="ws-filters__search-clear" id="agencyMemberSearchClear" data-ws-clear-bound="1" data-bound="1" hidden aria-label="پاک کردن جستجو"><i class="fas fa-times" aria-hidden="true"></i></button>
+            </label>
+
+            <button type="button"
+                    class="ws-filters__filter-btn agency-members-filter__open"
+                    id="agencyMemberFilterOpen"
+                    aria-expanded="false"
+                    aria-controls="agencyMemberFilterPanel"
+                    title="فیلتر"
+                    aria-label="فیلتر اعضا">
+                <i class="fas fa-sliders" aria-hidden="true"></i>
+                <span class="agency-members-filter__open-label">فیلتر</span>
+                <em class="agency-members-filter__badge" id="agencyMemberFilterBadge" hidden aria-label="فیلتر فعال"></em>
+            </button>
+
+            <button type="button" class="agency-members-filter__backdrop" id="agencyMemberFilterBackdrop" tabindex="-1" aria-hidden="true" data-agency-members-filter-close></button>
+            <div class="agency-members-filter__panel" id="agencyMemberFilterPanel" role="dialog" aria-modal="true" aria-labelledby="agencyMemberFilterTitle">
+                <header class="agency-members-filter__head">
+                    <div class="agency-members-filter__head-text">
+                        <h3 class="agency-members-filter__title" id="agencyMemberFilterTitle">فیلتر اعضا</h3>
+                        <p class="agency-members-filter__sub">وضعیت، نقش، لایسنس و مرتب‌سازی</p>
+                    </div>
+                    <button type="button" class="agency-members-filter__close" data-agency-members-filter-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+                </header>
+                <div class="ws-filters__fields agency-members-filter__body">
+                    <label class="agency-members-filter__field">
+                        <span class="agency-members-filter__label">وضعیت</span>
+                        <select class="ws-filters__select agency-filter-bar__select" id="agencyMemberStatusFilter" aria-label="فیلتر وضعیت">
+                            <option value="">وضعیت</option>
+                            <option value="active">عضو فعال</option>
+                            <option value="pending">در انتظار پذیرش</option>
+                        </select>
+                    </label>
+                    <label class="agency-members-filter__field">
+                        <span class="agency-members-filter__label">نقش</span>
+                        <select class="ws-filters__select agency-filter-bar__select" id="agencyMemberRoleFilter" aria-label="فیلتر نقش">
+                            <option value="">نقش</option>
+                            <option value="advisor">مشاور</option>
+                            <option value="secretary">منشی</option>
+                            <option value="manager">مدیر (legacy)</option>
+                        </select>
+                    </label>
+                    <label class="agency-members-filter__field">
+                        <span class="agency-members-filter__label">لایسنس استخراج</span>
+                        <select class="ws-filters__select agency-filter-bar__select" id="agencyMemberLicenseFilter" aria-label="فیلتر لایسنس">
+                            <option value="">لایسنس</option>
+                            <option value="licensed">دارای لایسنس</option>
+                            <option value="unlicensed">بدون لایسنس</option>
+                            <option value="not_required">بدون نیاز به لایسنس</option>
+                        </select>
+                    </label>
+                    <label class="agency-members-filter__field">
+                        <span class="agency-members-filter__label">مرتب‌سازی</span>
+                        <select class="ws-filters__select agency-filter-bar__select" id="agencyMemberSort" aria-label="مرتب‌سازی">
+                            <option value="name">نام</option>
+                            <option value="recent">جدیدترین</option>
+                        </select>
+                    </label>
+                </div>
+                <footer class="agency-members-filter__foot">
+                    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-agency-members-filter-reset hidden>پاک کردن</button>
+                    <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-agency-members-filter-close>اعمال</button>
+                </footer>
             </div>
-            <footer class="agency-members-filter__foot">
-                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" id="agencyMemberFilterClear" hidden>پاک کردن</button>
-                <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-agency-members-filter-close>اعمال</button>
-            </footer>
+
+            <div class="ws-filters__actions agency-members-filter__actions">
+                <button type="button" class="ws-filters__clear" id="agencyMemberFilterClear" data-agency-members-filter-reset hidden title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
+                    <i class="fas fa-times" aria-hidden="true"></i><span>پاک‌سازی</span>
+                </button>
+            </div>
         </div>
     </div>
 

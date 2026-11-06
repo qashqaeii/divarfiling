@@ -175,9 +175,9 @@
         background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-bg, #f8fafc));
     }
 
-    /* Hide desktop chrome */
+    /* Hide desktop chrome — keep fl-kpi-pro contacts KPIs visible */
     .crm-contacts-desk-header,
-    .crm-contacts-mobile .crm-dash-kpis {
+    .crm-contacts-mobile .crm-dash-kpis:not(.fl-kpi-pro) {
         display: none;
     }
 
@@ -592,7 +592,8 @@
         display: none !important;
     }
 
-    .crm-contacts-mob-active-chips {
+    .crm-contacts-mob-active-chips,
+    .crm-contacts-active-chips {
         display: flex;
         align-items: center;
         gap: 0.35rem;
@@ -601,7 +602,8 @@
         scrollbar-width: none;
         padding-bottom: 0.05rem;
     }
-    .crm-contacts-mob-active-chips::-webkit-scrollbar { display: none; }
+    .crm-contacts-mob-active-chips::-webkit-scrollbar,
+    .crm-contacts-active-chips::-webkit-scrollbar { display: none; }
     .crm-contacts-mob-chip {
         display: inline-flex;
         align-items: center;

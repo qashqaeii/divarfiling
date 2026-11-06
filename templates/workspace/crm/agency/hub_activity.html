@@ -1,5 +1,5 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
-{% load crm_tags humanize advisor360_tags %}
+{% load static crm_tags humanize advisor360_tags workspace_tags persian_tags %}
 {% block agency_hub_content %}
 <section class="agency-activity-page" aria-label="فعالیت تیم">
     <div class="agency-page-head agency-activity-page__head">
@@ -9,26 +9,63 @@
         </div>
     </div>
 
-    <form method="get" class="agency-filter-bar agency-activity-page__filters">
-        <select name="advisor" id="activityAdvisor" class="agency-filter-bar__select" aria-label="فیلتر مشاور">
-            <option value="">همه مشاوران</option>
-            {% for m in advisors %}
-            <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="event_type" id="activityEventType" value="{{ event_type_filter }}" placeholder="نوع رویداد..." class="agency-filter-bar__select agency-activity-page__event-input" aria-label="نوع رویداد">
-        <div class="agency-activity-page__filter-actions">
-            <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
-                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='filter' size='inline' only %}</span>
-                اعمال
-            </button>
-            {% if request.GET.advisor or event_type_filter %}
-            <a href="{% url 'workspace:agency_hub_activity' %}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن</a>
-            {% endif %}
+    {% url 'workspace:agency_hub_activity' as activity_clear_url %}
+    <form method="get" class="ws-filters ws-filters--rail agency-filter-bar agency-activity-page__filters agency-activity-filters--pro" id="agencyActivityFilters" aria-label="جستجو و فیلتر فعالیت">
+        <div class="ws-filters__rail agency-activity-filters__rail">
+            <div class="ws-filters__fields agency-activity-filters__fields{% if request.GET.advisor or event_type_filter %} is-filtered{% endif %}">
+                <select name="advisor" id="activityAdvisor" class="ws-filters__select agency-filter-bar__select{% if request.GET.advisor %} is-active{% endif %}" aria-label="فیلتر مشاور" onchange="this.form.submit()">
+                    <option value="">مشاور</option>
+                    {% for m in advisors %}
+                    <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
+                    {% endfor %}
+                </select>
+                <select name="event_type" id="activityEventType" class="ws-filters__select agency-filter-bar__select{% if event_type_filter %} is-active{% endif %}" aria-label="نوع رویداد" onchange="this.form.submit()">
+                    <option value="">نوع رویداد</option>
+                    {% for key, label in event_type_options %}
+                    <option value="{{ key }}"{% if event_type_filter == key %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ws-filters__actions agency-activity-filters__actions">
+                {% if request.GET.advisor or event_type_filter %}
+                <a href="{{ activity_clear_url }}" class="ws-filters__clear" title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
+                    <i class="fas fa-times" aria-hidden="true"></i><span>پاک‌سازی</span>
+                </a>
+                {% endif %}
+            </div>
         </div>
+
+        {% if request.GET.advisor or event_type_filter %}
+        <div class="ws-filters__active agency-activity-filters__chips" aria-label="فیلترهای فعال">
+            {% if request.GET.advisor %}
+            <a href="?{% ws_query_without 'advisor' %}" class="ws-filters__active-chip" title="حذف مشاور">
+                <i class="fas fa-user" aria-hidden="true"></i>
+                {% for m in advisors %}{% if request.GET.advisor == m.pk|stringformat:"s" %} {{ m.user.get_full_name|default:m.user.phone }}{% endif %}{% endfor %}
+                <span aria-hidden="true">×</span>
+            </a>
+            {% endif %}
+            {% if event_type_filter %}
+            <a href="?{% ws_query_without 'event_type' %}" class="ws-filters__active-chip" title="حذف نوع رویداد">
+                <i class="fas fa-bolt" aria-hidden="true"></i>
+                {{ event_type_filter|agency_hub_event_label }}
+                <span aria-hidden="true">×</span>
+            </a>
+            {% endif %}
+            <a href="{{ activity_clear_url }}" class="ws-filters__active-chip mk-filter-chip--reset">پاک کردن همه</a>
+        </div>
+        {% endif %}
     </form>
 
-    <div class="agency-panel agency-panel--activity agency-panel--timeline agency-activity-page__timeline">
+    <div class="agency-panel agency-panel--activity agency-panel--timeline agency-activity-page__timeline agency-activity-page__timeline--pro">
+        <header class="agency-activity-timeline__head">
+            <div>
+                <h3 class="agency-activity-timeline__title">فعالیت تیم</h3>
+                <p class="agency-activity-timeline__sub">رویدادها و اقدامات مشاوران در یک نگاه</p>
+            </div>
+            {% if events %}
+            <span class="agency-activity-timeline__count">{{ events|length|to_persian_digits }} رویداد</span>
+            {% endif %}
+        </header>
         {% if events %}
         {% include "workspace/crm/agency/includes/agency_hub_activity_timeline.html" with events=events %}
         {% else %}

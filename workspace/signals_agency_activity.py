@@ -105,8 +105,13 @@ def _customer_activity(sender, instance, created, **kwargs):
         event = EVENT_FOLLOW_UP
     emit_agency_activity(
         customer.agency, customer.user, event,
-        object_type='customer_activity', object_id=instance.pk,
-        metadata={'activity_type': atype, 'customer_id': customer.pk},
+        object_type='customer', object_id=customer.pk,
+        metadata={
+            'activity_type': atype,
+            'customer_id': customer.pk,
+            'activity_id': instance.pk,
+            'name': (customer.name or '')[:80],
+        },
     )
 
 
@@ -116,8 +121,12 @@ def _property_visit(sender, instance, created, **kwargs):
         return
     emit_for_user_record(
         instance.user, EVENT_VISIT,
-        object_type='property_visit', object_id=instance.pk,
-        metadata={'customer_id': instance.customer_id},
+        object_type='property', object_id=instance.property_id or instance.pk,
+        metadata={
+            'customer_id': instance.customer_id,
+            'visit_id': instance.pk,
+            'title': (instance.listing_title or '')[:80],
+        },
     )
 
 
@@ -131,6 +140,11 @@ def _deal_followup(sender, instance, created, **kwargs):
     actor = instance.user or deal.user
     emit_agency_activity(
         deal.agency, actor, EVENT_FOLLOW_UP,
-        object_type='deal_followup', object_id=instance.pk,
-        metadata={'deal_id': deal.pk, 'type': instance.follow_up_type},
+        object_type='deal', object_id=deal.pk,
+        metadata={
+            'deal_id': deal.pk,
+            'followup_id': instance.pk,
+            'type': instance.follow_up_type,
+            'title': (deal.title or '')[:80],
+        },
     )

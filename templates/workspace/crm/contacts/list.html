@@ -10,10 +10,10 @@
 {% block status_bar %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-controls.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-controls.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=18">
 {% endblock %}
 
@@ -39,14 +39,18 @@
     </div>
     {% endif %}
 
-    <header class="crm-dash-bar crm-contacts-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">مخاطبین</h1>
-            {% if request.GET.match_alerts == '1' %}
-            <p class="crm-dash-bar-sub is-visible">فقط مخاطبانی که فایل پیشنهادی قابل بررسی دارند</p>
-            {% endif %}
+    <header class="fl-header mk-filing-desk-header crm-contacts-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">مخاطبین</h1>
+            <p class="fl-header__sub">
+                {% if request.GET.match_alerts == '1' %}
+                فقط مخاطبانی که فایل پیشنهادی قابل بررسی دارند
+                {% else %}
+                مدیریت مشتریان، نیازها و پیگیری‌های روزمره
+                {% endif %}
+            </p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مخاطبین">
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات مخاطبین">
             <button type="button" class="fl-header__help crm-contacts-help" title="راهنمای مخاطبین" aria-label="راهنمای مخاطبین" data-modal-open="modal-crm-contacts-help">
                 <span class="fl-header__help-ring" aria-hidden="true"></span>
                 <span class="fl-header__help-bulb" aria-hidden="true">
@@ -55,16 +59,16 @@
                 </span>
                 <span class="fl-header__help-label">راهنما</span>
             </button>
-            <button type="button" class="crm-dash-act" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
+            <button type="button" class="fl-header__btn fl-header__btn--ghost" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
                 <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
             </button>
-            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-dash-act js-secure-export" data-export-type="fetch-blob" data-export-label="مخاطبین Excel" data-export-filename="crm_contacts.xlsx" title="خروجی Excel">
+            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="fl-header__btn fl-header__btn--ghost js-secure-export" data-export-type="fetch-blob" data-export-label="مخاطبین Excel" data-export-filename="crm_contacts.xlsx" title="خروجی Excel">
                 <i class="fas fa-file-excel" aria-hidden="true"></i><span>خروجی Excel</span>
             </a>
-            <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
+            <button type="button" class="fl-header__btn fl-header__btn--ghost" data-drawer-open="drawer-quick-lead">
                 <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
             </button>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-contact">
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-contact">
                 <i class="fas fa-user-plus" aria-hidden="true"></i><span>مخاطب</span>
             </button>
         </div>

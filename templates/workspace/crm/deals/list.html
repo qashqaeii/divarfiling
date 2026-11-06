@@ -9,8 +9,9 @@
 {% block crm_actions %}{% endblock %}
 
 {% block ws_surface_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=13">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-stages-drawer.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-journey.css' %}?v=6">
@@ -24,26 +25,26 @@
 {% url 'workspace:crm_deals' as deals_list_clear_url %}
 <div class="crm-shell-page crm-deals-page crm-deals-pro crm-deals-mobile crm-page-chrome mk-filing-datasets{% if view_mode == 'pipeline' %} crm-deals-pro--pipeline{% endif %}">
 
-    <header class="crm-dash-bar crm-deals-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">قیف معاملات</h1>
-            <p class="crm-dash-bar-sub is-visible">فرصت‌ها را مرحله‌به‌مرحله تا نهایی‌شدن معامله مدیریت کنید.</p>
+    <header class="fl-header mk-filing-desk-header crm-deals-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">قیف معاملات</h1>
+            <p class="fl-header__sub">فرصت‌ها را مرحله‌به‌مرحله تا نهایی‌شدن معامله مدیریت کنید.</p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات قیف معاملات">
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات قیف معاملات">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-deals-help' help_title='راهنمای قیف معاملات' %}
-            <button type="button" class="crm-dash-act" data-drawer-open="drawer-deal-stages" title="تنظیم مراحل pipeline">
+            <button type="button" class="fl-header__btn fl-header__btn--ghost" data-drawer-open="drawer-deal-stages" title="تنظیم مراحل pipeline">
                 <i class="fas fa-sliders" aria-hidden="true"></i><span>مراحل</span>
             </button>
-            <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-dash-act" title="داشبورد مالی معاملات">
+            <a href="{% url 'workspace:crm_deals_finance' %}" class="fl-header__btn fl-header__btn--ghost" title="داشبورد مالی معاملات">
                 <i class="fas fa-coins" aria-hidden="true"></i><span>مالی</span>
             </a>
-            <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-dash-act" title="قراردادها">
+            <a href="{% url 'workspace:contracts_dashboard' %}" class="fl-header__btn fl-header__btn--ghost" title="قراردادها">
                 <i class="fas fa-file-signature" aria-hidden="true"></i><span>قراردادها</span>
             </a>
-            <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act" title="مخاطبین">
+            <a href="{% url 'workspace:crm_contacts' %}" class="fl-header__btn fl-header__btn--ghost" title="مخاطبین">
                 <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
             </a>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-deal">
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-deal">
                 <i class="fas fa-plus" aria-hidden="true"></i><span>معامله جدید</span>
             </button>
         </div>

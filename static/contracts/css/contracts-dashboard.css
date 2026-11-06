@@ -53,46 +53,65 @@
     font-weight: 600;
 }
 
-/* ── Header ── */
+/* ── Header — filing fl-header parity ── */
 .crm-contracts-dashboard .ct-workspace-header {
     margin-bottom: 0.15rem;
 }
-.crm-contracts-dashboard .ct-workspace-header .crm-dash-bar-main {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-}
-.crm-contracts-dashboard .ct-dash-title-row {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-}
-.crm-contracts-dashboard .ct-dash-title-icon {
-    width: 2.5rem;
-    height: 2.5rem;
+.crm-contracts-dashboard .ct-workspace-header .fl-header__actions {
+    gap: 0.4rem;
+    padding: 0.28rem;
     border-radius: 12px;
+}
+.crm-contracts-dashboard .ct-workspace-header .fl-header__help {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
+    border-radius: 999px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--ct-dash-primary) 12%, var(--ct-dash-surface));
-    color: var(--ct-dash-primary);
-    font-size: 1rem;
-    flex-shrink: 0;
-    border: 1px solid color-mix(in srgb, var(--ct-dash-primary) 28%, var(--ct-dash-border));
+    gap: 0.4rem;
+    min-height: 2.35rem;
+    height: 2.35rem;
+    padding: 0 0.85rem;
+    border-radius: 9px;
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1;
+    box-sizing: border-box;
 }
-.crm-contracts-dashboard .ct-workspace-header .crm-dash-bar-title {
-    margin: 0;
-    font-size: clamp(1.25rem, 2.2vw, 1.55rem);
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    line-height: 1.2;
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn i,
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn .fas {
+    font-size: 0.78rem;
+    line-height: 1;
+    width: auto;
+    opacity: 0.9;
 }
-.crm-contracts-dashboard .ct-workspace-header .crm-dash-bar-sub {
-    margin: 0;
-    max-width: 42rem;
-    font-size: 0.88rem;
-    line-height: 1.55;
-    color: var(--ct-dash-muted);
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn--primary i,
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn--primary .fas {
+    opacity: 1;
+}
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn--ghost {
+    background: var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+    color: var(--ws-text-secondary);
+}
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn--primary {
+    background: var(--ws-primary);
+    border: 1px solid var(--ws-primary);
+    color: #fff;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+}
+.crm-contracts-dashboard .ct-workspace-header .fl-header__btn.is-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+    cursor: not-allowed;
 }
 
 /* Mobile header */
@@ -727,7 +746,7 @@
 }
 
 @media (max-width: 480px) {
-    .crm-contracts-dashboard .crm-dash-bar-actions {
+    .crm-contracts-dashboard .ct-workspace-header .fl-header__actions {
         flex-wrap: wrap;
     }
 }

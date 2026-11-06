@@ -68,11 +68,15 @@
     .mk-filing-mob-header {
         display: block;
         position: relative;
-        overflow: hidden;
+        z-index: 40;
+        overflow: visible;
         background: var(--ws-surface);
         border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
         border-radius: 0 0 22px 22px;
         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+    .mk-filing-mob-header:has(.fl-mob-header__more[open]) {
+        z-index: 60;
     }
     .mk-filing-mob-header-mesh {
         position: absolute;

@@ -60,70 +60,76 @@
     width: 100%;
 }
 
-/* ── Page header ── */
-.crm-cal-pro-v2 .crm-cal-desk-header,
-.crm-cal-pro-v2 .crm-dash-bar.crm-cal-desk-header {
+/* ── Page header — filing fl-header parity ── */
+.crm-cal-pro-v2 .crm-cal-desk-header {
     display: none;
-}
-
-.crm-cal-page-head {
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
 }
 
 @media (min-width: 769px) {
-    .crm-cal-page-head {
+    .crm-cal-pro-v2 .crm-cal-desk-header.fl-header {
         display: flex;
     }
 }
 
-.crm-cal-page-head-main {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.85rem;
-    min-width: 0;
+.crm-cal-page .crm-cal-desk-header .fl-header__actions {
+    gap: 0.4rem;
+    padding: 0.28rem;
+    border-radius: 12px;
 }
 
-.crm-cal-page-head-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: var(--cal-purple-soft);
-    color: var(--cal-purple);
-    display: flex;
+.crm-cal-page .crm-cal-desk-header .fl-header__help {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
+    border-radius: 999px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.crm-cal-page .crm-cal-desk-header .fl-header__btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
+    gap: 0.4rem;
+    min-height: 2.35rem;
+    height: 2.35rem;
+    padding: 0 0.85rem;
+    border-radius: 9px;
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1;
+    box-sizing: border-box;
 }
 
-.crm-cal-page-head-title {
-    margin: 0;
-    font-size: clamp(1.45rem, 2vw, 1.75rem);
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    color: var(--ws-text);
-    line-height: 1.2;
+.crm-cal-page .crm-cal-desk-header .fl-header__btn i,
+.crm-cal-page .crm-cal-desk-header .fl-header__btn .fas {
+    font-size: 0.78rem;
+    line-height: 1;
+    width: auto;
+    opacity: 0.9;
 }
 
-.crm-cal-page-head-sub {
-    margin: 0.35rem 0 0;
-    font-size: 0.82rem;
-    color: var(--ws-text-muted);
-    line-height: 1.45;
+.crm-cal-page .crm-cal-desk-header .fl-header__btn--primary i,
+.crm-cal-page .crm-cal-desk-header .fl-header__btn--primary .fas {
+    opacity: 1;
 }
 
-.crm-cal-page-head-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    flex-shrink: 0;
+.crm-cal-page .crm-cal-desk-header .fl-header__btn--ghost {
+    background: var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+    color: var(--ws-text-secondary);
 }
 
-/* ── Buttons ── */
+.crm-cal-page .crm-cal-desk-header .fl-header__btn--primary {
+    background: var(--ws-primary);
+    border: 1px solid var(--ws-primary);
+    color: #fff;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+}
+
+/* ── Buttons (board / nav) ── */
 .crm-cal-btn {
     display: inline-flex;
     align-items: center;
@@ -142,16 +148,14 @@
     transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.crm-cal-btn--primary,
-.crm-cal-page-head-actions .crm-cal-btn:not(.crm-cal-btn--ghost) {
+.crm-cal-btn--primary {
     background: var(--cal-purple);
     border-color: var(--cal-purple);
     color: #fff;
     box-shadow: 0 1px 3px rgba(124, 58, 237, 0.18);
 }
 
-.crm-cal-btn--primary:hover,
-.crm-cal-page-head-actions .crm-cal-btn:not(.crm-cal-btn--ghost):hover {
+.crm-cal-btn--primary:hover {
     background: var(--ws-primary-hover, #6d28d9);
     border-color: var(--ws-primary-hover, #6d28d9);
     color: #fff;
@@ -167,19 +171,6 @@
     border-color: var(--cal-purple);
     color: var(--cal-purple);
     background: var(--cal-purple-soft);
-}
-
-.crm-cal-page-head-actions .fl-header__help.crm-cal-btn--ghost {
-    min-height: 36px;
-    padding: 0 0.85rem;
-    border-radius: 10px;
-    border: 1px solid var(--ws-border);
-    background: var(--ws-surface);
-}
-
-.crm-cal-page-head-actions .fl-header__help.crm-cal-btn--ghost .fl-header__help-label {
-    font-size: 0.78rem;
-    font-weight: 700;
 }
 
 .crm-cal-btn--sm {

@@ -9,8 +9,9 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=19">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -18,15 +19,18 @@
 {% crm_placeholder_meta as ph_meta %}
 <div class="crm-shell-page crm-tpl-pro crm-tpl-pro-v2 crm-tpl-mobile crm-page-chrome mk-filing-datasets">
 
-    <header class="crm-dash-bar crm-tpl-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">قالب پیام</h1>
-            <p class="crm-dash-bar-sub">متن‌های آماده واتساپ و پیامک — با متغیر هوشمند شخصی‌سازی کنید</p>
+    <header class="fl-header mk-filing-desk-header crm-tpl-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">قالب پیام</h1>
+            <p class="fl-header__sub">متن‌های آماده واتساپ و پیامک — با متغیر هوشمند شخصی‌سازی کنید</p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات قالب‌ها">
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات قالب‌ها">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-templates-help' help_title='راهنمای قالب پیام' %}
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-template">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>قالب</span>
+            <a href="{% url 'workspace:crm_automation' %}" class="fl-header__btn fl-header__btn--ghost" title="اتوماسیون">
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>اتوماسیون</span>
+            </a>
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-template">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>قالب جدید</span>
             </button>
         </div>
     </header>

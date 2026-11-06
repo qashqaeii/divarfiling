@@ -9,10 +9,11 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=11">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-properties-list-controls.css' %}?v=2">
 {% endblock %}
 
@@ -59,15 +60,15 @@
         </div>
     </header>
 
-    <header class="crm-dash-bar crm-dash-bar--compact crm-files-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">فایل‌های شخصی</h1>
-            <p class="crm-dash-bar-sub is-visible">مدیریت و سازمان‌دهی فایل‌های املاک</p>
+    <header class="fl-header mk-filing-desk-header crm-files-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">فایل‌های شخصی</h1>
+            <p class="fl-header__sub">مدیریت و سازمان‌دهی فایل‌های املاک</p>
         </div>
-        <div class="crm-dash-bar-actions crm-files-desk-actions" role="toolbar" aria-label="عملیات فایل‌ها">
+        <div class="fl-header__actions crm-files-desk-actions" role="toolbar" aria-label="عملیات فایل‌ها">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-properties-help' help_title='راهنمای فایل‌های شخصی' %}
             <details class="crm-files-export">
-                <summary class="crm-dash-act" title="خروجی فایل‌های {% if has_filters %}{{ filtered_count }} فیلترشده{% else %}{{ stats.total }}{% endif %}">
+                <summary class="fl-header__btn fl-header__btn--ghost" title="خروجی فایل‌های {% if has_filters %}{{ filtered_count }} فیلترشده{% else %}{{ stats.total }}{% endif %}">
                     <i class="fas fa-file-export" aria-hidden="true"></i>
                     <span>خروجی</span>
                     <i class="fas fa-chevron-down crm-files-export-caret" aria-hidden="true"></i>
@@ -85,18 +86,18 @@
                     </a>
                 </div>
             </details>
-            <button type="button" class="crm-dash-act" data-drawer-open="drawer-property-import" title="ورود گروهی فایل‌های شخصی">
+            <button type="button" class="fl-header__btn fl-header__btn--ghost" data-drawer-open="drawer-property-import" title="ورود گروهی فایل‌های شخصی">
                 <i class="fas fa-file-import" aria-hidden="true"></i>
                 <span>ورود گروهی</span>
             </button>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-property" title="ثبت فایل جدید">
-                <i class="fas fa-file-circle-plus" aria-hidden="true"></i>
-                <span>فایل جدید</span>
-            </button>
-            <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-dash-act" title="نقشه فایل‌های شخصی">
+            <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="fl-header__btn fl-header__btn--ghost" title="نقشه فایل‌های شخصی">
                 <i class="fas fa-map-location-dot" aria-hidden="true"></i>
                 <span>نقشه</span>
             </a>
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-property" title="ثبت فایل جدید">
+                <i class="fas fa-file-circle-plus" aria-hidden="true"></i>
+                <span>فایل جدید</span>
+            </button>
         </div>
     </header>
 

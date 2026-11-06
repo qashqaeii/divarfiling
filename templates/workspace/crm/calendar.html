@@ -9,9 +9,10 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -30,19 +31,19 @@
         </div>
     </header>
 
-    <header class="crm-cal-page-head">
-        <div class="crm-cal-page-head-main">
-            <div class="crm-cal-page-head-icon" aria-hidden="true"><i class="fas fa-calendar-days"></i></div>
-            <div>
-                <h1 class="crm-cal-page-head-title">تقویم</h1>
-                <p class="crm-cal-page-head-sub">برنامه‌ریزی، پیگیری و هیچ فرصتی را از دست ندهید.</p>
-            </div>
+    <header class="fl-header mk-filing-desk-header crm-cal-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">تقویم</h1>
+            <p class="fl-header__sub">برنامه‌ریزی، پیگیری و هیچ فرصتی را از دست ندهید.</p>
         </div>
-        <div class="crm-cal-page-head-actions" role="toolbar" aria-label="عملیات تقویم">
-            <button type="button" class="crm-cal-btn crm-cal-btn--primary" data-drawer-open="drawer-reminder">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>ایجاد یادآور</span>
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات تقویم">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-calendar-help' help_title='راهنمای تقویم' %}
+            <a href="{% url 'workspace:crm_reminders' %}" class="fl-header__btn fl-header__btn--ghost" title="یادآورها">
+                <i class="fas fa-bell" aria-hidden="true"></i><span>یادآورها</span>
+            </a>
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-reminder">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>یادآوری جدید</span>
             </button>
-            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-calendar-help' help_title='راهنمای تقویم' help_btn_class='crm-cal-btn crm-cal-btn--ghost' %}
         </div>
     </header>
 

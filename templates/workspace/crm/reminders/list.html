@@ -10,8 +10,9 @@
 {% block status_bar %}{% endblock %}
 
 {% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=18">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=9">
 {% endblock %}
 
 {% block crm_content %}
@@ -69,15 +70,21 @@
         </div>
     </div>
 
-    <header class="crm-dash-bar crm-rm-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">یادآورها</h1>
-            <p class="crm-dash-bar-sub">معوق‌ها را اول ببندید؛ برای هر مورد انجام‌شده را بزنید</p>
+    <header class="fl-header mk-filing-desk-header crm-rm-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">یادآورها</h1>
+            <p class="fl-header__sub">معوق‌ها را اول ببندید؛ برای هر مورد انجام‌شده را بزنید</p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات یادآورها">
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات یادآورها">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-reminders-help' help_title='راهنمای یادآورها' %}
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-reminder">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>یادآور</span>
+            <a href="{% url 'workspace:crm_today' %}" class="fl-header__btn fl-header__btn--ghost" title="کارهای امروز">
+                <i class="fas fa-list-check" aria-hidden="true"></i><span>کارهای امروز</span>
+            </a>
+            <a href="{% url 'workspace:crm_calendar' %}" class="fl-header__btn fl-header__btn--ghost" title="تقویم">
+                <i class="fas fa-calendar-days" aria-hidden="true"></i><span>تقویم</span>
+            </a>
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-reminder">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>یادآوری جدید</span>
             </button>
         </div>
     </header>

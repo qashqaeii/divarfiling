@@ -20,25 +20,13 @@
     position: relative;
 }
 
-/* â”€â”€â”€ Header chips â”€â”€â”€ */
-.crm-today-pro .crm-dash-bar {
-    border-radius: var(--tq-radius);
-    padding: 0.85rem 1rem;
-}
-
-.crm-today-pro .crm-dash-bar-title {
-    font-size: 1.1rem;
-    letter-spacing: -0.02em;
-}
-
-.crm-today-pro .crm-dash-bar-sub.is-visible {
+/* ─── Desk header — exact filing button parity ─── */
+.crm-today-pro .fl-header.crm-today-desk-header .fl-header__sub {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem 0.5rem;
-    margin-top: 0.3rem;
-    font-size: 0.74rem;
-    color: var(--ws-text-muted);
+    max-width: none;
 }
 
 .crm-today-chip {
@@ -57,19 +45,63 @@
     color: #b45309;
 }
 
-.crm-today-pro .crm-dash-act {
-    min-height: 2.4rem;
-    border-radius: 10px;
-    transition: transform 0.12s, background 0.12s;
+.crm-today-pro .crm-today-desk-header .fl-header__actions {
+    gap: 0.4rem;
+    padding: 0.28rem;
+    border-radius: 12px;
 }
 
-.crm-today-pro .crm-dash-act:active {
-    transform: scale(0.97);
+.crm-today-pro .crm-today-desk-header .fl-header__help,
+.crm-today-pro .crm-today-desk-header .fl-header__btn--icon {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
+    border-radius: 999px;
+    box-sizing: border-box;
 }
 
-/* â”€â”€â”€ Help button (filing parity) â”€â”€â”€ */
-.crm-today-pro .crm-dash-bar-actions {
+.crm-today-pro .crm-today-desk-header .fl-header__btn {
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.35rem;
+    height: 2.35rem;
+    padding: 0 0.85rem;
+    border-radius: 9px;
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1;
+    box-sizing: border-box;
+    transform: none;
+}
+
+.crm-today-pro .crm-today-desk-header .fl-header__btn i,
+.crm-today-pro .crm-today-desk-header .fl-header__btn .fas {
+    font-size: 0.78rem;
+    line-height: 1;
+    width: auto;
+    opacity: 0.9;
+}
+
+.crm-today-pro .crm-today-desk-header .fl-header__btn--primary i,
+.crm-today-pro .crm-today-desk-header .fl-header__btn--primary .fas {
+    opacity: 1;
+}
+
+.crm-today-pro .crm-today-desk-header .fl-header__btn--ghost {
+    background: var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+    color: var(--ws-text-secondary);
+}
+
+.crm-today-pro .crm-today-desk-header .fl-header__btn--primary {
+    background: var(--ws-primary);
+    border: 1px solid var(--ws-primary);
+    color: #fff;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ws-primary) 28%, transparent);
 }
 
 .crm-today-pro .crm-today-help {

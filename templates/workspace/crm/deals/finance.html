@@ -9,9 +9,10 @@
 {% block crm_actions %}{% endblock %}
 
 {% block ws_surface_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=15">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -43,17 +44,17 @@
         </div>
     </header>
 
-    <header class="crm-dash-bar crm-deals-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">مالی معاملات</h1>
-            <p class="crm-fin-desk-sub">{{ finance.period_label }} · درآمد مشاور، سهم املاک و وصول کمیسیون</p>
+    <header class="fl-header mk-filing-desk-header crm-deals-desk-header crm-fin-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">مالی معاملات</h1>
+            <p class="fl-header__sub crm-fin-desk-sub">{{ finance.period_label }} · درآمد مشاور، سهم املاک و وصول کمیسیون</p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مالی">
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات مالی">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-deals-finance-help' help_title='راهنمای مالی معاملات' %}
-            <a href="{% url 'workspace:crm_deals' %}" class="crm-dash-act" title="معاملات">
+            <a href="{% url 'workspace:crm_deals' %}" class="fl-header__btn fl-header__btn--ghost" title="معاملات">
                 <i class="fas fa-handshake" aria-hidden="true"></i><span>معاملات</span>
             </a>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-finance-defaults">
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-finance-defaults">
                 <i class="fas fa-sliders" aria-hidden="true"></i><span>پیش‌فرض کمیسیون</span>
             </button>
         </div>

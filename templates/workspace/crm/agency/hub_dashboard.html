@@ -6,14 +6,14 @@
 {% if summary %}
 {% if agency_dash_profile == 'secretary' %}
 <div class="agency-dash agency-dash--secretary agency-dash--pro">
+    {% include "workspace/crm/agency/includes/agency_kpi.html" %}
+
     <div class="agency-dash-toolbar">
         <div class="agency-dash-toolbar__copy">
             <h2 class="agency-page-head__title">میزکار پذیرش</h2>
             <p class="agency-page-head__sub">ثبت سریع، صندوق سرنخ و پیگیری‌های امروز</p>
         </div>
     </div>
-
-    {% include "workspace/crm/agency/includes/agency_kpi.html" %}
 
     {% if quick_actions %}
     <section class="agency-section agency-dash-actions">
@@ -52,20 +52,19 @@
 </div>
 {% else %}
 <div class="agency-dash agency-dash--pro">
-    <div class="agency-dash-toolbar">
-        <div class="agency-dash-toolbar__copy">
-            <h2 class="agency-page-head__title">داشبورد آژانس</h2>
-            <p class="agency-page-head__sub">نمای تصمیم‌ساز تیم در بازه انتخابی</p>
+    {# 1) KPI بلافاصله زیر هدر/ناو — فقط فیلتر بازه فشرده #}
+    <section class="agency-dash-kpi-block" aria-label="شاخص‌های کلیدی">
+        <div class="agency-dash-kpi-block__period">
+            <div class="agency-period agency-period--kpi" role="group" aria-label="بازه زمانی">
+                <a href="?days=7" class="agency-period__btn{% if summary.period_days == 7 %} is-active{% endif %}">۷ روز</a>
+                <a href="?days=30" class="agency-period__btn{% if summary.period_days == 30 %} is-active{% endif %}">۳۰ روز</a>
+                <a href="?days=90" class="agency-period__btn{% if summary.period_days == 90 %} is-active{% endif %}">۹۰ روز</a>
+            </div>
         </div>
-        <div class="agency-period" role="group" aria-label="بازه زمانی">
-            <a href="?days=7" class="agency-period__btn{% if summary.period_days == 7 %} is-active{% endif %}">۷ روز</a>
-            <a href="?days=30" class="agency-period__btn{% if summary.period_days == 30 %} is-active{% endif %}">۳۰ روز</a>
-            <a href="?days=90" class="agency-period__btn{% if summary.period_days == 90 %} is-active{% endif %}">۹۰ روز</a>
-        </div>
-    </div>
+        {% include "workspace/crm/agency/includes/agency_kpi.html" %}
+    </section>
 
-    {% include "workspace/crm/agency/includes/agency_kpi.html" %}
-
+    {# 2) خلاصه ظرفیت #}
     {% if summary.contracts != None or summary.seats_total %}
     <section class="agency-dash-meta" aria-label="خلاصه ظرفیت و قرارداد">
         {% if summary.seats_total %}
@@ -90,6 +89,7 @@
     </section>
     {% endif %}
 
+    {# 3) محتوای تحلیلی #}
     <div class="agency-dash-grid agency-dash-grid--ref">
         <section class="agency-section agency-dash-grid__main">
             {% include "workspace/crm/agency/includes/section_head.html" with title="عملکرد مشاوران" decor="bar_chart" subtitle="وضعیت، آخرین فعالیت و حجم کار" link_url=advisors_url link_label="مشاهده همه" %}

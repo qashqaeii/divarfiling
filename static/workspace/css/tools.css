@@ -7,25 +7,36 @@
     max-width: 1200px;
 }
 
-/* ─── Hero ─── */
-.ws-tbx-hero {
+/* ─── Hero — filing fl-header parity (desk) ─── */
+.ws-tbx-hero.fl-header {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem 1.5rem;
-    padding: 1.15rem 1.35rem;
-    border-radius: 18px;
-    border: 1px solid color-mix(in srgb, var(--ws-border) 78%, transparent);
+    gap: 1rem 1.25rem;
+    padding: 1rem 1.15rem 1rem 1.2rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 92%, transparent);
+    border-inline-start: 3px solid var(--ws-primary);
     background:
-        radial-gradient(ellipse 80% 60% at 100% 0%, rgba(124, 58, 237, 0.08), transparent 55%),
-        radial-gradient(ellipse 60% 50% at 0% 100%, rgba(37, 99, 235, 0.06), transparent 50%),
-        var(--ws-surface);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface)) 0%,
+            var(--ws-surface) 72%
+        );
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 10px 28px rgba(15, 23, 42, 0.035);
+}
+
+.ws-tbx-hero-main {
+    min-width: 0;
+    flex: 1 1 15rem;
 }
 
 .ws-tbx-hero-kicker {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 0.45rem;
     margin-bottom: 0.35rem;
@@ -45,26 +56,123 @@
 
 .ws-tbx-hero-title {
     margin: 0;
-    font-size: 1.35rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-size: clamp(1.18rem, 1.08rem + 0.35vw, 1.35rem);
+    font-weight: 750;
+    letter-spacing: -0.03em;
     color: var(--ws-text);
-    line-height: 1.25;
+    line-height: 1.2;
 }
 
 .ws-tbx-hero-desc {
-    margin: 0.35rem 0 0;
-    font-size: 0.78rem;
+    margin: 0.28rem 0 0;
+    font-size: 0.76rem;
+    font-weight: 500;
     color: var(--ws-text-muted);
-    line-height: 1.6;
-    max-width: 36rem;
+    line-height: 1.5;
+    max-width: 34rem;
 }
 
 .ws-tbx-hero-badges {
-    display: flex;
+    display: none;
     flex-wrap: wrap;
     gap: 0.4rem;
-    align-self: center;
+    margin-top: 0.45rem;
+}
+
+.ws-tbx-hero-actions.fl-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding: 0.28rem;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--ws-surface-2) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+}
+
+.ws-tbx-hero .fl-header__help,
+.ws-tbx-hero .ws-tbx-hero-help {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
+    border-radius: 999px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.ws-tbx-hero .fl-header__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.35rem;
+    height: 2.35rem;
+    padding: 0 0.85rem;
+    border-radius: 9px;
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1;
+    box-sizing: border-box;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.ws-tbx-hero .fl-header__btn i,
+.ws-tbx-hero .fl-header__btn .fas {
+    font-size: 0.78rem;
+    line-height: 1;
+    width: auto;
+    opacity: 0.9;
+}
+
+.ws-tbx-hero .fl-header__btn--primary i,
+.ws-tbx-hero .fl-header__btn--primary .fas {
+    opacity: 1;
+}
+
+.ws-tbx-hero .fl-header__btn--ghost {
+    background: var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+    color: var(--ws-text-secondary);
+}
+
+.ws-tbx-hero .fl-header__btn--primary {
+    background: var(--ws-primary);
+    border: 1px solid var(--ws-primary);
+    color: #fff;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+}
+
+@media (max-width: 768px) {
+    .ws-tbx-hero.fl-header {
+        border-inline-start-width: 0;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    }
+
+    .ws-tbx-hero-kicker {
+        display: flex;
+    }
+
+    .ws-tbx-hero-badges {
+        display: flex;
+    }
+
+    .ws-tbx-hero .fl-header__btn {
+        display: none;
+    }
+
+    .ws-tbx-hero-actions.fl-header__actions {
+        padding: 0;
+        border: none;
+        background: transparent;
+        gap: 0;
+    }
 }
 
 .ws-tbx-badge {

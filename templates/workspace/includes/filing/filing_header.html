@@ -1,13 +1,10 @@
 <header class="fl-header mk-filing-desk-header" data-help-tour="filing-datasets" data-fl-tour="filing-header">
     <div class="fl-header__main">
-        <span class="fl-header__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
-        <div class="fl-header__text">
-            <h1 class="fl-header__title">فایلینگ</h1>
-            <p class="fl-header__sub">مدیریت، فیلتر و تحلیل پوشه‌های استخراج و آگهی‌های دیوار</p>
-        </div>
+        <h1 class="fl-header__title">فایلینگ</h1>
+        <p class="fl-header__sub">مدیریت، فیلتر و تحلیل پوشه‌های استخراج و آگهی‌های دیوار</p>
     </div>
     <div class="fl-header__actions" role="toolbar" aria-label="عملیات فایلینگ">
-        {% include 'workspace/includes/filing/filing_tour_button.html' with show_tour_label=True %}
+        {% include 'workspace/includes/filing/filing_tour_button.html' %}
         <button type="button" class="fl-header__help" title="راهنمای فایلینگ" aria-label="راهنمای فایلینگ" data-modal-open="modal-filing-help" data-fl-tour="filing-help-btn">
             <span class="fl-header__help-ring" aria-hidden="true"></span>
             <span class="fl-header__help-bulb" aria-hidden="true">

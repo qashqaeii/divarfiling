@@ -1,66 +1,51 @@
 {% load static workspace_tags %}
-<section class="agency-hero" aria-label="خلاصه آژانس">
-    <div class="agency-hero__brand">
+<header class="fl-header agency-hero" aria-label="خلاصه آژانس">
+    <div class="fl-header__main agency-hero__brand">
         <figure class="agency-hero__avatar{% if hub_agency_logo_url %} agency-hero__avatar--logo{% endif %}">
             {% if hub_agency_logo_url %}
-            <img src="{{ hub_agency_logo_url }}" alt="لوگوی {{ hub_agency.name|default:'آژانس' }}" class="agency-hero__avatar-img" width="56" height="56" loading="eager" decoding="async">
+            <img src="{{ hub_agency_logo_url }}" alt="لوگوی {{ hub_agency.name|default:'آژانس' }}" class="agency-hero__avatar-img" width="44" height="44" loading="eager" decoding="async">
             {% else %}
             <span class="agency-hero__avatar-fallback" aria-hidden="true">{{ hub_agency.name|default:"آ"|slice:":1" }}</span>
             {% endif %}
         </figure>
         <div class="agency-hero__identity">
-            <p class="agency-hero__eyebrow">{% if hub_advisor_member_shell %}میزکار مشاور{% else %}مدیریت آژانس{% endif %}</p>
-            <h1 class="agency-hero__title">{{ hub_agency.name|default:"آژانس" }}</h1>
-            {% if hub_member_role %}<p class="agency-hero__role">{{ hub_member_role }}</p>{% endif %}
-            {% if hub_subscription %}
-            <div class="agency-hero__badges">
-                <span class="agency-hub-chip agency-hub-chip--plan">
-                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='crown' size='xs' only %}</span>
-                    پلن آژانس
+            <h1 class="fl-header__title agency-hero__title">{{ hub_agency.name|default:"آژانس" }}</h1>
+            <p class="fl-header__sub agency-hero__sub">
+                <span class="agency-hero__eyebrow">{% if hub_advisor_member_shell %}میزکار مشاور{% else %}مدیریت آژانس{% endif %}</span>
+                {% if hub_member_role %}<span class="agency-hero__role">{{ hub_member_role }}</span>{% endif %}
+                {% if hub_subscription %}
+                <span class="agency-hero__chip agency-hero__chip--plan">پلن آژانس</span>
+                <span class="agency-hero__chip agency-hero__chip--ok">اشتراک فعال</span>
+                {% endif %}
+                {% if hub_seats and not hub_advisor_member_shell %}
+                <span class="agency-hero__chip agency-hero__chip--seats" aria-label="صندلی مشاوران {{ hub_seats.assigned }} از {{ hub_seats.total }}">
+                    صندلی {{ hub_seats.assigned }}/{{ hub_seats.total }}
                 </span>
-                <span class="agency-hub-chip">
-                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='xs' only %}</span>
-                    اشتراک فعال
-                </span>
-            </div>
-            {% endif %}
+                {% endif %}
+            </p>
         </div>
     </div>
 
-    <div class="agency-hero__end">
-        {% if hub_seats and not hub_advisor_member_shell %}
-        <div class="agency-hero__seats" aria-label="صندلی مشاوران">
-            <span class="agency-hero__seats-kpi">
-                <span class="agency-hero__seats-kpi-label">صندلی</span>
-                <strong>{{ hub_seats.assigned }}</strong><span class="agency-hero__seats-kpi-sep">/</span><span>{{ hub_seats.total }}</span>
+    <div class="fl-header__actions agency-hero__actions" role="toolbar" aria-label="عملیات آژانس">
+        <button type="button" class="fl-header__help agency-hero__help" title="راهنمای آژانس" aria-label="راهنمای آژانس" data-modal-open="modal-crm-agency-help">
+            <span class="fl-header__help-ring" aria-hidden="true"></span>
+            <span class="fl-header__help-bulb" aria-hidden="true">
+                <i class="fas fa-lightbulb"></i>
+                <span class="fl-header__help-bulb-glow"></span>
             </span>
-            <div class="agency-hero__seat-meter" role="progressbar" aria-valuenow="{{ hub_seats.assigned }}" aria-valuemin="0" aria-valuemax="{{ hub_seats.total }}" aria-label="تخصیص صندلی">
-                <span style="width: {% widthratio hub_seats.assigned hub_seats.total 100 %}%;"></span>
-            </div>
-        </div>
+            <span class="fl-header__help-label">راهنما</span>
+        </button>
+        {% if ws_agency_onboarding_cta %}
+        <a href="{{ ws_agency_onboarding_cta }}" class="fl-header__btn fl-header__btn--ghost">
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            <span>تکمیل راه‌اندازی</span>
+        </a>
         {% endif %}
-
-        <div class="agency-hero__actions">
-            <button type="button" class="fl-header__help agency-hero__help" title="راهنمای آژانس" aria-label="راهنمای آژانس" data-modal-open="modal-crm-agency-help">
-                <span class="fl-header__help-ring" aria-hidden="true"></span>
-                <span class="fl-header__help-bulb" aria-hidden="true">
-                    <i class="fas fa-lightbulb"></i>
-                    <span class="fl-header__help-bulb-glow"></span>
-                </span>
-                <span class="fl-header__help-label">راهنما</span>
-            </button>
-            {% if hub_show_invite and hub_section != 'advisors' %}
-            <button type="button" class="crm-btn crm-btn-primary agency-hero__cta" data-bs-toggle="modal" data-bs-target="#agencyInviteModal">
-                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user_plus' size='inline' only %}</span>
-                دعوت مشاور
-            </button>
-            {% endif %}
-            {% if ws_agency_onboarding_cta %}
-            <a href="{{ ws_agency_onboarding_cta }}" class="crm-btn crm-btn-ghost agency-hero__cta-secondary">
-                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' only %}</span>
-                تکمیل راه‌اندازی
-            </a>
-            {% endif %}
-        </div>
+        {% if hub_show_invite and hub_section != 'advisors' %}
+        <button type="button" class="fl-header__btn fl-header__btn--primary" data-bs-toggle="modal" data-bs-target="#agencyInviteModal">
+            <i class="fas fa-user-plus" aria-hidden="true"></i>
+            <span>دعوت مشاور</span>
+        </button>
+        {% endif %}
     </div>
-</section>
+</header>

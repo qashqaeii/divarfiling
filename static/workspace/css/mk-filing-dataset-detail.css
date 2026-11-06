@@ -10,22 +10,18 @@
     width: 100%;
 }
 
-/* ─── Desktop header ─── */
-.mk-filing-dataset-detail .fl-dd-header {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    padding: 0.8rem 1rem;
-    background: var(--ws-surface);
-    border: 1px solid var(--ws-border);
-    border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+/* ─── Desktop header — filing fl-header parity ─── */
+.mk-filing-dataset-detail > .fl-header.fl-dd-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 0.65rem;
 }
 .mk-filing-dataset-detail .fl-dd-crumb {
     display: flex;
     align-items: center;
     gap: 0.35rem;
     flex-wrap: wrap;
+    margin: 0 0 0.35rem;
     font-size: 0.68rem;
     font-weight: 700;
     color: var(--ws-text-muted);
@@ -40,36 +36,10 @@
 .mk-filing-dataset-detail .fl-dd-crumb__link:hover { opacity: 0.85; }
 .mk-filing-dataset-detail .fl-dd-crumb__sep { opacity: 0.45; font-size: 0.55rem; }
 .mk-filing-dataset-detail .fl-dd-crumb__current { color: var(--ws-text-secondary); }
-.mk-filing-dataset-detail .fl-dd-header__row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem 1rem;
-    flex-wrap: wrap;
-}
 .mk-filing-dataset-detail .fl-dd-header__main {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
     min-width: 0;
-    flex: 1;
+    flex: 1 1 16rem;
 }
-.mk-filing-dataset-detail .fl-dd-header__format {
-    flex-shrink: 0;
-    width: 2.5rem;
-    height: 2.5rem;
-    display: grid;
-    place-items: center;
-    border-radius: 11px;
-    font-size: 1rem;
-    color: var(--ws-primary);
-    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
-    border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
-}
-.mk-filing-dataset-detail .fl-dd-header__format i {
-    line-height: 1;
-}
-.mk-filing-dataset-detail .fl-dd-header__text { min-width: 0; flex: 1; }
 .mk-filing-dataset-detail .fl-dd-header__title-row {
     display: flex;
     align-items: baseline;
@@ -78,11 +48,6 @@
 }
 .mk-filing-dataset-detail .fl-dd-header__title {
     margin: 0;
-    font-size: 1.12rem;
-    font-weight: 850;
-    letter-spacing: -0.03em;
-    line-height: 1.25;
-    color: var(--ws-text);
 }
 .mk-filing-dataset-detail .fl-dd-header__count {
     display: inline-flex;
@@ -103,11 +68,33 @@
 }
 .mk-filing-dataset-detail .fl-dd-header__count.is-filtered strong { color: var(--ws-primary); }
 .mk-filing-dataset-detail .fl-dd-header__count-lbl { font-weight: 650; }
-.mk-filing-dataset-detail .fl-dd-header__chips {
+.mk-filing-dataset-detail .fl-dd-header__chips.fl-header__sub {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.3rem;
-    margin-top: 0.4rem;
+    margin-top: 0.45rem;
+    max-width: none;
+}
+.mk-filing-dataset-detail .fl-dd-header__actions.fl-header__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-self: center;
+    max-width: 100%;
+}
+.mk-filing-dataset-detail .fl-dd-header__actions .fl-header__btn {
+    min-height: 2.35rem;
+    height: 2.35rem;
+    box-sizing: border-box;
+}
+.mk-filing-dataset-detail .fl-dd-header__actions .fl-header__btn--icon,
+.mk-filing-dataset-detail .fl-dd-header__actions .fl-header__help,
+.mk-filing-dataset-detail .fl-dd-header__actions .fl-header__tour {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
 }
 .mk-filing-dataset-detail .fl-dd-chip {
     display: inline-flex;
@@ -173,6 +160,7 @@
 .mk-filing-dataset-detail .fl-dd-header__actions {
     flex-wrap: wrap;
     justify-content: flex-end;
+    align-self: center;
 }
 .mk-filing-dataset-detail .fl-dd-btn--danger:hover {
     color: #dc2626 !important;
@@ -243,6 +231,7 @@
             color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-bg, #f8fafc));
     }
     .mk-filing-dataset-detail .fl-dd-header,
+    .mk-filing-dataset-detail .mk-filing-desk-header,
     .mk-filing-dataset-detail .fl-dd-kpi { display: none !important; }
 
     .mk-filing-dataset-detail .fl-dd-mob-header {

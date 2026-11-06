@@ -9,8 +9,9 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=20">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-automation-mobile.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-automation-mobile.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -48,22 +49,25 @@
         </div>
     </header>
 
-    <header class="crm-dash-bar crm-auto-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">اتوماسیون</h1>
-            <p class="crm-dash-bar-sub">قوانین پیگیری خودکار — مخاطب راکد را فراموش نکنید</p>
+    <header class="fl-header mk-filing-desk-header crm-auto-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">اتوماسیون</h1>
+            <p class="fl-header__sub">قوانین پیگیری خودکار — مخاطب راکد را فراموش نکنید</p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات اتوماسیون">
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات اتوماسیون">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-automation-help' help_title='راهنمای اتوماسیون' %}
+            <a href="{% url 'workspace:crm_templates' %}" class="fl-header__btn fl-header__btn--ghost" title="قالب پیام">
+                <i class="fas fa-file-lines" aria-hidden="true"></i><span>قالب پیام</span>
+            </a>
             <form method="post" class="crm-auto-run-all-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="run">
-                <button type="submit" class="crm-dash-act" title="اجرای دستی همه قوانین فعال">
+                <button type="submit" class="fl-header__btn fl-header__btn--ghost" title="اجرای دستی همه قوانین فعال">
                     <i class="fas fa-play" aria-hidden="true"></i><span>اجرای الان</span>
                 </button>
             </form>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-rule">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>قانون</span>
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-rule">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>قانون جدید</span>
             </button>
         </div>
     </header>

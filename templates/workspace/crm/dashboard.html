@@ -11,20 +11,21 @@
 {% block crm_extra_css %}{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=38">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=10">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-dash crm-page-chrome crm-dash--pro" id="crmDash">
+<div class="crm-dash crm-page-chrome crm-dash--pro mk-filing-datasets" id="crmDash">
 
-    <div class="crm-dash-hero">
+    <div class="fl-header crm-dash-hero">
         <header class="crm-dash-bar crm-dash-bar--crm">
-            <div class="crm-dash-bar-main">
-                <h1 class="crm-dash-bar-title">
+            <div class="fl-header__main crm-dash-bar-main">
+                <h1 class="fl-header__title crm-dash-bar-title">
                     <span class="crm-dash-bar-title-desk">مدیریت مشتری (CRM)</span>
                     <span class="crm-dash-bar-title-a11y">مدیریت مشتری</span>
                 </h1>
-                <p class="crm-dash-bar-sub is-visible">
+                <p class="fl-header__sub crm-dash-bar-sub is-visible">
                     {% if today_jalali %}<span class="crm-dash-bar-date">{{ today_jalali }}</span>{% endif %}
                     {% if stats.due_today %}
                     <span class="crm-dash-bar-chip{% if stats.overdue_followups %} is-warn{% endif %}">{{ stats.due_today }} پیگیری امروز</span>
@@ -38,35 +39,26 @@
             </div>
         </header>
 
-        <div class="crm-dash-bar-actions crm-dash-quick" role="toolbar" aria-label="عملیات سریع">
-            <div class="crm-dash-quick-group crm-dash-quick-group--create">
-                <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="crm-dash-act crm-dash-act--primary crm-dash-act--featured" title="مخاطب جدید" aria-label="مخاطب جدید">
-                    <i class="fas fa-user-plus" aria-hidden="true"></i>
-                    <span class="crm-dash-act-label">مخاطب جدید</span>
-                </a>
-                <button type="button" class="crm-dash-act crm-dash-act--icon crm-dash-act--lead" data-drawer-open="drawer-quick-lead" title="مخاطب سریع" aria-label="مخاطب سریع">
-                    <i class="fas fa-bolt" aria-hidden="true"></i>
-                    <span class="crm-dash-act-label">سریع</span>
-                </button>
-                <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="crm-dash-act crm-dash-act--icon crm-dash-act--property" title="ملک جدید" aria-label="ملک جدید">
-                    <i class="fas fa-building" aria-hidden="true"></i>
-                    <span class="crm-dash-act-label">ملک</span>
-                </a>
-                <a href="{% url 'workspace:crm_reminders' %}?drawer=reminder" class="crm-dash-act crm-dash-act--icon crm-dash-act--reminder" title="یادآور جدید" aria-label="یادآور جدید">
-                    <i class="fas fa-bell" aria-hidden="true"></i>
-                    <span class="crm-dash-act-label">یادآور</span>
-                </a>
-            </div>
-            <span class="crm-dash-quick-sep" aria-hidden="true"></span>
-            <div class="crm-dash-quick-group crm-dash-quick-group--nav">
-                <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--today{% if today_count %} crm-dash-act--pulse{% endif %}" title="کارهای امروز" aria-label="کارهای امروز{% if today_count %} ({{ today_count }}){% endif %}">
-                    <i class="fas fa-list-check" aria-hidden="true"></i>
-                    <span class="crm-dash-act-label">امروز</span>
-                </a>
-            </div>
-            <a href="{% url 'workspace:academy_home' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--academy crm-dash-act--desk-only" title="آکادمی" aria-label="آکادمی">
-                <i class="fas fa-graduation-cap" aria-hidden="true"></i>
-                <span class="crm-dash-act-label">آکادمی</span>
+        <div class="fl-header__actions crm-dash-bar-actions crm-dash-quick" role="toolbar" aria-label="عملیات سریع">
+            <a href="{% url 'workspace:crm_today' %}" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon crm-dash-act crm-dash-act--icon crm-dash-act--today{% if today_count %} crm-dash-act--pulse{% endif %}" title="کارهای امروز" aria-label="کارهای امروز{% if today_count %} ({{ today_count }}){% endif %}">
+                <i class="fas fa-list-check" aria-hidden="true"></i>
+                <span class="crm-dash-act-label">امروز</span>
+            </a>
+            <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon crm-dash-act crm-dash-act--icon crm-dash-act--property" title="ملک جدید" aria-label="ملک جدید">
+                <i class="fas fa-building" aria-hidden="true"></i>
+                <span class="crm-dash-act-label">ملک</span>
+            </a>
+            <a href="{% url 'workspace:crm_reminders' %}?drawer=reminder" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon crm-dash-act crm-dash-act--icon crm-dash-act--reminder" title="یادآور جدید" aria-label="یادآور جدید">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                <span class="crm-dash-act-label">یادآور</span>
+            </a>
+            <button type="button" class="fl-header__btn fl-header__btn--ghost crm-dash-act crm-dash-act--lead" data-drawer-open="drawer-quick-lead" title="مخاطب سریع" aria-label="مخاطب سریع">
+                <i class="fas fa-bolt" aria-hidden="true"></i>
+                <span class="crm-dash-act-label">مخاطب سریع</span>
+            </button>
+            <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="fl-header__btn fl-header__btn--primary crm-dash-act crm-dash-act--primary crm-dash-act--featured" title="مخاطب جدید" aria-label="مخاطب جدید">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span class="crm-dash-act-label">مخاطب جدید</span>
             </a>
         </div>
     </div>

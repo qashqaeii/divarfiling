@@ -1,86 +1,81 @@
 {% load humanize %}
-<header class="fl-dd-header mk-filing-desk-header" aria-label="خلاصه پوشه">
-    <nav class="fl-dd-crumb" aria-label="مسیر">
-        <a href="{% url 'workspace:dataset_list' %}" class="fl-dd-crumb__link">
-            <i class="fas fa-arrow-right" aria-hidden="true"></i>
-            <span>فایلینگ</span>
-        </a>
-        <span class="fl-dd-crumb__sep" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-        <span class="fl-dd-crumb__current">جدول آگهی</span>
-    </nav>
+<header class="fl-header mk-filing-desk-header fl-dd-header" aria-label="خلاصه پوشه">
+    <div class="fl-header__main fl-dd-header__main">
+        <nav class="fl-dd-crumb" aria-label="مسیر">
+            <a href="{% url 'workspace:dataset_list' %}" class="fl-dd-crumb__link">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                <span>فایلینگ</span>
+            </a>
+            <span class="fl-dd-crumb__sep" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+            <span class="fl-dd-crumb__current">جدول آگهی</span>
+        </nav>
 
-    <div class="fl-dd-header__row">
-        <div class="fl-dd-header__main">
-            <span class="fl-dd-header__format" aria-hidden="true" title="پوشه استخراج">
-                <i class="fas fa-folder"></i>
+        <div class="fl-dd-header__title-row">
+            <h1 class="fl-header__title fl-dd-header__title">{{ dataset.name }}</h1>
+            <span class="fl-dd-header__count{% if is_listing_filtered %} is-filtered{% endif %}">
+                <strong>{{ filtered_count|intcomma }}</strong>
+                <span>/</span>
+                {{ total_count|intcomma }}
+                <span class="fl-dd-header__count-lbl">آگهی</span>
             </span>
-            <div class="fl-dd-header__text">
-                <div class="fl-dd-header__title-row">
-                    <h1 class="fl-dd-header__title">{{ dataset.name }}</h1>
-                    <span class="fl-dd-header__count{% if is_listing_filtered %} is-filtered{% endif %}">
-                        <strong>{{ filtered_count|intcomma }}</strong>
-                        <span>/</span>
-                        {{ total_count|intcomma }}
-                        <span class="fl-dd-header__count-lbl">آگهی</span>
-                    </span>
-                </div>
-                <div class="fl-dd-header__chips">
-                    {% if dataset.city %}
-                    <span class="fl-dd-chip fl-dd-chip--loc">
-                        <i class="fas fa-location-dot" aria-hidden="true"></i>
-                        {{ dataset.city }}{% if dataset.district %} · {{ dataset.district }}{% endif %}
-                    </span>
-                    {% endif %}
-                    <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
-                    {% if dataset.subcategory %}<span class="fl-dd-chip">{{ dataset.subcategory }}</span>{% endif %}
-                    <span class="fl-dd-chip fl-dd-chip--muted">{% if dataset.file_format == 'xlsx' %}فایل اکسل{% elif dataset.file_format == 'csv' %}فایل CSV{% else %}فایل JSON{% endif %}</span>
-                    {% if filter_count %}<span class="fl-dd-chip fl-dd-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
-                </div>
-            </div>
         </div>
 
-        <div class="fl-header__actions fl-dd-header__actions" role="toolbar" aria-label="عملیات پوشه">
-            {% include 'workspace/includes/filing/filing_tour_button.html' with show_tour_label=True tour_attr='filing-detail-tour-btn' %}
-            <button type="button" class="fl-header__help" title="راهنمای جدول آگهی" aria-label="راهنمای جدول آگهی" data-modal-open="modal-dataset-detail-help" data-fl-tour="filing-detail-help-btn">
-                <span class="fl-header__help-ring" aria-hidden="true"></span>
-                <span class="fl-header__help-bulb" aria-hidden="true">
-                    <i class="fas fa-lightbulb"></i>
-                    <span class="fl-header__help-bulb-glow"></span>
-                </span>
-                <span class="fl-header__help-label">راهنما</span>
-            </button>
-            <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-header__btn fl-header__btn--primary" title="تحلیل بازار" data-fl-tour="filing-detail-analyze">
-                <i class="fas fa-chart-line" aria-hidden="true"></i><span>تحلیل</span>
-            </a>
-            <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-header__btn fl-header__btn--ghost" title="نقشه آگهی‌ها" data-fl-tour="filing-detail-map">
-                <i class="fas fa-map-location-dot" aria-hidden="true"></i><span>نقشه</span>
-            </a>
-            <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-header__btn fl-header__btn--ghost js-secure-export" data-export-label="خروجی CSV مجموعه" title="دانلود CSV" data-fl-tour="filing-detail-export">
-                <i class="fas fa-download" aria-hidden="true"></i><span>خروجی</span>
-            </a>
-            {% if filing_video.available %}
-            <a href="{% url 'education' %}#edu-filing-video-title" class="fl-header__btn fl-header__btn--ghost" title="آموزش ویدیویی" aria-label="آموزش ویدیویی">
-                <i class="fas fa-circle-play" aria-hidden="true"></i>
-            </a>
+        <div class="fl-header__sub fl-dd-header__chips" aria-label="جزئیات پوشه">
+            {% if dataset.city %}
+            <span class="fl-dd-chip fl-dd-chip--loc">
+                <i class="fas fa-location-dot" aria-hidden="true"></i>
+                {{ dataset.city }}{% if dataset.district %} · {{ dataset.district }}{% endif %}
+            </span>
             {% endif %}
-            <button type="button" class="fl-header__btn fl-header__btn--ghost" data-modal-open="modal-rename" title="تغییر نام" aria-label="تغییر نام">
-                <i class="fas fa-pen" aria-hidden="true"></i>
-            </button>
-            {% if consultant_count %}
-            <button type="button" class="fl-header__btn fl-header__btn--ghost fl-dd-btn--danger" data-modal-open="modal-delete-consultants" title="حذف مشاورین" aria-label="حذف مشاورین">
-                <i class="fas fa-user-slash" aria-hidden="true"></i>
-            </button>
-            {% endif %}
-            {% if disguised_consultant_count %}
-            <button type="button" class="fl-header__btn fl-header__btn--ghost fl-dd-btn--danger" data-modal-open="modal-delete-disguised" title="حذف مشاور پنهان" aria-label="حذف مشاور پنهان">
-                <i class="fas fa-user-secret" aria-hidden="true"></i>
-            </button>
-            {% endif %}
+            <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
+            {% if dataset.subcategory %}<span class="fl-dd-chip">{{ dataset.subcategory }}</span>{% endif %}
+            <span class="fl-dd-chip fl-dd-chip--muted">{% if dataset.file_format == 'xlsx' %}فایل اکسل{% elif dataset.file_format == 'csv' %}فایل CSV{% else %}فایل JSON{% endif %}</span>
+            {% if filter_count %}<span class="fl-dd-chip fl-dd-chip--filter">{{ filter_count }} فیلتر</span>{% endif %}
         </div>
+    </div>
+
+    <div class="fl-header__actions fl-dd-header__actions" role="toolbar" aria-label="عملیات پوشه">
+        {% include 'workspace/includes/filing/filing_tour_button.html' with tour_attr='filing-detail-tour-btn' %}
+        <button type="button" class="fl-header__help" title="راهنمای جدول آگهی" aria-label="راهنمای جدول آگهی" data-modal-open="modal-dataset-detail-help" data-fl-tour="filing-detail-help-btn">
+            <span class="fl-header__help-ring" aria-hidden="true"></span>
+            <span class="fl-header__help-bulb" aria-hidden="true">
+                <i class="fas fa-lightbulb"></i>
+                <span class="fl-header__help-bulb-glow"></span>
+            </span>
+            <span class="fl-header__help-label">راهنما</span>
+        </button>
+        <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-header__btn fl-header__btn--ghost" title="نقشه آگهی‌ها" data-fl-tour="filing-detail-map">
+            <i class="fas fa-map-location-dot" aria-hidden="true"></i><span>نقشه</span>
+        </a>
+        <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-header__btn fl-header__btn--ghost js-secure-export" data-export-label="خروجی CSV مجموعه" title="دانلود CSV" data-fl-tour="filing-detail-export">
+            <i class="fas fa-download" aria-hidden="true"></i><span>خروجی</span>
+        </a>
+        {% if filing_video.available %}
+        <a href="{% url 'education' %}#edu-filing-video-title" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon" title="آموزش ویدیویی" aria-label="آموزش ویدیویی">
+            <i class="fas fa-circle-play" aria-hidden="true"></i>
+        </a>
+        {% endif %}
+        <button type="button" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon" data-modal-open="modal-rename" title="تغییر نام" aria-label="تغییر نام">
+            <i class="fas fa-pen" aria-hidden="true"></i>
+        </button>
+        {% if consultant_count %}
+        <button type="button" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon fl-dd-btn--danger" data-modal-open="modal-delete-consultants" title="حذف مشاورین" aria-label="حذف مشاورین">
+            <i class="fas fa-user-slash" aria-hidden="true"></i>
+        </button>
+        {% endif %}
+        {% if disguised_consultant_count %}
+        <button type="button" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon fl-dd-btn--danger" data-modal-open="modal-delete-disguised" title="حذف مشاور پنهان" aria-label="حذف مشاور پنهان">
+            <i class="fas fa-user-secret" aria-hidden="true"></i>
+        </button>
+        {% endif %}
+        <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-header__btn fl-header__btn--primary" title="تحلیل بازار" data-fl-tour="filing-detail-analyze">
+            <i class="fas fa-chart-line" aria-hidden="true"></i><span>تحلیل</span>
+        </a>
     </div>
 </header>
 
 <header class="fl-dd-mob-header fl-mob-header">
+    <div class="fl-dd-mob-header__mesh" aria-hidden="true"></div>
     <div class="fl-dd-mob-header__inner">
         <div class="fl-dd-mob-header__main">
             <a href="{% url 'workspace:dataset_list' %}" class="fl-dd-mob-back" aria-label="بازگشت به فایلینگ">

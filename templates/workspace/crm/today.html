@@ -10,9 +10,9 @@
 {% block status_bar %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=16">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-today-mobile-closure.css' %}?v=8">
 {% endblock %}
 
@@ -63,10 +63,10 @@
     </div>
     {% endif %}
 
-    <header class="crm-dash-bar crm-today-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">کارهای امروز</h1>
-            <p class="crm-dash-bar-sub is-visible">
+    <header class="fl-header mk-filing-desk-header crm-today-desk-header">
+        <div class="fl-header__main">
+            <h1 class="fl-header__title">کارهای امروز</h1>
+            <p class="fl-header__sub">
                 {% if today_jalali %}<span>{{ today_jalali }}</span>{% endif %}
                 {% if queue_stats.total %}
                 <span class="crm-today-chip">{{ queue_stats.total }} کار باز</span>
@@ -76,7 +76,7 @@
                 {% endif %}
             </p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات کارهای امروز">
+        <div class="fl-header__actions" role="toolbar" aria-label="عملیات کارهای امروز">
             <button type="button" class="fl-header__help crm-today-help" title="راهنمای کارهای امروز" aria-label="راهنمای کارهای امروز" data-modal-open="modal-crm-today-help">
                 <span class="fl-header__help-ring" aria-hidden="true"></span>
                 <span class="fl-header__help-bulb" aria-hidden="true">
@@ -85,18 +85,18 @@
                 </span>
                 <span class="fl-header__help-label">راهنما</span>
             </button>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-reminder">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>یادآوری جدید</span>
-            </button>
-            <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
-                <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
-            </button>
-            <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act" title="مخاطبین">
-                <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
-            </a>
-            <a href="{% url 'workspace:crm_reminders' %}" class="crm-dash-act crm-dash-act--icon" title="یادآورها">
+            <a href="{% url 'workspace:crm_reminders' %}" class="fl-header__btn fl-header__btn--ghost fl-header__btn--icon" title="یادآورها" aria-label="یادآورها">
                 <i class="fas fa-bell" aria-hidden="true"></i>
             </a>
+            <a href="{% url 'workspace:crm_contacts' %}" class="fl-header__btn fl-header__btn--ghost" title="مخاطبین">
+                <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
+            </a>
+            <button type="button" class="fl-header__btn fl-header__btn--ghost" data-drawer-open="drawer-quick-lead">
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
+            </button>
+            <button type="button" class="fl-header__btn fl-header__btn--primary" data-drawer-open="drawer-reminder">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>یادآوری جدید</span>
+            </button>
         </div>
     </header>
 

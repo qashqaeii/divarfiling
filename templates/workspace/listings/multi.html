@@ -289,7 +289,7 @@
                 <thead>
                     <tr>
                         <th class="mk-col-title listing-col-title"><a href="{% ws_sort_url filters 'title' filters.sort filter_qs %}" class="mk-sort-th">عنوان {% if filters.sort == 'title' %}↑{% elif filters.sort == '-title' %}↓{% endif %}</a></th>
-                        <th class="mk-col-nb listing-col-neighborhood listing-col-street">خیابان</th>
+                        <th class="mk-col-nb listing-col-neighborhood listing-col-street" title="خیابان، در صورت نبود محله/منطقه">خیابان/منطقه</th>
                         <th class="mk-col-dataset listing-col-dataset">فایل</th>
                         {% if tx.show_price %}<th class="mk-col-money listing-col-price"><a href="{% ws_sort_url filters 'price' filters.sort filter_qs %}" class="mk-sort-th">قیمت {% if filters.sort == 'price' %}↑{% elif filters.sort == '-price' %}↓{% endif %}</a></th>{% endif %}
                         {% if tx.show_deposit %}<th class="mk-col-money listing-col-deposit"><a href="{% ws_sort_url filters 'deposit' filters.sort filter_qs %}" class="mk-sort-th">ودیعه {% if filters.sort == 'deposit' %}↑{% elif filters.sort == '-deposit' %}↓{% endif %}</a></th>{% endif %}

@@ -32,12 +32,14 @@
             </div>
         </div>
     </td>
-    <td class="mk-col-nb listing-col-neighborhood listing-col-street" data-label="خیابان">
-        <span class="mk-nb-cell" title="{{ listing_street }}">
-            {% if listing_street %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}
-            <span class="mk-cell-clip">{{ listing_street|default:"—"|truncatechars:18 }}</span>
+    {% with loc_label=listing_street|default:listing.neighborhood %}
+    <td class="mk-col-nb listing-col-neighborhood listing-col-street" data-label="خیابان/منطقه">
+        <span class="mk-nb-cell" title="{{ loc_label }}">
+            {% if loc_label %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}
+            <span class="mk-cell-clip">{{ loc_label|default:"—"|truncatechars:18 }}</span>
         </span>
     </td>
+    {% endwith %}
     {% if show_dataset_column %}
     <td class="mk-col-dataset listing-col-dataset" data-label="پوشه استخراج">
         <a href="{% url 'workspace:dataset_detail' listing.dataset_id %}" class="mk-dataset-pill" title="{{ listing.dataset.name }}">{{ listing.dataset.name|truncatechars:18 }}</a>

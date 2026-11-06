@@ -466,6 +466,62 @@ def finance_dashboard(user, period: str = 'month') -> Dict[str, Any]:
 
     defaults = get_finance_defaults(user)
     split_total = advisor_income + agency_income
+    advisor_percent = (
+        round(advisor_income / split_total * 100)
+        if split_total else int(defaults['advisor_share_percent'])
+    )
+    agency_percent = (
+        round(agency_income / split_total * 100)
+        if split_total else int(defaults['agency_share_percent'])
+    )
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    mix_segments = []
+    if advisor_income:
+        mix_segments.append({
+            'key': 'advisor',
+            'label': 'مشاور',
+            'count': max(advisor_income, 1),
+            'pct': advisor_percent,
+        })
+    if agency_income:
+        mix_segments.append({
+            'key': 'agency',
+            'label': 'املاک',
+            'count': max(agency_income, 1),
+            'pct': agency_percent,
+        })
+
+    if closed_n:
+        hero_meta = f'{closed_n} معامله بسته · سهم شما {advisor_percent}٪'
+    else:
+        hero_meta = 'در این بازه معامله بسته‌شده‌ای نیست'
+
+    if outstanding:
+        outstanding_meta = f'{_share(outstanding, commission_total)}٪ از کمیسیون هنوز وصول نشده'
+    elif commission_total:
+        outstanding_meta = 'وصول کمیسیون کامل است'
+    else:
+        outstanding_meta = 'هنوز کمیسیونی ثبت نشده'
+
+    if received:
+        received_meta = f'{_share(received, commission_total)}٪ از کمیسیون کل'
+    elif commission_total:
+        received_meta = 'هنوز وصولی ثبت نشده'
+    else:
+        received_meta = 'بازه‌ای بدون کمیسیون'
+
+    if volume and closed_n:
+        volume_meta = f'{closed_n} معامله بسته در این بازه'
+    elif volume:
+        volume_meta = 'حجم معاملات بسته‌شده'
+    else:
+        volume_meta = 'حجمی در این بازه نیست'
+
     return {
         'period': period if period in dict(FINANCE_PERIODS) else 'month',
         'period_label': period_label,
@@ -483,12 +539,20 @@ def finance_dashboard(user, period: str = 'month') -> Dict[str, Any]:
             'avg_deal': avg_deal,
             'avg_commission': avg_commission,
             'avg_advisor': avg_advisor,
+            'mix_segments': mix_segments,
+            'hero_meta': hero_meta,
+            'outstanding_share': _share(outstanding, commission_total),
+            'outstanding_meta': outstanding_meta,
+            'received_share': _share(received, commission_total),
+            'received_meta': received_meta,
+            'volume_meta': volume_meta,
+            'advisor_percent': advisor_percent,
         },
         'split': {
             'advisor': advisor_income,
             'agency': agency_income,
-            'advisor_percent': round(advisor_income / split_total * 100) if split_total else int(defaults['advisor_share_percent']),
-            'agency_percent': round(agency_income / split_total * 100) if split_total else int(defaults['agency_share_percent']),
+            'advisor_percent': advisor_percent,
+            'agency_percent': agency_percent,
         },
         'payout': payout_rows,
         'monthly': month_rows,

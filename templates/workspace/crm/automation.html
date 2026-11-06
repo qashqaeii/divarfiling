@@ -9,7 +9,8 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-automation-mobile.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-automation-mobile.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -50,6 +51,7 @@
     <header class="crm-dash-bar crm-auto-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">اتوماسیون</h1>
+            <p class="crm-dash-bar-sub">قوانین پیگیری خودکار — مخاطب راکد را فراموش نکنید</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات اتوماسیون">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-automation-help' help_title='راهنمای اتوماسیون' %}
@@ -66,32 +68,7 @@
         </div>
     </header>
 
-    <section class="crm-auto-kpis" aria-label="آمار اتوماسیون">
-        <article class="crm-auto-kpi crm-auto-kpi--all">
-            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
-            <div class="crm-auto-kpi-body">
-                <span class="crm-auto-kpi-val">{{ stats.total }}</span>
-                <span class="crm-auto-kpi-lbl">کل قوانین</span>
-            </div>
-        </article>
-        <article class="crm-auto-kpi crm-auto-kpi--active">
-            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
-            <div class="crm-auto-kpi-body">
-                <span class="crm-auto-kpi-val">{{ stats.active }}</span>
-                <span class="crm-auto-kpi-lbl">فعال</span>
-            </div>
-        </article>
-        <article class="crm-auto-kpi crm-auto-kpi--queue">
-            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-users"></i></span>
-            <div class="crm-auto-kpi-body">
-                <span class="crm-auto-kpi-val">{{ stats.queue }}</span>
-                <span class="crm-auto-kpi-lbl">مخاطب در صف</span>
-            </div>
-        </article>
-    </section>
+    {% include 'workspace/crm/includes/automation_kpi.html' %}
 
     <p class="crm-auto-last-run" role="status">
         <i class="fas fa-clock" aria-hidden="true"></i>
@@ -141,9 +118,18 @@
         </section>
 
         <div class="crm-auto-result-bar">
-            <span>{{ rules|length }} قانون</span>
-            {% if stats.queue %}
+            <span>{{ rules|length }} از {{ rules_all_count }} قانون</span>
+            {% if show == 'active' %}
+            <span class="crm-auto-result-filter">فیلتر: فعال</span>
+            {% elif show == 'inactive' %}
+            <span class="crm-auto-result-filter">فیلتر: غیرفعال</span>
+            {% elif show == 'queue' %}
+            <span class="crm-auto-result-filter">فیلتر: دارای صف</span>
+            {% elif stats.queue %}
             <span class="crm-auto-result-hint"><i class="fas fa-circle" aria-hidden="true"></i> {{ stats.queue }} مخاطب منتظر اقدام خودکار</span>
+            {% endif %}
+            {% if show %}
+            <a href="?" class="crm-auto-result-clear">پاک کردن فیلتر</a>
             {% endif %}
         </div>
 
@@ -297,8 +283,14 @@
                     <span class="crm-auto-empty-ring"></span>
                     <i class="fas fa-robot"></i>
                 </div>
+                {% if show %}
+                <h2>قانونی در این فیلتر نیست</h2>
+                <p>فیلتر KPI را پاک کنید یا قانون جدید بسازید.</p>
+                <a href="?" class="crm-dash-act">مشاهده همه</a>
+                {% else %}
                 <h2>هنوز قانونی ندارید</h2>
                 <p>از «شروع سریع» یک قالب انتخاب کنید یا قانون اختصاصی بسازید.</p>
+                {% endif %}
                 <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-rule">
                     <i class="fas fa-plus" aria-hidden="true"></i><span>ساخت قانون</span>
                 </button>

@@ -106,6 +106,104 @@ def templates_by_category(user) -> Dict[str, List[CRMMessageTemplate]]:
     return grouped
 
 
+_CATEGORY_SEG_KEYS = {
+    'پیگیری': 'followup',
+    'بازدید': 'visit',
+    'پیشنهاد': 'offer',
+    'خوش‌آمد': 'welcome',
+    'سفارشی': 'custom_cat',
+}
+
+
+def build_templates_kpi_stats(templates: List[CRMMessageTemplate]) -> Dict[str, Any]:
+    """آمار قالب پیام برای fl-kpi-pro."""
+    total = len(templates)
+    whatsapp = sum(1 for t in templates if t.channel == 'واتساپ')
+    sms = sum(1 for t in templates if t.channel == 'پیامک')
+    custom = sum(1 for t in templates if not t.is_system)
+    categories = len({t.category for t in templates if t.category})
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    by_cat: Dict[str, int] = {}
+    for t in templates:
+        cat = t.category or 'سفارشی'
+        by_cat[cat] = by_cat.get(cat, 0) + 1
+
+    mix_segments = []
+    for cat in MESSAGE_TEMPLATE_CATEGORIES:
+        count = by_cat.get(cat, 0)
+        if count <= 0:
+            continue
+        mix_segments.append({
+            'key': _CATEGORY_SEG_KEYS.get(cat, 'other'),
+            'label': cat,
+            'count': count,
+            'pct': _share(count, total),
+        })
+    for cat, count in by_cat.items():
+        if cat in MESSAGE_TEMPLATE_CATEGORIES or count <= 0:
+            continue
+        mix_segments.append({
+            'key': 'other',
+            'label': cat,
+            'count': count,
+            'pct': _share(count, total),
+        })
+
+    if total:
+        hero_bits = []
+        if categories:
+            hero_bits.append(f'{categories} دسته')
+        if whatsapp:
+            hero_bits.append(f'{whatsapp} واتساپ')
+        if sms:
+            hero_bits.append(f'{sms} پیامک')
+        hero_meta = ' · '.join(hero_bits) if hero_bits else 'کتابخانه قالب آماده است'
+    else:
+        hero_meta = 'هنوز قالبی ندارید'
+
+    if whatsapp:
+        whatsapp_meta = f'{_share(whatsapp, total)}٪ از قالب‌ها برای واتساپ'
+    elif total:
+        whatsapp_meta = 'قالب واتساپ ندارید'
+    else:
+        whatsapp_meta = 'هنوز قالبی نیست'
+
+    if sms:
+        sms_meta = f'{_share(sms, total)}٪ از قالب‌ها برای پیامک'
+    elif total:
+        sms_meta = 'قالب پیامک ندارید'
+    else:
+        sms_meta = 'هنوز قالبی نیست'
+
+    if custom:
+        custom_meta = f'{_share(custom, total)}٪ ساختهٔ خودتان'
+    elif total:
+        custom_meta = 'هنوز قالب شخصی نساخته‌اید'
+    else:
+        custom_meta = 'اولین قالب را بسازید'
+
+    return {
+        'total': total,
+        'whatsapp': whatsapp,
+        'sms': sms,
+        'custom': custom,
+        'categories': categories,
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'whatsapp_share': _share(whatsapp, total),
+        'whatsapp_meta': whatsapp_meta,
+        'sms_share': _share(sms, total),
+        'sms_meta': sms_meta,
+        'custom_share': _share(custom, total),
+        'custom_meta': custom_meta,
+    }
+
+
 SAMPLE_PREVIEW_VALUES = {
     '{name}': 'علی محمدی',
     '{phone}': '۰۹۱۲۱۲۳۴۵۶۷',

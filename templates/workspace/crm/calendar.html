@@ -9,8 +9,9 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -45,40 +46,7 @@
         </div>
     </header>
 
-    <section class="crm-cal-kpis" aria-label="آمار تقویم">
-        <article class="crm-cal-kpi crm-cal-kpi--total">
-            <span class="crm-cal-kpi-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
-            <div class="crm-cal-kpi-body">
-                <span class="crm-cal-kpi-val">{{ calendar.kpis.total.value_label }}</span>
-                <span class="crm-cal-kpi-lbl">کل کارهای این ماه</span>
-                <span class="crm-cal-kpi-ctx">{{ calendar.kpis.total.context }}</span>
-            </div>
-        </article>
-        <article class="crm-cal-kpi crm-cal-kpi--followup">
-            <span class="crm-cal-kpi-icon" aria-hidden="true"><i class="fas fa-phone"></i></span>
-            <div class="crm-cal-kpi-body">
-                <span class="crm-cal-kpi-val">{{ calendar.kpis.followups.value_label }}</span>
-                <span class="crm-cal-kpi-lbl">پیگیری‌های پیش‌رو</span>
-                <span class="crm-cal-kpi-ctx">{{ calendar.kpis.followups.context }}</span>
-            </div>
-        </article>
-        <article class="crm-cal-kpi crm-cal-kpi--visit">
-            <span class="crm-cal-kpi-icon" aria-hidden="true"><i class="fas fa-door-open"></i></span>
-            <div class="crm-cal-kpi-body">
-                <span class="crm-cal-kpi-val">{{ calendar.kpis.visits.value_label }}</span>
-                <span class="crm-cal-kpi-lbl">بازدیدهای برنامه‌ریزی‌شده</span>
-                <span class="crm-cal-kpi-ctx">{{ calendar.kpis.visits.context }}</span>
-            </div>
-        </article>
-        <article class="crm-cal-kpi crm-cal-kpi--reminder">
-            <span class="crm-cal-kpi-icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
-            <div class="crm-cal-kpi-body">
-                <span class="crm-cal-kpi-val">{{ calendar.kpis.reminders.value_label }}</span>
-                <span class="crm-cal-kpi-lbl">یادآورهای فعال</span>
-                <span class="crm-cal-kpi-ctx">{{ calendar.kpis.reminders.context }}</span>
-            </div>
-        </article>
-    </section>
+    {% include 'workspace/crm/includes/calendar_kpi.html' %}
 
     <div class="crm-shell-body crm-shell-body--flush">
         <div class="crm-cal-layout">
@@ -384,5 +352,5 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/crm-calendar.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/crm-calendar.js' %}?v=4"></script>
 {% endblock %}

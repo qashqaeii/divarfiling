@@ -88,6 +88,48 @@ class CRMMessageTemplateViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(CRMMessageTemplate.objects.filter(pk=tpl.pk).exists())
 
+    def test_list_renders_premium_kpi_and_channel_filter(self):
+        CRMMessageTemplate.objects.create(
+            user=self.user,
+            name='واتس شخصی',
+            category='سفارشی',
+            channel='واتساپ',
+            body='سلام',
+            is_system=False,
+        )
+        CRMMessageTemplate.objects.create(
+            user=self.user,
+            name='پیامک شخصی',
+            category='سفارشی',
+            channel='پیامک',
+            body='سلامک',
+            is_system=False,
+        )
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'fl-kpi-pro--templates')
+        self.assertContains(resp, 'کل قالب‌ها')
+        self.assertGreaterEqual(resp.context['stats']['total'], 2)
+        self.assertGreaterEqual(resp.context['stats']['custom'], 2)
+
+        wa = self.client.get(self.url, {'channel': 'واتساپ'})
+        self.assertEqual(wa.status_code, 200)
+        self.assertEqual(wa.context['channel_filter'], 'واتساپ')
+        names = [t.name for items in wa.context['templates_by_category'].values() for t in items]
+        self.assertIn('واتس شخصی', names)
+        self.assertNotIn('پیامک شخصی', names)
+
+        custom = self.client.get(self.url, {'scope': 'custom'})
+        self.assertEqual(custom.status_code, 200)
+        self.assertEqual(custom.context['scope_filter'], 'custom')
+        custom_names = [t.name for items in custom.context['templates_by_category'].values() for t in items]
+        self.assertIn('واتس شخصی', custom_names)
+        self.assertTrue(all(
+            not t.is_system
+            for items in custom.context['templates_by_category'].values()
+            for t in items
+        ))
+
 
 class CRMAutomationViewTests(TestCase):
     def setUp(self):
@@ -136,3 +178,39 @@ class CRMAutomationViewTests(TestCase):
             'rule_id': rule.pk,
         })
         self.assertEqual(resp.status_code, 404)
+
+    def test_list_renders_premium_kpi_and_show_filter(self):
+        CRMAutomationRule.objects.create(
+            user=self.user,
+            name='فعال QA',
+            trigger_days=3,
+            trigger_statuses='جدید',
+            action='create_reminder',
+            action_reminder_title='پیگیری',
+            action_reminder_days=0,
+            is_active=True,
+        )
+        CRMAutomationRule.objects.create(
+            user=self.user,
+            name='خاموش QA',
+            trigger_days=7,
+            trigger_statuses='جدید',
+            action='create_reminder',
+            action_reminder_title='هفتگی',
+            action_reminder_days=1,
+            is_active=False,
+        )
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'fl-kpi-pro--automation')
+        self.assertContains(resp, 'کل قوانین')
+        self.assertGreaterEqual(resp.context['stats']['total'], 2)
+        self.assertGreaterEqual(resp.context['stats']['active'], 1)
+        self.assertGreaterEqual(resp.context['stats']['inactive'], 1)
+
+        inactive = self.client.get(self.url, {'show': 'inactive'})
+        self.assertEqual(inactive.status_code, 200)
+        self.assertEqual(inactive.context['show'], 'inactive')
+        names = [r.name for r in inactive.context['rules']]
+        self.assertIn('خاموش QA', names)
+        self.assertNotIn('فعال QA', names)

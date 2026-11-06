@@ -8,6 +8,110 @@
     display: none;
 }
 
+/* Desk polish — هماهنگ با fl-kpi-pro */
+.crm-automation-pro .crm-auto-desk-header {
+    margin-bottom: 0.35rem;
+}
+
+.crm-automation-pro .crm-auto-last-run {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.55rem;
+    margin: 0 0 0.55rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-border-light, #e2e8f0) 75%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 55%, var(--ws-surface));
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-automation-pro .crm-auto-last-run > i {
+    color: var(--ws-primary, #7c3aed);
+    font-size: 0.58rem;
+}
+
+.crm-automation-pro .crm-auto-last-run-label {
+    font-weight: 700;
+}
+
+.crm-automation-pro .crm-auto-last-run-val {
+    font-weight: 800;
+    color: var(--ws-text);
+}
+
+.crm-automation-pro .crm-auto-last-run-hint {
+    margin-inline-start: auto;
+    font-size: 0.56rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 8%, transparent);
+    color: var(--ws-primary, #7c3aed);
+}
+
+.crm-automation-pro .crm-auto-tip {
+    border-radius: 14px;
+    padding: 0.6rem 0.8rem;
+    border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 14%, transparent);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--ws-primary, #7c3aed) 6%, var(--ws-surface)) 0%, var(--ws-surface) 75%);
+}
+
+.crm-automation-pro .crm-auto-presets {
+    margin-bottom: 0.65rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ws-border-light, #e2e8f0) 75%, transparent);
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--ws-primary, #7c3aed) 4%, var(--ws-surface)) 0%, var(--ws-surface) 70%);
+}
+
+.crm-automation-pro .crm-auto-result-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.65rem;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border-light, #e2e8f0) 70%, transparent);
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+}
+
+.crm-automation-pro .crm-auto-result-filter {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--ws-primary, #7c3aed);
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 10%, transparent);
+}
+
+.crm-automation-pro .crm-auto-result-clear {
+    margin-inline-start: auto;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    text-decoration: none;
+}
+
+.crm-automation-pro .crm-auto-result-clear:hover {
+    color: var(--ws-primary, #7c3aed);
+}
+
+.crm-automation-pro .crm-auto-card-v2 {
+    border-radius: 18px;
+    border-color: color-mix(in srgb, var(--ws-border) 78%, transparent);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
+
+.crm-automation-pro .crm-auto-card-v2:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
 @media (max-width: 768px) {
     .crm-app .crm-auto-mobile.crm-page-chrome {
         padding: 0 0 calc(4.25rem + env(safe-area-inset-bottom, 0px)) !important;
@@ -20,7 +124,7 @@
         box-sizing: border-box;
     }
     .crm-app .crm-auto-mobile.crm-page-chrome > .crm-auto-mob-header,
-    .crm-app .crm-auto-mobile.crm-page-chrome > .crm-auto-kpis,
+    .crm-app .crm-auto-mobile.crm-page-chrome > .fl-kpi-pro--automation,
     .crm-app .crm-auto-mobile.crm-page-chrome > .crm-auto-last-run,
     .crm-app .crm-auto-mobile.crm-page-chrome > .crm-shell-body {
         width: 100%;
@@ -45,6 +149,19 @@
     }
 
     .crm-auto-mobile .crm-auto-desk-header {
+        display: none !important;
+    }
+
+    /* fl-kpi-pro روی موبایل */
+    .crm-auto-mobile .fl-kpi-pro--automation.crm-auto-desk-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.45rem 0 0.4rem;
+        padding: 0 0.5rem;
+    }
+
+    .crm-auto-mobile .crm-auto-kpis {
         display: none !important;
     }
 

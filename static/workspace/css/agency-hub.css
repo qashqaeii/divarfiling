@@ -2689,3 +2689,95 @@ body.agency-has-sticky-footer { padding-bottom: 72px; }
 .agency-member-card__meta .agency-status {
   font-size: 0.68rem;
 }
+
+/* --- Agency dashboard pro (fl-kpi-pro) --- */
+.agency-dash--pro .agency-dash-toolbar {
+  margin-bottom: 0.75rem;
+}
+
+.agency-dash--pro .agency-kpi-strip {
+  display: none;
+}
+
+.agency-dash-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 1rem;
+  border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+  border-radius: 16px;
+  background: var(--ws-surface, #fff);
+  overflow: hidden;
+}
+
+.agency-dash-meta__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border-inline-start: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+
+.agency-dash-meta__item:first-child {
+  border-inline-start: 0;
+}
+
+a.agency-dash-meta__item:hover {
+  background: color-mix(in srgb, #faf5ff 70%, #fff);
+}
+
+.agency-dash-meta__item em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.agency-dash-meta__item strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.agency-dash-meta__item span {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.agency-dash-tip--footer {
+  margin-top: 1rem;
+  border: 1px solid #ede9fe;
+  border-radius: 14px;
+  border-top: 1px solid #ede9fe;
+}
+
+.agency-dash--pro .agency-dash-grid--ref {
+  align-items: start;
+}
+
+.agency-dash--pro .agency-section__sub {
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 768px) {
+  .agency-dash-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .agency-dash-meta__item,
+  .agency-dash-meta__item:first-child {
+    border-inline-start: 0;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+  }
+
+  .agency-dash-meta__item:first-child {
+    border-top: 0;
+  }
+}

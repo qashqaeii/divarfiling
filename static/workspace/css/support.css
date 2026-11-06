@@ -6,7 +6,33 @@
     outline-offset: 2px;
 }
 
-.sup-filters { padding: 1rem 1.25rem; margin-bottom: 1rem; }
+/* Desk polish — هماهنگ با fl-kpi-pro */
+.sup-page .sup-desk-header {
+    margin-bottom: 0.45rem;
+}
+
+.sup-page .sup-desk-header .mk-hub-head-title {
+    margin: 0;
+}
+
+.sup-page .sup-desk-header .mk-hub-head-meta {
+    margin-top: 0.25rem;
+}
+
+.sup-page .sup-unread-banner--desk {
+    margin: 0 0 0.65rem;
+    border-radius: 14px;
+}
+
+.sup-filters {
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.85rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--ws-primary) 3.5%, var(--ws-surface)) 0%, var(--ws-surface) 72%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
 .sup-filter-form {
     display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: flex-end;
 }
@@ -23,9 +49,9 @@
 @media (min-width: 769px) {
     .sup-list-panel {
         background: var(--ws-surface);
-        border: 1px solid var(--ws-border);
-        border-radius: var(--ws-radius);
-        box-shadow: var(--ws-shadow);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 78%, transparent);
+        border-radius: 18px;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset, var(--ws-shadow);
     }
 }
 .sup-table-wrap { overflow-x: auto; }

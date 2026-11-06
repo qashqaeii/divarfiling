@@ -1,0 +1,103 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = کل، باز، منتظر شما، بسته #}
+<section class="fl-kpi-pro fl-kpi-pro--support sup-desk-kpis" aria-label="آمار تیکت‌های پشتیبانی">
+    <a href="{{ kpi_links.all }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero{% if not status_filter and not priority_filter %} is-selected{% endif %}">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-headset"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">همه تیکت‌ها</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-ticket"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.total|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب وضعیت: {{ stats.hero_meta }}">
+                {% for seg in stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.open }}" class="fl-kpi-pro__card fl-kpi-pro__card--open{% if status_filter == 'open' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">باز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.open %} is-empty{% endif %}">{{ stats.open|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--open"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.open_share }}"
+                aria-label="سهم باز {{ stats.open_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.open_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.open_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.waiting }}" class="fl-kpi-pro__card fl-kpi-pro__card--waiting{% if stats.waiting_user %} is-alert{% endif %}{% if status_filter == 'waiting_user' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">منتظر شما</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.waiting_user %} is-empty{% endif %}">{{ stats.waiting_user|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--waiting"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.waiting_share }}"
+                aria-label="سهم منتظر شما {{ stats.waiting_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.waiting_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.waiting_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.closed }}" class="fl-kpi-pro__card fl-kpi-pro__card--closed{% if status_filter == 'closed' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">بسته شده</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.closed %} is-empty{% endif %}">{{ stats.closed|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--closed"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.closed_share }}"
+                aria-label="سهم بسته {{ stats.closed_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.closed_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.closed_meta }}</p>
+        </footer>
+    </a>
+</section>

@@ -5,9 +5,10 @@
 {% block mobile_bar_title %}پشتیبانی{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=22">
+<link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -80,9 +81,8 @@
     {# ── Desktop header ── #}
     <header class="mk-hub-head sup-desk-header">
         <div class="mk-hub-head-main">
-            <p class="mk-hub-head-eyebrow">درخواست پشتیبانی</p>
             <h1 class="mk-hub-head-title">تیکت‌های پشتیبانی</h1>
-            <p class="mk-hub-head-meta">مدیریت درخواست‌ها و پیگیری پاسخ تیم پشتیبانی</p>
+            <p class="mk-hub-head-meta">پیگیری درخواست‌ها و پاسخ تیم پشتیبانی</p>
         </div>
         <div class="mk-hub-head-actions">
             <button type="button" class="mk-hub-head-btn mk-hub-head-btn--primary" data-modal-open="modal-ticket-create">
@@ -100,36 +100,7 @@
     </div>
     {% endif %}
 
-    <section class="mk-hub-metrics sup-metrics sup-metrics--desk" aria-label="خلاصه تیکت‌ها">
-        <a href="{% url 'workspace:support_list' %}" class="mk-hub-metric{% if not status_filter and not priority_filter %} is-active{% endif %}" data-tone="purple">
-            <span class="mk-hub-metric-icon"><i class="fas fa-ticket" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.total }}</span>
-                <span class="mk-hub-metric-lbl">همه تیکت‌ها</span>
-            </span>
-        </a>
-        <a href="?status=open" class="mk-hub-metric{% if status_filter == 'open' %} is-active{% endif %}" data-tone="blue">
-            <span class="mk-hub-metric-icon"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.open }}</span>
-                <span class="mk-hub-metric-lbl">باز</span>
-            </span>
-        </a>
-        <a href="?status=waiting_user" class="mk-hub-metric{% if status_filter == 'waiting_user' %} is-active{% endif %}" data-tone="amber">
-            <span class="mk-hub-metric-icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.waiting_user }}</span>
-                <span class="mk-hub-metric-lbl">منتظر پاسخ</span>
-            </span>
-        </a>
-        <a href="?status=closed" class="mk-hub-metric{% if status_filter == 'closed' %} is-active{% endif %}" data-tone="gray">
-            <span class="mk-hub-metric-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.closed }}</span>
-                <span class="mk-hub-metric-lbl">بسته شده</span>
-            </span>
-        </a>
-    </section>
+    {% include 'workspace/includes/support_kpi.html' %}
 
     <section class="ws-glass-panel sup-filters sup-filters--desk">
         <form method="get" class="sup-filter-form" role="search">

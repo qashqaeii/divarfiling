@@ -539,11 +539,6 @@
         border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
     }
 
-    /* On overview, hero already shows key stats — hide duplicate metric strip */
-    .ph-page-mobile[data-ph-tab="overview"] .ph-metrics {
-        display: none;
-    }
-
     @media (prefers-reduced-motion: reduce) {
         .ph-mob-orb,
         .ph-mob-live-dot {
@@ -551,33 +546,18 @@
         }
     }
 
-    /* Metrics strip */
+    /* Metrics / fl-kpi-pro */
     .ph-page-mobile .ph-notif-banner {
         margin: 0 0.7rem;
         border-radius: 16px;
         padding: 0.8rem 0.9rem;
     }
-    .ph-page-mobile .ph-metrics {
-        margin: 0 0.7rem;
-        display: flex;
-        gap: 0.45rem;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-        grid-template-columns: none;
+    .ph-page-mobile .fl-kpi-pro--product.ph-desk-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.15rem 0.7rem 0.35rem;
     }
-    .ph-page-mobile .ph-metrics::-webkit-scrollbar { display: none; }
-    .ph-page-mobile .ph-metric {
-        flex: 0 0 auto;
-        width: min(42vw, 9.2rem);
-        scroll-snap-align: start;
-        min-height: 4.3rem;
-        border-radius: 16px;
-        padding: 0.7rem 0.75rem;
-    }
-    .ph-page-mobile .ph-metric-val { font-size: 0.95rem; font-weight: 850; }
-    .ph-page-mobile .ph-metric-lbl { font-size: 0.65rem; }
 
     /* Sticky tabs */
     .ph-page-mobile .ph-tabs-wrap {

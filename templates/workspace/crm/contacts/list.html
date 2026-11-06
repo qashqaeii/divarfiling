@@ -11,8 +11,10 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-controls.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=18">
 {% endblock %}
 
 {% block crm_content %}
@@ -68,18 +70,13 @@
         </div>
     </header>
 
-    <section class="kpi-strip kpi-strip--compact kpi-strip--4 crm-dash-kpis" aria-label="آمار مخاطبین">
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.total label='کل' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.new label='جدید' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-dash-kpi--accent' accent=1 value=stats.in_progress label='پیگیری' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' warn=stats.due_today value=stats.due_today label='امروز' %}
-    </section>
+    {% include 'workspace/crm/includes/contacts_kpi.html' %}
 
     <div class="crm-contacts-smart-anchor crm-smart-command-anchor--minimal">
         {% include 'workspace/crm/includes/crm_smart_command.html' %}
     </div>
 
-    <div class="crm-contacts-mob-chrome">
+    <div class="crm-contacts-mob-chrome crm-contacts-list-controls">
     <nav class="crm-files-archive-tabs crm-contacts-archive-tabs" role="tablist" aria-label="نمای مخاطبین">
         <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab crm-files-archive-tab--current {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab" aria-label="مخاطبین جاری" aria-selected="{% if archive_scope == 'active' or not request.GET.archive_scope %}true{% else %}false{% endif %}">
             <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
@@ -121,7 +118,7 @@
             </span>
         </a>
     </nav>
-    <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
+    <form method="get" class="crm-contacts-filters crm-contacts-filters--pro crm-page-filters" id="crmContactFilters">
         <input type="hidden" name="view" value="{{ view_mode }}">
         {% if archive_scope and archive_scope != 'active' %}<input type="hidden" name="archive_scope" value="{{ archive_scope }}">{% endif %}
 
@@ -129,7 +126,7 @@
         <div class="crm-contacts-filter-primary crm-contacts-mob-toolbar-row">
             <label class="crm-contacts-search">
                 <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی مخاطب..." autocomplete="off" aria-label="جستجو">
+                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="نام، تلفن یا یادداشت…" autocomplete="off" aria-label="جستجوی مخاطب">
             </label>
             <button type="button"
                     class="crm-contacts-mob-filter-trigger"
@@ -176,7 +173,9 @@
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'جدید'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.status == 'جدید' %} is-active{% endif %}">جدید</a>
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'در حال پیگیری'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.status == 'در حال پیگیری' %} is-active{% endif %}">پیگیری</a>
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&customer_type={{ 'خریدار'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.customer_type == 'خریدار' %} is-active{% endif %}">خریدار</a>
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=today{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.due == 'today' %} is-active{% endif %}">امروز</a>
+            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=action{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.due == 'action' %} is-active{% endif %}">نیازمند اقدام</a>
+            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=unscheduled{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.due == 'unscheduled' %} is-active{% endif %}">بدون پیگیری</a>
+            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&priority={{ 'بالا'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.priority == 'بالا' %} is-active{% endif %}">اولویت بالا</a>
         </nav>
 
         {% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due or request.GET.match_alerts == '1' %}
@@ -198,7 +197,7 @@
             {% endif %}
             {% if request.GET.due %}
             <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
-                <span>{% if request.GET.due == 'today' %}امروز{% elif request.GET.due == 'overdue' %}معوق{% else %}بدون تاریخ{% endif %}</span><i class="fas fa-times" aria-hidden="true"></i>
+                <span>{% if request.GET.due == 'action' %}نیازمند اقدام{% elif request.GET.due == 'today' %}امروز{% elif request.GET.due == 'overdue' %}معوق{% elif request.GET.due == 'unscheduled' %}بدون پیگیری{% else %}بدون تاریخ{% endif %}</span><i class="fas fa-times" aria-hidden="true"></i>
             </a>
             {% endif %}
             {% if request.GET.match_alerts == '1' %}
@@ -248,8 +247,10 @@
                         <span class="crm-contacts-mob-filter-label">پیگیری</span>
                         <select name="due" class="crm-contacts-select crm-contacts-mob-select" aria-label="پیگیری">
                             <option value="">همه</option>
+                            <option value="action" {% if request.GET.due == 'action' %}selected{% endif %}>نیازمند اقدام</option>
                             <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
                             <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
+                            <option value="unscheduled" {% if request.GET.due == 'unscheduled' %}selected{% endif %}>بدون پیگیری</option>
                             <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
                         </select>
                     </label>
@@ -281,8 +282,10 @@
             </select>
             <select name="due" class="crm-contacts-select" aria-label="پیگیری" onchange="this.form.submit()">
                 <option value="">پیگیری</option>
+                <option value="action" {% if request.GET.due == 'action' %}selected{% endif %}>نیازمند اقدام</option>
                 <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
                 <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
+                <option value="unscheduled" {% if request.GET.due == 'unscheduled' %}selected{% endif %}>بدون پیگیری</option>
                 <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
             </select>
         </div>

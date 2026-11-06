@@ -15,12 +15,13 @@
     justify-content: space-between;
     gap: 1rem 1.5rem;
     padding: 1.15rem 1.35rem;
-    border-radius: 16px;
-    border: 1px solid var(--ws-border);
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 78%, transparent);
     background:
         radial-gradient(ellipse 80% 60% at 100% 0%, rgba(124, 58, 237, 0.08), transparent 55%),
         radial-gradient(ellipse 60% 50% at 0% 100%, rgba(37, 99, 235, 0.06), transparent 50%),
         var(--ws-surface);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
 }
 
 .ws-tbx-hero-kicker {
@@ -760,9 +761,10 @@
     flex-direction: column;
     gap: 0.65rem;
     padding: 1rem;
-    border-radius: 14px;
-    border: 1px solid var(--ws-border);
-    background: var(--ws-surface-2);
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 88%, #fff);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset;
 }
 
 .ws-tbx-formula {
@@ -1040,9 +1042,11 @@
     align-items: center;
     gap: 0.65rem 1rem;
     padding: 0.75rem 1rem;
-    border-radius: 14px;
-    border: 1px solid var(--ws-border);
-    background: var(--ws-surface);
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface)) 0%, var(--ws-surface) 72%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
 }
 
 .ws-tbx-dataset-bar--empty {
@@ -1380,10 +1384,11 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.65rem 1rem;
-    padding: 0.75rem 1rem;
-    border-radius: 14px;
-    border: 1px solid var(--ws-border);
+    padding: 0.7rem 0.9rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
     background: var(--ws-surface);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
 }
 
 .ws-tbx-quick-label {

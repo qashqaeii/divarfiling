@@ -10,10 +10,10 @@ from workspace.mixins import WorkspaceLoginMixin
 from workspace.models import Ticket
 from workspace.services.support_tickets import (
     add_user_reply,
+    build_support_kpi_stats,
     close_ticket,
     create_ticket,
     filter_user_tickets,
-    get_user_ticket_stats,
     mark_ticket_read_by_user,
     reopen_ticket,
 )
@@ -40,14 +40,35 @@ class SupportTicketListView(WorkspaceLoginMixin, ListView):
     def get_context_data(self, **kwargs):
         ticket_form = kwargs.pop('ticket_form', None)
         ctx = super().get_context_data(**kwargs)
-        ctx['stats'] = get_user_ticket_stats(self.request.user)
-        ctx['status_filter'] = self.request.GET.get('status', '').strip()
-        ctx['priority_filter'] = self.request.GET.get('priority', '').strip()
-        ctx['search_q'] = self.request.GET.get('q', '').strip()
+        status_filter = self.request.GET.get('status', '').strip()
+        priority_filter = self.request.GET.get('priority', '').strip()
+        search_q = self.request.GET.get('q', '').strip()
+        ctx['stats'] = build_support_kpi_stats(self.request.user)
+        ctx['status_filter'] = status_filter
+        ctx['priority_filter'] = priority_filter
+        ctx['search_q'] = search_q
         ctx['status_choices'] = TICKET_STATUS_CHOICES
         ctx['priority_choices'] = TICKET_PRIORITY_CHOICES
         ctx['ticket_form'] = ticket_form or TicketCreateForm()
         ctx['open_modal'] = self.request.GET.get('open', ctx.get('open_modal', ''))
+
+        def _link(**params):
+            from urllib.parse import urlencode
+            data = {}
+            if params.get('status'):
+                data['status'] = params['status']
+            if params.get('priority'):
+                data['priority'] = params['priority']
+            if params.get('q'):
+                data['q'] = params['q']
+            return f'?{urlencode(data)}' if data else '?'
+
+        ctx['kpi_links'] = {
+            'all': _link(q=search_q or None, priority=priority_filter or None),
+            'open': _link(status='open', q=search_q or None, priority=priority_filter or None),
+            'waiting': _link(status='waiting_user', q=search_q or None, priority=priority_filter or None),
+            'closed': _link(status='closed', q=search_q or None, priority=priority_filter or None),
+        }
         return ctx
 
 

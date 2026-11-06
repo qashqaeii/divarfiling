@@ -1,4 +1,4 @@
-/* داشبورد مالی معاملات */
+/* داشبورد مالی معاملات — premium workspace-aligned */
 .crm-fin-page {
   --fin-advisor: #0f766e;
   --fin-advisor-soft: #ccfbf1;
@@ -27,6 +27,10 @@
   font-family: inherit;
 }
 
+.crm-fin-pro.crm-fin-page {
+  gap: 0.85rem;
+}
+
 .crm-fin-header .crm-deals-mob-header-accent {
   background: linear-gradient(90deg, #0f766e, #7c3aed);
 }
@@ -37,137 +41,188 @@
   font-size: 0.85rem;
 }
 
+/* ── Period segmented control ── */
 .crm-fin-periods {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.2rem;
+  margin: 0 0 0.15rem;
+  padding: 0.28rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--fin-border) 72%, transparent);
+  background: color-mix(in srgb, var(--fin-surface-muted) 88%, var(--fin-surface));
   overflow-x: auto;
-  padding: 4px 2px 12px;
   scrollbar-width: none;
 }
 
+.crm-fin-periods::-webkit-scrollbar { display: none; }
+
 .crm-fin-period {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 8px 14px;
-  background: var(--fin-surface);
-  border: 1px solid var(--fin-border);
-  color: var(--fin-text-secondary);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.45rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fin-muted);
   font-weight: 700;
   font-size: 0.82rem;
   text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .crm-fin-period.is-active {
-  background: #0f766e;
-  border-color: #0f766e;
-  color: #fff;
+  background: #fff;
+  border-color: color-mix(in srgb, var(--fin-advisor) 22%, var(--fin-border));
+  color: var(--fin-advisor);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-.crm-fin-hero {
+@media (hover: hover) and (pointer: fine) {
+  .crm-fin-period:not(.is-active):hover {
+    color: var(--fin-text);
+    background: color-mix(in srgb, #fff 70%, transparent);
+  }
+}
+
+/* ── fl-kpi-pro finance accents ── */
+.fl-kpi-pro--finance {
+  margin: 0.15rem 0 0.35rem;
+}
+
+.fl-kpi-pro--finance .fl-kpi-pro__seg-part--advisor {
+  background: color-mix(in srgb, #5eead4 78%, #fff);
+}
+
+.fl-kpi-pro--finance .fl-kpi-pro__seg-part--agency {
+  background: color-mix(in srgb, #c4b5fd 78%, #fff);
+}
+
+.fl-kpi-pro__card--received .fl-kpi-pro__icon {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.fl-kpi-pro__progress--received .fl-kpi-pro__progress-fill {
+  background: linear-gradient(90deg, #86efac, #16a34a);
+}
+
+.fl-kpi-pro__card--volume .fl-kpi-pro__icon {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+/* ── Compact meta strip (not nested cards) ── */
+.crm-fin-meta {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.crm-fin-hero-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 20px;
-  padding: 18px 18px 16px;
-  color: #fff;
-  min-height: 124px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-}
-
-.crm-fin-hero-card strong {
-  display: block;
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 8px 0 6px;
-  font-variant-numeric: tabular-nums;
-}
-
-.crm-fin-hero-card em,
-.crm-fin-hero-kicker {
-  font-style: normal;
-  opacity: 0.86;
-  font-size: 0.78rem;
-}
-
-.crm-fin-hero-kicker {
-  font-weight: 800;
-}
-
-.crm-fin-hero-card--advisor { background: linear-gradient(135deg, #0f766e, #14b8a6); }
-.crm-fin-hero-card--agency { background: linear-gradient(135deg, #6d28d9, #a78bfa); }
-.crm-fin-hero-card--volume { background: linear-gradient(135deg, #1e293b, #334155); }
-
-.crm-fin-kpis {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.crm-fin-kpi {
-  background: var(--fin-surface);
-  border: 1px solid var(--fin-border);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--fin-border) 80%, transparent);
   border-radius: 16px;
-  padding: 12px 14px;
+  background: var(--fin-surface);
+  overflow: hidden;
 }
 
-.crm-fin-kpi em {
-  display: block;
+.crm-fin-meta__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border-inline-start: 1px solid color-mix(in srgb, var(--fin-border) 70%, transparent);
+}
+
+.crm-fin-meta__item:first-child {
+  border-inline-start: 0;
+}
+
+.crm-fin-meta__item em {
   font-style: normal;
-  color: var(--fin-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  color: var(--fin-muted);
+  letter-spacing: -0.01em;
 }
 
-.crm-fin-kpi strong {
-  display: block;
-  margin-top: 6px;
-  font-size: 0.98rem;
+.crm-fin-meta__item strong {
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--fin-text);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.crm-fin-kpi--net strong { color: var(--fin-advisor); }
-.crm-fin-kpi--in strong { color: var(--fin-success); }
-.crm-fin-kpi--out strong { color: var(--fin-rose); }
+.crm-fin-meta__item--net strong {
+  color: var(--fin-advisor);
+}
 
+/* ── Insight grid / panels ── */
 .crm-fin-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 0.85rem;
+  margin-bottom: 0.15rem;
 }
 
 .crm-fin-panel {
   background: var(--fin-surface);
-  border: 1px solid var(--fin-border);
-  border-radius: 20px;
-  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--fin-border) 80%, transparent);
+  border-radius: 18px;
+  padding: 1.05rem 1.1rem 1.1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.crm-fin-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .crm-fin-panel-head h2 {
   margin: 0;
-  font-size: 1.02rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--fin-text);
 }
 
 .crm-fin-panel-head p {
-  margin: 4px 0 14px;
+  margin: 0.25rem 0 0;
   color: var(--fin-muted);
   font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.crm-fin-panel-link {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--fin-agency);
+  text-decoration: none;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--fin-agency) 8%, transparent);
+}
+
+.crm-fin-panel-link:hover {
+  background: color-mix(in srgb, var(--fin-agency) 14%, transparent);
 }
 
 .crm-fin-split {
   display: flex;
-  height: 14px;
+  height: 12px;
   border-radius: 999px;
   overflow: hidden;
   background: var(--fin-split-track);
@@ -180,102 +235,171 @@
   font-style: normal;
 }
 
-.crm-fin-split-advisor { background: var(--fin-advisor); }
-.crm-fin-split-agency { background: var(--fin-agency); }
+.crm-fin-split-advisor { background: linear-gradient(90deg, #0f766e, #14b8a6); }
+.crm-fin-split-agency { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
 
 .crm-fin-split-legend {
   list-style: none;
-  margin: 12px 0 0;
+  margin: 1rem 0 0;
   padding: 0;
   display: grid;
-  gap: 8px;
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: var(--fin-text);
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.crm-fin-split-legend li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
 .crm-fin-split-legend span {
-  display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-left: 8px;
-  vertical-align: middle;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
 }
 
 .crm-fin-split-legend .is-advisor { background: var(--fin-advisor); }
 .crm-fin-split-legend .is-agency { background: var(--fin-agency); }
+
+.crm-fin-split-legend strong {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--fin-text);
+}
+
+.crm-fin-split-legend em {
+  display: block;
+  margin-top: 0.15rem;
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--fin-muted);
+  font-variant-numeric: tabular-nums;
+}
 
 .crm-fin-payout {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: 0.45rem;
 }
 
 .crm-fin-payout-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  border-radius: 14px;
-  padding: 10px 12px;
+  gap: 0.75rem;
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
   background: var(--fin-surface-muted);
+  color: var(--fin-text);
+  border: 1px solid transparent;
+}
+
+.crm-fin-payout-item strong {
+  display: block;
+  font-size: 0.84rem;
   color: var(--fin-text);
 }
 
-.crm-fin-payout-item strong { display: block; font-size: 0.86rem; color: var(--fin-text); }
-.crm-fin-payout-item em { font-style: normal; color: var(--fin-muted); font-size: 0.74rem; }
-.crm-fin-payout-item.is-paid { background: var(--fin-paid-bg); }
-.crm-fin-payout-item.is-partial { background: var(--fin-partial-bg); }
-.crm-fin-payout-item.is-unpaid { background: var(--fin-unpaid-bg); }
+.crm-fin-payout-item em {
+  font-style: normal;
+  color: var(--fin-muted);
+  font-size: 0.72rem;
+}
+
+.crm-fin-payout-item > span {
+  font-weight: 800;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.crm-fin-payout-item.is-paid {
+  background: var(--fin-paid-bg);
+  border-color: color-mix(in srgb, #86efac 35%, transparent);
+}
+
+.crm-fin-payout-item.is-partial {
+  background: var(--fin-partial-bg);
+  border-color: color-mix(in srgb, #fcd34d 40%, transparent);
+}
+
+.crm-fin-payout-item.is-unpaid {
+  background: var(--fin-unpaid-bg);
+  border-color: color-mix(in srgb, #fda4af 40%, transparent);
+}
+
 .crm-fin-payout-item.is-waived { background: var(--fin-waived-bg); }
 
+/* ── Trend chart ── */
 .crm-fin-months {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0.55rem;
   align-items: end;
-  min-height: 160px;
+  min-height: 168px;
+  padding: 0.35rem 0.15rem 0;
 }
 
 .crm-fin-month {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 0.4rem;
   text-align: center;
+  min-width: 0;
+  opacity: 0.72;
 }
+
+.crm-fin-month.has-data { opacity: 1; }
 
 .crm-fin-month-bars {
   display: flex;
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  height: 120px;
+  height: 128px;
   width: 100%;
+  padding: 0 0.15rem;
+  border-radius: 12px 12px 4px 4px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fin-surface-muted) 80%, transparent), transparent);
 }
 
 .crm-fin-month-bars span {
   display: block;
-  width: 10px;
+  width: 11px;
   min-height: 6px;
   border-radius: 999px 999px 4px 4px;
 }
 
-.crm-fin-month-bars .is-total { background: var(--fin-bar-total); }
-.crm-fin-month-bars .is-advisor { background: var(--fin-advisor); }
+.crm-fin-month-bars .is-total { background: color-mix(in srgb, var(--fin-bar-total) 85%, #94a3b8); }
+.crm-fin-month-bars .is-advisor { background: linear-gradient(180deg, #2dd4bf, #0f766e); }
 
-.crm-fin-month strong { font-size: 0.72rem; color: var(--fin-text); }
-.crm-fin-month em { font-style: normal; font-size: 0.68rem; color: var(--fin-muted); }
+.crm-fin-month strong {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--fin-text);
+}
+
+.crm-fin-month em {
+  font-style: normal;
+  font-size: 0.68rem;
+  color: var(--fin-muted);
+  font-variant-numeric: tabular-nums;
+}
 
 .crm-fin-months-legend {
-  margin: 12px 0 0;
+  margin: 0.85rem 0 0;
   color: var(--fin-muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   display: flex;
-  gap: 14px;
+  gap: 1rem;
   align-items: center;
 }
 
@@ -284,40 +408,53 @@
   height: 10px;
   border-radius: 3px;
   display: inline-block;
-  margin-left: 6px;
+  margin-left: 0.4rem;
+  vertical-align: middle;
 }
 
 .crm-fin-months-legend .is-total { background: var(--fin-bar-total); }
 .crm-fin-months-legend .is-advisor { background: var(--fin-advisor); }
 
+/* ── Forecast ── */
 .crm-fin-forecast-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 0.55rem;
 }
 
 .crm-fin-forecast-grid article {
   background: var(--fin-surface-muted);
-  border-radius: 14px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--fin-border) 65%, transparent);
+  border-radius: 12px;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--fin-border) 55%, transparent);
+  min-width: 0;
 }
 
 .crm-fin-forecast-grid em {
   display: block;
   font-style: normal;
   color: var(--fin-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .crm-fin-forecast-grid strong {
   display: block;
-  margin-top: 6px;
-  font-size: 0.95rem;
+  margin-top: 0.4rem;
+  font-size: 0.98rem;
+  font-weight: 800;
   color: var(--fin-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
+.crm-fin-forecast-grid article.is-advisor strong {
+  color: var(--fin-advisor);
+}
+
+/* ── Deals table ── */
 .crm-fin-table-wrap { overflow-x: auto; }
+
 .crm-fin-table {
   width: 100%;
   border-collapse: collapse;
@@ -328,21 +465,23 @@
 .crm-fin-table th,
 .crm-fin-table td {
   text-align: right;
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--fin-border);
+  padding: 0.75rem 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fin-border) 75%, transparent);
   white-space: nowrap;
 }
 
 .crm-fin-table th {
   color: var(--fin-muted);
   font-weight: 700;
+  font-size: 0.75rem;
 }
 
 .crm-fin-table td em {
   display: block;
   font-style: normal;
   color: var(--fin-muted);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
+  margin-top: 0.15rem;
 }
 
 .crm-fin-table a {
@@ -351,9 +490,7 @@
   text-decoration: none;
 }
 
-.crm-fin-table a:hover {
-  color: var(--fin-agency);
-}
+.crm-fin-table a:hover { color: var(--fin-agency); }
 
 .crm-fin-table .is-advisor { color: var(--fin-advisor); font-weight: 800; }
 .crm-fin-table .is-agency { color: var(--fin-agency); font-weight: 800; }
@@ -361,7 +498,7 @@
 .crm-fin-status {
   display: inline-flex;
   border-radius: 999px;
-  padding: 4px 8px;
+  padding: 0.28rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
 }
@@ -373,13 +510,36 @@
 
 .crm-fin-empty {
   text-align: center;
-  padding: 28px 12px;
+  padding: 2rem 1rem 1.5rem;
 }
 
-.crm-fin-empty i { font-size: 1.6rem; color: var(--fin-advisor); }
-.crm-fin-empty h3 { margin: 10px 0 6px; color: var(--fin-text); }
-.crm-fin-empty p { color: var(--fin-muted); margin-bottom: 14px; }
+.crm-fin-empty__icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--fin-advisor) 12%, transparent);
+  color: var(--fin-advisor);
+  font-size: 1.15rem;
+}
 
+.crm-fin-empty h3 {
+  margin: 0.85rem 0 0.35rem;
+  color: var(--fin-text);
+  font-size: 1.02rem;
+}
+
+.crm-fin-empty p {
+  color: var(--fin-muted);
+  margin: 0 auto 1rem;
+  max-width: 28rem;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+/* ── Shared deal-detail / drawer form styles ── */
 .crm-fin-fieldset {
   border: 1px solid var(--fin-border);
   border-radius: 14px;
@@ -498,8 +658,9 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 }
 
-[data-theme="dark"] .crm-fin-hero-card {
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+[data-theme="dark"] .crm-fin-period.is-active {
+  background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+  color: #5eead4;
 }
 
 [data-theme="dark"] .crm-fin-status.is-paid {
@@ -523,9 +684,7 @@
 }
 
 @media (min-width: 900px) {
-  .crm-fin-hero { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .crm-fin-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .crm-fin-grid { grid-template-columns: 1.1fr 0.9fr; }
+  .crm-fin-grid { grid-template-columns: 1.05fr 0.95fr; }
   .crm-fin-forecast-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .crm-fin-page.crm-shell-page {
     gap: 1rem;
@@ -536,20 +695,82 @@
   }
 }
 
+@media (max-width: 900px) {
+  .crm-fin-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .crm-fin-meta__item:nth-child(4),
+  .crm-fin-meta__item:nth-child(5) {
+    border-top: 1px solid color-mix(in srgb, var(--fin-border) 70%, transparent);
+  }
+
+  .crm-fin-meta__item:nth-child(4) {
+    border-inline-start: 0;
+  }
+}
+
 @media (max-width: 768px) {
+  .crm-fin-periods {
+    display: flex;
+    grid-template-columns: none;
+  }
+
+  .crm-fin-period {
+    flex: 1 0 auto;
+    min-width: 5.5rem;
+  }
+
+  .fl-kpi-pro--finance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .crm-fin-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-fin-meta__item:nth-child(odd) {
+    border-inline-start: 0;
+  }
+
+  .crm-fin-meta__item:nth-child(n + 3) {
+    border-top: 1px solid color-mix(in srgb, var(--fin-border) 70%, transparent);
+  }
+
+  .crm-fin-split-legend {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-fin-months {
+    gap: 0.35rem;
+    min-height: 148px;
+  }
+
+  .crm-fin-month-bars {
+    height: 108px;
+  }
+
+  .crm-fin-month-bars span {
+    width: 8px;
+  }
+
   .crm-fin-table thead { display: none; }
+
   .crm-fin-table tr {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    padding: 10px 0;
+    gap: 0.45rem;
+    padding: 0.85rem 0;
     border-bottom: 1px solid var(--fin-border);
   }
+
   .crm-fin-table td {
     border: 0;
     padding: 0;
     white-space: normal;
   }
+
   .crm-fin-table td:first-child { grid-column: 1 / -1; }
 
   [data-theme="dark"] .crm-fin-page.crm-deals-mobile.crm-page-chrome {

@@ -1,35 +1,112 @@
 {% load humanize %}
-<section class="fl-kpi-grid" aria-label="آمار فایلینگ" data-fl-tour="filing-kpi">
-    <article class="fl-kpi-card fl-kpi-card--purple">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{{ stats.files }}</strong>
-            <span class="fl-kpi-card__label">پوشه استخراج</span>
-            <span class="fl-kpi-card__sub">مجموع پوشه‌های ایجادشده</span>
+{# ترتیب DOM برای RTL Grid: راست → چپ = پوشه، آگهی، فروش، اجاره #}
+<section class="fl-kpi-pro" aria-label="آمار فایلینگ" data-fl-tour="filing-kpi">
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--hero">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-folder-open"></i>
         </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پوشه‌های استخراج</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-folder"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.files|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب پوشه‌ها: {{ stats.hero_meta }}">
+                {% for seg in stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} پوشه ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+            {% endif %}
+        </footer>
     </article>
-    <article class="fl-kpi-card fl-kpi-card--blue">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-file-lines"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{{ stats.listings|intcomma }}</strong>
-            <span class="fl-kpi-card__label">آگهی دیوار</span>
-            <span class="fl-kpi-card__sub">در تمام پوشه‌ها</span>
-        </div>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--listings">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">آگهی‌های دیوار</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.listings|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.listing_bars and stats.listing_bars_max %}
+            <div class="fl-kpi-pro__bars" role="img" aria-label="توزیع آگهی در پوشه‌ها">
+                {% for bar in stats.listing_bars %}
+                <span
+                    class="fl-kpi-pro__bar"
+                    style="--fl-bar-h: {{ bar.height }}%;"
+                    title="{{ bar.name }}: {{ bar.count|intcomma }} آگهی{% if bar.tx %} · {{ bar.tx }}{% endif %}"
+                >
+                    <i style="height: {{ bar.height }}%;" aria-hidden="true"></i>
+                </span>
+                {% endfor %}
+            </div>
+            <p class="fl-kpi-pro__meta">{{ stats.listings_meta }}</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">{{ stats.listings_meta }}</p>
+            {% endif %}
+        </footer>
     </article>
-    <article class="fl-kpi-card fl-kpi-card--green">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-tag"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{{ stats.sale }}</strong>
-            <span class="fl-kpi-card__label">فروش</span>
-            <span class="fl-kpi-card__sub">پوشه استخراج</span>
-        </div>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--sale">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پوشه‌های فروش</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-tag"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.sale|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.files %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--sale"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.sale_share }}"
+                aria-label="سهم فروش از پوشه‌ها {{ stats.sale_share }} درصد"
+                title="{{ stats.sale|intcomma }} از {{ stats.files|intcomma }} پوشه"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.sale_share }}%;"></i>
+                </span>
+            </div>
+            <p class="fl-kpi-pro__meta">{{ stats.sale_meta }}</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">{{ stats.sale_meta }}</p>
+            {% endif %}
+        </footer>
     </article>
-    <article class="fl-kpi-card fl-kpi-card--cyan">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-house"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{{ stats.rent }}</strong>
-            <span class="fl-kpi-card__label">اجاره</span>
-            <span class="fl-kpi-card__sub">پوشه استخراج</span>
-        </div>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--rent">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پوشه‌های اجاره</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-home"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.rent|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.files %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--rent"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.rent_share }}"
+                aria-label="سهم اجاره از پوشه‌ها {{ stats.rent_share }} درصد"
+                title="{{ stats.rent|intcomma }} از {{ stats.files|intcomma }} پوشه"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.rent_share }}%;"></i>
+                </span>
+            </div>
+            <p class="fl-kpi-pro__meta">{{ stats.rent_meta }}</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">{{ stats.rent_meta }}</p>
+            {% endif %}
+        </footer>
     </article>
 </section>

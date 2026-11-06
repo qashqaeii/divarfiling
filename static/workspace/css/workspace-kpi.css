@@ -10,7 +10,12 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--kpi-gap, 0);
-    background: var(--kpi-bg);
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--ws-primary, #7c3aed) 4%, var(--kpi-bg)) 0%,
+            var(--kpi-bg) 48%
+        );
     border: var(--kpi-border);
     border-radius: var(--kpi-radius);
     box-shadow: var(--kpi-shadow);
@@ -149,12 +154,19 @@
     color: var(--kpi-warn);
 }
 
-.kpi-card.is-active {
-    background: color-mix(in srgb, var(--kpi-accent) 6%, transparent);
+.kpi-card.is-active,
+.kpi-strip .kpi-card.is-active,
+.kpi-strip a.kpi-card.is-active {
+    background: color-mix(in srgb, var(--kpi-accent) 7%, transparent);
 }
 
-.kpi-card.is-active .kpi-card__value {
+.kpi-card.is-active .kpi-card__value,
+.kpi-strip .kpi-card.is-active .kpi-card__value {
     color: var(--kpi-accent);
+}
+
+.kpi-card.is-warn .kpi-card__value {
+    color: var(--kpi-warn);
 }
 
 /* ── Compact: operational pages ── */

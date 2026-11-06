@@ -1,0 +1,103 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = کارهای ماه، امروز، معوق، پیگیری پیش‌رو #}
+<section class="fl-kpi-pro fl-kpi-pro--calendar" aria-label="آمار تقویم">
+    <button type="button" class="fl-kpi-pro__card fl-kpi-pro__card--hero" data-cal-filter="all">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-calendar-days"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">کارهای این ماه</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ calendar.kpis.month_total|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if calendar.kpis.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب رویدادها: {{ calendar.kpis.hero_meta }}">
+                {% for seg in calendar.kpis.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ calendar.kpis.hero_meta }}</p>
+        </footer>
+    </button>
+
+    <button type="button" class="fl-kpi-pro__card fl-kpi-pro__card--today{% if calendar.kpis.today %} is-active-day{% endif %}" data-cal-goto-today>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">امروز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-sun"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not calendar.kpis.today %} is-empty{% endif %}">{{ calendar.kpis.today|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if calendar.kpis.month_total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--today"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ calendar.kpis.today_share }}"
+                aria-label="سهم امروز {{ calendar.kpis.today_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ calendar.kpis.today_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ calendar.kpis.today_meta }}</p>
+        </footer>
+    </button>
+
+    <button type="button" class="fl-kpi-pro__card fl-kpi-pro__card--overdue{% if calendar.kpis.overdue %} is-alert{% endif %}" data-cal-goto-overdue>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">معوق</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not calendar.kpis.overdue %} is-empty{% endif %}">{{ calendar.kpis.overdue|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if calendar.kpis.month_total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--overdue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ calendar.kpis.overdue_share }}"
+                aria-label="سهم معوق {{ calendar.kpis.overdue_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ calendar.kpis.overdue_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ calendar.kpis.overdue_meta }}</p>
+        </footer>
+    </button>
+
+    <button type="button" class="fl-kpi-pro__card fl-kpi-pro__card--followups" data-cal-filter="followup">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پیگیری پیش‌رو</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-phone"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not calendar.kpis.upcoming_followups %} is-empty{% endif %}">{{ calendar.kpis.upcoming_followups|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if calendar.kpis.month_total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--followups"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ calendar.kpis.followup_share }}"
+                aria-label="سهم پیگیری پیش‌رو {{ calendar.kpis.followup_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ calendar.kpis.followup_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ calendar.kpis.followup_meta }}</p>
+        </footer>
+    </button>
+</section>

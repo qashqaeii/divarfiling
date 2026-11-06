@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 from django.db.models import Max
 from django.utils import timezone
@@ -137,6 +137,91 @@ def count_rule_matches(rule: CRMAutomationRule) -> int:
         return 0
     statuses = rule.status_list() or ['جدید', 'در حال پیگیری']
     return sum(1 for _ in _inactive_customers(rule.user, rule.trigger_days, statuses))
+
+
+def build_automation_kpi_stats(rules: Iterable[CRMAutomationRule]) -> Dict[str, Any]:
+    """آمار قوانین اتوماسیون برای fl-kpi-pro — match_count باید از قبل ست شده باشد."""
+    rules_list = list(rules)
+    total = len(rules_list)
+    active = sum(1 for r in rules_list if r.is_active)
+    inactive = total - active
+    queue = sum(getattr(r, 'match_count', 0) or 0 for r in rules_list if r.is_active)
+    queued_rules = sum(
+        1 for r in rules_list
+        if r.is_active and (getattr(r, 'match_count', 0) or 0) > 0
+    )
+    last_runs = [r.last_run_at for r in rules_list if r.last_run_at]
+    last_run = max(last_runs) if last_runs else None
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    mix_segments = []
+    for key, label, count in (
+        ('active', 'فعال', active),
+        ('inactive', 'غیرفعال', inactive),
+    ):
+        if count <= 0:
+            continue
+        mix_segments.append({
+            'key': key,
+            'label': label,
+            'count': count,
+            'pct': _share(count, total),
+        })
+
+    if total:
+        hero_bits = []
+        if active:
+            hero_bits.append(f'{active} فعال')
+        if inactive:
+            hero_bits.append(f'{inactive} خاموش')
+        if queue:
+            hero_bits.append(f'{queue} در صف')
+        hero_meta = ' · '.join(hero_bits) if hero_bits else 'کتابخانه قوانین آماده است'
+    else:
+        hero_meta = 'هنوز قانونی ندارید'
+
+    if active:
+        active_meta = f'{_share(active, total)}٪ قوانین روشن هستند'
+    elif total:
+        active_meta = 'همه قوانین خاموش‌اند'
+    else:
+        active_meta = 'اولین قانون را بسازید'
+
+    if queue:
+        queue_meta = f'{queue} مخاطب منتظر اقدام خودکار'
+    elif active:
+        queue_meta = 'صف خالی است — همه چیز به‌روز'
+    elif total:
+        queue_meta = 'برای صف، قانونی را فعال کنید'
+    else:
+        queue_meta = 'هنوز قانونی نیست'
+
+    if inactive:
+        inactive_meta = f'{_share(inactive, total)}٪ قوانین خاموش'
+    elif total:
+        inactive_meta = 'قانون خاموشی ندارید'
+    else:
+        inactive_meta = 'هنوز قانونی نیست'
+
+    return {
+        'total': total,
+        'active': active,
+        'inactive': inactive,
+        'queue': queue,
+        'last_run': last_run,
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'active_share': _share(active, total),
+        'active_meta': active_meta,
+        'queue_share': _share(queued_rules, active),
+        'queue_meta': queue_meta,
+        'inactive_share': _share(inactive, total),
+        'inactive_meta': inactive_meta,
+    }
 
 
 def run_single_rule(rule: CRMAutomationRule, *, update_last_run: bool = True) -> int:

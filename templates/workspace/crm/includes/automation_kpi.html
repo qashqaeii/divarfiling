@@ -1,0 +1,103 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = کل، فعال، صف، غیرفعال #}
+<section class="fl-kpi-pro fl-kpi-pro--automation crm-auto-desk-kpis" aria-label="آمار اتوماسیون">
+    <a href="{{ kpi_links.all }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero{% if not show %} is-selected{% endif %}">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-robot"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">کل قوانین</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.total|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب وضعیت: {{ stats.hero_meta }}">
+                {% for seg in stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.active }}" class="fl-kpi-pro__card fl-kpi-pro__card--active{% if show == 'active' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.active %} is-empty{% endif %}">{{ stats.active|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--active"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.active_share }}"
+                aria-label="سهم فعال {{ stats.active_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.active_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.active_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.queue }}" class="fl-kpi-pro__card fl-kpi-pro__card--queue{% if stats.queue %} is-alert{% endif %}{% if show == 'queue' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">مخاطب در صف</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-user-clock"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.queue %} is-empty{% endif %}">{{ stats.queue|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.active %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--queue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.queue_share }}"
+                aria-label="سهم قوانین دارای صف {{ stats.queue_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.queue_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.queue_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.inactive }}" class="fl-kpi-pro__card fl-kpi-pro__card--inactive{% if show == 'inactive' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">غیرفعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-power-off"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.inactive %} is-empty{% endif %}">{{ stats.inactive|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--inactive"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.inactive_share }}"
+                aria-label="سهم غیرفعال {{ stats.inactive_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.inactive_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.inactive_meta }}</p>
+        </footer>
+    </a>
+</section>

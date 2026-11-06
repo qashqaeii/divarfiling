@@ -5,9 +5,10 @@
 {% block mobile_bar_title %}مرکز توسعه{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=23">
+<link rel="stylesheet" href="{% static 'workspace/css/product-hub.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-product-hub-mobile-v2.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -98,20 +99,6 @@
                 <span class="ph-mob-version-go" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
             </a>
 
-            <div class="ph-mob-hero-stats" aria-label="وضعیت محصول">
-                <a href="?tab=features" class="ph-mob-hero-stat">
-                    <em>{{ hub_stats.features_active }}</em>
-                    <span>فعال</span>
-                </a>
-                <a href="?tab=roadmap" class="ph-mob-hero-stat ph-mob-hero-stat--amber">
-                    <em>{{ hub_stats.features_in_progress }}</em>
-                    <span>در ساخت</span>
-                </a>
-                <a href="?tab=requests" class="ph-mob-hero-stat ph-mob-hero-stat--purple">
-                    <em>{{ hub_stats.requests_total }}</em>
-                    <span>پیشنهاد</span>
-                </a>
-            </div>
         </div>
 
         <nav class="ph-mob-hero-shortcuts" aria-label="میانبرهای سریع">
@@ -148,7 +135,7 @@
                     </span>
                 </div>
                 <h1 class="ph-hero-title">مرکز توسعه</h1>
-                <p class="ph-hero-desc">شفافیت کامل درباره نسخه‌ها، قابلیت‌ها، نقشه راه و پیشنهادهای شما</p>
+                <p class="ph-hero-desc">نسخه‌ها، قابلیت‌ها و نقشه راه — شفاف و قابل پیگیری</p>
                 <div class="ph-hero-meta">
                     <span class="ph-ver-chip" dir="ltr">
                         <i class="fas fa-tag" aria-hidden="true"></i>
@@ -196,52 +183,7 @@
     </a>
     {% endif %}
 
-    <section class="ph-metrics" aria-label="آمار محصول">
-        <div class="ph-metric ph-metric--teal">
-            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-tag"></i></span>
-            <div class="ph-metric-body">
-                <span class="ph-metric-val" dir="ltr">{{ hub_stats.latest_version }}</span>
-                <span class="ph-metric-lbl">آخرین نسخه</span>
-            </div>
-        </div>
-        <div class="ph-metric ph-metric--blue">
-            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
-            <div class="ph-metric-body">
-                <span class="ph-metric-val ph-metric-val--sm">
-                    {% if hub_stats.latest_released_at %}{{ hub_stats.latest_released_at|ws_jalali_date }}{% else %}—{% endif %}
-                </span>
-                <span class="ph-metric-lbl">آخرین بروزرسانی</span>
-            </div>
-        </div>
-        <div class="ph-metric ph-metric--green">
-            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
-            <div class="ph-metric-body">
-                <span class="ph-metric-val">{{ hub_stats.features_active }}</span>
-                <span class="ph-metric-lbl">قابلیت فعال</span>
-            </div>
-        </div>
-        <div class="ph-metric ph-metric--amber">
-            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-hammer"></i></span>
-            <div class="ph-metric-body">
-                <span class="ph-metric-val">{{ hub_stats.features_in_progress }}</span>
-                <span class="ph-metric-lbl">در حال توسعه</span>
-            </div>
-        </div>
-        <div class="ph-metric ph-metric--purple">
-            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
-            <div class="ph-metric-body">
-                <span class="ph-metric-val">{{ hub_stats.requests_total }}</span>
-                <span class="ph-metric-lbl">پیشنهاد کاربران</span>
-            </div>
-        </div>
-        <div class="ph-metric ph-metric--cyan">
-            <span class="ph-metric-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
-            <div class="ph-metric-body">
-                <span class="ph-metric-val">{{ hub_stats.bugs_resolved }}</span>
-                <span class="ph-metric-lbl">مشکلات رفع‌شده</span>
-            </div>
-        </div>
-    </section>
+    {% include 'workspace/includes/product_hub_kpi.html' %}
 
     <div class="ph-tabs-wrap">
         <nav class="ph-tabs" aria-label="بخش‌های مرکز توسعه" data-ph-tabs>

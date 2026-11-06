@@ -1,0 +1,1221 @@
+/* ═══════════════════════════════════════════════════════════
+   Filing Premium KPI V3 — composition / bars / share progress
+   Scoped: .fl-kpi-pro
+   RTL DOM order: hero → listings → sale → rent (right → left)
+   ═══════════════════════════════════════════════════════════ */
+
+.fl-kpi-pro {
+    --fl-kpi-radius: 16px;
+    --fl-kpi-gap: 0.85rem;
+    --fl-kpi-pad: 1rem 1.05rem 0.9rem;
+    --fl-kpi-viz-h: 2.55rem;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--fl-kpi-gap);
+    margin: 0 0 0.9rem;
+    align-items: stretch;
+}
+
+.fl-kpi-pro__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+    min-height: 9.5rem;
+    padding: var(--fl-kpi-pad);
+    border-radius: var(--fl-kpi-radius);
+    background: #fff;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 75%, transparent);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.03),
+        0 8px 22px rgba(124, 58, 237, 0.055);
+    overflow: hidden;
+    transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        border-color 0.22s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .fl-kpi-pro__card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 2px 4px rgba(15, 23, 42, 0.04),
+            0 14px 28px rgba(124, 58, 237, 0.1);
+        border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 22%, var(--ws-border, #e2e8f0));
+    }
+
+    .fl-kpi-pro__card--hero:hover {
+        border-color: transparent;
+        box-shadow:
+            0 16px 34px rgba(109, 40, 217, 0.36),
+            0 4px 10px rgba(91, 33, 182, 0.2);
+    }
+}
+
+.fl-kpi-pro__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.fl-kpi-pro__label {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.fl-kpi-pro__icon {
+    width: 2.05rem;
+    height: 2.05rem;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+}
+
+.fl-kpi-pro__value {
+    margin: 0.3rem 0 auto;
+    font-size: clamp(1.8rem, 2.35vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: #0f172a;
+    position: relative;
+    z-index: 1;
+}
+
+.fl-kpi-pro__viz {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.38rem;
+    margin-top: 0.15rem;
+    min-height: var(--fl-kpi-viz-h);
+    position: relative;
+    z-index: 1;
+}
+
+.fl-kpi-pro__viz--hero {
+    margin-top: auto;
+}
+
+.fl-kpi-pro__meta {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #64748b;
+}
+
+/* Accents */
+.fl-kpi-pro__card--listings .fl-kpi-pro__icon {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.fl-kpi-pro__card--sale .fl-kpi-pro__icon {
+    color: #16a34a;
+    background: #f0fdf4;
+}
+
+.fl-kpi-pro__card--rent .fl-kpi-pro__icon {
+    color: #0891b2;
+    background: #ecfeff;
+}
+
+/* Primary hero */
+.fl-kpi-pro__card--hero {
+    background: linear-gradient(148deg, #a78bfa 0%, #7c3aed 45%, #5b21b6 100%);
+    border-color: transparent;
+    box-shadow:
+        0 12px 28px rgba(109, 40, 217, 0.3),
+        0 2px 6px rgba(91, 33, 182, 0.16);
+    color: #fff;
+}
+
+.fl-kpi-pro__card--hero .fl-kpi-pro__label,
+.fl-kpi-pro__card--hero .fl-kpi-pro__value,
+.fl-kpi-pro__card--hero .fl-kpi-pro__meta {
+    color: #fff;
+}
+
+.fl-kpi-pro__card--hero .fl-kpi-pro__meta {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 650;
+}
+
+.fl-kpi-pro__card--hero .fl-kpi-pro__icon {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 0.65rem;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(8px);
+}
+
+.fl-kpi-pro__hero-deco {
+    position: absolute;
+    inset-inline-end: -0.5rem;
+    top: -0.3rem;
+    font-size: 5.5rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.14);
+    pointer-events: none;
+    transform: rotate(-12deg);
+}
+
+/* A — Segmented mix on hero */
+.fl-kpi-pro__seg {
+    display: flex;
+    width: 100%;
+    height: 0.42rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.18);
+    gap: 2px;
+}
+
+.fl-kpi-pro__seg-part {
+    display: block;
+    min-width: 0.28rem;
+    height: 100%;
+    border-radius: 999px;
+    flex-shrink: 1;
+    flex-basis: 0;
+}
+
+.fl-kpi-pro__seg-part--sale {
+    background: color-mix(in srgb, #86efac 82%, #fff);
+}
+
+.fl-kpi-pro__seg-part--rent {
+    background: color-mix(in srgb, #67e8f9 78%, #fff);
+}
+
+.fl-kpi-pro__seg-part--other,
+.fl-kpi-pro__seg-part--unknown {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+/* Detail page advertiser mix tones (on purple hero) */
+.fl-kpi-pro--detail .fl-kpi-pro__seg-part--genuine {
+    background: color-mix(in srgb, #ddd6fe 70%, #fff);
+}
+.fl-kpi-pro--detail .fl-kpi-pro__seg-part--disguised {
+    background: color-mix(in srgb, #fda4af 75%, #fff);
+}
+.fl-kpi-pro--detail .fl-kpi-pro__seg-part--consultant {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+.fl-kpi-pro--detail .fl-kpi-pro__seg-part--other {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.fl-kpi-pro__card--consultant .fl-kpi-pro__icon {
+    color: #2563eb;
+    background: #eff6ff;
+}
+.fl-kpi-pro__card--personal .fl-kpi-pro__icon {
+    color: #0891b2;
+    background: #ecfeff;
+}
+.fl-kpi-pro__card--genuine .fl-kpi-pro__icon {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.fl-kpi-pro__progress--consultant .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #93c5fd, #2563eb);
+}
+.fl-kpi-pro__progress--genuine .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #c4b5fd, #7c3aed);
+}
+
+.fl-kpi-pro__bar--genuine i {
+    background: color-mix(in srgb, #8b5cf6 75%, #c4b5fd);
+    opacity: 0.9;
+}
+.fl-kpi-pro__bar--disguised i {
+    background: color-mix(in srgb, #f43f5e 70%, #fda4af);
+    opacity: 0.75;
+}
+.fl-kpi-pro__bar--other i {
+    background: color-mix(in srgb, #06b6d4 65%, #a5f3fc);
+    opacity: 0.7;
+}
+
+.mk-filing-dataset-detail .fl-kpi-pro {
+    margin: 0 0 0.9rem;
+}
+
+.fl-kpi-pro__value.is-empty {
+    opacity: 0.55;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.fl-kpi-pro__value--price {
+    font-size: clamp(1.25rem, 1.7vw, 1.55rem);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.fl-kpi-pro__subvalue {
+    margin: -0.15rem 0 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+}
+
+.fl-kpi-pro__card--owners .fl-kpi-pro__icon {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.fl-kpi-pro__card--price .fl-kpi-pro__icon {
+    color: #ca8a04;
+    background: #fefce8;
+}
+
+.fl-kpi-pro__card--area .fl-kpi-pro__icon {
+    color: #0d9488;
+    background: #f0fdfa;
+}
+
+/* CRM Properties KPIs */
+.fl-kpi-pro--properties a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--properties .fl-kpi-pro__seg-part--sale {
+    background: color-mix(in srgb, #86efac 82%, #fff);
+}
+
+.fl-kpi-pro--properties .fl-kpi-pro__seg-part--rent {
+    background: color-mix(in srgb, #67e8f9 78%, #fff);
+}
+
+.fl-kpi-pro--properties .fl-kpi-pro__seg-part--other {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.fl-kpi-pro__card--published .fl-kpi-pro__icon {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.fl-kpi-pro__progress--published .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #c4b5fd, #7c3aed);
+}
+
+.fl-kpi-pro__card--draft .fl-kpi-pro__icon {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+.fl-kpi-pro__progress--draft .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #cbd5e1, #64748b);
+}
+
+.crm-properties-page .fl-kpi-pro--properties {
+    margin: 0 0 0.75rem;
+}
+
+/* CRM Contacts KPIs */
+.fl-kpi-pro--contacts a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--contacts .fl-kpi-pro__seg-part--new {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+
+.fl-kpi-pro--contacts .fl-kpi-pro__seg-part--followup {
+    background: color-mix(in srgb, #c4b5fd 75%, #fff);
+}
+
+.fl-kpi-pro--contacts .fl-kpi-pro__seg-part--visited {
+    background: color-mix(in srgb, #67e8f9 78%, #fff);
+}
+
+.fl-kpi-pro--contacts .fl-kpi-pro__seg-part--contract {
+    background: color-mix(in srgb, #86efac 82%, #fff);
+}
+
+.fl-kpi-pro--contacts .fl-kpi-pro__seg-part--other {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.fl-kpi-pro__card--no-followup .fl-kpi-pro__icon {
+    color: #d97706;
+    background: #fffbeb;
+}
+
+.fl-kpi-pro__card--no-followup.is-warn {
+    border-color: color-mix(in srgb, #fbbf24 40%, var(--ws-border, #e2e8f0));
+}
+
+.fl-kpi-pro__card--high-priority .fl-kpi-pro__icon {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+.fl-kpi-pro__progress--no-followup .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fcd34d, #d97706);
+}
+
+.fl-kpi-pro__progress--high-priority .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fca5a5, #dc2626);
+}
+
+.crm-contacts-pro .fl-kpi-pro--contacts {
+    margin: 0 0 0.75rem;
+}
+
+/* CRM Today KPIs */
+.fl-kpi-pro--today a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--today .fl-kpi-pro__seg-part--today {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.fl-kpi-pro--today .fl-kpi-pro__seg-part--overdue {
+    background: color-mix(in srgb, #fda4af 80%, #fff);
+}
+
+.fl-kpi-pro__card--overdue .fl-kpi-pro__icon {
+    color: #e11d48;
+    background: #fff1f2;
+}
+
+.fl-kpi-pro__card--overdue.is-alert {
+    border-color: color-mix(in srgb, #fb7185 35%, var(--ws-border, #e2e8f0));
+}
+
+.fl-kpi-pro__card--followups .fl-kpi-pro__icon {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.fl-kpi-pro__card--reminders .fl-kpi-pro__icon {
+    color: #d97706;
+    background: #fffbeb;
+}
+
+.fl-kpi-pro__progress--overdue .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fda4af, #e11d48);
+}
+
+.fl-kpi-pro__progress--followups .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #93c5fd, #2563eb);
+}
+
+.fl-kpi-pro__progress--reminders .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fcd34d, #d97706);
+}
+
+.crm-today-pro .fl-kpi-pro--today {
+    margin: 0 0 0.9rem;
+}
+
+/* CRM Deals KPIs */
+.fl-kpi-pro--deals a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--lead {
+    background: color-mix(in srgb, #94a3b8 70%, #fff);
+}
+
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--negotiate,
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--contact {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--visit {
+    background: color-mix(in srgb, #fcd34d 78%, #fff);
+}
+
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--precontract,
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--offer {
+    background: color-mix(in srgb, #c4b5fd 75%, #fff);
+}
+
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--contract {
+    background: color-mix(in srgb, #f9a8d4 75%, #fff);
+}
+
+.fl-kpi-pro--deals .fl-kpi-pro__seg-part--other {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.fl-kpi-pro__card--pipeline .fl-kpi-pro__icon {
+    color: #ca8a04;
+    background: #fefce8;
+}
+
+.fl-kpi-pro__card--forecast .fl-kpi-pro__icon {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.fl-kpi-pro__progress--forecast .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #93c5fd, #2563eb);
+}
+
+.crm-deals-pro .fl-kpi-pro--deals {
+    margin: 0 0 0.75rem;
+}
+
+/* Show premium KPIs on mobile too (replace legacy mob strip) */
+@media (max-width: 768px) {
+    .crm-deals-page .crm-deals-mob-kpis,
+    .crm-deals-page .kpi-strip.crm-deals-kpis {
+        display: none !important;
+    }
+
+    .crm-deals-page .fl-kpi-pro--deals.crm-deals-desk-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0 0 0.75rem;
+        padding: 0 0.75rem;
+    }
+}
+
+/* CRM Contracts KPIs */
+.fl-kpi-pro--contracts a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--contracts .fl-kpi-pro__seg-part--draft {
+    background: color-mix(in srgb, #cbd5e1 78%, #fff);
+}
+
+.fl-kpi-pro--contracts .fl-kpi-pro__seg-part--pending {
+    background: color-mix(in srgb, #fcd34d 78%, #fff);
+}
+
+.fl-kpi-pro--contracts .fl-kpi-pro__seg-part--finalized {
+    background: color-mix(in srgb, #86efac 82%, #fff);
+}
+
+.fl-kpi-pro--contracts .fl-kpi-pro__seg-part--other {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.fl-kpi-pro__card--finalized .fl-kpi-pro__icon {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.fl-kpi-pro__progress--finalized .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #86efac, #16a34a);
+}
+
+.crm-contracts-dashboard .fl-kpi-pro--contracts {
+    margin: 0.75rem 0;
+}
+
+@media (max-width: 768px) {
+    .crm-contracts-dashboard .kpi-strip.ct-dash-kpis {
+        display: none !important;
+    }
+
+    .crm-contracts-dashboard .fl-kpi-pro--contracts.ct-dash-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0 0 0.75rem;
+    }
+}
+
+/* CRM Finance KPIs */
+.fl-kpi-pro--finance .fl-kpi-pro__card--hero .fl-kpi-pro__icon {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.crm-fin-page .fl-kpi-pro--finance {
+    margin: 0.15rem 0 0.35rem;
+}
+
+/* CRM Calendar KPIs */
+.fl-kpi-pro--calendar button.fl-kpi-pro__card {
+    width: 100%;
+    text-align: inherit;
+    font: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.fl-kpi-pro--calendar .fl-kpi-pro__seg-part--followup {
+    background: color-mix(in srgb, #c4b5fd 78%, #fff);
+}
+
+.fl-kpi-pro--calendar .fl-kpi-pro__seg-part--visit {
+    background: color-mix(in srgb, #6ee7b7 78%, #fff);
+}
+
+.fl-kpi-pro--calendar .fl-kpi-pro__seg-part--reminder {
+    background: color-mix(in srgb, #fcd34d 78%, #fff);
+}
+
+.fl-kpi-pro--calendar .fl-kpi-pro__seg-part--contract {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+
+.fl-kpi-pro__card--today .fl-kpi-pro__icon {
+    color: #ca8a04;
+    background: #fefce8;
+}
+
+.fl-kpi-pro__card--today.is-active-day {
+    border-color: color-mix(in srgb, #fbbf24 38%, var(--ws-border, #e2e8f0));
+}
+
+.fl-kpi-pro__progress--today .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fde68a, #d97706);
+}
+
+.crm-cal-page .fl-kpi-pro--calendar {
+    margin: 0 0 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .crm-cal-page .fl-kpi-pro--calendar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0 0 0.75rem;
+    }
+}
+
+/* Agency hub KPIs */
+.fl-kpi-pro--agency a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--agency .fl-kpi-pro__seg-part--occupied {
+    background: color-mix(in srgb, #c4b5fd 80%, #fff);
+}
+
+.fl-kpi-pro--agency .fl-kpi-pro__seg-part--available {
+    background: color-mix(in srgb, #86efac 78%, #fff);
+}
+
+.fl-kpi-pro--agency .fl-kpi-pro__seg-part--inbox {
+    background: color-mix(in srgb, #fda4af 78%, #fff);
+}
+
+.fl-kpi-pro--agency .fl-kpi-pro__seg-part--followup {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+
+.fl-kpi-pro--agency-secretary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.agency-hub .fl-kpi-pro--agency {
+    margin: 0 0 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .agency-hub .fl-kpi-pro--agency {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+}
+
+/* Workspace Support KPIs */
+.fl-kpi-pro--support a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--support .fl-kpi-pro__seg-part--waiting {
+    background: color-mix(in srgb, #fcd34d 80%, #fff);
+}
+
+.fl-kpi-pro--support .fl-kpi-pro__seg-part--open {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+
+.fl-kpi-pro--support .fl-kpi-pro__seg-part--closed {
+    background: color-mix(in srgb, #cbd5e1 78%, #fff);
+}
+
+.fl-kpi-pro__card--open .fl-kpi-pro__icon {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.fl-kpi-pro__progress--open .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #93c5fd, #2563eb);
+}
+
+.fl-kpi-pro__card--waiting .fl-kpi-pro__icon {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.fl-kpi-pro__card--waiting.is-alert {
+    border-color: color-mix(in srgb, #f59e0b 40%, var(--ws-border, #e2e8f0));
+    box-shadow: 0 0 0 1px color-mix(in srgb, #f59e0b 14%, transparent);
+}
+
+.fl-kpi-pro__progress--waiting .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fcd34d, #d97706);
+}
+
+.fl-kpi-pro__card--closed .fl-kpi-pro__icon {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+.fl-kpi-pro__progress--closed .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #cbd5e1, #64748b);
+}
+
+.fl-kpi-pro--support .fl-kpi-pro__card.is-selected:not(.fl-kpi-pro__card--hero) {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 45%, transparent);
+    outline-offset: 1px;
+}
+
+.fl-kpi-pro--support .fl-kpi-pro__card--hero.is-selected {
+    box-shadow:
+        0 10px 28px rgba(91, 33, 182, 0.28),
+        0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.sup-page .fl-kpi-pro--support {
+    margin: 0.15rem 0 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .sup-page .fl-kpi-pro--support {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.45rem 0 0.55rem;
+    }
+}
+
+/* Workspace Tools KPIs */
+.fl-kpi-pro--tools .fl-kpi-pro__seg-part--p10 {
+    background: color-mix(in srgb, #c4b5fd 72%, #fff);
+}
+
+.fl-kpi-pro--tools .fl-kpi-pro__seg-part--p25 {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+
+.fl-kpi-pro--tools .fl-kpi-pro__seg-part--p75 {
+    background: color-mix(in srgb, #86efac 78%, #fff);
+}
+
+.fl-kpi-pro--tools .fl-kpi-pro__seg-part--p90 {
+    background: color-mix(in srgb, #fcd34d 78%, #fff);
+}
+
+.fl-kpi-pro__card--ratio .fl-kpi-pro__icon {
+    color: #6d28d9;
+    background: #ede9fe;
+}
+
+.fl-kpi-pro__progress--ratio .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #c4b5fd, #7c3aed);
+}
+
+.fl-kpi-pro--tools .fl-kpi-pro__card--price .fl-kpi-pro__icon {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.fl-kpi-pro--tools .fl-kpi-pro__card--area .fl-kpi-pro__icon {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.ws-toolbox-pro .fl-kpi-pro--tools {
+    margin: 0.15rem 0 0.35rem;
+}
+
+@media (max-width: 768px) {
+    .ws-toolbox-pro .fl-kpi-pro--tools {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.35rem 0 0.45rem;
+    }
+}
+
+/* CRM Automation KPIs */
+.fl-kpi-pro--automation a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--automation .fl-kpi-pro__seg-part--active {
+    background: color-mix(in srgb, #86efac 80%, #fff);
+}
+
+.fl-kpi-pro--automation .fl-kpi-pro__seg-part--inactive {
+    background: color-mix(in srgb, #cbd5e1 78%, #fff);
+}
+
+.fl-kpi-pro__card--active .fl-kpi-pro__icon {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.fl-kpi-pro__progress--active .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #86efac, #16a34a);
+}
+
+.fl-kpi-pro__card--queue .fl-kpi-pro__icon {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.fl-kpi-pro__card--queue.is-alert {
+    border-color: color-mix(in srgb, #3b82f6 35%, var(--ws-border, #e2e8f0));
+    box-shadow: 0 0 0 1px color-mix(in srgb, #3b82f6 12%, transparent);
+}
+
+.fl-kpi-pro__progress--queue .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #93c5fd, #2563eb);
+}
+
+.fl-kpi-pro__card--inactive .fl-kpi-pro__icon {
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+.fl-kpi-pro__progress--inactive .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #cbd5e1, #64748b);
+}
+
+.fl-kpi-pro--automation .fl-kpi-pro__card.is-selected:not(.fl-kpi-pro__card--hero) {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 45%, transparent);
+    outline-offset: 1px;
+}
+
+.fl-kpi-pro--automation .fl-kpi-pro__card--hero.is-selected {
+    box-shadow:
+        0 10px 28px rgba(91, 33, 182, 0.28),
+        0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.crm-automation-pro .fl-kpi-pro--automation {
+    margin: 0.15rem 0 0.55rem;
+}
+
+@media (max-width: 768px) {
+    .crm-automation-pro .fl-kpi-pro--automation {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.45rem 0 0.5rem;
+    }
+}
+
+/* CRM Templates KPIs */
+.fl-kpi-pro--templates a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--templates .fl-kpi-pro__seg-part--followup {
+    background: color-mix(in srgb, #c4b5fd 80%, #fff);
+}
+
+.fl-kpi-pro--templates .fl-kpi-pro__seg-part--visit {
+    background: color-mix(in srgb, #93c5fd 78%, #fff);
+}
+
+.fl-kpi-pro--templates .fl-kpi-pro__seg-part--offer {
+    background: color-mix(in srgb, #fcd34d 78%, #fff);
+}
+
+.fl-kpi-pro--templates .fl-kpi-pro__seg-part--welcome {
+    background: color-mix(in srgb, #86efac 78%, #fff);
+}
+
+.fl-kpi-pro--templates .fl-kpi-pro__seg-part--custom_cat,
+.fl-kpi-pro--templates .fl-kpi-pro__seg-part--other {
+    background: color-mix(in srgb, #fda4af 72%, #fff);
+}
+
+.fl-kpi-pro__card--whatsapp .fl-kpi-pro__icon {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.fl-kpi-pro__progress--whatsapp .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #86efac, #16a34a);
+}
+
+.fl-kpi-pro__card--sms .fl-kpi-pro__icon {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.fl-kpi-pro__progress--sms .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #93c5fd, #2563eb);
+}
+
+.fl-kpi-pro__card--custom .fl-kpi-pro__icon {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.fl-kpi-pro__progress--custom .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fcd34d, #d97706);
+}
+
+.fl-kpi-pro--templates .fl-kpi-pro__card.is-selected:not(.fl-kpi-pro__card--hero) {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 45%, transparent);
+    outline-offset: 1px;
+}
+
+.fl-kpi-pro--templates .fl-kpi-pro__card--hero.is-selected {
+    box-shadow:
+        0 10px 28px rgba(91, 33, 182, 0.28),
+        0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.crm-tpl-pro .fl-kpi-pro--templates {
+    margin: 0.15rem 0 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .crm-tpl-pro .fl-kpi-pro--templates {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.45rem 0 0.55rem;
+    }
+}
+
+/* CRM Reminders KPIs */
+.fl-kpi-pro--reminders a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--reminders .fl-kpi-pro__seg-part--overdue {
+    background: color-mix(in srgb, #fda4af 82%, #fff);
+}
+
+.fl-kpi-pro--reminders .fl-kpi-pro__seg-part--today {
+    background: color-mix(in srgb, #fcd34d 80%, #fff);
+}
+
+.fl-kpi-pro--reminders .fl-kpi-pro__seg-part--upcoming {
+    background: color-mix(in srgb, #c4b5fd 78%, #fff);
+}
+
+.fl-kpi-pro__card--received .fl-kpi-pro__icon {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.fl-kpi-pro__progress--received .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #86efac, #16a34a);
+}
+
+.fl-kpi-pro--reminders .fl-kpi-pro__card.is-selected:not(.fl-kpi-pro__card--hero) {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 45%, transparent);
+    outline-offset: 1px;
+}
+
+.fl-kpi-pro--reminders .fl-kpi-pro__card--hero.is-selected {
+    box-shadow:
+        0 10px 28px rgba(91, 33, 182, 0.28),
+        0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.crm-reminders-pro .fl-kpi-pro--reminders {
+    margin: 0.15rem 0 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .crm-reminders-pro .fl-kpi-pro--reminders {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.55rem 0 0.65rem;
+    }
+}
+
+/* Product Hub KPIs */
+.fl-kpi-pro--product a.fl-kpi-pro__card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.fl-kpi-pro--product .fl-kpi-pro__seg-part--active {
+    background: color-mix(in srgb, #6ee7b7 82%, #fff);
+}
+
+.fl-kpi-pro--product .fl-kpi-pro__seg-part--beta {
+    background: color-mix(in srgb, #67e8f9 78%, #fff);
+}
+
+.fl-kpi-pro--product .fl-kpi-pro__seg-part--in_progress {
+    background: color-mix(in srgb, #fcd34d 80%, #fff);
+}
+
+.fl-kpi-pro--product .fl-kpi-pro__seg-part--planned {
+    background: color-mix(in srgb, #c4b5fd 78%, #fff);
+}
+
+.fl-kpi-pro__card--progress .fl-kpi-pro__icon {
+    color: #b45309;
+    background: #fffbeb;
+}
+
+.fl-kpi-pro__progress--progress .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fcd34d, #d97706);
+}
+
+.fl-kpi-pro__card--requests .fl-kpi-pro__icon {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.fl-kpi-pro__progress--requests .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #c4b5fd, #7c3aed);
+}
+
+.fl-kpi-pro__card--bugs .fl-kpi-pro__icon {
+    color: #be123c;
+    background: #fff1f2;
+}
+
+.fl-kpi-pro__card--bugs.is-alert {
+    border-color: color-mix(in srgb, #e11d48 38%, var(--ws-border, #e2e8f0));
+    box-shadow: 0 0 0 1px color-mix(in srgb, #e11d48 12%, transparent);
+}
+
+.fl-kpi-pro__progress--bugs .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #fda4af, #e11d48);
+}
+
+.fl-kpi-pro--product .fl-kpi-pro__card.is-selected:not(.fl-kpi-pro__card--hero) {
+    outline: 2px solid color-mix(in srgb, #0f766e 45%, transparent);
+    outline-offset: 1px;
+}
+
+.fl-kpi-pro--product .fl-kpi-pro__card--hero.is-selected {
+    box-shadow:
+        0 10px 28px rgba(15, 118, 110, 0.28),
+        0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.fl-kpi-pro--product .fl-kpi-pro__card--hero {
+    background: linear-gradient(145deg, #0f766e 0%, #0d9488 55%, #115e59 100%);
+}
+
+.ph-page .fl-kpi-pro--product {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .ph-page .fl-kpi-pro--product {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0 0.7rem;
+    }
+}
+
+.fl-kpi-pro__progress--hero .fl-kpi-pro__progress-fill {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.fl-kpi-pro__card--hero .fl-kpi-pro__progress-track {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* B — Micro bars for listings */
+.fl-kpi-pro__bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.22rem;
+    width: 100%;
+    height: 1.55rem;
+}
+
+.fl-kpi-pro__bar {
+    flex: 1 1 0;
+    min-width: 0.28rem;
+    max-width: 0.7rem;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.fl-kpi-pro__bar i {
+    display: block;
+    width: 100%;
+    min-height: 0.18rem;
+    border-radius: 999px 999px 3px 3px;
+    background: color-mix(in srgb, #3b82f6 72%, #93c5fd);
+    opacity: 0.55;
+    transform-origin: bottom;
+    animation: fl-kpi-bar-in 0.55s ease both;
+}
+
+.fl-kpi-pro__bar:nth-child(odd) i { opacity: 0.42; }
+.fl-kpi-pro__bar:nth-child(3n) i { opacity: 0.68; }
+.fl-kpi-pro__bar:nth-child(4n) i { opacity: 0.85; }
+
+.fl-kpi-pro__bar:hover i,
+.fl-kpi-pro__bar:focus-within i {
+    opacity: 1;
+}
+
+/* C/D — Share progress */
+.fl-kpi-pro__progress {
+    width: 100%;
+}
+
+.fl-kpi-pro__progress-track {
+    display: block;
+    width: 100%;
+    height: 0.38rem;
+    border-radius: 999px;
+    background: #f1f5f9;
+    overflow: hidden;
+}
+
+.fl-kpi-pro__progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    min-width: 0;
+    transform: scaleX(1);
+    transform-origin: right;
+    animation: fl-kpi-fill-in 0.65s ease both;
+}
+
+.fl-kpi-pro__progress--sale .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #86efac, #22c55e);
+}
+
+.fl-kpi-pro__progress--rent .fl-kpi-pro__progress-fill {
+    background: linear-gradient(90deg, #67e8f9, #06b6d4);
+}
+
+@keyframes fl-kpi-bar-in {
+    from { transform: scaleY(0.15); opacity: 0.2; }
+    to { transform: scaleY(1); }
+}
+
+@keyframes fl-kpi-fill-in {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fl-kpi-pro__card {
+        transition: none;
+    }
+
+    .fl-kpi-pro__bar i,
+    .fl-kpi-pro__progress-fill {
+        animation: none;
+    }
+}
+
+@media (max-width: 1100px) {
+    .fl-kpi-pro {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-kpi-pro {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0 0 0.75rem;
+    }
+
+    .fl-kpi-pro__card {
+        min-height: 8.5rem;
+        padding: 0.85rem 0.9rem 0.8rem;
+    }
+
+    .fl-kpi-pro__value {
+        font-size: 1.65rem;
+    }
+
+    .fl-kpi-pro__bars {
+        height: 1.3rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .fl-kpi-pro,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-kpi-pro {
+        grid-template-columns: 1fr;
+    }
+}
+
+[data-theme="dark"] .fl-kpi-pro__card:not(.fl-kpi-pro__card--hero) {
+    background: var(--ws-surface);
+    border-color: var(--ws-border);
+    box-shadow: none;
+}
+
+[data-theme="dark"] .fl-kpi-pro__label,
+[data-theme="dark"] .fl-kpi-pro__value {
+    color: var(--ws-text);
+}
+
+[data-theme="dark"] .fl-kpi-pro__meta {
+    color: var(--ws-muted, #94a3b8);
+}
+
+[data-theme="dark"] .fl-kpi-pro__progress-track {
+    background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+}
+
+[data-theme="dark"] .fl-kpi-pro__card--listings .fl-kpi-pro__icon {
+    background: color-mix(in srgb, #2563eb 22%, transparent);
+}
+
+[data-theme="dark"] .fl-kpi-pro__card--sale .fl-kpi-pro__icon {
+    background: color-mix(in srgb, #16a34a 22%, transparent);
+}
+
+[data-theme="dark"] .fl-kpi-pro__card--rent .fl-kpi-pro__icon {
+    background: color-mix(in srgb, #0891b2 22%, transparent);
+}

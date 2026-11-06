@@ -145,103 +145,13 @@
     box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28);
 }
 
-/* ── KPI cards ── */
-.ct-dash-kpis {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.85rem;
-    margin: 1.25rem 0 1rem;
+/* ── KPI — unified workspace strip (workspace-kpi.css) ── */
+.crm-contracts-dashboard .kpi-strip.ct-dash-kpis {
+    margin: 0.75rem 0;
 }
-.ct-dash-kpi {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem 1.05rem;
-    border: 1px solid var(--ct-dash-border);
-    border-radius: var(--ct-dash-radius);
-    background: var(--ct-dash-surface);
-    text-decoration: none;
-    color: inherit;
-    box-shadow: var(--ct-dash-shadow);
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-    position: relative;
-    overflow: hidden;
-}
-.ct-dash-kpi::after {
-    content: '';
-    position: absolute;
-    inset-inline-start: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    border-radius: 0 4px 4px 0;
-    background: var(--ct-kpi-accent, var(--ct-dash-primary));
-    opacity: 0;
-    transition: opacity 0.15s;
-}
-.ct-dash-kpi:hover {
-    border-color: color-mix(in srgb, var(--ct-kpi-accent, var(--ct-dash-primary)) 35%, var(--ct-dash-border));
-    box-shadow: var(--ct-dash-shadow-md);
-    transform: translateY(-2px);
-}
-.ct-dash-kpi.is-active {
-    border-color: color-mix(in srgb, var(--ct-kpi-accent, var(--ct-dash-primary)) 40%, var(--ct-dash-border));
-    background: color-mix(in srgb, var(--ct-kpi-accent, var(--ct-dash-primary)) 4%, var(--ct-dash-surface));
-}
-.ct-dash-kpi.is-active::after { opacity: 1; }
-.ct-dash-kpi__icon {
-    width: 2.35rem;
-    height: 2.35rem;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 0.9rem;
-    background: var(--ct-kpi-bg, #f5f3ff);
-    color: var(--ct-kpi-accent, var(--ct-dash-primary));
-}
-.ct-dash-kpi__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.12rem;
-    min-width: 0;
-    flex: 1;
-}
-.ct-dash-kpi__value {
-    font-size: 1.55rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-    font-variant-numeric: tabular-nums;
-    color: var(--ct-dash-text);
-}
-.ct-dash-kpi__label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--ct-dash-text);
-}
-.ct-dash-kpi__hint {
-    font-size: 0.72rem;
-    color: var(--ct-dash-muted);
-    line-height: 1.35;
-    margin: 0.08rem 0 0;
-}
-.ct-dash-kpi--draft {
-    --ct-kpi-accent: #7c3aed;
-    --ct-kpi-bg: var(--ws-primary-soft, #f5f3ff);
-}
-.ct-dash-kpi--pending {
-    --ct-kpi-accent: #d97706;
-    --ct-kpi-bg: color-mix(in srgb, #d97706 12%, var(--ct-dash-surface));
-}
-.ct-dash-kpi--finalized {
-    --ct-kpi-accent: #059669;
-    --ct-kpi-bg: color-mix(in srgb, #059669 12%, var(--ct-dash-surface));
-}
-.ct-dash-kpi--action {
-    --ct-kpi-accent: #e11d48;
-    --ct-kpi-bg: color-mix(in srgb, #e11d48 12%, var(--ct-dash-surface));
+
+.crm-contracts-dashboard .fl-kpi-pro--contracts.ct-dash-kpis {
+    margin: 0.75rem 0;
 }
 
 /* ── Quick filter tabs ── */
@@ -295,87 +205,76 @@
     color: #fff;
 }
 
-/* ── Filter card ── */
+/* ── Filter bar (minimal) ── */
 .ct-dash-filter-card {
-    border: 1px solid var(--ct-dash-border);
-    border-radius: var(--ct-dash-radius);
+    border: 1px solid color-mix(in srgb, var(--ct-dash-border) 80%, transparent);
+    border-radius: 12px;
     background: var(--ct-dash-surface);
-    box-shadow: var(--ct-dash-shadow);
-    margin-bottom: 0.85rem;
+    box-shadow: none;
+    margin-bottom: 0.75rem;
     overflow: hidden;
 }
-.ct-dash-filter-card__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--ct-dash-border);
-    background: linear-gradient(180deg, var(--ws-surface-2, #fafbfc) 0%, var(--ct-dash-surface) 100%);
+.ct-dash-filter-card--minimal {
+    padding: 0;
 }
-.ct-dash-filter-card__title {
-    display: inline-flex;
+.ct-dash-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.45rem;
-    margin: 0;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: var(--ct-dash-text);
+    padding: 0.55rem 0.65rem;
 }
-.ct-dash-filter-card__title i {
-    color: var(--ct-dash-primary);
-    font-size: 0.82rem;
-}
-.ct-dash-filter-card__body {
-    padding: 1rem;
-}
-.ct-dash-filter-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(130px, 1fr));
-    gap: 0.65rem;
-    align-items: end;
-}
-.ct-dash-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.28rem;
-    min-width: 0;
-}
+.ct-dash-filter-card__head,
+.ct-dash-filter-card__title,
+.ct-dash-filter-card__body,
+.ct-dash-filter-grid,
+.ct-dash-field,
 .ct-dash-field__label {
-    font-size: 0.72rem;
-    font-weight: 650;
-    color: var(--ct-dash-muted);
+    display: none;
 }
 .ct-dash-search {
     position: relative;
     display: flex;
     align-items: center;
+    flex: 1 1 14rem;
+    min-width: 0;
 }
 .ct-dash-search > i {
     position: absolute;
-    inset-inline-start: 0.75rem;
+    inset-inline-start: 0.7rem;
     color: var(--ct-dash-muted);
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     pointer-events: none;
 }
 .ct-dash-search .crm-input {
     width: 100%;
-    padding-inline-start: 2.15rem;
-    min-height: 2.5rem;
-    border-radius: 10px;
+    padding-inline-start: 2rem;
+    min-height: 2.2rem;
+    border-radius: 9px;
+    font-size: 0.8125rem;
 }
-.ct-dash-filter-grid .crm-select {
-    min-height: 2.5rem;
-    border-radius: 10px;
+.ct-dash-filter-select,
+.ct-dash-filter-bar .crm-select {
+    flex: 0 1 8.5rem;
+    min-width: 7.5rem;
+    min-height: 2.2rem;
+    border-radius: 9px;
+    font-size: 0.8125rem;
 }
 .ct-dash-filter-actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: inline-flex;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.85rem;
-    padding-top: 0.85rem;
-    border-top: 1px solid var(--ct-dash-border);
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    margin-inline-start: auto;
+}
+.ct-dash-filter-actions .crm-dash-act {
+    min-height: 2.2rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
 }
 .ct-dash-filter-actions .crm-dash-act--ghost {
     background: transparent;
@@ -734,17 +633,18 @@
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {
-    .ct-dash-filter-grid {
-        grid-template-columns: 1fr 1fr;
+    .ct-dash-filter-bar {
+        gap: 0.4rem;
     }
-    .ct-dash-filter-grid .ct-dash-field:first-child {
-        grid-column: 1 / -1;
+    .ct-dash-filter-select,
+    .ct-dash-filter-bar .crm-select {
+        flex: 1 1 8rem;
     }
 }
 
 @media (max-width: 960px) {
-    .ct-dash-kpis {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .crm-contracts-dashboard .kpi-strip.ct-dash-kpis.kpi-strip--4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 
@@ -766,12 +666,25 @@
     .ct-dash-quick__tab {
         flex-shrink: 0;
     }
-    .ct-dash-filter-grid {
-        grid-template-columns: 1fr;
-    }
-    .ct-dash-filter-card__head {
+    .ct-dash-filter-bar {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        padding: 0.55rem;
+    }
+    .ct-dash-search,
+    .ct-dash-filter-select,
+    .ct-dash-filter-bar .crm-select {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+    }
+    .ct-dash-filter-actions {
+        margin-inline-start: 0;
+        width: 100%;
+    }
+    .ct-dash-filter-actions .crm-dash-act {
+        flex: 1;
+        justify-content: center;
     }
     .ct-dash-list-head {
         flex-direction: column;
@@ -814,12 +727,6 @@
 }
 
 @media (max-width: 480px) {
-    .ct-dash-kpis {
-        grid-template-columns: 1fr;
-    }
-    .ct-dash-kpi__value {
-        font-size: 1.35rem;
-    }
     .crm-contracts-dashboard .crm-dash-bar-actions {
         flex-wrap: wrap;
     }

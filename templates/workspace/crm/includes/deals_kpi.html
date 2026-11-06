@@ -1,0 +1,97 @@
+{% load humanize workspace_tags %}
+{# ترتیب DOM برای RTL: راست → چپ = فعال، نیازمند پیگیری، ارزش قیف، پیش‌بینی وزنی #}
+<section class="fl-kpi-pro fl-kpi-pro--deals crm-deals-desk-kpis" aria-label="شاخص‌های معاملات">
+    <a href="{{ kpi_links.active }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-filter"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">معاملات فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.active|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب مراحل: {{ stats.hero_meta }}">
+                {% for seg in stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+            {% endif %}
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.stale }}" class="fl-kpi-pro__card fl-kpi-pro__card--overdue{% if stats.stale %} is-alert{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">نیازمند پیگیری</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-hourglass-end"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.stale %} is-empty{% endif %}">{{ stats.stale|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.active %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--overdue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.stale_share }}"
+                aria-label="سهم نیازمند پیگیری {{ stats.stale_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.stale_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.stale_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.pipeline }}" class="fl-kpi-pro__card fl-kpi-pro__card--pipeline">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">ارزش قیف</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-coins"></i></span>
+        </header>
+        <strong
+            class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not stats.pipeline_value %} is-empty{% endif %}"
+            title="{{ stats.pipeline_value|ws_money }}"
+        >{% if stats.pipeline_value %}{{ stats.pipeline_value|ws_money_compact }}{% else %}—{% endif %}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta">{{ stats.pipeline_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.forecast }}" class="fl-kpi-pro__card fl-kpi-pro__card--forecast">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پیش‌بینی وزنی</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+        </header>
+        <strong
+            class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not stats.weighted_forecast %} is-empty{% endif %}"
+            title="{{ stats.weighted_forecast|ws_money }}"
+        >{% if stats.weighted_forecast %}{{ stats.weighted_forecast|ws_money_compact }}{% else %}—{% endif %}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.pipeline_value %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--forecast"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.forecast_share }}"
+                aria-label="سهم پیش‌بینی از ارزش قیف {{ stats.forecast_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.forecast_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.forecast_meta }}</p>
+        </footer>
+    </a>
+</section>

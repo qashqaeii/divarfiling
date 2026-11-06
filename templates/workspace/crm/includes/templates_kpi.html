@@ -1,0 +1,103 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = کل، واتساپ، پیامک، سفارشی #}
+<section class="fl-kpi-pro fl-kpi-pro--templates crm-tpl-desk-kpis" aria-label="آمار قالب‌ها">
+    <a href="{{ kpi_links.all }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero{% if not channel_filter and not scope_filter and not cat_filter %} is-selected{% endif %}">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-message"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">کل قالب‌ها</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-message"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.total|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب دسته: {{ stats.hero_meta }}">
+                {% for seg in stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.whatsapp }}" class="fl-kpi-pro__card fl-kpi-pro__card--whatsapp{% if channel_filter == 'واتساپ' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">واتساپ</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fab fa-whatsapp"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.whatsapp %} is-empty{% endif %}">{{ stats.whatsapp|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--whatsapp"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.whatsapp_share }}"
+                aria-label="سهم واتساپ {{ stats.whatsapp_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.whatsapp_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.whatsapp_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.sms }}" class="fl-kpi-pro__card fl-kpi-pro__card--sms{% if channel_filter == 'پیامک' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پیامک</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-comment-sms"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.sms %} is-empty{% endif %}">{{ stats.sms|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--sms"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.sms_share }}"
+                aria-label="سهم پیامک {{ stats.sms_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.sms_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.sms_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.custom }}" class="fl-kpi-pro__card fl-kpi-pro__card--custom{% if scope_filter == 'custom' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">سفارشی</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-pen-ruler"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.custom %} is-empty{% endif %}">{{ stats.custom|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--custom"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.custom_share }}"
+                aria-label="سهم سفارشی {{ stats.custom_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.custom_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.custom_meta }}</p>
+        </footer>
+    </a>
+</section>

@@ -291,6 +291,7 @@
             updateFilterLabel(filter);
 
             filterChips.forEach(function (chip) {
+                if (!chip.classList.contains('crm-cal-filter-chip')) return;
                 chip.classList.toggle('is-active', chip.getAttribute('data-cal-filter') === filter);
             });
 
@@ -489,6 +490,29 @@
                 applyFilter(chip.getAttribute('data-cal-filter') || 'all');
                 if (chip.closest('.crm-cal-mob-filter-sheet')) {
                     closeFilterSheet();
+                }
+            });
+        });
+
+        root.querySelectorAll('[data-cal-goto-today]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                applyFilter('all');
+                setSelectedDay(todayJkey);
+                switchView('month');
+                var todayCell = root.querySelector('.crm-cal-cell[data-jkey="' + todayJkey + '"]');
+                if (todayCell && todayCell.scrollIntoView) {
+                    todayCell.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        });
+
+        root.querySelectorAll('[data-cal-goto-overdue]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                applyFilter('all');
+                switchView('list');
+                var listPanel = root.querySelector('[data-cal-view-panel="list"]');
+                if (listPanel && listPanel.scrollIntoView) {
+                    listPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         });

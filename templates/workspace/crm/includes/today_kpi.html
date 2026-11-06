@@ -1,0 +1,124 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = امروز، معوق، پیگیری، یادآور #}
+<section class="fl-kpi-pro fl-kpi-pro--today crm-today-kpis crm-today-desk-kpis" aria-label="آمار کارهای امروز">
+    <a href="#col-today" class="fl-kpi-pro__card fl-kpi-pro__card--hero" data-today-jump="today">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-sun"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">امروز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-sun"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ queue_stats.today|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if queue_stats.total %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب کارهای باز">
+                {% if queue_stats.today %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--today"
+                    style="flex-grow: {{ queue_stats.today }};"
+                    title="امروز: {{ queue_stats.today|intcomma }}"
+                ></span>
+                {% endif %}
+                {% if queue_stats.overdue %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--overdue"
+                    style="flex-grow: {{ queue_stats.overdue }};"
+                    title="معوق: {{ queue_stats.overdue|intcomma }}"
+                ></span>
+                {% endif %}
+            </div>
+            <p class="fl-kpi-pro__meta">
+                {% widthratio queue_stats.today queue_stats.total 100 as today_share %}
+                {{ today_share }}٪ از کارهای باز
+            </p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">برای امروز کاری ثبت نشده</p>
+            {% endif %}
+        </footer>
+    </a>
+
+    <a href="#col-overdue" class="fl-kpi-pro__card fl-kpi-pro__card--overdue{% if queue_stats.overdue %} is-alert{% endif %}" data-today-jump="overdue">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">معوق</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ queue_stats.overdue|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if queue_stats.total %}
+            {% widthratio queue_stats.overdue queue_stats.total 100 as overdue_share %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--overdue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ overdue_share }}"
+                aria-label="سهم معوق {{ overdue_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ overdue_share }}%;"></i>
+                </span>
+            </div>
+            <p class="fl-kpi-pro__meta">{{ overdue_share }}٪ از کارهای باز</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">بدون کار معوق</p>
+            {% endif %}
+        </footer>
+    </a>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--followups">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پیگیری</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-user-group"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ queue_stats.followups|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if queue_stats.total %}
+            {% widthratio queue_stats.followups queue_stats.total 100 as follow_share %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--followups"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ follow_share }}"
+                aria-label="سهم پیگیری {{ follow_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ follow_share }}%;"></i>
+                </span>
+            </div>
+            <p class="fl-kpi-pro__meta">{{ follow_share }}٪ از کارهای باز</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">پیگیری بازی نیست</p>
+            {% endif %}
+        </footer>
+    </article>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--reminders">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">یادآور</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ queue_stats.reminders|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if queue_stats.total %}
+            {% widthratio queue_stats.reminders queue_stats.total 100 as rem_share %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--reminders"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ rem_share }}"
+                aria-label="سهم یادآور {{ rem_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ rem_share }}%;"></i>
+                </span>
+            </div>
+            <p class="fl-kpi-pro__meta">{{ rem_share }}٪ از کارهای باز</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">یادآور بازی نیست</p>
+            {% endif %}
+        </footer>
+    </article>
+</section>

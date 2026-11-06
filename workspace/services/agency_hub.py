@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from django.db.models import Count, Max, Q
+from django.urls import reverse
 from django.utils import timezone
 
 from workspace.models import AgencyActivityEvent, CRMDeal, CRMProperty, Customer
@@ -64,10 +65,40 @@ def build_secretary_dashboard_context(user, days: int = 30) -> dict[str, Any]:
     ctx['agency_dash_profile'] = NAV_PROFILE_SECRETARY
     stats = get_command_center_stats(agency, days=min(days, 30))
     inbox_qs = team_inbox_qs(user)
+    inbox_n = int(stats.get('inbox_unassigned', inbox_qs.count()) or 0)
+    followups_n = int(stats.get('followups_today', 0) or 0)
+    action_base = max(inbox_n + followups_n, 1)
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
     ctx['summary'] = {
-        'inbox_unassigned': stats.get('inbox_unassigned', inbox_qs.count()),
-        'followups_today': stats.get('followups_today', 0),
+        'inbox_unassigned': inbox_n,
+        'followups_today': followups_n,
         'period_days': days,
+        'mix_segments': (
+            [{'key': 'inbox', 'label': 'سرنخ', 'count': inbox_n, 'pct': _share(inbox_n, action_base)}]
+            if inbox_n else []
+        ) + (
+            [{'key': 'followup', 'label': 'پیگیری', 'count': followups_n, 'pct': _share(followups_n, action_base)}]
+            if followups_n else []
+        ),
+        'hero_meta': (
+            f'{inbox_n} سرنخ بدون مسئول'
+            if inbox_n else 'صندوق سرنخ خالی است'
+        ),
+        'inbox_share': _share(inbox_n, action_base),
+        'inbox_meta': 'نیاز به ارجاع دارند' if inbox_n else 'الان سرنخ معلقی نیست',
+        'followups_share': _share(followups_n, action_base),
+        'followups_meta': 'برای امروز زمان‌بندی شده' if followups_n else 'پیگیری امروز ندارید',
+    }
+    ctx['kpi_links'] = {
+        'inbox': reverse('workspace:agency_hub_inbox'),
+        'today': reverse('workspace:crm_today'),
+        'contacts': reverse('workspace:crm_contacts'),
+        'properties': reverse('workspace:crm_properties'),
     }
     ctx['inbox_preview'] = list(inbox_qs[:8])
     ctx['quick_actions'] = [
@@ -119,14 +150,106 @@ def build_dashboard_context(user, days: int = 30) -> dict[str, Any]:
     if is_agency_rbac_v2_enabled(agency) and not has_agency_permission(user, PERM_DEALS_VIEW_TEAM):
         summary_deals = None
 
+    seats = ctx['hub_seats'] or {}
+    seats_total = int(seats.get('total') or 0)
+    seats_assigned = int(seats.get('assigned') or 0)
+    seats_available = int(seats.get('available') or 0)
+    active_advisors = members.count()
+    contracts_val = contracts_count if has_agency_permission(user, PERM_CONTRACTS_VIEW_TEAM) else None
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    mix_segments = []
+    if seats_total > 0:
+        if seats_assigned:
+            mix_segments.append({
+                'key': 'occupied',
+                'label': 'اشغال',
+                'count': seats_assigned,
+                'pct': _share(seats_assigned, seats_total),
+            })
+        if seats_available:
+            mix_segments.append({
+                'key': 'available',
+                'label': 'آزاد',
+                'count': seats_available,
+                'pct': _share(seats_available, seats_total),
+            })
+    elif active_advisors:
+        mix_segments.append({
+            'key': 'occupied',
+            'label': 'مشاور',
+            'count': active_advisors,
+            'pct': 100,
+        })
+
+    if active_advisors:
+        hero_meta = f'{active_advisors} مشاور'
+        if seats_total:
+            hero_meta += f' · {seats_assigned} از {seats_total} صندلی'
+    else:
+        hero_meta = 'هنوز مشاوری در تیم نیست'
+
+    growth_base = max(contacts_new + properties_new, 1)
+    pipeline_base = max(
+        (summary_deals or 0) + contacts_new + properties_new,
+        1,
+    ) if summary_deals is not None else max(contacts_new + properties_new, 1)
+
+    if summary_deals is None:
+        deals_meta = 'دسترسی به معاملات تیم ندارید'
+        deals_share = 0
+    elif summary_deals:
+        deals_meta = f'{_share(summary_deals, pipeline_base)}٪ از جریان کاری باز'
+        deals_share = _share(summary_deals, pipeline_base)
+    else:
+        deals_meta = 'معامله فعالی در تیم نیست'
+        deals_share = 0
+
+    if contacts_new:
+        contacts_meta = f'در {days} روز اخیر'
+        contacts_share = _share(contacts_new, growth_base)
+    else:
+        contacts_meta = f'در {days} روز اخیر مخاطب جدیدی نبود'
+        contacts_share = 0
+
+    if properties_new:
+        properties_meta = f'در {days} روز اخیر'
+        properties_share = _share(properties_new, growth_base)
+    else:
+        properties_meta = f'در {days} روز اخیر فایل جدیدی نبود'
+        properties_share = 0
+
     ctx['summary'] = {
-        'active_advisors': members.count(),
-        'available_seats': (ctx['hub_seats'] or {}).get('available', 0),
+        'active_advisors': active_advisors,
+        'available_seats': seats_available,
+        'seats_total': seats_total,
+        'seats_assigned': seats_assigned,
         'contacts_new': contacts_new,
         'properties_new': properties_new,
         'deals_active': summary_deals,
-        'contracts': contracts_count if has_agency_permission(user, PERM_CONTRACTS_VIEW_TEAM) else None,
+        'contracts': contracts_val,
         'period_days': days,
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'deals_share': deals_share,
+        'deals_meta': deals_meta,
+        'contacts_share': contacts_share,
+        'contacts_meta': contacts_meta,
+        'properties_share': properties_share,
+        'properties_meta': properties_meta,
+        'seat_fill_share': _share(seats_assigned, seats_total) if seats_total else 0,
+    }
+    ctx['kpi_links'] = {
+        'advisors': reverse('workspace:agency_hub_advisors'),
+        'deals': f"{reverse('workspace:crm_deals')}?bucket=active",
+        'contacts': reverse('workspace:crm_contacts'),
+        'properties': reverse('workspace:crm_properties'),
+        'licenses': reverse('workspace:agency_hub_licenses'),
+        'contracts': reverse('workspace:contracts_dashboard'),
     }
 
     def _counts_by_user(model, **extra):

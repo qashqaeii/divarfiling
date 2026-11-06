@@ -9,7 +9,8 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=19">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -20,6 +21,7 @@
     <header class="crm-dash-bar crm-tpl-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">قالب پیام</h1>
+            <p class="crm-dash-bar-sub">متن‌های آماده واتساپ و پیامک — با متغیر هوشمند شخصی‌سازی کنید</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات قالب‌ها">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-templates-help' help_title='راهنمای قالب پیام' %}
@@ -29,51 +31,18 @@
         </div>
     </header>
 
-    <section class="crm-tpl-kpis" aria-label="آمار قالب‌ها">
-        <article class="crm-tpl-kpi crm-tpl-kpi--all">
-            <span class="crm-tpl-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-tpl-kpi-icon" aria-hidden="true"><i class="fas fa-message"></i></span>
-            <div class="crm-tpl-kpi-body">
-                <span class="crm-tpl-kpi-val">{{ stats.total }}</span>
-                <span class="crm-tpl-kpi-lbl">کل قالب‌ها</span>
-            </div>
-        </article>
-        <article class="crm-tpl-kpi crm-tpl-kpi--wa">
-            <span class="crm-tpl-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-tpl-kpi-icon" aria-hidden="true"><i class="fab fa-whatsapp"></i></span>
-            <div class="crm-tpl-kpi-body">
-                <span class="crm-tpl-kpi-val">{{ stats.whatsapp }}</span>
-                <span class="crm-tpl-kpi-lbl">واتساپ</span>
-            </div>
-        </article>
-        <article class="crm-tpl-kpi crm-tpl-kpi--sms">
-            <span class="crm-tpl-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-tpl-kpi-icon" aria-hidden="true"><i class="fas fa-comment-sms"></i></span>
-            <div class="crm-tpl-kpi-body">
-                <span class="crm-tpl-kpi-val">{{ stats.sms }}</span>
-                <span class="crm-tpl-kpi-lbl">پیامک</span>
-            </div>
-        </article>
-        <article class="crm-tpl-kpi crm-tpl-kpi--cat">
-            <span class="crm-tpl-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-tpl-kpi-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
-            <div class="crm-tpl-kpi-body">
-                <span class="crm-tpl-kpi-val">{{ stats.categories }}</span>
-                <span class="crm-tpl-kpi-lbl">دسته‌بندی</span>
-            </div>
-        </article>
-    </section>
-
     <div class="crm-shell-body">
         <div class="crm-tpl-mob-chrome">
             <div class="crm-tpl-mob-toolbar-sticky">
                 <div class="crm-tpl-mob-toolbar-row">
                     <form method="get" class="crm-tpl-search" role="search">
                         {% if cat_filter %}<input type="hidden" name="cat" value="{{ cat_filter }}">{% endif %}
+                        {% if channel_filter %}<input type="hidden" name="channel" value="{{ channel_filter }}">{% endif %}
+                        {% if scope_filter %}<input type="hidden" name="scope" value="{{ scope_filter }}">{% endif %}
                         <i class="fas fa-search" aria-hidden="true"></i>
                         <input type="search" name="q" value="{{ search_q }}" placeholder="جستجو قالب..." autocomplete="off" aria-label="جستجو قالب" enterkeyhint="search">
                         {% if search_q %}
-                        <a href="{% if cat_filter %}?cat={{ cat_filter|urlencode }}{% else %}{% url 'workspace:crm_templates' %}{% endif %}" class="crm-tpl-search-clear" aria-label="پاک کردن جستجو" title="پاک کردن جستجو">
+                        <a href="?{% if cat_filter %}cat={{ cat_filter|urlencode }}&{% endif %}{% if channel_filter %}channel={{ channel_filter|urlencode }}&{% endif %}{% if scope_filter %}scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-search-clear" aria-label="پاک کردن جستجو" title="پاک کردن جستجو">
                             <i class="fas fa-times" aria-hidden="true"></i>
                         </a>
                         {% endif %}
@@ -99,25 +68,36 @@
                     <span>{{ stats.total }} قالب</span>
                     {% if stats.whatsapp %}<span class="crm-tpl-mob-summary-dot" aria-hidden="true">·</span><span>{{ stats.whatsapp }} واتساپ</span>{% endif %}
                     {% if stats.sms %}<span class="crm-tpl-mob-summary-dot" aria-hidden="true">·</span><span>{{ stats.sms }} پیامک</span>{% endif %}
+                    {% if stats.custom %}<span class="crm-tpl-mob-summary-dot" aria-hidden="true">·</span><span>{{ stats.custom }} سفارشی</span>{% endif %}
                 </p>
                 <nav class="crm-tpl-segment" role="tablist" aria-label="فیلتر دسته">
-                    <a href="?{% if search_q %}q={{ search_q|urlencode }}&{% endif %}" class="crm-tpl-seg-btn {% if not cat_filter %}is-active{% endif %}" role="tab">همه</a>
+                    <a href="?{% if search_q %}q={{ search_q|urlencode }}&{% endif %}{% if channel_filter %}channel={{ channel_filter|urlencode }}&{% endif %}{% if scope_filter %}scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-seg-btn {% if not cat_filter %}is-active{% endif %}" role="tab">همه</a>
                     {% for c in template_categories %}
-                    <a href="?cat={{ c|urlencode }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="crm-tpl-seg-btn {% if cat_filter == c %}is-active{% endif %}" role="tab">
+                    <a href="?cat={{ c|urlencode }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if channel_filter %}&channel={{ channel_filter|urlencode }}{% endif %}{% if scope_filter %}&scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-seg-btn {% if cat_filter == c %}is-active{% endif %}" role="tab">
                         <i class="fas {{ c|crm_template_category_icon }}" aria-hidden="true"></i>
                         <span>{{ c }}</span>
                     </a>
                     {% endfor %}
                 </nav>
-                {% if search_q or cat_filter %}
+                {% if search_q or cat_filter or channel_filter or scope_filter %}
                 <div class="crm-tpl-mob-active-filters">
+                    {% if channel_filter %}
+                    <a href="?{% if cat_filter %}cat={{ cat_filter|urlencode }}&{% endif %}{% if search_q %}q={{ search_q|urlencode }}&{% endif %}{% if scope_filter %}scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-mob-active-chip">
+                        <span>{{ channel_filter }}</span><i class="fas fa-times" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                    {% if scope_filter == 'custom' %}
+                    <a href="?{% if cat_filter %}cat={{ cat_filter|urlencode }}&{% endif %}{% if search_q %}q={{ search_q|urlencode }}&{% endif %}{% if channel_filter %}channel={{ channel_filter|urlencode }}{% endif %}" class="crm-tpl-mob-active-chip">
+                        <span>سفارشی</span><i class="fas fa-times" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
                     {% if cat_filter %}
-                    <a href="?{% if search_q %}q={{ search_q|urlencode }}{% endif %}" class="crm-tpl-mob-active-chip">
+                    <a href="?{% if search_q %}q={{ search_q|urlencode }}&{% endif %}{% if channel_filter %}channel={{ channel_filter|urlencode }}&{% endif %}{% if scope_filter %}scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-mob-active-chip">
                         <span>{{ cat_filter }}</span><i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                     {% endif %}
                     {% if search_q %}
-                    <a href="{% if cat_filter %}?cat={{ cat_filter|urlencode }}{% else %}{% url 'workspace:crm_templates' %}{% endif %}" class="crm-tpl-mob-active-chip">
+                    <a href="?{% if cat_filter %}cat={{ cat_filter|urlencode }}&{% endif %}{% if channel_filter %}channel={{ channel_filter|urlencode }}&{% endif %}{% if scope_filter %}scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-mob-active-chip">
                         <span>«{{ search_q|truncatechars:18 }}»</span><i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                     {% endif %}
@@ -126,6 +106,8 @@
                 {% endif %}
             </div>
         </div>
+
+        {% include 'workspace/crm/includes/templates_kpi.html' %}
 
         <section class="crm-tpl-vars-pro crm-tpl-vars-pro--desk" aria-label="متغیرهای هوشمند">
             <div class="crm-tpl-vars-pro-head">
@@ -154,9 +136,9 @@
 
         <div class="crm-tpl-toolbar crm-tpl-toolbar--desk">
             <nav class="crm-tpl-segment" role="tablist" aria-label="فیلتر دسته">
-                <a href="?{% if search_q %}q={{ search_q|urlencode }}&{% endif %}" class="crm-tpl-seg-btn {% if not cat_filter %}is-active{% endif %}" role="tab">همه</a>
+                <a href="?{% if search_q %}q={{ search_q|urlencode }}&{% endif %}{% if channel_filter %}channel={{ channel_filter|urlencode }}&{% endif %}{% if scope_filter %}scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-seg-btn {% if not cat_filter %}is-active{% endif %}" role="tab">همه</a>
                 {% for c in template_categories %}
-                <a href="?cat={{ c|urlencode }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="crm-tpl-seg-btn {% if cat_filter == c %}is-active{% endif %}" role="tab">
+                <a href="?cat={{ c|urlencode }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if channel_filter %}&channel={{ channel_filter|urlencode }}{% endif %}{% if scope_filter %}&scope={{ scope_filter|urlencode }}{% endif %}" class="crm-tpl-seg-btn {% if cat_filter == c %}is-active{% endif %}" role="tab">
                     <i class="fas {{ c|crm_template_category_icon }}" aria-hidden="true"></i>
                     <span>{{ c }}</span>
                 </a>
@@ -164,15 +146,25 @@
             </nav>
             <form method="get" class="crm-tpl-search" role="search">
                 {% if cat_filter %}<input type="hidden" name="cat" value="{{ cat_filter }}">{% endif %}
+                {% if channel_filter %}<input type="hidden" name="channel" value="{{ channel_filter }}">{% endif %}
+                {% if scope_filter %}<input type="hidden" name="scope" value="{{ scope_filter }}">{% endif %}
                 <i class="fas fa-search" aria-hidden="true"></i>
                 <input type="search" name="q" value="{{ search_q }}" placeholder="جستجو نام یا متن..." autocomplete="off" aria-label="جستجو قالب" enterkeyhint="search">
-                {% if search_q or cat_filter %}
+                {% if search_q or cat_filter or channel_filter or scope_filter %}
                 <a href="{% url 'workspace:crm_templates' %}" class="crm-tpl-search-clear" aria-label="پاک کردن فیلترها" title="پاک کردن فیلتر">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </a>
                 {% endif %}
             </form>
         </div>
+
+        {% if channel_filter or scope_filter %}
+        <div class="crm-tpl-filter-bar crm-tpl-desk-meta" aria-live="polite">
+            {% if channel_filter %}<span class="crm-tpl-filter-chip">کانال: {{ channel_filter }}</span>{% endif %}
+            {% if scope_filter == 'custom' %}<span class="crm-tpl-filter-chip">فقط سفارشی</span>{% endif %}
+            <a href="?{% if cat_filter %}cat={{ cat_filter|urlencode }}&{% endif %}{% if search_q %}q={{ search_q|urlencode }}{% endif %}" class="crm-tpl-filter-clear">حذف فیلتر KPI</a>
+        </div>
+        {% endif %}
 
         <div class="crm-tpl-mob-vars-sheet" id="crmTplVarsSheet" hidden aria-hidden="true">
             <div class="crm-tpl-mob-vars-backdrop" data-tpl-vars-close tabindex="-1" aria-hidden="true"></div>
@@ -334,9 +326,9 @@
                 <span class="crm-tpl-empty-ring"></span>
                 <i class="fas fa-message"></i>
             </div>
-            <h2>{% if search_q or cat_filter %}قالبی پیدا نشد{% else %}هنوز قالبی ندارید{% endif %}</h2>
-            <p>{% if search_q or cat_filter %}فیلتر یا جستجو را تغییر دهید، یا قالب جدید بسازید.{% else %}اولین قالب پیام خود را برای واتساپ یا پیامک بسازید.{% endif %}</p>
-            {% if search_q or cat_filter %}
+            <h2>{% if search_q or cat_filter or channel_filter or scope_filter %}قالبی پیدا نشد{% else %}هنوز قالبی ندارید{% endif %}</h2>
+            <p>{% if search_q or cat_filter or channel_filter or scope_filter %}فیلتر یا جستجو را تغییر دهید، یا قالب جدید بسازید.{% else %}اولین قالب پیام خود را برای واتساپ یا پیامک بسازید.{% endif %}</p>
+            {% if search_q or cat_filter or channel_filter or scope_filter %}
             <a href="{% url 'workspace:crm_templates' %}" class="crm-btn crm-btn-ghost">پاک کردن فیلتر</a>
             {% endif %}
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-template">

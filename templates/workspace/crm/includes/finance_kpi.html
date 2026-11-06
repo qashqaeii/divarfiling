@@ -1,0 +1,101 @@
+{% load humanize workspace_tags %}
+{# ترتیب DOM برای RTL: راست → چپ = درآمد مشاور، معوق، وصول‌شده، حجم #}
+<section class="fl-kpi-pro fl-kpi-pro--finance" aria-label="شاخص‌های مالی معاملات">
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--hero">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">درآمد مشاور</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
+        </header>
+        <strong
+            class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not k.advisor_income %} is-empty{% endif %}"
+            title="{{ k.advisor_income|ws_money }}"
+        >{% if k.advisor_income %}{{ k.advisor_income|ws_money_compact }}{% else %}—{% endif %}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if k.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="تقسیم کمیسیون: {{ k.hero_meta }}">
+                {% for seg in k.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.pct }}٪"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ k.hero_meta }}</p>
+        </footer>
+    </article>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--overdue{% if k.outstanding %} is-alert{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">معوق</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
+        </header>
+        <strong
+            class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not k.outstanding %} is-empty{% endif %}"
+            title="{{ k.outstanding|ws_money }}"
+        >{% if k.outstanding %}{{ k.outstanding|ws_money_compact }}{% else %}—{% endif %}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if k.commission_total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--overdue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ k.outstanding_share }}"
+                aria-label="سهم معوق {{ k.outstanding_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ k.outstanding_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ k.outstanding_meta }}</p>
+        </footer>
+    </article>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--received">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">وصول‌شده</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+        </header>
+        <strong
+            class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not k.received %} is-empty{% endif %}"
+            title="{{ k.received|ws_money }}"
+        >{% if k.received %}{{ k.received|ws_money_compact }}{% else %}—{% endif %}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if k.commission_total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--received"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ k.received_share }}"
+                aria-label="سهم وصول‌شده {{ k.received_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ k.received_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ k.received_meta }}</p>
+        </footer>
+    </article>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--volume">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">حجم معاملات</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-chart-column"></i></span>
+        </header>
+        <strong
+            class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not k.volume %} is-empty{% endif %}"
+            title="{{ k.volume|ws_money }}"
+        >{% if k.volume %}{{ k.volume|ws_money_compact }}{% else %}—{% endif %}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta">{{ k.volume_meta }}{% if k.avg_deal %} · میانگین {{ k.avg_deal|ws_money_compact }}{% endif %}</p>
+        </footer>
+    </article>
+</section>

@@ -1,0 +1,105 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = کل، نیازمند اقدام، پیش‌نویس، نهایی‌شده #}
+<section class="fl-kpi-pro fl-kpi-pro--contracts ct-dash-kpis" aria-label="شاخص‌های قرارداد">
+    <a href="{{ kpi_links.all }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-file-signature"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">کل قراردادها</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ stats.total|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب وضعیت: {{ stats.hero_meta }}">
+                {% for seg in stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+            {% else %}
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+            {% endif %}
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.needs_action }}" class="fl-kpi-pro__card fl-kpi-pro__card--overdue{% if stats.needs_action %} is-alert{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">نیازمند اقدام</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.needs_action %} is-empty{% endif %}">{{ stats.needs_action|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--overdue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.needs_action_share }}"
+                aria-label="سهم نیازمند اقدام {{ stats.needs_action_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.needs_action_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.needs_action_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.draft }}" class="fl-kpi-pro__card fl-kpi-pro__card--draft">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پیش‌نویس</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-file-pen"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.draft %} is-empty{% endif %}">{{ stats.draft|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--draft"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.draft_share }}"
+                aria-label="سهم پیش‌نویس {{ stats.draft_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.draft_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.draft_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.finalized }}" class="fl-kpi-pro__card fl-kpi-pro__card--finalized">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">نهایی‌شده</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.finalized %} is-empty{% endif %}">{{ stats.finalized|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--finalized"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.finalized_share }}"
+                aria-label="سهم نهایی‌شده {{ stats.finalized_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.finalized_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.finalized_meta }}</p>
+        </footer>
+    </a>
+</section>

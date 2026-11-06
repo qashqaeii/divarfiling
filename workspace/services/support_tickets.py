@@ -204,6 +204,82 @@ def get_user_ticket_stats(user):
     }
 
 
+def build_support_kpi_stats(user) -> dict:
+    """آمار تیکت‌ها برای fl-kpi-pro — کلیدهای پایه get_user_ticket_stats حفظ می‌شود."""
+    stats = get_user_ticket_stats(user)
+    total = stats['total']
+    open_n = stats['open']
+    waiting = stats['waiting_user']
+    closed = stats['closed']
+    unread = stats['unread_replies']
+    other_open = max(open_n - waiting, 0)
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    mix_segments = []
+    for key, label, count in (
+        ('waiting', 'منتظر شما', waiting),
+        ('open', 'باز', other_open),
+        ('closed', 'بسته', closed),
+    ):
+        if count <= 0:
+            continue
+        mix_segments.append({
+            'key': key,
+            'label': label,
+            'count': count,
+            'pct': _share(count, total),
+        })
+
+    if total:
+        hero_bits = []
+        if open_n:
+            hero_bits.append(f'{open_n} باز')
+        if waiting:
+            hero_bits.append(f'{waiting} منتظر شما')
+        if unread:
+            hero_bits.append(f'{unread} پاسخ جدید')
+        hero_meta = ' · '.join(hero_bits) if hero_bits else 'همه تیکت‌ها بسته‌اند'
+    else:
+        hero_meta = 'هنوز تیکتی ثبت نکرده‌اید'
+
+    if open_n:
+        open_meta = f'{_share(open_n, total)}٪ تیکت‌ها هنوز بازند'
+    elif total:
+        open_meta = 'تیکت بازی ندارید'
+    else:
+        open_meta = 'اولین تیکت را ثبت کنید'
+
+    if waiting:
+        waiting_meta = f'{waiting} تیکت منتظر پاسخ شماست'
+    elif open_n:
+        waiting_meta = 'الان چیزی منتظر شما نیست'
+    else:
+        waiting_meta = 'تیکت بازی نیست'
+
+    if closed:
+        closed_meta = f'{_share(closed, total)}٪ تیکت‌ها بسته‌شده'
+    elif total:
+        closed_meta = 'هنوز تیکتی بسته نشده'
+    else:
+        closed_meta = 'هنوز تیکتی نیست'
+
+    return {
+        **stats,
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'open_share': _share(open_n, total),
+        'open_meta': open_meta,
+        'waiting_share': _share(waiting, total),
+        'waiting_meta': waiting_meta,
+        'closed_share': _share(closed, total),
+        'closed_meta': closed_meta,
+    }
+
+
 def filter_user_tickets(user, *, status='', priority='', q=''):
     from workspace.models import Ticket
 

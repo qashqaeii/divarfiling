@@ -1,35 +1,86 @@
 {% load humanize %}
-<section class="fl-dd-kpi fl-kpi-grid" aria-label="آمار پوشه" data-fl-tour="filing-detail-kpi">
-    <article class="fl-kpi-card fl-kpi-card--purple">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-table-list"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{{ filtered_count|intcomma }}</strong>
-            <span class="fl-kpi-card__label">در نمایش</span>
-            <span class="fl-kpi-card__sub">از {{ total_count|intcomma }} آگهی کل</span>
+{# ترتیب DOM برای RTL: راست → چپ = جدید، مالک مستقیم، قیمت، متراژ #}
+<section class="fl-kpi-pro fl-kpi-pro--detail fl-dd-kpi" aria-label="تحلیل پوشه استخراج" data-fl-tour="filing-detail-kpi">
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--hero">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-bolt"></i>
         </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">آگهی‌های جدید</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-calendar-week"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not insight_new.has_value %} is-empty{% endif %}">{{ insight_new.value_display }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if insight_new.has_value and total_count %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--hero"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ insight_new.share }}"
+                aria-label="سهم آگهی‌های جدید {{ insight_new.share }} درصد"
+                title="{{ insight_new.hint }}"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ insight_new.share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta" title="{{ insight_new.hint }}">{{ insight_new.meta }}</p>
+        </footer>
     </article>
-    <article class="fl-kpi-card fl-kpi-card--blue">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{{ consultant_count|intcomma }}</strong>
-            <span class="fl-kpi-card__label">مشاور</span>
-            <span class="fl-kpi-card__sub">{{ consultant_pct }}٪ از کل آگهی‌ها</span>
-        </div>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--owners">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">مالک‌های مستقیم</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-user-check"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not insight_owners.has_value %} is-empty{% endif %}">{{ insight_owners.value_display }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if insight_owners.has_value %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--genuine"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ insight_owners.share }}"
+                aria-label="سهم مالک مستقیم {{ insight_owners.share }} درصد"
+                title="{{ insight_owners.hint }}"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ insight_owners.share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta" title="{{ insight_owners.hint }}">{{ insight_owners.meta }}</p>
+        </footer>
     </article>
-    <article class="fl-kpi-card fl-kpi-card--green">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{{ personal_count|intcomma }}</strong>
-            <span class="fl-kpi-card__label">شخصی</span>
-            <span class="fl-kpi-card__sub">{{ personal_pct }}٪ از کل آگهی‌ها</span>
-        </div>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--price">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">{{ insight_price.title|default:'شاخص قیمت' }}</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-coins"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not insight_price.has_value %} is-empty{% endif %}">{{ insight_price.value_display }}</strong>
+        {% if insight_price.secondary_display %}
+        <span class="fl-kpi-pro__subvalue">{{ insight_price.secondary_display }}</span>
+        {% endif %}
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta" title="{{ insight_price.hint }}">{{ insight_price.meta }}</p>
+        </footer>
     </article>
-    <article class="fl-kpi-card fl-kpi-card--cyan">
-        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
-        <div class="fl-kpi-card__body">
-            <strong class="fl-kpi-card__value">{% if genuine_personal_count %}{{ genuine_personal_count|intcomma }}{% else %}—{% endif %}</strong>
-            <span class="fl-kpi-card__label">مالک واقعی</span>
-            <span class="fl-kpi-card__sub">{% if disguised_consultant_count %}{{ disguised_consultant_count|intcomma }} مشاور پنهان{% else %}ترکیب آگهی‌دهنده{% endif %}</span>
-        </div>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--area">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">میانه متراژ</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not insight_area.has_value %} is-empty{% endif %}">{{ insight_area.value_display }}</strong>
+        {% if insight_area.secondary_display %}
+        <span class="fl-kpi-pro__subvalue">{{ insight_area.secondary_display }}</span>
+        {% endif %}
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta" title="{{ insight_area.hint }}">{{ insight_area.meta }}</p>
+        </footer>
     </article>
 </section>

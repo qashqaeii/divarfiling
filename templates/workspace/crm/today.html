@@ -11,7 +11,8 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=14">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-today-mobile-closure.css' %}?v=8">
 {% endblock %}
 
@@ -99,18 +100,7 @@
         </div>
     </header>
 
-    <section class="kpi-strip kpi-strip--compact kpi-strip--4 crm-dash-kpis crm-today-kpis crm-today-desk-kpis" aria-label="آمار کارهای امروز">
-        <a href="#col-overdue" class="kpi-card kpi-card--compact crm-dash-kpi crm-dash-kpi--warn is-warn" data-today-jump="overdue">
-            <span class="kpi-card__value crm-dash-kpi-val">{{ queue_stats.overdue }}</span>
-            <span class="kpi-card__body crm-dash-kpi-meta"><span class="kpi-card__label crm-dash-kpi-lbl">معوق</span></span>
-        </a>
-        <a href="#col-today" class="kpi-card kpi-card--compact crm-dash-kpi crm-dash-kpi--accent is-accent" data-today-jump="today">
-            <span class="kpi-card__value crm-dash-kpi-val">{{ queue_stats.today }}</span>
-            <span class="kpi-card__body crm-dash-kpi-meta"><span class="kpi-card__label crm-dash-kpi-lbl">امروز</span></span>
-        </a>
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=queue_stats.followups label='پیگیری' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=queue_stats.reminders label='یادآور' %}
-    </section>
+    {% include 'workspace/crm/includes/today_kpi.html' %}
 
     {% if queue_items %}
     <div class="crm-today-tabs" role="tablist" aria-label="ستون‌های کارهای امروز">
@@ -149,8 +139,8 @@
                     {% if queue_stats.total %}برای امروز کاری باقی نمانده{% else %}برای امروز کاری ثبت نشده{% endif %}
                 </p>
                 <div class="crm-queue-col-empty crm-today-desk-only-empty">
-                    <i class="fas fa-mug-hot" aria-hidden="true"></i>
-                    <span>کار امروز تمام شده</span>
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                    <span>{% if queue_stats.total %}برای امروز کاری نمانده{% else %}کاری برای امروز نیست{% endif %}</span>
                 </div>
                 {% endif %}
             </div>
@@ -175,8 +165,8 @@
                 {% endfor %}
                 {% if not queue_stats.overdue %}
                 <div class="crm-queue-col-empty">
-                    <i class="fas fa-check-circle" aria-hidden="true"></i>
-                    <span>معوقی ندارید — عالی!</span>
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                    <span>معوقی ندارید</span>
                 </div>
                 {% endif %}
             </div>

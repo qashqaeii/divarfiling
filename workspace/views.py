@@ -219,14 +219,116 @@ def _dataset_page_query(request):
     return params
 
 
-def _dataset_stats(user):
+def _dataset_stats(user, request=None):
+    """آمار KPI فایلینگ — همان محدوده فیلتر صفحه + visualizationهای واقعی."""
     base = _dataset_base_qs(user)
+    if request is not None:
+        base = _apply_dataset_filters(base, request)
+
+    # کارت فروش/اجاره: همان منطق فیلتر صفحه (icontains)
+    sale = base.filter(transaction_type__icontains='فروش').count()
+    rent = base.filter(transaction_type__icontains='اجاره').count()
+
+    # ترکیب هیرو: دسته‌های انحصاری تا مجموع = کل پوشه‌ها
+    sale_seg = base.filter(transaction_type__icontains='فروش').exclude(
+        transaction_type__icontains='اجاره',
+    ).count()
+    rent_seg = base.filter(transaction_type__icontains='اجاره').exclude(
+        transaction_type__icontains='فروش',
+    ).count()
+
     agg = base.aggregate(files=Count('id'), listings=Sum('listing_count'))
+    files = int(agg['files'] or 0)
+    listings = int(agg['listings'] or 0)
+    other_seg = max(files - sale_seg - rent_seg, 0)
+
+    sale_share = round(sale * 100 / files) if files else 0
+    rent_share = round(rent * 100 / files) if files else 0
+    avg_listings = round(listings / files) if files else 0
+
+    mix_segments = []
+    if sale_seg:
+        mix_segments.append({
+            'key': 'sale',
+            'label': 'فروش',
+            'count': sale_seg,
+            'pct': round(sale_seg * 100 / files) if files else 0,
+        })
+    if rent_seg:
+        mix_segments.append({
+            'key': 'rent',
+            'label': 'اجاره',
+            'count': rent_seg,
+            'pct': round(rent_seg * 100 / files) if files else 0,
+        })
+    if other_seg:
+        mix_segments.append({
+            'key': 'other',
+            'label': 'سایر',
+            'count': other_seg,
+            'pct': round(other_seg * 100 / files) if files else 0,
+        })
+
+    # اگر گرد کردن درصد مجموع را از ۱۰۰ منحرف کرد، آخرین بخش را تنظیم کن
+    if mix_segments and files:
+        drift = 100 - sum(s['pct'] for s in mix_segments)
+        mix_segments[-1]['pct'] = max(mix_segments[-1]['pct'] + drift, 0)
+
+    bar_limit = 12
+    folder_rows = list(
+        base.order_by('-listing_count', '-updated_at', 'name')
+        .values('name', 'listing_count', 'transaction_type')[:bar_limit]
+    )
+    bar_max = max((int(r['listing_count'] or 0) for r in folder_rows), default=0)
+    listing_bars = []
+    for row in folder_rows:
+        count = int(row['listing_count'] or 0)
+        name = (row['name'] or 'بدون نام').strip() or 'بدون نام'
+        short = name if len(name) <= 28 else f'{name[:26]}…'
+        listing_bars.append({
+            'name': name,
+            'short': short,
+            'count': count,
+            'height': round(count * 100 / bar_max) if bar_max else 0,
+            'tx': row.get('transaction_type') or '',
+        })
+
+    if not files:
+        hero_meta = 'هنوز پوشه‌ای ثبت نشده'
+    elif sale_seg or rent_seg:
+        parts = []
+        if sale_seg:
+            parts.append(f'{sale_seg} فروش')
+        if rent_seg:
+            parts.append(f'{rent_seg} اجاره')
+        if other_seg:
+            parts.append(f'{other_seg} سایر')
+        hero_meta = ' · '.join(parts)
+    else:
+        hero_meta = 'پوشه‌ها بدون نوع معامله مشخص'
+
+    listings_meta = (
+        f'میانگین {avg_listings} آگهی در هر پوشه' if files and listings
+        else 'بدون آگهی در این محدوده'
+    )
+    if files > bar_limit and listing_bars:
+        listings_meta = f'{bar_limit} پوشه با بیشترین آگهی · {listings_meta}'
+
     return {
-        'files': agg['files'] or 0,
-        'listings': agg['listings'] or 0,
-        'sale': base.filter(transaction_type__icontains='فروش').count(),
-        'rent': base.filter(transaction_type__icontains='اجاره').count(),
+        'files': files,
+        'listings': listings,
+        'sale': sale,
+        'rent': rent,
+        'sale_share': sale_share,
+        'rent_share': rent_share,
+        'avg_listings': avg_listings,
+        'hero_meta': hero_meta,
+        'listings_meta': listings_meta,
+        'sale_meta': f'{sale_share}٪ از پوشه‌ها' if files else 'بدون پوشه',
+        'rent_meta': f'{rent_share}٪ از پوشه‌ها' if files else 'بدون پوشه',
+        'mix_segments': mix_segments,
+        'listing_bars': listing_bars,
+        'listing_bars_max': bar_max,
     }
 
 
@@ -277,7 +379,7 @@ def _dataset_list_context(request, extra=None):
         'page_obj': page_obj,
         'open_modal': request.GET.get('open', ''),
         'upload_batch': upload_batch,
-        'stats': _dataset_stats(request.user),
+        'stats': _dataset_stats(request.user, request),
         'cities': _dataset_base_qs(request.user).exclude(city='').values_list(
             'city', flat=True,
         ).distinct().order_by('city'),
@@ -318,7 +420,7 @@ class DatasetListView(LicenseRequiredMixin, ListView):
         ctx.update({
             'open_modal': self.request.GET.get('open', ctx.get('open_modal', '')),
             'upload_batch': upload_batch,
-            'stats': _dataset_stats(self.request.user),
+            'stats': _dataset_stats(self.request.user, self.request),
             'cities': _dataset_base_qs(self.request.user).exclude(city='').values_list(
                 'city', flat=True,
             ).distinct().order_by('city'),
@@ -715,6 +817,16 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
         ctx['personal_pct'] = round(ctx['personal_count'] * 100 / total) if total else 0
         ctx['filter_pct'] = round(filtered * 100 / total) if total else 100
         ctx['is_listing_filtered'] = filtered < total or ctx['filter_count'] > 0
+        from workspace.services.dataset_detail_kpi import build_dataset_detail_insight_kpis
+        ctx.update(
+            build_dataset_detail_insight_kpis(
+                listings_qs=all_qs,
+                tx=tx,
+                total_count=total,
+                genuine_count=ctx['genuine_personal_count'],
+                genuine_pct=ctx['genuine_personal_pct'],
+            )
+        )
         ctx['listing_edit_form'] = ListingEditForm()
         ctx['filing_video'] = get_filing_video_context()
         ctx['filter_reset_url'] = reverse('workspace:dataset_detail', args=[dataset.id])
@@ -1747,13 +1859,22 @@ class ToolsView(LicenseRequiredMixin, TemplateView):
         if not selected and datasets:
             selected = datasets[0]
 
-        from workspace.services.tools import build_market_snapshot
+        from workspace.services.tools import build_market_snapshot, build_tools_kpi_stats
 
-        snapshots = {str(d.pk): build_market_snapshot(d) for d in datasets}
+        snapshots = {}
+        for d in datasets:
+            snap = build_market_snapshot(d)
+            snap['kpi'] = build_tools_kpi_stats(snap)
+            snapshots[str(d.pk)] = snap
         ctx['selected_dataset'] = selected
         ctx['active_dataset'] = selected
         ctx['market_snapshots'] = snapshots
         ctx['market_snapshot'] = snapshots.get(str(selected.pk)) if selected else None
+        ctx['tools_kpi'] = (
+            (ctx['market_snapshot'] or {}).get('kpi')
+            if ctx['market_snapshot']
+            else build_tools_kpi_stats(None)
+        )
         ctx['market_snapshots_json'] = json.dumps(snapshots, ensure_ascii=False)
         ctx['market_snapshot_json'] = json.dumps(ctx['market_snapshot'], ensure_ascii=False)
         from workspace.carto_basemap import get_carto_basemap_api_key

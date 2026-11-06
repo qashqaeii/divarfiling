@@ -107,7 +107,8 @@ def _crm_lead_api_rate_limit_exceeded(client_ip: str) -> bool:
 from workspace.services.features import extract_listing_features
 from workspace.services.crm import (
     resolve_listing_for_property,
-    apply_contact_suggestions, apply_property_suggestions, build_customer_whatsapp_text,
+    apply_contact_suggestions, apply_property_suggestions, build_contacts_kpi_stats,
+    build_customer_whatsapp_text, build_properties_kpi_stats,
     build_dashboard_charts,
     complete_follow_up, complete_property_follow_up, convert_lead, export_customers_excel_response,
     export_properties_csv_response, export_properties_excel_response, filter_contacts,
@@ -126,19 +127,20 @@ from workspace.services.crm_analytics import (
     get_conversion_funnel, get_stagnant_contacts, stagnant_count,
 )
 from workspace.services.crm_automation import (
-    AUTOMATION_PRESETS, count_rule_matches, ensure_default_rules,
-    run_automation_for_user, run_single_rule,
+    AUTOMATION_PRESETS, build_automation_kpi_stats, count_rule_matches,
+    ensure_default_rules, run_automation_for_user, run_single_rule,
 )
 from workspace.services.crm_calendar import get_calendar_month, get_due_notifications
 from workspace.services.crm_templates import (
-    ensure_default_templates, list_templates, render_message_template, templates_by_category,
+    build_templates_kpi_stats, ensure_default_templates, list_templates,
+    render_message_template, templates_by_category,
 )
 from workspace.services.crm_deals import (
     apply_deal_commission, create_deal, filter_deals, find_duplicate_active_deal,
     get_property_active_deals, get_property_deal_parties_context, infer_deal_kind_from_property, property_deals_qs,
     search_customers_for_property_deal, serialize_property_deal_customer,
     suggest_deal_title, update_deal_stage,
-    get_deal_pipeline, get_deal_stats,
+    get_deal_pipeline, get_deal_stats, build_deals_kpi_stats,
 )
 from workspace.services.crm_deal_finance import (
     apply_deal_finance, finance_dashboard, get_finance_defaults,
@@ -473,13 +475,26 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
             ARCHIVE_SCOPE_ARCHIVED: _tab_qs(ARCHIVE_SCOPE_ARCHIVED),
             ARCHIVE_SCOPE_ALL: _tab_qs(ARCHIVE_SCOPE_ALL),
         }
+        kpi = build_contacts_kpi_stats(active_cqs, today=today)
         ctx['stats'] = {
-            'total': active_cqs.count(),
+            **kpi,
             'archived': archived_cqs.count(),
             'all': cqs.count(),
-            'new': active_cqs.filter(status='جدید').count(),
-            'in_progress': active_cqs.filter(status='در حال پیگیری').count(),
-            'due_today': active_cqs.filter(next_follow_up=today).count(),
+        }
+        view_mode_param = (self.request.GET.get('view') or 'table').strip()
+        if view_mode_param not in ('table', 'pipeline'):
+            view_mode_param = 'table'
+
+        def _kpi_filter_qs(**extra) -> str:
+            pairs = {'view': view_mode_param}
+            pairs.update({k: v for k, v in extra.items() if v})
+            return urlencode(pairs)
+
+        ctx['kpi_links'] = {
+            'all': f'?{_kpi_filter_qs()}',
+            'needs_action': f'?{_kpi_filter_qs(due="action")}',
+            'no_followup': f'?{_kpi_filter_qs(due="unscheduled")}',
+            'high_priority': f'?{_kpi_filter_qs(priority="بالا")}',
         }
         ctx['customer_form'] = ctx.get('customer_form', CustomerForm())
         ctx['open_modal'] = self.request.GET.get('open', ctx.get('open_modal', ''))
@@ -1525,13 +1540,85 @@ class CustomerExportView(ExportSecurityMixin, LoginRequiredMixin, View):
 
 
 def _crm_reminder_stats_for_user(user):
+    """آمار یادآورها — کلیدهای پایه برای AJAX + فیلدهای viz برای fl-kpi-pro."""
     qs = reminders_qs(user)
     now = timezone.now()
+    today = timezone.localdate()
+    active = qs.filter(is_done=False).count()
+    done = qs.filter(is_done=True).count()
+    overdue = qs.filter(is_done=False, due_at__lt=now).count()
+    today_n = qs.filter(is_done=False, due_at__date=today).count()
+    # بخش‌های نوار hero بدون هم‌پوشانی: معوق + باقیِ امروز + پیش‌رو
+    later_today = qs.filter(is_done=False, due_at__gte=now, due_at__date=today).count()
+    upcoming = qs.filter(is_done=False, due_at__date__gt=today).count()
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    mix_segments = []
+    for key, label, count in (
+        ('overdue', 'معوق', overdue),
+        ('today', 'امروز', later_today),
+        ('upcoming', 'پیش‌رو', upcoming),
+    ):
+        if count <= 0:
+            continue
+        mix_segments.append({
+            'key': key,
+            'label': label,
+            'count': count,
+            'pct': _share(count, active),
+        })
+
+    if active:
+        hero_bits = []
+        if overdue:
+            hero_bits.append(f'{overdue} معوق')
+        if today_n:
+            hero_bits.append(f'{today_n} امروز')
+        if upcoming:
+            hero_bits.append(f'{upcoming} پیش‌رو')
+        hero_meta = ' · '.join(hero_bits) if hero_bits else 'یادآور فعال دارید'
+    else:
+        hero_meta = 'یادآور فعالی ندارید'
+
+    if overdue:
+        overdue_meta = f'{_share(overdue, active)}٪ از فعال‌ها عقب افتاده'
+    elif active:
+        overdue_meta = 'معوقی ندارید'
+    else:
+        overdue_meta = 'هنوز یادآوری نیست'
+
+    if today_n:
+        today_meta = f'{_share(today_n, active)}٪ از فعال‌ها برای امروز'
+    elif active:
+        today_meta = 'برای امروز یادآوری نیست'
+    else:
+        today_meta = 'هنوز یادآوری نیست'
+
+    if done:
+        done_meta = f'{done} مورد بسته‌شده'
+    elif active:
+        done_meta = 'هنوز موردی را انجام‌شده نکرده‌اید'
+    else:
+        done_meta = 'هنوز یادآوری نیست'
+
     return {
-        'active': qs.filter(is_done=False).count(),
-        'done': qs.filter(is_done=True).count(),
-        'overdue': qs.filter(is_done=False, due_at__lt=now).count(),
-        'today': qs.filter(is_done=False, due_at__date=timezone.localdate()).count(),
+        'active': active,
+        'done': done,
+        'overdue': overdue,
+        'today': today_n,
+        'upcoming': upcoming,
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'overdue_share': _share(overdue, active),
+        'overdue_meta': overdue_meta,
+        'today_share': _share(today_n, active),
+        'today_meta': today_meta,
+        'done_share': _share(done, max(active + done, 1)),
+        'done_meta': done_meta,
     }
 
 
@@ -1543,12 +1630,20 @@ class CRMReminderListView(CRMContextMixin, LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         show = self.request.GET.get('show', 'active')
+        due = (self.request.GET.get('due') or '').strip()
         qs = reminders_qs(self.request.user).select_related('customer', 'property')
         if show == 'done':
             return qs.filter(is_done=True).order_by('-due_at')
         if show == 'all':
             return qs.order_by('due_at')
-        return qs.filter(is_done=False).order_by('due_at')
+        qs = qs.filter(is_done=False)
+        now = timezone.now()
+        today = timezone.localdate()
+        if due == 'overdue':
+            qs = qs.filter(due_at__lt=now)
+        elif due == 'today':
+            qs = qs.filter(due_at__date=today)
+        return qs.order_by('due_at')
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.GET.get('partial') == '1':
@@ -1568,8 +1663,17 @@ class CRMReminderListView(CRMContextMixin, LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         user = self.request.user
-        ctx['show'] = self.request.GET.get('show', 'active')
+        show = self.request.GET.get('show', 'active')
+        due = (self.request.GET.get('due') or '').strip()
+        ctx['show'] = show
+        ctx['due'] = due if due in ('overdue', 'today') else ''
         ctx['stats'] = _crm_reminder_stats_for_user(user)
+        ctx['kpi_links'] = {
+            'active': '?show=active',
+            'overdue': '?show=active&due=overdue',
+            'today': '?show=active&due=today',
+            'done': '?show=done',
+        }
         ctx['reminder_form'] = ctx.get('reminder_form', CRMReminderForm())
         ctx['crm_customers'] = customers_qs(user).order_by('name')[:200]
         ctx['open_drawer'] = self.request.GET.get('drawer', '')
@@ -1740,13 +1844,27 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
             ARCHIVE_SCOPE_ARCHIVED: _tab_qs(ARCHIVE_SCOPE_ARCHIVED),
             ARCHIVE_SCOPE_ALL: _tab_qs(ARCHIVE_SCOPE_ALL),
         }
+        today = timezone.now().date()
+        kpi = build_properties_kpi_stats(active_props, today=today)
         ctx['stats'] = {
-            'total': active_props.count(),
+            **kpi,
             'archived': archived_props.count(),
-            'sale': active_props.filter(deal_mode='فروش').count(),
-            'rent': active_props.filter(deal_mode__in=['رهن و اجاره', 'اجاره']).count(),
-            'active': active_props.filter(transaction_status='فعال').count(),
-            'published': active_props.filter(publish_status='منتشرشده').count(),
+            'all': props.count(),
+        }
+        view_mode_param = (self.request.GET.get('view') or 'grid').strip()
+        if view_mode_param not in ('grid', 'table', 'pipeline'):
+            view_mode_param = 'grid'
+
+        def _prop_kpi_filter_qs(**extra) -> str:
+            pairs = {'view': view_mode_param}
+            pairs.update({k: v for k, v in extra.items() if v})
+            return urlencode(pairs)
+
+        ctx['kpi_links'] = {
+            'all': f'?{_prop_kpi_filter_qs()}',
+            'needs_action': f'?{_prop_kpi_filter_qs(due="action")}',
+            'no_followup': f'?{_prop_kpi_filter_qs(due="unscheduled")}',
+            'draft': f'?{_prop_kpi_filter_qs(publish_status="پیش‌نویس")}',
         }
         ctx['filtered_count'] = filtered.count()
         ctx['property_form'] = ctx.get('property_form', CRMPropertyForm())
@@ -1764,7 +1882,7 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         })
         ctx['has_filters'] = any(self.request.GET.get(k) for k in (
             'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
-            'folder_id', 'cabinet_id', 'archive_scope',
+            'folder_id', 'cabinet_id', 'archive_scope', 'due',
             'parking', 'storage', 'elevator', 'rooms',
             'area_min', 'area_max', 'price_min', 'price_max',
             'year_min', 'year_max', 'age_max',
@@ -3197,13 +3315,27 @@ class CRMDealListView(CRMDealsAccessMixin, CRMContextMixin, LoginRequiredMixin, 
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['stats'] = get_deal_stats(self.request.user)
+        ctx['stats'] = build_deals_kpi_stats(self.request.user)
         ctx['deal_stages'] = get_user_deal_stages(self.request.user)
         ctx['deal_stage_defs'] = get_user_deal_stage_defs(self.request.user)
         ctx['deal_stage_meta'] = stage_meta_map(self.request.user)
         ctx['deal_stages_json'] = json.dumps(ctx['deal_stage_defs'], ensure_ascii=False)
         ctx['deal_stages_payload'] = serialize_stages_payload(self.request.user)
         ctx['view_mode'] = self.request.GET.get('view', 'table')
+        view_mode = ctx['view_mode'] if ctx['view_mode'] in ('table', 'pipeline') else 'table'
+        ctx['view_mode'] = view_mode
+
+        def _deal_kpi_qs(**extra) -> str:
+            pairs = {'view': view_mode}
+            pairs.update({k: v for k, v in extra.items() if v})
+            return urlencode(pairs)
+
+        ctx['kpi_links'] = {
+            'active': f'?{_deal_kpi_qs(bucket="active")}',
+            'stale': f'?{_deal_kpi_qs(bucket="stale")}',
+            'pipeline': f'?{_deal_kpi_qs(view="pipeline", bucket="active")}',
+            'forecast': f'?{_deal_kpi_qs(bucket="active")}',
+        }
         ctx['pipeline'] = get_deal_pipeline(self.request.user, per_column=30)
         ctx['pipeline_interactive'] = True
         ctx['deal_form'] = ctx.get('deal_form', CRMDealForm(user=self.request.user))
@@ -3872,19 +4004,49 @@ class CRMTemplatesView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         grouped = templates_by_category(user)
         cat_filter = self.request.GET.get('cat', '').strip()
         q = self.request.GET.get('q', '').strip()
+        channel_raw = self.request.GET.get('channel', '').strip()
+        channel_filter = channel_raw if channel_raw in ('واتساپ', 'پیامک') else ''
+        scope_raw = self.request.GET.get('scope', '').strip()
+        scope_filter = scope_raw if scope_raw == 'custom' else ''
+
         if cat_filter:
             grouped = {cat_filter: grouped.get(cat_filter, [])}
-        if q:
+
+        def _keep(tpl):
+            if channel_filter and tpl.channel != channel_filter:
+                return False
+            if scope_filter == 'custom' and tpl.is_system:
+                return False
+            if q:
+                ql = q.lower()
+                if ql not in (tpl.name or '').lower() and ql not in (tpl.body or '').lower():
+                    return False
+            return True
+
+        if channel_filter or scope_filter or q:
             filtered = {}
             for cat, items in grouped.items():
-                hits = [
-                    t for t in items
-                    if q.lower() in t.name.lower() or q.lower() in t.body.lower()
-                ]
+                hits = [t for t in items if _keep(t)]
                 if hits:
                     filtered[cat] = hits
             grouped = filtered
+
         all_templates = list(CRMMessageTemplate.objects.filter(user=user))
+        stats = build_templates_kpi_stats(all_templates)
+
+        def _kpi_href(**params):
+            from urllib.parse import urlencode
+            data = {}
+            if params.get('q'):
+                data['q'] = params['q']
+            if params.get('cat'):
+                data['cat'] = params['cat']
+            if params.get('channel'):
+                data['channel'] = params['channel']
+            if params.get('scope'):
+                data['scope'] = params['scope']
+            return f'?{urlencode(data)}' if data else '?'
+
         ctx['templates_by_category'] = grouped
         ctx['has_templates'] = any(items for items in grouped.values())
         ctx['template_form'] = ctx.get('template_form', CRMMessageTemplateForm())
@@ -3892,11 +4054,14 @@ class CRMTemplatesView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['template_categories'] = MESSAGE_TEMPLATE_CATEGORIES
         ctx['cat_filter'] = cat_filter
         ctx['search_q'] = q
-        ctx['stats'] = {
-            'total': len(all_templates),
-            'whatsapp': sum(1 for t in all_templates if t.channel == 'واتساپ'),
-            'sms': sum(1 for t in all_templates if t.channel == 'پیامک'),
-            'categories': len({t.category for t in all_templates}),
+        ctx['channel_filter'] = channel_filter
+        ctx['scope_filter'] = scope_filter
+        ctx['stats'] = stats
+        ctx['kpi_links'] = {
+            'all': _kpi_href(q=q or None),
+            'whatsapp': _kpi_href(q=q or None, channel='واتساپ'),
+            'sms': _kpi_href(q=q or None, channel='پیامک'),
+            'custom': _kpi_href(q=q or None, scope='custom'),
         }
         ctx['template_edit_payload'] = {
             str(t.pk): {
@@ -3963,18 +4128,32 @@ class CRMAutomationView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         rules = list(CRMAutomationRule.objects.filter(user=self.request.user))
         for rule in rules:
             rule.match_count = count_rule_matches(rule)
-        ctx['rules'] = rules
-        ctx['rules_active_count'] = sum(1 for r in rules if r.is_active)
+        stats = build_automation_kpi_stats(rules)
+        show = (self.request.GET.get('show') or '').strip()
+        if show not in ('active', 'inactive', 'queue'):
+            show = ''
+        if show == 'active':
+            displayed = [r for r in rules if r.is_active]
+        elif show == 'inactive':
+            displayed = [r for r in rules if not r.is_active]
+        elif show == 'queue':
+            displayed = [r for r in rules if r.is_active and (getattr(r, 'match_count', 0) or 0) > 0]
+        else:
+            displayed = rules
+        ctx['rules'] = displayed
+        ctx['rules_all_count'] = len(rules)
+        ctx['rules_active_count'] = stats['active']
         ctx['rule_preview'] = {r.id: r.match_count for r in rules}
         ctx['rule_form'] = ctx.get('rule_form', CRMAutomationRuleForm())
         ctx['crm_statuses'] = CRM_STATUSES
         ctx['automation_presets'] = AUTOMATION_PRESETS
-        last_runs = [r.last_run_at for r in rules if r.last_run_at]
-        ctx['stats'] = {
-            'total': len(rules),
-            'active': ctx['rules_active_count'],
-            'queue': sum(ctx['rule_preview'].get(r.id, 0) for r in rules if r.is_active),
-            'last_run': max(last_runs) if last_runs else None,
+        ctx['stats'] = stats
+        ctx['show'] = show
+        ctx['kpi_links'] = {
+            'all': '?',
+            'active': '?show=active',
+            'queue': '?show=queue',
+            'inactive': '?show=inactive',
         }
         ctx['crm_section'] = 'automation'
         ctx['open_drawer'] = self.request.GET.get('drawer', '')

@@ -94,6 +94,8 @@ class DealFinanceServiceTests(TestCase):
         self.assertGreaterEqual(payload['kpis']['closed_count'], 1)
         self.assertEqual(payload['kpis']['volume'], 1_000_000_000)
         self.assertEqual(payload['kpis']['advisor_income'], deal.advisor_commission)
+        self.assertTrue(payload['kpis']['hero_meta'])
+        self.assertIn('mix_segments', payload['kpis'])
         self.assertTrue(payload['defaults'])
         self.assertEqual(payload['defaults']['advisor_share_percent'], DEFAULT_DEAL_FINANCE['advisor_share_percent'])
 
@@ -116,3 +118,5 @@ class CRMDealFinanceViewTests(TestCase):
             response = self.client.get(url, {'period': period})
             self.assertEqual(response.status_code, 200, period)
             self.assertContains(response, 'crm-deal-finance.css')
+            self.assertContains(response, 'fl-kpi-pro')
+            self.assertContains(response, 'درآمد مشاور')

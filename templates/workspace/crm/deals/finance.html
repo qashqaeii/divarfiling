@@ -10,13 +10,14 @@
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
 {% with k=finance.kpis s=finance.split %}
-<div class="crm-shell-page crm-deals-mobile crm-page-chrome crm-fin-page mk-filing-datasets">
+<div class="crm-shell-page crm-deals-mobile crm-page-chrome crm-fin-page crm-fin-pro mk-filing-datasets">
     <header class="crm-deals-mob-header crm-fin-header">
         <div class="crm-deals-mob-header-mesh" aria-hidden="true"></div>
         <div class="crm-deals-mob-header-accent" aria-hidden="true"></div>
@@ -27,7 +28,7 @@
                 <p class="crm-deals-mob-sub">
                     <span>{{ finance.period_label }}</span>
                     {% if k.closed_count %}<span class="crm-deals-mob-sub-chip is-win">{{ k.closed_count }} معامله بسته</span>{% endif %}
-                    {% if k.net_income %}<span class="crm-deals-mob-sub-chip">خالص {{ k.net_income|ws_money }}</span>{% endif %}
+                    {% if k.net_income %}<span class="crm-deals-mob-sub-chip">خالص {{ k.net_income|ws_money_compact }}</span>{% endif %}
                 </p>
             </div>
             <div class="crm-deals-mob-header-actions" role="toolbar" aria-label="عملیات مالی">
@@ -64,71 +65,67 @@
         {% endfor %}
     </nav>
 
-    <section class="crm-fin-hero" aria-label="خلاصه عملکرد">
-        <article class="crm-fin-hero-card crm-fin-hero-card--advisor">
-            <span class="crm-fin-hero-kicker">درآمد مشاور</span>
-            <strong>{{ k.advisor_income|ws_money }}</strong>
-            <em>سهم شما از کمیسیون بسته‌شده</em>
-        </article>
-        <article class="crm-fin-hero-card crm-fin-hero-card--agency">
-            <span class="crm-fin-hero-kicker">سهم املاک</span>
-            <strong>{{ k.agency_income|ws_money }}</strong>
-            <em>کمیسیون دفتر در همین بازه</em>
-        </article>
-        <article class="crm-fin-hero-card crm-fin-hero-card--volume">
-            <span class="crm-fin-hero-kicker">حجم معاملات</span>
-            <strong>{{ k.volume|ws_money }}</strong>
-            <em>{{ k.closed_count }} معامله بسته · میانگین {{ k.avg_deal|ws_money }}</em>
-        </article>
-    </section>
+    {% include 'workspace/crm/includes/finance_kpi.html' %}
 
-    <section class="crm-fin-kpis" aria-label="شاخص‌های مالی">
-        <article class="crm-fin-kpi">
+    <section class="crm-fin-meta" aria-label="خلاصه تکمیلی">
+        <div class="crm-fin-meta__item">
             <em>کمیسیون کل</em>
-            <strong>{{ k.commission_total|ws_money }}</strong>
-        </article>
-        <article class="crm-fin-kpi crm-fin-kpi--net">
+            <strong title="{{ k.commission_total|ws_money }}">{{ k.commission_total|ws_money_compact }}</strong>
+        </div>
+        <div class="crm-fin-meta__item crm-fin-meta__item--net">
             <em>خالص مشاور</em>
-            <strong>{{ k.net_income|ws_money }}</strong>
-        </article>
-        <article class="crm-fin-kpi crm-fin-kpi--in">
-            <em>وصول‌شده</em>
-            <strong>{{ k.received|ws_money }}</strong>
-        </article>
-        <article class="crm-fin-kpi crm-fin-kpi--out">
-            <em>معوق</em>
-            <strong>{{ k.outstanding|ws_money }}</strong>
-        </article>
-        <article class="crm-fin-kpi">
+            <strong title="{{ k.net_income|ws_money }}">{{ k.net_income|ws_money_compact }}</strong>
+        </div>
+        <div class="crm-fin-meta__item">
+            <em>سهم املاک</em>
+            <strong title="{{ k.agency_income|ws_money }}">{{ k.agency_income|ws_money_compact }}</strong>
+        </div>
+        <div class="crm-fin-meta__item">
             <em>میانگین کمیسیون</em>
-            <strong>{{ k.avg_commission|ws_money }}</strong>
-        </article>
-        <article class="crm-fin-kpi">
+            <strong title="{{ k.avg_commission|ws_money }}">{{ k.avg_commission|ws_money_compact }}</strong>
+        </div>
+        <div class="crm-fin-meta__item">
             <em>هزینه‌ها</em>
-            <strong>{{ k.costs|ws_money }}</strong>
-        </article>
+            <strong title="{{ k.costs|ws_money }}">{{ k.costs|ws_money_compact }}</strong>
+        </div>
     </section>
 
     <div class="crm-fin-grid">
-        <section class="crm-fin-panel">
+        <section class="crm-fin-panel crm-fin-panel--split">
             <header class="crm-fin-panel-head">
-                <h2>تقسیم کمیسیون</h2>
-                <p>سهم مشاور در برابر سهم دفتر املاک</p>
+                <div>
+                    <h2>تقسیم کمیسیون</h2>
+                    <p>سهم مشاور در برابر سهم دفتر املاک</p>
+                </div>
             </header>
             <div class="crm-fin-split" role="img" aria-label="تقسیم {{ s.advisor_percent }} درصد مشاور و {{ s.agency_percent }} درصد املاک">
                 <i class="crm-fin-split-advisor" style="width: {{ s.advisor_percent }}%"></i>
                 <b class="crm-fin-split-agency" style="width: {{ s.agency_percent }}%"></b>
             </div>
             <ul class="crm-fin-split-legend">
-                <li><span class="is-advisor"></span>مشاور {{ s.advisor_percent }}٪ · {{ s.advisor|ws_money }}</li>
-                <li><span class="is-agency"></span>املاک {{ s.agency_percent }}٪ · {{ s.agency|ws_money }}</li>
+                <li>
+                    <span class="is-advisor" aria-hidden="true"></span>
+                    <div>
+                        <strong>مشاور {{ s.advisor_percent }}٪</strong>
+                        <em title="{{ s.advisor|ws_money }}">{{ s.advisor|ws_money_compact }}</em>
+                    </div>
+                </li>
+                <li>
+                    <span class="is-agency" aria-hidden="true"></span>
+                    <div>
+                        <strong>املاک {{ s.agency_percent }}٪</strong>
+                        <em title="{{ s.agency|ws_money }}">{{ s.agency|ws_money_compact }}</em>
+                    </div>
+                </li>
             </ul>
         </section>
 
-        <section class="crm-fin-panel">
+        <section class="crm-fin-panel crm-fin-panel--payout">
             <header class="crm-fin-panel-head">
-                <h2>وصول کمیسیون</h2>
-                <p>وضعیت دریافت از طرفین معامله</p>
+                <div>
+                    <h2>وصول کمیسیون</h2>
+                    <p>وضعیت دریافت از طرفین معامله</p>
+                </div>
             </header>
             <ul class="crm-fin-payout">
                 {% for row in finance.payout %}
@@ -137,27 +134,29 @@
                         <strong>{{ row.label }}</strong>
                         <em>{{ row.count }} معامله</em>
                     </div>
-                    <span>{{ row.amount|ws_money }}</span>
+                    <span title="{{ row.amount|ws_money }}">{{ row.amount|ws_money_compact }}</span>
                 </li>
                 {% endfor %}
             </ul>
         </section>
     </div>
 
-    <section class="crm-fin-panel crm-fin-panel--wide">
+    <section class="crm-fin-panel crm-fin-panel--wide crm-fin-panel--trend">
         <header class="crm-fin-panel-head">
-            <h2>روند شش ماه اخیر</h2>
-            <p>کمیسیون کل و سهم مشاور به تفکیک ماه شمسی</p>
+            <div>
+                <h2>روند شش ماه اخیر</h2>
+                <p>کمیسیون کل و سهم مشاور به تفکیک ماه شمسی</p>
+            </div>
         </header>
         <div class="crm-fin-months" role="img" aria-label="نمودار ماهانه کمیسیون">
             {% for m in finance.monthly %}
-            <div class="crm-fin-month">
+            <div class="crm-fin-month{% if m.commission %} has-data{% endif %}">
                 <div class="crm-fin-month-bars" aria-hidden="true">
                     <span class="is-total" style="height: {{ m.commission_pct|default:4 }}%"></span>
                     <span class="is-advisor" style="height: {{ m.advisor_pct|default:4 }}%"></span>
                 </div>
                 <strong>{{ m.label }}</strong>
-                <em>{{ m.advisor|ws_money_compact }}</em>
+                <em title="{{ m.advisor|ws_money }}">{{ m.advisor|ws_money_compact }}</em>
             </div>
             {% endfor %}
         </div>
@@ -166,8 +165,11 @@
 
     <section class="crm-fin-panel crm-fin-forecast">
         <header class="crm-fin-panel-head">
-            <h2>پیش‌بینی قیف فعال</h2>
-            <p>بر اساس احتمال بستن معاملات جاری</p>
+            <div>
+                <h2>پیش‌بینی قیف فعال</h2>
+                <p>بر اساس احتمال بستن معاملات جاری</p>
+            </div>
+            <a href="{% url 'workspace:crm_deals' %}?view=pipeline&bucket=active" class="crm-fin-panel-link">مشاهده قیف</a>
         </header>
         <div class="crm-fin-forecast-grid">
             <article>
@@ -176,23 +178,25 @@
             </article>
             <article>
                 <em>حجم وزنی</em>
-                <strong>{{ finance.forecast.weighted_volume|ws_money }}</strong>
+                <strong title="{{ finance.forecast.weighted_volume|ws_money }}">{{ finance.forecast.weighted_volume|ws_money_compact }}</strong>
             </article>
             <article>
                 <em>کمیسیون مورد انتظار</em>
-                <strong>{{ finance.forecast.weighted_commission|ws_money }}</strong>
+                <strong title="{{ finance.forecast.weighted_commission|ws_money }}">{{ finance.forecast.weighted_commission|ws_money_compact }}</strong>
             </article>
-            <article>
+            <article class="is-advisor">
                 <em>سهم مشاور</em>
-                <strong>{{ finance.forecast.weighted_advisor|ws_money }}</strong>
+                <strong title="{{ finance.forecast.weighted_advisor|ws_money }}">{{ finance.forecast.weighted_advisor|ws_money_compact }}</strong>
             </article>
         </div>
     </section>
 
-    <section class="crm-fin-panel crm-fin-panel--wide">
+    <section class="crm-fin-panel crm-fin-panel--wide crm-fin-panel--deals">
         <header class="crm-fin-panel-head">
-            <h2>معاملات بسته‌شده</h2>
-            <p>ارزش، کمیسیون کل، سهم شما و وضعیت وصول</p>
+            <div>
+                <h2>معاملات بسته‌شده</h2>
+                <p>ارزش، کمیسیون کل، سهم شما و وضعیت وصول</p>
+            </div>
         </header>
         {% if finance.deals %}
         <div class="crm-fin-table-wrap">
@@ -214,10 +218,10 @@
                             <a href="{% url 'workspace:crm_deal_detail' d.id %}">{{ d.title }}</a>
                             <em>{{ d.customer_name }}{% if d.deal_kind_label %} · {{ d.deal_kind_label }}{% endif %}</em>
                         </td>
-                        <td>{{ d.value|ws_money }}</td>
-                        <td>{{ d.commission_amount|ws_money }}</td>
-                        <td class="is-advisor">{{ d.advisor_commission|ws_money }}</td>
-                        <td class="is-agency">{{ d.agency_commission|ws_money }}</td>
+                        <td title="{{ d.value|ws_money }}">{{ d.value|ws_money_compact }}</td>
+                        <td title="{{ d.commission_amount|ws_money }}">{{ d.commission_amount|ws_money_compact }}</td>
+                        <td class="is-advisor" title="{{ d.advisor_commission|ws_money }}">{{ d.advisor_commission|ws_money_compact }}</td>
+                        <td class="is-agency" title="{{ d.agency_commission|ws_money }}">{{ d.agency_commission|ws_money_compact }}</td>
                         <td><span class="crm-fin-status is-{{ d.payout_status }}">{{ d.payout_status_label }}</span></td>
                     </tr>
                     {% endfor %}
@@ -226,7 +230,7 @@
         </div>
         {% else %}
         <div class="crm-fin-empty">
-            <i class="fas fa-coins" aria-hidden="true"></i>
+            <div class="crm-fin-empty__icon" aria-hidden="true"><i class="fas fa-coins"></i></div>
             <h3>هنوز معامله بسته‌شده‌ای در این بازه نیست</h3>
             <p>با بستن معاملات، درآمد مشاور، سهم املاک و وصول کمیسیون اینجا دیده می‌شود.</p>
             <a href="{% url 'workspace:crm_deals' %}" class="crm-btn crm-btn-primary">رفتن به معاملات</a>

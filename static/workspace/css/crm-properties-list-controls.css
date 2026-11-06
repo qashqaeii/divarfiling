@@ -1,0 +1,528 @@
+/* ═══════════════════════════════════════════════════════════
+   Properties — Scope tabs + Toolbar (contacts-parity)
+   Scoped under .crm-properties-page
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-properties-page .crm-properties-list-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin: 0 0 0.55rem;
+    min-width: 0;
+}
+
+/* Show premium KPIs on mobile too (replace legacy mob strip) */
+@media (max-width: 768px) {
+    .crm-properties-page .crm-files-mob-kpis,
+    .crm-properties-page .kpi-strip.crm-files-kpi-strip {
+        display: none !important;
+    }
+
+    .crm-properties-page .fl-kpi-pro--properties.crm-files-desk-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0 0 0.75rem;
+    }
+}
+
+.crm-properties-page .crm-properties-scope-bar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.crm-properties-page .crm-properties-layout__scope.crm-properties-scope-bar {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+/* ─── Scope switcher ─── */
+.crm-properties-page .crm-properties-archive-tabs.crm-files-archive-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.2rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.28rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 72%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 88%, var(--ws-surface, #fff));
+    box-shadow: none;
+    overflow: visible;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab {
+    position: relative;
+    flex: unset;
+    min-width: 0;
+    display: block;
+    min-height: 2.65rem;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    text-decoration: none;
+    color: var(--ws-text-muted, #64748b);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s ease;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab::after {
+    display: none !important;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__surface {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    opacity: 0;
+    transition:
+        opacity 0.16s ease,
+        background 0.16s ease,
+        border-color 0.16s ease,
+        box-shadow 0.16s ease;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 2.65rem;
+    padding: 0.35rem 0.55rem;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__ico {
+    flex-shrink: 0;
+    width: 1.45rem;
+    height: 1.45rem;
+    display: inline-grid !important;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted, #64748b);
+    background: transparent;
+    border: none;
+    opacity: 0.75;
+    transition: color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__text {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__label-short {
+    display: none;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__label-full {
+    display: inline;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__count {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.25rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--ws-text-muted, #64748b);
+    background: color-mix(in srgb, var(--ws-border, #e2e8f0) 34%, transparent);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab:hover {
+    color: var(--ws-text, #0f172a);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab:hover .crm-files-archive-tab__ico {
+    opacity: 1;
+    color: var(--ws-text-secondary, #475569);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 45%, transparent);
+    outline-offset: 1px;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab:active {
+    transform: none;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab.is-active,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab[aria-current="page"] {
+    color: var(--ws-text, #0f172a);
+    font-weight: inherit;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab.is-active .crm-files-archive-tab__surface,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab[aria-current="page"] .crm-files-archive-tab__surface {
+    opacity: 1;
+    background: var(--ws-surface, #fff);
+    border-color: color-mix(in srgb, var(--ws-border, #e2e8f0) 65%, transparent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab.is-active .crm-files-archive-tab__label,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab[aria-current="page"] .crm-files-archive-tab__label {
+    font-weight: 800;
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab.is-active .crm-files-archive-tab__ico,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab[aria-current="page"] .crm-files-archive-tab__ico {
+    opacity: 1;
+    color: var(--ws-primary, #7c3aed);
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 10%, transparent);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab.is-active .crm-files-archive-tab__count,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab[aria-current="page"] .crm-files-archive-tab__count {
+    color: var(--ws-primary, #7c3aed);
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 12%, transparent);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__ico,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--archived[aria-current="page"] .crm-files-archive-tab__ico {
+    color: #475569;
+    background: color-mix(in srgb, #64748b 12%, transparent);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--archived.is-active .crm-files-archive-tab__count,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--archived[aria-current="page"] .crm-files-archive-tab__count {
+    color: #475569;
+    background: color-mix(in srgb, #64748b 14%, transparent);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--all.is-active .crm-files-archive-tab__ico,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--all[aria-current="page"] .crm-files-archive-tab__ico {
+    color: #0f766e;
+    background: color-mix(in srgb, #14b8a6 12%, transparent);
+}
+
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--all.is-active .crm-files-archive-tab__count,
+.crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab--all[aria-current="page"] .crm-files-archive-tab__count {
+    color: #0f766e;
+    background: color-mix(in srgb, #14b8a6 12%, transparent);
+}
+
+/* ─── Toolbar rail ─── */
+.crm-properties-page .crm-properties-layout__toolbar {
+    margin: 0;
+    padding: 0;
+}
+
+.crm-properties-page .crm-files-filters--pro {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+@media (min-width: 769px) {
+    .crm-properties-page .crm-prop-toolbar {
+        gap: 0.45rem;
+        padding: 0.5rem 0.55rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 72%, transparent);
+        background: var(--ws-surface, #fff);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__main {
+        flex-wrap: nowrap;
+        gap: 0.45rem 0.5rem;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__row--search {
+        flex: 1 1 14rem;
+        min-width: 12rem;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__row--controls {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__search.crm-files-search {
+        width: 100%;
+        min-height: 2.35rem;
+        height: 2.35rem;
+        gap: 0.45rem;
+        padding: 0 0.75rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 92%, transparent);
+        color: var(--ws-text-muted, #64748b);
+        box-shadow: none;
+        transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__search.crm-files-search i {
+        font-size: 0.72rem;
+        opacity: 0.7;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__search input {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__search.crm-files-search:hover {
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 100%, transparent);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__search.crm-files-search:focus-within {
+        background: var(--ws-surface, #fff);
+        border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 28%, var(--ws-border, #e2e8f0));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary, #7c3aed) 12%, transparent);
+        color: var(--ws-primary, #7c3aed);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__filter-btn {
+        min-height: 2.35rem;
+        height: 2.35rem;
+        padding: 0 0.75rem;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, transparent);
+        font-size: 0.74rem;
+        font-weight: 650;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__filter-btn.is-active {
+        border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 28%, var(--ws-border, #e2e8f0));
+        background: color-mix(in srgb, var(--ws-primary, #7c3aed) 10%, #fff);
+        color: var(--ws-primary, #7c3aed);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__sort {
+        min-height: 2.35rem;
+        padding: 0.15rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, transparent);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__sort-select {
+        min-height: 2.05rem;
+        height: 2.05rem;
+        min-width: 6.75rem;
+        max-width: 9rem;
+        padding-block: 0;
+        padding-inline: 0.55rem 1.55rem;
+        border: none;
+        border-radius: 8px;
+        background-color: transparent;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 0.55rem center;
+        background-size: 10px 6px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: var(--ws-text-secondary, #475569);
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__sort-select:hover,
+    .crm-properties-page .crm-prop-toolbar__sort-select:focus {
+        background-color: var(--ws-surface, #fff);
+        color: var(--ws-text, #0f172a);
+        outline: none;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__views.crm-files-view-toggle {
+        padding: 0.15rem;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 75%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 80%, transparent);
+        gap: 0.1rem;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__views .crm-files-view-btn {
+        width: 2.05rem;
+        height: 1.95rem;
+        min-width: 2.05rem;
+        min-height: 1.95rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        color: var(--ws-text-muted, #64748b);
+        box-shadow: none;
+        transition: background 0.12s ease, color 0.12s ease;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__views .crm-files-view-btn:hover {
+        color: var(--ws-text, #0f172a);
+        background: color-mix(in srgb, var(--ws-surface, #fff) 80%, transparent);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__views .crm-files-view-btn.is-active {
+        background: var(--ws-surface, #fff);
+        color: var(--ws-primary, #7c3aed);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__chips {
+        padding: 0.1rem 0.15rem 0.05rem;
+    }
+}
+
+/* ─── Mobile ─── */
+@media (max-width: 768px) {
+    .crm-properties-page .crm-properties-list-controls {
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0.15rem 0 0.35rem;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs.crm-files-archive-tabs {
+        gap: 0.18rem;
+        padding: 0.22rem;
+        border-radius: 13px;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab {
+        min-height: 3rem;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__inner {
+        flex-direction: column;
+        gap: 0.2rem;
+        min-height: 3rem;
+        padding: 0.32rem 0.2rem 0.3rem;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__text {
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__ico {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.66rem;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__label-full {
+        display: none;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__label-short {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 750;
+        text-align: center;
+    }
+
+    .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab__count {
+        min-width: 1.2rem;
+        height: 1.1rem;
+        font-size: 0.6rem;
+        padding: 0 0.32rem;
+    }
+
+    .crm-properties-page .crm-prop-toolbar {
+        gap: 0.4rem;
+        padding: 0.5rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 72%, transparent);
+        background: var(--ws-surface, #fff);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__search.crm-files-search {
+        min-height: 2.5rem;
+        height: 2.5rem;
+        border-radius: 11px;
+        border: 1px solid transparent;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 95%, transparent);
+        box-shadow: none;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__search.crm-files-search:focus-within {
+        border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 26%, var(--ws-border, #e2e8f0));
+        background: var(--ws-surface, #fff);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary, #7c3aed) 12%, transparent);
+    }
+
+    .crm-properties-page .crm-prop-toolbar__filter-btn,
+    .crm-properties-page .crm-prop-toolbar__sort-select,
+    .crm-properties-page .crm-prop-toolbar__views .crm-files-view-btn {
+        border-radius: 10px;
+    }
+
+    .crm-properties-page .crm-prop-toolbar__views.crm-files-view-toggle {
+        margin-inline-start: auto;
+        padding: 0.15rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 80%, transparent);
+    }
+}
+
+/* Dark */
+[data-theme="dark"] .crm-properties-page .crm-properties-archive-tabs.crm-files-archive-tabs,
+[data-theme="dark"] .crm-properties-page .crm-prop-toolbar {
+    background: var(--ws-surface);
+    border-color: var(--ws-border);
+    box-shadow: none;
+}
+
+[data-theme="dark"] .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab.is-active .crm-files-archive-tab__surface,
+[data-theme="dark"] .crm-properties-page .crm-properties-archive-tabs .crm-files-archive-tab[aria-current="page"] .crm-files-archive-tab__surface {
+    background: color-mix(in srgb, var(--ws-surface-2, #1e293b) 80%, var(--ws-surface));
+    box-shadow: none;
+}
+
+@media (min-width: 769px) {
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__search.crm-files-search,
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__filter-btn,
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__sort,
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__views.crm-files-view-toggle {
+        background: color-mix(in srgb, var(--ws-surface-2, #1e293b) 70%, transparent);
+    }
+
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__search.crm-files-search:focus-within,
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__sort-select:hover,
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__sort-select:focus,
+    [data-theme="dark"] .crm-properties-page .crm-prop-toolbar__views .crm-files-view-btn.is-active {
+        background: var(--ws-surface);
+    }
+}

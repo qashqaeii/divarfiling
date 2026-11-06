@@ -215,6 +215,9 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
     followups_this_week = 0
     visits_today = 0
     reminders_today = 0
+    overdue_n = 0
+    upcoming_followups = 0
+    upcoming_visits = 0
 
     for jkey, evs in events_by_jkey.items():
         jy, jm, jd = [int(x) for x in jkey.split('-')]
@@ -253,8 +256,16 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
                 elif ev['type'] == 'reminder':
                     reminders_today += 1
 
-            if ev['type'] == 'followup' and week_start_g <= gday <= week_end_g and gday >= today_g:
-                followups_this_week += 1
+            if gday < today_g and ev['type'] in ('followup', 'reminder'):
+                overdue_n += 1
+
+            if ev['type'] == 'followup' and gday >= today_g:
+                upcoming_followups += 1
+                if week_start_g <= gday <= week_end_g:
+                    followups_this_week += 1
+
+            if ev['type'] == 'visit' and gday >= today_g:
+                upcoming_visits += 1
 
             if ev['type'] == 'reminder' and gday > today_g:
                 near_reminders.append(item)
@@ -264,33 +275,88 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
     near_reminders.sort(key=lambda x: x['sort_key'])
 
     event_total = sum(len(v) for v in events_by_jkey.values())
+    today_n = len(today_agenda)
     prev_y, prev_m = _prev_jmonth(jyear, jmonth)
     next_y, next_m = _next_jmonth(jyear, jmonth)
     prev_total = _count_month_events(user, prev_y, prev_m)
     pct_change = _percent_change(event_total, prev_total)
 
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    mix_segments: List[Dict[str, Any]] = []
+    for key, label in (
+        ('followup', 'پیگیری'),
+        ('visit', 'بازدید'),
+        ('reminder', 'یادآور'),
+        ('contract', 'قرارداد'),
+    ):
+        count = int(stats.get(key) or 0)
+        if count <= 0:
+            continue
+        mix_segments.append({
+            'key': key,
+            'label': label,
+            'count': count,
+            'pct': _share(count, event_total),
+        })
+
+    hero_bits = []
+    for seg in mix_segments[:3]:
+        hero_bits.append(f'{seg["count"]} {seg["label"]}')
+    if pct_change is not None and pct_change > 0:
+        hero_bits.append(f'+{abs(pct_change)}٪ ماه قبل')
+    elif pct_change is not None and pct_change < 0:
+        hero_bits.append(f'{abs(pct_change)}٪ کمتر از ماه قبل')
+    hero_meta = ' · '.join(hero_bits) if hero_bits else (
+        'رویدادی در این ماه نیست' if event_total == 0 else 'برنامه ماه آماده است'
+    )
+
+    if today_n:
+        today_meta = f'{_share(today_n, event_total)}٪ از کارهای ماه'
+        if visits_today or reminders_today:
+            bits = []
+            if visits_today:
+                bits.append(f'{visits_today} بازدید')
+            if reminders_today:
+                bits.append(f'{reminders_today} یادآور')
+            today_meta = ' · '.join(bits)
+    elif event_total:
+        today_meta = 'امروز برنامه آزادی دارید'
+    else:
+        today_meta = 'هنوز رویدادی نیست'
+
+    if overdue_n:
+        overdue_meta = f'{_share(overdue_n, event_total)}٪ از کارهای ماه عقب افتاده'
+    elif event_total:
+        overdue_meta = 'کار معوقی در این ماه نیست'
+    else:
+        overdue_meta = 'هنوز رویدادی نیست'
+
+    if upcoming_followups:
+        followup_meta = f'{followups_this_week} مورد این هفته'
+    elif stats.get('followup'):
+        followup_meta = 'پیگیری‌های باقی‌مانده گذشته‌اند'
+    else:
+        followup_meta = 'پیگیری پیش‌رویی نیست'
+
+    # سازگاری با قالب‌های قدیمی + ساختار fl-kpi-pro
     kpis = {
         'total': {
             'value': event_total,
             'value_label': to_persian_digits(event_total),
-            'context': (
-                f'+{to_persian_digits(abs(pct_change))}٪ نسبت به ماه قبل'
-                if pct_change is not None and pct_change > 0
-                else (
-                    f'{to_persian_digits(abs(pct_change))}٪ کمتر از ماه قبل'
-                    if pct_change is not None and pct_change < 0
-                    else 'بدون تغییر نسبت به ماه قبل'
-                )
-            ),
+            'context': hero_meta,
         },
         'followups': {
-            'value': stats.get('followup', 0),
-            'value_label': to_persian_digits(stats.get('followup', 0)),
-            'context': f'{to_persian_digits(followups_this_week)} مورد این هفته',
+            'value': upcoming_followups,
+            'value_label': to_persian_digits(upcoming_followups),
+            'context': followup_meta,
         },
         'visits': {
-            'value': stats.get('visit', 0),
-            'value_label': to_persian_digits(stats.get('visit', 0)),
+            'value': upcoming_visits,
+            'value_label': to_persian_digits(upcoming_visits),
             'context': f'{to_persian_digits(visits_today)} مورد امروز',
         },
         'reminders': {
@@ -298,6 +364,19 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
             'value_label': to_persian_digits(stats.get('reminder', 0)),
             'context': f'{to_persian_digits(reminders_today)} مورد امروز',
         },
+        'month_total': event_total,
+        'today': today_n,
+        'overdue': overdue_n,
+        'upcoming_followups': upcoming_followups,
+        'upcoming_visits': upcoming_visits,
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'today_share': _share(today_n, event_total),
+        'today_meta': today_meta,
+        'overdue_share': _share(overdue_n, event_total),
+        'overdue_meta': overdue_meta,
+        'followup_share': _share(upcoming_followups, event_total),
+        'followup_meta': followup_meta,
     }
 
     month_strip = [

@@ -112,5 +112,26 @@ class CRMReminderListAjaxTests(TestCase):
         self.assertTrue(data['is_done'])
         self.assertEqual(data['reminder_id'], reminder.pk)
         self.assertIn('stats', data)
+        self.assertIn('active', data['stats'])
+        self.assertIn('overdue', data['stats'])
         reminder.refresh_from_db()
         self.assertTrue(reminder.is_done)
+
+    def test_list_renders_premium_kpi_and_due_filter(self):
+        self._make_reminder('معوق', offset_days=-2)
+        self._make_reminder('امروز', offset_days=0)
+        self._make_reminder('فردا', offset_days=1)
+        url = reverse('workspace:crm_reminders')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'fl-kpi-pro--reminders')
+        self.assertContains(response, 'یادآور فعال')
+        self.assertEqual(response.context['stats']['active'], 3)
+        self.assertGreaterEqual(response.context['stats']['overdue'], 1)
+
+        overdue_resp = self.client.get(url, {'show': 'active', 'due': 'overdue'})
+        self.assertEqual(overdue_resp.status_code, 200)
+        self.assertEqual(overdue_resp.context['due'], 'overdue')
+        titles = [r.title for r in overdue_resp.context['reminders']]
+        self.assertIn('معوق', titles)
+        self.assertNotIn('فردا', titles)

@@ -1236,6 +1236,285 @@ def resolve_district_for_property(prop) -> str:
     return district_from_listing(listing)
 
 
+def build_properties_kpi_stats(active_qs, *, today: Optional[date] = None) -> Dict[str, Any]:
+    """
+    KPI تصمیم‌ساز فهرست فایل‌های شخصی برای مشاور (fl-kpi-pro).
+    پایه: فایل‌های جاری (بدون بایگانی).
+
+    کارت‌ها: کل · نیازمند اقدام · بدون پیگیری · پیش‌نویس
+    """
+    today = today or timezone.now().date()
+    pipeline_tx = ['فعال', 'در مذاکره']
+    agg = active_qs.aggregate(
+        total=Count('id'),
+        sale=Count('id', filter=Q(deal_mode='فروش')),
+        rent=Count('id', filter=Q(deal_mode__in=['رهن و اجاره', 'اجاره'])),
+        active=Count('id', filter=Q(transaction_status='فعال')),
+        published=Count('id', filter=Q(publish_status='منتشرشده')),
+        draft=Count('id', filter=Q(publish_status='پیش‌نویس')),
+        due_today=Count(
+            'id',
+            filter=Q(next_follow_up=today, transaction_status__in=pipeline_tx),
+        ),
+        overdue=Count(
+            'id',
+            filter=Q(
+                next_follow_up__lt=today,
+                transaction_status__in=pipeline_tx,
+            ),
+        ),
+        needs_action=Count(
+            'id',
+            filter=Q(
+                next_follow_up__lte=today,
+                transaction_status__in=pipeline_tx,
+            ),
+        ),
+        no_followup=Count(
+            'id',
+            filter=Q(
+                next_follow_up__isnull=True,
+                transaction_status__in=pipeline_tx,
+            ),
+        ),
+    )
+    total = int(agg['total'] or 0)
+    sale = int(agg['sale'] or 0)
+    rent = int(agg['rent'] or 0)
+    active = int(agg['active'] or 0)
+    published = int(agg['published'] or 0)
+    draft = int(agg['draft'] or 0)
+    due_today = int(agg['due_today'] or 0)
+    overdue = int(agg['overdue'] or 0)
+    needs_action = int(agg['needs_action'] or 0)
+    no_followup = int(agg['no_followup'] or 0)
+    other = max(total - sale - rent, 0)
+
+    def _share(part: int) -> int:
+        if not total:
+            return 0
+        return int(round((part / total) * 100))
+
+    mix_segments: List[Dict[str, Any]] = []
+    for key, label, count in (
+        ('sale', 'فروش', sale),
+        ('rent', 'اجاره', rent),
+        ('other', 'سایر', other),
+    ):
+        if count <= 0:
+            continue
+        mix_segments.append({
+            'key': key,
+            'label': label,
+            'count': count,
+            'pct': _share(count),
+        })
+
+    hero_bits = []
+    if sale:
+        hero_bits.append(f'{sale} فروش')
+    if rent:
+        hero_bits.append(f'{rent} اجاره')
+    if published:
+        hero_bits.append(f'{published} منتشر')
+    hero_meta = ' · '.join(hero_bits) if hero_bits else (
+        'فایل جاری ندارید' if total == 0 else 'ترکیب معامله آماده است'
+    )
+
+    if needs_action:
+        action_bits = []
+        if overdue:
+            action_bits.append(f'{overdue} معوق')
+        if due_today:
+            action_bits.append(f'{due_today} امروز')
+        needs_action_meta = ' · '.join(action_bits) if action_bits else f'{_share(needs_action)}٪ از جاری'
+    elif total:
+        needs_action_meta = 'الان کار عقب‌افتاده‌ای نیست'
+    else:
+        needs_action_meta = 'هنوز فایلی نیست'
+
+    if no_followup:
+        no_followup_meta = f'{_share(no_followup)}٪ از جاری بدون تاریخ'
+    elif total:
+        no_followup_meta = 'همه پیگیری‌ها زمان‌بندی شده'
+    else:
+        no_followup_meta = 'هنوز فایلی نیست'
+
+    if draft:
+        draft_meta = f'{_share(draft)}٪ از فایل‌های جاری'
+    elif total:
+        draft_meta = 'پیش‌نویسی ندارید'
+    else:
+        draft_meta = 'هنوز فایلی نیست'
+
+    return {
+        'total': total,
+        'sale': sale,
+        'rent': rent,
+        'active': active,
+        'published': published,
+        'draft': draft,
+        'due_today': due_today,
+        'overdue': overdue,
+        'needs_action': needs_action,
+        'no_followup': no_followup,
+        'sale_share': _share(sale),
+        'rent_share': _share(rent),
+        'active_share': _share(active),
+        'published_share': _share(published),
+        'draft_share': _share(draft),
+        'needs_action_share': _share(needs_action),
+        'no_followup_share': _share(no_followup),
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'needs_action_meta': needs_action_meta,
+        'no_followup_meta': no_followup_meta,
+        'draft_meta': draft_meta,
+    }
+
+
+def build_contacts_kpi_stats(active_qs, *, today: Optional[date] = None) -> Dict[str, Any]:
+    """
+    KPI تصمیم‌ساز فهرست مخاطبین برای مشاور (fl-kpi-pro).
+    پایه: مخاطبین جاری (بدون بایگانی).
+
+    کارت‌ها: کل · نیازمند اقدام · بدون پیگیری · اولویت بالا
+    """
+    today = today or timezone.now().date()
+    pipeline_statuses = ['جدید', 'در حال پیگیری']
+    agg = active_qs.aggregate(
+        total=Count('id'),
+        new=Count('id', filter=Q(status='جدید')),
+        in_progress=Count('id', filter=Q(status='در حال پیگیری')),
+        visited=Count('id', filter=Q(status='بازدید انجام شد')),
+        contract=Count('id', filter=Q(status='قرارداد')),
+        due_today=Count(
+            'id',
+            filter=Q(next_follow_up=today, status__in=pipeline_statuses),
+        ),
+        overdue=Count(
+            'id',
+            filter=Q(
+                next_follow_up__lt=today,
+                status__in=pipeline_statuses,
+            ),
+        ),
+        needs_action=Count(
+            'id',
+            filter=Q(
+                next_follow_up__lte=today,
+                status__in=pipeline_statuses,
+            ),
+        ),
+        no_followup=Count(
+            'id',
+            filter=Q(
+                next_follow_up__isnull=True,
+                status__in=pipeline_statuses,
+            ),
+        ),
+        high_priority=Count('id', filter=Q(priority='بالا')),
+    )
+    total = int(agg['total'] or 0)
+    new = int(agg['new'] or 0)
+    in_progress = int(agg['in_progress'] or 0)
+    visited = int(agg['visited'] or 0)
+    contract = int(agg['contract'] or 0)
+    due_today = int(agg['due_today'] or 0)
+    overdue = int(agg['overdue'] or 0)
+    needs_action = int(agg['needs_action'] or 0)
+    no_followup = int(agg['no_followup'] or 0)
+    high_priority = int(agg['high_priority'] or 0)
+    known = new + in_progress + visited + contract
+    other = max(total - known, 0)
+
+    def _share(part: int) -> int:
+        if not total:
+            return 0
+        return int(round((part / total) * 100))
+
+    mix_segments: List[Dict[str, Any]] = []
+    for key, label, count in (
+        ('new', 'جدید', new),
+        ('followup', 'پیگیری', in_progress),
+        ('visited', 'بازدید', visited),
+        ('contract', 'قرارداد', contract),
+        ('other', 'سایر', other),
+    ):
+        if count <= 0:
+            continue
+        mix_segments.append({
+            'key': key,
+            'label': label,
+            'count': count,
+            'pct': _share(count),
+        })
+
+    hero_bits = []
+    if new:
+        hero_bits.append(f'{new} جدید')
+    if in_progress:
+        hero_bits.append(f'{in_progress} پیگیری')
+    if visited:
+        hero_bits.append(f'{visited} بازدید')
+    if contract:
+        hero_bits.append(f'{contract} قرارداد')
+    hero_meta = ' · '.join(hero_bits) if hero_bits else (
+        'مخاطب جاری ندارید' if total == 0 else 'ترکیب وضعیت آماده است'
+    )
+
+    if needs_action:
+        action_bits = []
+        if overdue:
+            action_bits.append(f'{overdue} معوق')
+        if due_today:
+            action_bits.append(f'{due_today} امروز')
+        needs_action_meta = ' · '.join(action_bits) if action_bits else f'{_share(needs_action)}٪ از جاری'
+    elif total:
+        needs_action_meta = 'الان کار عقب‌افتاده‌ای نیست'
+    else:
+        needs_action_meta = 'هنوز مخاطبی نیست'
+
+    if no_followup:
+        no_followup_meta = f'{_share(no_followup)}٪ از جاری بدون تاریخ'
+    elif total:
+        no_followup_meta = 'همه پیگیری‌ها زمان‌بندی شده'
+    else:
+        no_followup_meta = 'هنوز مخاطبی نیست'
+
+    if high_priority:
+        high_priority_meta = f'{_share(high_priority)}٪ از مخاطبین جاری'
+    elif total:
+        high_priority_meta = 'اولویت بالایی ندارید'
+    else:
+        high_priority_meta = 'هنوز مخاطبی نیست'
+
+    return {
+        'total': total,
+        'new': new,
+        'in_progress': in_progress,
+        'visited': visited,
+        'contract': contract,
+        'due_today': due_today,
+        'overdue': overdue,
+        'needs_action': needs_action,
+        'no_followup': no_followup,
+        'high_priority': high_priority,
+        'new_share': _share(new),
+        'in_progress_share': _share(in_progress),
+        'due_today_share': _share(due_today),
+        'overdue_share': _share(overdue),
+        'needs_action_share': _share(needs_action),
+        'no_followup_share': _share(no_followup),
+        'high_priority_share': _share(high_priority),
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'needs_action_meta': needs_action_meta,
+        'no_followup_meta': no_followup_meta,
+        'high_priority_meta': high_priority_meta,
+    }
+
+
 def get_dashboard_stats(user) -> Dict[str, Any]:
     from workspace.services.crm_contact_archive import archived_contacts_q
 
@@ -1624,6 +1903,16 @@ def filter_contacts(user, params: dict):
         qs = qs.filter(next_follow_up__lt=today, status__in=['جدید', 'در حال پیگیری']).exclude(
             archived_contacts_q(),
         )
+    elif due == 'action':
+        qs = qs.filter(
+            next_follow_up__lte=today,
+            status__in=['جدید', 'در حال پیگیری'],
+        ).exclude(archived_contacts_q())
+    elif due == 'unscheduled':
+        qs = qs.filter(
+            next_follow_up__isnull=True,
+            status__in=['جدید', 'در حال پیگیری'],
+        ).exclude(archived_contacts_q())
     elif due == 'none':
         qs = qs.filter(next_follow_up__isnull=True)
     if params.get('match_alerts') == '1':
@@ -1741,8 +2030,24 @@ def filter_properties(user, params: dict):
     if age_max is not None and age_max >= 0:
         qs = qs.filter(build_year__gte=date.today().year - age_max)
 
+    due = (params.get('due') or '').strip()
+    today = timezone.now().date()
+    pipeline_tx = ['فعال', 'در مذاکره']
+    if due == 'today':
+        qs = qs.filter(next_follow_up=today, transaction_status__in=pipeline_tx)
+    elif due == 'overdue':
+        qs = qs.filter(next_follow_up__lt=today, transaction_status__in=pipeline_tx)
+    elif due == 'action':
+        qs = qs.filter(next_follow_up__lte=today, transaction_status__in=pipeline_tx)
+    elif due == 'unscheduled':
+        qs = qs.filter(next_follow_up__isnull=True, transaction_status__in=pipeline_tx)
+
     sort = params.get('sort', '-updated_at')
-    allowed = {'title', '-title', 'updated_at', '-updated_at', 'sale_price', '-sale_price', 'area', '-area'}
+    allowed = {
+        'title', '-title', 'updated_at', '-updated_at',
+        'sale_price', '-sale_price', 'area', '-area',
+        'next_follow_up', '-next_follow_up',
+    }
     if sort in allowed:
         qs = qs.order_by(sort)
     else:
@@ -1803,6 +2108,19 @@ def build_property_list_filter_chips(request) -> list:
     pub = request.GET.get('publish_status', '').strip()
     if pub:
         chips.append({'label': f'انتشار: {pub}', 'href': href_without('publish_status')})
+
+    due = (request.GET.get('due') or '').strip()
+    if due:
+        due_labels = {
+            'action': 'نیازمند اقدام',
+            'today': 'پیگیری امروز',
+            'overdue': 'پیگیری معوق',
+            'unscheduled': 'بدون پیگیری',
+        }
+        chips.append({
+            'label': due_labels.get(due, f'پیگیری: {due}'),
+            'href': href_without('due'),
+        })
 
     city = request.GET.get('city', '').strip()
     if city:

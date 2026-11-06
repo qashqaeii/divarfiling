@@ -31,8 +31,8 @@ from contracts.services.clause_ux import build_clause_context, build_clause_sect
 from contracts.services.clauses import get_applicable_clauses, get_legal_warnings
 from contracts.services.contract_renderer import render_contract_document
 from contracts.services.dashboard import (
+    build_contracts_kpi_stats,
     contract_acceptance_progress,
-    contract_dashboard_stats,
     filter_contracts,
 )
 from contracts.services.invitations import resend_invitation, send_invitations
@@ -631,6 +631,21 @@ class ContractsDashboardView(
                     'pending': 0,
                     'finalized': 0,
                     'needs_action': 0,
+                    'mix_segments': [],
+                    'hero_meta': 'قراردادی ثبت نشده',
+                    'needs_action_share': 0,
+                    'needs_action_meta': 'هنوز قراردادی نیست',
+                    'draft_share': 0,
+                    'draft_meta': 'هنوز قراردادی نیست',
+                    'finalized_share': 0,
+                    'finalized_meta': 'هنوز قراردادی نیست',
+                    'pending_share': 0,
+                },
+                'kpi_links': {
+                    'all': '?',
+                    'needs_action': '?focus=needs',
+                    'draft': '?status=draft',
+                    'finalized': '?status=finalized',
                 },
                 'crm_section': 'contracts',
                 'filter_deal': None,
@@ -647,12 +662,20 @@ class ContractsDashboardView(
                 filter_deal_obj = deal_for_user(self.request.user, int(filter_deal))
             except (TypeError, ValueError):
                 filter_deal_obj = None
+
+        deal_qs = f'&deal={filter_deal_obj.pk}' if filter_deal_obj else ''
         ctx.update({
             'contracts_page': page,
             'contracts': page.object_list,
             'contract_types': CONTRACT_TYPES,
             'contract_statuses': CONTRACT_STATUSES,
-            'stats': contract_dashboard_stats(self.request.user),
+            'stats': build_contracts_kpi_stats(self.request.user),
+            'kpi_links': {
+                'all': f'?{deal_qs.lstrip("&")}' if deal_qs else '?',
+                'needs_action': f'?focus=needs{deal_qs}',
+                'draft': f'?status=draft{deal_qs}',
+                'finalized': f'?status=finalized{deal_qs}',
+            },
             'crm_section': 'contracts',
             'filter_deal': filter_deal_obj,
             'filter_qs': self.request.GET.urlencode(),

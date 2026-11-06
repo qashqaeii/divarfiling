@@ -1,0 +1,153 @@
+{% load humanize %}
+{% if agency_dash_profile == 'secretary' %}
+{# پذیرش: سرنخ بدون مسئول · پیگیری امروز #}
+<section class="fl-kpi-pro fl-kpi-pro--agency fl-kpi-pro--agency-secretary" aria-label="کارهای امروز پذیرش">
+    <a href="{{ kpi_links.inbox }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero{% if summary.inbox_unassigned %} is-alert{% endif %}">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-inbox"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">سرنخ بدون مسئول</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not summary.inbox_unassigned %} is-empty{% endif %}">{{ summary.inbox_unassigned|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if summary.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="{{ summary.hero_meta }}">
+                {% for seg in summary.mix_segments %}
+                <span class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}" style="flex-grow: {{ seg.count }};" title="{{ seg.label }}: {{ seg.count|intcomma }}"></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ summary.inbox_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.today }}" class="fl-kpi-pro__card fl-kpi-pro__card--followups">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پیگیری امروز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not summary.followups_today %} is-empty{% endif %}">{{ summary.followups_today|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta">{{ summary.followups_meta }}</p>
+        </footer>
+    </a>
+</section>
+{% else %}
+{# مالک/مدیر: مشاوران · معامله · مخاطب جدید · فایل جدید #}
+<section class="fl-kpi-pro fl-kpi-pro--agency" aria-label="شاخص‌های کلیدی آژانس">
+    <a href="{{ kpi_links.advisors }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-users"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">مشاوران فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ summary.active_advisors|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if summary.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ظرفیت صندلی: {{ summary.hero_meta }}">
+                {% for seg in summary.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ summary.hero_meta }}</p>
+        </footer>
+    </a>
+
+    {% if summary.deals_active != None %}
+    <a href="{{ kpi_links.deals }}" class="fl-kpi-pro__card fl-kpi-pro__card--pipeline{% if not summary.deals_active %} is-empty-card{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">معامله فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not summary.deals_active %} is-empty{% endif %}">{{ summary.deals_active|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if summary.deals_active or summary.contacts_new or summary.properties_new %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--forecast"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ summary.deals_share }}"
+                aria-label="سهم معاملات فعال {{ summary.deals_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ summary.deals_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ summary.deals_meta }}</p>
+        </footer>
+    </a>
+    {% else %}
+    <a href="{{ kpi_links.licenses }}" class="fl-kpi-pro__card fl-kpi-pro__card--draft{% if summary.available_seats %} is-warn{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">صندلی آزاد</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-chair"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not summary.available_seats %} is-empty{% endif %}">{{ summary.available_seats|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta">{% if summary.seats_total %}از {{ summary.seats_total|intcomma }} صندلی{% else %}ظرفیت ثبت نشده{% endif %}</p>
+        </footer>
+    </a>
+    {% endif %}
+
+    <a href="{{ kpi_links.contacts }}" class="fl-kpi-pro__card fl-kpi-pro__card--followups">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">مخاطب جدید</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not summary.contacts_new %} is-empty{% endif %}">{{ summary.contacts_new|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if summary.contacts_new or summary.properties_new %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--followups"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ summary.contacts_share }}"
+                aria-label="سهم مخاطب جدید {{ summary.contacts_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ summary.contacts_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ summary.contacts_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.properties }}" class="fl-kpi-pro__card fl-kpi-pro__card--volume">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">فایل جدید</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not summary.properties_new %} is-empty{% endif %}">{{ summary.properties_new|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if summary.contacts_new or summary.properties_new %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--draft"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ summary.properties_share }}"
+                aria-label="سهم فایل جدید {{ summary.properties_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ summary.properties_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ summary.properties_meta }}</p>
+        </footer>
+    </a>
+</section>
+{% endif %}

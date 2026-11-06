@@ -1,0 +1,103 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = قابلیت‌ها، در ساخت، پیشنهاد باز، باگ باز #}
+<section class="fl-kpi-pro fl-kpi-pro--product ph-desk-kpis" aria-label="آمار مرکز توسعه">
+    <a href="?tab=features" class="fl-kpi-pro__card fl-kpi-pro__card--hero{% if active_tab == 'features' or active_tab == 'overview' %} is-selected{% endif %}">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-rocket"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">قابلیت‌ها</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-puzzle-piece"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value">{{ hub_stats.features_total|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if hub_stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب وضعیت: {{ hub_stats.hero_meta }}">
+                {% for seg in hub_stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ hub_stats.hero_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="?tab=roadmap" class="fl-kpi-pro__card fl-kpi-pro__card--progress{% if active_tab == 'roadmap' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">در حال ساخت</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-hammer"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not hub_stats.features_in_progress %} is-empty{% endif %}">{{ hub_stats.features_in_progress|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if hub_stats.features_total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--progress"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ hub_stats.progress_share }}"
+                aria-label="سهم در ساخت {{ hub_stats.progress_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ hub_stats.progress_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ hub_stats.progress_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="?tab=requests" class="fl-kpi-pro__card fl-kpi-pro__card--requests{% if active_tab == 'requests' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">پیشنهاد باز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not hub_stats.requests_open %} is-empty{% endif %}">{{ hub_stats.requests_open|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if hub_stats.requests_total %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--requests"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ hub_stats.requests_share }}"
+                aria-label="سهم پیشنهاد باز {{ hub_stats.requests_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ hub_stats.requests_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ hub_stats.requests_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="?tab=bugs" class="fl-kpi-pro__card fl-kpi-pro__card--bugs{% if hub_stats.bugs_open %} is-alert{% endif %}{% if active_tab == 'bugs' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">باگ باز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-bug"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not hub_stats.bugs_open %} is-empty{% endif %}">{{ hub_stats.bugs_open|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if hub_stats.bugs_open or hub_stats.bugs_resolved %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--bugs"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ hub_stats.bugs_share }}"
+                aria-label="سهم باگ باز {{ hub_stats.bugs_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ hub_stats.bugs_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ hub_stats.bugs_meta }}</p>
+        </footer>
+    </a>
+</section>

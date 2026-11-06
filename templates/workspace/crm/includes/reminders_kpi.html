@@ -1,0 +1,103 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = فعال، معوق، امروز، انجام‌شده #}
+<section class="fl-kpi-pro fl-kpi-pro--reminders crm-rm-desk-kpis" aria-label="آمار یادآورها">
+    <a href="{{ kpi_links.active }}" class="fl-kpi-pro__card fl-kpi-pro__card--hero{% if show == 'active' and not due %} is-selected{% endif %}">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-bell"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">یادآور فعال</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value" data-stat="active">{{ stats.active|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if stats.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="ترکیب زمان: {{ stats.hero_meta }}">
+                {% for seg in stats.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }} ({{ seg.pct }}٪)"
+                ></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.hero_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.overdue }}" class="fl-kpi-pro__card fl-kpi-pro__card--overdue{% if stats.overdue %} is-alert{% endif %}{% if due == 'overdue' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">معوق</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.overdue %} is-empty{% endif %}" data-stat="overdue">{{ stats.overdue|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.active %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--overdue"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.overdue_share }}"
+                aria-label="سهم معوق {{ stats.overdue_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.overdue_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.overdue_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.today }}" class="fl-kpi-pro__card fl-kpi-pro__card--today{% if due == 'today' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">امروز</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-sun"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.today %} is-empty{% endif %}" data-stat="today">{{ stats.today|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.active %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--today"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.today_share }}"
+                aria-label="سهم امروز {{ stats.today_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.today_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.today_meta }}</p>
+        </footer>
+    </a>
+
+    <a href="{{ kpi_links.done }}" class="fl-kpi-pro__card fl-kpi-pro__card--received{% if show == 'done' %} is-selected{% endif %}">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">انجام‌شده</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not stats.done %} is-empty{% endif %}" data-stat="done">{{ stats.done|intcomma }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            {% if stats.active or stats.done %}
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--received"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ stats.done_share }}"
+                aria-label="سهم انجام‌شده {{ stats.done_share }} درصد"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ stats.done_share }}%;"></i>
+                </span>
+            </div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta">{{ stats.done_meta }}</p>
+        </footer>
+    </a>
+</section>

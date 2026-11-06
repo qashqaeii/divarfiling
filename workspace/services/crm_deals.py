@@ -246,6 +246,92 @@ def get_deal_stats(user) -> Dict[str, Any]:
     }
 
 
+def build_deals_kpi_stats(user) -> Dict[str, Any]:
+    """
+    KPI تصمیم‌ساز فهرست معاملات برای مشاور (fl-kpi-pro).
+
+    کارت‌ها: فعال · نیازمند پیگیری · ارزش قیف · پیش‌بینی وزنی
+    """
+    stats = get_deal_stats(user)
+    active_n = int(stats['active'] or 0)
+    stale_n = int(stats['stale'] or 0)
+    closed_n = int(stats['closed'] or 0)
+    lost_n = int(stats['lost'] or 0)
+    pipeline_value = int(stats['pipeline_value'] or 0)
+    weighted = int(stats['weighted_forecast'] or 0)
+    win_rate = int(stats['win_rate'] or 0)
+    by_stage = stats.get('by_stage') or {}
+    meta_map = stage_meta_map(user)
+    active_names = active_stages_for_user(user)
+
+    def _share(part: int, base: int) -> int:
+        if not base:
+            return 0
+        return int(round((part / base) * 100))
+
+    mix_segments: List[Dict[str, Any]] = []
+    hero_bits: List[str] = []
+    for stage_name in active_names:
+        count = int(by_stage.get(stage_name) or 0)
+        if count <= 0:
+            continue
+        meta = meta_map.get(stage_name) or {}
+        key = str(meta.get('id') or 'other').strip() or 'other'
+        # CSS کلاس امن
+        key = ''.join(ch if ch.isalnum() or ch == '-' else '-' for ch in key)[:24] or 'other'
+        mix_segments.append({
+            'key': key,
+            'label': stage_name,
+            'count': count,
+            'pct': _share(count, active_n),
+        })
+        if len(hero_bits) < 3:
+            hero_bits.append(f'{count} {stage_name}')
+
+    if hero_bits:
+        hero_meta = ' · '.join(hero_bits)
+    elif active_n:
+        hero_meta = f'{closed_n} بسته · نرخ بستن {win_rate}٪'
+    else:
+        hero_meta = 'معامله فعالی ندارید'
+
+    if stale_n:
+        stale_meta = f'{_share(stale_n, active_n)}٪ از فعال‌ها مانده‌اند'
+    elif active_n:
+        stale_meta = 'همه مراحل در زمان مجاز هستند'
+    else:
+        stale_meta = 'هنوز معامله فعالی نیست'
+
+    if pipeline_value:
+        pipeline_meta = f'{active_n} معامله فعال'
+    elif active_n:
+        pipeline_meta = 'ارزش برای معاملات فعال ثبت نشده'
+    else:
+        pipeline_meta = 'قیف خالی است'
+
+    forecast_share = _share(weighted, pipeline_value) if pipeline_value else 0
+    if weighted:
+        forecast_bits = [f'{forecast_share}٪ از ارزش قیف']
+        if closed_n or lost_n:
+            forecast_bits.append(f'نرخ بستن {win_rate}٪')
+        forecast_meta = ' · '.join(forecast_bits)
+    elif pipeline_value:
+        forecast_meta = 'احتمال مراحل را بررسی کنید'
+    else:
+        forecast_meta = 'پیش‌بینی در دسترس نیست'
+
+    stats.update({
+        'mix_segments': mix_segments,
+        'hero_meta': hero_meta,
+        'stale_share': _share(stale_n, active_n),
+        'stale_meta': stale_meta,
+        'pipeline_meta': pipeline_meta,
+        'forecast_share': forecast_share,
+        'forecast_meta': forecast_meta,
+    })
+    return stats
+
+
 def infer_deal_kind_from_property(prop) -> str:
     """نوع معامله CRM از deal_mode ملک."""
     mode = (getattr(prop, 'deal_mode', None) or '').strip()

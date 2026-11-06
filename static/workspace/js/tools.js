@@ -807,8 +807,67 @@
         return name.length > max ? name.slice(0, max) + '…' : name;
     }
 
+    function setKpiText(sel, text) {
+        document.querySelectorAll(`[data-tbx-kpi="${sel}"]`).forEach(el => {
+            el.textContent = text;
+        });
+    }
+
+    function updateToolsKpi(snap) {
+        const root = document.querySelector('[data-fl-surface="tools-kpi"]');
+        if (!root) return;
+        const k = (snap && snap.kpi) || {};
+        const rowsEl = root.querySelector('[data-tbx-kpi="rows"]');
+        if (rowsEl) {
+            rowsEl.textContent = k.rows_display || '۰';
+            rowsEl.classList.toggle('is-empty', !k.has_dataset || !k.rows);
+        }
+        setKpiText('hero-meta', k.hero_meta || 'فایل بازاری انتخاب نشده');
+
+        const ratioEl = root.querySelector('[data-tbx-kpi="ratio"]');
+        if (ratioEl) {
+            ratioEl.textContent = k.ratio_display || '—';
+            ratioEl.classList.toggle('is-empty', !k.ratio);
+        }
+        setKpiText('ratio-meta', k.ratio_meta || '');
+        const ratioFill = root.querySelector('[data-tbx-kpi="ratio-fill"]');
+        if (ratioFill) ratioFill.style.width = `${k.ratio_share || 0}%`;
+        const ratioMeter = root.querySelector('[data-tbx-kpi="ratio-meter"]');
+        if (ratioMeter) ratioMeter.setAttribute('aria-valuenow', String(k.ratio_share || 0));
+
+        setKpiText('price-label', k.price_label || 'شاخص قیمت');
+        const priceEl = root.querySelector('[data-tbx-kpi="price"]');
+        if (priceEl) {
+            priceEl.textContent = k.price_display || '—';
+            priceEl.classList.toggle('is-empty', !k.price_has_value);
+        }
+        setKpiText('price-meta', k.price_meta || '');
+
+        const areaEl = root.querySelector('[data-tbx-kpi="area"]');
+        if (areaEl) {
+            areaEl.textContent = k.area_display || '—';
+            areaEl.classList.toggle('is-empty', !k.area_has_value);
+        }
+        setKpiText('area-meta', k.area_meta || '');
+
+        const mix = root.querySelector('[data-tbx-kpi="mix"]');
+        if (mix) {
+            const segs = k.mix_segments || [];
+            if (!segs.length) {
+                mix.hidden = true;
+                mix.innerHTML = '';
+            } else {
+                mix.hidden = false;
+                mix.innerHTML = segs.map(seg => (
+                    `<span class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--${seg.key}" style="flex-grow: ${seg.count};" title="${seg.label}: ${seg.count}"></span>`
+                )).join('');
+            }
+        }
+    }
+
     function updateDatasetUI() {
         const snap = marketSnapshot;
+        updateToolsKpi(snap);
         const meta = document.getElementById('wsTbxDatasetMeta');
         if (meta) {
             if (snap) {

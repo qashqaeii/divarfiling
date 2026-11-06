@@ -94,7 +94,7 @@ class ProductHubView(WorkspaceLoginMixin, TemplateView):
         licensed = user.is_staff or has_active_bot_license(user)
         ctx.update({
             'active_tab': tab,
-            'hub_stats': stats_svc.get_hub_stats(),
+            'hub_stats': stats_svc.build_hub_kpi_stats(),
             'has_product_action_access': licensed,
             'category_choices': FEATURE_CATEGORY_CHOICES,
             'feature_status_choices': FEATURE_STATUS_CHOICES,

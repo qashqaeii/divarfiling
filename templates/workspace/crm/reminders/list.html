@@ -10,7 +10,8 @@
 {% block status_bar %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=8">
 {% endblock %}
 
 {% block crm_content %}
@@ -71,7 +72,7 @@
     <header class="crm-dash-bar crm-rm-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">یادآورها</h1>
-            <p class="crm-dash-bar-sub">برای تکمیل هر مورد، دکمهٔ «انجام شد» را بزنید</p>
+            <p class="crm-dash-bar-sub">معوق‌ها را اول ببندید؛ برای هر مورد انجام‌شده را بزنید</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات یادآورها">
             {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-reminders-help' help_title='راهنمای یادآورها' %}
@@ -81,40 +82,7 @@
         </div>
     </header>
 
-    <section class="crm-rm-kpis crm-rm-desk-kpis" aria-label="آمار یادآورها">
-        <a href="?show=active" class="crm-rm-kpi crm-rm-kpi--active{% if show == 'active' %} is-active{% endif %}">
-            <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
-            <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val" data-stat="active">{{ stats.active }}</span>
-                <span class="crm-rm-kpi-lbl">فعال</span>
-            </div>
-        </a>
-        <a href="?show=active" class="crm-rm-kpi crm-rm-kpi--overdue{% if show == 'active' and stats.overdue %} is-active{% endif %}">
-            <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
-            <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val" data-stat="overdue">{{ stats.overdue }}</span>
-                <span class="crm-rm-kpi-lbl">معوق</span>
-            </div>
-        </a>
-        <a href="?show=active" class="crm-rm-kpi crm-rm-kpi--today">
-            <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-sun"></i></span>
-            <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val" data-stat="today">{{ stats.today }}</span>
-                <span class="crm-rm-kpi-lbl">امروز</span>
-            </div>
-        </a>
-        <a href="?show=done" class="crm-rm-kpi crm-rm-kpi--done{% if show == 'done' %} is-active{% endif %}">
-            <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
-            <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val" data-stat="done">{{ stats.done }}</span>
-                <span class="crm-rm-kpi-lbl">انجام‌شده</span>
-            </div>
-        </a>
-    </section>
+    {% include 'workspace/crm/includes/reminders_kpi.html' %}
 
     <div class="crm-shell-body">
         <nav class="crm-rm-segment crm-rm-desk-segment" role="tablist" aria-label="فیلتر یادآورها">
@@ -136,15 +104,19 @@
 
         <div class="crm-rm-result-bar crm-rm-desk-meta">
             <span class="crm-rm-result-count" data-stat="total">{{ page_obj.paginator.count }} یادآور</span>
-            {% if show == 'active' and stats.overdue %}
+            {% if due == 'overdue' %}
+            <span class="crm-rm-result-filter">فیلتر: معوق</span>
+            {% elif due == 'today' %}
+            <span class="crm-rm-result-filter">فیلتر: امروز</span>
+            {% elif show == 'active' and stats.overdue %}
             <span class="crm-rm-result-hint crm-rm-desk-meta-hint" data-stat-wrap="overdue"><i class="fas fa-circle" aria-hidden="true"></i> {{ stats.overdue }} مورد نیاز به پیگیری فوری</span>
             {% endif %}
         </div>
 
-        {% if show == 'active' and reminders %}
+        {% if show == 'active' and not due and reminders %}
         <div class="crm-rm-tip crm-rm-desk-tip" role="note">
             <span class="crm-rm-tip-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
-            <span class="crm-rm-tip-text">با دکمهٔ سبز <strong>انجام شد</strong> یادآور را ببندید — بعداً از تب «انجام‌شده» قابل بازگردانی است.</span>
+            <span class="crm-rm-tip-text">با دکمهٔ سبز <strong>انجام شد</strong> یادآور را ببندید — از تب «انجام‌شده» قابل بازگردانی است.</span>
         </div>
         {% endif %}
 
@@ -166,6 +138,10 @@
         {% if stats.active or stats.done %}
             {% if show == 'done' %}
             {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='bell' title='یادآوری در این بخش نیست' desc='هنوز یادآوری را انجام‌شده علامت نزده‌اید.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
+            {% elif due == 'overdue' %}
+            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='bell' title='معوقی ندارید' desc='عالی — هیچ یادآور عقب‌افتاده‌ای نیست.' btn_text='مشاهده فعال‌ها' btn_icon='fa-bolt' btn_href='?show=active' %}
+            {% elif due == 'today' %}
+            {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='bell' title='برای امروز یادآوری نیست' desc='یادآور فعالی با موعد امروز ندارید.' btn_text='مشاهده فعال‌ها' btn_icon='fa-bolt' btn_href='?show=active' %}
             {% elif show == 'all' %}
             {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='bell' title='یادآوری در این بخش نیست' desc='فیلتر فعلی نتیجه‌ای ندارد.' btn_text='ثبت یادآور' btn_icon='fa-plus' btn_drawer='drawer-reminder' %}
             {% else %}

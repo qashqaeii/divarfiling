@@ -1,0 +1,76 @@
+{% load humanize %}
+{# ترتیب DOM برای RTL: راست → چپ = آگهی، نرخ تبدیل، شاخص قیمت، متراژ #}
+<section class="fl-kpi-pro fl-kpi-pro--tools" aria-label="آمار فایل فعال ابزارها" data-fl-tour="tools-kpi">
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--hero">
+        <div class="fl-kpi-pro__hero-deco" aria-hidden="true">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">آگهی‌های فایل</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-file-lines"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value" data-tbx-kpi="rows">{{ tools_kpi.rows_display }}</strong>
+        <footer class="fl-kpi-pro__viz fl-kpi-pro__viz--hero">
+            {% if tools_kpi.mix_segments %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="توزیع قیمت فایل" data-tbx-kpi="mix">
+                {% for seg in tools_kpi.mix_segments %}
+                <span
+                    class="fl-kpi-pro__seg-part fl-kpi-pro__seg-part--{{ seg.key }}"
+                    style="flex-grow: {{ seg.count }};"
+                    title="{{ seg.label }}: {{ seg.count|intcomma }}"
+                ></span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="fl-kpi-pro__seg" role="img" aria-label="توزیع قیمت فایل" data-tbx-kpi="mix" hidden></div>
+            {% endif %}
+            <p class="fl-kpi-pro__meta" data-tbx-kpi="hero-meta">{{ tools_kpi.hero_meta }}</p>
+        </footer>
+    </article>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--ratio">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">نرخ تبدیل بازار</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-scale-balanced"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value{% if not tools_kpi.ratio %} is-empty{% endif %}" data-tbx-kpi="ratio">{{ tools_kpi.ratio_display }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <div
+                class="fl-kpi-pro__progress fl-kpi-pro__progress--ratio"
+                role="meter"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="{{ tools_kpi.ratio_share }}"
+                aria-label="نسبت نرخ به بازه بازار"
+                data-tbx-kpi="ratio-meter"
+            >
+                <span class="fl-kpi-pro__progress-track">
+                    <i class="fl-kpi-pro__progress-fill" style="width: {{ tools_kpi.ratio_share }}%;" data-tbx-kpi="ratio-fill"></i>
+                </span>
+            </div>
+            <p class="fl-kpi-pro__meta" data-tbx-kpi="ratio-meta">{{ tools_kpi.ratio_meta }}</p>
+        </footer>
+    </article>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--price">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label" data-tbx-kpi="price-label">{{ tools_kpi.price_label }}</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-coins"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not tools_kpi.price_has_value %} is-empty{% endif %}" data-tbx-kpi="price">{{ tools_kpi.price_display }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta" data-tbx-kpi="price-meta">{{ tools_kpi.price_meta }}</p>
+        </footer>
+    </article>
+
+    <article class="fl-kpi-pro__card fl-kpi-pro__card--area">
+        <header class="fl-kpi-pro__head">
+            <span class="fl-kpi-pro__label">میانه متراژ</span>
+            <span class="fl-kpi-pro__icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+        </header>
+        <strong class="fl-kpi-pro__value fl-kpi-pro__value--price{% if not tools_kpi.area_has_value %} is-empty{% endif %}" data-tbx-kpi="area">{{ tools_kpi.area_display }}</strong>
+        <footer class="fl-kpi-pro__viz">
+            <p class="fl-kpi-pro__meta" data-tbx-kpi="area-meta">{{ tools_kpi.area_meta }}</p>
+        </footer>
+    </article>
+</section>

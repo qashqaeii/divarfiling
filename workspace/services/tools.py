@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from workspace.services.formatting import full_deposit_equiv
+from workspace.services.formatting import (
+    format_area,
+    format_toman_compact,
+    full_deposit_equiv,
+)
 
 
 def deposit_rent_convert(
@@ -287,3 +291,147 @@ def build_market_snapshot(dataset) -> Dict[str, Any]:
 
     snapshot['supports_pricing'] = bool(snapshot.get('median_pps'))
     return snapshot
+
+
+def build_tools_kpi_stats(snapshot: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """آمار فایل فعال برای fl-kpi-pro در صفحه ابزارها."""
+    empty = {
+        'has_dataset': False,
+        'rows': 0,
+        'rows_display': '۰',
+        'hero_meta': 'فایل بازاری انتخاب نشده',
+        'mix_segments': [],
+        'ratio': None,
+        'ratio_display': '—',
+        'ratio_share': 0,
+        'ratio_meta': 'پس از انتخاب فایل نمایش داده می‌شود',
+        'price_label': 'شاخص قیمت',
+        'price_display': '—',
+        'price_meta': 'داده قیمت کافی نیست',
+        'price_has_value': False,
+        'price_raw': None,
+        'area_display': '—',
+        'area_meta': 'داده متراژ نیست',
+        'area_has_value': False,
+        'area_raw': None,
+    }
+    if not snapshot:
+        return empty
+
+    rows = int(snapshot.get('row_count') or 0)
+    tx = (snapshot.get('transaction_type') or '').strip()
+    name = (snapshot.get('dataset_name') or '').strip()
+    ratio = snapshot.get('ratio')
+    try:
+        ratio_f = float(ratio) if ratio is not None else None
+    except (TypeError, ValueError):
+        ratio_f = None
+
+    mix_segments = []
+    for key, label, raw in (
+        ('p10', 'P10', snapshot.get('pps_p10')),
+        ('p25', 'P25', snapshot.get('pps_p25')),
+        ('p75', 'P75', snapshot.get('pps_p75')),
+        ('p90', 'P90', snapshot.get('pps_p90')),
+    ):
+        if raw is None:
+            continue
+        try:
+            val = float(raw)
+        except (TypeError, ValueError):
+            continue
+        if val <= 0:
+            continue
+        mix_segments.append({
+            'key': key,
+            'label': label,
+            'count': int(round(val)),
+            'pct': 0,
+        })
+    if mix_segments:
+        total_w = sum(s['count'] for s in mix_segments) or 1
+        for seg in mix_segments:
+            seg['pct'] = int(round((seg['count'] / total_w) * 100))
+
+    if rows:
+        hero_bits = []
+        if tx:
+            hero_bits.append(tx)
+        if name:
+            short = name if len(name) <= 28 else f'{name[:27]}…'
+            hero_bits.append(short)
+        hero_meta = ' · '.join(hero_bits) if hero_bits else f'{rows} آگهی در فایل فعال'
+    else:
+        hero_meta = 'فایل خالی است'
+
+    if ratio_f is not None:
+        ratio_display = f'{ratio_f:g}:۱'
+        ratio_share = int(round(min(ratio_f, 60) / 60 * 100))
+        if abs(ratio_f - 30) < 0.6:
+            ratio_meta = 'نزدیک عرف بازار ۳۰:۱'
+        elif ratio_f > 30:
+            ratio_meta = 'سخت‌گیرانه‌تر از عرف ۳۰:۱'
+        else:
+            ratio_meta = 'آسان‌تر از عرف ۳۰:۱'
+    else:
+        ratio_display = '—'
+        ratio_share = 0
+        ratio_meta = 'نرخ بازار محاسبه نشد'
+
+    price_label = 'شاخص قیمت'
+    price_raw = None
+    price_display = '—'
+    price_meta = 'داده قیمت کافی نیست'
+    price_has_value = False
+    median_pps = snapshot.get('median_pps')
+    median_full = snapshot.get('median_full_deposit')
+    median_price = snapshot.get('median_price')
+    if median_pps:
+        price_raw = median_pps
+        price_display = format_toman_compact(median_pps)
+        price_label = 'میانه قیمت/متر' if not snapshot.get('is_rent') else 'میانه رهن/متر'
+        price_meta = 'مرجع قیمت‌گذاری هوشمند'
+        price_has_value = True
+    elif median_full:
+        price_raw = median_full
+        price_display = format_toman_compact(median_full)
+        price_label = 'میانه رهن کامل'
+        price_meta = 'معادل ودیعه+اجاره بازار'
+        price_has_value = True
+    elif median_price:
+        price_raw = median_price
+        price_display = format_toman_compact(median_price)
+        price_label = 'میانه قیمت'
+        price_meta = 'میانه فایل فعال'
+        price_has_value = True
+
+    area_raw = snapshot.get('median_area')
+    if area_raw:
+        area_display = format_area(area_raw)
+        area_meta = 'میانه متراژ فایل فعال'
+        area_has_value = True
+    else:
+        area_display = '—'
+        area_meta = 'داده متراژ نیست'
+        area_has_value = False
+
+    return {
+        'has_dataset': True,
+        'rows': rows,
+        'rows_display': f'{rows:,}'.replace(',', '٬'),
+        'hero_meta': hero_meta,
+        'mix_segments': mix_segments,
+        'ratio': ratio_f,
+        'ratio_display': ratio_display,
+        'ratio_share': ratio_share,
+        'ratio_meta': ratio_meta,
+        'price_label': price_label,
+        'price_display': price_display,
+        'price_meta': price_meta,
+        'price_has_value': price_has_value,
+        'price_raw': price_raw,
+        'area_display': area_display,
+        'area_meta': area_meta,
+        'area_has_value': area_has_value,
+        'area_raw': area_raw,
+    }

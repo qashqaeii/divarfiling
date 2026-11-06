@@ -33,6 +33,7 @@
 
     .ws-toolbox-mobile--closure .ws-tbx-workspace,
     .ws-toolbox-mobile--closure .ws-tbx-dataset-bar,
+    .ws-toolbox-mobile--closure .fl-kpi-pro--tools,
     .ws-toolbox-mobile--closure .ws-tbx-quick,
     .ws-toolbox-mobile--closure .ws-tbx-mob-toolbar,
     .ws-toolbox-mobile--closure .ws-tbx-rail {
@@ -208,6 +209,17 @@
 
     .ws-toolbox-mobile--closure.is-mob-tool-open .ws-tbx-dataset-bar {
         display: none;
+    }
+
+    .ws-toolbox-mobile--closure.is-mob-tool-open .fl-kpi-pro--tools {
+        display: none !important;
+    }
+
+    .ws-toolbox-mobile--closure:not(.is-mob-tool-open) .fl-kpi-pro--tools {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem;
+        margin: 0.2rem 0 0.35rem;
     }
 
     /* ── Tool toolbar ── */

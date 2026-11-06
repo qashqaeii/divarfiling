@@ -9,6 +9,102 @@
     display: none;
 }
 
+/* Desk polish — هماهنگ با fl-kpi-pro و صفحات CRM */
+.crm-tpl-pro .crm-tpl-desk-header {
+    margin-bottom: 0.35rem;
+}
+
+.crm-tpl-pro .crm-tpl-vars-pro--desk {
+    margin: 0.35rem 0 0.55rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 16px;
+    border-color: color-mix(in srgb, var(--ws-border-light, #e2e8f0) 75%, transparent);
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--ws-primary, #7c3aed) 4%, var(--ws-surface)) 0%, var(--ws-surface) 70%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+.crm-tpl-pro .crm-tpl-vars-pro-head h2 {
+    font-size: 0.74rem;
+}
+
+.crm-tpl-pro .crm-tpl-toolbar--desk {
+    margin-bottom: 0.55rem;
+    padding-bottom: 0.55rem;
+    border-bottom-color: color-mix(in srgb, var(--ws-border-light, #e2e8f0) 70%, transparent);
+}
+
+.crm-tpl-pro .crm-tpl-segment {
+    padding: 0.22rem;
+    background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 88%, #fff);
+    border-color: color-mix(in srgb, var(--ws-border-light, #e2e8f0) 70%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.crm-tpl-pro .crm-tpl-seg-btn {
+    padding: 0.38rem 0.7rem;
+    font-size: 0.64rem;
+}
+
+.crm-tpl-pro .crm-tpl-seg-btn.is-active {
+    box-shadow: 0 1px 6px rgba(15, 23, 42, 0.08);
+}
+
+.crm-tpl-pro .crm-tpl-search {
+    border-radius: 12px;
+    border-color: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.crm-tpl-pro .crm-tpl-filter-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: -0.15rem 0 0.65rem;
+}
+
+.crm-tpl-pro .crm-tpl-filter-chip {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--ws-primary, #7c3aed);
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 10%, transparent);
+}
+
+.crm-tpl-pro .crm-tpl-filter-clear {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    text-decoration: none;
+}
+
+.crm-tpl-pro .crm-tpl-filter-clear:hover {
+    color: var(--ws-primary, #7c3aed);
+}
+
+.crm-tpl-pro .crm-tpl-section-v2 {
+    margin-bottom: 1.1rem;
+}
+
+.crm-tpl-pro .crm-tpl-section-v2-icon {
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 10%, transparent);
+    border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 14%, transparent);
+}
+
+.crm-tpl-pro .crm-tpl-card-v2 {
+    border-radius: 18px;
+    border-color: color-mix(in srgb, var(--ws-border) 78%, transparent);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
+
+.crm-tpl-pro .crm-tpl-card-v2:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
 @media (max-width: 768px) {
     /* یک گاتر: فقط padding-inline از .ws-content — نه crm-mobile.css */
     .crm-app .crm-tpl-mobile.crm-page-chrome {
@@ -22,7 +118,6 @@
         box-sizing: border-box;
     }
     .crm-app .crm-tpl-mobile.crm-page-chrome > .crm-tpl-mob-header,
-    .crm-app .crm-tpl-mobile.crm-page-chrome > .crm-tpl-kpis,
     .crm-app .crm-tpl-mobile.crm-page-chrome > .crm-shell-body {
         width: 100%;
         max-width: 100%;
@@ -49,12 +144,22 @@
         display: none !important;
     }
 
-    /* KPI / هدر قدیمی — عنوان در topbar میزکار است */
     .crm-tpl-mobile .crm-tpl-kpis {
         display: none !important;
     }
+
+    /* fl-kpi-pro روی موبایل هم دیده شود */
+    .crm-tpl-mobile .fl-kpi-pro--templates.crm-tpl-desk-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin: 0.4rem 0 0.5rem;
+        padding: 0 0.5rem;
+    }
+
     .crm-tpl-mobile .crm-tpl-toolbar--desk,
-    .crm-tpl-mobile .crm-tpl-vars-pro--desk {
+    .crm-tpl-mobile .crm-tpl-vars-pro--desk,
+    .crm-tpl-mobile .crm-tpl-desk-meta {
         display: none !important;
     }
 

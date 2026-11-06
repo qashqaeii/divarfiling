@@ -11,7 +11,7 @@
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=25">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-theme-dark.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-home-dashboard-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-home-dashboard-v2.css' %}?v=4">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -79,13 +79,13 @@
         </a>
         {% endif %}
 
+        <div class="wsh2-body__quick">
+            {% include 'workspace/includes/home/workspace_shortcuts.html' %}
+        </div>
+
         <div class="wsh2-main-grid wsh2-body__main">
             {% include 'workspace/includes/home/workspace_today_queue.html' %}
             {% include 'workspace/includes/home/workspace_opportunities.html' %}
-        </div>
-
-        <div class="wsh2-body__quick">
-            {% include 'workspace/includes/home/workspace_shortcuts.html' %}
         </div>
 
         <details class="wsh2-analytics wsh2-body__analytics" data-wsh2-analytics open>

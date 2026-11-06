@@ -12,16 +12,19 @@
 }
 
 @media (min-width: 769px) {
-    /* Align body with funnel / KPIs (no extra shell padding) */
+    /* Align header / KPI / funnel / body on one full-width rail */
     .crm-deals-mobile.crm-page-chrome > .crm-dash-bar,
     .crm-deals-mobile.crm-page-chrome > .crm-deals-desk-header,
     .crm-deals-mobile.crm-page-chrome > .crm-deals-kpis,
+    .crm-deals-mobile.crm-page-chrome > .fl-kpi-pro--deals,
+    .crm-deals-mobile.crm-page-chrome > .crm-deals-desk-kpis,
     .crm-deals-mobile.crm-page-chrome > .crm-deals-stale-banner,
     .crm-deals-mobile.crm-page-chrome > .crm-deal-path,
     .crm-deals-mobile.crm-page-chrome > .crm-shell-body {
         width: 100%;
         min-width: 0;
-        max-width: 100%;
+        max-width: none;
+        margin-inline: 0;
         box-sizing: border-box;
     }
     .crm-deals-mobile .crm-deals-body {

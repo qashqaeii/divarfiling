@@ -418,11 +418,23 @@
     .ct-workspace-toolbar { flex-direction: column; align-items: stretch; }
 }
 
-/* ── Deals funnel list width ── */
+/* ── Deals funnel list width ──
+   هدر/KPI/بنر/بدنه باید هم‌عرضِ کاملِ chrome باشند (مثل fl-header فایلینگ).
+   قید قدیمی 1440px فقط روی هدر اعمال می‌شد و با KPI تمام‌عرض ناهم‌تراز می‌شد. */
 .crm-deals-page .crm-shell-body,
 .crm-deals-page .crm-deals-kpis,
+.crm-deals-page .fl-kpi-pro--deals,
+.crm-deals-page .crm-deals-desk-kpis,
 .crm-deals-page .crm-deal-path,
 .crm-deals-page .crm-deals-stale-banner,
+.crm-deals-page .crm-deals-desk-header,
+.crm-deals-page .crm-deals-mob-header {
+    max-width: none;
+    width: 100%;
+    margin-inline: 0;
+    box-sizing: border-box;
+}
+
 .ct-workspace > *,
 .ct-manage > *:not(.ct-workspace-inner):not(.ct-manage-inner),
 .crm-contract-wizard-layout {
@@ -431,8 +443,6 @@
     margin-right: auto;
     width: 100%;
 }
-.crm-deals-page .crm-deals-desk-header,
-.crm-deals-page .crm-deals-mob-header { max-width: 1440px; margin-inline: auto; }
 
 /* Contract wizard — full-width two-column layout on desktop */
 .crm-contract-wizard-layout {

@@ -480,6 +480,7 @@ class Customer(models.Model):
     want_storage = models.BooleanField(default=False, verbose_name='انباری')
     want_elevator = models.BooleanField(default=False, verbose_name='آسانسور')
     areas = models.TextField(blank=True, verbose_name='محله‌های مورد نظر')
+    streets = models.TextField(blank=True, verbose_name='خیابان‌های مورد نظر')
     matching_tolerance_percent = models.PositiveSmallIntegerField(
         default=20,
         verbose_name='انعطاف‌پذیری تطبیق (٪)',

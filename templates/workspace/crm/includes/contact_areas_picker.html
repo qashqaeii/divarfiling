@@ -1,14 +1,16 @@
-{# انتخاب محله از فایلینگ + تگ دلخواه #}
+{# انتخاب محله/خیابان از فایلینگ و فایل شخصی + تگ دلخواه #}
 <div class="crm-field crm-areas-field{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.errors %} crm-field-has-error{% endif %}"
      data-field="{{ field_name }}"
      data-crm-areas-picker
      data-field-name="{{ field_name }}"
-     data-areas-search-url="{% url 'workspace:crm_contact_areas_search' %}">
+     data-areas-search-url="{{ search_url }}"
+     data-unit-label="{{ unit_label }}"
+     data-empty-selected="{{ empty_selected }}">
     <div class="crm-areas-head">
         <label class="crm-label" id="crm-areas-label-{{ field_name }}">{{ label }}</label>
-        <span class="crm-areas-count" data-crm-areas-count aria-live="polite">۰ محله</span>
+        <span class="crm-areas-count" data-crm-areas-count aria-live="polite">۰ {{ unit_label }}</span>
     </div>
-    <p class="crm-form-hint crm-form-hint--tight">از محله‌های فایلینگ تیک بزنید یا محله دلخواه را به‌صورت تگ اضافه کنید.</p>
+    <p class="crm-form-hint crm-form-hint--tight">{{ hint }}</p>
 
     {{ field }}
 
@@ -19,17 +21,17 @@
             <input type="search"
                    class="crm-areas-search"
                    data-crm-areas-search
-                   placeholder="جستجو در محله‌های فایلینگ..."
+                   placeholder="{{ search_placeholder }}"
                    autocomplete="off"
-                   aria-label="جستجوی محله">
+                   aria-label="جستجوی {{ unit_label }}">
             <i class="fas fa-search" aria-hidden="true"></i>
         </div>
         <div class="crm-areas-custom">
             <input type="text"
                    class="crm-input crm-areas-custom-input"
                    data-crm-areas-custom-input
-                   placeholder="محله دلخواه..."
-                   aria-label="افزودن محله دلخواه">
+                   placeholder="{{ custom_placeholder }}"
+                   aria-label="افزودن {{ unit_label }} دلخواه">
             <button type="button" class="crm-areas-custom-add" data-crm-areas-custom-add>
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 افزودن
@@ -38,17 +40,16 @@
     </div>
 
     <div class="crm-areas-catalog-wrap">
-        {% if dataset_neighborhoods %}
-        <div class="crm-areas-catalog" data-crm-areas-catalog role="group" aria-label="محله‌های فایلینگ">
-            {% for nb in dataset_neighborhoods %}
+        <div class="crm-areas-catalog" data-crm-areas-catalog role="group" aria-label="{{ catalog_aria }}"{% if not catalog_items %} hidden{% endif %}>
+            {% for item in catalog_items %}
             <label class="crm-areas-option" data-crm-areas-option-wrap>
-                <input type="checkbox" class="crm-areas-option-input" value="{{ nb }}" data-crm-areas-option>
-                <span class="crm-areas-option-text">{{ nb }}</span>
+                <input type="checkbox" class="crm-areas-option-input" value="{{ item }}" data-crm-areas-option>
+                <span class="crm-areas-option-text">{{ item }}</span>
             </label>
             {% endfor %}
         </div>
-        {% else %}
-        <p class="crm-areas-empty">هنوز محله‌ای در فایلینگ شما ثبت نشده — محله دلخواه را با دکمه «افزودن» وارد کنید.</p>
+        {% if not catalog_items %}
+        <p class="crm-areas-empty" data-crm-areas-empty>{{ empty_catalog }}</p>
         {% endif %}
     </div>
 

@@ -144,9 +144,12 @@ def _profile_has_area_criteria(profile) -> bool:
 
 
 def _profile_has_geo_criteria(profile) -> bool:
-    from workspace.services.crm_matching_geo import preferred_areas_from_profile
+    from workspace.services.crm_matching_geo import (
+        preferred_areas_from_profile,
+        preferred_streets_from_profile,
+    )
 
-    return bool(preferred_areas_from_profile(profile))
+    return bool(preferred_areas_from_profile(profile) or preferred_streets_from_profile(profile))
 
 
 def _profile_has_rooms_criteria(profile) -> bool:

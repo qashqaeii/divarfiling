@@ -689,8 +689,9 @@ a.crm-today-pro .crm-queue-card-name:hover,
         padding-bottom: 4.5rem;
     }
 
+    /* Mobile chrome padding owned by crm-today-mobile-closure.css */
     .crm-app--today .crm-page-chrome.crm-today-pro {
-        padding: 0.5rem 0.7rem calc(5rem + env(safe-area-inset-bottom, 0px));
+        padding: 0 0 calc(5rem + env(safe-area-inset-bottom, 0px));
     }
 
     .crm-today-pro .crm-dash-bar {
@@ -924,7 +925,7 @@ a.crm-today-pro .crm-queue-card-name:hover,
 
 @media (max-width: 320px) {
     .crm-app--today .crm-page-chrome.crm-today-pro {
-        padding-inline: 0.55rem;
+        padding-inline: 0;
     }
 
     .crm-today-pro .crm-queue-card-actions {

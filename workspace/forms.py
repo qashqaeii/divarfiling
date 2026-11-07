@@ -328,7 +328,7 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'budget_min', 'budget_max', 'deposit_min', 'deposit_max',
             'rent_min', 'rent_max', 'min_area', 'max_area',
             'rooms_min', 'rooms_max', 'year_min', 'year_max', 'floor_min', 'floor_max',
-            'want_parking', 'want_storage', 'want_elevator', 'areas',
+            'want_parking', 'want_storage', 'want_elevator', 'areas', 'streets',
             'builder_buy_budget_min', 'builder_buy_budget_max',
             'builder_buy_areas', 'builder_buy_min_area', 'builder_buy_max_area',
             'tags', 'notes', 'next_follow_up', 'lease_deadline',
@@ -371,6 +371,7 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'want_storage': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
             'want_elevator': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
             'areas': forms.HiddenInput(attrs={'class': 'crm-areas-hidden', 'data-crm-areas-hidden': 'areas'}),
+            'streets': forms.HiddenInput(attrs={'class': 'crm-areas-hidden', 'data-crm-areas-hidden': 'streets'}),
             'builder_buy_budget_min': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'builder_buy_budget_max': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
             'builder_buy_areas': forms.HiddenInput(attrs={

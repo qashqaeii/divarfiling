@@ -12,15 +12,16 @@
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=11">
-<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=21">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=24">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-list-controls.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-list-controls.css' %}?v=9">
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile-premium.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile-premium.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-mcard-mobile.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -46,9 +47,6 @@
                     </button>
                     <a href="{% url 'workspace:crm_properties_export' %}?{{ filter_qs }}" class="crm-files-mob-toolbar-item js-secure-export" data-export-label="فایل‌های شخصی Excel" role="menuitem">
                         <i class="fas fa-file-excel" aria-hidden="true"></i><span>خروجی Excel</span>
-                    </a>
-                    <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-mob-toolbar-item" role="menuitem">
-                        <i class="fas fa-table-columns" aria-hidden="true"></i><span>نمای کانبان</span>
                     </a>
                     <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-files-mob-toolbar-item" role="menuitem">
                         <i class="fas fa-map-location-dot" aria-hidden="true"></i><span>نقشه</span>
@@ -351,8 +349,8 @@
                         {% endif %}
                         <div class="ws-filters__view crm-prop-toolbar__views" role="group" aria-label="نمای نمایش">
                             <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="ws-filters__view-btn {% if view_mode == 'grid' %}is-active{% endif %}" title="کارت" aria-label="کارت"><i class="fas fa-grip" aria-hidden="true"></i></a>
-                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="ws-filters__view-btn {% if view_mode == 'table' %}is-active{% endif %}" title="جدول" aria-label="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="ws-filters__view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="ws-filters__view-btn crm-prop-view-btn--desk {% if view_mode == 'table' %}is-active{% endif %}" title="جدول" aria-label="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="ws-filters__view-btn crm-prop-view-btn--desk {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
                             <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="ws-filters__view-btn" title="نقشه" aria-label="نقشه"><i class="fas fa-map-location-dot" aria-hidden="true"></i></a>
                         </div>
                     </div>
@@ -587,6 +585,20 @@
 {% endblock %}
 
 {% block crm_js %}
+<script>
+/* Mobile: table/kanban are desktop-only — force card view */
+(function () {
+    try {
+        if (!window.matchMedia('(max-width: 768px)').matches) return;
+        var params = new URLSearchParams(window.location.search);
+        var view = params.get('view');
+        if (view !== 'table' && view !== 'pipeline') return;
+        params.set('view', 'grid');
+        var qs = params.toString();
+        window.location.replace(window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+    } catch (e) {}
+})();
+</script>
 <script>
 window.crmPropertyFolders = {{ property_folders_json|default:'[]'|safe }};
 window.crmPropertyBulkDeleteUrl = '{% url "workspace:crm_properties_bulk_delete" %}';

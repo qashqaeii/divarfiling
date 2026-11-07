@@ -5,7 +5,7 @@
          data-has-stored="{% if nearby_pois_ctx.has_stored %}1{% else %}0{% endif %}"
          data-status="{{ nearby_pois_ctx.status|default:'' }}"
          data-location-precision="{{ nearby_pois_ctx.location_precision|default:'none' }}"
-         data-radius-hint="{{ nearby_pois_ctx.radius_label|default:'شعاع ۳ کیلومتر' }} · {{ nearby_pois_ctx.category_count|default:22 }} دسته — دکمه «محاسبه»">
+         data-radius-hint="{{ nearby_pois_ctx.radius_label|default:'شعاع ۳ کیلومتر' }} · {{ nearby_pois_ctx.category_count|default:22 }} دسته">
     <div class="crm-nearby-pois__inner">
         <header class="crm-nearby-pois__header">
             <div class="crm-nearby-pois__lead">
@@ -13,12 +13,13 @@
                     <i class="fas fa-map-location-dot"></i>
                 </span>
                 <div class="crm-nearby-pois__titles">
+                    <p class="crm-nearby-pois__eyebrow">اطراف ملک</p>
                     <h2 class="crm-nearby-pois__title">امکانات و دسترسی‌ها</h2>
                     <p class="crm-nearby-pois__sub" data-nearby-header-sub>
                         {% if nearby_pois_ctx.failed %}
                             محاسبه دسترسی‌ها انجام نشد
                         {% elif not nearby_pois_ctx.has_coords %}
-                            برای محاسبه دسترسی‌ها، موقعیت ملک را روی نقشه مشخص کنید
+                            برای محاسبه، موقعیت ملک را روی نقشه مشخص کنید
                         {% elif nearby_pois_ctx.has_stored %}
                             <span data-nearby-header-ready hidden></span>
                         {% else %}
@@ -63,11 +64,16 @@
         </div>
 
         {% if not nearby_pois_ctx.has_coords %}
-        <p class="crm-nearby-pois__hint" data-nearby-empty-coords>
-            <i class="fas fa-map-pin" aria-hidden="true"></i>
-            ابتدا موقعیت ملک را روی نقشه بالا مشخص کنید.
+        <div class="crm-nearby-pois__idle" data-nearby-empty-coords>
+            <div class="crm-nearby-pois__radar" aria-hidden="true">
+                <span></span><span></span><span></span>
+                <i class="fas fa-map-pin"></i>
+            </div>
+            <p class="crm-nearby-pois__idle-copy">
+                ابتدا موقعیت ملک را روی نقشه مشخص کنید.
+            </p>
             <button type="button" class="crm-nearby-pois__hint-link" data-open-property-map>تعیین موقعیت</button>
-        </p>
+        </div>
         {% else %}
         <div class="crm-nearby-pois__body" data-nearby-body {% if not nearby_pois_ctx.has_stored %}hidden{% endif %}>
             <div class="crm-nearby-pois__highlights" data-nearby-highlights hidden aria-label="نزدیک‌ترین موارد"></div>
@@ -79,11 +85,20 @@
             <div class="crm-nearby-pois__missing" data-nearby-missing hidden></div>
         </div>
 
-        <p class="crm-nearby-pois__hint" data-nearby-placeholder
-           {% if nearby_pois_ctx.has_stored %}hidden{% endif %}>
-            <i class="fas fa-circle-info" aria-hidden="true"></i>
-            فاصله خط مستقیم تا نزدیک‌ترین مکان‌ها — با دکمه «محاسبه» دریافت و ذخیره می‌شود.
-        </p>
+        <div class="crm-nearby-pois__idle" data-nearby-placeholder
+             {% if nearby_pois_ctx.has_stored %}hidden{% endif %}>
+            <div class="crm-nearby-pois__radar" aria-hidden="true">
+                <span></span><span></span><span></span>
+                <i class="fas fa-location-crosshairs"></i>
+            </div>
+            <p class="crm-nearby-pois__idle-copy">
+                فاصله خط مستقیم تا نزدیک‌ترین مکان‌ها را محاسبه و ذخیره کنید.
+            </p>
+            <ul class="crm-nearby-pois__idle-chips" aria-hidden="true">
+                <li>{{ nearby_pois_ctx.radius_label|default:"شعاع ۳ کیلومتر" }}</li>
+                <li>{{ nearby_pois_ctx.category_count|default:22 }} دسته</li>
+            </ul>
+        </div>
 
         <div class="crm-nearby-pois__loading" data-nearby-loading hidden aria-live="polite"></div>
         {% endif %}

@@ -466,18 +466,29 @@
 
     .crm-contacts-mobile .crm-contacts-list-controls > .crm-contacts-desk-kpis.fl-kpi-pro--contacts {
         display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.5rem;
-        width: 100%;
-        max-width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
         margin: 0.35rem 0 0.45rem;
         padding: 0;
+        box-sizing: border-box !important;
     }
 
     .crm-contacts-mobile .crm-contacts-list-controls > .crm-contacts-desk-kpis .fl-kpi-pro__card {
-        min-width: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
         padding: 0.7rem 0.75rem 0.65rem;
         border-radius: 14px;
+        box-sizing: border-box !important;
+    }
+
+    .crm-contacts-mobile .crm-contacts-list-controls > .crm-contacts-desk-kpis .fl-kpi-pro__card--hero {
+        box-shadow:
+            0 8px 18px rgba(109, 40, 217, 0.22),
+            0 1px 3px rgba(91, 33, 182, 0.12) !important;
     }
 
     .crm-contacts-mobile .crm-contacts-list-controls > .crm-contacts-desk-kpis .fl-kpi-pro__value {
@@ -1228,35 +1239,53 @@
         display: none !important;
     }
 
-    /* Mobile IA: smart → tabs+KPI+filters → list */
+    /* Mobile IA: pagehead → tabs → KPI → smart → filters → list */
     .crm-contacts-pro.crm-page-chrome {
         display: flex;
         flex-direction: column;
     }
 
-    .crm-contacts-pro > .crm-contacts-smart-anchor {
-        order: 2;
-    }
-
     .crm-contacts-pro .crm-contacts-list-controls {
-        order: 3;
+        order: 2;
+        display: flex;
+        flex-direction: column;
         margin-bottom: 0.25rem;
         overflow-x: clip;
         max-width: 100%;
         min-width: 0;
     }
 
-    .crm-contacts-pro > .crm-contacts-alert-rail {
+    .crm-contacts-pro .crm-contacts-list-controls > .crm-contacts-mob-pagehead {
+        order: 1;
+    }
+
+    .crm-contacts-pro .crm-contacts-list-controls > .crm-contacts-archive-tabs {
+        order: 2;
+    }
+
+    .crm-contacts-pro .crm-contacts-list-controls > .crm-contacts-desk-kpis {
+        order: 3;
+    }
+
+    .crm-contacts-pro .crm-contacts-list-controls > .crm-contacts-smart-anchor {
         order: 4;
+    }
+
+    .crm-contacts-pro .crm-contacts-list-controls > #crmContactFilters {
+        order: 5;
+    }
+
+    .crm-contacts-pro > .crm-contacts-alert-rail {
+        order: 3;
     }
 
     .crm-contacts-pro > .crm-contacts-workspace,
     .crm-contacts-pro > .crm-contacts-pipeline {
-        order: 5;
+        order: 4;
     }
 }
 
-/* Desktop — column order: header → smart → tabs/KPI/filters → list */
+/* Desktop — column order: header → smart → KPI → tabs → filters → list */
 @media (min-width: 768px) {
     .crm-contacts-pro.crm-page-chrome {
         display: flex;
@@ -1268,17 +1297,18 @@
         order: 1;
     }
 
-    .crm-contacts-pro > .crm-contacts-smart-anchor {
-        order: 2;
-        margin-bottom: 0.35rem;
-    }
-
     .crm-contacts-pro .crm-contacts-mob-chrome,
     .crm-contacts-pro .crm-contacts-list-controls {
-        order: 3;
+        order: 2;
         display: flex;
         flex-direction: column;
         gap: 0.65rem;
+    }
+
+    /* Smart sits under desk header, above KPI on desktop */
+    .crm-contacts-pro .crm-contacts-list-controls > .crm-contacts-smart-anchor {
+        order: -2;
+        margin-bottom: 0.35rem;
     }
 
     /* KPI above scope tabs on desktop */

@@ -18,6 +18,7 @@ def has_no_preferences(customer) -> bool:
             customer.min_area,
             customer.max_area,
             customer.areas,
+            getattr(customer, 'streets', ''),
             customer.builder_buy_property_types,
             customer.builder_buy_budget_min,
             customer.builder_buy_budget_max,
@@ -46,6 +47,7 @@ def has_no_preferences(customer) -> bool:
         customer.want_storage,
         customer.want_elevator,
         customer.areas,
+        getattr(customer, 'streets', ''),
     ))
     if getattr(customer, 'customer_type', '') == 'سازنده':
         return not any((

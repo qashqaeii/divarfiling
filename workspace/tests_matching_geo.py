@@ -2,9 +2,18 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from workspace.models import CRMProperty, Customer
-from workspace.services.crm_matching import get_customer_matches, match_crm_properties
+from workspace.models import CRMProperty, Customer, Dataset, Listing
+from workspace.services.advertiser_signal import ADVERTISER_SIGNAL_GENUINE_PERSONAL
+from workspace.services.crm_matching import (
+    _score_listing,
+    get_customer_matches,
+    match_crm_properties,
+)
 from workspace.services.crm_matching_geo import (
+    LOC_STATUS_DIFFERENT,
+    LOC_STATUS_STREET,
+    LOC_STATUS_UNKNOWN,
+    evaluate_soft_location_match,
     location_tokens_equivalent,
     normalize_geo_text,
 )
@@ -88,3 +97,113 @@ class MatchingGeoCityTests(TestCase):
         data = get_customer_matches(self.buyer, self.user, divar_enabled=False)
         ids = {m['property_id'] for m in data['crm_matches']}
         self.assertIn(prop.pk, ids)
+
+
+class MatchingStreetPreferenceTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09121114444', phone='09121114444', password='x')
+        self.ds = Dataset.objects.create(user=self.user, name='ds-street', is_active=True)
+        self.buyer = Customer.objects.create(
+            user=self.user,
+            name='خریدار خیابان',
+            phone='09121114445',
+            customer_type='خریدار',
+            budget_min=5_000_000_000,
+            budget_max=20_000_000_000,
+            property_type='آپارتمان',
+            streets='ولیعصر، فرشته',
+        )
+
+    def test_evaluate_street_pref_exact(self):
+        geo = evaluate_soft_location_match(
+            self.buyer,
+            neighborhood='',
+            city='تهران',
+            trusted_street='ولیعصر',
+        )
+        self.assertEqual(geo.status, LOC_STATUS_STREET)
+        self.assertGreaterEqual(geo.hood_s, 0.78)
+
+    def test_evaluate_street_pref_mismatch(self):
+        geo = evaluate_soft_location_match(
+            self.buyer,
+            neighborhood='',
+            city='تهران',
+            trusted_street='جردن',
+        )
+        self.assertEqual(geo.status, LOC_STATUS_DIFFERENT)
+
+    def test_evaluate_street_pref_unknown_without_street(self):
+        geo = evaluate_soft_location_match(
+            self.buyer,
+            neighborhood='ونک',
+            city='تهران',
+            trusted_street='',
+        )
+        self.assertEqual(geo.status, LOC_STATUS_UNKNOWN)
+
+    def test_crm_property_street_pref_matches(self):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان ولیعصر',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=10_000_000_000,
+            neighborhood='ونک',
+            city='تهران',
+            area=100,
+            feature_data={'خیابان': 'ولیعصر'},
+        )
+        matches = match_crm_properties(self.buyer, self.user)
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]['location_match_status'], LOC_STATUS_STREET)
+        self.assertIn(prop.pk, {m['property_id'] for m in matches})
+
+    def test_crm_property_wrong_street_is_different(self):
+        CRMProperty.objects.create(
+            user=self.user,
+            title='آپارتمان جردن',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            transaction_status='فعال',
+            sale_price=10_000_000_000,
+            neighborhood='جردن',
+            city='تهران',
+            area=100,
+            feature_data={'خیابان': 'جردن'},
+        )
+        matches = match_crm_properties(self.buyer, self.user)
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]['location_match_status'], LOC_STATUS_DIFFERENT)
+
+    def test_listing_trusted_street_pref_matches(self):
+        listing = Listing.objects.create(
+            dataset=self.ds,
+            token='street-match-1',
+            title='فروش آپارتمان',
+            city='تهران',
+            price=10_000_000_000,
+            area=100,
+            is_expired=False,
+            advertiser_signal=ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+            neighborhood='',
+            data={
+                'مکان_خیابان': 'فرشته',
+                'مکان_منبع_جزئیات': 'seo:city_persian,seo:street',
+            },
+        )
+        scored = _score_listing(self.buyer, listing)
+        self.assertIsNotNone(scored)
+        self.assertEqual(scored['location_match_status'], LOC_STATUS_STREET)
+
+    def test_street_and_area_pref_neighborhood_wins(self):
+        self.buyer.areas = 'ونک'
+        self.buyer.save(update_fields=['areas'])
+        geo = evaluate_soft_location_match(
+            self.buyer,
+            neighborhood='ونک',
+            city='تهران',
+            trusted_street='جردن',
+        )
+        self.assertEqual(geo.status, 'exact_neighborhood')

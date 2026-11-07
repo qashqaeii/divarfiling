@@ -222,12 +222,15 @@ def _crm_nav_counts(user):
 
 
 def _contact_areas_context(user):
-    from workspace.services.filters import get_user_dataset_neighborhoods
+    from workspace.services.filters import get_user_dataset_neighborhoods, get_user_location_streets
 
     neighborhoods = get_user_dataset_neighborhoods(user)
+    streets = get_user_location_streets(user)
     return {
         'dataset_neighborhoods': neighborhoods,
         'dataset_neighborhoods_json': json.dumps(neighborhoods, ensure_ascii=False),
+        'dataset_streets': streets,
+        'dataset_streets_json': json.dumps(streets, ensure_ascii=False),
     }
 
 
@@ -942,7 +945,7 @@ class PropertyContactMatchesMoreView(LoginRequiredMixin, View):
 
 
 class ContactAreasSearchView(LoginRequiredMixin, View):
-    """جست‌وجوی محله‌های فایلینگ برای انتخابگر مخاطب."""
+    """جست‌وجوی محله/منطقه فایلینگ و فایل شخصی برای انتخابگر مخاطب."""
 
     def get(self, request):
         from workspace.services.filters import get_user_dataset_neighborhoods
@@ -954,6 +957,29 @@ class ContactAreasSearchView(LoginRequiredMixin, View):
             offset = 0
         limit = 80
         items = get_user_dataset_neighborhoods(
+            request.user, search=q, offset=offset, limit=limit,
+        )
+        return JsonResponse({
+            'ok': True,
+            'items': items,
+            'offset': offset,
+            'has_more': len(items) >= limit,
+        })
+
+
+class ContactStreetsSearchView(LoginRequiredMixin, View):
+    """جست‌وجوی خیابان فایلینگ و فایل شخصی برای انتخابگر مخاطب."""
+
+    def get(self, request):
+        from workspace.services.filters import get_user_location_streets
+
+        q = (request.GET.get('q') or '').strip()
+        try:
+            offset = max(0, int(request.GET.get('offset', 0) or 0))
+        except (TypeError, ValueError):
+            offset = 0
+        limit = 80
+        items = get_user_location_streets(
             request.user, search=q, offset=offset, limit=limit,
         )
         return JsonResponse({
@@ -1076,6 +1102,7 @@ class CustomerPanelView(LoginRequiredMixin, View):
             'follow_state': follow_state,
             'notes': (customer.notes or '')[:280],
             'areas': customer.areas or '',
+            'streets': getattr(customer, 'streets', '') or '',
             'budget_label': _panel_budget_label(customer),
             'detail_url': reverse('workspace:crm_detail', kwargs={'customer_id': customer.pk}),
             'edit_url': f"{reverse('workspace:crm_detail', kwargs={'customer_id': customer.pk})}?drawer=edit",

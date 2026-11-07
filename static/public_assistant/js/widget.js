@@ -3,14 +3,16 @@
 
   var PANEL_CLOSE_MS = 260;
   var DOCK_POS_KEY = 'pa_dock_pos';
-  var DRAG_THRESHOLD = 6;
+  var DRAG_THRESHOLD = 10;
   var DOCK_MARGIN = 12;
   var ICON_COPY =
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>';
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 8.6V6.8A1.8 1.8 0 0 1 9.8 5h7.4A1.8 1.8 0 0 1 19 6.8v7.4a1.8 1.8 0 0 1-1.8 1.8H15.4" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><rect x="5" y="9" width="10.4" height="10.4" rx="2" stroke="currentColor" stroke-width="1.65"/></svg>';
+  var ICON_CHECK =
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.5 12.5l4.4 4.4L18.5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ICON_THUMB_UP =
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 11v8a1 1 0 0 0 1 1h2.5a1 1 0 0 0 .95-.68L13 14h5.2a2 2 0 0 0 1.94-2.52l-1.2-5A2 2 0 0 0 17.06 5H14a2 2 0 0 0-2 2v1H9a2 2 0 0 0-2 2v1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 11v9H6.2A1.2 1.2 0 0 1 5 18.8v-6.6A1.2 1.2 0 0 1 6.2 11H8z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M8 11l2.1-5.3A1.9 1.9 0 0 1 11.9 4.5h.4c1.1 0 1.9 1 1.7 2.1L13.5 11H18a2 2 0 0 1 1.95 2.45l-1.1 4.8A2.4 2.4 0 0 1 16.5 20H8" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>';
   var ICON_THUMB_DOWN =
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 13V5a1 1 0 0 0-1-1h-2.5a1 1 0 0 0-.95.68L11 10H5.8a2 2 0 0 0-1.94 2.52l1.2 5A2 2 0 0 0 6.94 19H10a2 2 0 0 0 2-2v-1h3a2 2 0 0 0 2-2v-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 13V4h1.8A1.2 1.2 0 0 1 19 5.2v6.6A1.2 1.2 0 0 1 17.8 13H16z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M16 13l-2.1 5.3a1.9 1.9 0 0 1-1.8 1.2h-.4c-1.1 0-1.9-1-1.7-2.1L10.5 13H6a2 2 0 0 1-1.95-2.45l1.1-4.8A2.4 2.4 0 0 1 7.5 4H16" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>';
   var ICON_CHIP =
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
   var ICON_LINK_EXT =
@@ -194,6 +196,8 @@
   var panel = document.getElementById('paPanel');
   var messagesEl = document.getElementById('paMessages');
   var welcomeEl = document.getElementById('paWelcome');
+  var welcomeRobot = document.getElementById('paWelcomeRobot');
+  var welcomeRobotSrc = welcomeRobot ? welcomeRobot.getAttribute('src') || '' : '';
   var suggestionsEl = document.getElementById('paSuggestions');
   var form = document.getElementById('paForm');
   var input = document.getElementById('paInput');
@@ -219,6 +223,7 @@
   var panelCloseTimer = null;
   var lastFailedMessage = '';
   var dockDrag = null;
+  var fabAnchor = null;
 
   function isMobile() {
     return window.matchMedia('(max-width: 640px)').matches;
@@ -228,6 +233,13 @@
     return !isMobile() && !!dock;
   }
 
+  function fabSize() {
+    if (fab && fab.offsetWidth && fab.offsetHeight) {
+      return { w: fab.offsetWidth, h: fab.offsetHeight };
+    }
+    return { w: 72, h: 72 };
+  }
+
   function resetDockPosition() {
     if (!dock) return;
     dock.classList.remove('is-custom-position');
@@ -235,12 +247,10 @@
     dock.style.top = '';
     dock.style.right = '';
     dock.style.bottom = '';
+    fabAnchor = null;
   }
 
-  function clampDockXY(x, y) {
-    var rect = dock.getBoundingClientRect();
-    var w = rect.width || 0;
-    var h = rect.height || 0;
+  function clampXYForSize(x, y, w, h) {
     var maxX = Math.max(DOCK_MARGIN, window.innerWidth - w - DOCK_MARGIN);
     var maxY = Math.max(DOCK_MARGIN, window.innerHeight - h - DOCK_MARGIN);
     return {
@@ -249,17 +259,75 @@
     };
   }
 
+  function clampDockXY(x, y) {
+    var rect = dock.getBoundingClientRect();
+    return clampXYForSize(x, y, rect.width || 0, rect.height || 0);
+  }
+
+  function persistFabAnchor(anchor) {
+    if (!anchor) return;
+    try {
+      sessionStorage.setItem(
+        DOCK_POS_KEY,
+        JSON.stringify({ x: anchor.x, y: anchor.y, w: anchor.w, h: anchor.h })
+      );
+    } catch (e) {}
+  }
+
   function setDockXY(x, y, persist) {
     var c = clampDockXY(x, y);
     dock.classList.add('is-custom-position');
     dock.style.left = c.x + 'px';
     dock.style.top = c.y + 'px';
-    if (persist) {
-      try {
-        sessionStorage.setItem(DOCK_POS_KEY, JSON.stringify({ x: c.x, y: c.y }));
-      } catch (e) {}
+    if (persist && !root.classList.contains('is-open')) {
+      var size = fabSize();
+      fabAnchor = { x: c.x, y: c.y, w: size.w, h: size.h };
+      persistFabAnchor(fabAnchor);
     }
     return c;
+  }
+
+  function captureFabAnchorFromDom() {
+    if (!fab) return null;
+    var rect = fab.getBoundingClientRect();
+    if (!rect.width || !rect.height) return fabAnchor;
+    return { x: rect.left, y: rect.top, w: rect.width, h: rect.height };
+  }
+
+  function placePanelFromFabAnchor(anchor) {
+    if (!dock || !anchor || !panel) return;
+    var pw = panel.offsetWidth || 420;
+    var ph = panel.offsetHeight || 640;
+    // گوشه پایین‌چپ dock را ثابت نگه می‌داریم (RTL: inline-end)
+    var left = anchor.x;
+    var top = anchor.y + anchor.h - ph;
+    var c = clampXYForSize(left, top, pw, ph);
+    dock.classList.add('is-custom-position');
+    dock.style.left = c.x + 'px';
+    dock.style.top = c.y + 'px';
+  }
+
+  function restoreFabFromAnchor(anchor) {
+    if (!dock || !anchor) return;
+    var c = clampXYForSize(anchor.x, anchor.y, anchor.w, anchor.h);
+    dock.classList.add('is-custom-position');
+    dock.style.left = c.x + 'px';
+    dock.style.top = c.y + 'px';
+    fabAnchor = { x: c.x, y: c.y, w: anchor.w, h: anchor.h };
+    persistFabAnchor(fabAnchor);
+  }
+
+  function syncFabAnchorFromOpenPanel() {
+    if (!panel) return;
+    var rect = panel.getBoundingClientRect();
+    var size = fabSize();
+    fabAnchor = {
+      x: rect.left,
+      y: rect.bottom - size.h,
+      w: size.w,
+      h: size.h,
+    };
+    persistFabAnchor(fabAnchor);
   }
 
   function ensureDockCustomFromAnchor() {
@@ -277,7 +345,14 @@
       if (!raw) return;
       var pos = JSON.parse(raw);
       if (typeof pos.x !== 'number' || typeof pos.y !== 'number') return;
-      setDockXY(pos.x, pos.y, false);
+      var size = fabSize();
+      fabAnchor = {
+        x: pos.x,
+        y: pos.y,
+        w: typeof pos.w === 'number' ? pos.w : size.w,
+        h: typeof pos.h === 'number' ? pos.h : size.h,
+      };
+      restoreFabFromAnchor(fabAnchor);
     } catch (e) {}
   }
 
@@ -311,6 +386,12 @@
     document.removeEventListener('pointercancel', endDockDrag);
     if (moved && !isNaN(lastX) && !isNaN(lastY)) {
       setDockXY(lastX, lastY, true);
+      if (root.classList.contains('is-open')) {
+        syncFabAnchorFromOpenPanel();
+      } else {
+        fabAnchor = captureFabAnchorFromDom();
+        persistFabAnchor(fabAnchor);
+      }
     } else if (source === 'fab') {
       setOpen(true);
     }
@@ -349,11 +430,18 @@
       resetDockPosition();
       return;
     }
-    if (dock.classList.contains('is-custom-position')) {
-      var x = parseFloat(dock.style.left);
-      var y = parseFloat(dock.style.top);
-      if (!isNaN(x) && !isNaN(y)) setDockXY(x, y, false);
+    if (!dock.classList.contains('is-custom-position')) return;
+    if (root.classList.contains('is-open')) {
+      if (fabAnchor) placePanelFromFabAnchor(fabAnchor);
+      return;
     }
+    if (fabAnchor) {
+      restoreFabFromAnchor(fabAnchor);
+      return;
+    }
+    var x = parseFloat(dock.style.left);
+    var y = parseFloat(dock.style.top);
+    if (!isNaN(x) && !isNaN(y)) setDockXY(x, y, true);
   }
 
   function setHeadStatus(text) {
@@ -396,6 +484,13 @@
     unlockBodyScroll();
   }
 
+  function replayWelcomeRobot() {
+    if (!welcomeRobot || !welcomeRobotSrc) return;
+    if (root.classList.contains('has-chat')) return;
+    if (welcomeEl && welcomeEl.style.display === 'none') return;
+    welcomeRobot.src = welcomeRobotSrc.split('?')[0] + '?t=' + Date.now();
+  }
+
   function setOpen(open) {
     fab.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (panelCloseTimer) {
@@ -404,24 +499,30 @@
     }
 
     if (open) {
+      if (canDockDrag() && dock.classList.contains('is-custom-position')) {
+        var captured = captureFabAnchorFromDom();
+        if (captured) fabAnchor = captured;
+      }
       panel.removeAttribute('hidden');
       panel.removeAttribute('inert');
       requestAnimationFrame(function () {
         root.classList.add('is-open');
+        if (canDockDrag() && fabAnchor && dock.classList.contains('is-custom-position')) {
+          placePanelFromFabAnchor(fabAnchor);
+        }
       });
+      replayWelcomeRobot();
       lockBodyScrollIfNeeded();
-      if (canDockDrag() && dock.classList.contains('is-custom-position')) {
-        requestAnimationFrame(function () {
-          var x = parseFloat(dock.style.left);
-          var y = parseFloat(dock.style.top);
-          if (!isNaN(x) && !isNaN(y)) setDockXY(x, y, false);
-        });
-      }
       window.setTimeout(function () {
         input.focus();
       }, 280);
     } else {
       root.classList.remove('is-open');
+      if (canDockDrag() && fabAnchor && dock.classList.contains('is-custom-position')) {
+        requestAnimationFrame(function () {
+          restoreFabFromAnchor(fabAnchor);
+        });
+      }
       if (isMobile()) {
         unlockBodyScroll();
       }
@@ -592,13 +693,18 @@
     );
   }
 
-  function makeActionBtn(label, title, html, onClick) {
+  function makeActionBtn(label, title, iconHtml, onClick, opts) {
+    opts = opts || {};
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'pa-msg__act';
+    btn.className = 'pa-msg__act' + (opts.className ? ' ' + opts.className : '');
     btn.setAttribute('aria-label', label);
     btn.title = title;
-    btn.innerHTML = html;
+    var icon = '<span class="pa-msg__act-icon" aria-hidden="true">' + iconHtml + '</span>';
+    var text = opts.text
+      ? '<span class="pa-msg__act-label">' + escapeHtml(opts.text) + '</span>'
+      : '';
+    btn.innerHTML = icon + text;
     btn.addEventListener('click', onClick);
     return btn;
   }
@@ -634,34 +740,51 @@
       var srcEl = buildSourceChips(options.sources);
       if (srcEl) meta.appendChild(srcEl);
 
-      var actions = document.createElement('span');
+      var actions = document.createElement('div');
       actions.className = 'pa-msg__actions';
+      actions.setAttribute('role', 'group');
+      actions.setAttribute('aria-label', 'اقدامات پاسخ');
 
-      var copyBtn = makeActionBtn('کپی پاسخ', 'کپی', ICON_COPY, function () {
-        var text = body.innerText || '';
-        navigator.clipboard.writeText(text).then(
-          function () {
-            copyBtn.classList.add('is-copied');
-            window.setTimeout(function () {
-              copyBtn.classList.remove('is-copied');
-            }, 1400);
-          },
-          function () {}
-        );
-      });
+      var copyBtn = makeActionBtn(
+        'کپی پاسخ',
+        'کپی پاسخ',
+        ICON_COPY,
+        function () {
+          var text = body.innerText || '';
+          navigator.clipboard.writeText(text).then(
+            function () {
+              copyBtn.classList.add('is-copied');
+              var iconEl = copyBtn.querySelector('.pa-msg__act-icon');
+              if (iconEl) iconEl.innerHTML = ICON_CHECK;
+              window.setTimeout(function () {
+                copyBtn.classList.remove('is-copied');
+                if (iconEl) iconEl.innerHTML = ICON_COPY;
+              }, 1600);
+            },
+            function () {}
+          );
+        },
+        { className: 'pa-msg__act--copy' }
+      );
 
-      var upBtn = makeActionBtn('مفید بود', 'مفید', ICON_THUMB_UP, function () {
+      var sep = document.createElement('span');
+      sep.className = 'pa-msg__actions-sep';
+      sep.setAttribute('aria-hidden', 'true');
+
+      var upBtn = makeActionBtn('مفید بود', 'مفید بود', ICON_THUMB_UP, function () {
         postFeedback(true);
         upBtn.classList.add('is-selected');
         downBtn.classList.remove('is-selected');
-      });
-      var downBtn = makeActionBtn('مفید نبود', 'نامفید', ICON_THUMB_DOWN, function () {
+      }, { className: 'pa-msg__act--up' });
+
+      var downBtn = makeActionBtn('مفید نبود', 'مفید نبود', ICON_THUMB_DOWN, function () {
         postFeedback(false);
         downBtn.classList.add('is-selected');
         upBtn.classList.remove('is-selected');
-      });
+      }, { className: 'pa-msg__act--down' });
 
       actions.appendChild(copyBtn);
+      actions.appendChild(sep);
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       meta.appendChild(actions);
@@ -740,7 +863,10 @@
   function renderSuggestions(questions) {
     if (!suggestionsEl) return;
     suggestionsEl.innerHTML = '';
-    (questions || []).forEach(function (q) {
+    var list = (questions || []).slice(0, 2);
+    var head = welcomeEl ? welcomeEl.querySelector('.pa-welcome__suggest-head') : null;
+    if (head) head.hidden = list.length === 0;
+    list.forEach(function (q) {
       var chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'pa-chip';
@@ -884,6 +1010,7 @@
         if (welcomeEl && !messagesEl.contains(welcomeEl)) {
           messagesEl.insertBefore(welcomeEl, messagesEl.firstChild);
         }
+        replayWelcomeRobot();
         stickToBottom = true;
         updateJumpButton();
         loadConfig();

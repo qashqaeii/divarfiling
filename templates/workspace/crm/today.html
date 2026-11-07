@@ -12,48 +12,86 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today-mobile-closure.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today-mobile-closure.css' %}?v=11">
 {% endblock %}
 
 {% block crm_content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
 <div class="crm-queue-app crm-today-pro crm-today-mobile crm-page-chrome mk-filing-datasets" id="crmTodayPro">
 
-    <div class="crm-today-mob-chrome">
-        <div class="crm-today-mob-summary" aria-label="خلاصه کارهای امروز">
-            {% if queue_stats.total %}
-            <span class="crm-today-mob-summary-today">امروز <strong>{{ queue_stats.today }}</strong></span>
-            {% if queue_stats.overdue %}
-            <span class="crm-today-mob-summary-warn">عقب‌افتاده <strong>{{ queue_stats.overdue }}</strong></span>
-            {% endif %}
-            {% else %}
-            <span class="crm-today-mob-summary-muted">برای امروز کاری ثبت نشده</span>
-            {% endif %}
-            <details class="crm-today-mob-more-menu">
-                <summary class="crm-today-mob-more-btn" aria-label="منوی بیشتر">
-                    <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
-                </summary>
-                <div class="crm-today-mob-more-panel" role="menu">
-                    <button type="button" class="crm-today-mob-more-item" role="menuitem" data-modal-open="modal-crm-today-help">
-                        <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
-                    </button>
-                    <a href="{% url 'workspace:crm_reminders' %}" class="crm-today-mob-more-item" role="menuitem">
-                        <i class="fas fa-bell" aria-hidden="true"></i><span>یادآورها</span>
-                    </a>
-                    <a href="{% url 'workspace:crm_contacts' %}" class="crm-today-mob-more-item" role="menuitem">
-                        <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
-                    </a>
+    <div class="crm-today-mob-chrome" aria-label="کارهای امروز — موبایل">
+        <div class="crm-today-mob-toolbar-sticky">
+            <div class="crm-today-mob-toolbar-panel">
+                <div class="crm-today-mob-toolbar-row">
+                    <div class="crm-today-mob-head">
+                        <div class="crm-today-mob-brand">
+                            <span class="crm-today-mob-brand-ico" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+                            <div class="crm-today-mob-brand-copy">
+                                <h1 class="crm-today-mob-title">کارهای امروز</h1>
+                                {% if today_jalali %}
+                                <p class="crm-today-mob-date">{{ today_jalali }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="crm-today-mob-toolbar-actions">
+                        <details class="crm-today-mob-more-menu">
+                            <summary class="crm-today-mob-more-btn" aria-label="منوی بیشتر">
+                                <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                            </summary>
+                            <div class="crm-today-mob-more-panel" role="menu">
+                                <button type="button" class="crm-today-mob-more-item" role="menuitem" data-modal-open="modal-crm-today-help">
+                                    <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
+                                </button>
+                                <a href="{% url 'workspace:crm_reminders' %}" class="crm-today-mob-more-item" role="menuitem">
+                                    <i class="fas fa-bell" aria-hidden="true"></i><span>یادآورها</span>
+                                </a>
+                                <a href="{% url 'workspace:crm_calendar' %}" class="crm-today-mob-more-item" role="menuitem">
+                                    <i class="fas fa-calendar-days" aria-hidden="true"></i><span>تقویم</span>
+                                </a>
+                                <a href="{% url 'workspace:crm_contacts' %}" class="crm-today-mob-more-item" role="menuitem">
+                                    <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
+                                </a>
+                            </div>
+                        </details>
+                        <button type="button" class="crm-today-mob-add" data-drawer-open="drawer-reminder" title="یادآوری جدید" aria-label="یادآوری جدید">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
-            </details>
-        </div>
-        <div class="crm-today-mob-actions" role="toolbar" aria-label="عملیات سریع">
-            <button type="button" class="crm-today-mob-act crm-today-mob-act--primary" data-drawer-open="drawer-reminder">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>یادآوری جدید</span>
-            </button>
-            <button type="button" class="crm-today-mob-act crm-today-mob-act--secondary" data-drawer-open="drawer-quick-lead">
-                <span>مخاطب</span>
-            </button>
+
+                <div class="crm-today-mob-metrics" aria-label="خلاصه کارهای امروز">
+                    {% if queue_stats.total %}
+                    <div class="crm-today-mob-metric crm-today-mob-metric--today">
+                        <strong>{{ queue_stats.today }}</strong>
+                        <span>امروز</span>
+                    </div>
+                    <div class="crm-today-mob-metric crm-today-mob-metric--warn{% if not queue_stats.overdue %} is-empty{% endif %}">
+                        <strong>{{ queue_stats.overdue }}</strong>
+                        <span>معوق</span>
+                    </div>
+                    <div class="crm-today-mob-metric crm-today-mob-metric--open">
+                        <strong>{{ queue_stats.total }}</strong>
+                        <span>باز</span>
+                    </div>
+                    {% else %}
+                    <div class="crm-today-mob-metric crm-today-mob-metric--muted">
+                        <strong>۰</strong>
+                        <span>کاری ثبت نشده</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="crm-today-mob-actions" role="toolbar" aria-label="عملیات سریع">
+                    <button type="button" class="crm-today-mob-act crm-today-mob-act--primary" data-drawer-open="drawer-reminder">
+                        <i class="fas fa-plus" aria-hidden="true"></i><span>یادآوری جدید</span>
+                    </button>
+                    <button type="button" class="crm-today-mob-act crm-today-mob-act--secondary" data-drawer-open="drawer-quick-lead">
+                        <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -126,7 +164,11 @@
                 <span class="crm-queue-col-count">{{ queue_stats.today }}</span>
             </header>
             <div class="crm-today-mob-section-label crm-today-mob-section-label--today">
-                <span>امروز</span><em>{{ queue_stats.today }} مورد</em>
+                <span class="crm-today-mob-section-label__main">
+                    <i class="fas fa-sun" aria-hidden="true"></i>
+                    <span>امروز</span>
+                </span>
+                <em>{{ queue_stats.today }} مورد</em>
             </div>
             <div class="crm-queue-col-body">
                 {% for item in queue_items %}
@@ -155,7 +197,11 @@
                 <span class="crm-queue-col-count">{{ queue_stats.overdue }}</span>
             </header>
             <div class="crm-today-mob-section-label crm-today-mob-section-label--warn">
-                <span>عقب‌افتاده</span><em>{{ queue_stats.overdue }} مورد</em>
+                <span class="crm-today-mob-section-label__main">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    <span>عقب‌افتاده</span>
+                </span>
+                <em>{{ queue_stats.overdue }} مورد</em>
             </div>
             <div class="crm-queue-col-body">
                 {% for item in queue_items %}

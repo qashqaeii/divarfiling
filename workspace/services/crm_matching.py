@@ -33,7 +33,9 @@ from workspace.services.crm_matching_geo import (
     location_tokens_equivalent,
     match_preferred_locations,
     preferred_areas_from_profile,
+    preferred_streets_from_profile,
     property_conflicts_search_city_hint,
+    property_trusted_street,
     match_area_preferences_for_property,
 )
 from workspace.services.crm_matching_prefilter import (
@@ -769,6 +771,7 @@ def _deposit_rent_sql_bounds(profile, *, tolerance: float = RANGE_TOLERANCE) -> 
 def _customer_has_narrow_detail_prefs(customer: Customer) -> bool:
     return any([
         customer.areas,
+        getattr(customer, 'streets', ''),
         customer.want_parking,
         customer.want_storage,
         customer.want_elevator,
@@ -912,6 +915,7 @@ def _builder_supply_profile(customer: Customer):
         want_storage=customer.want_storage,
         want_elevator=customer.want_elevator,
         areas=customer.areas,
+        streets=getattr(customer, 'streets', '') or '',
         property_type=customer.property_type or 'آپارتمان',
         allowed_types=set(BUILDER_SELL_PROPERTY_TYPES),
         customer_type=customer.customer_type,
@@ -940,6 +944,7 @@ def _builder_acquisition_profile(customer: Customer):
         want_storage=False,
         want_elevator=False,
         areas=customer.builder_buy_areas or customer.areas,
+        streets=getattr(customer, 'streets', '') or '',
         property_type='',
         allowed_types=set(parse_builder_buy_types(customer.builder_buy_property_types)),
         customer_type=customer.customer_type,
@@ -1036,6 +1041,7 @@ def _score_crm_property_with_profile(
         prop.city or '',
         prop.district or '',
         extra_values=None,
+        trusted_street=property_trusted_street(prop),
     )
     type_s, type_note = _property_type_match_profile(profile, prop.property_type)
     room_s, room_note = _rooms_match_profile(profile, prop.rooms)
@@ -1271,6 +1277,8 @@ def _score_listing_with_profile(
         )
         if matched and label:
             display_neighborhood = label
+    elif preferred_streets_from_profile(profile) and trusted_street:
+        display_neighborhood = trusted_street
 
     result = {
         'source': 'divar',

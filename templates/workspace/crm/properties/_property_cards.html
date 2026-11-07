@@ -1,6 +1,7 @@
 {% load workspace_tags crm_tags %}
 {% for p in properties %}
-<article class="crm-files-card crm-files-mcard crm-properties-card {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}"
+{% with cover=p.images.0|default:'' %}
+<article class="crm-files-card crm-files-mcard crm-properties-card crm-prop-mcard {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}{% if cover %} crm-prop-mcard--has-media{% endif %}"
          style="--tx-accent: {{ p|property_display_status|crm_tx_status_dot }}; --deal-mode-accent: {% if p.deal_mode == 'فروش' %}#2563eb{% else %}#0f766e{% endif %};"
          aria-label="{{ p.title }}"
          data-property-id="{{ p.id }}"
@@ -10,127 +11,163 @@
         <input type="checkbox" class="crm-checkbox crm-prop-row-check" value="{{ p.id }}">
     </label>
 
-    <div class="crm-files-card-body crm-properties-card__content">
     <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-hit" aria-label="مشاهده {{ p.title }}"></a>
 
-    <header class="crm-files-card-head crm-files-mcard__top crm-properties-card__head">
-        {% with cover=p.images.0|default:'' %}
-        {% if cover %}
-        <div class="crm-properties-card__thumb" aria-hidden="true">
-            <img src="{{ cover }}" alt="" loading="lazy" decoding="async" onerror="var t=this.closest('.crm-properties-card__thumb'); if(t){ t.classList.add('is-broken'); t.remove(); }">
+    {% if cover %}
+    <div class="crm-prop-mcard__media crm-properties-card__thumb" aria-hidden="true">
+        <img src="{{ cover }}" alt="" loading="lazy" decoding="async" onerror="var t=this.closest('.crm-prop-mcard__media'); if(t){ t.classList.add('is-broken'); t.remove(); }">
+        <div class="crm-prop-mcard__media-fade" aria-hidden="true"></div>
+        <div class="crm-prop-mcard__badges">
+            <span class="crm-prop-mcard__badge crm-prop-mcard__badge--deal">{{ p.deal_mode }}</span>
+            <span class="crm-prop-mcard__badge crm-prop-mcard__badge--status{% if p|property_is_archived_flag %} is-archived{% endif %}">{{ p|property_display_status }}</span>
         </div>
-        {% endif %}
-        {% endwith %}
-        <div class="crm-files-mcard__head crm-properties-card__head-text">
-            <h3 class="crm-files-card-title">{{ p.title }}</h3>
-            {% include 'workspace/crm/includes/property_list_loc.html' %}
-        </div>
-    </header>
-
-    <div class="crm-files-card-tags crm-properties-card__meta">
-        <span class="crm-files-pill crm-files-pill--deal">{{ p.deal_mode }}</span>
-        <span class="crm-files-pill crm-files-pill--status{% if p|property_is_archived_flag %} crm-files-pill--archived{% endif %}">{{ p|property_display_status }}</span>
-        {% if p|property_is_archived_flag %}
-        <span class="crm-files-pill crm-files-pill--meta" title="وضعیت معامله">معامله: {{ p.transaction_status }}</span>
-        {% if p.rental_contract_end_date and p.deal_mode != 'فروش' and p.deal_mode != 'پیش‌فروش' %}
-        <span class="crm-files-pill crm-files-pill--meta" title="پایان قرارداد اجاره">{{ p.rental_contract_end_date|ws_jalali_date }}</span>
-        {% endif %}
-        {% endif %}
-        {% if p.is_vacant %}
-        <span class="crm-files-pill crm-files-pill--vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>
-        {% endif %}
-        {% if p.property_type %}<span class="crm-files-pill crm-files-pill--type">{{ p.property_type }}</span>{% endif %}
-        {% for fb in p.folder_badges %}
-        <span class="crm-files-folder-badge" style="--zonkan-color:{{ fb.color }}" title="{{ fb.name }}">
-            <i class="fas {{ fb.icon|default:'fa-folder' }}" aria-hidden="true"></i>{{ fb.name }}
-        </span>
-        {% endfor %}
-    </div>
-
-    {% if p.owner_name %}
-    <p class="crm-files-card-owner crm-files-mcard__owner">
-        <span>{{ p.owner_name }}</span>
-    </p>
-    {% endif %}
-
-    {% if p.area or p.rooms or p.floor is not None %}
-    <div class="crm-files-card-metrics crm-files-mcard__metrics">
-        {% if p.area %}<span class="crm-files-metric-chip"><em>متراژ</em><strong>{{ p.area|ws_area }}</strong></span>{% endif %}
-        {% if p.rooms %}<span class="crm-files-metric-chip"><em>اتاق</em><strong>{{ p.rooms }}</strong></span>{% endif %}
-        {% if p.floor is not None %}<span class="crm-files-metric-chip"><em>طبقه</em><strong>{{ p.floor|ws_floor_display:p.total_floors }}</strong></span>{% endif %}
     </div>
     {% endif %}
 
-    <div class="crm-files-card-price">
-        {% if p.sale_price %}
-        <em>{{ p.deal_mode }}</em>
-        <strong>{{ p.sale_price|ws_money }}</strong>
-        {% elif p.deposit %}
-        <em>{% if p.monthly_rent %}رهن و اجاره{% else %}رهن{% endif %}</em>
-        <strong>{{ p.deposit|ws_money }}</strong>
-        {% if p.monthly_rent %}<small>+ {{ p.monthly_rent|ws_money }} اجاره</small>{% endif %}
-        {% else %}
-        <em>{{ p.deal_mode }}</em>
-        <strong class="is-muted">قیمت ثبت نشده</strong>
-        {% endif %}
-    </div>
+    <div class="crm-files-card-body crm-properties-card__content crm-prop-mcard__content">
+        <header class="crm-files-card-head crm-files-mcard__top crm-properties-card__head crm-prop-mcard__head">
+            <div class="crm-files-mcard__head crm-properties-card__head-text crm-prop-mcard__identity">
+                <div class="crm-prop-mcard__title-row">
+                    <h3 class="crm-files-card-title">{{ p.title }}</h3>
+                    {% if not cover %}
+                    <span class="crm-prop-mcard__badge crm-prop-mcard__badge--deal crm-prop-mcard__badge--inline">{{ p.deal_mode }}</span>
+                    {% endif %}
+                </div>
+                {% include 'workspace/crm/includes/property_list_loc.html' %}
+            </div>
+        </header>
 
-    {% with amen_extra=p.card_amenities|slice:"4:" %}
-    <div class="crm-files-card-amenities" aria-label="امکانات">
-        {% for item in p.card_amenities|slice:":4" %}
-        {% if item.state == 'yes' or item.state == 'neutral' %}
-        <span class="crm-files-amenity is-on{% if not item.is_core %} is-extra{% endif %}"
-              data-tip="{{ item.tip }}"
-              aria-label="{{ item.tip }}"
-              tabindex="0">
-            <i class="fas {{ item.icon }}" aria-hidden="true"></i>
-        </span>
-        {% endif %}
-        {% empty %}
-        {% if p.has_parking %}<span class="crm-files-amenity is-on" data-tip="پارکینگ: دارد" aria-label="پارکینگ: دارد"><i class="fas fa-square-parking" aria-hidden="true"></i></span>{% endif %}
-        {% if p.has_storage %}<span class="crm-files-amenity is-on" data-tip="انباری: دارد" aria-label="انباری: دارد"><i class="fas fa-box-archive" aria-hidden="true"></i></span>{% endif %}
-        {% if p.has_elevator %}<span class="crm-files-amenity is-on" data-tip="آسانسور: دارد" aria-label="آسانسور: دارد"><i class="fas fa-elevator" aria-hidden="true"></i></span>{% endif %}
-        {% endfor %}
-        {% if amen_extra %}
-        <span class="crm-files-amenity-more" title="امکانات بیشتر">+{{ amen_extra|length }}</span>
-        {% endif %}
-    </div>
-    {% endwith %}
-    </div>
-
-    <footer class="crm-files-card-foot crm-files-mcard__valueband">
-        <div class="crm-files-card-actionbar" role="toolbar" aria-label="عملیات فایل">
-            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-ico crm-files-card-ico--primary" data-tip="مشاهده پرونده" aria-label="مشاهده پرونده">
-                <i class="fas fa-eye" aria-hidden="true"></i>
-            </a>
-            <a href="{% url 'workspace:crm_property_edit' p.id %}" class="crm-files-card-ico" data-tip="ویرایش ملک" aria-label="ویرایش ملک">
-                <i class="fas fa-pen" aria-hidden="true"></i>
-            </a>
-            <button type="button" class="crm-files-card-ico" data-crm-prop-duplicate="{{ p.id }}" data-tip="کپی فایل" aria-label="کپی فایل">
-                <i class="fas fa-copy" aria-hidden="true"></i>
-            </button>
-            {% if property_folders %}
-            <button type="button" class="crm-files-card-ico" data-prop-folder-assign="{{ p.id }}" data-tip="افزودن به زونکن" aria-label="افزودن به زونکن">
-                <i class="fas fa-folder-plus" aria-hidden="true"></i>
-            </button>
+        <div class="crm-files-card-tags crm-properties-card__meta crm-prop-mcard__tags">
+            <span class="crm-files-pill crm-files-pill--deal">{{ p.deal_mode }}</span>
+            <span class="crm-files-pill crm-files-pill--status{% if p|property_is_archived_flag %} crm-files-pill--archived{% endif %}">{{ p|property_display_status }}</span>
+            {% if p|property_is_archived_flag %}
+            <span class="crm-files-pill crm-files-pill--meta" title="وضعیت معامله">معامله: {{ p.transaction_status }}</span>
+            {% if p.rental_contract_end_date and p.deal_mode != 'فروش' and p.deal_mode != 'پیش‌فروش' %}
+            <span class="crm-files-pill crm-files-pill--meta" title="پایان قرارداد اجاره">{{ p.rental_contract_end_date|ws_jalali_date }}</span>
             {% endif %}
-            <a href="{% url 'workspace:crm_property_detail' p.id %}?share=1" class="crm-files-card-ico" data-tip="اشتراک با مشتری" aria-label="اشتراک با مشتری">
-                <i class="fas fa-share-nodes" aria-hidden="true"></i>
-            </a>
-            <a href="{% url 'workspace:crm_property_detail' p.id %}?tab=contacts" class="crm-files-card-ico" data-tip="مخاطبین مرتبط" aria-label="مخاطبین مرتبط">
-                <i class="fas fa-user-group" aria-hidden="true"></i>
-            </a>
+            {% endif %}
+            {% if p.is_vacant %}
+            <span class="crm-files-pill crm-files-pill--vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>
+            {% endif %}
+            {% if p.property_type %}<span class="crm-files-pill crm-files-pill--type">{{ p.property_type }}</span>{% endif %}
+            {% for fb in p.folder_badges %}
+            <span class="crm-files-folder-badge" style="--zonkan-color:{{ fb.color }}" title="{{ fb.name }}">
+                <i class="fas {{ fb.icon|default:'fa-folder' }}" aria-hidden="true"></i>{{ fb.name }}
+            </span>
+            {% endfor %}
+        </div>
+
+        {% if p.owner_name %}
+        <p class="crm-files-card-owner crm-files-mcard__owner crm-prop-mcard__owner">
+            <span>{{ p.owner_name }}</span>
+        </p>
+        {% endif %}
+
+        {% if p.area or p.rooms or p.floor is not None %}
+        <div class="crm-files-card-metrics crm-files-mcard__metrics crm-prop-mcard__specs" aria-label="مشخصات">
+            {% if p.area %}
+            <span class="crm-files-metric-chip crm-prop-mcard__spec crm-prop-mcard__spec--area">
+                <i class="fas fa-ruler-combined" aria-hidden="true"></i>
+                <span class="crm-prop-mcard__spec-text">
+                    <em>متراژ</em>
+                    <strong>{{ p.area|ws_area }}</strong>
+                </span>
+            </span>
+            {% endif %}
+            {% if p.rooms %}
+            <span class="crm-files-metric-chip crm-prop-mcard__spec crm-prop-mcard__spec--rooms">
+                <i class="fas fa-bed" aria-hidden="true"></i>
+                <span class="crm-prop-mcard__spec-text">
+                    <em>خواب</em>
+                    <strong>{{ p.rooms }}</strong>
+                </span>
+            </span>
+            {% endif %}
+            {% if p.floor is not None %}
+            <span class="crm-files-metric-chip crm-prop-mcard__spec crm-prop-mcard__spec--floor">
+                <i class="fas fa-building" aria-hidden="true"></i>
+                <span class="crm-prop-mcard__spec-text">
+                    <em>طبقه</em>
+                    <strong>{{ p.floor|ws_floor_display:p.total_floors }}</strong>
+                </span>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="crm-files-card-price crm-prop-mcard__price">
+            {% if p.sale_price %}
+            <em>{{ p.deal_mode }}</em>
+            <strong>{{ p.sale_price|ws_money }}</strong>
+            {% elif p.deposit %}
+            <em>{% if p.monthly_rent %}رهن و اجاره{% else %}رهن{% endif %}</em>
+            <strong>{{ p.deposit|ws_money }}</strong>
+            {% if p.monthly_rent %}<small>+ {{ p.monthly_rent|ws_money }} اجاره</small>{% endif %}
+            {% else %}
+            <em>{{ p.deal_mode }}</em>
+            <strong class="is-muted">قیمت ثبت نشده</strong>
+            {% endif %}
+        </div>
+
+        {% with amen_extra=p.card_amenities|slice:"4:" %}
+        <div class="crm-files-card-amenities crm-prop-mcard__amenities" aria-label="امکانات">
+            {% for item in p.card_amenities|slice:":4" %}
+            {% if item.state == 'yes' or item.state == 'neutral' %}
+            <span class="crm-files-amenity is-on{% if not item.is_core %} is-extra{% endif %}"
+                  data-tip="{{ item.tip }}"
+                  aria-label="{{ item.tip }}"
+                  tabindex="0">
+                <i class="fas {{ item.icon }}" aria-hidden="true"></i>
+            </span>
+            {% endif %}
+            {% empty %}
+            {% if p.has_parking %}<span class="crm-files-amenity is-on" data-tip="پارکینگ: دارد" aria-label="پارکینگ: دارد"><i class="fas fa-square-parking" aria-hidden="true"></i></span>{% endif %}
+            {% if p.has_storage %}<span class="crm-files-amenity is-on" data-tip="انباری: دارد" aria-label="انباری: دارد"><i class="fas fa-box-archive" aria-hidden="true"></i></span>{% endif %}
+            {% if p.has_elevator %}<span class="crm-files-amenity is-on" data-tip="آسانسور: دارد" aria-label="آسانسور: دارد"><i class="fas fa-elevator" aria-hidden="true"></i></span>{% endif %}
+            {% endfor %}
+            {% if amen_extra %}
+            <span class="crm-files-amenity-more" title="امکانات بیشتر">+{{ amen_extra|length }}</span>
+            {% endif %}
+        </div>
+        {% endwith %}
+    </div>
+
+    <footer class="crm-files-card-foot crm-files-mcard__valueband crm-prop-mcard__foot">
+        <div class="crm-prop-mcard__meta crm-files-card-meta crm-files-card-meta--sub">
+            {% if p.contact_count %}<span class="crm-files-meta-chip" title="مخاطب مرتبط"><i class="fas fa-users" aria-hidden="true"></i>{{ p.contact_count }}</span>{% endif %}
+            {% if p.property_type %}<span class="crm-prop-mcard__type">{{ p.property_type }}</span>{% endif %}
+            <span class="crm-files-pub crm-files-pub--{{ p.publish_status }}" title="{{ p.publish_status }}"></span>
+            <time datetime="{{ p.updated_at|date:'c' }}">{{ p.updated_at|ws_jalali }}</time>
+        </div>
+        <div class="crm-files-card-actionbar crm-prop-mcard__actions" role="toolbar" aria-label="عملیات فایل">
             {% if p.phone %}
             <a href="tel:{{ p.phone }}" class="crm-files-card-ico crm-files-card-ico--phone" data-tip="تماس" aria-label="تماس {{ p.phone }}" dir="ltr">
                 <i class="fas fa-phone" aria-hidden="true"></i>
             </a>
             {% endif %}
-        </div>
-        <div class="crm-files-card-meta crm-files-card-meta--sub">
-            {% if p.contact_count %}<span class="crm-files-meta-chip" title="مخاطب مرتبط"><i class="fas fa-users" aria-hidden="true"></i>{{ p.contact_count }}</span>{% endif %}
-            <span class="crm-files-pub crm-files-pub--{{ p.publish_status }}" title="{{ p.publish_status }}"></span>
-            <time datetime="{{ p.updated_at|date:'c' }}"><i class="fas fa-clock" aria-hidden="true"></i>{{ p.updated_at|ws_jalali }}</time>
+            <a href="{% url 'workspace:crm_property_edit' p.id %}" class="crm-files-card-ico crm-files-card-ico--edit" data-tip="ویرایش ملک" aria-label="ویرایش ملک">
+                <i class="fas fa-pen" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="crm-files-card-ico crm-files-card-ico--secondary" data-crm-prop-duplicate="{{ p.id }}" data-tip="کپی فایل" aria-label="کپی فایل">
+                <i class="fas fa-copy" aria-hidden="true"></i>
+            </button>
+            {% if property_folders %}
+            <button type="button" class="crm-files-card-ico crm-files-card-ico--secondary" data-prop-folder-assign="{{ p.id }}" data-tip="افزودن به زونکن" aria-label="افزودن به زونکن">
+                <i class="fas fa-folder-plus" aria-hidden="true"></i>
+            </button>
+            {% endif %}
+            <a href="{% url 'workspace:crm_property_detail' p.id %}?share=1" class="crm-files-card-ico crm-files-card-ico--secondary" data-tip="اشتراک با مشتری" aria-label="اشتراک با مشتری">
+                <i class="fas fa-share-nodes" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'workspace:crm_property_detail' p.id %}?tab=contacts" class="crm-files-card-ico crm-files-card-ico--secondary" data-tip="مخاطبین مرتبط" aria-label="مخاطبین مرتبط">
+                <i class="fas fa-user-group" aria-hidden="true"></i>
+            </a>
+            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-ico crm-files-card-ico--primary" data-tip="مشاهده پرونده" aria-label="مشاهده پرونده">
+                <span class="crm-files-card-ico__label">پرونده</span>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
         </div>
     </footer>
 </article>
+{% endwith %}
 {% endfor %}

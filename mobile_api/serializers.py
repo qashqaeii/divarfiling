@@ -357,6 +357,7 @@ def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
         'want_storage': bool(c.want_storage),
         'want_elevator': bool(c.want_elevator),
         'areas': c.areas or '',
+        'streets': getattr(c, 'streets', '') or '',
         'notes': c.notes or '',
         'address': c.city or '',
         'city': c.city or '',

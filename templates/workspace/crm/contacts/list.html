@@ -10,11 +10,11 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
-<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=13">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-controls.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=34">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=36">
 {% endblock %}
 
 {% block crm_content %}
@@ -73,10 +73,6 @@
             </button>
         </div>
     </header>
-
-    <div class="crm-contacts-smart-anchor crm-smart-command-anchor--minimal">
-        {% include 'workspace/crm/includes/crm_smart_command.html' %}
-    </div>
 
     <div class="crm-contacts-mob-chrome crm-contacts-list-controls">
     <header class="crm-contacts-mob-pagehead">
@@ -151,6 +147,12 @@
     </nav>
 
     {% include 'workspace/crm/includes/contacts_kpi.html' %}
+
+    {% if smart_command.enabled %}
+    <div class="crm-contacts-smart-anchor crm-smart-command-anchor--minimal">
+        {% include 'workspace/crm/includes/crm_smart_command.html' %}
+    </div>
+    {% endif %}
 
     <form method="get" class="ws-filters ws-filters--rail crm-contacts-filters crm-contacts-filters--pro crm-page-filters" id="crmContactFilters">
         <input type="hidden" name="view" value="{{ view_mode }}">

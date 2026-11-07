@@ -2558,6 +2558,22 @@ function initCRMPropContactMatches() {
         });
     }
 
+    function syncPcmWhyPanel(card, open) {
+        const whyPanel = card.querySelector('[data-pcm-why-panel]');
+        const toggleBtn = card.querySelector('[data-pcm-why-toggle]');
+        if (!whyPanel || !toggleBtn) return;
+        const nextOpen = !!open;
+        whyPanel.hidden = !nextOpen;
+        card.classList.toggle('is-why-open', nextOpen);
+        toggleBtn.classList.toggle('is-open', nextOpen);
+        toggleBtn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+    }
+
+    rows().forEach((card) => {
+        const whyPanel = card.querySelector('[data-pcm-why-panel]');
+        syncPcmWhyPanel(card, !!(whyPanel && !whyPanel.hidden));
+    });
+
     function payloadFromCheckbox(cb) {
         const d = cb.dataset;
         return {
@@ -2613,6 +2629,18 @@ function initCRMPropContactMatches() {
 
     let propLoadMoreBusy = false;
     root.addEventListener('click', async (ev) => {
+        const whyToggle = ev.target.closest('[data-pcm-why-toggle]');
+        if (whyToggle && root.contains(whyToggle)) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const card = whyToggle.closest('[data-prop-match-card]');
+            if (!card) return;
+            const whyPanel = card.querySelector('[data-pcm-why-panel]');
+            if (!whyPanel) return;
+            syncPcmWhyPanel(card, !!whyPanel.hidden);
+            return;
+        }
+
         const btn = ev.target.closest('[data-prop-match-load-more]');
         if (!btn || propLoadMoreBusy) return;
         const baseUrl = root.dataset.propMatchesMoreUrl || '';
@@ -2978,6 +3006,9 @@ function initCRMAreasPicker(root) {
         const catalog = picker.querySelector('[data-crm-areas-catalog]');
         if (!hidden || !selectedWrap) return;
 
+        const unitLabel = (picker.dataset.unitLabel || 'محله').trim() || 'محله';
+        const emptySelectedText = (picker.dataset.emptySelected || `هنوز ${unitLabel}‌ای انتخاب نشده`).trim();
+
         const catalogValues = new Set(
             Array.from(picker.querySelectorAll('[data-crm-areas-option]')).map(el => el.value.trim())
         );
@@ -2992,8 +3023,8 @@ function initCRMAreasPicker(root) {
             hidden.value = selected.join('، ');
             if (countEl) {
                 countEl.textContent = selected.length
-                    ? `${selected.length.toLocaleString('fa-IR')} محله`
-                    : '۰ محله';
+                    ? `${selected.length.toLocaleString('fa-IR')} ${unitLabel}`
+                    : `۰ ${unitLabel}`;
             }
         }
 
@@ -3008,7 +3039,7 @@ function initCRMAreasPicker(root) {
             if (!selected.length) {
                 const empty = document.createElement('span');
                 empty.className = 'crm-areas-selected-empty';
-                empty.textContent = 'هنوز محله\u200cای انتخاب نشده';
+                empty.textContent = emptySelectedText;
                 selectedWrap.appendChild(empty);
             } else {
                 selected.forEach(name => {
@@ -3104,6 +3135,9 @@ function initCRMAreasPicker(root) {
             span.textContent = name;
             wrap.appendChild(cb);
             wrap.appendChild(span);
+            catalog.hidden = false;
+            const emptyMsg = picker.querySelector('[data-crm-areas-empty]');
+            if (emptyMsg) emptyMsg.remove();
             catalog.appendChild(wrap);
             catalogValues.add(name);
         }

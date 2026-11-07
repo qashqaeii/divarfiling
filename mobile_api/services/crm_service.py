@@ -120,7 +120,7 @@ def _contact_patch_has_writes(data: Dict[str, Any]) -> bool:
         return False
     scalar_fields = (
         'full_name', 'name', 'phone', 'email', 'status', 'customer_type', 'priority', 'notes',
-        'property_type', 'property_types', 'rooms', 'areas', 'budget', 'budget_min', 'budget_max',
+        'property_type', 'property_types', 'rooms', 'areas', 'streets', 'budget', 'budget_min', 'budget_max',
         'deposit_min', 'deposit_max', 'rent_min', 'rent_max', 'builder_buy_property_types',
         'builder_buy_types', 'builder_buy_areas', 'builder_buy_budget_min', 'builder_buy_budget_max',
         'builder_buy_min_area', 'builder_buy_max_area', 'min_area', 'max_area', 'lease_deadline',
@@ -275,6 +275,8 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         c.rooms = (data['rooms'] or '').strip()
     if _field_present(data, 'areas'):
         c.areas = (data['areas'] or '').strip()
+    if _field_present(data, 'streets'):
+        c.streets = (data['streets'] or '').strip()
     for field in ('budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
                   'builder_buy_budget_min', 'builder_buy_budget_max'):
         if _field_present(data, field):
@@ -441,7 +443,7 @@ _NL_CUSTOMER_ALLOWED = frozenset({
     'customer_type', 'status', 'priority', 'source', 'property_type',
     'budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
     'min_area', 'max_area', 'rooms_min', 'rooms_max', 'year_min', 'year_max',
-    'floor_min', 'floor_max', 'areas', 'rooms',
+    'floor_min', 'floor_max', 'areas', 'streets', 'rooms',
     'want_parking', 'want_storage', 'want_elevator',
     'tags', 'notes', 'next_follow_up',
 })
@@ -508,6 +510,7 @@ def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
         source=source,
         property_type=property_type,
         areas=(payload.get('areas') or '').strip(),
+        streets=(payload.get('streets') or '').strip(),
         min_area=payload.get('min_area'),
         max_area=payload.get('max_area'),
         budget_min=payload.get('budget_min'),
@@ -955,7 +958,10 @@ def _today_item_to_api(item: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def crm_neighborhoods_payload(user) -> Dict[str, Any]:
-    """محله‌های distinct از فایلینگ‌های فعال کاربر — برای انتخاب محله مخاطب."""
-    from workspace.services.filters import get_user_dataset_neighborhoods
+    """محله و خیابان distinct از فایلینگ و فایل شخصی — برای ترجیحات مخاطب."""
+    from workspace.services.filters import get_user_dataset_neighborhoods, get_user_location_streets
 
-    return {'neighborhoods': get_user_dataset_neighborhoods(user)}
+    return {
+        'neighborhoods': get_user_dataset_neighborhoods(user),
+        'streets': get_user_location_streets(user),
+    }

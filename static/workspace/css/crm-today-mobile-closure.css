@@ -6,12 +6,33 @@
 }
 
 @media (max-width: 768px) {
-    .crm-today-mobile.crm-today-pro.crm-page-chrome {
-        padding: 0 0 calc(5.25rem + env(safe-area-inset-bottom, 0px));
+    /* ── Canvas: single outer gutter from .ws-content ── */
+    .crm-app .crm-today-mobile.crm-today-pro.crm-page-chrome {
+        --tq-gutter: 0;
+        --tq-radius: 14px;
+        --tq-card-radius: 14px;
+        padding: 0 0 calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
         gap: 0 !important;
         row-gap: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0;
         overflow-x: clip;
+        box-sizing: border-box;
         background: transparent;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .crm-app .crm-today-mobile.crm-today-pro.crm-page-chrome > .crm-today-mob-chrome,
+    .crm-app .crm-today-mobile.crm-today-pro.crm-page-chrome > .crm-today-smart-anchor,
+    .crm-app .crm-today-mobile.crm-today-pro.crm-page-chrome > .crm-today-board,
+    .crm-app .crm-today-mobile.crm-today-pro.crm-page-chrome > .crm-today-empty-wrap {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-inline: 0;
+        box-sizing: border-box;
     }
 
     .crm-today-mobile .crm-today-desk-header,
@@ -21,83 +42,159 @@
         display: none !important;
     }
 
-    /* ── Compact context + quick actions ── */
+    /* ── Sticky premium header panel ── */
     .crm-today-mob-chrome {
         order: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 0.45rem;
-        padding: 0.35rem 0.75rem 0.5rem;
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .crm-today-mob-toolbar-sticky {
         position: sticky;
         top: calc(var(--ws-mob-topbar-h, 3rem) + env(safe-area-inset-top, 0px));
-        z-index: 22;
-        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 96%, var(--ws-surface));
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
+        z-index: 24;
+        padding: 0.28rem 0 0.4rem;
+        background: transparent;
+        border: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: none;
     }
 
-    .crm-today-mob-summary {
+    .crm-today-mob-toolbar-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        width: 100%;
+        padding: 0.65rem 0.7rem 0.7rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface)) 0%,
+                var(--ws-surface) 42%,
+                var(--ws-surface) 100%
+            );
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.04),
+            0 12px 28px -18px rgba(15, 23, 42, 0.22);
+        box-sizing: border-box;
+    }
+
+    .crm-today-mob-toolbar-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.55rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .crm-today-mob-head {
+        min-width: 0;
+    }
+
+    .crm-today-mob-brand {
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 0.35rem 0.55rem;
+        gap: 0.55rem;
         min-width: 0;
-        font-size: 0.72rem;
-        font-weight: 650;
-        color: var(--ws-text-secondary);
     }
 
-    .crm-today-mob-summary strong {
-        font-weight: 800;
-        font-variant-numeric: tabular-nums;
+    .crm-today-mob-brand-ico {
+        display: inline-grid;
+        place-items: center;
+        width: 2.45rem;
+        height: 2.45rem;
+        flex-shrink: 0;
+        border-radius: 13px;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface)),
+                color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface))
+            );
+        color: var(--ws-primary);
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+        font-size: 0.92rem;
+    }
+
+    .crm-today-mob-brand-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 0.08rem;
+        min-width: 0;
+    }
+
+    .crm-today-mob-title {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 850;
+        letter-spacing: -0.025em;
+        line-height: 1.25;
         color: var(--ws-text);
     }
 
-    .crm-today-mob-summary-today strong {
-        color: var(--ws-primary);
-    }
-
-    .crm-today-mob-summary-warn {
-        color: #b45309;
-    }
-
-    .crm-today-mob-summary-warn strong {
-        color: #b45309;
-    }
-
-    .crm-today-mob-summary-muted {
+    .crm-today-mob-date {
+        margin: 0;
+        font-size: 0.7rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
         color: var(--ws-text-muted);
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-today-mob-toolbar-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        flex-shrink: 0;
     }
 
     .crm-today-mob-more-menu {
-        margin-inline-start: auto;
         position: relative;
+        margin: 0;
     }
 
     .crm-today-mob-more-btn {
-        width: 32px;
-        height: 32px;
+        width: 2.45rem;
+        height: 2.45rem;
+        min-width: 2.45rem;
+        min-height: 2.45rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
-        border-radius: 10px;
-        background: var(--ws-surface);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--ws-bg) 35%, var(--ws-surface));
         color: var(--ws-text-muted);
         list-style: none;
         cursor: pointer;
+        font-size: 0.88rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-today-mob-more-btn::-webkit-details-marker {
+        display: none;
     }
 
     .crm-today-mob-more-panel {
         position: absolute;
         inset-inline-end: 0;
-        top: calc(100% + 0.25rem);
+        top: calc(100% + 0.35rem);
         z-index: 40;
-        min-width: 10.5rem;
+        min-width: 11.5rem;
         padding: 0.3rem;
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
         background: var(--ws-surface);
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
     }
 
     .crm-today-mob-more-menu:not([open]) .crm-today-mob-more-panel {
@@ -107,19 +204,148 @@
     .crm-today-mob-more-item {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.5rem;
         width: 100%;
         min-height: 2.75rem;
-        padding: 0.4rem 0.5rem;
+        padding: 0.4rem 0.55rem;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         background: transparent;
         color: var(--ws-text-secondary);
         font-family: inherit;
-        font-size: 0.76rem;
+        font-size: 0.78rem;
         font-weight: 650;
         text-decoration: none;
         cursor: pointer;
+    }
+
+    .crm-today-mob-more-item:hover,
+    .crm-today-mob-more-item:active {
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
+        color: var(--ws-text);
+    }
+
+    .crm-today-mob-more-item i {
+        width: 1.05rem;
+        text-align: center;
+        color: var(--ws-primary);
+        opacity: 0.85;
+    }
+
+    .crm-today-mob-add {
+        width: 2.45rem;
+        height: 2.45rem;
+        min-width: 2.45rem;
+        min-height: 2.45rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 12px;
+        background: var(--ws-primary);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.95rem;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 22%, transparent) inset,
+            0 6px 16px -6px color-mix(in srgb, var(--ws-primary) 55%, transparent);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-today-mob-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .crm-today-mob-metrics:has(.crm-today-mob-metric--muted:only-child) {
+        grid-template-columns: 1fr;
+    }
+
+    .crm-today-mob-metric {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 0.12rem;
+        min-width: 0;
+        min-height: 3.15rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: color-mix(in srgb, var(--ws-bg) 45%, var(--ws-surface));
+        box-sizing: border-box;
+    }
+
+    .crm-today-mob-metric strong {
+        font-size: 1.15rem;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        color: var(--ws-text);
+    }
+
+    .crm-today-mob-metric span {
+        font-size: 0.66rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+        line-height: 1.2;
+    }
+
+    .crm-today-mob-metric--today {
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent);
+        background:
+            linear-gradient(
+                160deg,
+                color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)),
+                var(--ws-surface)
+            );
+    }
+
+    .crm-today-mob-metric--today strong {
+        color: var(--ws-primary);
+    }
+
+    .crm-today-mob-metric--warn {
+        border-color: color-mix(in srgb, #f59e0b 28%, transparent);
+        background:
+            linear-gradient(
+                160deg,
+                color-mix(in srgb, #fef3c7 70%, var(--ws-surface)),
+                var(--ws-surface)
+            );
+    }
+
+    .crm-today-mob-metric--warn strong {
+        color: #b45309;
+    }
+
+    .crm-today-mob-metric--warn.is-empty {
+        opacity: 0.72;
+        border-color: color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: color-mix(in srgb, var(--ws-bg) 45%, var(--ws-surface));
+    }
+
+    .crm-today-mob-metric--warn.is-empty strong {
+        color: var(--ws-text-muted);
+    }
+
+    .crm-today-mob-metric--open strong {
+        color: var(--ws-text);
+    }
+
+    .crm-today-mob-metric--muted {
+        align-items: center;
+        text-align: center;
+        min-height: 2.85rem;
+    }
+
+    .crm-today-mob-metric--muted strong {
+        color: var(--ws-text-muted);
+        font-size: 1rem;
     }
 
     .crm-today-mob-actions {
@@ -133,12 +359,12 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
-        min-height: 2.75rem;
-        padding: 0.45rem 0.85rem;
+        gap: 0.4rem;
+        min-height: 2.85rem;
+        padding: 0.5rem 0.85rem;
         border-radius: 12px;
         font-family: inherit;
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         font-weight: 800;
         border: 1px solid transparent;
         cursor: pointer;
@@ -152,24 +378,51 @@
         background: var(--ws-primary);
         color: #fff;
         border-color: var(--ws-primary);
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 18%, transparent) inset,
+            0 6px 16px -8px color-mix(in srgb, var(--ws-primary) 55%, transparent);
     }
 
     .crm-today-mob-act--secondary {
         flex: 0 0 auto;
-        background: var(--ws-surface);
+        background: color-mix(in srgb, var(--ws-bg) 40%, var(--ws-surface));
         color: var(--ws-text-secondary);
-        border-color: color-mix(in srgb, var(--ws-border) 70%, transparent);
+        border-color: color-mix(in srgb, var(--ws-border) 60%, transparent);
     }
 
-    /* ── Board: stacked sections ── */
+    /* ── Smart command ── */
+    .crm-today-mobile .crm-today-smart-anchor {
+        order: 2;
+        flex: 0 0 auto;
+        min-width: 0;
+        padding: 0.45rem 0 0.15rem;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor:empty {
+        display: none;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command-wrap {
+        display: block !important;
+        flex: 0 0 auto;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* ── Board + sections ── */
     .crm-today-mobile .crm-today-board {
+        order: 3;
         display: flex;
         flex-direction: column;
-        gap: 0.85rem;
-        padding: 0.45rem 0.75rem 0.25rem;
+        gap: 0.95rem;
+        padding: 0.55rem 0 0.35rem;
         min-width: 0;
         flex: 1 1 auto;
         overflow: visible;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .crm-today-mobile #panel-today {
@@ -182,11 +435,16 @@
 
     .crm-today-mobile .crm-queue-col {
         display: flex !important;
+        flex-direction: column;
         border: none;
         border-radius: 0;
         box-shadow: none;
         background: transparent;
         min-height: 0;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
 
     .crm-today-mobile .crm-queue-col[hidden] {
@@ -202,24 +460,41 @@
         align-items: center;
         justify-content: space-between;
         gap: 0.5rem;
-        margin: 0.15rem 0 0.4rem;
-        padding: 0 0.15rem;
-        font-size: 0.76rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
+        margin: 0 0 0.5rem;
+        padding: 0.15rem 0.1rem;
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: -0.015em;
         color: var(--ws-text);
     }
 
-    .crm-today-mob-section-label--today {
-        color: var(--ws-text);
+    .crm-today-mob-section-label__main {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 0;
     }
 
-    .crm-today-mob-section-label--today em {
+    .crm-today-mob-section-label__main i {
+        display: inline-grid;
+        place-items: center;
+        width: 1.55rem;
+        height: 1.55rem;
+        border-radius: 8px;
+        font-size: 0.68rem;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
         color: var(--ws-primary);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent);
+    }
+
+    .crm-today-mob-section-label--warn .crm-today-mob-section-label__main i {
+        background: color-mix(in srgb, #f59e0b 12%, var(--ws-surface));
+        color: #b45309;
+        border-color: color-mix(in srgb, #f59e0b 22%, transparent);
     }
 
     .crm-today-mob-section-label--warn {
-        color: #b45309;
+        color: #9a3412;
     }
 
     .crm-today-mob-section-label em {
@@ -228,14 +503,34 @@
         font-weight: 800;
         font-variant-numeric: tabular-nums;
         color: var(--ws-text-muted);
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-bg) 55%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+    }
+
+    .crm-today-mob-section-label--today em {
+        color: var(--ws-primary);
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, transparent);
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
+    }
+
+    .crm-today-mob-section-label--warn em {
+        color: #b45309;
+        border-color: color-mix(in srgb, #f59e0b 24%, transparent);
+        background: color-mix(in srgb, #fef3c7 50%, var(--ws-surface));
     }
 
     .crm-today-mobile .crm-queue-col-body {
+        display: flex;
+        flex-direction: column;
         padding: 0;
-        gap: 0.5rem;
+        gap: 0.55rem;
         background: transparent;
         overflow: visible;
         max-height: none;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .crm-today-mobile .crm-queue-col-empty {
@@ -251,66 +546,126 @@
 
     .crm-today-mob-queue-empty {
         margin: 0;
-        padding: 0.55rem 0.65rem;
-        font-size: 0.74rem;
-        font-weight: 600;
+        padding: 0.7rem 0.8rem;
+        font-size: 0.76rem;
+        font-weight: 650;
         line-height: 1.45;
         color: var(--ws-text-muted);
         text-align: start;
-        border-radius: 10px;
+        border-radius: 12px;
         background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
         border: 1px dashed color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        width: 100%;
+        box-sizing: border-box;
     }
 
-    /* ── Smart command: compact bar (directly under mob chrome) ── */
-    .crm-today-mobile.crm-today-pro {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .crm-today-mobile .crm-today-smart-anchor {
-        order: 2;
-        flex: 0 0 auto;
-        min-width: 0;
-    }
-
-    .crm-today-mobile .crm-today-smart-anchor:empty {
-        display: none;
-    }
-
-    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command-wrap {
-        display: block !important;
-        flex: 0 0 auto;
-        min-width: 0;
-    }
-
-    .crm-today-mobile .crm-today-board {
-        order: 3;
-    }
-
-    /* ── Task cards (minimal; detail in crm-today.css) ── */
+    /* ── Premium task cards ── */
     .crm-today-mobile .crm-queue-card.crm-today-task {
-        border-radius: 12px;
-        border-color: color-mix(in srgb, var(--ws-border) 75%, transparent);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        border-radius: var(--tq-card-radius);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: var(--ws-surface);
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.035),
+            0 10px 22px -16px rgba(15, 23, 42, 0.14);
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
     .crm-today-mobile .crm-queue-card.crm-today-task:hover {
         transform: none;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.035),
+            0 10px 22px -16px rgba(15, 23, 42, 0.14);
+    }
+
+    .crm-today-mobile .crm-queue-card--overdue.crm-today-task {
+        border-color: color-mix(in srgb, #f59e0b 28%, var(--ws-border));
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, #fff7ed 70%, var(--ws-surface)),
+                var(--ws-surface)
+            );
     }
 
     .crm-today-mobile .crm-today-task-accent,
     .crm-today-mobile .crm-queue-card-accent {
-        width: 2px;
+        position: absolute;
+        inset-block: 0.65rem;
+        inset-inline-start: 0;
+        width: 3px;
+        border-radius: 999px;
+        background: var(--ws-primary);
+    }
+
+    .crm-today-mobile .crm-queue-card--overdue .crm-today-task-accent,
+    .crm-today-mobile .crm-queue-card--overdue .crm-queue-card-accent {
+        background: #f59e0b;
+    }
+
+    .crm-today-mobile .crm-queue-card--reminder .crm-today-task-accent,
+    .crm-today-mobile .crm-queue-card--reminder .crm-queue-card-accent {
+        background: #8b5cf6;
     }
 
     .crm-today-mobile .crm-today-task-inner {
-        padding: 0.65rem 0.7rem 0.7rem 0.78rem;
+        padding: 0.8rem 0.8rem 0.8rem 0.9rem !important;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .crm-today-mobile .crm-today-task-top {
+        gap: 0.45rem;
     }
 
     .crm-today-mobile .crm-today-task-title {
-        font-size: 0.92rem;
+        font-size: 0.94rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.35;
+    }
+
+    .crm-today-mobile .crm-today-task-lede {
+        margin-top: 0.28rem;
+        font-size: 0.7rem;
+        gap: 0.3rem 0.45rem;
+    }
+
+    .crm-today-mobile .crm-today-task-kind-label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.35rem;
+        padding: 0.08rem 0.42rem;
+        border-radius: 999px;
+        font-size: 0.64rem;
+        font-weight: 750;
+        background: color-mix(in srgb, var(--ws-bg) 50%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+    }
+
+    .crm-today-mobile .crm-queue-card--reminder .crm-today-task-kind-label {
+        color: #6d28d9;
+        border-color: color-mix(in srgb, #8b5cf6 22%, transparent);
+        background: color-mix(in srgb, #8b5cf6 8%, var(--ws-surface));
+    }
+
+    .crm-today-mobile .crm-queue-card--followup .crm-today-task-kind-label {
+        color: #1d4ed8;
+        border-color: color-mix(in srgb, #3b82f6 22%, transparent);
+        background: color-mix(in srgb, #3b82f6 8%, var(--ws-surface));
+    }
+
+    .crm-today-mobile .crm-today-task-kind-label:not(:last-child)::after {
+        display: none;
+    }
+
+    .crm-today-mobile .crm-today-task-when {
+        font-size: 0.7rem;
+        font-weight: 650;
     }
 
     .crm-today-mobile .crm-today-task-more-btn {
@@ -318,23 +673,110 @@
         height: 2.5rem;
         min-width: 2.5rem;
         min-height: 2.5rem;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
+        background: color-mix(in srgb, var(--ws-bg) 40%, var(--ws-surface));
+    }
+
+    .crm-today-mobile .crm-today-task-more-panel {
+        border-radius: 12px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+        min-width: 11.5rem;
+    }
+
+    .crm-today-mobile .crm-today-task-more-item {
+        min-height: 2.75rem;
+        font-size: 0.78rem;
+        border-radius: 9px;
+    }
+
+    .crm-today-mobile .crm-today-task-context {
+        margin-top: 0.45rem;
+        font-size: 0.78rem;
+    }
+
+    .crm-today-mobile .crm-today-task-note {
+        margin-top: 0.4rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 10px;
+        font-size: 0.74rem;
+        background: color-mix(in srgb, var(--ws-bg) 55%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent);
+        -webkit-line-clamp: 3;
     }
 
     .crm-today-mobile .crm-today-task-meta {
-        margin-top: 0.35rem;
+        margin-top: 0.5rem;
+        gap: 0.35rem;
+    }
+
+    .crm-today-mobile .crm-today-task-meta-row {
+        min-height: 1.55rem;
+        padding: 0.15rem 0.5rem;
+        font-size: 0.68rem;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent);
+    }
+
+    .crm-today-mobile .crm-today-task-actions {
+        margin-top: 0.65rem;
+        gap: 0.45rem;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
     }
 
     .crm-today-mobile .crm-today-task-act {
-        min-height: 2.75rem;
-        font-size: max(16px, 0.78rem);
+        min-height: 2.85rem;
+        border-radius: 11px;
+        font-size: max(16px, 0.8rem);
+        font-weight: 800;
+    }
+
+    .crm-today-mobile .crm-today-task-act--call {
+        background: color-mix(in srgb, #10b981 8%, var(--ws-surface));
+        border-color: color-mix(in srgb, #10b981 24%, var(--ws-border));
+    }
+
+    .crm-today-mobile .crm-today-task-act--done {
+        box-shadow: 0 4px 12px -6px rgba(22, 163, 74, 0.55);
+    }
+
+    /* ── Empty + academy ── */
+    .crm-today-mobile .crm-today-empty-wrap {
+        order: 3;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.55rem 0 0.35rem;
     }
 
     .crm-today-mobile .crm-today-empty {
-        margin: 0.5rem 0.75rem;
+        margin: 0;
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 14px;
     }
 
     .crm-today-mobile .contextual-academy-banner {
-        margin-inline: 0.75rem;
+        margin-inline: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 360px) {
+    .crm-today-mob-toolbar-panel {
+        padding: 0.5rem 0.55rem;
+    }
+
+    .crm-today-mob-act--secondary span {
+        display: none;
+    }
+
+    .crm-today-mob-act--secondary {
+        width: 2.85rem;
+        padding-inline: 0;
+    }
+
+    .crm-today-mobile .crm-today-task-inner {
+        padding: 0.72rem 0.7rem 0.72rem 0.8rem !important;
     }
 }
 

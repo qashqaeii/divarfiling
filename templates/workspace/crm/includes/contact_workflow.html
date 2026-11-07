@@ -76,6 +76,12 @@
             <dd>{{ customer.areas|truncatechars:22 }}</dd>
         </div>
         {% endif %}
+        {% if customer.streets %}
+        <div class="crm-contact-summary__item crm-contact-summary__item--streets">
+            <dt>خیابان</dt>
+            <dd>{{ customer.streets|truncatechars:22 }}</dd>
+        </div>
+        {% endif %}
         {% if customer.budget_min or customer.budget_max %}
         <div class="crm-contact-summary__item crm-contact-summary__item--budget">
             <dt>بودجه</dt>

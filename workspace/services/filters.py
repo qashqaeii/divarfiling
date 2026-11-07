@@ -414,23 +414,103 @@ def get_user_dataset_neighborhoods(
     limit: int = 500,
     offset: int = 0,
 ) -> List[str]:
-    """محله‌های distinct از فایلینگ‌های فعال — با جست‌وجو و صفحه‌بندی."""
-    from workspace.models import Listing
+    """محله/منطقهٔ distinct از فایلینگ فعال و فایل‌های شخصی — با جست‌وجو و صفحه‌بندی."""
+    from workspace.models import CRMProperty, Listing
 
     if not user or not getattr(user, 'pk', None):
         return []
-    qs = Listing.objects.filter(
+
+    names: set[str] = set()
+    term = (search or '').strip()
+
+    listing_qs = Listing.objects.filter(
         dataset__user=user,
         dataset__is_active=True,
     ).exclude(neighborhood='')
-    term = (search or '').strip()
     if term:
-        qs = qs.filter(neighborhood__icontains=term)
-    return list(
-        qs.values_list('neighborhood', flat=True)
-        .distinct()
-        .order_by('neighborhood')[offset: offset + limit]
+        listing_qs = listing_qs.filter(neighborhood__icontains=term)
+    names.update(
+        n.strip()
+        for n in listing_qs.values_list('neighborhood', flat=True).distinct().iterator(chunk_size=500)
+        if (n or '').strip()
     )
+
+    prop_qs = CRMProperty.objects.filter(
+        user=user,
+        deleted_at__isnull=True,
+    )
+    if term:
+        prop_qs = prop_qs.filter(
+            Q(neighborhood__icontains=term) | Q(district__icontains=term)
+        )
+    for neighborhood, district in prop_qs.values_list('neighborhood', 'district').iterator(chunk_size=400):
+        for raw in (neighborhood, district):
+            value = (raw or '').strip()
+            if not value:
+                continue
+            if term and term.casefold() not in value.casefold():
+                continue
+            names.add(value)
+
+    ordered = sorted(names)
+    return ordered[offset: offset + limit]
+
+
+def get_user_location_streets(
+    user,
+    *,
+    search: str = '',
+    limit: int = 500,
+    offset: int = 0,
+) -> List[str]:
+    """خیابان‌های distinct از فایلینگ فعال و فایل‌های شخصی — با جست‌وجو و صفحه‌بندی."""
+    from workspace.models import CRMProperty, Listing
+    from workspace.services.listing_street_data import (
+        normalize_street_storage_value,
+        sync_street_keys_in_listing_data,
+    )
+
+    if not user or not getattr(user, 'pk', None):
+        return []
+
+    names: set[str] = set()
+    term = (search or '').strip()
+    term_cf = term.casefold() if term else ''
+
+    def _accept(street: str) -> None:
+        if not street:
+            return
+        if term_cf and term_cf not in street.casefold():
+            return
+        names.add(street)
+
+    listing_qs = Listing.objects.filter(
+        dataset__user=user,
+        dataset__is_active=True,
+    )
+    if term:
+        listing_qs = listing_qs.filter(
+            Q(data__مکان_خیابان__icontains=term) | Q(data__خیابان__icontains=term)
+        )
+    for data in listing_qs.values_list('data', flat=True).iterator(chunk_size=400):
+        if not isinstance(data, dict):
+            continue
+        synced = sync_street_keys_in_listing_data(data)
+        _accept(normalize_street_storage_value(synced.get('مکان_خیابان')))
+
+    prop_qs = CRMProperty.objects.filter(
+        user=user,
+        deleted_at__isnull=True,
+    )
+    for feature_data in prop_qs.values_list('feature_data', flat=True).iterator(chunk_size=400):
+        if not isinstance(feature_data, dict):
+            continue
+        _accept(normalize_street_storage_value(
+            feature_data.get('خیابان') or feature_data.get('مکان_خیابان')
+        ))
+
+    ordered = sorted(names)
+    return ordered[offset: offset + limit]
 
 
 _CONSULTANT_FILTER_Q = (

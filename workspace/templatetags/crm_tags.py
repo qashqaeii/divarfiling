@@ -637,12 +637,43 @@ def crm_contact_channels_form(form):
 
 @register.inclusion_tag('workspace/crm/includes/contact_areas_picker.html')
 def crm_contact_areas_picker(form, field_name, label, wrapper_class='', dataset_neighborhoods=None):
+    from django.urls import reverse
+
     return {
         'field': form[field_name],
         'field_name': field_name,
         'label': label,
         'wrapper_class': wrapper_class,
-        'dataset_neighborhoods': dataset_neighborhoods or [],
+        'catalog_items': dataset_neighborhoods or [],
+        'search_url': reverse('workspace:crm_contact_areas_search'),
+        'unit_label': 'محله',
+        'hint': 'از محله‌ها و مناطق فایلینگ و فایل‌های شخصی تیک بزنید یا محله دلخواه را به‌صورت تگ اضافه کنید.',
+        'search_placeholder': 'جستجو در محله‌ها و مناطق...',
+        'custom_placeholder': 'محله یا منطقه دلخواه...',
+        'catalog_aria': 'محله‌ها و مناطق موجود',
+        'empty_catalog': 'هنوز محله‌ای در فایلینگ یا فایل‌های شخصی شما ثبت نشده — محله دلخواه را با دکمه «افزودن» وارد کنید.',
+        'empty_selected': 'هنوز محله‌ای انتخاب نشده',
+    }
+
+
+@register.inclusion_tag('workspace/crm/includes/contact_areas_picker.html')
+def crm_contact_streets_picker(form, field_name, label, wrapper_class='', dataset_streets=None):
+    from django.urls import reverse
+
+    return {
+        'field': form[field_name],
+        'field_name': field_name,
+        'label': label,
+        'wrapper_class': wrapper_class,
+        'catalog_items': dataset_streets or [],
+        'search_url': reverse('workspace:crm_contact_streets_search'),
+        'unit_label': 'خیابان',
+        'hint': 'از خیابان‌های فایلینگ و فایل‌های شخصی تیک بزنید یا خیابان دلخواه را به‌صورت تگ اضافه کنید.',
+        'search_placeholder': 'جستجو در خیابان‌ها...',
+        'custom_placeholder': 'خیابان دلخواه...',
+        'catalog_aria': 'خیابان‌های موجود',
+        'empty_catalog': 'هنوز خیابانی در فایلینگ یا فایل‌های شخصی شما ثبت نشده — خیابان دلخواه را با دکمه «افزودن» وارد کنید.',
+        'empty_selected': 'هنوز خیابانی انتخاب نشده',
     }
 
 

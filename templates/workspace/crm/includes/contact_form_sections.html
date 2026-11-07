@@ -232,7 +232,8 @@
             {% crm_field form.year_max 'سال ساخت تا' 'crm-prefs-year' %}
             {% crm_field form.floor_min 'طبقه از' 'crm-prefs-floor' %}
             {% crm_field form.floor_max 'طبقه تا' 'crm-prefs-floor' %}
-            {% crm_contact_areas_picker form 'areas' 'اولویت محله‌ها' 'crm-field-full crm-prefs-location' dataset_neighborhoods %}
+            {% crm_contact_areas_picker form 'areas' 'اولویت محله‌ها / مناطق' 'crm-field-full crm-prefs-location' dataset_neighborhoods %}
+            {% crm_contact_streets_picker form 'streets' 'اولویت خیابان‌ها' 'crm-field-full crm-prefs-location crm-prefs-streets' dataset_streets %}
         </div>
         <div class="crm-prefs-amenities crm-prefs-amenities-block">
             <span class="crm-label">امکانات ضروری</span>

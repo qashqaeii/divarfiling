@@ -362,6 +362,10 @@ def preferred_areas_from_profile(profile) -> List[str]:
     return parse_preferred_areas(getattr(profile, 'areas', '') or '')
 
 
+def preferred_streets_from_profile(profile) -> List[str]:
+    return parse_preferred_areas(getattr(profile, 'streets', '') or '')
+
+
 @dataclass(frozen=True)
 class GeographicMatchResult:
     status: str
@@ -425,7 +429,8 @@ def evaluate_soft_location_match(
     ترجیح محله نرم — بدون حذف قطعی؛ اولویت در hood_s و status.
     """
     areas = preferred_areas_from_profile(profile)
-    if not areas:
+    street_prefs = preferred_streets_from_profile(profile)
+    if not areas and not street_prefs:
         return GeographicMatchResult(
             status='',
             confidence='none',
@@ -434,30 +439,43 @@ def evaluate_soft_location_match(
             geo_level=GEO_MATCH_UNKNOWN,
         )
 
-    nb_fields = location_field_values(neighborhood, '', '', extra_values=None)
-    nb_level, nb_label = _best_match_level_for_prefs(profile, nb_fields, property_city=city)
-    if nb_level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS):
-        return GeographicMatchResult(
-            status=LOC_STATUS_EXACT,
-            confidence='high',
-            reason=f'محله — {nb_label or areas[0]}',
-            hood_s=1.0,
-            geo_level=nb_level,
-        )
+    if areas:
+        nb_fields = location_field_values(neighborhood, '', '', extra_values=None)
+        nb_level, nb_label = _best_match_level_for_prefs(profile, nb_fields, property_city=city)
+        if nb_level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS):
+            return GeographicMatchResult(
+                status=LOC_STATUS_EXACT,
+                confidence='high',
+                reason=f'محله — {nb_label or areas[0]}',
+                hood_s=1.0,
+                geo_level=nb_level,
+            )
 
-    dist_fields = location_field_values('', '', district, extra_values=extra_values)
-    dist_level, dist_label = _best_match_level_for_prefs(profile, dist_fields, property_city=city)
-    if dist_level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS, GEO_MATCH_STRUCTURED):
-        return GeographicMatchResult(
-            status=LOC_STATUS_DISTRICT,
-            confidence='medium',
-            reason=f'محدوده موردنظر — {dist_label or district or areas[0]}',
-            hood_s=0.82,
-            geo_level=GEO_MATCH_STRUCTURED,
-        )
+        dist_fields = location_field_values('', '', district, extra_values=extra_values)
+        dist_level, dist_label = _best_match_level_for_prefs(profile, dist_fields, property_city=city)
+        if dist_level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS, GEO_MATCH_STRUCTURED):
+            return GeographicMatchResult(
+                status=LOC_STATUS_DISTRICT,
+                confidence='medium',
+                reason=f'محدوده موردنظر — {dist_label or district or areas[0]}',
+                hood_s=0.82,
+                geo_level=GEO_MATCH_STRUCTURED,
+            )
 
     street = (trusted_street or '').strip()
-    if street:
+    if street and street_prefs:
+        for pref in street_prefs:
+            st_level, st_label = location_token_match_level(pref, street)
+            if st_level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS):
+                return GeographicMatchResult(
+                    status=LOC_STATUS_STREET,
+                    confidence='medium',
+                    reason=f'خیابان موردنظر — {st_label or street}',
+                    hood_s=0.78,
+                    geo_level=GEO_MATCH_STRUCTURED,
+                )
+
+    if street and areas:
         street_fields = location_field_values(street, '', '', extra_values=None)
         st_level, st_label = _best_match_level_for_prefs(
             profile, street_fields, property_city=city,
@@ -470,6 +488,23 @@ def evaluate_soft_location_match(
                 hood_s=0.78,
                 geo_level=GEO_MATCH_STRUCTURED,
             )
+
+    if not areas and street_prefs:
+        if street:
+            return GeographicMatchResult(
+                status=LOC_STATUS_DIFFERENT,
+                confidence='medium',
+                reason='خیابان با ترجیح مخاطب فرق دارد',
+                hood_s=0.22,
+                geo_level=GEO_MATCH_NONE,
+            )
+        return GeographicMatchResult(
+            status=LOC_STATUS_UNKNOWN,
+            confidence='low',
+            reason='خیابان فایل مشخص نیست',
+            hood_s=0.5,
+            geo_level=GEO_MATCH_UNKNOWN,
+        )
 
     hints = [str(h).strip() for h in (unverified_hints or []) if str(h).strip()]
     if hints:
@@ -582,6 +617,16 @@ def listing_trusted_street(listing) -> str:
     if not sources or sources <= _TITLE_DERIVED_SOURCES:
         return ''
     return raw
+
+
+def property_trusted_street(prop) -> str:
+    """خیابان فایل شخصی از feature_data — ورودی مشاور، قابل اتکا برای تطبیق."""
+    from workspace.services.listing_street_data import normalize_street_storage_value
+
+    fd = getattr(prop, 'feature_data', None) or {}
+    if not isinstance(fd, dict):
+        return ''
+    return normalize_street_storage_value(fd.get('خیابان') or fd.get('مکان_خیابان'))
 
 
 def listing_trusted_makan_mahalle(listing) -> str:

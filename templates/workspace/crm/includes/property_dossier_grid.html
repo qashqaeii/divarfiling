@@ -183,7 +183,7 @@
             {% endif %}
             {% if property.latitude and property.longitude %}
             <div class="crm-prop-dossier-row--meta">
-                <dt>مختصات</dt>
+                <dt><i class="fas fa-crosshairs" aria-hidden="true"></i> مختصات</dt>
                 <dd class="crm-prop-dl-coords" dir="ltr">{{ property.latitude }}, {{ property.longitude }}</dd>
             </div>
             {% endif %}
@@ -217,7 +217,7 @@
     {% if dossier_amenities %}
     <div class="crm-prop-dossier-group crm-prop-dossier-group--amenities">
         <h3 class="crm-prop-dossier-h">
-            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas {{ 'امکانات'|feature_icon }}" aria-hidden="true"></i></span>
+            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas fa-sparkles" aria-hidden="true"></i></span>
             <span class="crm-prop-dossier-h__text">
                 <span class="crm-prop-dossier-h__title">امکانات</span>
                 <span class="crm-prop-dossier-h__sub">تجهیزات و امکانات ثبت‌شده</span>
@@ -225,16 +225,18 @@
         </h3>
         <dl class="crm-prop-dossier-dl crm-prop-dossier-amenities">
             {% for item in dossier_amenities %}
-            <div class="crm-prop-amenity-row state-{{ item.state }}">
+            <div class="crm-prop-amenity-row state-{{ item.state }}" title="{{ item.tip|default:item.label }}">
                 <dt>
-                    <i class="fas {{ item.icon }} crm-prop-amenity-icon" aria-hidden="true"></i>
+                    <span class="crm-prop-amenity-ico" aria-hidden="true">
+                        <i class="fas {{ item.icon|default:'fa-circle-dot' }} crm-prop-amenity-icon"></i>
+                    </span>
                     <span class="crm-prop-amenity-label">{{ item.label }}</span>
                 </dt>
                 <dd>
                     {% if item.state == 'yes' %}
                     <span class="crm-prop-dl-amenity is-yes"><i class="fas fa-check" aria-hidden="true"></i> دارد</span>
                     {% elif item.state == 'no' %}
-                    <span class="crm-prop-dl-amenity is-no">ندارد</span>
+                    <span class="crm-prop-dl-amenity is-no"><i class="fas fa-minus" aria-hidden="true"></i> ندارد</span>
                     {% else %}
                     <span class="crm-prop-amenity-value">{{ item.value }}</span>
                     {% endif %}
@@ -246,7 +248,7 @@
     {% elif property.amenities %}
     <div class="crm-prop-dossier-group crm-prop-dossier-group--amenities">
         <h3 class="crm-prop-dossier-h">
-            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas {{ 'امکانات'|feature_icon }}" aria-hidden="true"></i></span>
+            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas fa-sparkles" aria-hidden="true"></i></span>
             <span class="crm-prop-dossier-h__text">
                 <span class="crm-prop-dossier-h__title">امکانات</span>
                 <span class="crm-prop-dossier-h__sub">تجهیزات و امکانات ثبت‌شده</span>
@@ -309,13 +311,13 @@
         <dl class="crm-prop-dossier-dl">
             {% if property.token and not mask_sensitive %}
             <div class="crm-prop-dossier-row--meta">
-                <dt>شناسه</dt>
+                <dt><i class="fas fa-fingerprint" aria-hidden="true"></i> شناسه</dt>
                 <dd dir="ltr">{{ property.token }}</dd>
             </div>
             {% endif %}
             {% if property.link and not mask_sensitive %}
             <div class="crm-prop-dossier-row--meta crm-prop-dossier-dl--full">
-                <dt>لینک</dt>
+                <dt><i class="fas fa-link" aria-hidden="true"></i> لینک</dt>
                 <dd>
                     <span class="ws-fv-url">
                         <span class="ws-fv-url-label" title="{{ property.link }}">{{ property.link }}</span>
@@ -328,22 +330,22 @@
             </div>
             {% endif %}
             <div class="crm-prop-dossier-row--meta">
-                <dt>ثبت</dt>
+                <dt><i class="fas fa-calendar-plus" aria-hidden="true"></i> ثبت</dt>
                 <dd>{{ property.created_at|ws_jalali }}</dd>
             </div>
             <div class="crm-prop-dossier-row--meta">
-                <dt>بروزرسانی</dt>
+                <dt><i class="fas fa-rotate" aria-hidden="true"></i> بروزرسانی</dt>
                 <dd>{{ property.updated_at|ws_jalali }}</dd>
             </div>
             {% if property.images %}
             <div class="crm-prop-dossier-row--meta">
-                <dt>تصاویر</dt>
+                <dt><i class="fas fa-images" aria-hidden="true"></i> تصاویر</dt>
                 <dd>{{ property.images|length }} عدد</dd>
             </div>
             {% endif %}
             {% if property.videos %}
             <div class="crm-prop-dossier-row--meta">
-                <dt>ویدئو</dt>
+                <dt><i class="fas fa-video" aria-hidden="true"></i> ویدئو</dt>
                 <dd>{{ property.videos|length }} عدد</dd>
             </div>
             {% endif %}

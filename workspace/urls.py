@@ -196,6 +196,7 @@ urlpatterns = [
     path('crm/contacts/<int:customer_id>/matching-tolerance/', crm_views.CustomerMatchingToleranceView.as_view(), name='crm_contact_matching_tolerance'),
     path('crm/contacts/<int:customer_id>/matches-more/', crm_views.CustomerMatchesMoreView.as_view(), name='crm_contact_matches_more'),
     path('crm/contacts/areas-search/', crm_views.ContactAreasSearchView.as_view(), name='crm_contact_areas_search'),
+    path('crm/contacts/streets-search/', crm_views.ContactStreetsSearchView.as_view(), name='crm_contact_streets_search'),
     path('crm/contacts/<int:customer_id>/panel/', crm_views.CustomerPanelView.as_view(), name='crm_contact_panel'),
     path('crm/contacts/new/', crm_views.CustomerCreateView.as_view(), name='crm_create'),
     path('crm/contacts/<int:customer_id>/', crm_views.CustomerDetailView.as_view(), name='crm_detail'),

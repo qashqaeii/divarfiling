@@ -366,6 +366,31 @@ def preferred_streets_from_profile(profile) -> List[str]:
     return parse_preferred_areas(getattr(profile, 'streets', '') or '')
 
 
+def street_matches_profile_preferences(profile, street: str) -> bool:
+    """
+    فیلتر سخت خیابان: اگر ترجیح خیابان ثبت شده باشد، خیابان ملک باید با یکی از آن‌ها
+    در سطح exact/alias تطبیق کند. بدون ترجیح خیابان → True.
+    """
+    prefs = preferred_streets_from_profile(profile)
+    if not prefs:
+        return True
+    raw = (street or '').strip()
+    if not raw:
+        return False
+    for pref in prefs:
+        level, _ = location_token_match_level(pref, raw)
+        if level in (GEO_MATCH_EXACT, GEO_MATCH_ALIAS):
+            return True
+    return False
+
+
+def listing_street_for_preference_filter(listing) -> str:
+    """خیابان آگهی برای فیلتر سخت — هم‌تراز کاتالوگ انتخاب مخاطب."""
+    from workspace.services.listing_street_data import listing_street_for_display
+
+    return listing_street_for_display(listing)
+
+
 @dataclass(frozen=True)
 class GeographicMatchResult:
     status: str

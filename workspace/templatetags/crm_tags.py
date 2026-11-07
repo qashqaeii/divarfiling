@@ -668,7 +668,7 @@ def crm_contact_streets_picker(form, field_name, label, wrapper_class='', datase
         'catalog_items': dataset_streets or [],
         'search_url': reverse('workspace:crm_contact_streets_search'),
         'unit_label': 'خیابان',
-        'hint': 'از خیابان‌های فایلینگ و فایل‌های شخصی تیک بزنید یا خیابان دلخواه را به‌صورت تگ اضافه کنید.',
+        'hint': 'با انتخاب خیابان، فقط آگهی‌ها و فایل‌های همان خیابان‌ها در پیشنهادها نمایش داده می‌شوند. می‌توانید از لیست تیک بزنید یا خیابان دلخواه اضافه کنید.',
         'search_placeholder': 'جستجو در خیابان‌ها...',
         'custom_placeholder': 'خیابان دلخواه...',
         'catalog_aria': 'خیابان‌های موجود',

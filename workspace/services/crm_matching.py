@@ -36,6 +36,8 @@ from workspace.services.crm_matching_geo import (
     preferred_streets_from_profile,
     property_conflicts_search_city_hint,
     property_trusted_street,
+    listing_street_for_preference_filter,
+    street_matches_profile_preferences,
     match_area_preferences_for_property,
 )
 from workspace.services.crm_matching_prefilter import (
@@ -288,6 +290,11 @@ def _profile_search_city_eligible(profile, city: str = '') -> bool:
     return not property_conflicts_search_city_hint(profile, city or '')
 
 
+def _profile_street_eligible(profile, street: str = '') -> bool:
+    """فیلتر سخت خیابان‌های ترجیحی مخاطب — در صورت خالی بودن ترجیح، محدودیتی نیست."""
+    return street_matches_profile_preferences(profile, street)
+
+
 def _profile_neighborhood_eligible(
     profile,
     neighborhood: str = '',
@@ -417,6 +424,7 @@ def _profile_criteria_eligible(
     city: str = '',
     district: str = '',
     location_extras: Optional[List[str]] = None,
+    street: str = '',
     rooms: Optional[str] = None,
     build_year: Optional[int] = None,
     floor: Optional[int] = None,
@@ -428,10 +436,12 @@ def _profile_criteria_eligible(
     rent: Optional[int] = None,
     is_rent: bool = False,
 ) -> bool:
-    """فیلتر سخت: بودجه، متراژ، نوع، شهر هدف صریح و جزئیات ترجیحات."""
+    """فیلتر سخت: بودجه، متراژ، نوع، شهر هدف صریح، خیابان ترجیحی و جزئیات ترجیحات."""
     if not _profile_property_type_eligible(profile, prop_type):
         return False
     if not _profile_search_city_eligible(profile, city):
+        return False
+    if not _profile_street_eligible(profile, street):
         return False
     if not _profile_area_eligible(profile, area):
         return False
@@ -1001,6 +1011,7 @@ def _score_crm_property_with_profile(
     if scoring_deal is None:
         return None
     use_rent_price = scoring_deal == 'rent'
+    prop_street = property_trusted_street(prop)
     if not _profile_criteria_eligible(
         profile,
         area=prop.area,
@@ -1009,6 +1020,7 @@ def _score_crm_property_with_profile(
         city=prop.city or '',
         district=prop.district or '',
         location_extras=None,
+        street=prop_street,
         rooms=prop.rooms,
         build_year=prop.build_year,
         floor=prop.floor,
@@ -1041,7 +1053,7 @@ def _score_crm_property_with_profile(
         prop.city or '',
         prop.district or '',
         extra_values=None,
-        trusted_street=property_trusted_street(prop),
+        trusted_street=prop_street,
     )
     type_s, type_note = _property_type_match_profile(profile, prop.property_type)
     room_s, room_note = _rooms_match_profile(profile, prop.rooms)
@@ -1165,7 +1177,10 @@ def _score_listing_with_profile(
     listing_extras = listing_structured_district_extras(listing)
     listing_district = listing_matching_district(listing)
     trusted_neighborhood = listing_trusted_neighborhood(listing) or listing_trusted_makan_mahalle(listing)
+    filter_street = listing_street_for_preference_filter(listing)
     trusted_street = listing_trusted_street(listing)
+    # برای ترجیح خیابان: همان مقدار کاتالوگ؛ وگرنه فقط خیابان معتبر ساختاریافته
+    soft_street = filter_street if preferred_streets_from_profile(profile) else trusted_street
     location_hints = listing_unverified_location_hints(listing)
     if not _profile_criteria_eligible(
         profile,
@@ -1175,6 +1190,7 @@ def _score_listing_with_profile(
         city=listing.city or '',
         district=listing_district,
         location_extras=listing_extras,
+        street=filter_street,
         rooms=listing_rooms,
         build_year=listing_year,
         floor=listing_floor,
@@ -1207,7 +1223,7 @@ def _score_listing_with_profile(
         listing.city or '',
         listing_district,
         extra_values=listing_extras,
-        trusted_street=trusted_street,
+        trusted_street=soft_street,
         unverified_hints=location_hints,
     )
     type_s, type_note = _property_type_match_profile(profile, inferred)
@@ -1277,8 +1293,8 @@ def _score_listing_with_profile(
         )
         if matched and label:
             display_neighborhood = label
-    elif preferred_streets_from_profile(profile) and trusted_street:
-        display_neighborhood = trusted_street
+    elif preferred_streets_from_profile(profile) and soft_street:
+        display_neighborhood = soft_street
 
     result = {
         'source': 'divar',

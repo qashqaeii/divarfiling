@@ -20,11 +20,13 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-premium.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-dossier.css' %}?v=11">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-tabs.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-activities.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-activities.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-scan.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-filing.css' %}?v=33">
 {% endblock %}
 
 {% block crm_content %}
-    <div class="crm-contact-detail-pro crm-page-chrome crm-contact-mobile crm-contact-dossier mk-filing-datasets">
+    <div class="crm-contact-detail-pro crm-page-chrome crm-contact-mobile crm-contact-dossier crm-contact-detail-scan ws-crm-cd-mob mk-filing-datasets">
     <header class="crm-contact-workspace__header">
     <section class="crm-contact-hero crm-contact-hero--compact" aria-label="پروفایل مخاطب">
         <div class="crm-contact-hero__top">
@@ -58,41 +60,16 @@
                     </button>
                     {% endif %}
                     {% if not customer_is_shared %}
-                    <details class="crm-contact-mob-menu crm-contact-mob-menu--inline crm-contact-mob-menu--toolbar">
-                        <summary class="crm-contact-mob-menu-trigger" aria-label="گزینه‌های بیشتر">
-                            <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
-                        </summary>
-                        <div class="crm-contact-mob-menu-panel" role="menu">
-                            <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-drawer-open="drawer-activity">
-                                <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت فعالیت</span>
-                            </button>
-                            <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-drawer-open="drawer-deal">
-                                <i class="fas fa-handshake" aria-hidden="true"></i><span>معامله جدید</span>
-                            </button>
-                            <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-drawer-open="drawer-reminder">
-                                <i class="fas fa-bell" aria-hidden="true"></i><span>یادآور</span>
-                            </button>
-                            <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-drawer-open="drawer-document">
-                                <i class="fas fa-upload" aria-hidden="true"></i><span>آپلود مدرک</span>
-                            </button>
-                            {% if customer.phone %}
-                            <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-copy="{{ whatsapp_text }}">
-                                <i class="fas fa-comment-dots" aria-hidden="true"></i><span>کپی قالب پیام</span>
-                            </button>
-                            {% endif %}
-                            {% if customer.phone and ai_enabled and has_bot_license %}
-                            <button type="button" class="crm-contact-mob-menu-item crm-contact-mob-menu-item--ai" role="menuitem" data-drawer-open="drawer-ai-message">
-                                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>پیام هوشمند</span>
-                            </button>
-                            {% endif %}
-                            <form method="post" action="{% url 'workspace:crm_delete' customer.id %}" class="crm-contact-mob-menu-danger" onsubmit="return confirm('حذف این مخاطب؟')">
-                                {% csrf_token %}
-                                <button type="submit" class="crm-contact-mob-menu-item crm-contact-mob-menu-item--danger" role="menuitem">
-                                    <i class="fas fa-trash" aria-hidden="true"></i><span>حذف مخاطب</span>
-                                </button>
-                            </form>
-                        </div>
-                    </details>
+                    <button
+                        type="button"
+                        class="crm-contact-mob-menu-trigger"
+                        data-crm-more-open
+                        aria-haspopup="dialog"
+                        aria-controls="crmContactMoreSheet"
+                        aria-label="گزینه‌های بیشتر"
+                    >
+                        <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                    </button>
                     {% endif %}
                     </div>
                 <div class="crm-contact-hero__actions-desk">
@@ -237,12 +214,107 @@
                 </form>
             </div>
             {% endif %}
+
+            {# Mobile filing-pattern identity (mirrors listing/property keyfacts) #}
+            <div
+                class="crm-cd-mob-keyfacts"
+                aria-label="خلاصه مخاطب"
+                data-crm-contact-avatar
+                data-url="{% url 'workspace:crm_contact_photo' customer.id %}"
+                data-has-photo="{% if customer.photo %}1{% else %}0{% endif %}"
+                data-can-edit="{% if not customer_is_shared and can_edit_customer %}1{% else %}0{% endif %}"
+            >
+                <div class="crm-cd-mob-keyfacts__aura" aria-hidden="true"></div>
+                <div class="crm-cd-mob-keyfacts__identity">
+                    <div class="crm-cd-mob-keyfacts__avatar-block">
+                        <div class="crm-cd-mob-keyfacts__avatar-ring" aria-hidden="true"></div>
+                        <div class="crm-cd-mob-keyfacts__avatar-frame" data-crm-avatar-frame>
+                            {% include 'workspace/crm/includes/contact_avatar.html' with contact=customer css_class='crm-cd-mob-keyfacts__avatar' width=96 height=96 loading='eager' %}
+                        </div>
+                        {% if not customer_is_shared and can_edit_customer %}
+                        <button
+                            type="button"
+                            class="crm-cd-mob-keyfacts__avatar-edit"
+                            data-crm-avatar-open
+                            aria-haspopup="dialog"
+                            aria-controls="crmContactAvatarSheet"
+                            aria-label="تغییر تصویر مخاطب"
+                        >
+                            <i class="fas fa-camera" aria-hidden="true"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="crm-cd-mob-keyfacts__copy">
+                        {% if customer.customer_type %}<span class="crm-cd-mob-keyfacts__role">{{ customer.customer_type }}</span>{% endif %}
+                        <h1 class="crm-cd-mob-keyfacts__title">{{ customer.name }}</h1>
+                        {% if customer.company_name %}<p class="crm-cd-mob-keyfacts__company">{{ customer.company_name }}</p>{% endif %}
+                        {% if customer.phone %}
+                        <a href="{{ customer.phone|phone_tel_href }}" class="crm-cd-mob-keyfacts__phone" dir="ltr">{{ customer.phone }}</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="crm-cd-mob-keyfacts__status">
+                    {% if contact_is_archived %}
+                    <span class="crm-cd-mob-keyfacts__chip is-warn">{{ contact_display_status }}</span>
+                    {% elif not customer_is_shared %}
+                    <div class="crm-cd-mob-keyfacts__status-picker" data-crm-status-picker data-url="{% url 'workspace:crm_contact_status' customer.id %}">
+                        <label class="sr-only" for="crmContactStatusSelectMob">وضعیت مخاطب</label>
+                        <select id="crmContactStatusSelectMob" class="crm-cd-mob-keyfacts__status-select" aria-label="تغییر وضعیت">
+                            {% for s in crm_statuses %}
+                            <option value="{{ s }}" {% if customer.status == s %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                    <span class="crm-cd-mob-keyfacts__chip">{{ contact_display_status }}</span>
+                    {% endif %}
+                    {% if customer.priority == 'بالا' %}<span class="crm-cd-mob-keyfacts__chip is-priority">اولویت بالا</span>{% endif %}
+                    {% if crm_agency and is_customer_owner and not customer_is_shared %}
+                    <span class="crm-cd-mob-keyfacts__chip"><i class="fas fa-lock" aria-hidden="true"></i> خصوصی</span>
+                    {% endif %}
+                </div>
+                {% if contact_summary.deal_mode or customer.areas or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or contact_summary.match_count %}
+                <ul class="crm-cd-mob-keyfacts__meta" aria-label="نیاز کلیدی">
+                    {% if contact_summary.deal_mode %}<li>{{ contact_summary.deal_mode }}</li>{% endif %}
+                    {% if customer.areas %}<li>{{ customer.areas|truncatechars:28 }}</li>{% endif %}
+                    {% if customer.budget_min or customer.budget_max %}
+                    <li>{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% endif %}{% if customer.budget_min and customer.budget_max %} — {% endif %}{% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% endif %}</li>
+                    {% elif customer.deposit_min or customer.deposit_max %}
+                    <li>ودیعه {% if customer.deposit_min %}{{ customer.deposit_min|ws_money }}{% endif %}{% if customer.deposit_min and customer.deposit_max %} — {% endif %}{% if customer.deposit_max %}{{ customer.deposit_max|ws_money }}{% endif %}</li>
+                    {% endif %}
+                    {% if contact_summary.match_count %}<li>{{ contact_summary.match_count }} پیشنهاد</li>{% endif %}
+                </ul>
+                {% endif %}
+            </div>
         </div>
     </section>
 
     <div class="crm-contact-dossier-prelude">
         {% include 'workspace/crm/includes/contact_followup_module.html' with mobile_slot=True %}
     </div>
+
+    <div class="crm-cd-prefs-access" data-crm-prefs-access>
+        <button type="button" class="crm-cd-prefs-access__main" data-crm-prefs-jump aria-controls="crm-contact-prefs">
+            <span class="crm-cd-prefs-access__ico" aria-hidden="true"><i class="fas fa-sliders-h"></i></span>
+            <span class="crm-cd-prefs-access__copy">
+                <strong>ترجیحات</strong>
+                <em>{% if contact_summary.has_no_preferences %}ثبت نشده{% elif customer.areas %}{{ customer.areas|truncatechars:32 }}{% elif customer.budget_min or customer.budget_max %}{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% endif %}{% if customer.budget_min and customer.budget_max %} — {% endif %}{% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% endif %}{% elif customer.deposit_min or customer.deposit_max %}ودیعه ثبت‌شده{% else %}ثبت‌شده{% endif %}</em>
+            </span>
+            <i class="fas fa-chevron-left crm-cd-prefs-access__chev" aria-hidden="true"></i>
+        </button>
+        {% if not customer_is_shared and can_edit_customer %}
+        <button
+            type="button"
+            class="crm-cd-prefs-access__edit"
+            data-drawer-open="drawer-edit"
+            data-form-tab="prefs"
+            aria-label="ویرایش ترجیحات"
+        >
+            <i class="fas fa-pen" aria-hidden="true"></i>
+        </button>
+        {% endif %}
+    </div>
+
     {% include 'workspace/crm/includes/contact_workflow.html' %}
     {% if can_share_team_resources %}
     <div id="crm-contact-team-bar" class="crm-prop-hero-share-block crm-contact-hero-share-block" data-crm-contact-team data-customer-id="{{ customer.pk }}">
@@ -260,25 +332,56 @@
     <div class="crm-contact-workspace__body">
     <div class="crm-detail-grid">
         <div class="crm-detail-main crm-contact-main">
+            <nav class="crm-cd-mob-sections" aria-label="بخش‌های پرونده">
+                <button type="button" class="crm-cd-mob-section-row active" data-tab-jump="timeline">
+                    <span>فعالیت‌ها</span>
+                    <span class="crm-cd-mob-section-row__end"><em{% if not activities %} class="is-empty"{% endif %}>{{ activities|length }}</em><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                </button>
+                <button type="button" class="crm-cd-mob-section-row" data-tab-jump="matches">
+                    <span>پیشنهادها</span>
+                    <span class="crm-cd-mob-section-row__end"><em data-crm-match-tab-count{% if not contact_summary.match_count %} class="is-empty"{% endif %}>{% crm_match_tab_count match_data %}</em><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                </button>
+                <button type="button" class="crm-cd-mob-section-row" data-tab-jump="visits">
+                    <span>بازدیدها</span>
+                    <span class="crm-cd-mob-section-row__end"><em{% if not visits %} class="is-empty"{% endif %}>{{ visits|length }}</em><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                </button>
+                <button type="button" class="crm-cd-mob-section-row" data-tab-jump="properties">
+                    <span>فایل‌های مرتبط</span>
+                    <span class="crm-cd-mob-section-row__end"><em{% with pl=property_links|length ll=linked_listings|length %}{% if not pl and not ll %} class="is-empty"{% endif %}>{{ pl|add:ll }}{% endwith %}</em><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                </button>
+                <button type="button" class="crm-cd-mob-section-row" data-tab-jump="deals">
+                    <span>معاملات</span>
+                    <span class="crm-cd-mob-section-row__end"><em{% if not deals %} class="is-empty"{% endif %}>{{ deals|length }}</em><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                </button>
+                <button type="button" class="crm-cd-mob-section-row" data-tab-jump="notes">
+                    <span>یادداشت</span>
+                    <span class="crm-cd-mob-section-row__end"><em{% if not customer.notes and not customer.tags %} class="is-empty"{% endif %}>{% if customer.notes or customer.tags %}1{% else %}0{% endif %}</em><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                </button>
+                <button type="button" class="crm-cd-mob-section-row" data-tab-jump="docs">
+                    <span>مدارک</span>
+                    <span class="crm-cd-mob-section-row__end"><em{% if not documents %} class="is-empty"{% endif %}>{{ documents|length }}</em><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                </button>
+            </nav>
+
             <div class="crm-contact-segrail" data-contact-segrail>
                 <nav class="crm-tabs crm-tabs-pro crm-contact-tabs" role="tablist" aria-label="بخش‌های مخاطب">
                     <button type="button" class="crm-tab crm-tab-pro active" data-tab="timeline" role="tab" aria-selected="true">
-                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-stream"></i></span>
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-bolt"></i></span>
                         <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">فعالیت</span><span class="crm-contact-seg__short">فعالیت</span></span>
                         <em{% if not activities %} class="is-empty"{% endif %}>{{ activities|length }}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab">
-                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-house"></i></span>
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
                         <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">پیشنهادها</span><span class="crm-contact-seg__short">پیشنهادها</span></span>
                         <em data-crm-match-tab-count{% if not contact_summary.match_count %} class="is-empty"{% endif %}>{% crm_match_tab_count match_data %}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="visits" role="tab">
-                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-door-open"></i></span>
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-eye"></i></span>
                         <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">بازدیدها</span><span class="crm-contact-seg__short">بازدیدها</span></span>
                         <em{% if not visits %} class="is-empty"{% endif %}>{{ visits|length }}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="properties" role="tab">
-                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-link"></i></span>
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
                         <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">فایل‌ها</span><span class="crm-contact-seg__short">فایل‌ها</span></span>
                         <em{% with pl=property_links|length ll=linked_listings|length %}{% if not pl and not ll %} class="is-empty"{% endif %}>{{ pl|add:ll }}{% endwith %}</em>
                     </button>
@@ -288,31 +391,33 @@
                         <em{% if not deals %} class="is-empty"{% endif %}>{{ deals|length }}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="notes" role="tab">
-                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-note-sticky"></i></span>
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
                         <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">یادداشت</span><span class="crm-contact-seg__short">یادداشت</span></span>
                         <em{% if not customer.notes and not customer.tags %} class="is-empty"{% endif %}>{% if customer.notes or customer.tags %}1{% else %}0{% endif %}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="docs" role="tab">
-                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-file"></i></span>
+                        <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-file-lines"></i></span>
                         <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">مدارک</span><span class="crm-contact-seg__short">مدارک</span></span>
                         <em{% if not documents %} class="is-empty"{% endif %}>{{ documents|length }}</em>
                     </button>
                 </nav>
             </div>
 
-            <div data-panel="timeline" class="crm-contact-panel crm-contact-tab-panel" {% if active_tab and active_tab != 'timeline' %}hidden{% endif %}>
-                <header class="crm-contact-panel-head crm-contact-tab-head">
-                    <div class="crm-contact-panel-head-text">
+            <div data-panel="timeline" class="crm-contact-panel crm-contact-tab-panel crm-cd-timeline" {% if active_tab and active_tab != 'timeline' %}hidden{% endif %}>
+                <header class="crm-contact-panel-head crm-contact-tab-head crm-cd-timeline__head">
+                    <div class="crm-contact-panel-head-text crm-cd-timeline__head-text">
                         <h2>فعالیت‌ها</h2>
-                        <p class="crm-contact-tab-head__sub">{% if activities %}{{ activities|length }} رویداد · آخرین تعاملات با این مخاطب{% else %}آخرین تعاملات با این مخاطب{% endif %}</p>
+                        {% if activities %}
+                        <em class="crm-cd-timeline__count" aria-label="{{ activities|length }} رویداد">{{ activities|length }}</em>
+                        {% endif %}
                     </div>
                     {% if not customer_is_shared %}
-                    <button type="button" class="crm-dash-act crm-dash-act--primary crm-contact-tab-head__cta" data-drawer-open="drawer-activity">
-                        <i class="fas fa-plus" aria-hidden="true"></i><span>ثبت فعالیت</span>
+                    <button type="button" class="crm-cd-timeline__cta" data-drawer-open="drawer-activity" aria-label="ثبت فعالیت">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
                     </button>
                     {% endif %}
                 </header>
-                <div class="crm-contact-panel-body crm-activity-tab__body">
+                <div class="crm-contact-panel-body crm-activity-tab__body crm-cd-timeline__body">
                     {% if activities %}
                     <div class="crm-activity-feed" role="feed" aria-label="تایم‌لاین فعالیت‌ها">
                         {% regroup activities by created_at|date:"Y-m-d" as activity_days %}
@@ -331,12 +436,12 @@
                             <div class="crm-activity-day__events">
                                 {% for a in day.list %}
                                 <article class="crm-activity-event{% if a.activity_type == 'تماس' %} crm-activity-event--call{% elif a.activity_type == 'واتساپ' %} crm-activity-event--whatsapp{% elif a.activity_type == 'پیام' or a.activity_type == 'پیامک' %} crm-activity-event--msg{% elif a.activity_type == 'یادآور' %} crm-activity-event--reminder{% elif a.activity_type == 'پیگیری' %} crm-activity-event--followup{% elif a.activity_type == 'بازدید' %} crm-activity-event--visit{% elif a.activity_type == 'جلسه' %} crm-activity-event--meeting{% elif a.activity_type == 'املاک' or a.activity_type == 'پیشنهاد' %} crm-activity-event--listing{% elif a.activity_type == 'تغییر وضعیت' %} crm-activity-event--system{% elif a.activity_type == 'یادداشت' %} crm-activity-event--note{% else %} crm-activity-event--default{% endif %}" role="article">
-                                    <div class="crm-activity-event__rail" aria-hidden="true">
-                                        <span class="crm-activity-event__node"><i class="{{ a.activity_type|crm_activity_icon }}" aria-hidden="true"></i></span>
-                                    </div>
                                     <div class="crm-activity-event__content">
                                         <header class="crm-activity-event__head">
-                                            <span class="crm-activity-event__type">{{ a.activity_type }}</span>
+                                            <div class="crm-activity-event__lead">
+                                                <span class="crm-activity-event__node" aria-hidden="true"><i class="{{ a.activity_type|crm_activity_icon }}"></i></span>
+                                                <span class="crm-activity-event__type">{{ a.activity_type }}</span>
+                                            </div>
                                             <time class="crm-activity-event__time" datetime="{{ a.created_at|date:'c' }}">{{ a.created_at|ws_time }}</time>
                                         </header>
                                         {% if a.title %}
@@ -390,14 +495,20 @@
                 </div>
             </div>
 
-            <div data-panel="matches" class="crm-contact-panel crm-contact-panel--flush crm-contact-tab-panel" {% if active_tab != 'matches' %}hidden{% endif %}>
-                <header class="crm-contact-panel-head crm-contact-tab-head">
-                    <div class="crm-contact-panel-head-text">
+            <div data-panel="matches" class="crm-contact-panel crm-contact-panel--flush crm-contact-tab-panel crm-cd-matches" {% if active_tab != 'matches' %}hidden{% endif %}>
+                <header class="crm-contact-panel-head crm-contact-tab-head crm-cd-matches__head">
+                    <div class="crm-contact-panel-head-text crm-cd-matches__head-text">
                         <h2>پیشنهادها</h2>
-                        <p class="crm-contact-tab-head__sub">{% crm_match_tab_count match_data %} فایل پیشنهادی</p>
+                        <em class="crm-cd-matches__count{% if not contact_summary.match_count %} is-empty{% endif %}" data-crm-match-tab-count aria-label="{% crm_match_tab_count match_data %} پیشنهاد">{% crm_match_tab_count match_data %}</em>
+                        <p class="crm-contact-tab-head__sub">فایل پیشنهادی</p>
                     </div>
+                    {% if match_data.eligible %}
+                    <button type="button" class="crm-cd-matches__precision-btn" data-crm-matches-precision-toggle aria-controls="crm-matches-precision-panel" aria-expanded="false" aria-label="تنظیم دقت پیشنهادها">
+                        <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                    </button>
+                    {% endif %}
                 </header>
-                <div class="crm-contact-panel-body crm-contact-panel-body--flush">
+                <div class="crm-contact-panel-body crm-contact-panel-body--flush crm-cd-matches__body">
                     {% include 'workspace/crm/includes/matches_panel.html' %}
                 </div>
             </div>
@@ -560,7 +671,7 @@
         </div>
 
         <aside class="crm-detail-sidebar crm-contact-sidebar">
-            <details class="crm-contact-side-card crm-contact-side-card--prefs crm-contact-side-fold" open>
+            <details id="crm-contact-prefs" class="crm-contact-side-card crm-contact-side-card--prefs crm-contact-side-fold crm-contact-side-fold--prefs" open>
                 <summary class="crm-contact-side-head">
                     <span class="crm-contact-side-icon crm-contact-side-icon--prefs" aria-hidden="true"><i class="fas fa-sliders-h"></i></span>
                     <h3>ترجیحات</h3>
@@ -821,7 +932,7 @@
             {% endif %}
 
             {% if deals %}
-            <details class="crm-contact-side-card crm-contact-side-card--deals crm-contact-side-fold" open>
+            <details class="crm-contact-side-card crm-contact-side-card--deals crm-contact-side-fold">
                 <summary class="crm-contact-side-head">
                     <span class="crm-contact-side-icon crm-contact-side-icon--deal" aria-hidden="true"><i class="fas fa-handshake"></i></span>
                     <h3>معاملات</h3>
@@ -834,7 +945,7 @@
                 {% endif %}
             </details>
             {% else %}
-            <details class="crm-contact-side-card crm-contact-side-card--deals crm-contact-side-fold" open>
+            <details class="crm-contact-side-card crm-contact-side-card--deals crm-contact-side-fold">
                 <summary class="crm-contact-side-head">
                     <span class="crm-contact-side-icon crm-contact-side-icon--deal" aria-hidden="true"><i class="fas fa-handshake"></i></span>
                     <h3>معاملات</h3>
@@ -943,6 +1054,133 @@
 
     {% include 'workspace/crm/includes/crm_contact_detail_help_modal.html' %}
     </div>
+
+    {% if not customer_is_shared %}
+    <div
+        id="crmContactMoreSheet"
+        class="crm-cd-more-sheet"
+        data-crm-more-sheet
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="crmContactMoreSheetTitle"
+    >
+        <button type="button" class="crm-cd-more-sheet__backdrop" data-crm-more-close aria-label="بستن"></button>
+        <div class="crm-cd-more-sheet__panel" role="menu" aria-label="اقدامات مخاطب">
+            <div class="crm-cd-more-sheet__head">
+                <span class="crm-cd-more-sheet__handle" aria-hidden="true"></span>
+                <p id="crmContactMoreSheetTitle" class="crm-cd-more-sheet__title">اقدامات</p>
+            </div>
+            <div class="crm-cd-more-sheet__list">
+                <button type="button" class="crm-cd-more-sheet__item" role="menuitem" data-drawer-open="drawer-activity" data-crm-more-close>
+                    <span class="crm-cd-more-sheet__ico" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    <span class="crm-cd-more-sheet__label">ثبت فعالیت</span>
+                </button>
+                <button type="button" class="crm-cd-more-sheet__item" role="menuitem" data-drawer-open="drawer-deal" data-crm-more-close>
+                    <span class="crm-cd-more-sheet__ico" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                    <span class="crm-cd-more-sheet__label">معامله جدید</span>
+                </button>
+                <button type="button" class="crm-cd-more-sheet__item" role="menuitem" data-drawer-open="drawer-reminder" data-crm-more-close>
+                    <span class="crm-cd-more-sheet__ico" aria-hidden="true"><i class="fas fa-bell"></i></span>
+                    <span class="crm-cd-more-sheet__label">یادآور</span>
+                </button>
+                <button type="button" class="crm-cd-more-sheet__item" role="menuitem" data-drawer-open="drawer-document" data-crm-more-close>
+                    <span class="crm-cd-more-sheet__ico" aria-hidden="true"><i class="fas fa-file-arrow-up"></i></span>
+                    <span class="crm-cd-more-sheet__label">آپلود مدرک</span>
+                </button>
+                {% if customer.phone %}
+                <button type="button" class="crm-cd-more-sheet__item" role="menuitem" data-copy="{{ whatsapp_text }}" data-crm-more-close>
+                    <span class="crm-cd-more-sheet__ico" aria-hidden="true"><i class="fas fa-copy"></i></span>
+                    <span class="crm-cd-more-sheet__label">کپی قالب پیام</span>
+                </button>
+                {% endif %}
+                {% if customer.phone and ai_enabled and has_bot_license %}
+                <button type="button" class="crm-cd-more-sheet__item crm-cd-more-sheet__item--ai" role="menuitem" data-drawer-open="drawer-ai-message" data-crm-more-close>
+                    <span class="crm-cd-more-sheet__ico" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+                    <span class="crm-cd-more-sheet__label">پیام هوشمند</span>
+                </button>
+                {% endif %}
+            </div>
+            <form method="post" action="{% url 'workspace:crm_delete' customer.id %}" class="crm-cd-more-sheet__danger" onsubmit="return confirm('حذف این مخاطب؟')">
+                {% csrf_token %}
+                <button type="submit" class="crm-cd-more-sheet__item crm-cd-more-sheet__item--danger" role="menuitem">
+                    <span class="crm-cd-more-sheet__ico" aria-hidden="true"><i class="fas fa-trash"></i></span>
+                    <span class="crm-cd-more-sheet__label">حذف مخاطب</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not customer_is_shared and can_edit_customer %}
+    <div
+        id="crmContactAvatarSheet"
+        class="crm-cd-avatar-sheet"
+        data-crm-avatar-sheet
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="crmContactAvatarSheetTitle"
+    >
+        <button type="button" class="crm-cd-avatar-sheet__backdrop" data-crm-avatar-close aria-label="بستن"></button>
+        <div class="crm-cd-avatar-sheet__panel">
+            <div class="crm-cd-avatar-sheet__handle" aria-hidden="true"></div>
+            <h2 id="crmContactAvatarSheetTitle" class="crm-cd-avatar-sheet__title">تصویر مخاطب</h2>
+            <p class="crm-cd-avatar-sheet__hint">یک عکس واضح انتخاب کنید؛ حداکثر ۵ مگابایت.</p>
+            <div class="crm-cd-avatar-sheet__actions">
+                <button type="button" class="crm-cd-avatar-sheet__btn crm-cd-avatar-sheet__btn--primary" data-crm-avatar-pick>
+                    <i class="fas fa-images" aria-hidden="true"></i>
+                    <span>انتخاب از گالری</span>
+                </button>
+                <button type="button" class="crm-cd-avatar-sheet__btn crm-cd-avatar-sheet__btn--danger" data-crm-avatar-clear {% if not customer.photo %}hidden{% endif %}>
+                    <i class="fas fa-trash-can" aria-hidden="true"></i>
+                    <span>حذف تصویر اختصاصی</span>
+                </button>
+                <button type="button" class="crm-cd-avatar-sheet__btn crm-cd-avatar-sheet__btn--ghost" data-crm-avatar-close>
+                    انصراف
+                </button>
+            </div>
+            <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif" data-crm-avatar-file tabindex="-1">
+            <p class="crm-cd-avatar-sheet__status" data-crm-avatar-status hidden></p>
+        </div>
+    </div>
+    {% endif %}
+<script>
+(function () {
+    var root = document.querySelector('.ws-crm-cd-mob');
+    if (!root) return;
+
+    if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+        root.querySelectorAll(
+            '.crm-contact-side-card--prefs, .crm-contact-side-card--msg, ' +
+            '.crm-contact-side-card--reminders, .crm-contact-side-card--convert'
+        ).forEach(function (el) { el.removeAttribute('open'); });
+        var warn = root.querySelector('.crm-contact-side-card--warn');
+        if (warn) warn.setAttribute('open', '');
+    }
+
+    function syncSectionRows() {
+        var activeTab = root.querySelector('.crm-contact-tabs .crm-tab.active, .crm-contact-tabs .crm-tab[aria-selected="true"]');
+        var key = activeTab && activeTab.getAttribute('data-tab');
+        root.querySelectorAll('.crm-cd-mob-section-row').forEach(function (row) {
+            var jump = row.getAttribute('data-tab-jump');
+            row.classList.toggle('active', !!key && jump === key);
+        });
+    }
+
+    root.querySelectorAll('.crm-contact-tabs .crm-tab[data-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            window.setTimeout(syncSectionRows, 0);
+        });
+    });
+    root.querySelectorAll('.crm-cd-mob-section-row[data-tab-jump]').forEach(function (row) {
+        row.addEventListener('click', function () {
+            window.setTimeout(syncSectionRows, 30);
+        });
+    });
+    syncSectionRows();
+})();
+</script>
 {% endblock %}
 
 {% block crm_drawers %}
@@ -951,7 +1189,13 @@
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel crm-drawer-panel-lg">
         <div class="crm-drawer-head crm-mob-sheet-head">
-            <div class="crm-mob-sheet-head__text"><h2>ویرایش مخاطب</h2><p>{{ customer.name }}</p></div>
+            <div class="crm-mob-sheet-head__main">
+                <span class="crm-mob-sheet-head__icon" aria-hidden="true"><i class="fas fa-user-pen"></i></span>
+                <div class="crm-mob-sheet-head__text">
+                    <h2>ویرایش مخاطب</h2>
+                    <p>{{ customer.name }}</p>
+                </div>
+            </div>
             <button type="button" class="crm-drawer-close crm-mob-sheet-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <form method="post" action="{% url 'workspace:crm_edit' customer.id %}" class="crm-drawer-form">

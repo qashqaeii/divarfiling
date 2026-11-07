@@ -12,7 +12,7 @@
 @media (max-width: 767px) {
     /* ── Calmer shell (reduce “desktop hero” decoration) ── */
     .ws-ld-detail.ws-ld-mobile.crm-page-chrome {
-        background: var(--ws-bg, #f8fafc);
+        background: transparent;
         gap: 0.35rem;
     }
 
@@ -57,17 +57,17 @@
     .ws-ld-detail .ws-ld-mob-keyfacts {
         display: block;
         padding: 0.65rem 0.85rem 0.75rem;
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
-        background: var(--ws-surface);
+        border-bottom: none;
+        background: transparent;
     }
 
     .ws-ld-detail .ws-ld-mob-keyfacts__price {
         margin: 0;
-        font-size: 1.35rem;
+        font-size: 1.25rem;
         font-weight: 850;
         line-height: 1.25;
         letter-spacing: -0.02em;
-        color: var(--ws-primary);
+        color: var(--ws-text);
     }
 
     .ws-ld-detail .ws-ld-mob-keyfacts__price--muted {
@@ -87,17 +87,12 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem 0.55rem;
-        margin: 0.35rem 0 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
         font-size: 0.8125rem;
         font-weight: 650;
         color: var(--ws-text-secondary);
-    }
-
-    .ws-ld-detail .ws-ld-mob-keyfacts__meta span:not(:last-child)::after {
-        content: "·";
-        margin-inline-start: 0.55rem;
-        opacity: 0.45;
-        font-weight: 400;
     }
 
     .ws-ld-detail .ws-ld-mob-keyfacts__loc {
@@ -236,7 +231,11 @@
     }
 
     .ws-ld-detail .crm-prop-panel-body {
-        padding-inline: 0.65rem;
+        padding-inline: 0;
+    }
+
+    .ws-ld-detail .crm-prop-detail-grid {
+        padding-inline: 0;
     }
 
     /* ── Map intro slimmer ── */

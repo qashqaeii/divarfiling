@@ -7,7 +7,6 @@
 {% block crm_desc %}{% endblock %}
 {% block crm_actions %}{% endblock %}
 {% block crm_search %}{% endblock %}
-{% block status_bar %}{% endblock %}
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=36">
@@ -15,7 +14,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-page-filters.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-controls.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=34">
 {% endblock %}
 
 {% block crm_content %}
@@ -80,6 +79,35 @@
     </div>
 
     <div class="crm-contacts-mob-chrome crm-contacts-list-controls">
+    <header class="crm-contacts-mob-pagehead">
+        <div class="crm-contacts-mob-pagehead__main">
+            <span class="crm-contacts-mob-pagehead__icon" aria-hidden="true"><i class="fas fa-address-book"></i></span>
+            <div class="crm-contacts-mob-pagehead__copy">
+                <h1 class="crm-contacts-mob-pagehead__title">مخاطبین</h1>
+                <p class="crm-contacts-mob-pagehead__sub">
+                    {% if request.GET.match_alerts == '1' %}
+                    فقط مخاطبان با فایل پیشنهادی
+                    {% else %}
+                    جستجو، تماس و پیگیری روزانه
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="crm-contacts-mob-pagehead__meta" aria-label="خلاصه آمار">
+            <div class="crm-contacts-mob-pagehead__pulse">
+                <span class="crm-contacts-mob-pagehead__pulse-item crm-contacts-mob-pagehead__pulse-item--live">
+                    <strong>{{ stats.total }}</strong>
+                    <em>جاری</em>
+                </span>
+                <span class="crm-contacts-mob-pagehead__pulse-divider" aria-hidden="true"></span>
+                <span class="crm-contacts-mob-pagehead__pulse-item">
+                    <strong>{{ stats.archived }}</strong>
+                    <em>بایگانی</em>
+                </span>
+            </div>
+        </div>
+    </header>
+
     <nav class="crm-files-archive-tabs crm-contacts-archive-tabs" role="tablist" aria-label="نمای مخاطبین">
         <a href="?{% if archive_tab_qs.active %}{{ archive_tab_qs.active }}{% else %}view={{ view_mode }}{% endif %}" class="crm-files-archive-tab crm-files-archive-tab--current {% if archive_scope == 'active' or not request.GET.archive_scope %}is-active{% endif %}" role="tab" aria-label="مخاطبین جاری" aria-selected="{% if archive_scope == 'active' or not request.GET.archive_scope %}true{% else %}false{% endif %}">
             <span class="crm-files-archive-tab__surface" aria-hidden="true"></span>
@@ -175,14 +203,21 @@
             </button>
         </div>
 
-        <nav class="ws-filters__chips crm-contacts-mob-filter-chips" aria-label="فیلتر سریع">
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="ws-filters__chip crm-contacts-mob-filter-chip{% if not request.GET.status and not request.GET.due and not request.GET.customer_type and not request.GET.priority and request.GET.match_alerts != '1' %} is-active{% endif %}">همه</a>
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'جدید'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="ws-filters__chip crm-contacts-mob-filter-chip{% if request.GET.status == 'جدید' %} is-active{% endif %}">جدید</a>
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'در حال پیگیری'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="ws-filters__chip crm-contacts-mob-filter-chip{% if request.GET.status == 'در حال پیگیری' %} is-active{% endif %}">پیگیری</a>
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&customer_type={{ 'خریدار'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="ws-filters__chip crm-contacts-mob-filter-chip{% if request.GET.customer_type == 'خریدار' %} is-active{% endif %}">خریدار</a>
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=action{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="ws-filters__chip crm-contacts-mob-filter-chip{% if request.GET.due == 'action' %} is-active{% endif %}">نیازمند اقدام</a>
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=unscheduled{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="ws-filters__chip crm-contacts-mob-filter-chip{% if request.GET.due == 'unscheduled' %} is-active{% endif %}">بدون پیگیری</a>
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&priority={{ 'بالا'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="ws-filters__chip crm-contacts-mob-filter-chip{% if request.GET.priority == 'بالا' %} is-active{% endif %}">اولویت بالا</a>
+        <nav class="ws-filters__chips crm-contacts-mob-filter-chips" aria-label="نقش مخاطبین">
+            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}{% if archive_scope and archive_scope != 'active' %}&archive_scope={{ archive_scope }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+               class="ws-filters__chip crm-contacts-mob-filter-chip{% if not request.GET.customer_type %} is-active{% endif %}">
+                <span>همه</span>
+                <em class="crm-contacts-mob-filter-chip__count">{{ contact_role_chip_total }}</em>
+            </a>
+            {% for role in contact_role_chips %}
+            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}{% if archive_scope and archive_scope != 'active' %}&archive_scope={{ archive_scope }}{% endif %}&customer_type={{ role.type|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+               class="ws-filters__chip crm-contacts-mob-filter-chip{% if request.GET.customer_type == role.type %} is-active{% endif %}">
+                <span>{{ role.type }}</span>
+                <em class="crm-contacts-mob-filter-chip__count">{{ role.count }}</em>
+            </a>
+            {% empty %}
+            <span class="crm-contacts-mob-filter-chip crm-contacts-mob-filter-chip--empty">نقشی ثبت نشده</span>
+            {% endfor %}
         </nav>
         </div>
 
@@ -201,35 +236,43 @@
                 <div class="crm-contacts-mob-filter-body">
                     <label class="crm-contacts-mob-filter-field">
                         <span class="crm-contacts-mob-filter-label">نوع مخاطب</span>
-                        <select name="customer_type" class="crm-contacts-select crm-contacts-mob-select" aria-label="نوع">
-                            <option value="">همه انواع</option>
-                            {% for t in crm_types %}<option value="{{ t }}" {% if request.GET.customer_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
-                        </select>
+                        <span class="crm-contacts-mob-filter-control">
+                            <select name="customer_type" class="crm-contacts-select crm-contacts-mob-select" aria-label="نوع">
+                                <option value="">همه انواع</option>
+                                {% for t in crm_types %}<option value="{{ t }}" {% if request.GET.customer_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                            </select>
+                        </span>
                     </label>
                     <label class="crm-contacts-mob-filter-field">
                         <span class="crm-contacts-mob-filter-label">وضعیت</span>
-                        <select name="status" class="crm-contacts-select crm-contacts-mob-select" aria-label="وضعیت">
-                            <option value="">همه وضعیت‌ها</option>
-                            {% for s in crm_statuses %}<option value="{{ s }}" {% if request.GET.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-                        </select>
+                        <span class="crm-contacts-mob-filter-control">
+                            <select name="status" class="crm-contacts-select crm-contacts-mob-select" aria-label="وضعیت">
+                                <option value="">همه وضعیت‌ها</option>
+                                {% for s in crm_statuses %}<option value="{{ s }}" {% if request.GET.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                            </select>
+                        </span>
                     </label>
                     <label class="crm-contacts-mob-filter-field">
                         <span class="crm-contacts-mob-filter-label">اولویت</span>
-                        <select name="priority" class="crm-contacts-select crm-contacts-mob-select" aria-label="اولویت">
-                            <option value="">همه اولویت‌ها</option>
-                            {% for p in crm_priorities %}<option value="{{ p }}" {% if request.GET.priority == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
-                        </select>
+                        <span class="crm-contacts-mob-filter-control">
+                            <select name="priority" class="crm-contacts-select crm-contacts-mob-select" aria-label="اولویت">
+                                <option value="">همه اولویت‌ها</option>
+                                {% for p in crm_priorities %}<option value="{{ p }}" {% if request.GET.priority == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                            </select>
+                        </span>
                     </label>
                     <label class="crm-contacts-mob-filter-field">
                         <span class="crm-contacts-mob-filter-label">پیگیری</span>
-                        <select name="due" class="crm-contacts-select crm-contacts-mob-select" aria-label="پیگیری">
-                            <option value="">همه</option>
-                            <option value="action" {% if request.GET.due == 'action' %}selected{% endif %}>نیازمند اقدام</option>
-                            <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
-                            <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
-                            <option value="unscheduled" {% if request.GET.due == 'unscheduled' %}selected{% endif %}>بدون پیگیری</option>
-                            <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
-                        </select>
+                        <span class="crm-contacts-mob-filter-control">
+                            <select name="due" class="crm-contacts-select crm-contacts-mob-select" aria-label="پیگیری">
+                                <option value="">همه</option>
+                                <option value="action" {% if request.GET.due == 'action' %}selected{% endif %}>نیازمند اقدام</option>
+                                <option value="today" {% if request.GET.due == 'today' %}selected{% endif %}>امروز</option>
+                                <option value="overdue" {% if request.GET.due == 'overdue' %}selected{% endif %}>معوق</option>
+                                <option value="unscheduled" {% if request.GET.due == 'unscheduled' %}selected{% endif %}>بدون پیگیری</option>
+                                <option value="none" {% if request.GET.due == 'none' %}selected{% endif %}>بدون تاریخ</option>
+                            </select>
+                        </span>
                     </label>
                     <div class="crm-contacts-mob-filter-saved">
                         {% include 'workspace/crm/includes/saved_filters.html' %}
@@ -390,11 +433,6 @@
     {% endif %}
 
     {% include 'workspace/crm/includes/crm_contacts_help_modal.html' %}
-
-    <button type="button" class="crm-contacts-fab" data-drawer-open="drawer-contact" title="مخاطب جدید" aria-label="مخاطب جدید">
-        <i class="fas fa-plus" aria-hidden="true"></i>
-        <span>مخاطب جدید</span>
-    </button>
 </div>
 {% endblock %}
 
@@ -403,7 +441,13 @@
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel crm-drawer-panel-lg">
         <div class="crm-drawer-head crm-mob-sheet-head">
-            <div class="crm-mob-sheet-head__text"><h2>مخاطب جدید</h2><p>اطلاعات کامل مخاطب</p></div>
+            <div class="crm-mob-sheet-head__main">
+                <span class="crm-mob-sheet-head__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
+                <div class="crm-mob-sheet-head__text">
+                    <h2>مخاطب جدید</h2>
+                    <p>ثبت هویت، تماس و نیاز مشتری</p>
+                </div>
+            </div>
             <button type="button" class="crm-drawer-close crm-mob-sheet-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <form method="post" action="{% url 'workspace:crm_create' %}" class="crm-drawer-form">
@@ -460,7 +504,7 @@
 
 {% block crm_js %}
 <script src="{% static 'workspace/js/ws-page-filters.js' %}?v=4"></script>
-<script src="{% static 'workspace/js/crm-contacts-list.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-contacts-list.js' %}?v=3"></script>
 <script>
 window.crmTypeProfiles = {{ type_profiles_json|safe }};
 window.crmLeaseDeadlineTypes = {{ lease_deadline_types_json|safe }};

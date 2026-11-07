@@ -9,24 +9,60 @@
                     <div class="crm-contacts-mob-card__identity">
                         {% include 'workspace/crm/includes/contact_avatar.html' with contact=c css_class='crm-contacts-avatar' width=48 height=48 %}
                         <div class="crm-contacts-mob-card__identity-text">
-                            <span class="crm-contacts-name">{{ c.name }}</span>
-                            {% if c.customer_type %}<span class="crm-contacts-mob-type">{{ c.customer_type }}</span>{% elif c.company_name %}<span class="crm-contacts-mob-type crm-contacts-mob-type--muted">{{ c.company_name }}</span>{% endif %}
-                            {% if c.phone %}
-                            <span class="crm-contacts-mob-phone" dir="ltr">{{ c.phone }}</span>
-                            {% else %}
-                            <span class="crm-contacts-mob-phone crm-contacts-mob-phone--empty">بدون شماره</span>
-                            {% endif %}
+                            <div class="crm-contacts-mob-card__title-row">
+                                <span class="crm-contacts-name">{{ c.name }}</span>
+                                {% if c.priority == 'بالا' and not c|crm_contact_is_archived %}
+                                <span class="crm-contacts-mob-card__prio" title="اولویت بالا">اولویت</span>
+                                {% endif %}
+                            </div>
+                            <span class="crm-contacts-mob-card__sub">
+                                {% if c.customer_type %}<span>{{ c.customer_type }}</span>{% endif %}
+                                {% if c.company_name and c.company_name != c.name %}
+                                {% if c.customer_type %}<span class="crm-contacts-mob-card__sub-sep" aria-hidden="true">·</span>{% endif %}
+                                <span class="crm-contacts-mob-card__sub-muted">{{ c.company_name }}</span>
+                                {% elif c.job %}
+                                {% if c.customer_type %}<span class="crm-contacts-mob-card__sub-sep" aria-hidden="true">·</span>{% endif %}
+                                <span class="crm-contacts-mob-card__sub-muted">{{ c.job }}</span>
+                                {% endif %}
+                                {% if c.phone %}
+                                {% if c.customer_type or c.company_name or c.job %}<span class="crm-contacts-mob-card__sub-sep" aria-hidden="true">·</span>{% endif %}
+                                <span class="crm-contacts-mob-phone" dir="ltr">{{ c.phone }}</span>
+                                {% elif not c.customer_type and not c.company_name and not c.job %}
+                                <span class="crm-contacts-mob-phone crm-contacts-mob-phone--empty">بدون شماره</span>
+                                {% endif %}
+                            </span>
                         </div>
                     </div>
+
+                    {% with areas_list=c.areas|split_areas %}
+                    {% if c.budget_min or c.budget_max or c.rent_max or c.deposit_max or c.property_type or c.district or c.city or areas_list %}
+                    <p class="crm-contacts-mob-card__insight" aria-label="خلاصه نیاز">
+                        {% if c.budget_min or c.budget_max %}
+                        <strong>{% if c.budget_min and c.budget_max %}{{ c.budget_min|ws_money_compact }}–{{ c.budget_max|ws_money_compact }}{% elif c.budget_max %}تا {{ c.budget_max|ws_money_compact }}{% else %}از {{ c.budget_min|ws_money_compact }}{% endif %}</strong>{% if c.property_type or c.district or c.city or areas_list %}<span class="crm-contacts-mob-card__insight-sep" aria-hidden="true">·</span>{% endif %}
+                        {% elif c.rent_max or c.deposit_max %}
+                        <strong>{% if c.deposit_max %}ودیعه {{ c.deposit_max|ws_money_compact }}{% endif %}{% if c.deposit_max and c.rent_max %} · {% endif %}{% if c.rent_max %}اجاره {{ c.rent_max|ws_money_compact }}{% endif %}</strong>{% if c.property_type or c.district or c.city or areas_list %}<span class="crm-contacts-mob-card__insight-sep" aria-hidden="true">·</span>{% endif %}
+                        {% endif %}
+                        {% if c.property_type %}
+                        <span>{{ c.property_type|crm_customer_property_type_label }}</span>{% if c.district or c.city or areas_list %}<span class="crm-contacts-mob-card__insight-sep" aria-hidden="true">·</span>{% endif %}
+                        {% endif %}
+                        {% if c.district or c.city %}
+                        <span>{% if c.city and c.district %}{{ c.district }}{% else %}{{ c.district|default:c.city }}{% endif %}</span>
+                        {% elif areas_list %}
+                        <span>{{ areas_list.0 }}{% if areas_list|length > 1 %}+{{ areas_list|length|add:"-1" }}{% endif %}</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                    {% endwith %}
+
                     <div class="crm-contacts-mob-card__state">
                         <span class="crm-contacts-mob-status-pill{% if c|crm_contact_is_archived %} crm-contacts-mob-status-pill--default{% elif c.status == 'جدید' %} crm-contacts-mob-status-pill--new{% elif c.status == 'در حال پیگیری' %} crm-contacts-mob-status-pill--following{% elif c.status == 'بازدید انجام شد' %} crm-contacts-mob-status-pill--visited{% elif c.status == 'قرارداد' %} crm-contacts-mob-status-pill--visited{% else %} crm-contacts-mob-status-pill--default{% endif %}">
                             <span class="crm-contacts-dot" aria-hidden="true"></span>
                             {{ c|crm_contact_display_status }}
                         </span>
-                        {% with last_st=c|crm_contact_last_comm_status %}{% if last_st %}<span class="crm-contacts-mob-type crm-contacts-mob-type--muted">آخرین وضعیت: {{ last_st }}</span>{% endif %}{% endwith %}
                         {% contact_followup_mob c.next_follow_up today as fu %}
                         {% if fu.label %}
                         <span class="crm-contacts-mob-followup-pill crm-contacts-mob-followup-pill--{{ fu.tone }}">
+                            <i class="fas fa-clock" aria-hidden="true"></i>
                             {{ fu.label }}
                         </span>
                         {% endif %}
@@ -37,20 +73,37 @@
                         <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
                     </summary>
                     <div class="crm-contacts-mob-row-more-panel" role="menu">
+                        <p class="crm-contacts-mob-row-more-label">میانبرها</p>
                         <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-mob-row-more-item" role="menuitem">
-                            <i class="fas fa-user" aria-hidden="true"></i><span>پروفایل</span>
+                            <span class="crm-contacts-mob-row-more-ico" aria-hidden="true"><i class="fas fa-user"></i></span>
+                            <span class="crm-contacts-mob-row-more-copy">
+                                <strong>پروفایل</strong>
+                                <em>مشاهده و ویرایش مخاطب</em>
+                            </span>
                         </a>
                         {% if c.customer_type in match_eligible_types %}
                         <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-mob-row-more-item" role="menuitem">
-                            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>فایل‌های پیشنهادی</span>
+                            <span class="crm-contacts-mob-row-more-ico crm-contacts-mob-row-more-ico--match" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+                            <span class="crm-contacts-mob-row-more-copy">
+                                <strong>فایل‌های پیشنهادی</strong>
+                                <em>تطبیق هوشمند ملک</em>
+                            </span>
                         </a>
                         {% endif %}
                         {% if c.phone %}
                         <a href="{{ c.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contacts-mob-row-more-item" role="menuitem">
-                            <i class="fab fa-whatsapp" aria-hidden="true"></i><span>واتساپ</span>
+                            <span class="crm-contacts-mob-row-more-ico crm-contacts-mob-row-more-ico--wa" aria-hidden="true"><i class="fab fa-whatsapp"></i></span>
+                            <span class="crm-contacts-mob-row-more-copy">
+                                <strong>واتساپ</strong>
+                                <em dir="ltr">{{ c.phone }}</em>
+                            </span>
                         </a>
                         <a href="{{ c.phone|phone_sms_href }}" class="crm-contacts-mob-row-more-item" role="menuitem">
-                            <i class="fas fa-comment-sms" aria-hidden="true"></i><span>پیامک</span>
+                            <span class="crm-contacts-mob-row-more-ico crm-contacts-mob-row-more-ico--sms" aria-hidden="true"><i class="fas fa-comment-sms"></i></span>
+                            <span class="crm-contacts-mob-row-more-copy">
+                                <strong>پیامک</strong>
+                                <em>ارسال پیام متنی</em>
+                            </span>
                         </a>
                         {% endif %}
                     </div>

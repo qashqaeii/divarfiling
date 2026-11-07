@@ -1,0 +1,451 @@
+/* Contact create/edit form sheet — Mobile Premium
+   Load after crm-mobile-sheets.css / crm-contacts-mobile.css */
+
+@media (max-width: 768px) {
+    #drawer-contact .crm-drawer-overlay,
+    #drawer-edit .crm-drawer-overlay {
+        background: rgba(15, 23, 42, 0.52) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    #drawer-contact.crm-mob-sheet--form .crm-drawer-panel,
+    #drawer-edit.crm-mob-sheet--form .crm-drawer-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        border-radius: 22px 22px 0 0 !important;
+        border: none !important;
+        background: var(--ws-surface) !important;
+        box-shadow:
+            0 -12px 40px rgba(15, 23, 42, 0.16),
+            0 -1px 0 rgba(255, 255, 255, 0.65) inset !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+    }
+
+    #drawer-contact .crm-drawer-form,
+    #drawer-edit .crm-drawer-form {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.ws-body:has(.crm-contact-detail-pro) #drawer-edit.crm-mob-sheet--form .crm-drawer-panel,
+    body.ws-body:not(:has(.ws-mobile-topbar)) #drawer-contact.crm-mob-sheet--form .crm-drawer-panel {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-head,
+    #drawer-edit .crm-mob-sheet-head {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center !important;
+        gap: 0.65rem !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0.75rem 1rem 0.85rem !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        background:
+            radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--ws-primary) 10%, transparent), transparent 55%),
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) 0%,
+                var(--ws-surface) 100%
+            ) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-head__main,
+    #drawer-edit .crm-mob-sheet-head__main {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        min-width: 0;
+    }
+
+    #drawer-contact .crm-mob-sheet-head__icon,
+    #drawer-edit .crm-mob-sheet-head__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.55rem;
+        height: 2.55rem;
+        flex-shrink: 0;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        box-shadow: 0 3px 12px color-mix(in srgb, var(--ws-primary) 16%, transparent);
+    }
+
+    #drawer-contact .crm-mob-sheet-head h2,
+    #drawer-edit .crm-mob-sheet-head h2 {
+        font-size: 1.08rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.025em !important;
+        line-height: 1.25 !important;
+        color: var(--ws-text) !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-head p,
+    #drawer-edit .crm-mob-sheet-head p {
+        margin-top: 0.2rem !important;
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+        color: var(--ws-text-muted) !important;
+        white-space: normal !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-close,
+    #drawer-edit .crm-mob-sheet-close {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        border-radius: 13px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
+        color: var(--ws-text-muted) !important;
+        box-shadow: none !important;
+    }
+
+    #drawer-contact .crm-drawer-body,
+    #drawer-edit .crm-drawer-body {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.85rem 0.95rem 1.15rem !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-bg, #f4f6fb) 70%, var(--ws-surface)) 0%,
+                var(--ws-bg, #f4f6fb) 100%
+            ) !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-foot,
+    #drawer-edit .crm-mob-sheet-foot,
+    #drawer-contact .crm-mob-sheet-head,
+    #drawer-edit .crm-mob-sheet-head {
+        flex-shrink: 0 !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-foot,
+    #drawer-edit .crm-mob-sheet-foot {
+        gap: 0.55rem !important;
+        padding: 0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface-2, #f8fafc) 40%, var(--ws-surface)),
+                var(--ws-surface)
+            ) !important;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    #drawer-contact .crm-mob-sheet-foot .crm-btn,
+    #drawer-edit .crm-mob-sheet-foot .crm-btn {
+        min-height: 3rem !important;
+        border-radius: 14px !important;
+        font-size: 0.88rem !important;
+        font-weight: 820 !important;
+        letter-spacing: -0.015em;
+    }
+
+    #drawer-contact .crm-mob-sheet-foot__secondary,
+    #drawer-edit .crm-mob-sheet-foot__secondary {
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-foot__primary,
+    #drawer-edit .crm-mob-sheet-foot__primary {
+        box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--ws-primary) 55%, transparent) !important;
+    }
+
+    #drawer-contact .crm-mob-sheet-foot__primary:active,
+    #drawer-edit .crm-mob-sheet-foot__primary:active {
+        transform: scale(0.985);
+    }
+
+    /* Keep all 4 tabs visible — no horizontal clip */
+    #drawer-contact .crm-contact-form .crm-form-tabs,
+    #drawer-edit .crm-contact-form .crm-form-tabs {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        flex-direction: unset !important;
+        flex-wrap: unset !important;
+        gap: 0.3rem !important;
+        overflow: visible !important;
+        padding: 0.32rem !important;
+        margin: 0 0 0.9rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent) !important;
+        border-radius: 16px !important;
+        background: color-mix(in srgb, var(--ws-surface) 92%, #fff) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        position: sticky;
+        top: 0;
+        z-index: 8;
+    }
+
+    #drawer-contact .crm-contact-form .crm-form-tab,
+    #drawer-edit .crm-contact-form .crm-form-tab {
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        min-height: 2.55rem !important;
+        padding: 0.4rem 0.55rem !important;
+        border: none !important;
+        border-radius: 12px !important;
+        background: transparent !important;
+        color: var(--ws-text-muted) !important;
+        font-size: 0.74rem !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.01em;
+        box-shadow: none !important;
+        gap: 0.35rem;
+        justify-content: center;
+    }
+
+    /* Panel visibility — never let display utilities defeat [hidden] */
+    #drawer-contact .crm-contact-form .crm-form-panel[hidden],
+    #drawer-edit .crm-contact-form .crm-form-panel[hidden] {
+        display: none !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-form-panel:not([hidden]),
+    #drawer-edit .crm-contact-form .crm-form-panel:not([hidden]) {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: 0;
+    }
+
+    #drawer-contact .crm-contact-form .crm-form-tab i,
+    #drawer-edit .crm-contact-form .crm-form-tab i {
+        display: inline-flex !important;
+        font-size: 0.7rem;
+        opacity: 0.8;
+    }
+
+    #drawer-contact .crm-contact-form .crm-form-tab.active,
+    #drawer-edit .crm-contact-form .crm-form-tab.active {
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--ws-primary) 55%, transparent) !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-form-tab.active i,
+    #drawer-edit .crm-contact-form .crm-form-tab.active i {
+        opacity: 1;
+        color: #fff;
+    }
+
+    #drawer-contact .crm-contact-form .crm-form-tab.has-error:not(.active),
+    #drawer-edit .crm-contact-form .crm-form-tab.has-error:not(.active) {
+        color: #dc2626 !important;
+        background: color-mix(in srgb, #ef4444 8%, var(--ws-surface)) !important;
+    }
+
+    /* ── Sections as soft cards ── */
+    #drawer-contact .crm-form-section,
+    #drawer-edit .crm-form-section {
+        margin: 0 0 0.75rem !important;
+        padding: 0.85rem 0.85rem 0.9rem !important;
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent);
+        background: var(--ws-surface);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    #drawer-contact .crm-form-section-title,
+    #drawer-edit .crm-form-section-title {
+        margin: 0 0 0.7rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 820 !important;
+        letter-spacing: -0.015em;
+        color: var(--ws-text) !important;
+    }
+
+    #drawer-contact .crm-form-section-title i,
+    #drawer-edit .crm-form-section-title i {
+        width: 1.55rem;
+        height: 1.55rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        font-size: 0.68rem !important;
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+    }
+
+    #drawer-contact .crm-form-section-head,
+    #drawer-edit .crm-form-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.65rem;
+    }
+
+    #drawer-contact .crm-form-section-head .crm-form-section-title,
+    #drawer-edit .crm-form-section-head .crm-form-section-title {
+        margin-bottom: 0 !important;
+    }
+
+    #drawer-contact .crm-form-section-optional,
+    #drawer-edit .crm-form-section-optional {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.25rem;
+        padding: 0.1rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.6rem;
+        font-weight: 750;
+        color: var(--ws-text-muted);
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+    }
+
+    #drawer-contact .crm-contact-form .crm-fields-2,
+    #drawer-contact .crm-contact-form .crm-fields,
+    #drawer-edit .crm-contact-form .crm-fields-2,
+    #drawer-edit .crm-contact-form .crm-fields {
+        gap: 0.75rem !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-label,
+    #drawer-edit .crm-contact-form .crm-label {
+        font-size: 0.7rem !important;
+        font-weight: 750 !important;
+        letter-spacing: -0.01em;
+        color: var(--ws-text-secondary) !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-input,
+    #drawer-contact .crm-contact-form .crm-select,
+    #drawer-contact .crm-contact-form .crm-textarea,
+    #drawer-contact .crm-contact-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    #drawer-contact .crm-contact-form select,
+    #drawer-contact .crm-contact-form textarea,
+    #drawer-edit .crm-contact-form .crm-input,
+    #drawer-edit .crm-contact-form .crm-select,
+    #drawer-edit .crm-contact-form .crm-textarea,
+    #drawer-edit .crm-contact-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    #drawer-edit .crm-contact-form select,
+    #drawer-edit .crm-contact-form textarea {
+        min-height: 3.05rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 46%, transparent) !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface-2, #f8fafc) 42%, var(--ws-surface))
+            ) !important;
+        box-shadow:
+            inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent),
+            0 1px 2px rgba(15, 23, 42, 0.025) !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        padding: 0.72rem 0.9rem !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-input:focus,
+    #drawer-contact .crm-contact-form .crm-select:focus,
+    #drawer-contact .crm-contact-form .crm-textarea:focus,
+    #drawer-contact .crm-contact-form input:not([type="checkbox"]):not([type="radio"]):focus,
+    #drawer-contact .crm-contact-form select:focus,
+    #drawer-contact .crm-contact-form textarea:focus,
+    #drawer-edit .crm-contact-form .crm-input:focus,
+    #drawer-edit .crm-contact-form .crm-select:focus,
+    #drawer-edit .crm-contact-form .crm-textarea:focus,
+    #drawer-edit .crm-contact-form input:not([type="checkbox"]):not([type="radio"]):focus,
+    #drawer-edit .crm-contact-form select:focus,
+    #drawer-edit .crm-contact-form textarea:focus {
+        border-color: color-mix(in srgb, var(--ws-primary) 42%, var(--ws-border)) !important;
+        box-shadow:
+            0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent),
+            inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent) !important;
+        outline: none !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-gender-segment,
+    #drawer-edit .crm-contact-form .crm-gender-segment {
+        min-height: 2.75rem;
+        padding: 0.2rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 45%, var(--ws-surface));
+    }
+
+    #drawer-contact .crm-contact-form .crm-gender-seg:has(input:checked) > span,
+    #drawer-edit .crm-contact-form .crm-gender-seg:has(input:checked) > span {
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        font-weight: 780;
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+    }
+
+    #drawer-contact .crm-contact-form .crm-contact-channels,
+    #drawer-edit .crm-contact-form .crm-contact-channels {
+        margin-bottom: 0.75rem;
+    }
+
+    #drawer-contact .crm-contact-form .crm-contact-channels-bar,
+    #drawer-contact .crm-contact-form .crm-contact-channels-fold__summary,
+    #drawer-edit .crm-contact-form .crm-contact-channels-bar,
+    #drawer-edit .crm-contact-form .crm-contact-channels-fold__summary {
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    #drawer-contact .crm-contact-form .crm-form-errors,
+    #drawer-edit .crm-contact-form .crm-form-errors {
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, #ef4444 22%, var(--ws-border));
+        background: color-mix(in srgb, #fef2f2 70%, var(--ws-surface));
+        padding: 0.8rem 0.9rem !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-lease-panel,
+    #drawer-edit .crm-contact-form .crm-lease-panel {
+        border-radius: 16px !important;
+        border-color: color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    #drawer-contact .crm-contact-form .crm-prefs-amenity,
+    #drawer-edit .crm-contact-form .crm-prefs-amenity {
+        border-radius: 13px !important;
+        min-height: 3rem !important;
+    }
+
+    #drawer-contact .crm-contact-form .crm-notes-expand,
+    #drawer-edit .crm-contact-form .crm-notes-expand {
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent);
+        background: var(--ws-surface);
+        overflow: hidden;
+    }
+}

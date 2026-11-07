@@ -44,6 +44,11 @@
                 {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.neighborhood %}
             </div>
             <div class="crm-field">
+                <label class="crm-label" for="{{ form.street.id_for_label }}">خیابان</label>
+                {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.street %}
+                <p class="crm-form-hint crm-form-hint--tight">خیابان اصلی ملک؛ برای تطبیق و فیلتر دقیق‌تر</p>
+            </div>
+            <div class="crm-field">
                 <label class="crm-label" for="{{ form.postal_code.id_for_label }}">کد پستی</label>
                 {{ form.postal_code }}
             </div>

@@ -1,5 +1,7 @@
 {% load workspace_tags crm_tags %}
 <section class="crm-contact-workflow" aria-label="اقدام و خلاصه پرونده">
+    {% if after_call_prompt or contact_nba %}
+    <div class="crm-contact-workflow__action">
     {% if after_call_prompt %}
     <div class="crm-contact-nba crm-contact-after-call" role="status" aria-live="polite">
         <div class="crm-contact-after-call__head">
@@ -24,7 +26,7 @@
         </div>
     </div>
     {% elif contact_nba %}
-    <div class="crm-contact-nba{% if contact_nba.key == 'followup' or contact_nba.key == 'need' %} is-accent{% endif %}" role="status">
+    <div class="crm-contact-nba{% if contact_nba.key == 'followup' or contact_nba.key == 'next_follow' or contact_nba.key == 'need' %} is-accent{% endif %}{% if contact_nba.key == 'followup' or contact_nba.key == 'next_follow' %} crm-contact-nba--followup{% endif %}{% if contact_nba.key == 'need' %} crm-contact-nba--need{% endif %}" role="status">
         <div class="crm-contact-nba__copy">
             <strong>{{ contact_nba.title }}</strong>
             {% if contact_nba.desc %}<p>{{ contact_nba.desc }}</p>{% endif %}
@@ -50,54 +52,56 @@
         {% endif %}
     </div>
     {% endif %}
+    </div>
+    {% endif %}
 
-    <div class="crm-contact-snapshot-block">
-    <h2 class="crm-contact-snapshot__title">خلاصه نیاز مشتری</h2>
+    <div class="crm-contact-snapshot-block crm-contact-workflow__snapshot">
+    <h2 class="crm-contact-snapshot__title">خلاصه نیاز</h2>
     <dl class="crm-contact-summary" aria-label="خلاصه مخاطب">
         {% if customer.customer_type %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--type">
             <dt>نوع</dt>
             <dd>{{ customer.customer_type }}</dd>
         </div>
         {% endif %}
         {% if contact_summary.deal_mode %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--deal">
             <dt>معامله</dt>
             <dd>{{ contact_summary.deal_mode }}</dd>
         </div>
         {% endif %}
         {% if customer.areas %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--areas">
             <dt>محدوده</dt>
             <dd>{{ customer.areas|truncatechars:22 }}</dd>
         </div>
         {% endif %}
         {% if customer.budget_min or customer.budget_max %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--budget">
             <dt>بودجه</dt>
             <dd>{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% endif %}{% if customer.budget_min and customer.budget_max %} — {% endif %}{% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% endif %}</dd>
         </div>
         {% endif %}
         {% if customer.deposit_min or customer.deposit_max %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--deposit">
             <dt>ودیعه</dt>
             <dd>{% if customer.deposit_min %}{{ customer.deposit_min|ws_money }}{% endif %}{% if customer.deposit_min and customer.deposit_max %} — {% endif %}{% if customer.deposit_max %}{{ customer.deposit_max|ws_money }}{% endif %}</dd>
         </div>
         {% endif %}
         {% if customer.rent_min or customer.rent_max %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--rent">
             <dt>اجاره ماهانه</dt>
             <dd>{% if customer.rent_min %}{{ customer.rent_min|ws_money }}{% endif %}{% if customer.rent_min and customer.rent_max %} — {% endif %}{% if customer.rent_max %}{{ customer.rent_max|ws_money }}{% endif %}</dd>
         </div>
         {% endif %}
         {% if customer.status %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--status">
             <dt>وضعیت</dt>
             <dd>{{ customer.status }}</dd>
         </div>
         {% endif %}
         {% if contact_summary.last_call %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--last-call">
             <dt>آخرین تماس</dt>
             <dd>{{ contact_summary.last_call.created_at|ws_jalali_datetime }}</dd>
         </div>
@@ -109,7 +113,7 @@
         </div>
         {% endif %}
         {% if contact_summary.match_count %}
-        <div class="crm-contact-summary__item">
+        <div class="crm-contact-summary__item crm-contact-summary__item--matches">
             <dt>فایل پیشنهادی</dt>
             <dd>{{ contact_summary.match_count }} مورد</dd>
         </div>

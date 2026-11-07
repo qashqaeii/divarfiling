@@ -11,10 +11,11 @@
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ld-mobile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/advertiser-analysis.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=29">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=47">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-share-modal-mobile.css' %}?v=2">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
 {% endif %}
@@ -140,7 +141,7 @@
                         <img src="{{ gallery_images.0 }}" alt="تصویر ۱" loading="eager">
                     </button>
                     {% if gallery_images|length > 1 %}
-                    <span class="crm-prop-hero-img-badge"><i class="fas fa-images"></i> {{ gallery_images|length }}</span>
+                    <span class="crm-prop-hero-img-badge" aria-label="{{ gallery_images|length }} تصویر"><i class="fas fa-camera" aria-hidden="true"></i><span>{{ gallery_images|length }}</span></span>
                     {% endif %}
                     {% include 'workspace/includes/listing_image_auth_badge.html' with auth_class='mk-img-auth--hero' %}
                     {% else %}
@@ -335,9 +336,21 @@
         </div>
 
         <div class="ws-ld-mob-keyfacts" aria-label="خلاصه آگهی">
+            <div class="ws-ld-mob-keyfacts__head">
+                {% if tx.badge %}<span class="ws-ld-mob-keyfacts__deal">{{ tx.badge }}</span>{% endif %}
+                <h1 class="ws-ld-mob-keyfacts__title">{{ listing.title }}</h1>
+                {% if listing.neighborhood or listing.city or location_side_summary %}
+                <p class="ws-ld-mob-keyfacts__loc">
+                    <i class="fas fa-location-dot" aria-hidden="true"></i>
+                    <span>{% if location_side_summary %}{{ location_side_summary }}{% else %}{% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}{% endif %}</span>
+                </p>
+                {% endif %}
+            </div>
+
             <div class="ws-ld-mob-keyfacts__pricing">
             {% if tx.show_price and listing.price %}
             <p class="ws-ld-mob-keyfacts__price">{{ listing.price|ws_money }}</p>
+            {% if tx.show_price_per_sqm and listing.price_per_sqm %}<p class="ws-ld-mob-keyfacts__ppsqm">{{ listing.price_per_sqm|ws_money:'per_sqm' }} <span>هر متر</span></p>{% endif %}
             {% elif tx.show_deposit and tx.show_rent %}
             {% if listing.deposit and listing.rent %}
             <div class="ws-ld-mob-keyfacts__rent-dual" aria-label="ودیعه و اجاره ماهانه">
@@ -369,23 +382,86 @@
             {% else %}
             <p class="ws-ld-mob-keyfacts__price ws-ld-mob-keyfacts__price--muted">قیمت ثبت نشده</p>
             {% endif %}
+            {% if benchmark.verdict %}
+            <div class="ws-ld-mob-keyfacts__bench{% if benchmark.diff_pct is not None and benchmark.diff_pct <= -12 %} is-below{% elif benchmark.diff_pct is not None and benchmark.diff_pct >= 12 %} is-above{% elif benchmark.diff_pct is not None %} is-fair{% endif %}"
+                 title="{% if benchmark.price_per_sqm_fmt %}این آگهی: {{ benchmark.price_per_sqm_fmt }}{% endif %}{% if benchmark.market_median_fmt %} · میانه: {{ benchmark.market_median_fmt }}{% endif %}">
+                <span class="ws-ld-mob-keyfacts__bench-ico" aria-hidden="true"><i class="fas fa-scale-balanced"></i></span>
+                <span class="ws-ld-mob-keyfacts__bench-copy">
+                    <strong class="ws-ld-mob-keyfacts__bench-verdict">{{ benchmark.verdict }}</strong>
+                    {% if benchmark.diff_pct is not None %}
+                    <em class="ws-ld-mob-keyfacts__bench-pct" dir="ltr">{{ benchmark.diff_pct|ws_pct }}</em>
+                    {% endif %}
+                </span>
             </div>
-            <p class="ws-ld-mob-keyfacts__meta">
-                {% if listing.area %}<span>{{ listing.area|ws_area }}</span>{% endif %}
-                {% if feat.rooms or listing.rooms %}<span>{{ feat.rooms|default:listing.rooms }} خواب</span>{% endif %}
-                {% if tx.badge %}<span>{{ tx.badge }}</span>{% endif %}
-            </p>
-            {% if listing.neighborhood or listing.city %}
-            <p class="ws-ld-mob-keyfacts__loc">
-                <i class="fas fa-location-dot" aria-hidden="true"></i>
-                {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}
-            </p>
             {% endif %}
-            <p class="ws-ld-mob-keyfacts__status">
+            </div>
+
+            <ul class="ws-ld-mob-keyfacts__meta" aria-label="مشخصات کلیدی">
+                {% if listing.area %}<li class="ws-ld-mob-keyfacts__fact"><i class="fas fa-ruler-combined" aria-hidden="true"></i><span>{{ listing.area|ws_area }}</span></li>{% endif %}
+                {% if feat.rooms or listing.rooms %}<li class="ws-ld-mob-keyfacts__fact"><i class="fas fa-bed" aria-hidden="true"></i><span>{{ feat.rooms|default:listing.rooms }} خواب</span></li>{% endif %}
+                {% if feat.parking is True %}<li class="ws-ld-mob-keyfacts__fact"><i class="fas fa-square-parking" aria-hidden="true"></i><span>پارکینگ</span></li>{% endif %}
+                {% if feat.elevator is True %}<li class="ws-ld-mob-keyfacts__fact"><i class="fas fa-elevator" aria-hidden="true"></i><span>آسانسور</span></li>{% elif feat.storage is True %}<li class="ws-ld-mob-keyfacts__fact"><i class="fas fa-box" aria-hidden="true"></i><span>انباری</span></li>{% endif %}
+            </ul>
+
+            {% if feat.advertiser or listing.is_expired or meta.is_favorite or crm_property %}
+            <div class="ws-ld-mob-keyfacts__status">
                 {% if feat.advertiser %}<span class="ws-ld-mob-keyfacts__adv"><i class="fas {{ feat.advertiser.icon|default:'fa-user' }}" aria-hidden="true"></i>{{ feat.advertiser.label }}</span>{% endif %}
                 {% if listing.is_expired %}<span class="ws-ld-mob-keyfacts__warn">منقضی</span>{% endif %}
-                {% if meta.is_favorite %}<span>علاقه‌مند</span>{% endif %}
-            </p>
+                {% if meta.is_favorite %}<span class="ws-ld-mob-keyfacts__chip">علاقه‌مند</span>{% endif %}
+                {% if crm_property %}<span class="ws-ld-mob-keyfacts__chip">در فایل شخصی</span>{% endif %}
+            </div>
+            {% endif %}
+
+            <nav class="ws-ld-mob-actions" aria-label="عملیات آگهی">
+                <button type="button" class="ws-ld-mob-act ws-ld-mob-act--primary" data-modal-open="modal-share" title="اشتراک‌گذاری با مشتری">
+                    <span class="ws-ld-mob-act__ico" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
+                    <span class="ws-ld-mob-act__lbl">اشتراک</span>
+                </button>
+
+                {% if crm_property %}
+                <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="ws-ld-mob-act" title="مشاهده فایل شخصی">
+                    <span class="ws-ld-mob-act__ico" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+                    <span class="ws-ld-mob-act__lbl">فایل شخصی</span>
+                </a>
+                {% else %}
+                <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-mob-act-form" data-listing-add-personal-form onsubmit="return !window.wsInterceptListingPersonalAdd || window.wsInterceptListingPersonalAdd(event)">
+                    {% csrf_token %}
+                    <input type="hidden" name="redirect" value="property">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="folder_id" value="">
+                    <button type="submit" class="ws-ld-mob-act" title="افزودن به فایل شخصی">
+                        <span class="ws-ld-mob-act__ico" aria-hidden="true"><i class="fas fa-folder-plus"></i></span>
+                        <span class="ws-ld-mob-act__lbl">فایل شخصی</span>
+                    </button>
+                </form>
+                {% endif %}
+
+                <button type="button" class="ws-ld-mob-act" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" title="ویرایش آگهی">
+                    <span class="ws-ld-mob-act__ico" aria-hidden="true"><i class="fas fa-pen"></i></span>
+                    <span class="ws-ld-mob-act__lbl">ویرایش</span>
+                </button>
+
+                <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="ws-ld-mob-act-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="ws-ld-mob-act{% if meta.is_favorite %} is-on{% endif %}" title="{% if meta.is_favorite %}حذف از علاقه‌مندی{% else %}افزودن به علاقه‌مندی{% endif %}">
+                        <span class="ws-ld-mob-act__ico" aria-hidden="true"><i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}"></i></span>
+                        <span class="ws-ld-mob-act__lbl">علاقه</span>
+                    </button>
+                </form>
+
+                {% if listing.link %}
+                <a href="{{ listing.link }}" target="_blank" rel="noopener" class="ws-ld-mob-act" title="مشاهده در دیوار">
+                    <span class="ws-ld-mob-act__ico" aria-hidden="true"><i class="fas fa-external-link"></i></span>
+                    <span class="ws-ld-mob-act__lbl">دیوار</span>
+                </a>
+                {% endif %}
+
+                <button type="button" class="ws-ld-mob-act ws-ld-mob-act--more" data-ld-more-open aria-haspopup="dialog" aria-controls="wsLdMobMore" title="عملیات بیشتر" aria-label="عملیات بیشتر">
+                    <span class="ws-ld-mob-act__ico" aria-hidden="true"><i class="fas fa-ellipsis"></i></span>
+                    <span class="ws-ld-mob-act__lbl">بیشتر</span>
+                </button>
+            </nav>
         </div>
     </header>
 
@@ -427,50 +503,6 @@
                 </button>
                 {% endif %}
             </nav>
-            <div class="ws-crm-pd-mob-section-ui">
-                <div class="ws-crm-pd-mob-section-bar">
-                    <span class="ws-crm-pd-mob-section-bar__label" id="wsLdSectionLabel">
-                        <i class="fas fa-table-columns ws-crm-pd-mob-section-bar__label-ico" aria-hidden="true"></i>
-                        <span data-filing-mob-section-label-text>اطلاعات اصلی</span>
-                    </span>
-                    <button type="button" class="ws-crm-pd-mob-section-bar__trigger" data-filing-mob-sections-open aria-haspopup="dialog" aria-controls="wsLdSectionSheet" aria-expanded="false">
-                        <span>بخش‌ها</span>
-                        <i class="fas fa-chevron-down ws-crm-pd-mob-section-bar__chev" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="ws-ld-mob-sections" role="tablist" aria-label="بخش‌های جزئیات" hidden>
-                <button type="button" class="ws-ld-mob-section-row active" data-tab="overview" role="tab" aria-selected="true">
-                    <span>اطلاعات اصلی</span>
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="ws-ld-mob-section-row" data-tab="contacts" role="tab" aria-selected="false">
-                    <span>مخاطبین{% if crm_links %} <em>{{ crm_links|length }}</em>{% endif %}</span>
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                {% if feature_profile.has_details %}
-                <button type="button" class="ws-ld-mob-section-row" data-tab="specs" role="tab" aria-selected="false">
-                    <span>امکانات و مشخصات{% if feature_profile.detail_count %} <em>{{ feature_profile.detail_count }}</em>{% endif %}</span>
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                {% endif %}
-                {% if supplementary_fields or supplementary_groups %}
-                <button type="button" class="ws-ld-mob-section-row" data-tab="extra" role="tab" aria-selected="false">
-                    <span>مشخصات بیشتر</span>
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                {% endif %}
-                <button type="button" class="ws-ld-mob-section-row" data-tab="notes" role="tab" aria-selected="false">
-                    <span>یادداشت‌ها</span>
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                {% if price_history %}
-                <button type="button" class="ws-ld-mob-section-row" data-tab="history" role="tab" aria-selected="false">
-                    <span>تاریخچه قیمت <em>{{ price_history|length }}</em></span>
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                {% endif %}
-            </div>
             </div>
 
             <div data-panel="overview" class="crm-prop-panel crm-prop-panel-pro" role="tabpanel">
@@ -546,16 +578,18 @@
             </div>
 
             <div data-panel="contacts" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
-                <header class="crm-prop-panel-head crm-prop-panel-head--row ws-ld-contacts-head-desk">
-                    <div>
+                <header class="crm-prop-panel-head crm-prop-panel-head--row ws-ld-contacts-head-desk ws-ld-mob-acc-head" data-ld-acc-toggle>
+                    <span class="ws-ld-mob-acc-head__ico" aria-hidden="true"><i class="fas fa-users"></i></span>
+                    <div class="ws-ld-mob-acc-head__text">
                         <h2>مخاطبین مرتبط</h2>
-                        <p>افراد پیوندشده به این آگهی</p>
+                        <p>افراد پیوندشده به این آگهی{% if crm_links %} · {{ crm_links|length }} نفر{% endif %}</p>
                     </div>
-                    <div class="crm-prop-panel-head-actions">
+                    <div class="crm-prop-panel-head-actions ws-ld-mob-acc-head__desk-actions">
                         <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="crm-dash-act crm-dash-act--primary">
                             <i class="fas fa-user-plus"></i><span>مخاطب جدید</span>
                         </a>
                     </div>
+                    <i class="fas fa-chevron-down ws-ld-mob-acc-head__chev" aria-hidden="true"></i>
                 </header>
                 <div class="crm-prop-panel-body">
                     <div class="ws-ld-mob-contacts-bar">
@@ -633,11 +667,13 @@
 
             {% if feature_profile.has_details %}
             <div data-panel="specs" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
-                <header class="crm-prop-panel-head">
-                    <h2>ویژگی‌ها و امکانات</h2>
-                    {% if listing.link %}
-                    <p>منبع: <a href="{{ listing.link }}" target="_blank" rel="noopener">مشاهده در دیوار</a></p>
-                    {% endif %}
+                <header class="crm-prop-panel-head ws-ld-mob-acc-head" data-ld-acc-toggle>
+                    <span class="ws-ld-mob-acc-head__ico" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+                    <div class="ws-ld-mob-acc-head__text">
+                        <h2>امکانات و مشخصات</h2>
+                        <p>{% if feature_profile.detail_count %}{{ feature_profile.detail_count }} مورد{% else %}ویژگی‌های استخراج‌شده{% endif %}</p>
+                    </div>
+                    <i class="fas fa-chevron-down ws-ld-mob-acc-head__chev" aria-hidden="true"></i>
                 </header>
                 <div class="crm-prop-panel-body">
                     {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True %}
@@ -645,26 +681,47 @@
             </div>
             {% endif %}
 
-            {% if supplementary_fields or supplementary_groups %}
+            {% if supplementary_groups %}
             <div data-panel="extra" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
-                <header class="crm-prop-panel-head">
-                    <h2>اطلاعات تکمیلی</h2>
-                    <p>فیلدهای اضافی استخراج‌شده</p>
+                <header class="crm-prop-panel-head ws-ld-mob-acc-head" data-ld-acc-toggle>
+                    <span class="ws-ld-mob-acc-head__ico" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                    <div class="ws-ld-mob-acc-head__text">
+                        <h2>مشخصات بیشتر</h2>
+                        <p>فیلدهای اضافی استخراج‌شده</p>
+                    </div>
+                    <i class="fas fa-chevron-down ws-ld-mob-acc-head__chev" aria-hidden="true"></i>
                 </header>
                 <div class="crm-prop-panel-body">
-                    {% if supplementary_groups %}
                     {% include 'workspace/includes/supplementary_fields.html' with groups=supplementary_groups %}
-                    {% endif %}
+                </div>
+            </div>
+            {% elif supplementary_fields %}
+            <div data-panel="extra" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head ws-ld-mob-acc-head" data-ld-acc-toggle>
+                    <span class="ws-ld-mob-acc-head__ico" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                    <div class="ws-ld-mob-acc-head__text">
+                        <h2>مشخصات بیشتر</h2>
+                        <p>فیلدهای اضافی استخراج‌شده</p>
+                    </div>
+                    <i class="fas fa-chevron-down ws-ld-mob-acc-head__chev" aria-hidden="true"></i>
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% include 'workspace/includes/listing_field_list_ld_mob.html' with fields=supplementary_fields %}
                 </div>
             </div>
             {% endif %}
 
             <div data-panel="notes" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
-                <header class="crm-prop-panel-head crm-prop-panel-head--row">
-                    <div><h2>یادداشت</h2><p>یادداشت شخصی روی این آگهی</p></div>
-                    <button type="button" class="crm-dash-act" data-modal-open="modal-meta">
+                <header class="crm-prop-panel-head crm-prop-panel-head--row ws-ld-mob-acc-head" data-ld-acc-toggle>
+                    <span class="ws-ld-mob-acc-head__ico" aria-hidden="true"><i class="fas fa-note-sticky"></i></span>
+                    <div class="ws-ld-mob-acc-head__text">
+                        <h2>یادداشت‌ها</h2>
+                        <p>یادداشت شخصی روی این آگهی</p>
+                    </div>
+                    <button type="button" class="crm-dash-act ws-ld-mob-acc-head__desk-actions" data-modal-open="modal-meta">
                         <i class="fas fa-pen"></i><span>ویرایش</span>
                     </button>
+                    <i class="fas fa-chevron-down ws-ld-mob-acc-head__chev" aria-hidden="true"></i>
                 </header>
                 <div class="crm-prop-panel-body">
                     {% if meta.note %}
@@ -681,9 +738,13 @@
 
             {% if price_history %}
             <div data-panel="history" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
-                <header class="crm-prop-panel-head">
-                    <h2>تاریخچه قیمت</h2>
-                    <p>تغییرات ثبت‌شده برای این توکن</p>
+                <header class="crm-prop-panel-head ws-ld-mob-acc-head" data-ld-acc-toggle>
+                    <span class="ws-ld-mob-acc-head__ico" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+                    <div class="ws-ld-mob-acc-head__text">
+                        <h2>تاریخچه قیمت</h2>
+                        <p>{{ price_history|length }} تغییر ثبت‌شده</p>
+                    </div>
+                    <i class="fas fa-chevron-down ws-ld-mob-acc-head__chev" aria-hidden="true"></i>
                 </header>
                 <div class="crm-prop-panel-body">
                     <div class="ws-ld-history-wrap">
@@ -713,47 +774,52 @@
             {% endif %}
         </main>
 
-        <aside class="crm-prop-aside" aria-label="اطلاعات پرونده">
-            {% url 'workspace:listing_detail' dataset.id listing.id as listing_owner_action %}
-            {% include 'workspace/includes/owner_contact_box.html' with owner_form_action=listing_owner_action owner_phone=owner_phone owner_name=owner_name owner_contact=owner_contact can_edit_owner=True owner_id_prefix='ld-owner' %}
+        <div class="ws-ld-side-col">
+            <section class="ws-ld-owner-slot{% if not owner_phone and not owner_name and not owner_contact %} is-empty{% else %} is-filled{% endif %}"
+                     aria-label="مالک ملک">
+                {% url 'workspace:listing_detail' dataset.id listing.id as listing_owner_action %}
+                {% include 'workspace/includes/owner_contact_box.html' with owner_form_action=listing_owner_action owner_phone=owner_phone owner_name=owner_name owner_contact=owner_contact can_edit_owner=True owner_id_prefix='ld-owner' %}
+            </section>
 
-            <div class="crm-prop-side-card crm-prop-side-card--pro">
-                <h3>خلاصه آگهی</h3>
-                <dl class="crm-prop-side-dl">
-                    <div><dt>نوع معامله</dt><dd>{{ tx.badge }}</dd></div>
-                    {% if feat.advertiser %}<div><dt>آگهی‌دهنده</dt><dd>{{ feat.advertiser.label }}</dd></div>{% endif %}
-                    {% if listing.neighborhood %}<div><dt>محله</dt><dd>{{ listing.neighborhood }}</dd></div>{% endif %}
-                    {% if listing.city %}<div><dt>شهر</dt><dd>{{ listing.city }}</dd></div>{% endif %}
-                    <div><dt>فایلینگ</dt><dd>{{ dataset.name }}</dd></div>
-                    {% if listing.published_at %}<div><dt>تاریخ ایجاد در دیوار</dt><dd>{{ listing.published_at|ws_jalali_datetime }}</dd></div>{% endif %}
-                    {% if last_bump_at %}<div><dt>آخرین نردبان</dt><dd><i class="fas fa-angles-up ws-ld-side-bump-icon" aria-hidden="true"></i> {{ last_bump_at|ws_jalali_datetime }}</dd></div>{% endif %}
-                    {% if listing.is_expired %}<div><dt>وضعیت</dt><dd>منقضی</dd></div>{% endif %}
-                    {% if crm_property %}
-                    <div><dt>فایل شخصی</dt><dd><a href="{% url 'workspace:crm_property_detail' crm_property.id %}">مشاهده فایل شخصی</a></dd></div>
-                    <p class="ws-ld-personal-notice">این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.</p>
-                    {% endif %}
-                </dl>
-            </div>
+            <aside class="crm-prop-aside" aria-label="اطلاعات پرونده">
+                <div class="crm-prop-side-card crm-prop-side-card--pro">
+                    <h3>خلاصه آگهی</h3>
+                    <dl class="crm-prop-side-dl">
+                        <div><dt>نوع معامله</dt><dd>{{ tx.badge }}</dd></div>
+                        {% if feat.advertiser %}<div><dt>آگهی‌دهنده</dt><dd>{{ feat.advertiser.label }}</dd></div>{% endif %}
+                        {% if listing.neighborhood %}<div><dt>محله</dt><dd>{{ listing.neighborhood }}</dd></div>{% endif %}
+                        {% if listing.city %}<div><dt>شهر</dt><dd>{{ listing.city }}</dd></div>{% endif %}
+                        <div><dt>فایلینگ</dt><dd>{{ dataset.name }}</dd></div>
+                        {% if listing.published_at %}<div><dt>تاریخ ایجاد در دیوار</dt><dd>{{ listing.published_at|ws_jalali_datetime }}</dd></div>{% endif %}
+                        {% if last_bump_at %}<div><dt>آخرین نردبان</dt><dd><i class="fas fa-angles-up ws-ld-side-bump-icon" aria-hidden="true"></i> {{ last_bump_at|ws_jalali_datetime }}</dd></div>{% endif %}
+                        {% if listing.is_expired %}<div><dt>وضعیت</dt><dd>منقضی</dd></div>{% endif %}
+                        {% if crm_property %}
+                        <div><dt>فایل شخصی</dt><dd><a href="{% url 'workspace:crm_property_detail' crm_property.id %}">مشاهده فایل شخصی</a></dd></div>
+                        <p class="ws-ld-personal-notice">این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.</p>
+                        {% endif %}
+                    </dl>
+                </div>
 
-            {% if listing.latitude and listing.longitude %}
-            <div class="crm-prop-side-card crm-prop-side-card--pro">
-                <h3>موقعیت</h3>
-                {% if location_side_summary %}<p class="ws-ld-side-loc">{{ location_side_summary }}</p>{% elif listing.neighborhood %}<p class="ws-ld-side-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
-                {% if location_accuracy.label %}<p class="ws-ld-side-accuracy">{{ location_accuracy.label }}</p>{% endif %}
-                <a href="#wsLdMapFinale" class="crm-dash-act" data-ld-map-jump>
-                    <i class="fas fa-map" aria-hidden="true"></i><span>مشاهده نقشه</span>
-                </a>
-            </div>
-            {% endif %}
+                {% if listing.latitude and listing.longitude %}
+                <div class="crm-prop-side-card crm-prop-side-card--pro">
+                    <h3>موقعیت</h3>
+                    {% if location_side_summary %}<p class="ws-ld-side-loc">{{ location_side_summary }}</p>{% elif listing.neighborhood %}<p class="ws-ld-side-loc">{{ listing.neighborhood }}{% if listing.city %} · {{ listing.city }}{% endif %}</p>{% endif %}
+                    {% if location_accuracy.label %}<p class="ws-ld-side-accuracy">{{ location_accuracy.label }}</p>{% endif %}
+                    <a href="#wsLdMapFinale" class="crm-dash-act" data-ld-map-jump>
+                        <i class="fas fa-map" aria-hidden="true"></i><span>مشاهده نقشه</span>
+                    </a>
+                </div>
+                {% endif %}
 
-            {% if meta.note %}
-            <div class="crm-prop-side-card crm-prop-side-card--pro">
-                <h3>یادداشت</h3>
-                <p class="ws-ld-note-body">{{ meta.note|truncatechars:160 }}</p>
-                <button type="button" class="crm-dash-act" data-tab-jump="notes" style="margin-top:0.5rem">مشاهده کامل</button>
-            </div>
-            {% endif %}
-        </aside>
+                {% if meta.note %}
+                <div class="crm-prop-side-card crm-prop-side-card--pro">
+                    <h3>یادداشت</h3>
+                    <p class="ws-ld-note-body">{{ meta.note|truncatechars:160 }}</p>
+                    <button type="button" class="crm-dash-act" data-tab-jump="notes" style="margin-top:0.5rem">مشاهده کامل</button>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
     </div>
 
     {% if listing.latitude and listing.longitude %}
@@ -809,130 +875,159 @@
     </section>
     {% endif %}
 
-    <nav class="crm-prop-mobile-dock ws-ld-mob-dock" aria-label="عملیات سریع موبایل">
-        <div class="crm-prop-mobile-dock__inner">
-            <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--share crm-prop-dock-btn--primary" data-modal-open="modal-share" title="ارسال لینک برای مشتری" aria-label="ارسال برای مشتری">
-                <i class="fas fa-share-alt" aria-hidden="true"></i>
-                <span class="crm-prop-dock-btn__label">
-                    <span class="crm-prop-dock-btn__long">ارسال برای مشتری</span>
-                    <span class="crm-prop-dock-btn__short">برای مشتری</span>
-                </span>
-            </button>
-            {% if crm_property %}
-            <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="crm-prop-dock-btn crm-prop-dock-btn--personal ws-ld-dock-personal-link" title="مشاهده فایل شخصی" aria-label="مشاهده فایل شخصی">
-                <i class="fas fa-folder-open" aria-hidden="true"></i>
-                <span>فایل شخصی</span>
-            </a>
-            {% else %}
-            <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-dock-form ws-ld-dock-form--personal" data-listing-add-personal-form onsubmit="return !window.wsInterceptListingPersonalAdd || window.wsInterceptListingPersonalAdd(event)">
-                {% csrf_token %}
-                <input type="hidden" name="redirect" value="property">
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <input type="hidden" name="folder_id" value="">
-                <button type="submit" class="crm-prop-dock-btn crm-prop-dock-btn--personal" title="افزودن به فایل شخصی" aria-label="افزودن به فایل شخصی">
-                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
-                    <span>افزودن شخصی</span>
-                </button>
-            </form>
-            {% endif %}
-            <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="ws-ld-dock-form">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="crm-prop-dock-btn crm-prop-dock-btn--fav{% if meta.is_favorite %} is-on{% endif %}" title="{% if meta.is_favorite %}حذف از علاقه‌مندی{% else %}افزودن به علاقه‌مندی{% endif %}">
-                    <i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}" aria-hidden="true"></i>
-                    <span>علاقه</span>
-                </button>
-            </form>
-            <button type="button" class="crm-prop-dock-btn ws-ld-dock-edit" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" title="ویرایش کامل آگهی">
-                <i class="fas fa-pen" aria-hidden="true"></i>
-                <span>ویرایش</span>
-            </button>
-            <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--more" data-ld-more-open title="عملیات بیشتر">
-                <i class="fas fa-ellipsis" aria-hidden="true"></i>
-                <span>بیشتر</span>
-            </button>
-        </div>
-    </nav>
-
     <div class="ws-ld-mob-more" id="wsLdMobMore" hidden aria-hidden="true">
         <button type="button" class="ws-ld-mob-more__backdrop" data-ld-more-close aria-label="بستن"></button>
         <div class="ws-ld-mob-more__panel" role="dialog" aria-modal="true" aria-labelledby="wsLdMobMoreTitle">
             <div class="ws-ld-mob-more__handle" aria-hidden="true"></div>
-            <h2 class="ws-ld-mob-more__title" id="wsLdMobMoreTitle">عملیات آگهی</h2>
-            <div class="ws-ld-mob-more__grid">
-                <button type="button" class="ws-ld-mob-more__act ws-ld-mob-more__act--help" data-modal-open="modal-listing-detail-help" data-ld-more-close>
-                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
-                    <span>راهنما</span>
+            <header class="ws-ld-mob-more__head">
+                <h2 class="ws-ld-mob-more__title" id="wsLdMobMoreTitle">عملیات آگهی</h2>
+                <button type="button" class="ws-ld-mob-more__close" data-ld-more-close aria-label="بستن">
+                    <i class="fas fa-xmark" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="ws-ld-mob-more__act" data-modal-open="modal-meta" data-ld-more-close>
-                    <i class="fas fa-sliders" aria-hidden="true"></i>
-                    <span>متادیتا</span>
-                </button>
-                <button type="button" class="ws-ld-mob-more__act ws-ld-mob-more__act--primary" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" data-ld-more-close>
-                    <i class="fas fa-pen" aria-hidden="true"></i>
-                    <span>ویرایش</span>
-                </button>
-                <button type="button" class="ws-ld-mob-more__act ws-ld-mob-more__act--share" data-modal-open="modal-share" data-ld-more-close>
-                    <i class="fas fa-share-alt" aria-hidden="true"></i>
-                    <span>اشتراک</span>
-                </button>
-                <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="ws-ld-mob-more__form">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <button type="submit" class="ws-ld-mob-more__act ws-ld-mob-more__act--fav{% if meta.is_favorite %} is-on{% endif %}">
-                        <i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}" aria-hidden="true"></i>
-                        <span>{% if meta.is_favorite %}حذف علاقه{% else %}علاقه‌مندی{% endif %}</span>
-                    </button>
-                </form>
-                {% if owner_phone %}
-                <a href="{{ owner_phone|phone_wa_href }}" target="_blank" rel="noopener" class="ws-ld-mob-more__act">
-                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                    <span>واتساپ مالک</span>
-                </a>
-                {% endif %}
-                <button type="button" class="ws-ld-mob-more__act" data-copy="{{ whatsapp_text }}" data-ld-more-close>
-                    <i class="fas fa-comment-dots" aria-hidden="true"></i>
-                    <span>کپی واتساپ</span>
-                </button>
-                {% if crm_property %}
-                <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="ws-ld-mob-more__act">
-                    <i class="fas fa-folder-open" aria-hidden="true"></i>
-                    <span>مشاهده فایل شخصی</span>
-                </a>
-                <p class="ws-ld-mob-more__notice">این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.</p>
-                {% else %}
-                <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-mob-more__form" data-listing-add-personal-form onsubmit="return !window.wsInterceptListingPersonalAdd || window.wsInterceptListingPersonalAdd(event)">
-                    {% csrf_token %}
-                    <input type="hidden" name="redirect" value="property">
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <input type="hidden" name="folder_id" value="">
-                    <button type="submit" class="ws-ld-mob-more__act ws-ld-mob-more__act--personal" data-ld-more-close>
-                        <i class="fas fa-folder-plus" aria-hidden="true"></i>
-                        <span>فایل شخصی</span>
-                    </button>
-                </form>
-                {% endif %}
-                {% if listing.link %}
-                <a href="{{ listing.link }}" target="_blank" rel="noopener" class="ws-ld-mob-more__act">
-                    {% include 'includes/icon_slot.html' with decor='external_link' size='inline' only %}
-                    <span>مشاهده در دیوار</span>
-                </a>
-                {% endif %}
-                {% if listing.latitude and listing.longitude %}
-                <a href="#wsLdMapFinale" class="ws-ld-mob-more__act" data-ld-map-jump data-ld-more-close>
-                    <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                    <span>نقشه</span>
-                </a>
-                {% endif %}
-                <button type="button"
-                        class="ws-ld-mob-more__act ws-ld-mob-more__act--danger js-delete-listing"
-                        data-id="{{ listing.id }}"
-                        data-dataset-id="{{ dataset.id }}"
-                        data-title="{{ listing.title|truncatechars:40|escapejs }}"
-                        data-ld-more-close>
-                    <i class="fas fa-trash" aria-hidden="true"></i>
-                    <span>حذف آگهی</span>
-                </button>
+            </header>
+            <div class="ws-ld-mob-more__groups">
+                <section class="ws-ld-mob-more__group" aria-label="اقدامات اصلی">
+                    <h3 class="ws-ld-mob-more__group-label">اقدامات اصلی</h3>
+                    <div class="ws-ld-mob-more__list">
+                        <button type="button" class="ws-ld-mob-more__row ws-ld-mob-more__row--accent" data-modal-open="modal-share" data-ld-more-close>
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-paper-plane"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>ارسال به مشتری</strong>
+                                <em>لینک اشتراک و پیام آماده</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </button>
+                        {% if crm_property %}
+                        <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="ws-ld-mob-more__row">
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>مشاهده فایل شخصی</strong>
+                                <em>قبلاً به فایل شخصی اضافه شده</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </a>
+                        {% else %}
+                        <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-mob-more__form" data-listing-add-personal-form onsubmit="return !window.wsInterceptListingPersonalAdd || window.wsInterceptListingPersonalAdd(event)">
+                            {% csrf_token %}
+                            <input type="hidden" name="redirect" value="property">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <input type="hidden" name="folder_id" value="">
+                            <button type="submit" class="ws-ld-mob-more__row" data-ld-more-close>
+                                <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-folder-plus"></i></span>
+                                <span class="ws-ld-mob-more__row-copy">
+                                    <strong>افزودن به فایل شخصی</strong>
+                                    <em>نگه‌داری دائم در CRM</em>
+                                </span>
+                                <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                        <button type="button" class="ws-ld-mob-more__row" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" data-ld-more-close>
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-pen"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>ویرایش آگهی</strong>
+                                <em>اصلاح مشخصات و قیمت</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </button>
+                        <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="ws-ld-mob-more__form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="ws-ld-mob-more__row{% if meta.is_favorite %} is-on{% endif %}">
+                                <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}"></i></span>
+                                <span class="ws-ld-mob-more__row-copy">
+                                    <strong>{% if meta.is_favorite %}حذف از علاقه‌مندی{% else %}افزودن به علاقه‌مندی{% endif %}</strong>
+                                    <em>دسترسی سریع‌تر در ادامه کار</em>
+                                </span>
+                                <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="ws-ld-mob-more__group" aria-label="ارتباط">
+                    <h3 class="ws-ld-mob-more__group-label">ارتباط</h3>
+                    <div class="ws-ld-mob-more__list">
+                        {% if owner_phone %}
+                        <a href="{{ owner_phone|phone_wa_href }}" target="_blank" rel="noopener" class="ws-ld-mob-more__row">
+                            <span class="ws-ld-mob-more__row-ico ws-ld-mob-more__row-ico--wa" aria-hidden="true"><i class="fab fa-whatsapp"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>واتساپ مالک</strong>
+                                <em>گفت‌وگوی مستقیم</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                        <button type="button" class="ws-ld-mob-more__row" data-copy="{{ whatsapp_text }}" data-ld-more-close>
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-copy"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>کپی متن واتساپ</strong>
+                                <em>آماده ارسال برای مشتری</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </button>
+                        {% if listing.link %}
+                        <a href="{{ listing.link }}" target="_blank" rel="noopener" class="ws-ld-mob-more__row">
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-external-link"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>مشاهده در دیوار</strong>
+                                <em>باز کردن آگهی اصلی</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="ws-ld-mob-more__group" aria-label="ابزارها">
+                    <h3 class="ws-ld-mob-more__group-label">ابزارها</h3>
+                    <div class="ws-ld-mob-more__list">
+                        <button type="button" class="ws-ld-mob-more__row" data-modal-open="modal-meta" data-ld-more-close>
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-sliders"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>متادیتا</strong>
+                                <em>برچسب و تنظیمات داخلی</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </button>
+                        {% if listing.latitude and listing.longitude %}
+                        <a href="#wsLdMapFinale" class="ws-ld-mob-more__row" data-ld-map-jump data-ld-more-close>
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-map-location-dot"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>نقشه موقعیت</strong>
+                                <em>مشاهده روی نقشه</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                        <button type="button" class="ws-ld-mob-more__row" data-modal-open="modal-listing-detail-help" data-ld-more-close>
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>راهنما</strong>
+                                <em>نحوه کار با این صفحه</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="ws-ld-mob-more__group" aria-label="خطرناک">
+                    <div class="ws-ld-mob-more__list">
+                        <button type="button"
+                                class="ws-ld-mob-more__row ws-ld-mob-more__row--danger js-delete-listing"
+                                data-id="{{ listing.id }}"
+                                data-dataset-id="{{ dataset.id }}"
+                                data-title="{{ listing.title|truncatechars:40|escapejs }}"
+                                data-ld-more-close>
+                            <span class="ws-ld-mob-more__row-ico" aria-hidden="true"><i class="fas fa-trash"></i></span>
+                            <span class="ws-ld-mob-more__row-copy">
+                                <strong>حذف آگهی</strong>
+                                <em>حذف از این دیتاست</em>
+                            </span>
+                            <i class="fas fa-chevron-left ws-ld-mob-more__row-chev" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
@@ -1028,7 +1123,7 @@ window.wsListingPersonalPlaceBootstrap = {
 <script>
 if (typeof initListingAddPersonal === 'function') initListingAddPersonal();
 </script>
-<script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
+<script src="{% static 'workspace/js/listing-edit.js' %}?v=8"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% if divar_contact_enabled %}
 <script src="{% static 'workspace/js/divar_contact.js' %}?v=8"></script>
@@ -1119,105 +1214,36 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', closeLdNavSheet);
     });
 
-    function syncLdMobSectionRows(tabName) {
-        document.querySelectorAll('.ws-ld-detail .ws-ld-mob-section-row[data-tab]').forEach(function (row) {
-            var on = row.getAttribute('data-tab') === tabName;
-            row.classList.toggle('active', on);
-            row.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-    }
-    function syncFilingMobSectionUI(tabName) {
-        document.querySelectorAll('[data-filing-mob-section-pick]').forEach(function (pick) {
-            var on = pick.getAttribute('data-tab') === tabName;
-            pick.classList.toggle('is-active', on);
-            var icon = pick.querySelector('i.fas');
-            var base = pick.getAttribute('data-tab-icon');
-            if (icon && base) {
-                icon.className = on ? 'fas fa-check' : 'fas ' + base;
+    function initLdMobAccordions() {
+        var isMob = window.matchMedia('(max-width: 767px)').matches;
+        var root = document.querySelector('.ws-ld-detail.ws-filing-mob-dl');
+        if (!root || !isMob) return;
+        root.querySelectorAll('.crm-prop-panel[data-panel]').forEach(function (panel) {
+            panel.hidden = false;
+            panel.removeAttribute('hidden');
+            if (panel.getAttribute('data-panel') === 'overview') return;
+            panel.classList.remove('is-acc-open');
+            var head = panel.querySelector('[data-ld-acc-toggle]');
+            if (!head) return;
+            head.setAttribute('role', 'button');
+            head.setAttribute('tabindex', '0');
+            head.setAttribute('aria-expanded', 'false');
+            function toggleAcc(e) {
+                if (e.target.closest('a, button:not([data-ld-acc-toggle])')) return;
+                var open = panel.classList.toggle('is-acc-open');
+                head.setAttribute('aria-expanded', open ? 'true' : 'false');
             }
-        });
-        var activePick = document.querySelector('[data-filing-mob-section-pick][data-tab="' + tabName + '"]');
-        var labelEl = document.getElementById('wsLdSectionLabel');
-        if (labelEl && activePick) {
-            var labelTextEl = labelEl.querySelector('[data-filing-mob-section-label-text]');
-            var nextLabel = activePick.getAttribute('data-section-label') || (labelTextEl ? labelTextEl.textContent : '');
-            if (labelTextEl) labelTextEl.textContent = nextLabel;
-            var labelIco = labelEl.querySelector('.ws-crm-pd-mob-section-bar__label-ico');
-            var icoBase = activePick.getAttribute('data-tab-icon');
-            if (labelIco && icoBase) {
-                labelIco.className = 'fas ' + icoBase + ' ws-crm-pd-mob-section-bar__label-ico';
-            }
-        }
-    }
-    var ldSectionSheet = document.getElementById('wsLdSectionSheet');
-    var ldSectionTrigger = document.querySelector('[data-filing-mob-sections-open]');
-    function closeFilingMobSections() {
-        if (!ldSectionSheet) return;
-        ldSectionSheet.classList.remove('is-open');
-        ldSectionSheet.hidden = true;
-        ldSectionSheet.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-        if (ldSectionTrigger) ldSectionTrigger.setAttribute('aria-expanded', 'false');
-    }
-    function openFilingMobSections() {
-        if (!ldSectionSheet) return;
-        ldSectionSheet.hidden = false;
-        ldSectionSheet.classList.add('is-open');
-        ldSectionSheet.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-        if (ldSectionTrigger) ldSectionTrigger.setAttribute('aria-expanded', 'true');
-    }
-    document.querySelectorAll('[data-filing-mob-sections-open]').forEach(function (btn) {
-        btn.addEventListener('click', openFilingMobSections);
-    });
-    document.querySelectorAll('[data-filing-mob-sections-close]').forEach(function (btn) {
-        btn.addEventListener('click', closeFilingMobSections);
-    });
-    document.querySelectorAll('[data-filing-mob-section-pick]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var panelName = btn.getAttribute('data-tab');
-            activateListingDetailTab(panelName);
-            syncFilingMobSectionUI(panelName);
-            closeFilingMobSections();
-            var panel = document.querySelector('.ws-ld-detail [data-panel="' + panelName + '"]');
-            if (!panel) return;
-            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            requestAnimationFrame(function () {
-                panel.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+            head.addEventListener('click', toggleAcc);
+            head.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleAcc(e);
+                }
             });
         });
-    });
-    if (ldSectionSheet) {
-        ldSectionSheet.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeFilingMobSections();
-        });
     }
-    function activateListingDetailTab(tabName) {
-        var main = document.querySelector('.ws-ld-detail .crm-prop-main');
-        if (!main) return;
-        var tabBtn = main.querySelector('.crm-prop-tabs .crm-tab[data-tab="' + tabName + '"]');
-        if (tabBtn) tabBtn.click();
-        else syncLdMobSectionRows(tabName);
-    }
-    document.querySelectorAll('.ws-ld-detail .ws-ld-mob-section-row[data-tab]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var panelName = btn.getAttribute('data-tab');
-            activateListingDetailTab(panelName);
-            var panel = document.querySelector('.ws-ld-detail [data-panel="' + panelName + '"]');
-            if (!panel) return;
-            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            requestAnimationFrame(function () {
-                panel.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-            });
-        });
-    });
-    document.querySelectorAll('.ws-ld-detail .crm-prop-tabs .crm-tab[data-tab]').forEach(function (tabBtn) {
-        tabBtn.addEventListener('click', function () {
-            var tabName = tabBtn.getAttribute('data-tab');
-            syncLdMobSectionRows(tabName);
-            syncFilingMobSectionUI(tabName);
-        });
-    });
+    initLdMobAccordions();
+
     if (moreSheet) {
         moreSheet.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') closeLdMore();

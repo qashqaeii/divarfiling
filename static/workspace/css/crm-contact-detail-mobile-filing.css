@@ -1,0 +1,3517 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Contact Detail — Filing mobile pattern (final layer)
+   Keyfacts + premium segmented tabs
+   Scoped: .ws-crm-cd-mob @ max-width 767px — desktop untouched
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-cd-mob-keyfacts,
+.crm-cd-mob-sections {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    /* Let .ws-main workspace background show through */
+    body.ws-body:has(.ws-crm-cd-mob) .ws-content,
+    body.ws-body:has(.ws-crm-cd-mob) .crm-main,
+    body.ws-body:has(.ws-crm-cd-mob) .crm-app {
+        background: transparent !important;
+        background-image: none !important;
+        background-color: transparent !important;
+    }
+
+    /* Same content width contract as contacts list: shell gutter only */
+    body.ws-body:has(.ws-crm-cd-mob) .ws-content {
+        width: 100% !important;
+        max-width: none !important;
+        padding-inline: var(--mobile-section-padding, 16px) !important;
+        padding-top: var(--mobile-section-padding, 16px) !important;
+        padding-bottom: calc(var(--ws-mob-nav-offset, 5.5rem) + var(--mobile-section-padding, 16px)) !important;
+        box-sizing: border-box !important;
+    }
+
+    body.ws-body .ws-crm-cd-mob.crm-contact-detail-pro.crm-contact-mobile.crm-page-chrome,
+    .ws-crm-cd-mob.crm-contact-detail-pro.crm-page-chrome {
+        --crm-cd-gutter: 0;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 0 0.35rem !important;
+        gap: 0.65rem !important;
+        overflow-x: clip !important;
+        background: transparent !important;
+        background-image: none !important;
+        background-color: transparent !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-workspace__header,
+    .ws-crm-cd-mob .crm-contact-workspace__body,
+    .ws-crm-cd-mob .crm-detail-grid,
+    .ws-crm-cd-mob .crm-contact-workflow,
+    .ws-crm-cd-mob .crm-contact-main,
+    .ws-crm-cd-mob .crm-contact-sidebar {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        order: initial !important;
+        box-sizing: border-box !important;
+        overflow-x: clip !important;
+    }
+
+    /* Neutralize v7 unified-section chrome that double-pads/narrows detail */
+    body.ws-body:has(.ws-crm-cd-mob) .crm-contact-workspace__header,
+    .ws-crm-cd-mob .crm-contact-workspace__header {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 0.65rem !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        background-image: none !important;
+    }
+
+    body.ws-body:has(.ws-crm-cd-mob) .crm-contact-panel,
+    .ws-crm-cd-mob .crm-contact-panel,
+    .ws-crm-cd-mob .crm-contact-tab-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-inline: 0 !important;
+        margin-bottom: 0.65rem !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        background-image: none !important;
+    }
+
+    /* ── Header card (rounded surface — same language as list toolbar) ── */
+    .ws-crm-cd-mob .crm-contact-hero {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 0.65rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 18px !important;
+        box-sizing: border-box !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 94%, #fff),
+                color-mix(in srgb, var(--ws-surface) 88%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 28px rgba(15, 23, 42, 0.05),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(16px) saturate(1.12);
+        -webkit-backdrop-filter: blur(16px) saturate(1.12);
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero--compact .crm-contact-hero__top {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero__toolbar {
+        position: relative;
+        z-index: 2;
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        width: 100%;
+        min-width: 0;
+        margin: 0 !important;
+        padding: 0.55rem 0.7rem 0.45rem !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-sizing: border-box;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero__toolbar-center {
+        opacity: 1 !important;
+        pointer-events: none;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero__toolbar-title {
+        display: block;
+        font-size: 0.84rem;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--ws-text);
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero__crumb,
+    .ws-crm-cd-mob .crm-contact-detail-help--mob,
+    .ws-crm-cd-mob .crm-contact-hero__actions-desk,
+    .ws-crm-cd-mob .crm-contact-hero__actions-col--desk,
+    .ws-crm-cd-mob .crm-contact-hero__stage,
+    .ws-crm-cd-mob .crm-contact-mob-profile,
+    .ws-crm-cd-mob .crm-contact-mob-primary,
+    .ws-crm-cd-mob .crm-contact-hero__back--stage {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero__toolbar-start .crm-contact-hero__back,
+    .ws-crm-cd-mob .crm-contact-mob-menu-trigger,
+    .ws-crm-cd-mob .crm-contact-mob-edit-btn {
+        width: 2.45rem !important;
+        height: 2.45rem !important;
+        min-width: 2.45rem !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero__toolbar-utils {
+        display: inline-flex !important;
+        gap: 0.3rem;
+    }
+
+    /* ── More actions portal sheet (outside hero overflow) ── */
+    .ws-crm-cd-mob .crm-contact-mob-menu-trigger i {
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+    }
+
+    .crm-cd-more-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 1220;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0 0.55rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .crm-cd-more-sheet[hidden] {
+        display: none !important;
+    }
+
+    .crm-cd-more-sheet__backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        cursor: pointer;
+        animation: crmCdMoreScrimIn 0.2s ease;
+    }
+
+    .crm-cd-more-sheet__panel {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 26rem);
+        max-height: min(72vh, 28rem);
+        margin: 0;
+        padding: 0.45rem 0.55rem 0.55rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        overflow: hidden;
+        border-radius: 22px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 97%, #fff),
+                var(--ws-surface)
+            );
+        box-shadow:
+            0 18px 48px rgba(15, 23, 42, 0.18),
+            0 2px 6px rgba(15, 23, 42, 0.05),
+            inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+        box-sizing: border-box;
+        animation: crmCdMoreSheetIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes crmCdMoreScrimIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes crmCdMoreSheetIn {
+        from { transform: translateY(1.2rem) scale(0.985); opacity: 0.55; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .crm-cd-more-sheet__backdrop,
+        .crm-cd-more-sheet__panel {
+            animation: none;
+        }
+    }
+
+    .crm-cd-more-sheet__head {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.15rem 0.35rem 0.4rem;
+        flex-shrink: 0;
+    }
+
+    .crm-cd-more-sheet__handle {
+        width: 2.15rem;
+        height: 0.26rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 72%, transparent);
+    }
+
+    .crm-cd-more-sheet__title {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 750;
+        letter-spacing: -0.01em;
+        color: var(--ws-text-muted);
+        text-align: center;
+    }
+
+    .crm-cd-more-sheet__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.05rem 0.1rem 0.2rem;
+    }
+
+    .crm-cd-more-sheet__item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.45rem 0.55rem;
+        border: none;
+        border-radius: 14px;
+        background: transparent;
+        color: var(--ws-text);
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        text-align: start;
+        cursor: pointer;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-cd-more-sheet__item:active {
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    }
+
+    .crm-cd-more-sheet__ico {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        flex-shrink: 0;
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 78%, var(--ws-surface));
+        color: var(--ws-text-secondary);
+        font-size: 0.78rem;
+    }
+
+    .crm-cd-more-sheet__label {
+        flex: 1;
+        min-width: 0;
+        text-align: start;
+    }
+
+    .crm-cd-more-sheet__item--ai .crm-cd-more-sheet__ico {
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    }
+
+    .crm-cd-more-sheet__danger {
+        margin: 0.15rem 0.1rem 0;
+        padding: 0.35rem 0 0;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent);
+        flex-shrink: 0;
+    }
+
+    .crm-cd-more-sheet__item--danger {
+        color: #b91c1c;
+    }
+
+    .crm-cd-more-sheet__item--danger .crm-cd-more-sheet__ico {
+        color: #b91c1c;
+        background: color-mix(in srgb, #ef4444 9%, var(--ws-surface));
+    }
+
+    body.ws-body:has(.crm-cd-more-sheet:not([hidden])) {
+        overflow: hidden;
+    }
+
+    /* ── Premium identity keyfacts ── */
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts {
+        position: relative;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 1rem 0.85rem 0.95rem;
+        box-sizing: border-box;
+        background: transparent;
+        border: none;
+        overflow: hidden;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__aura {
+        position: absolute;
+        inset-inline: -18%;
+        top: -42%;
+        height: 9.5rem;
+        pointer-events: none;
+        background:
+            radial-gradient(
+                55% 70% at 72% 40%,
+                color-mix(in srgb, var(--ws-primary) 22%, transparent),
+                transparent 72%
+            ),
+            radial-gradient(
+                48% 65% at 28% 55%,
+                color-mix(in srgb, var(--ws-primary) 10%, transparent),
+                transparent 70%
+            );
+        opacity: 0.9;
+        filter: blur(2px);
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__identity {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 0.85rem;
+        min-width: 0;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-block {
+        position: relative;
+        width: 5.75rem;
+        height: 5.75rem;
+        flex-shrink: 0;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-ring {
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        background:
+            conic-gradient(
+                from 210deg,
+                color-mix(in srgb, var(--ws-primary) 72%, #fff),
+                color-mix(in srgb, var(--ws-primary) 18%, transparent),
+                color-mix(in srgb, var(--ws-primary) 55%, #94a3b8),
+                color-mix(in srgb, var(--ws-primary) 72%, #fff)
+            );
+        opacity: 0.85;
+        animation: crmCdAvatarRing 8s linear infinite;
+    }
+
+    @keyframes crmCdAvatarRing {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-ring {
+            animation: none;
+        }
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-frame {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        overflow: hidden;
+        background:
+            linear-gradient(
+                160deg,
+                color-mix(in srgb, var(--ws-surface) 92%, #fff),
+                color-mix(in srgb, var(--ws-surface-2, #f8fafc) 80%, var(--ws-surface))
+            );
+        box-shadow:
+            0 0 0 3px color-mix(in srgb, var(--ws-surface) 96%, #fff),
+            0 10px 24px rgba(15, 23, 42, 0.12);
+        z-index: 1;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar,
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar--photo {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar.crm-deals-avatar {
+        display: grid;
+        place-items: center;
+        font-size: 1.35rem;
+        font-weight: 850;
+        letter-spacing: -0.03em;
+        color: #fff;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-edit {
+        position: absolute;
+        inset-inline-end: -0.1rem;
+        bottom: -0.05rem;
+        z-index: 2;
+        display: inline-grid;
+        place-items: center;
+        width: 2.05rem;
+        height: 2.05rem;
+        border: 2px solid color-mix(in srgb, var(--ws-surface) 96%, #fff);
+        border-radius: 50%;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 92%, #fff),
+                var(--ws-primary)
+            );
+        color: #fff;
+        box-shadow: 0 6px 16px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+        cursor: pointer;
+        transition: transform 0.18s ease, filter 0.18s ease;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-edit i {
+        font-size: 0.72rem;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-edit:active {
+        transform: scale(0.94);
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-block.is-busy .crm-cd-mob-keyfacts__avatar-frame::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--ws-surface) 55%, transparent);
+        backdrop-filter: blur(2px);
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__avatar-block.is-busy .crm-cd-mob-keyfacts__avatar-edit {
+        pointer-events: none;
+        filter: grayscale(0.2);
+        opacity: 0.75;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.28rem;
+        min-width: 0;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__role {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.4rem;
+        padding: 0.12rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent);
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__title {
+        margin: 0;
+        max-width: 100%;
+        font-size: clamp(1.28rem, 5.4vw, 1.52rem);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1.15;
+        color: var(--ws-text);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__company {
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        line-height: 1.35;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__phone {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-top: 0.2rem;
+        font-size: 0.92rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+        color: var(--ws-text);
+        text-decoration: none;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__phone::before {
+        content: "\f095";
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free";
+        font-weight: 900;
+        font-size: 0.7rem;
+        color: var(--ws-primary);
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__status {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.85rem;
+        max-width: 100%;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__chip,
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__status-select {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        min-height: 1.55rem;
+        padding: 0.14rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 750;
+        color: var(--ws-text-secondary);
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 80%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent);
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__chip.is-priority {
+        color: #b45309;
+        background: color-mix(in srgb, #f59e0b 12%, var(--ws-surface));
+        border-color: color-mix(in srgb, #f59e0b 22%, transparent);
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__chip.is-warn {
+        color: #b91c1c;
+        background: color-mix(in srgb, #ef4444 10%, var(--ws-surface));
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__status-select {
+        max-width: 100%;
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 20%, var(--ws-border));
+        font-family: inherit;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem 0.55rem;
+        margin: 0.7rem 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.78rem;
+        font-weight: 650;
+        color: var(--ws-text-secondary);
+        line-height: 1.4;
+    }
+
+    .ws-crm-cd-mob .crm-cd-mob-keyfacts__meta li:not(:last-child)::after {
+        content: "·";
+        margin-inline-start: 0.55rem;
+        color: var(--ws-text-muted);
+        opacity: 0.7;
+    }
+
+    /* ── Insight: NBA / follow-up only, flush ── */
+    .ws-crm-cd-mob .crm-contact-dossier-prelude,
+    .ws-crm-cd-mob .crm-contact-workflow__action {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 0.7rem var(--crm-cd-gutter) 0;
+        box-sizing: border-box;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-nba,
+    .ws-crm-cd-mob .crm-contact-after-call {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 !important;
+        padding: 0.7rem 0.8rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        border-radius: 14px !important;
+        background: var(--ws-surface) !important;
+        box-shadow: none !important;
+        box-sizing: border-box;
+    }
+
+    /* ── Premium minimal follow-up card ── */
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob,
+    .ws-crm-cd-mob .crm-contact-followup--mob {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 0.65rem !important;
+        padding: 0.75rem 0.8rem 0.8rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 28px rgba(15, 23, 42, 0.045),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob > .crm-contact-side-head,
+    .ws-crm-cd-mob .crm-contact-followup--mob > .crm-contact-side-head {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.5rem !important;
+        pointer-events: none;
+        cursor: default;
+        min-height: 0 !important;
+        margin: 0 0 0.55rem !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob > .crm-contact-side-head::after {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-contact-side-icon,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-contact-side-icon {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+        min-width: 1.75rem !important;
+        border-radius: 10px !important;
+        font-size: 0.68rem !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+        color: var(--ws-primary) !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-contact-side-head h3,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-contact-side-head h3 {
+        margin: 0 !important;
+        flex: 1 1 auto !important;
+        font-size: 0.82rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-text) !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-badge {
+        margin: 0 !important;
+        margin-inline-start: auto !important;
+        padding: 0.12rem 0.45rem !important;
+        border-radius: 999px !important;
+        font-size: 0.62rem !important;
+        font-weight: 800 !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-stack {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-log-call-mob,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-v2-done,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-v2-history {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-status,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-status {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: baseline !important;
+        justify-content: flex-start !important;
+        gap: 0.35rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-status__state {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-status strong,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-status strong {
+        display: block !important;
+        margin: 0 !important;
+        font-size: 1.05rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.03em !important;
+        font-variant-numeric: tabular-nums !important;
+        line-height: 1.25 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-status.is-overdue strong {
+        color: #b91c1c !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-status.is-today strong {
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-empty,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-v2-empty {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: 0.86rem !important;
+        font-weight: 650 !important;
+        color: var(--ws-text-muted) !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-quick,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-v2-quick {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 0.35rem !important;
+        margin: 0 !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-v2-quick form {
+        margin: 0 !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-quick button,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-v2-quick button {
+        width: 100% !important;
+        min-height: 2.2rem !important;
+        padding: 0 0.35rem !important;
+        border-radius: 11px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
+        font-family: inherit !important;
+        font-size: 0.72rem !important;
+        font-weight: 750 !important;
+        letter-spacing: -0.01em;
+        color: var(--ws-text-secondary) !important;
+        box-shadow: none !important;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-v2-quick button:active {
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-links,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-links {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.55rem !important;
+        margin: 0.1rem 0 0 !important;
+        padding: 0.55rem 0 0 !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 26%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-link,
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        min-height: 1.85rem !important;
+        margin: 0 !important;
+        padding: 0 0.15rem !important;
+        border: none !important;
+        background: none !important;
+        box-shadow: none !important;
+        font-family: inherit !important;
+        font-size: 0.74rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-secondary) !important;
+        cursor: pointer;
+    }
+
+    .ws-crm-cd-mob .crm-contact-followup--mob .crm-followup-link--primary {
+        color: var(--ws-primary) !important;
+        font-weight: 800 !important;
+    }
+
+    /* ── Prefs quick access (top) ── */
+    .crm-cd-prefs-access {
+        display: none;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0.7rem 0 0.75rem !important;
+        padding: 0.2rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 22px rgba(15, 23, 42, 0.04),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__main {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.55rem 0.55rem 0.6rem !important;
+        border: none !important;
+        border-radius: 15px !important;
+        background: transparent !important;
+        color: inherit !important;
+        font: inherit !important;
+        text-align: start !important;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__main:active {
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__ico {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        flex-shrink: 0 !important;
+        border-radius: 11px !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+        color: var(--ws-primary) !important;
+        font-size: 0.72rem !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__copy {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.12rem !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__copy strong {
+        font-size: 0.82rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-text) !important;
+        line-height: 1.2 !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__copy em {
+        display: block !important;
+        max-width: 100% !important;
+        font-style: normal !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.3 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__chev {
+        flex-shrink: 0 !important;
+        font-size: 0.62rem !important;
+        color: var(--ws-text-muted) !important;
+        opacity: 0.55 !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__edit {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 2.15rem !important;
+        height: 2.15rem !important;
+        min-width: 2.15rem !important;
+        margin: 0 0.25rem 0 0 !important;
+        padding: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 12px !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+        font-size: 0.72rem !important;
+        cursor: pointer;
+        flex-shrink: 0 !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob .crm-cd-prefs-access__edit:active {
+        color: var(--ws-primary) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob #crm-contact-prefs.is-prefs-flash {
+        box-shadow:
+            0 0 0 2px color-mix(in srgb, var(--ws-primary) 28%, transparent),
+            0 10px 28px rgba(15, 23, 42, 0.06) !important;
+        transition: box-shadow 0.35s ease;
+    }
+
+    /* Keep mobile follow-up module; hide duplicate follow-up NBA strip */
+    .ws-crm-cd-mob .crm-contact-nba--followup,
+    .ws-crm-cd-mob .crm-contact-workflow__action:has(> .crm-contact-nba--followup):not(:has(.crm-contact-after-call)) {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-nba:not(.crm-contact-after-call):not(.crm-contact-nba--followup) {
+        display: flex !important;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .ws-crm-cd-mob .crm-contact-nba__cta {
+        flex-shrink: 0;
+        min-height: 2.2rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    /* After-call prompt replaces follow-up module temporarily */
+    .ws-crm-cd-mob:has(.crm-contact-after-call) .crm-contact-dossier-prelude {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-workflow__snapshot,
+    .ws-crm-cd-mob .crm-contact-snapshot-block,
+    .ws-crm-cd-mob #crm-contact-team-bar,
+    .ws-crm-cd-mob .crm-contact-hero-share-block {
+        display: none !important;
+    }
+
+    /* ── Premium segmented tabs (primary nav) ── */
+    .ws-crm-cd-mob .crm-cd-mob-sections {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-segrail,
+    .ws-crm-cd-mob .crm-contact-segrail {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 28 !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 0 0.7rem !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-segrail.is-stuck,
+    .ws-crm-cd-mob .crm-contact-segrail.is-stuck {
+        padding: 0.35rem 0 0.45rem !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-bg, #f4f6fb) 88%, transparent) 0%,
+                color-mix(in srgb, var(--ws-bg, #f4f6fb) 72%, transparent) 70%,
+                transparent 100%
+            ) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-segrail::before,
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-segrail::after,
+    .ws-crm-cd-mob .crm-contact-segrail::before,
+    .ws-crm-cd-mob .crm-contact-segrail::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan nav.crm-tabs.crm-tabs-pro.crm-contact-tabs,
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-tabs.crm-tabs-pro,
+    .ws-crm-cd-mob nav.crm-tabs.crm-tabs-pro.crm-contact-tabs,
+    .ws-crm-cd-mob .crm-contact-tabs {
+        position: relative !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.22rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0.28rem !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 28px rgba(15, 23, 42, 0.045),
+            inset 0 1px 0 color-mix(in srgb, #fff 62%, transparent) !important;
+        grid-template-columns: unset !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tabs::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab {
+        position: relative !important;
+        flex: 0 0 auto !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.32rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 2.35rem !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0.34rem 0.72rem !important;
+        border: none !important;
+        border-radius: 13px !important;
+        background: transparent !important;
+        color: var(--ws-text-muted) !important;
+        font-family: inherit !important;
+        font-size: 0.74rem !important;
+        font-weight: 650 !important;
+        letter-spacing: -0.02em;
+        line-height: 1.2 !important;
+        box-shadow: none !important;
+        white-space: nowrap !important;
+        scroll-snap-align: start;
+        -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
+        transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro .crm-contact-seg__ico,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab .crm-contact-seg__ico {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro .crm-contact-seg__full,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab .crm-contact-seg__full {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro .crm-contact-seg__short,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab .crm-contact-seg__short,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro .crm-contact-seg__txt,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab .crm-contact-seg__txt {
+        display: inline !important;
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        letter-spacing: inherit;
+        white-space: nowrap;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro em,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro em,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab em {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.15rem;
+        min-height: 1.15rem;
+        padding: 0 0.3rem;
+        margin: 0;
+        border-radius: 999px;
+        font-style: normal !important;
+        font-size: 0.62rem !important;
+        font-weight: 800 !important;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        color: var(--ws-text-secondary) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 82%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro em.is-empty,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab em.is-empty {
+        opacity: 0.42;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro.active,
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro[aria-selected="true"],
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro.active,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro[aria-selected="true"],
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab.active,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab[aria-selected="true"] {
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 92%, #fff),
+                var(--ws-primary)
+            ) !important;
+        color: #fff !important;
+        font-weight: 800 !important;
+        box-shadow:
+            0 6px 16px -6px color-mix(in srgb, var(--ws-primary) 55%, transparent),
+            inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro.active em,
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro[aria-selected="true"] em,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro.active em,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro[aria-selected="true"] em,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab.active em,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab[aria-selected="true"] em {
+        color: #fff !important;
+        background: color-mix(in srgb, #fff 18%, transparent) !important;
+        border-color: color-mix(in srgb, #fff 24%, transparent) !important;
+        opacity: 1;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro:active:not(.active),
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab:active:not(.active) {
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab-pro:focus-visible,
+    .ws-crm-cd-mob .crm-contact-tabs .crm-tab:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--ws-primary) 45%, transparent);
+        outline-offset: 1px;
+    }
+
+    /* ── Active panel ── */
+    .ws-crm-cd-mob .crm-contact-tab-panel,
+    .ws-crm-cd-mob .crm-contact-panel {
+        overflow-x: clip !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-panel-head,
+    .ws-crm-cd-mob .crm-contact-tab-head {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+        margin: 0 0 0.55rem !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-panel-head h2,
+    .ws-crm-cd-mob .crm-contact-tab-head h2 {
+        margin: 0 !important;
+        font-size: 0.92rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em;
+    }
+
+    .ws-crm-cd-mob .crm-contact-tab-head__sub {
+        margin: 0.1rem 0 0 !important;
+        font-size: 0.68rem !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-panel-body {
+        min-width: 0 !important;
+        overflow-x: clip !important;
+    }
+
+    .ws-crm-cd-mob .crm-activity-event,
+    .ws-crm-cd-mob .crm-visit-card-pro,
+    .ws-crm-cd-mob .crm-contact-deal-row,
+    .ws-crm-cd-mob .crm-doc-item {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* ── Premium timeline panel ── */
+    .ws-crm-cd-mob .crm-cd-timeline,
+    .ws-crm-cd-mob [data-panel="timeline"].crm-contact-panel {
+        --crm-cd-tl-gap: 0.85rem;
+        --crm-cd-tl-pad-x: 0.9rem;
+        width: 100% !important;
+        margin: 0 0 0.75rem !important;
+        padding: 0.8rem var(--crm-cd-tl-pad-x) 0.9rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 28px rgba(15, 23, 42, 0.045),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__head,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-panel-head,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-tab-head {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        margin: 0 0 0.7rem !important;
+        padding: 0 0.1rem 0.6rem !important;
+        border: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 26%, transparent) !important;
+        background: transparent !important;
+        text-align: start !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__head-text,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-panel-head-text,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-cd-timeline__head-text {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.4rem !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__head-text h2,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-tab-head h2,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-panel-head-text h2 {
+        display: inline-block !important;
+        width: auto !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 0.9rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.025em !important;
+        line-height: 1.2 !important;
+        color: var(--ws-text) !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-tab-head__sub,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-panel-head-text p {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__count {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        min-width: 1.55rem !important;
+        min-height: 1.4rem !important;
+        margin: 0 !important;
+        padding: 0.12rem 0.48rem !important;
+        border-radius: 8px !important;
+        font-style: normal !important;
+        font-size: 0.68rem !important;
+        font-weight: 750 !important;
+        font-variant-numeric: tabular-nums !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1 !important;
+        color: var(--ws-text-secondary) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 78%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__cta,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-contact-tab-head__cta {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 2.05rem !important;
+        height: 2.05rem !important;
+        min-width: 2.05rem !important;
+        min-height: 2.05rem !important;
+        margin: 0 !important;
+        margin-inline-start: auto !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 11px !important;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 90%, #fff),
+                var(--ws-primary)
+            ) !important;
+        color: #fff !important;
+        box-shadow: 0 5px 12px -5px color-mix(in srgb, var(--ws-primary) 50%, transparent) !important;
+        cursor: pointer;
+        flex-shrink: 0 !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__cta i {
+        font-size: 0.7rem;
+        line-height: 1;
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__cta:active {
+        transform: scale(0.96);
+    }
+
+    .ws-crm-cd-mob .crm-cd-timeline__body,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-tab__body {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-feed {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.15rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        padding-bottom: 0.15rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-day__head {
+        display: grid !important;
+        grid-template-columns: 1fr auto 1fr !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        margin: 0 0 0.65rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-day__rule {
+        height: 1px !important;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            color-mix(in srgb, var(--ws-border) 48%, transparent) 18%,
+            color-mix(in srgb, var(--ws-border) 48%, transparent) 82%,
+            transparent
+        ) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-day__labels {
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 0.08rem !important;
+        min-height: 0 !important;
+        padding: 0.28rem 0.7rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface)) !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-day__primary {
+        font-size: 0.7rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-text) !important;
+        line-height: 1.2 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-day__secondary {
+        font-size: 0.6rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.2 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-day__events {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__rail {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__content {
+        min-width: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.4rem !important;
+        padding: 0.75rem 0.8rem 0.8rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-surface) 98%, #fff),
+                color-mix(in srgb, var(--ws-surface) 94%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.025),
+            inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__head {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.5rem !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__lead {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__node {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.7rem !important;
+        height: 1.7rem !important;
+        flex-shrink: 0 !important;
+        border-radius: 10px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface)) !important;
+        font-size: 0.66rem !important;
+        color: var(--ws-text-muted) !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__type {
+        display: inline-flex !important;
+        align-items: center !important;
+        min-height: 1.35rem !important;
+        padding: 0.1rem 0.48rem !important;
+        border-radius: 999px !important;
+        font-size: 0.64rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.01em !important;
+        color: var(--ws-text-secondary) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 78%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__time {
+        flex-shrink: 0 !important;
+        font-size: 0.66rem !important;
+        font-weight: 750 !important;
+        font-variant-numeric: tabular-nums !important;
+        color: var(--ws-text-muted) !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__title {
+        margin: 0 !important;
+        font-size: 0.86rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.4 !important;
+        color: var(--ws-text) !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-desc__text {
+        margin: 0 !important;
+        font-size: 0.78rem !important;
+        line-height: 1.55 !important;
+        font-weight: 550 !important;
+        color: var(--ws-text-secondary) !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-desc--lead .crm-activity-desc__text {
+        font-weight: 750 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-context {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        margin-top: 0.1rem !important;
+        padding: 0.5rem 0.55rem !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
+        text-decoration: none !important;
+        color: inherit !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-context__icon {
+        width: 1.85rem !important;
+        height: 1.85rem !important;
+        border-radius: 10px !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        font-size: 0.7rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-context__title {
+        font-size: 0.76rem !important;
+        font-weight: 800 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-context__meta {
+        font-size: 0.64rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__foot {
+        margin-top: 0.2rem !important;
+        padding-top: 0.45rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 26%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event__cta {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        min-height: 2rem !important;
+        padding: 0 0.7rem !important;
+        border-radius: 10px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 20%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        font-family: inherit !important;
+        font-size: 0.7rem !important;
+        font-weight: 750 !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--call .crm-activity-event__node,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--whatsapp .crm-activity-event__node {
+        color: #047857 !important;
+        background: color-mix(in srgb, #10b981 12%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, #10b981 22%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--call .crm-activity-event__type,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--whatsapp .crm-activity-event__type {
+        color: #047857 !important;
+        background: color-mix(in srgb, #10b981 10%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, #10b981 18%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--followup .crm-activity-event__node,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--reminder .crm-activity-event__node,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--meeting .crm-activity-event__node {
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 11%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 20%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--followup .crm-activity-event__type,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--reminder .crm-activity-event__type,
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-event--meeting .crm-activity-event__type {
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 16%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="timeline"] .crm-activity-empty {
+        margin: 0.15rem 0 0 !important;
+        padding: 1.35rem 1rem !important;
+        border-radius: 14px !important;
+        border: 1px dashed color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 45%, var(--ws-surface)) !important;
+        text-align: center !important;
+    }
+
+    /* ── Premium matches panel ── */
+    .ws-crm-cd-mob .crm-cd-matches,
+    .ws-crm-cd-mob [data-panel="matches"].crm-contact-panel {
+        width: 100% !important;
+        margin: 0 0 0.75rem !important;
+        padding: 0.8rem 0.85rem 0.95rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 28px rgba(15, 23, 42, 0.045),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-matches__head,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-contact-panel-head,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-contact-tab-head {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        margin: 0 0 0.7rem !important;
+        padding: 0 0.1rem 0.6rem !important;
+        border: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 26%, transparent) !important;
+        background: transparent !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-matches__head-text,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-contact-panel-head-text {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-contact-tab-head h2,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-contact-panel-head-text h2 {
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.025em !important;
+        line-height: 1.2 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-contact-tab-head__sub {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-matches__count {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        min-width: 1.55rem !important;
+        min-height: 1.4rem !important;
+        margin: 0 !important;
+        padding: 0.12rem 0.48rem !important;
+        border-radius: 8px !important;
+        font-style: normal !important;
+        font-size: 0.68rem !important;
+        font-weight: 750 !important;
+        font-variant-numeric: tabular-nums !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1 !important;
+        color: var(--ws-text-secondary) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 78%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-matches__count.is-empty {
+        opacity: 0.55;
+    }
+
+    .ws-crm-cd-mob .crm-cd-matches__precision-btn {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 2.05rem !important;
+        height: 2.05rem !important;
+        min-width: 2.05rem !important;
+        margin: 0 !important;
+        margin-inline-start: auto !important;
+        padding: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 11px !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+        font-size: 0.72rem !important;
+        cursor: pointer;
+        flex-shrink: 0 !important;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+    }
+
+    .ws-crm-cd-mob .crm-cd-matches__precision-btn.is-active,
+    .ws-crm-cd-mob .crm-cd-matches__precision-btn:active {
+        color: var(--ws-primary) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 24%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob .crm-cd-matches__body,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-contact-panel-body--flush {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] #crmMatches.crm-matches-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-matches-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.65rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Keep precision accessible; hide verbose desktop copy */
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-head {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-head-copy {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-precision {
+        display: none !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 14px !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
+        overflow: hidden !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-precision[open] {
+        display: block !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-precision > summary {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-precision-body {
+        padding: 0.75rem 0.8rem 0.85rem !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-loading {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.45rem !important;
+        margin: 0 !important;
+        padding: 0.7rem 0.85rem !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface)) !important;
+        font-size: 0.74rem !important;
+        font-weight: 650 !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    /* Never force-show loading while [hidden] is set */
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-loading[hidden] {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-toolbar {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.45rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-sources {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 0.2rem !important;
+        padding: 0.22rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface))
+            ) !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-sources::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-source {
+        flex: 1 1 0 !important;
+        justify-content: center !important;
+        min-height: 2.05rem !important;
+        padding: 0.35rem 0.55rem !important;
+        border-radius: 11px !important;
+        font-size: 0.7rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-secondary) !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-source em {
+        font-size: 0.66rem !important;
+        font-weight: 800 !important;
+        font-variant-numeric: tabular-nums !important;
+        color: inherit !important;
+        opacity: 0.72;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-source.is-active {
+        color: var(--ws-primary) !important;
+        background: var(--ws-surface) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.05),
+            0 6px 14px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-sort {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-feed,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-builder-v3 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.65rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-col-v3 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-col-v3[hidden],
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-col-v3.is-match-source-hidden,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-col-v3[data-match-total="0"]:not(.crm-matches-col--locked) {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-list,
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-list-v3,
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-feed-list,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-list,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-list-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-feed-list {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.7rem !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+        grid: none !important;
+        grid-template-columns: none !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        overflow-y: visible !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-group-head-v3 {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        margin: 0.15rem 0 0.1rem !important;
+        padding: 0 0.1rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-group-head-v3 h4 {
+        margin: 0 !important;
+        font-size: 0.78rem !important;
+        font-weight: 800 !important;
+        color: var(--ws-text) !important;
+    }
+
+    /* Match cards — reference layout on mobile */
+    .ws-crm-cd-mob.crm-contact-mobile #crmMatches.crm-matches-v3 .crm-match-card-v3,
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-card.crm-match-card-v3,
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-cd-match,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-card-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 5.5rem !important;
+        grid-template-areas:
+            "body media"
+            "why why" !important;
+        column-gap: 0.65rem !important;
+        row-gap: 0.5rem !important;
+        align-items: start !important;
+        justify-content: stretch !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0.7rem 0.7rem 0.65rem !important;
+        padding-inline-end: 2.2rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        border-radius: 16px !important;
+        background: var(--ws-surface) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 24px -16px rgba(15, 23, 42, 0.16) !important;
+        overflow: hidden !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-media {
+        grid-area: media !important;
+        position: relative !important;
+        width: 100% !important;
+        min-height: 5.5rem !important;
+        aspect-ratio: 1 / 1 !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 88%, var(--ws-surface)),
+                color-mix(in srgb, var(--ws-border) 30%, var(--ws-surface))
+            ) !important;
+        box-shadow:
+            inset 0 0 0 1px color-mix(in srgb, var(--ws-border) 42%, transparent),
+            0 1px 3px rgba(15, 23, 42, 0.05) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-media__img {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-media__fallback {
+        position: absolute !important;
+        inset: 0 !important;
+        display: grid !important;
+        place-items: center !important;
+        color: color-mix(in srgb, var(--ws-text-muted) 72%, transparent) !important;
+        font-size: 1.05rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-media .crm-match-score-v3 {
+        position: absolute !important;
+        inset-inline-start: 0.28rem !important;
+        bottom: 0.28rem !important;
+        top: auto !important;
+        inset-inline-end: auto !important;
+        z-index: 2 !important;
+        width: 2.3rem !important;
+        height: 2.3rem !important;
+        min-width: 2.3rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 50% !important;
+        background: color-mix(in srgb, var(--ws-surface) 93%, transparent) !important;
+        box-shadow:
+            0 1px 3px rgba(15, 23, 42, 0.2),
+            inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent) !important;
+        display: grid !important;
+        place-items: center !important;
+        overflow: visible !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-card-v3::before {
+        display: none !important;
+        content: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-card-v3.is-selected {
+        border-color: color-mix(in srgb, var(--ws-primary) 38%, transparent) !important;
+        background:
+            linear-gradient(
+                160deg,
+                color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)),
+                var(--ws-surface)
+            ) !important;
+        box-shadow:
+            0 0 0 1px color-mix(in srgb, var(--ws-primary) 16%, transparent),
+            0 10px 24px rgba(15, 23, 42, 0.05) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-check-v3 {
+        position: absolute !important;
+        inset-inline-end: 0.65rem !important;
+        top: 0.7rem !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        z-index: 3 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-check-ui {
+        width: 1.2rem !important;
+        height: 1.2rem !important;
+        margin: 0.35rem auto 0 !important;
+        border-radius: 7px !important;
+        border-width: 1.5px !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-body-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-body-v3 {
+        grid-area: body !important;
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 0 0 auto !important;
+        align-items: stretch !important;
+        gap: 0.35rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: relative !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-cd-match__main,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match__main {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.28rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-card-head,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-card-head {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        padding-inline-end: 0 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-specs {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.3rem 0.65rem !important;
+        margin: 0.1rem 0 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-specs__item {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.25rem !important;
+        font-size: 0.68rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-specs__item i {
+        font-size: 0.64rem !important;
+        color: color-mix(in srgb, var(--ws-text-muted) 75%, var(--ws-primary)) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-foot {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 0.3rem !important;
+        margin-top: 0.35rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-act {
+        display: inline-flex !important;
+        flex: 1 1 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.22rem !important;
+        min-width: 0 !important;
+        min-height: 2.05rem !important;
+        padding: 0.28rem 0.35rem !important;
+        border-radius: 999px !important;
+        font-size: 0.62rem !important;
+        font-weight: 750 !important;
+        line-height: 1.15 !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-act > span {
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-act > i {
+        flex-shrink: 0 !important;
+        font-size: 0.58rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-act--primary {
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-act--why,
+    .ws-crm-cd-mob [data-panel="matches"] summary.crm-match-act--why.crm-cd-match-why__summary {
+        width: auto !important;
+        min-height: 2.05rem !important;
+        padding: 0.28rem 0.35rem !important;
+        border-radius: 999px !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+        color: var(--ws-primary) !important;
+        list-style: none !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-act--divar {
+        background: var(--ws-surface) !important;
+        border: 1px solid var(--ws-divar-brand-border, rgba(166, 38, 38, 0.22)) !important;
+        color: var(--ws-divar-brand, #a62626) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-why-panel,
+    .ws-crm-cd-mob [data-panel="matches"] [data-match-why-panel] {
+        grid-area: why !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        margin-inline-end: 0 !important;
+        padding: 0.65rem 0.7rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        border-radius: 14px !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 48%, var(--ws-surface)) !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-why-panel[hidden],
+    .ws-crm-cd-mob [data-panel="matches"] [data-match-why-panel][hidden] {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-source {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.28rem !important;
+        min-height: 1.35rem !important;
+        padding: 0.12rem 0.48rem !important;
+        border-radius: 999px !important;
+        font-size: 0.62rem !important;
+        font-weight: 750 !important;
+        letter-spacing: -0.01em !important;
+        border: 1px solid transparent !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-source.is-crm {
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-source.is-divar,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-source.is-divar {
+        gap: 0 !important;
+        min-height: 1.55rem !important;
+        padding: 0.22rem 0.55rem !important;
+        color: var(--ws-divar-brand, #a62626) !important;
+        background: var(--ws-divar-brand-soft, rgba(166, 38, 38, 0.09)) !important;
+        border-color: var(--ws-divar-brand-border, rgba(166, 38, 38, 0.22)) !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-source.is-divar .crm-match-source__logo,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-source.is-divar .crm-match-source__logo,
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 img.crm-match-source__logo {
+        display: block !important;
+        width: 2.85rem !important;
+        height: 0.95rem !important;
+        max-width: 2.85rem !important;
+        max-height: 0.95rem !important;
+        margin: 0 !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-source.is-divar .crm-match-source__mark {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-media .crm-match-score-v3__ring,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-score-v3__ring {
+        display: block !important;
+        position: absolute !important;
+        inset: 0 !important;
+        border-radius: 50% !important;
+        background:
+            conic-gradient(
+                from -90deg,
+                var(--ws-primary) calc(var(--match-pct, 0) * 1%),
+                color-mix(in srgb, var(--ws-border) 55%, transparent) 0
+            ) !important;
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+        mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-card-v3[data-score-tier="high"] .crm-match-score-v3__ring {
+        background:
+            conic-gradient(
+                from -90deg,
+                #10b981 calc(var(--match-pct, 0) * 1%),
+                color-mix(in srgb, var(--ws-border) 55%, transparent) 0
+            ) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-card-v3[data-score-tier="mid"] .crm-match-score-v3__ring {
+        background:
+            conic-gradient(
+                from -90deg,
+                var(--ws-primary) calc(var(--match-pct, 0) * 1%),
+                color-mix(in srgb, var(--ws-border) 55%, transparent) 0
+            ) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-media .crm-match-score-v3__value,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-score-v3__value {
+        position: relative !important;
+        z-index: 1 !important;
+        font-size: 0.6rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.03em !important;
+        line-height: 1 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-score-v3__label {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-title,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-title {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        padding-inline-end: 0.2rem !important;
+        font-size: 0.88rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.4 !important;
+        color: var(--ws-text) !important;
+        text-decoration: none !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        -webkit-line-clamp: unset !important;
+        line-clamp: unset !important;
+        -webkit-box-orient: unset !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] a.crm-match-title:hover,
+    .ws-crm-cd-mob [data-panel="matches"] a.crm-match-title:active {
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-price-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-price-v3 {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        font-size: 0.92rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.03em !important;
+        line-height: 1.3 !important;
+        color: var(--ws-text) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-price-v3.is-warn {
+        color: #b45309 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-price-v3.is-note {
+        color: #047857 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-score-track {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-facts,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-facts {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 0.2rem 0.15rem !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.35 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-facts span:not(:last-child)::after {
+        content: "·" !important;
+        margin-inline: 0.28rem !important;
+        opacity: 0.45;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-features {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.28rem !important;
+        margin: 0.05rem 0 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-features span {
+        display: inline-flex !important;
+        align-items: center !important;
+        min-height: 1.35rem !important;
+        padding: 0.1rem 0.45rem !important;
+        border-radius: 8px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
+        font-size: 0.64rem !important;
+        font-weight: 700 !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-features span:nth-child(n + 4) {
+        display: inline-flex !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-quick-links,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-quick-links {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.35rem !important;
+        width: 100% !important;
+        height: auto !important;
+        margin-top: 0.15rem !important;
+        padding-top: 0.55rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 26%, transparent) !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-match-more,
+    .ws-crm-cd-mob #crmMatches.crm-matches-v3 .crm-cd-match-why,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-more,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        flex: 0 0 auto !important;
+        align-self: stretch !important;
+        position: relative !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        margin-top: 0.35rem !important;
+        margin-inline-end: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-quick-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.32rem !important;
+        min-height: 1.9rem !important;
+        padding: 0 0.65rem !important;
+        border-radius: 10px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        font-size: 0.68rem !important;
+        font-weight: 750 !important;
+        text-decoration: none !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-quick-link i {
+        font-size: 0.62rem !important;
+        opacity: 0.85;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-quick-link--divar {
+        border-color: color-mix(in srgb, #f59e0b 22%, transparent) !important;
+        background: color-mix(in srgb, #f59e0b 8%, var(--ws-surface)) !important;
+        color: #a16207 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-more:not(.crm-match-why-inline) > summary,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why:not(.crm-match-why-inline) .crm-cd-match-why__summary {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        min-height: 3.05rem !important;
+        margin: 0 !important;
+        padding: 0.5rem 0.55rem 0.5rem 0.5rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent) !important;
+        border-radius: 14px !important;
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) 0%,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff) 50%,
+                var(--ws-surface) 100%
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 18px rgba(15, 23, 42, 0.035),
+            inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent) !important;
+        color: var(--ws-text) !important;
+        font: inherit !important;
+        cursor: pointer;
+        list-style: none;
+        box-sizing: border-box !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-more > summary::-webkit-details-marker,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why:not(.crm-match-why-inline)[open] .crm-cd-match-why__summary {
+        border-color: color-mix(in srgb, var(--ws-primary) 28%, transparent) !important;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface)),
+                var(--ws-surface)
+            ) !important;
+        border-radius: 14px 14px 0 0 !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-act--why.is-open,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-card-v3.is-why-open .crm-match-act--why {
+        background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface)) !important;
+        border-radius: 999px !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary-ico {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 2.2rem !important;
+        height: 2.2rem !important;
+        border-radius: 12px !important;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 88%, #fff),
+                var(--ws-primary)
+            ) !important;
+        color: #fff !important;
+        font-size: 0.78rem !important;
+        flex-shrink: 0 !important;
+        box-shadow: 0 6px 14px -5px color-mix(in srgb, var(--ws-primary) 55%, transparent) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary-copy {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.12rem !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary-copy em {
+        display: block !important;
+        font-style: normal !important;
+        font-size: 0.62rem !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.01em !important;
+        color: var(--ws-primary) !important;
+        line-height: 1.15 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary-copy strong,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary-txt {
+        display: block !important;
+        font-size: 0.8rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.2 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary-score {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 2.35rem !important;
+        min-height: 1.55rem !important;
+        padding: 0.12rem 0.45rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        background: var(--ws-surface) !important;
+        font-size: 0.7rem !important;
+        font-weight: 850 !important;
+        font-variant-numeric: tabular-nums !important;
+        letter-spacing: -0.03em !important;
+        color: var(--ws-text-secondary) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary[data-tier="high"] .crm-cd-match-why__summary-score {
+        border-color: color-mix(in srgb, #10b981 28%, transparent) !important;
+        background: color-mix(in srgb, #10b981 10%, var(--ws-surface)) !important;
+        color: #047857 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary[data-tier="mid"] .crm-cd-match-why__summary-score {
+        border-color: color-mix(in srgb, var(--ws-primary) 24%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__summary-chev {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 1.4rem !important;
+        height: 1.4rem !important;
+        border-radius: 999px !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface)) !important;
+        color: var(--ws-text-muted) !important;
+        font-size: 0.58rem !important;
+        flex-shrink: 0 !important;
+        opacity: 1 !important;
+        transition: transform 0.18s ease, background 0.15s ease, color 0.15s ease;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why[open] .crm-cd-match-why__summary-chev {
+        transform: rotate(180deg);
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why:not(.crm-match-why-inline) .crm-cd-match-why__body,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-more:not(.crm-match-why-inline) .crm-match-more-body {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+        padding: 0.55rem 0.55rem 0.65rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent) !important;
+        border-top: none !important;
+        border-radius: 0 0 12px 12px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface)),
+                var(--ws-surface)
+            ) !important;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__hero {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 0.55rem !important;
+        padding: 0.55rem 0.55rem !important;
+        border-radius: 11px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        background: var(--ws-surface) !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__score {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 2.85rem !important;
+        padding: 0.3rem 0.3rem !important;
+        border-radius: 10px !important;
+        background: var(--ws-surface) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__score strong {
+        font-size: 0.86rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.03em !important;
+        line-height: 1.1 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__score span {
+        font-size: 0.54rem !important;
+        font-weight: 700 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__hero[data-tier="high"] .crm-cd-match-why__score {
+        border-color: color-mix(in srgb, #10b981 26%, transparent) !important;
+        background: color-mix(in srgb, #10b981 10%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__hero[data-tier="high"] .crm-cd-match-why__score strong {
+        color: #047857 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__verdict {
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__verdict strong {
+        display: block !important;
+        margin: 0 0 0.15rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 800 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__verdict p {
+        margin: 0 !important;
+        font-size: 0.7rem !important;
+        font-weight: 550 !important;
+        line-height: 1.45 !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__label {
+        margin: 0 !important;
+        font-size: 0.64rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__list,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-reasons-v3 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.4rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-reasons-v3 em {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 0.45rem !important;
+        margin: 0 !important;
+        padding: 0.5rem 0.55rem !important;
+        border-radius: 10px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        background: var(--ws-surface) !important;
+        font-size: 0.74rem !important;
+        font-style: normal !important;
+        font-weight: 650 !important;
+        line-height: 1.4 !important;
+        color: var(--ws-text) !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight__ico {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        border-radius: 8px !important;
+        flex-shrink: 0 !important;
+        font-size: 0.66rem !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight.is-fit {
+        border-color: color-mix(in srgb, #10b981 20%, transparent) !important;
+        background: color-mix(in srgb, #10b981 6%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight.is-fit .crm-cd-match-insight__ico {
+        background: color-mix(in srgb, #10b981 12%, var(--ws-surface)) !important;
+        color: #047857 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight.is-caution {
+        border-color: color-mix(in srgb, #f59e0b 22%, transparent) !important;
+        background: color-mix(in srgb, #f59e0b 7%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight.is-caution .crm-cd-match-insight__ico {
+        background: color-mix(in srgb, #f59e0b 12%, var(--ws-surface)) !important;
+        color: #b45309 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight__body {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.1rem !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight__status {
+        font-size: 0.62rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.01em !important;
+        line-height: 1.2 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight.is-fit .crm-cd-match-insight__status {
+        color: #047857 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight.is-caution .crm-cd-match-insight__status {
+        color: #b45309 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-insight__txt {
+        display: block !important;
+        max-width: 100% !important;
+        color: var(--ws-text) !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-specs {
+        gap: 0.3rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-specs__item {
+        max-width: 100% !important;
+        padding: 0.24rem 0.5rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-price-v3 {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.3rem !important;
+        width: fit-content !important;
+        max-width: 100% !important;
+        padding: 0.28rem 0.6rem !important;
+        border-radius: 10px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__facts {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.35rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__facts span {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.3rem !important;
+        min-height: 1.65rem !important;
+        padding: 0.12rem 0.5rem !important;
+        border-radius: 8px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 50%, var(--ws-surface)) !important;
+        font-size: 0.66rem !important;
+        font-weight: 650 !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__facts i {
+        font-size: 0.58rem !important;
+        color: var(--ws-primary) !important;
+        opacity: 0.8;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__foot {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-cd-match-why__share {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        min-height: 1.9rem !important;
+        padding: 0 0.7rem !important;
+        border-radius: 10px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        background: var(--ws-surface) !important;
+        font-size: 0.68rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-secondary) !important;
+        text-decoration: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-pager-v3 {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.35rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        order: 2;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-list-v3 {
+        order: 1;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-load-more {
+        width: 100% !important;
+        min-height: 2.35rem !important;
+        border-radius: 12px !important;
+        font-weight: 750 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-ineligible-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-empty-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-locked-card-v3,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-match-empty-v3 {
+        margin: 0 !important;
+        max-height: none !important;
+        padding: 1.25rem 1rem !important;
+        border-radius: 14px !important;
+        border: 1px dashed color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 45%, var(--ws-surface)) !important;
+        text-align: center !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-empty-v3 strong,
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-ineligible-v3 p {
+        font-size: 0.86rem !important;
+        font-weight: 800 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-empty-actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+        margin-top: 0.75rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .mk-notice {
+        margin: 0 !important;
+        border-radius: 12px !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-matches-filter-empty {
+        margin: 0 !important;
+        padding: 0.85rem !important;
+        text-align: center !important;
+        font-size: 0.76rem !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    /* Suggest dock above bottom nav */
+    .ws-crm-cd-mob [data-panel="matches"] #crmMatches.crm-matches-v3.is-selecting {
+        padding-bottom: 0.25rem !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] #crmMatches.crm-matches-v3.is-selecting .crm-suggest-dock {
+        position: fixed !important;
+        inset-inline: 0.85rem !important;
+        bottom: calc(var(--ws-mob-nav-offset, 5.5rem) + 0.55rem) !important;
+        z-index: 140 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] #crmMatches.crm-matches-v3.is-selecting .crm-suggest-dock-inner {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        padding: 0.55rem 0.6rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 16px !important;
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 92%, transparent)
+            ) !important;
+        box-shadow:
+            0 10px 28px rgba(15, 23, 42, 0.12),
+            inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-suggest-dock-meta {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-suggest-count {
+        font-size: 0.74rem !important;
+        font-weight: 700 !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-suggest-count strong {
+        color: var(--ws-primary) !important;
+        font-weight: 850 !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-suggest-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] #crmClearMatchSelection {
+        min-width: 2.15rem !important;
+        min-height: 2.15rem !important;
+        padding: 0 0.55rem !important;
+        border-radius: 11px !important;
+        font-size: 0.68rem !important;
+        font-weight: 700 !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-suggest-submit {
+        min-height: 2.15rem !important;
+        padding: 0 0.85rem !important;
+        border-radius: 11px !important;
+        font-size: 0.72rem !important;
+        font-weight: 800 !important;
+        white-space: nowrap !important;
+    }
+
+    .ws-crm-cd-mob [data-panel="matches"] .crm-suggest-submit:not(:disabled) {
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 88%, #fff),
+                var(--ws-primary)
+            ) !important;
+        box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--ws-primary) 45%, transparent) !important;
+    }
+
+    /* ── Sidebar: same width language as hero / timeline cards ── */
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-sidebar,
+    .ws-crm-cd-mob .crm-contact-sidebar,
+    .ws-crm-cd-mob .crm-detail-sidebar {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0.15rem 0 0.85rem !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        overflow-x: clip !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-side-card:not(.crm-contact-followup--mob):not(.crm-contact-followup--desk),
+    .ws-crm-cd-mob .crm-contact-side-card:not(.crm-contact-followup--mob):not(.crm-contact-followup--desk) {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        margin-inline: 0 !important;
+        padding: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 28px rgba(15, 23, 42, 0.045),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-side-card:not(.crm-contact-followup--mob):not(.crm-contact-followup--desk) > .crm-contact-side-head,
+    .ws-crm-cd-mob .crm-contact-side-card:not(.crm-contact-followup--mob):not(.crm-contact-followup--desk) > .crm-contact-side-head {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        min-height: 2.75rem !important;
+        margin: 0 !important;
+        padding: 0.65rem 0.8rem !important;
+        border: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 24%, transparent) !important;
+        background: transparent !important;
+        box-sizing: border-box !important;
+        text-align: start !important;
+        list-style: none !important;
+        cursor: pointer;
+    }
+
+    .ws-crm-cd-mob .crm-contact-side-card > .crm-contact-side-head::-webkit-details-marker {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob.crm-contact-detail-scan .crm-contact-side-card > .crm-contact-side-head h3,
+    .ws-crm-cd-mob .crm-contact-side-card > .crm-contact-side-head h3 {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        font-size: 0.86rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.25 !important;
+        color: var(--ws-text) !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-side-card > .crm-contact-side-head .crm-contact-side-icon {
+        width: 1.85rem !important;
+        height: 1.85rem !important;
+        min-width: 1.85rem !important;
+        border-radius: 10px !important;
+        font-size: 0.72rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-side-card > .crm-contact-side-head .crm-contact-prefs-edit {
+        width: 1.95rem !important;
+        height: 1.95rem !important;
+        min-width: 1.95rem !important;
+        margin: 0 !important;
+        border-radius: 10px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-side-card[open] > :not(summary) {
+        padding: 0.65rem 0.8rem 0.8rem !important;
+        border-top: none !important;
+        box-sizing: border-box !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-prefs,
+    .ws-crm-cd-mob .crm-contact-pref-group,
+    .ws-crm-cd-mob .crm-contact-pref-row,
+    .ws-crm-cd-mob .crm-contact-pref-body {
+        text-align: start !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-pref-row {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-side-card--deals,
+    .ws-crm-cd-mob .crm-contact-followup--desk,
+    .ws-crm-cd-mob .crm-contact-delete-form {
+        display: none !important;
+    }
+
+    /* Insight strips align with header card width */
+    .ws-crm-cd-mob .crm-contact-dossier-prelude,
+    .ws-crm-cd-mob .crm-contact-workflow__action {
+        padding-inline: 0 !important;
+    }
+
+    /* ── Shell bottom nav (میزکار / فایلینگ / …) — hide contact action dock ── */
+    .ws-crm-cd-mob .crm-contact-mobile-dock,
+    .ws-crm-cd-mob .crm-contact-action-bar,
+    body.ws-body:has(.ws-crm-cd-mob) .crm-contact-mobile-dock,
+    body.ws-body:has(.ws-crm-cd-mob) .crm-contact-action-bar {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    body.ws-body:has(.ws-crm-cd-mob) .ws-bottom-nav,
+    body.ws-body:has(.crm-contact-detail-pro.ws-crm-cd-mob) #wsBottomNav {
+        display: flex !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero__toolbar {
+        margin-inline: 0 !important;
+    }
+
+    .ws-crm-cd-mob img,
+    .ws-crm-cd-mob table,
+    .ws-crm-cd-mob pre {
+        max-width: 100%;
+    }
+
+    /* ── Avatar change sheet ── */
+    .crm-cd-avatar-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+        margin: 0;
+    }
+
+    .crm-cd-avatar-sheet[hidden] {
+        display: none !important;
+    }
+
+    .crm-cd-avatar-sheet__backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        background: rgba(15, 23, 42, 0.42);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        cursor: pointer;
+    }
+
+    .crm-cd-avatar-sheet__panel {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 28rem);
+        margin: 0;
+        padding: 0.55rem 1rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+        border-radius: 22px 22px 0 0;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                var(--ws-surface)
+            );
+        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.16);
+        box-sizing: border-box;
+        transform: translateY(0);
+        animation: crmCdAvatarSheetIn 0.28s ease;
+    }
+
+    @keyframes crmCdAvatarSheetIn {
+        from { transform: translateY(110%); opacity: 0.6; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .crm-cd-avatar-sheet__panel {
+            animation: none;
+        }
+    }
+
+    .crm-cd-avatar-sheet__handle {
+        width: 2.4rem;
+        height: 0.28rem;
+        margin: 0.15rem auto 0.85rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    .crm-cd-avatar-sheet__title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 850;
+        letter-spacing: -0.03em;
+        color: var(--ws-text);
+        text-align: center;
+    }
+
+    .crm-cd-avatar-sheet__hint {
+        margin: 0.35rem 0 0.95rem;
+        font-size: 0.78rem;
+        font-weight: 550;
+        color: var(--ws-text-muted);
+        text-align: center;
+        line-height: 1.45;
+    }
+
+    .crm-cd-avatar-sheet__actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .crm-cd-avatar-sheet__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        width: 100%;
+        min-height: 2.85rem;
+        padding: 0.65rem 1rem;
+        border-radius: 14px;
+        border: 1px solid transparent;
+        font: inherit;
+        font-size: 0.92rem;
+        font-weight: 750;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+    .crm-cd-avatar-sheet__btn--primary {
+        color: #fff;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 88%, #fff),
+                var(--ws-primary)
+            );
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--ws-primary) 24%, transparent);
+    }
+
+    .crm-cd-avatar-sheet__btn--danger {
+        color: #b91c1c;
+        background: color-mix(in srgb, #ef4444 8%, var(--ws-surface));
+        border-color: color-mix(in srgb, #ef4444 18%, transparent);
+    }
+
+    .crm-cd-avatar-sheet__btn--ghost {
+        color: var(--ws-text-secondary);
+        background: transparent;
+        border-color: color-mix(in srgb, var(--ws-border) 40%, transparent);
+    }
+
+    .crm-cd-avatar-sheet__status {
+        margin: 0.75rem 0 0;
+        font-size: 0.78rem;
+        font-weight: 650;
+        text-align: center;
+        color: var(--ws-text-secondary);
+    }
+
+    .crm-cd-avatar-sheet__status.is-error {
+        color: #b91c1c;
+    }
+
+    .crm-cd-avatar-sheet.is-busy .crm-cd-avatar-sheet__btn {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    body.ws-body:has(.crm-cd-avatar-sheet:not([hidden])) {
+        overflow: hidden;
+    }
+}
+
+.crm-match-score-v3__ring {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .crm-cd-mob-keyfacts,
+    .crm-cd-mob-sections,
+    .crm-cd-avatar-sheet,
+    .crm-cd-more-sheet,
+    .crm-cd-prefs-access,
+    .crm-cd-matches__precision-btn {
+        display: none !important;
+    }
+
+    .crm-cd-matches__count {
+        display: none !important;
+    }
+}

@@ -66,6 +66,40 @@
             {% include 'workspace/includes/listing_card_location.html' with location_class='mk-lcard-native__meta' neighborhood_max=24 city_max=18 street_max=24 %}
         </div>
 
+        <ul class="mk-lcard-native__rail" aria-label="مشخصات">
+            {% if listing.area %}
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-ruler-combined" aria-hidden="true"></i>
+                <span>{{ listing.area|floatformat:0 }} متر</span>
+            </li>
+            {% endif %}
+            {% if feat.rooms or listing.rooms %}
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-bed" aria-hidden="true"></i>
+                <span>{{ feat.rooms|default:listing.rooms }} خواب</span>
+            </li>
+            {% endif %}
+            {% if feat.parking is True %}
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-square-parking" aria-hidden="true"></i>
+                <span>پارکینگ</span>
+            </li>
+            {% endif %}
+            {% if feat.elevator is True %}
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-elevator" aria-hidden="true"></i>
+                <span>آسانسور</span>
+            </li>
+            {% elif feat.storage is True %}
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-box" aria-hidden="true"></i>
+                <span>انباری</span>
+            </li>
+            {% endif %}
+        </ul>
+
+        {% if not listing.images %}{% include 'workspace/includes/listing_card_market_insight.html' with mode='inline' %}{% endif %}
+
         <div class="mk-lcard-native__pricebox">
             {% if tx.show_price and listing.price %}
             <strong class="mk-lcard-native__price mk-money" title="{{ listing.price|ws_money }}">{{ listing.price|ws_money_compact }}</strong>
@@ -109,43 +143,9 @@
             {% endif %}
         </div>
 
-        {% if not listing.images %}{% include 'workspace/includes/listing_card_market_insight.html' with mode='inline' %}{% endif %}
-
-        <ul class="mk-lcard-native__rail" aria-label="مشخصات">
-            {% if listing.area %}
-            <li class="mk-lcard-native__rail-item">
-                <i class="fas fa-ruler-combined" aria-hidden="true"></i>
-                <span>{{ listing.area|floatformat:0 }} متر</span>
-            </li>
-            {% endif %}
-            {% if feat.rooms or listing.rooms %}
-            <li class="mk-lcard-native__rail-item">
-                <i class="fas fa-bed" aria-hidden="true"></i>
-                <span>{{ feat.rooms|default:listing.rooms }} خواب</span>
-            </li>
-            {% endif %}
-            {% if feat.parking is True %}
-            <li class="mk-lcard-native__rail-item">
-                <i class="fas fa-square-parking" aria-hidden="true"></i>
-                <span>پارکینگ</span>
-            </li>
-            {% endif %}
-            {% if feat.elevator is True %}
-            <li class="mk-lcard-native__rail-item">
-                <i class="fas fa-building" aria-hidden="true"></i>
-                <span>آسانسور</span>
-            </li>
-            {% elif feat.storage is True %}
-            <li class="mk-lcard-native__rail-item">
-                <i class="fas fa-box" aria-hidden="true"></i>
-                <span>انباری</span>
-            </li>
-            {% endif %}
-        </ul>
-
         <footer class="mk-lcard-foot mk-lcard-native__foot">
             <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-native__cta">
-                <span>مشاهده جزئیات</span>
+                <span>جزئیات</span>
                 <i class="fas fa-arrow-left" aria-hidden="true"></i>
             </a>
             <details class="mk-action-menu mk-lcard-more">

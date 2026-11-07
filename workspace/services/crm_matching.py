@@ -453,19 +453,27 @@ def _profile_criteria_eligible(
 
 
 def _area_match_profile(profile, area: Optional[float]) -> Tuple[float, str]:
-    if area is None or area <= 0:
-        return 0.5, ''
     min_a = profile.min_area
     max_a = profile.max_area
+    if area is None or area <= 0:
+        if min_a is None and max_a is None:
+            return 0.5, ''
+        pref = _format_preference_range(
+            int(min_a) if min_a is not None else None,
+            int(max_a) if max_a is not None else None,
+            unit=' متر',
+        )
+        return 0.5, f'متراژ مشخص نیست — ترجیح مشتری {pref}' if pref else ''
     if min_a is None and max_a is None:
         return 0.5, ''
+    area_i = int(area)
     if min_a is not None and area < min_a:
         ratio = max(0, 1 - (min_a - area) / max(min_a, 1))
-        return ratio * 0.5, f'متراژ کمتر از {min_a}'
+        return ratio * 0.5, f'متراژ کمتر از حد موردنظر — {area_i} متر'
     if max_a is not None and area > max_a:
         ratio = max(0, 1 - (area - max_a) / max(max_a, 1))
-        return ratio * 0.5, f'متراژ بیشتر از {max_a}'
-    return 1.0, f'متراژ {int(area)} متر'
+        return ratio * 0.5, f'متراژ بیشتر از حد موردنظر — {area_i} متر'
+    return 1.0, f'متراژ — {area_i} متر'
 
 
 def _neighborhood_match_profile(
@@ -489,38 +497,128 @@ def _neighborhood_match_profile(
     return geo.hood_s, geo.reason, geo
 
 
+def _format_preference_range(lo: Optional[int], hi: Optional[int], *, unit: str = '') -> str:
+    if lo is not None and hi is not None:
+        if lo == hi:
+            return f'{lo}{unit}'
+        return f'{lo} تا {hi}{unit}'
+    if lo is not None:
+        return f'{lo}{unit} به بالا'
+    if hi is not None:
+        return f'تا {hi}{unit}'
+    return ''
+
+
+def _range_preference_note(
+    *,
+    label: str,
+    value: Optional[int],
+    lo: Optional[int],
+    hi: Optional[int],
+    value_label: Optional[str] = None,
+) -> str:
+    if lo is None and hi is None:
+        return ''
+    pref = _format_preference_range(lo, hi)
+    if value is None:
+        return f'{label} مشخص نیست — ترجیح مشتری {pref}'
+    shown = value_label if value_label is not None else str(value)
+    if (lo is None or value >= lo) and (hi is None or value <= hi):
+        return f'{label} مطابق ترجیح — {shown}'
+    return f'{label} خارج از ترجیح — {shown}'
+
+
+def _amenity_preference_note(label: str, want: bool, has: Optional[bool]) -> str:
+    if not want:
+        return ''
+    if has is True:
+        return f'{label} — دارد'
+    if has is False:
+        return f'{label} ندارد — ترجیح مشتری دارد'
+    return f'{label} مشخص نیست — ترجیح مشتری دارد'
+
+
+def _detail_preference_notes(
+    profile,
+    *,
+    floor: Optional[int] = None,
+    build_year: Optional[int] = None,
+    has_parking: Optional[bool] = None,
+    has_storage: Optional[bool] = None,
+    has_elevator: Optional[bool] = None,
+) -> List[str]:
+    """دلایل متنی برای ترجیحات جزئی ثبت‌شده (طبقه، سال، امکانات)."""
+    notes: List[str] = []
+    floor_val = _parse_int_feature(floor)
+    floor_label = None
+    if floor_val == 0:
+        floor_label = 'همکف'
+    elif floor_val is not None:
+        floor_label = f'طبقه {floor_val}'
+    floor_note = _range_preference_note(
+        label='طبقه',
+        value=floor_val,
+        lo=getattr(profile, 'floor_min', None),
+        hi=getattr(profile, 'floor_max', None),
+        value_label=floor_label,
+    )
+    if floor_note:
+        notes.append(floor_note)
+
+    year_val = _parse_int_feature(build_year)
+    year_note = _range_preference_note(
+        label='سال ساخت',
+        value=year_val,
+        lo=getattr(profile, 'year_min', None),
+        hi=getattr(profile, 'year_max', None),
+        value_label=f'سال {year_val}' if year_val is not None else None,
+    )
+    if year_note:
+        notes.append(year_note)
+
+    for label, want_attr, has in (
+        ('پارکینگ', 'want_parking', has_parking),
+        ('انباری', 'want_storage', has_storage),
+        ('آسانسور', 'want_elevator', has_elevator),
+    ):
+        note = _amenity_preference_note(label, bool(getattr(profile, want_attr, False)), has)
+        if note:
+            notes.append(note)
+    return notes
+
+
 def _rooms_match_profile(profile, rooms: str) -> Tuple[float, str]:
     lo, hi = _profile_rooms_bounds(profile)
     got = _parse_int_feature(rooms)
     if lo is None and hi is None:
         return 0.5, ''
     if got is None:
-        return 0.4, ''
+        pref = _format_preference_range(lo, hi, unit=' خواب')
+        return 0.4, f'تعداد خواب مشخص نیست — ترجیح مشتری {pref}' if pref else ''
     if (lo is None or got >= lo) and (hi is None or got <= hi):
-        label = f'{got} خواب'
-        return 1.0, label
+        return 1.0, f'تعداد خواب — {got} خواب'
     if lo is not None and got < lo:
         gap = lo - got
     else:
         gap = got - (hi or got)
     if gap == 1:
-        return 0.55, f'{got} خواب'
-    return 0.15, f'{got} خواب'
+        return 0.55, f'تعداد خواب نزدیک به ترجیح — {got} خواب'
+    return 0.15, f'تعداد خواب متفاوت — {got} خواب'
 
 
 def _property_type_match_profile(profile, prop_type: str) -> Tuple[float, str]:
     allowed = _profile_allowed_property_types(profile)
     if allowed is not None:
         if prop_type in allowed:
-            return 1.0, prop_type
-        return 0.1, prop_type
+            return 1.0, f'نوع ملک — {prop_type}'
+        return 0.1, f'نوع ملک متفاوت — {prop_type}'
     if not profile.property_type or not prop_type:
         return 0.5, ''
     if profile.property_type == 'سایر':
-        return 0.5, prop_type
+        return 0.5, f'نوع ملک — {prop_type}'
     if profile.property_type == prop_type:
-        return 1.0, prop_type
-    return 0.2, prop_type
+        return 1.0, f'نوع ملک — {prop_type}'
+    return 0.2, f'نوع ملک متفاوت — {prop_type}'
 
 
 def _price_match_sale_profile(profile, price: Optional[int]) -> Tuple[float, str]:
@@ -528,16 +626,17 @@ def _price_match_sale_profile(profile, price: Optional[int]) -> Tuple[float, str
         if _profile_has_sale_criteria(profile):
             return 0.05, ''
         return 0.4, ''
+    shown = format_toman(price)
     lo, hi = profile.budget_min, profile.budget_max
     if lo is None and hi is None:
-        return 0.5, format_toman(price)
+        return 0.5, shown
     if lo is not None and price < lo:
         gap = (lo - price) / max(lo, 1)
-        return max(0, 1 - gap) * 0.6, f'زیر بودجه — {format_toman(price)}'
+        return max(0, 1 - gap) * 0.6, f'قیمت زیر بودجه — {shown}'
     if hi is not None and price > hi:
         gap = (price - hi) / max(hi, 1)
-        return max(0, 1 - gap) * 0.6, f'بالای بودجه — {format_toman(price)}'
-    return 1.0, format_toman(price)
+        return max(0, 1 - gap) * 0.6, f'قیمت بالای بودجه — {shown}'
+    return 1.0, f'قیمت در بودجه — {shown}'
 
 
 def _price_match_rent_profile(
@@ -550,27 +649,35 @@ def _price_match_rent_profile(
 
     if deposit is not None:
         lo, hi = profile.deposit_min, profile.deposit_max
+        shown = format_toman(deposit)
         if lo is None and hi is None:
             score_parts.append(0.5)
+            parts.append(f'رهن {shown}')
         elif lo is not None and deposit < lo:
             score_parts.append(max(0, 1 - (lo - deposit) / max(lo, 1)) * 0.6)
+            parts.append(f'رهن زیر بودجه — {shown}')
         elif hi is not None and deposit > hi:
             score_parts.append(max(0, 1 - (deposit - hi) / max(hi, 1)) * 0.6)
+            parts.append(f'رهن بالای بودجه — {shown}')
         else:
             score_parts.append(1.0)
-        parts.append(f'رهن {format_toman(deposit)}')
+            parts.append(f'رهن در بودجه — {shown}')
 
     if rent is not None:
         lo, hi = profile.rent_min, profile.rent_max
+        shown = format_toman(rent)
         if lo is None and hi is None:
             score_parts.append(0.5)
+            parts.append(f'اجاره {shown}')
         elif lo is not None and rent < lo:
             score_parts.append(max(0, 1 - (lo - rent) / max(lo, 1)) * 0.6)
+            parts.append(f'اجاره زیر بودجه — {shown}')
         elif hi is not None and rent > hi:
             score_parts.append(max(0, 1 - (rent - hi) / max(hi, 1)) * 0.6)
+            parts.append(f'اجاره بالای بودجه — {shown}')
         else:
             score_parts.append(1.0)
-        parts.append(f'اجاره {format_toman(rent)}')
+            parts.append(f'اجاره در بودجه — {shown}')
 
     if not score_parts:
         if _profile_has_rent_criteria(profile):
@@ -847,6 +954,29 @@ def _listing_type_inference(listing: Listing):
     return infer_listing_property_type_detail(listing)
 
 
+def _match_cover_image(images) -> str:
+    """اولین تصویر قابل‌نمایش برای کارت پیشنهاد (نرمال‌شده)."""
+    from workspace.services.property_images import (
+        deduplicate_divar_image_urls,
+        normalize_external_image_url,
+    )
+
+    raw: List[str] = []
+    for item in images or []:
+        if isinstance(item, str) and item.strip():
+            raw.append(item.strip())
+        elif isinstance(item, dict):
+            url = str(item.get('url') or item.get('src') or '').strip()
+            if url:
+                raw.append(url)
+    if not raw:
+        return ''
+    urls = deduplicate_divar_image_urls(
+        [normalize_external_image_url(u) for u in raw],
+    )
+    return urls[0] if urls else ''
+
+
 def _score_crm_property_with_profile(
     profile,
     prop: CRMProperty,
@@ -888,9 +1018,16 @@ def _score_crm_property_with_profile(
         return None
 
     if use_rent_price:
-        price_s, price_label = _price_match_rent_profile(profile, prop.deposit, prop.monthly_rent)
+        price_s, price_note = _price_match_rent_profile(profile, prop.deposit, prop.monthly_rent)
+        price_display = ' · '.join(
+            part for part in (
+                f'رهن {format_toman(prop.deposit)}' if prop.deposit is not None else '',
+                f'اجاره {format_toman(prop.monthly_rent)}' if prop.monthly_rent is not None else '',
+            ) if part
+        )
     else:
-        price_s, price_label = _price_match_sale_profile(profile, prop.sale_price)
+        price_s, price_note = _price_match_sale_profile(profile, prop.sale_price)
+        price_display = format_toman(prop.sale_price) if prop.sale_price else ''
 
     area_s, area_note = _area_match_profile(profile, prop.area)
     hood_s, hood_note, geo = _neighborhood_match_profile(
@@ -902,6 +1039,14 @@ def _score_crm_property_with_profile(
     )
     type_s, type_note = _property_type_match_profile(profile, prop.property_type)
     room_s, room_note = _rooms_match_profile(profile, prop.rooms)
+    detail_notes = _detail_preference_notes(
+        profile,
+        floor=prop.floor,
+        build_year=prop.build_year,
+        has_parking=prop.has_parking,
+        has_storage=prop.has_storage,
+        has_elevator=prop.has_elevator,
+    )
 
     dims = DimensionScores(
         price_s=price_s,
@@ -909,11 +1054,12 @@ def _score_crm_property_with_profile(
         hood_s=hood_s,
         type_s=type_s,
         room_s=room_s,
-        price_label=price_label,
+        price_label=price_note,
         area_note=area_note,
         hood_note=hood_note,
         type_note=type_note,
         room_note=room_note,
+        detail_notes=detail_notes,
         geo_level=geo.geo_level,
         location_match_status=geo.status,
         location_confidence=geo.confidence,
@@ -953,19 +1099,21 @@ def _score_crm_property_with_profile(
         'token': prop.token or '',
         'title': prop.title,
         'score': score,
-        'reasons': reasons[:4],
+        'reasons': reasons[:8],
         'deal_mode': prop.deal_mode,
         'neighborhood': prop.neighborhood or prop.district or '',
         'city': prop.city or '',
         'area': prop.area,
         'rooms': prop.rooms or '',
+        'floor': prop.floor,
+        'build_year': prop.build_year,
         'property_type': prop.property_type or '',
-        'price_label': price_label or (
+        'price_label': price_display or (
             format_toman(prop.monthly_rent or prop.deposit or prop.sale_price)
             if (prop.monthly_rent or prop.deposit or prop.sale_price) else ''
         ),
         'link': prop.link or '',
-        'image': (prop.images or [None])[0] if prop.images else '',
+        'image': _match_cover_image(prop.images),
         'advertiser': property_advertiser_display(prop.business_type),
     }
     if match_intent:
@@ -1035,9 +1183,16 @@ def _score_listing_with_profile(
         return None
 
     if use_rent_price:
-        price_s, price_label = _price_match_rent_profile(profile, listing.deposit, listing.rent)
+        price_s, price_note = _price_match_rent_profile(profile, listing.deposit, listing.rent)
+        price_display = ' · '.join(
+            part for part in (
+                f'رهن {format_toman(listing.deposit)}' if listing.deposit is not None else '',
+                f'اجاره {format_toman(listing.rent)}' if listing.rent is not None else '',
+            ) if part
+        )
     else:
-        price_s, price_label = _price_match_sale_profile(profile, listing.price)
+        price_s, price_note = _price_match_sale_profile(profile, listing.price)
+        price_display = format_toman(listing.price) if listing.price else ''
 
     area_s, area_note = _area_match_profile(profile, listing.area)
     hood_s, hood_note, geo = _neighborhood_match_profile(
@@ -1051,6 +1206,14 @@ def _score_listing_with_profile(
     )
     type_s, type_note = _property_type_match_profile(profile, inferred)
     room_s, room_note = _rooms_match_profile(profile, listing_rooms)
+    detail_notes = _detail_preference_notes(
+        profile,
+        floor=listing_floor,
+        build_year=listing_year,
+        has_parking=feats.get('parking'),
+        has_storage=feats.get('storage'),
+        has_elevator=feats.get('elevator'),
+    )
 
     dims = DimensionScores(
         price_s=price_s,
@@ -1058,11 +1221,12 @@ def _score_listing_with_profile(
         hood_s=hood_s,
         type_s=type_s,
         room_s=room_s,
-        price_label=price_label,
+        price_label=price_note,
         area_note=area_note,
         hood_note=hood_note,
         type_note=type_note,
         room_note=room_note,
+        detail_notes=detail_notes,
         geo_level=geo.geo_level,
         location_match_status=geo.status,
         location_confidence=geo.confidence,
@@ -1116,16 +1280,18 @@ def _score_listing_with_profile(
         'token': listing.token,
         'title': listing.title or listing.token,
         'score': score,
-        'reasons': reasons[:4],
+        'reasons': reasons[:8],
         'deal_mode': 'رهن و اجاره' if listing.deposit else ('اجاره' if listing.rent else 'فروش'),
         'neighborhood': display_neighborhood,
         'city': listing.city or '',
         'area': listing.area,
         'rooms': listing.rooms or '',
+        'floor': listing_floor,
+        'build_year': listing_year,
         'property_type': inferred,
-        'price_label': price_label,
+        'price_label': price_display or price_note,
         'link': listing.link or '',
-        'image': (listing.images or [None])[0] if listing.images else '',
+        'image': _match_cover_image(listing.images),
         'advertiser': listing_advertiser_display(listing),
     }
     if match_intent:

@@ -45,6 +45,10 @@
             <section class="ws-mob-sheet-section" aria-label="CRM">
                 <p class="ws-mob-sheet-kicker">مدیریت مشتری</p>
                 <nav class="ws-mob-sheet-nav">
+                    <a href="{% url 'workspace:crm_today' %}" class="ws-mob-sheet-link{% if request.resolver_match.url_name == 'crm_today' %} is-active{% endif %}">
+                        <i class="fas fa-list-check" aria-hidden="true"></i>
+                        <span>کارهای امروز</span>
+                    </a>
                     <a href="{% url 'workspace:crm_dashboard' %}" class="ws-mob-sheet-link{% if request.resolver_match.url_name == 'crm_dashboard' %} is-active{% endif %}">
                         <i class="fas fa-chart-line" aria-hidden="true"></i>
                         <span>نمای CRM</span>

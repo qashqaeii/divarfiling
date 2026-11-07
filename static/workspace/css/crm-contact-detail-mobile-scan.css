@@ -1,0 +1,992 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Contact Detail — Mobile Scan (final surface, ≤767px)
+   Aligns with contacts list language. Desktop untouched.
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    .crm-contact-detail-scan.crm-contact-detail-pro.crm-contact-mobile.crm-page-chrome {
+        --crm-cd-pad: var(--mobile-section-padding, 1rem);
+        --crm-cd-gap: 0.55rem;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0 0 calc(var(--ws-mob-dock-clearance, 4.75rem) + env(safe-area-inset-bottom, 0px)) !important;
+        gap: 0 !important;
+        background: var(--ws-bg, #f4f6fb) !important;
+        overflow-x: clip;
+    }
+
+    /*
+      Mobile IA (top → bottom):
+      1 Identity hero
+      2 Priority action (NBA / after-call)
+      3 Follow-up scheduler (if no competing action)
+      4 Need snapshot (deduped)
+      5 Tabs + tab body
+      6 Prefs / secondary folds
+      7 Team share
+      8 Dock (fixed)
+    */
+    .crm-contact-detail-scan .crm-contact-workspace__header,
+    .crm-contact-detail-scan .crm-contact-workspace__body,
+    .crm-contact-detail-scan .crm-detail-grid,
+    .crm-contact-detail-scan .crm-contact-workflow {
+        display: contents !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero {
+        order: 10;
+    }
+
+    .crm-contact-detail-scan .crm-contact-workflow__action {
+        order: 20;
+    }
+
+    .crm-contact-detail-scan .crm-contact-dossier-prelude {
+        order: 30;
+    }
+
+    .crm-contact-detail-scan .crm-contact-workflow__snapshot,
+    .crm-contact-detail-scan .crm-contact-snapshot-block {
+        order: 40;
+    }
+
+    .crm-contact-detail-scan .crm-contact-main {
+        order: 50;
+    }
+
+    .crm-contact-detail-scan .crm-contact-sidebar {
+        order: 60;
+    }
+
+    .crm-contact-detail-scan #crm-contact-team-bar,
+    .crm-contact-detail-scan .crm-contact-hero-share-block {
+        order: 70;
+    }
+
+    .crm-contact-detail-scan .crm-contact-mobile-dock {
+        order: 80;
+    }
+
+    /* Avoid duplicate follow-up UIs when action strip already handles it */
+    .crm-contact-detail-scan:has(.crm-contact-after-call) .crm-contact-dossier-prelude,
+    .crm-contact-detail-scan:has(.crm-contact-nba--followup) .crm-contact-dossier-prelude {
+        display: none !important;
+    }
+
+    /* ── Page chrome remnants ── */
+    .crm-contact-detail-scan .crm-contact-workspace__header {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    /* ── Premium identity hero ── */
+    .crm-contact-detail-scan .crm-contact-hero {
+        position: relative;
+        margin: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero--compact .crm-contact-hero__top {
+        position: relative;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.95rem !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0.45rem var(--crm-cd-pad) 1.15rem !important;
+        overflow: hidden !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background:
+            radial-gradient(
+                120% 90% at 100% -10%,
+                color-mix(in srgb, var(--ws-primary) 16%, transparent) 0%,
+                transparent 52%
+            ),
+            radial-gradient(
+                90% 70% at 0% 100%,
+                color-mix(in srgb, var(--ws-primary) 7%, transparent) 0%,
+                transparent 55%
+            ),
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 97%, #fff) 0%,
+                color-mix(in srgb, var(--ws-surface) 88%, var(--ws-bg, #f4f6fb)) 100%
+            ) !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero--compact .crm-contact-hero__top::after {
+        content: "";
+        position: absolute;
+        inset-inline: 0;
+        bottom: 0;
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            color-mix(in srgb, var(--ws-border) 55%, transparent) 18%,
+            color-mix(in srgb, var(--ws-border) 55%, transparent) 82%,
+            transparent 100%
+        );
+        pointer-events: none;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 28;
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        min-height: 2.75rem;
+        margin: -0.45rem calc(-1 * var(--crm-cd-pad)) 0;
+        padding: 0.45rem var(--crm-cd-pad) 0.2rem;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__toolbar-start {
+        grid-column: 1;
+        display: flex;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__toolbar-center {
+        grid-column: 2;
+        min-width: 0;
+        text-align: center;
+        pointer-events: none;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__toolbar-title {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        line-height: 1.25;
+        color: var(--ws-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__toolbar-end {
+        grid-column: 3;
+        justify-self: end;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__crumb,
+    .crm-contact-detail-scan .crm-contact-hero__actions-desk,
+    .crm-contact-detail-scan .crm-contact-hero__actions-col--desk,
+    .crm-contact-detail-scan .crm-contact-detail-help--mob,
+    .crm-contact-detail-scan .crm-contact-hero__back--stage {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__toolbar-start .crm-contact-hero__back,
+    .crm-contact-detail-scan .crm-contact-mob-menu-trigger,
+    .crm-contact-detail-scan .crm-contact-mob-edit-btn {
+        width: 2.55rem !important;
+        height: 2.55rem !important;
+        min-width: 2.55rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 72%, transparent) !important;
+        color: var(--ws-text-secondary) !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__toolbar-utils {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    /* ── Identity composition ── */
+    .crm-contact-detail-scan .crm-contact-hero__stage {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-mob-profile {
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        align-items: start !important;
+        column-gap: 0.9rem !important;
+        row-gap: 0 !important;
+        width: 100%;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__avatar,
+    .crm-contact-detail-scan .crm-contact-hero__avatar--photo {
+        position: relative;
+        width: 4.15rem !important;
+        height: 4.15rem !important;
+        min-width: 4.15rem !important;
+        border-radius: 22px !important;
+        font-size: 1.2rem !important;
+        font-weight: 850 !important;
+        border: 2px solid color-mix(in srgb, #fff 80%, var(--ws-primary)) !important;
+        box-shadow:
+            0 0 0 4px color-mix(in srgb, var(--ws-primary) 12%, transparent),
+            0 12px 28px -10px color-mix(in srgb, var(--ws-primary) 42%, transparent) !important;
+        object-fit: cover;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__identity,
+    .crm-contact-detail-scan .crm-contact-hero__headline {
+        flex: 1;
+        min-width: 0;
+        align-items: flex-start !important;
+        text-align: start !important;
+        gap: 0.35rem !important;
+        padding-top: 0.1rem;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__title-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.18rem;
+        width: 100%;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__title {
+        margin: 0 !important;
+        font-size: clamp(1.15rem, 4.6vw, 1.35rem) !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.04em !important;
+        line-height: 1.18 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-mob-role {
+        display: block !important;
+        margin: 0 !important;
+        font-size: 0.74rem !important;
+        font-weight: 650 !important;
+        letter-spacing: -0.01em;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.3;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__gender {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__company {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__badges .crm-contact-hero__type {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__badges {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin-top: 0.45rem !important;
+        gap: 0.32rem !important;
+        justify-content: flex-start !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__status,
+    .crm-contact-detail-scan .crm-contact-hero__status-select,
+    .crm-contact-detail-scan .crm-contact-hero__priority,
+    .crm-contact-detail-scan .crm-contact-hero__private,
+    .crm-contact-detail-scan .crm-contact-hero__status--archived {
+        font-size: 0.64rem !important;
+        font-weight: 780 !important;
+        min-height: 1.55rem;
+        padding: 0.14rem 0.55rem !important;
+        border-radius: 999px !important;
+        letter-spacing: -0.01em;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero__status-select {
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-mob-profile__phone {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.35rem;
+        margin-top: 0.55rem !important;
+        padding: 0.32rem 0.65rem 0.32rem 0.55rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 78%, transparent) !important;
+        font-size: 0.78rem !important;
+        font-weight: 750 !important;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.015em;
+        color: var(--ws-text) !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+
+    .crm-contact-detail-scan .crm-contact-mob-profile__phone::before {
+        content: "\f095";
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free";
+        font-weight: 900;
+        font-size: 0.62rem;
+        color: var(--ws-primary);
+        opacity: 0.9;
+    }
+
+    /* CTA mid-page removed — dock is primary */
+    .crm-contact-detail-scan .crm-contact-mob-primary {
+        display: none !important;
+    }
+
+    /* ── Below-header: flush, no card chrome, same width as hero ── */
+    .crm-contact-detail-scan .crm-contact-dossier-prelude,
+    .crm-contact-detail-scan .crm-contact-workflow__action,
+    .crm-contact-detail-scan .crm-contact-workflow__snapshot,
+    .crm-contact-detail-scan .crm-contact-snapshot-block,
+    .crm-contact-detail-scan .crm-contact-hero-share-block,
+    .crm-contact-detail-scan #crm-contact-team-bar {
+        box-sizing: border-box;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0.75rem var(--crm-cd-pad) 0 !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-workflow__action {
+        padding-top: 0.65rem !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob {
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: visible;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob > .crm-contact-side-head {
+        pointer-events: none;
+        cursor: default;
+        min-height: 0 !important;
+        padding: 0 0 0.35rem !important;
+        gap: 0.45rem;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob > .crm-contact-side-head::after {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-contact-side-icon {
+        width: 1.7rem !important;
+        height: 1.7rem !important;
+        border-radius: 9px !important;
+        font-size: 0.68rem !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, transparent) !important;
+        border: none !important;
+        color: var(--ws-primary) !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-contact-side-head h3 {
+        font-size: 0.78rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em;
+        color: var(--ws-text) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-stack {
+        padding: 0 0 0.15rem !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-log-call-mob,
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-done {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-status,
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-empty {
+        display: block;
+        margin: 0 0 0.55rem;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: 0.8rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-status strong {
+        display: block;
+        margin-top: 0.15rem;
+        font-size: 0.95rem;
+        font-weight: 850;
+        letter-spacing: -0.025em;
+        font-variant-numeric: tabular-nums;
+        color: var(--ws-text);
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-quick {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-quick button {
+        min-height: 2.25rem !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent) !important;
+        background: transparent !important;
+        font-size: 0.72rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-secondary) !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-links {
+        display: flex;
+        gap: 0.85rem;
+        margin-top: 0.55rem;
+        padding-top: 0.55rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-link {
+        font-size: 0.72rem !important;
+        font-weight: 780 !important;
+        color: var(--ws-primary) !important;
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-followup--mob .crm-followup-v2-history {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-nba:not(.crm-contact-after-call) {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.65rem !important;
+        margin: 0 !important;
+        padding: 0.2rem 0 0.15rem !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-nba__copy {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .crm-contact-detail-scan .crm-contact-nba__copy strong {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+    }
+
+    .crm-contact-detail-scan .crm-contact-nba__copy p {
+        margin: 0.15rem 0 0;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        line-height: 1.4;
+    }
+
+    .crm-contact-detail-scan .crm-contact-nba__cta,
+    .crm-contact-detail-scan .crm-contact-nba__form .crm-contact-nba__cta {
+        flex-shrink: 0;
+        width: auto !important;
+        min-height: 2.25rem !important;
+        padding: 0.35rem 0.8rem !important;
+        border-radius: 999px !important;
+        font-size: 0.7rem !important;
+        font-weight: 800 !important;
+        white-space: nowrap;
+    }
+
+    .crm-contact-detail-scan .crm-contact-after-call {
+        margin: 0 !important;
+        padding: 0.65rem 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-snapshot-block,
+    .crm-contact-detail-scan .crm-contact-workflow__snapshot {
+        margin: 0 !important;
+        padding: 0.7rem var(--crm-cd-pad) 0.15rem !important;
+        border: none !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-workflow__snapshot:not(:has(
+        .crm-contact-summary__item--deal,
+        .crm-contact-summary__item--areas,
+        .crm-contact-summary__item--budget,
+        .crm-contact-summary__item--deposit,
+        .crm-contact-summary__item--rent,
+        .crm-contact-summary__item--last-call,
+        .crm-contact-summary__item--matches
+    )) {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-snapshot__title {
+        margin: 0 0 0.5rem !important;
+        font-size: 0.72rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.015em;
+        color: var(--ws-text) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-summary {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem 0.85rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-summary__item {
+        flex: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.12rem !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Hide fields already visible in hero / follow-up */
+    .crm-contact-detail-scan .crm-contact-summary__item--type,
+    .crm-contact-detail-scan .crm-contact-summary__item--status,
+    .crm-contact-detail-scan .crm-contact-summary__item--follow {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-summary__item dt {
+        font-size: 0.62rem !important;
+        font-weight: 700 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-summary__item dd {
+        margin: 0 !important;
+        font-size: 0.78rem !important;
+        font-weight: 800 !important;
+        line-height: 1.35 !important;
+        color: var(--ws-text) !important;
+        word-break: break-word;
+    }
+
+    .crm-contact-detail-scan .crm-contact-hero-share-block,
+    .crm-contact-detail-scan #crm-contact-team-bar,
+    .crm-contact-detail-scan .crm-prop-hero-share-block,
+    .crm-contact-detail-scan .crm-contact-agency-strip__shared-only,
+    .crm-contact-detail-scan .crm-contact-team-bar--compact {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan #crm-contact-team-bar {
+        padding: 0.75rem var(--crm-cd-pad) 0.35rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-main {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0.55rem 0 0.15rem !important;
+        overflow: visible !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-sidebar {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.45rem !important;
+        margin: 0 !important;
+        padding: 0.35rem 0 0.65rem !important;
+    }
+
+    /* Sidebar fold priority after tabs */
+    .crm-contact-detail-scan .crm-contact-side-card--warn {
+        order: 1;
+    }
+
+    .crm-contact-detail-scan .crm-contact-side-card--prefs {
+        order: 2;
+    }
+
+    .crm-contact-detail-scan .crm-contact-side-card--reminders {
+        order: 3;
+    }
+
+    .crm-contact-detail-scan .crm-contact-side-card--msg {
+        order: 4;
+    }
+
+    .crm-contact-detail-scan .crm-contact-side-card--convert {
+        order: 5;
+    }
+
+    .crm-contact-detail-scan .crm-contact-side-card--deals,
+    .crm-contact-detail-scan .crm-contact-followup--desk,
+    .crm-contact-detail-scan .crm-contact-delete-form {
+        display: none !important;
+    }
+
+    /* ── Segmented tabs (list-chip language) ── */
+    .crm-contact-detail-scan .crm-contact-segrail {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 24 !important;
+        margin: 0 0 0.55rem !important;
+        padding: 0.4rem var(--crm-cd-pad) 0.5rem !important;
+        width: 100% !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-bg, #f4f6fb) 92%, var(--ws-surface)) 60%,
+                transparent
+            ) !important;
+        border: none !important;
+        border-bottom: none !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-segrail.is-stuck {
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05) !important;
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 94%, var(--ws-surface)) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs.crm-tabs-pro,
+    .crm-contact-detail-scan nav.crm-tabs.crm-tabs-pro.crm-contact-tabs {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0.2rem !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 16px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 94%, #fff),
+                color-mix(in srgb, var(--ws-surface) 88%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent) !important;
+        grid-template-columns: unset !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs.crm-tabs-pro::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro {
+        flex: 0 0 auto !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.28rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 2.15rem !important;
+        height: auto !important;
+        padding: 0.28rem 0.7rem !important;
+        border: none !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        color: var(--ws-text-muted) !important;
+        box-shadow: none !important;
+        scroll-snap-align: start;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro .crm-contact-seg__ico {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro .crm-contact-seg__full {
+        display: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro .crm-contact-seg__short {
+        display: inline !important;
+        font-size: 0.72rem !important;
+        font-weight: 720 !important;
+        letter-spacing: -0.015em;
+        white-space: nowrap;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro em {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.1rem;
+        min-height: 1.1rem;
+        padding: 0 0.28rem;
+        border-radius: 999px;
+        font-style: normal;
+        font-size: 0.6rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--ws-text-secondary);
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent);
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro em.is-empty {
+        opacity: 0.45;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro.active,
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro[aria-selected="true"] {
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        font-weight: 800 !important;
+        box-shadow: 0 4px 12px -5px color-mix(in srgb, var(--ws-primary) 58%, transparent) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro.active em,
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro[aria-selected="true"] em {
+        color: #fff !important;
+        background: color-mix(in srgb, #fff 18%, transparent) !important;
+        border-color: color-mix(in srgb, #fff 22%, transparent) !important;
+    }
+
+    /* ── Tab panels ── */
+    .crm-contact-detail-scan .crm-contact-tab-panel,
+    .crm-contact-detail-scan .crm-contact-panel {
+        margin: 0 var(--crm-cd-pad) !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-panel-head,
+    .crm-contact-detail-scan .crm-contact-tab-head {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.65rem !important;
+        margin: 0 0 0.55rem !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-panel-head h2,
+    .crm-contact-detail-scan .crm-contact-tab-head h2 {
+        margin: 0 !important;
+        font-size: 0.92rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-text) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tab-head__sub {
+        margin: 0.12rem 0 0 !important;
+        font-size: 0.68rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tab-head__cta {
+        min-height: 2.15rem !important;
+        padding: 0.3rem 0.7rem !important;
+        border-radius: 999px !important;
+        font-size: 0.7rem !important;
+        font-weight: 800 !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-panel-body {
+        padding: 0 !important;
+    }
+
+    /* Activity events — quieter surfaces */
+    .crm-contact-detail-scan .crm-activity-event {
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-empty {
+        padding: 1.35rem 1rem !important;
+        border-radius: 16px !important;
+        border: 1px dashed color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 70%, transparent) !important;
+        text-align: center;
+    }
+
+    .crm-contact-detail-scan .crm-visit-card-pro,
+    .crm-contact-detail-scan .crm-contact-deal-row,
+    .crm-contact-detail-scan .crm-doc-item {
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: none !important;
+    }
+
+    /* ── Sidebar after tabs: compact folds ── */
+    .crm-contact-detail-scan .crm-contact-side-card:not(.crm-contact-followup--mob):not(.crm-contact-followup--desk) {
+        margin: 0 var(--crm-cd-pad) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        border-radius: 16px !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+        overflow: hidden;
+    }
+
+    .crm-contact-detail-scan .crm-contact-side-card:not(.crm-contact-followup--mob):not(.crm-contact-followup--desk) > .crm-contact-side-head {
+        min-height: 2.85rem !important;
+        padding: 0.55rem 0.8rem !important;
+        align-items: center;
+    }
+
+    .crm-contact-detail-scan .crm-contact-side-card:not(.crm-contact-followup--mob):not(.crm-contact-followup--desk) > .crm-contact-side-head h3 {
+        font-size: 0.78rem !important;
+        font-weight: 800 !important;
+    }
+
+    /* ── Dock polish ── */
+    body.ws-body:has(.crm-contact-detail-scan .crm-contact-mobile-dock) .crm-contact-detail-scan .crm-contact-mobile-dock.crm-contact-action-bar {
+        padding: 0.4rem var(--crm-cd-pad) calc(0.4rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    body.ws-body:has(.crm-contact-detail-scan .crm-contact-mobile-dock) .crm-contact-detail-scan .crm-contact-mobile-dock__inner {
+        min-height: 3.35rem !important;
+        padding: 0.35rem 0.4rem !important;
+        border-radius: 18px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent) !important;
+        box-shadow:
+            0 8px 28px rgba(15, 23, 42, 0.12),
+            0 2px 8px rgba(15, 23, 42, 0.05),
+            inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent) !important;
+    }
+
+    body.ws-body:has(.crm-contact-detail-scan .crm-contact-mobile-dock) .crm-contact-detail-scan .crm-contact-dock-btn {
+        min-height: 2.95rem !important;
+        border-radius: 13px !important;
+        font-size: 0.6rem !important;
+        font-weight: 750 !important;
+        letter-spacing: -0.01em;
+    }
+
+    body.ws-body:has(.crm-contact-detail-scan .crm-contact-mobile-dock) .crm-contact-detail-scan .crm-contact-dock-btn--primary {
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--ws-primary) 55%, transparent) !important;
+    }
+
+    body.ws-body:has(.crm-contact-detail-scan .crm-contact-mobile-dock) .crm-contact-detail-scan .crm-contact-dock-more-panel {
+        border-radius: 22px 22px 0 0 !important;
+        padding: 0.55rem 0.85rem calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+        border-bottom: none;
+        box-shadow: 0 -10px 36px rgba(15, 23, 42, 0.14) !important;
+    }
+
+    body.ws-body:has(.crm-contact-detail-scan .crm-contact-mobile-dock) .crm-contact-detail-scan .crm-contact-dock-more-panel::before {
+        content: "";
+        display: block;
+        width: 2.35rem;
+        height: 0.26rem;
+        margin: 0.15rem auto 0.55rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, var(--ws-text-muted));
+    }
+
+    /* Overflow menu sheet from toolbar */
+    .crm-contact-detail-scan .crm-contact-mob-menu--inline .crm-contact-mob-menu-panel {
+        border-radius: 22px 22px 0 0 !important;
+        padding: 0.55rem 0.85rem calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-mob-menu--inline .crm-contact-mob-menu-panel::before {
+        content: "";
+        display: block;
+        width: 2.35rem;
+        height: 0.26rem;
+        margin: 0.1rem auto 0.5rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, var(--ws-text-muted));
+    }
+}
+
+@media (max-width: 360px) {
+    .crm-contact-detail-scan .crm-contact-hero__title {
+        font-size: 1rem !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-tabs .crm-tab-pro {
+        padding: 0.26rem 0.58rem !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-nba:not(.crm-contact-after-call) {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .crm-contact-detail-scan .crm-contact-nba__cta,
+    .crm-contact-detail-scan .crm-contact-nba__form .crm-contact-nba__cta {
+        width: 100% !important;
+    }
+}

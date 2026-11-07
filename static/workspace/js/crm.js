@@ -2077,9 +2077,12 @@ function bindCRMMatchingToleranceRoot(root) {
                 initCRMMatchingTolerance();
             }
 
-            const tabCount = document.querySelector('[data-crm-match-tab-count]');
-            if (tabCount && data.match_tab_count != null) {
-                tabCount.textContent = crmToPersianDigits(String(data.match_tab_count));
+            if (data.match_tab_count != null) {
+                const countText = crmToPersianDigits(String(data.match_tab_count));
+                document.querySelectorAll('[data-crm-match-tab-count]').forEach((tabCount) => {
+                    tabCount.textContent = countText;
+                    tabCount.classList.toggle('is-empty', !Number(data.match_tab_count));
+                });
             }
             const refreshed = document.getElementById('crmMatches');
             if (refreshed) crmSyncMatchPanelTabCounts(refreshed);
@@ -2315,7 +2318,9 @@ function initCRMMatches() {
         });
         panel.querySelectorAll('.crm-matches-col-v3').forEach((col) => {
             const colSource = (col.getAttribute('data-match-source') || '').trim();
-            setMatchNodeHidden(col, filter !== 'all' && colSource !== filter);
+            const total = Number(col.getAttribute('data-match-total') || '0');
+            const emptyUnlocked = total <= 0 && !col.classList.contains('crm-matches-col--locked');
+            setMatchNodeHidden(col, emptyUnlocked || (filter !== 'all' && colSource !== filter));
         });
         panel.querySelectorAll('[data-match-locked]').forEach((el) => {
             setMatchNodeHidden(el, filter === 'crm');
@@ -2449,11 +2454,68 @@ function initCRMMatches() {
 
     applySourceFilter('all');
 
+    function crmMatchScrollParents(node) {
+        const parents = [];
+        let el = node && node.parentElement;
+        while (el && el !== document.body) {
+            const style = window.getComputedStyle(el);
+            const oy = style.overflowY;
+            if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && el.scrollHeight > el.clientHeight + 1) {
+                parents.push({ el, top: el.scrollTop });
+            }
+            el = el.parentElement;
+        }
+        parents.push({ el: window, top: window.scrollY, left: window.scrollX });
+        return parents;
+    }
+
+    function crmRestoreMatchScroll(snapshot) {
+        if (!snapshot) return;
+        snapshot.forEach((item) => {
+            if (item.el === window) {
+                window.scrollTo(item.left || 0, item.top || 0);
+            } else if (item.el) {
+                item.el.scrollTop = item.top || 0;
+            }
+        });
+    }
+
+    function syncMatchWhyPanel(card, open) {
+        if (!card) return;
+        const whyPanel = card.querySelector('[data-match-why-panel]');
+        const toggleBtn = card.querySelector('[data-match-why-toggle]');
+        if (!whyPanel || !toggleBtn) return;
+        const nextOpen = !!open;
+        whyPanel.hidden = !nextOpen;
+        card.classList.toggle('is-why-open', nextOpen);
+        toggleBtn.classList.toggle('is-open', nextOpen);
+        toggleBtn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+    }
+
+    panel.querySelectorAll('[data-match-card]').forEach((card) => {
+        const whyPanel = card.querySelector('[data-match-why-panel]');
+        syncMatchWhyPanel(card, !!(whyPanel && !whyPanel.hidden));
+    });
+
     panel.addEventListener('change', (ev) => {
         if (ev.target && ev.target.classList.contains('crm-match-select')) updateSelection();
     });
 
     panel.addEventListener('click', (ev) => {
+        const whyToggle = ev.target.closest('[data-match-why-toggle]');
+        if (whyToggle && panel.contains(whyToggle)) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const card = whyToggle.closest('[data-match-card]');
+            if (!card) return;
+            const whyPanel = card.querySelector('[data-match-why-panel]');
+            if (!whyPanel) return;
+            const snapshot = crmMatchScrollParents(card);
+            syncMatchWhyPanel(card, !!whyPanel.hidden);
+            crmRestoreMatchScroll(snapshot);
+            requestAnimationFrame(() => crmRestoreMatchScroll(snapshot));
+            return;
+        }
         const filterBtn = ev.target.closest('[data-match-filter]');
         if (filterBtn) {
             applySourceFilter(filterBtn.getAttribute('data-match-filter') || 'all');
@@ -4195,36 +4257,204 @@ function initCRMTeamPage() {
     });
 }
 
-function initCRMContactStatusPicker() {
-    const picker = document.querySelector('[data-crm-status-picker]');
-    if (!picker) return;
-    const select = picker.querySelector('.crm-contact-hero__status-select');
-    const url = picker.dataset.url || window.crmContactStatusUrl || '';
-    if (!select || !url) return;
+function initContactAvatarEditor() {
+    const root = document.querySelector('[data-crm-contact-avatar]');
+    const sheet = document.querySelector('[data-crm-avatar-sheet]');
+    if (!root || !sheet || root.dataset.canEdit !== '1') return;
 
-    let previous = select.value;
-    select.addEventListener('change', async () => {
-        const newStatus = select.value;
-        select.classList.add('is-loading');
+    const url = root.dataset.url || '';
+    if (!url) return;
+
+    const openBtn = root.querySelector('[data-crm-avatar-open]');
+    const avatarBlock = root.querySelector('.crm-cd-mob-keyfacts__avatar-block');
+    const pickBtn = sheet.querySelector('[data-crm-avatar-pick]');
+    const clearBtn = sheet.querySelector('[data-crm-avatar-clear]');
+    const fileInput = sheet.querySelector('[data-crm-avatar-file]');
+    const statusEl = sheet.querySelector('[data-crm-avatar-status]');
+    const closeBtns = sheet.querySelectorAll('[data-crm-avatar-close]');
+
+    const setBusy = (busy) => {
+        sheet.classList.toggle('is-busy', busy);
+        if (avatarBlock) avatarBlock.classList.toggle('is-busy', busy);
+    };
+
+    const setStatus = (msg, isError) => {
+        if (!statusEl) return;
+        if (!msg) {
+            statusEl.hidden = true;
+            statusEl.textContent = '';
+            statusEl.classList.remove('is-error');
+            return;
+        }
+        statusEl.hidden = false;
+        statusEl.textContent = msg;
+        statusEl.classList.toggle('is-error', !!isError);
+    };
+
+    const syncHasPhoto = (hasPhoto) => {
+        root.dataset.hasPhoto = hasPhoto ? '1' : '0';
+        if (clearBtn) clearBtn.hidden = !hasPhoto;
+    };
+
+    const markPhotoClass = (el) => {
+        if (el.classList.contains('crm-cd-mob-keyfacts__avatar')) {
+            el.classList.add('crm-cd-mob-keyfacts__avatar--photo');
+        }
+        if (el.classList.contains('crm-contact-hero__avatar')) {
+            el.classList.add('crm-contact-hero__avatar--photo');
+        }
+    };
+
+    const applyAvatarUrl = (photoUrl) => {
+        if (!photoUrl) return;
+        document.querySelectorAll(
+            '.crm-cd-mob-keyfacts__avatar, .crm-contact-hero__avatar'
+        ).forEach((node) => {
+            if (node.tagName === 'IMG') {
+                node.src = photoUrl;
+                markPhotoClass(node);
+                return;
+            }
+            const img = document.createElement('img');
+            img.className = node.className
+                .replace(/\bcrm-deals-avatar\b/g, '')
+                .replace(/\bcrm-deals-avatar--hue-\d+\b/g, '')
+                .trim();
+            markPhotoClass(img);
+            img.src = photoUrl;
+            img.alt = '';
+            img.decoding = 'async';
+            img.loading = 'eager';
+            node.replaceWith(img);
+        });
+    };
+
+    const openSheet = () => {
+        setStatus('');
+        sheet.hidden = false;
+        document.body.style.overflow = 'hidden';
+        (pickBtn || closeBtns[0])?.focus?.();
+    };
+
+    const closeSheet = () => {
+        if (sheet.classList.contains('is-busy')) return;
+        sheet.hidden = true;
+        document.body.style.overflow = '';
+        openBtn?.focus?.();
+    };
+
+    const postPhoto = async (formData) => {
+        setBusy(true);
+        setStatus('در حال ذخیره…');
         try {
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                body: JSON.stringify({ status: newStatus }),
+                body: formData,
             });
             const data = await res.json();
-            if (!data.ok) throw new Error(data.error || 'خطا');
-            previous = newStatus;
+            if (!data.ok) throw new Error(data.error || 'ذخیره تصویر انجام نشد.');
+            if (data.photo_url) applyAvatarUrl(data.photo_url);
+            syncHasPhoto(!!data.has_photo);
+            setStatus('تصویر به‌روز شد.');
+            window.setTimeout(() => closeSheet(), 420);
         } catch (err) {
-            select.value = previous;
-            window.alert(err.message || 'تغییر وضعیت انجام نشد.');
+            setStatus(err.message || 'ذخیره تصویر انجام نشد.', true);
         } finally {
-            select.classList.remove('is-loading');
+            setBusy(false);
+            if (fileInput) fileInput.value = '';
         }
+    };
+
+    openBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        openSheet();
+    });
+
+    closeBtns.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeSheet();
+        });
+    });
+
+    pickBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput?.click();
+    });
+
+    fileInput?.addEventListener('change', () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            setStatus('حجم تصویر حداکثر ۵ مگابایت است.', true);
+            fileInput.value = '';
+            return;
+        }
+        const fd = new FormData();
+        fd.append('photo', file);
+        postPhoto(fd);
+    });
+
+    clearBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!window.confirm('تصویر اختصاصی این مخاطب حذف شود؟')) return;
+        const fd = new FormData();
+        fd.append('clear', '1');
+        postPhoto(fd);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !sheet.hidden) {
+            e.preventDefault();
+            closeSheet();
+        }
+    });
+}
+
+function initCRMContactStatusPicker() {
+    const pickers = document.querySelectorAll('[data-crm-status-picker]');
+    if (!pickers.length) return;
+
+    pickers.forEach((picker) => {
+        const select = picker.querySelector(
+            '.crm-contact-hero__status-select, .crm-cd-mob-keyfacts__status-select'
+        );
+        const url = picker.dataset.url || window.crmContactStatusUrl || '';
+        if (!select || !url) return;
+
+        let previous = select.value;
+        select.addEventListener('change', async () => {
+            const newStatus = select.value;
+            select.classList.add('is-loading');
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'خطا');
+                previous = newStatus;
+                document.querySelectorAll(
+                    '.crm-contact-hero__status-select, .crm-cd-mob-keyfacts__status-select'
+                ).forEach((other) => {
+                    if (other !== select) other.value = newStatus;
+                });
+            } catch (err) {
+                select.value = previous;
+                window.alert(err.message || 'تغییر وضعیت انجام نشد.');
+            } finally {
+                select.classList.remove('is-loading');
+            }
+        });
     });
 }
 
@@ -5410,6 +5640,59 @@ function initContactAsideFolds() {
     });
 }
 
+function initContactPrefsAccess() {
+    const jump = document.querySelector('[data-crm-prefs-jump]');
+    if (!jump) return;
+
+    jump.addEventListener('click', () => {
+        const prefs = document.getElementById('crm-contact-prefs');
+        if (!prefs) return;
+        prefs.open = true;
+        try {
+            prefs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (err) {
+            prefs.scrollIntoView(true);
+        }
+        prefs.classList.add('is-prefs-flash');
+        window.setTimeout(() => prefs.classList.remove('is-prefs-flash'), 1200);
+    });
+}
+
+function initContactMatchesPrecisionToggle() {
+    const toggle = document.querySelector('[data-crm-matches-precision-toggle]');
+    if (!toggle || toggle.dataset.crmMatchesPrecisionBound === '1') return;
+    toggle.dataset.crmMatchesPrecisionBound = '1';
+
+    const getPanel = () => document.getElementById('crm-matches-precision-panel');
+
+    const sync = () => {
+        const panel = getPanel();
+        const open = !!(panel && panel.open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.classList.toggle('is-active', open);
+    };
+
+    toggle.addEventListener('click', () => {
+        const panel = getPanel();
+        if (!panel) return;
+        panel.open = !panel.open;
+        sync();
+        if (panel.open) {
+            try {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (err) {
+                panel.scrollIntoView(true);
+            }
+        }
+    });
+
+    document.addEventListener('toggle', (event) => {
+        if (event.target && event.target.id === 'crm-matches-precision-panel') sync();
+    }, true);
+
+    sync();
+}
+
 function initContactHeroMorePanel() {
     document.querySelectorAll('.crm-contact-hero__more').forEach(details => {
         const panel = details.querySelector('.crm-contact-hero__more-panel');
@@ -5468,6 +5751,39 @@ function initContactDetailMobileMenus() {
     const root = document.querySelector('.crm-contact-detail-pro');
     if (!root) return;
 
+    const moreSheet = document.querySelector('[data-crm-more-sheet]');
+    const moreOpenBtn = root.querySelector('[data-crm-more-open]');
+
+    const closeMoreSheet = () => {
+        if (!moreSheet || moreSheet.hidden) return;
+        moreSheet.hidden = true;
+        document.body.classList.remove('crm-contact-mob-menu-open');
+        moreOpenBtn?.setAttribute('aria-expanded', 'false');
+    };
+
+    const openMoreSheet = () => {
+        if (!moreSheet) return;
+        root.querySelectorAll('.crm-contact-dock-more[open], .crm-contact-hero__more[open], .crm-contact-mob-menu[open]').forEach((menu) => {
+            menu.removeAttribute('open');
+        });
+        moreSheet.hidden = false;
+        document.body.classList.add('crm-contact-mob-menu-open');
+        moreOpenBtn?.setAttribute('aria-expanded', 'true');
+    };
+
+    moreOpenBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (moreSheet && !moreSheet.hidden) closeMoreSheet();
+        else openMoreSheet();
+    });
+
+    moreSheet?.querySelectorAll('[data-crm-more-close]').forEach((el) => {
+        el.addEventListener('click', () => {
+            closeMoreSheet();
+        });
+    });
+
     const closeMenus = (except) => {
         root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open], .crm-contact-hero__more[open]').forEach(menu => {
             if (menu !== except) menu.removeAttribute('open');
@@ -5476,7 +5792,10 @@ function initContactDetailMobileMenus() {
 
     root.querySelectorAll('.crm-contact-mob-menu, .crm-contact-dock-more, .crm-contact-hero__more').forEach(menu => {
         menu.addEventListener('toggle', () => {
-            if (menu.open) closeMenus(menu);
+            if (menu.open) {
+                closeMenus(menu);
+                closeMoreSheet();
+            }
         });
     });
 
@@ -5497,6 +5816,7 @@ function initContactDetailMobileMenus() {
     document.addEventListener('click', (e) => {
         const onHeroMorePanel = e.target.closest('.crm-contact-hero__more-panel');
         if (onHeroMorePanel) return;
+        if (e.target.closest('[data-crm-more-sheet], [data-crm-more-open]')) return;
         root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open], .crm-contact-hero__more[open]').forEach(menu => {
             if (!menu.contains(e.target)) menu.removeAttribute('open');
         });
@@ -5505,6 +5825,7 @@ function initContactDetailMobileMenus() {
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
         closeMenus();
+        closeMoreSheet();
     });
 }
 
@@ -6875,6 +7196,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initContactDetailMobileMenus();
     initContactHeroMorePanel();
     initContactAsideFolds();
+    initContactPrefsAccess();
+    initContactMatchesPrecisionToggle();
+    initContactAvatarEditor();
     const afterCall = document.querySelector('.crm-contact-after-call');
     if (afterCall) afterCall.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     initCRMPropertyAdvFilters();

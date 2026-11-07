@@ -1,3 +1,26 @@
+/* Owner + aside: one sidebar stack (avoids 2-row grid gap) */
+.ws-ld-detail .ws-ld-side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+@media (min-width: 768px) {
+    .ws-ld-detail .crm-prop-detail-grid {
+        grid-template-columns: minmax(0, 1fr) 260px;
+        align-items: start;
+    }
+
+    .ws-ld-detail .ws-ld-owner-slot .mk-owner-box {
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 12%, var(--ws-border-light));
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 22px rgba(15, 23, 42, 0.04);
+    }
+}
+
 /* Listing detail — filing help button + modal parity */
 .ws-ld-detail.mk-filing-datasets .crm-prop-hero-actions {
     flex-wrap: wrap;
@@ -20,52 +43,54 @@
     }
 }
 
-/* ── بخش مکان: متادیتا در یک ردیف + نقشه تمام‌عرض ── */
-.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.35rem;
-    min-width: 0;
-}
+/* ── بخش مکان: متادیتا چیپ‌مانند فقط دسکتاپ ── */
+@media (min-width: 768px) {
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+        min-width: 0;
+    }
 
-.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-list {
-    display: contents;
-}
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-list {
+        display: contents;
+    }
 
-.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-row {
-    display: inline-flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.28rem;
-    padding: 0.3rem 0.6rem;
-    margin: 0;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
-    background: var(--ws-surface);
-    box-shadow: 0 1px 0 color-mix(in srgb, #fff 50%, transparent) inset;
-    grid-template-columns: unset;
-}
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-row {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.28rem;
+        padding: 0.3rem 0.6rem;
+        margin: 0;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
+        background: var(--ws-surface);
+        box-shadow: 0 1px 0 color-mix(in srgb, #fff 50%, transparent) inset;
+        grid-template-columns: unset;
+    }
 
-.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key {
-    font-size: 0.62rem;
-    font-weight: 650;
-    color: var(--ws-text-muted);
-    white-space: nowrap;
-}
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key {
+        font-size: 0.62rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+        white-space: nowrap;
+    }
 
-.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key::after {
-    content: '\00a0·';
-    font-weight: 400;
-    opacity: 0.45;
-}
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key::after {
+        content: '\00a0·';
+        font-weight: 400;
+        opacity: 0.45;
+    }
 
-.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-val {
-    font-size: 0.72rem;
-    font-weight: 750;
-    color: var(--ws-text);
-    text-align: start;
-    line-height: 1.3;
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-val {
+        font-size: 0.72rem;
+        font-weight: 750;
+        color: var(--ws-text);
+        text-align: start;
+        line-height: 1.3;
+    }
 }
 
 .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) {

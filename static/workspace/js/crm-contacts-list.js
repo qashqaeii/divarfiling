@@ -89,4 +89,38 @@
         }, { root: null, rootMargin: '280px 0px 280px 0px', threshold: 0 });
         observer.observe(sentinel);
     }
+
+    /* Mobile row "more" popover: one open + outside/Escape close */
+    function closeRowMoreMenus(except) {
+        document.querySelectorAll('.crm-contacts-mob-row-more[open]').forEach(function (el) {
+            if (except && el === except) return;
+            el.removeAttribute('open');
+        });
+    }
+
+    document.addEventListener('toggle', function (event) {
+        var target = event.target;
+        if (!target || !target.classList || !target.classList.contains('crm-contacts-mob-row-more')) return;
+        if (!target.open) return;
+        closeRowMoreMenus(target);
+    }, true);
+
+    document.addEventListener('pointerdown', function (event) {
+        var openMenus = document.querySelectorAll('.crm-contacts-mob-row-more[open]');
+        if (!openMenus.length) return;
+        var t = event.target;
+        openMenus.forEach(function (menu) {
+            var trigger = menu.querySelector('summary');
+            var panel = menu.querySelector('.crm-contacts-mob-row-more-panel');
+            /* Keep open only for trigger (native toggle) or panel items */
+            if (trigger && trigger.contains(t)) return;
+            if (panel && panel.contains(t)) return;
+            menu.removeAttribute('open');
+        });
+    }, true);
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        closeRowMoreMenus();
+    });
 })();

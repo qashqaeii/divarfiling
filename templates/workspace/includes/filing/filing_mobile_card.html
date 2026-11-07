@@ -2,42 +2,65 @@
 
 {% for ds in datasets %}
 {% with tx=ds.transaction_type|ws_tx_profile %}
-<article class="mk-ds-card fl-mob-card mk-ds-card--{{ tx.mode|default:'other' }}" data-id="{{ ds.id }}" data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}">
-    <div class="mk-ds-card-glass">
-        <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-primary" aria-label="ورود به پوشه {{ ds.name }}">
-            <div class="mk-ds-card-cover{% if not ds.cover_image %} mk-ds-card-cover-empty{% endif %}">
+<article
+    class="mk-ds-card fl-mob-card fl-mob-card--pro mk-ds-card--{{ tx.mode|default:'other' }}"
+    data-id="{{ ds.id }}"
+    data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}"
+>
+    <div class="mk-ds-card-glass fl-mob-card__shell">
+        <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-primary fl-mob-card__hit" aria-label="ورود به پوشه {{ ds.name }}">
+            <div class="fl-mob-card__media mk-ds-card-cover{% if not ds.cover_image %} mk-ds-card-cover-empty{% endif %}">
                 {% if ds.cover_image %}
                 <img class="mk-ds-card-cover-img" src="{{ ds.cover_image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"
                      onerror="this.classList.add('is-failed'); this.parentElement.classList.add('mk-ds-card-cover-empty');">
                 {% endif %}
-                <span class="mk-ds-card-cover-fallback" aria-hidden="true">
+                <span class="mk-ds-card-cover-fallback fl-mob-card__media-fallback" aria-hidden="true">
                     <i class="fas fa-folder-open"></i>
                 </span>
+                <span class="fl-mob-card__media-shade" aria-hidden="true"></span>
+                {% if ds.file_format %}
+                <span class="fl-mob-card__fmt fl-badge fl-badge--format fl-badge--{{ ds.file_format|default:'json' }}">{{ ds.file_format|default:'json'|upper }}</span>
+                {% endif %}
+                <span class="fl-mob-card__selected-mark" aria-hidden="true"><i class="fas fa-check"></i></span>
             </div>
-            <div class="mk-ds-card-body">
-                <h3 class="mk-ds-card-title" title="{{ ds.name }}">{{ ds.name }}</h3>
-                <div class="mk-ds-card-summary">
-                    <span class="mk-ds-card-summary__main">
-                        {% if ds.transaction_type %}
-                        {% include 'workspace/includes/filing/filing_status_badge.html' with kind='tx' mode=tx.mode label=tx.badge %}
-                        {% endif %}
-                        <span class="mk-ds-chip mk-ds-chip--count">
-                            <span>{{ ds.listing_count|default:ds.row_count|intcomma }} آگهی</span>
-                        </span>
+
+            <div class="fl-mob-card__main mk-ds-card-body">
+                <div class="fl-mob-card__kicker">
+                    {% if ds.transaction_type %}
+                    {% include 'workspace/includes/filing/filing_status_badge.html' with kind='tx' mode=tx.mode label=tx.badge %}
+                    {% else %}
+                    <span class="fl-mob-card__kicker-muted">پوشه استخراج</span>
+                    {% endif %}
+                </div>
+
+                <h3 class="mk-ds-card-title fl-mob-card__title" title="{{ ds.name }}">{{ ds.name }}</h3>
+
+                <div class="fl-mob-card__metrics mk-ds-card-summary">
+                    <div class="fl-mob-card__count mk-ds-chip mk-ds-chip--count">
+                        <strong>{{ ds.listing_count|default:ds.row_count|intcomma }}</strong>
+                        <em>آگهی</em>
+                    </div>
+                    {% if ds.city or ds.district %}
+                    <span class="fl-mob-card__place">
+                        <i class="fas fa-location-dot" aria-hidden="true"></i>
+                        <span>{% if ds.district %}{{ ds.district }}{% if ds.city %}، {% endif %}{% endif %}{% if ds.city %}{{ ds.city }}{% endif %}</span>
                     </span>
-                    {% if ds.file_format %}
-                    <span class="mk-ds-card-fmt-inline fl-badge fl-badge--format fl-badge--{{ ds.file_format|default:'json' }}">{{ ds.file_format|default:'json'|upper }}</span>
+                    {% elif ds.subcategory %}
+                    <span class="fl-mob-card__place">
+                        <i class="fas fa-tag" aria-hidden="true"></i>
+                        <span>{{ ds.subcategory }}</span>
+                    </span>
                     {% endif %}
                 </div>
             </div>
-            <span class="mk-ds-card-primary__chev" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
         </a>
-        <footer class="mk-ds-card-foot">
+
+        <footer class="mk-ds-card-foot fl-mob-card__foot">
             <label class="mk-ds-card-check fl-mob-card__check" title="انتخاب">
                 <input type="checkbox" class="mk-checkbox mk-ds-check" value="{{ ds.id }}" aria-label="انتخاب {{ ds.name }}">
             </label>
-            <div class="mk-ds-card-foot-end">
-                <time class="mk-ds-card-date" datetime="{{ ds.updated_at|date:'c' }}">
+            <div class="mk-ds-card-foot-end fl-mob-card__foot-end">
+                <time class="mk-ds-card-date fl-mob-card__date" datetime="{{ ds.updated_at|date:'c' }}">
                     <span class="mk-ds-card-date__lbl">بروزرسانی</span>
                     <span class="mk-ds-card-date__val">{{ ds.updated_at|ws_jalali_date }}</span>
                 </time>

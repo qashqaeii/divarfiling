@@ -1,0 +1,193 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Shell — Mobile Bottom Nav (premium floating dock)
+   Mobile-only (max-width: 767px). Desktop unchanged.
+   Loads after ws-shell-mobile-v3.css
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    :root {
+        --ws-mob-nav-h: 3.7rem;
+        --ws-mob-nav-float-x: 0.55rem;
+        --ws-mob-nav-float-y: 0.48rem;
+        --ws-mob-nav-gap: 0px;
+        --ws-mob-nav-offset: calc(
+            var(--ws-mob-nav-h)
+            + var(--ws-mob-nav-float-y)
+            + 0.35rem
+            + env(safe-area-inset-bottom, 0px)
+        );
+    }
+
+    .ws-bottom-nav {
+        display: flex !important;
+        align-items: stretch !important;
+        justify-content: space-between !important;
+        gap: 0.12rem !important;
+        position: fixed !important;
+        inset-inline: var(--ws-mob-nav-float-x) !important;
+        bottom: calc(var(--ws-mob-nav-float-y) + env(safe-area-inset-bottom, 0px)) !important;
+        z-index: 180 !important;
+        height: auto !important;
+        min-height: var(--ws-mob-nav-h) !important;
+        max-height: none !important;
+        padding: 0.32rem 0.28rem !important;
+        border-radius: 22px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent) !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent) !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 92%, transparent)
+            ) !important;
+        box-shadow:
+            0 10px 32px rgba(15, 23, 42, 0.12),
+            0 2px 8px rgba(15, 23, 42, 0.05),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        backdrop-filter: blur(20px) saturate(1.18) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.18) !important;
+    }
+
+    [data-theme="dark"] .ws-bottom-nav {
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 94%, transparent),
+                color-mix(in srgb, var(--ws-surface) 88%, transparent)
+            ) !important;
+        border-color: color-mix(in srgb, var(--ws-border) 80%, transparent) !important;
+        box-shadow:
+            0 12px 36px rgba(0, 0, 0, 0.38),
+            0 2px 8px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent) !important;
+    }
+
+    .ws-bottom-nav-item {
+        position: relative !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        min-height: 3.05rem !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.14rem !important;
+        padding: 0.28rem 0.12rem 0.22rem !important;
+        border: none !important;
+        border-radius: 16px !important;
+        background: transparent !important;
+        color: var(--ws-text-muted) !important;
+        font-family: inherit !important;
+        font-size: 0.58rem !important;
+        font-weight: 650 !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.01em !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
+        transition:
+            color 0.16s ease,
+            background 0.16s ease,
+            transform 0.12s ease !important;
+    }
+
+    .ws-bottom-nav-item span {
+        display: block !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: inherit !important;
+        font-weight: inherit !important;
+    }
+
+    .ws-bottom-nav-item i {
+        position: relative !important;
+        z-index: 1 !important;
+        width: 1.85rem !important;
+        height: 1.85rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.05rem !important;
+        line-height: 1 !important;
+        border-radius: 11px !important;
+        background: transparent !important;
+        color: inherit !important;
+        box-shadow: none !important;
+        transform: none !important;
+        transition:
+            background 0.16s ease,
+            color 0.16s ease,
+            box-shadow 0.16s ease,
+            transform 0.16s ease !important;
+    }
+
+    .ws-bottom-nav-item.is-active {
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, transparent) !important;
+        font-weight: 780 !important;
+    }
+
+    .ws-bottom-nav-item.is-active i {
+        background: color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+        color: var(--ws-primary) !important;
+        box-shadow: none !important;
+        transform: translateY(-0.5px) !important;
+    }
+
+    .ws-bottom-nav-item:active {
+        transform: scale(0.94) !important;
+    }
+
+    .ws-bottom-nav-item:focus-visible {
+        outline: 2px solid var(--ws-primary) !important;
+        outline-offset: 2px !important;
+    }
+
+    /* «بیشتر» when sheet is open — same active language */
+    .ws-bottom-nav-item[data-ws-bottom-more].is-active {
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, transparent) !important;
+    }
+
+    .ws-bottom-nav-item[data-ws-bottom-more].is-active i {
+        background: color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    /* Content clearance for floating dock */
+    .ws-content {
+        padding-bottom: calc(var(--ws-mob-nav-offset) + 0.35rem) !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-bottom-nav {
+        inset-inline: 0.4rem !important;
+        border-radius: 20px !important;
+        padding: 0.28rem 0.2rem !important;
+    }
+
+    .ws-bottom-nav-item {
+        font-size: 0.52rem !important;
+        gap: 0.1rem !important;
+        border-radius: 14px !important;
+        padding: 0.22rem 0.06rem 0.18rem !important;
+    }
+
+    .ws-bottom-nav-item i {
+        width: 1.7rem !important;
+        height: 1.7rem !important;
+        font-size: 0.98rem !important;
+        border-radius: 10px !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ws-bottom-nav-item,
+    .ws-bottom-nav-item i {
+        transition: none !important;
+    }
+}

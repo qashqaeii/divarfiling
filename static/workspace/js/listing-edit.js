@@ -44,6 +44,7 @@
 
         this.editModal = qs('#modal-edit-listing');
         this.editForm = qs('#editListingForm');
+        this.editTitle = qs('#editListingTitle');
         this.editSubtitle = qs('#editListingSubtitle');
         this.editToken = qs('#editListingToken');
         this.featuresJson = qs('#editFeaturesJson');
@@ -602,8 +603,21 @@
     ListingEditController.prototype.fillEditForm = function (data) {
         if (!data) return;
         var f = this.fields;
-        if (this.editSubtitle) this.editSubtitle.textContent = data.title || '—';
-        if (this.editToken) this.editToken.textContent = data.token ? 'شناسه: ' + data.token : '';
+        var listingTitle = data.title || '—';
+        if (this.editTitle) this.editTitle.textContent = listingTitle;
+        if (this.editSubtitle) {
+            this.editSubtitle.textContent = listingTitle;
+            this.editSubtitle.hidden = true;
+        }
+        if (this.editToken) {
+            if (data.token) {
+                this.editToken.hidden = false;
+                this.editToken.textContent = data.token;
+            } else {
+                this.editToken.hidden = true;
+                this.editToken.textContent = '';
+            }
+        }
 
         setField(f.title, data.title);
         setField(f.price, data.price);

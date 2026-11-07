@@ -200,6 +200,7 @@ urlpatterns = [
     path('crm/contacts/new/', crm_views.CustomerCreateView.as_view(), name='crm_create'),
     path('crm/contacts/<int:customer_id>/', crm_views.CustomerDetailView.as_view(), name='crm_detail'),
     path('crm/contacts/<int:customer_id>/edit/', crm_views.CustomerUpdateView.as_view(), name='crm_edit'),
+    path('crm/contacts/<int:customer_id>/photo/', crm_views.CustomerPhotoUpdateView.as_view(), name='crm_contact_photo'),
     path('crm/contacts/<int:customer_id>/delete/', crm_views.CustomerDeleteView.as_view(), name='crm_delete'),
     path('crm/contacts/export/', crm_views.CustomerExportView.as_view(), name='crm_export'),
     path('crm/contacts/import/', crm_views.CustomerImportView.as_view(), name='crm_import'),

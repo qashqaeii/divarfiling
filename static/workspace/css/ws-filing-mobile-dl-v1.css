@@ -304,32 +304,22 @@
         display: none;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-glass {
-        border-radius: 14px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-        box-shadow: none;
-        background: var(--ws-surface);
-    }
-
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-chips {
         gap: 0.35rem;
     }
 
     /* ── Dataset detail: single gutter, compact list head ── */
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter {
-        margin-inline: 0 !important;
-        border-radius: 14px;
-    }
-
     .ws-filing-mob-dl.mk-filing-dataset-detail .ws-filing-retention-policy {
         margin-inline: 0;
         border-radius: 12px;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header__inner,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__inner,
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-quick,
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-stats {
-        padding-inline: 0 !important;
+        margin-inline: 0 !important;
     }
 
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-stats__grid {
@@ -373,28 +363,114 @@
         color: var(--ws-text-muted);
     }
 
-    /* ── Dataset detail: compact IA, listings first ── */
+    /* ── Dataset detail: align with filing hub language ── */
     .ws-filing-mob-dl.mk-filing-dataset-detail.mk-page {
-        padding-inline: 14px !important;
-        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+        padding-inline: 0 !important;
+        padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
+        gap: var(--mobile-section-gap, 0.65rem) !important;
+        background: transparent !important;
+        overflow-x: clip;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi,
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mix,
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-actions,
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-stats,
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-dock {
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-dock,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-quick {
         display: none !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header {
+    /* Header — identical to filing hub .fl-mob-header */
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header.fl-dd-mob-header,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header {
+        display: block !important;
+        position: relative !important;
+        z-index: 40 !important;
         overflow: visible !important;
-        position: relative;
-        z-index: auto;
+        margin: 0 !important;
+        border-radius: 0 0 18px 18px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        border-top: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface)) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header:has(.fl-dd-mob-more[open]) {
-        z-index: 60;
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header:has(.fl-mob-header__more[open]),
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header:has(.fl-dd-mob-more[open]) {
+        z-index: 60 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header__mesh {
+        display: none !important;
+    }
+
+    /* KPI — show premium 2×2 like filing hub */
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi.fl-kpi-pro,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-kpi-pro.fl-dd-kpi {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 0 0.75rem !important;
+        padding: 0 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__card {
+        min-height: 7.6rem !important;
+        padding: 0.75rem 0.75rem 0.65rem !important;
+        border-radius: 16px !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__value {
+        font-size: 1.45rem !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__value--price {
+        font-size: 1.2rem !important;
+        letter-spacing: -0.02em;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__label {
+        font-size: 0.78rem !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__meta {
+        font-size: 0.68rem !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__subvalue {
+        font-size: 0.68rem !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__hero-deco {
+        font-size: 3.25rem;
+        inset-inline-end: -0.35rem;
+        top: -0.2rem;
+    }
+
+    @media (max-width: 420px) {
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi.fl-kpi-pro,
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-kpi-pro.fl-dd-kpi {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.5rem !important;
+        }
+
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__label {
+            font-size: 0.72rem !important;
+        }
+
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__value {
+            font-size: 1.35rem !important;
+        }
+
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi .fl-kpi-pro__value--price {
+            font-size: 1.1rem !important;
+        }
     }
 
     /* Filter/sort sheets: lift shell above dataset header (header was trapping sheets below) */
@@ -402,78 +478,448 @@
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open,
     body.ws-filing-sort-open .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter,
     body.ws-filing-dd-stats-open .ws-filing-mob-dl.mk-filing-dataset-detail.mk-page {
-        position: relative;
-        z-index: 185;
+        position: relative !important;
+        z-index: 185 !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-more {
-        position: relative;
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__inner {
+        position: relative !important;
+        z-index: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.65rem !important;
+        padding: 0.55rem 0 0.45rem !important;
+        overflow: visible !important;
+        margin: 0 !important;
     }
 
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__main--with-back {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__copy {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__title {
+        margin: 0 0 0.15rem !important;
+        font-size: 1.05rem !important;
+        font-weight: 900 !important;
+        letter-spacing: -0.03em !important;
+        line-height: 1.25 !important;
+        color: var(--ws-text) !important;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__sub {
+        margin: 0 !important;
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+        line-height: 1.35 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__sub strong {
+        color: var(--ws-text);
+        font-weight: 800;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__actions {
+        display: flex !important;
+        gap: 0.3rem !important;
+        position: relative;
+        z-index: 2;
+        overflow: visible;
+        flex-shrink: 0;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__icon {
+        width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-width: 2.35rem !important;
+        min-height: 2.35rem !important;
+        display: inline-grid !important;
+        place-items: center !important;
+        border: 1px solid var(--ws-border) !important;
+        border-radius: 11px !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+        text-decoration: none !important;
+        cursor: pointer;
+        font-size: 0.82rem !important;
+        font-family: inherit;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__icon--back:active {
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__more {
+        position: relative;
+        z-index: 3;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__more > summary {
+        list-style: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__more > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__more-panel,
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-more-panel {
-        z-index: 1;
+        position: absolute !important;
+        inset-inline-end: 0 !important;
+        top: calc(100% + 0.35rem) !important;
+        min-width: 10.5rem !important;
         max-height: min(70dvh, 420px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        padding: 0.35rem !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14) !important;
+        z-index: 80 !important;
         scrollbar-width: none;
-        -ms-overflow-style: none;
     }
 
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__more-panel::-webkit-scrollbar,
     .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-more-panel::-webkit-scrollbar {
         display: none;
         width: 0;
         height: 0;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-more > summary.fl-dd-mob-header__icon {
-        list-style: none;
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__more-item,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-more-item {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        width: 100%;
+        padding: 0.55rem 0.65rem !important;
+        border: none !important;
+        border-radius: 9px !important;
+        background: transparent !important;
+        font-size: 0.8125rem !important;
+        font-weight: 700 !important;
+        font-family: inherit;
+        color: var(--ws-text-secondary) !important;
+        text-decoration: none !important;
+        text-align: start;
+        cursor: pointer;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-mob-header__more-item:active,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-more-item:active {
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface-2)) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-more-item--danger {
+        color: #dc2626 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .ws-filing-retention-policy,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-panel,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-kpi {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+        box-sizing: border-box;
+    }
+
+    /* Search / filter — match filing hub toolbar language */
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter.fl-listing-filters,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter {
+        top: auto !important;
+        margin: 0 0 0.5rem !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    body:not(.ws-filing-sort-open) .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter:not(.fl-dd-filter-open):not(.mk-filter-shell-open) {
+        position: static !important;
+        z-index: auto !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-primary,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__rail,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-filters__rail {
+        position: static !important;
+        top: auto !important;
+        z-index: auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.65rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-sizing: border-box;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__main,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar--listing {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__search,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__search {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        min-height: 2.75rem !important;
+        height: 2.75rem !important;
+        padding-inline: 0.75rem !important;
+        margin: 0 !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__search:focus-within,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__search:focus-within {
+        border-color: color-mix(in srgb, var(--ws-primary) 50%, var(--ws-border)) !important;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__search > i,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__search > i {
+        flex-shrink: 0;
+        opacity: 0.55;
+        color: var(--ws-text-muted);
+        font-size: 0.9rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__search:focus-within > i,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__search:focus-within > i {
+        opacity: 0.85;
+        color: var(--ws-primary);
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__search input,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__search input {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        font-size: 1rem !important;
+        line-height: 1.35 !important;
+        color: var(--ws-text);
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__btn,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.35rem !important;
+        width: auto !important;
+        min-width: 2.75rem !important;
+        height: 2.75rem !important;
+        min-height: 2.75rem !important;
+        padding: 0 0.75rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+        font-family: inherit !important;
+        font-size: 0.8125rem !important;
+        font-weight: 800 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__clear {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 55%, transparent);
+        color: var(--ws-text-muted);
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header__inner {
-        padding: 0.45rem 0 0.35rem !important;
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__clear[hidden] {
+        display: none !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header__title {
-        font-size: 0.9375rem !important;
-        font-weight: 900 !important;
-        -webkit-line-clamp: 2;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__clear i {
+        font-size: 0.65rem;
+        line-height: 1;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__fields,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__actions,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-primary__fields,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-actions--desk {
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__btn:active,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn:active {
+        transform: scale(0.98);
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__btn > i,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn > i {
+        font-size: 1.05rem !important;
+        color: var(--ws-primary) !important;
+        line-height: 1;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn-label {
+        display: block !important;
+        max-width: 100%;
         overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.8125rem !important;
+        font-weight: 800 !important;
+        color: var(--ws-text-secondary);
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-mob-header__sub {
-        font-size: 0.6875rem !important;
-        line-height: 1.35 !important;
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__btn.has-active,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__btn.is-active,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn.is-active,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn.has-active {
+        border-color: color-mix(in srgb, var(--ws-primary) 40%, var(--ws-border)) !important;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter {
-        margin: 0.35rem 0 0.25rem !important;
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__badge,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-badge {
+        position: static !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.125rem;
+        min-height: 1.125rem;
+        height: auto !important;
+        width: auto !important;
+        padding: 0 0.28rem;
+        margin-inline-start: 0.1rem;
+        border-radius: 999px;
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        font-size: 0.625rem !important;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-filters__filter-badge {
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-active,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__chips,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-filters__active {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        gap: 0.35rem !important;
+        margin-top: 0.4rem !important;
         padding: 0 !important;
         border: none !important;
         background: transparent !important;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-active::-webkit-scrollbar,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-filters__active::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-chip,
+    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-filters__active-chip {
+        flex: 0 0 auto;
+        min-height: 1.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        padding: 0.2rem 0.55rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: var(--ws-surface) !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        color: var(--ws-text-secondary) !important;
+        text-decoration: none !important;
         box-shadow: none !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .mk-filter-primary,
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__rail {
-        position: sticky;
-        top: 0;
-        z-index: 48;
-        padding: 0.35rem 0 0.45rem;
-        margin: 0 0 0.15rem;
-        background: color-mix(in srgb, var(--ws-bg, var(--ws-surface)) 92%, transparent);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
-    }
+    @media (max-width: 359px) {
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__main,
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar--listing {
+            gap: 0.4rem !important;
+        }
 
-    .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__main {
-        gap: 0.4rem;
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .ws-mob-search-bar__btn,
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn {
+            min-width: 2.85rem !important;
+            max-width: 3.4rem;
+            padding-inline: 0.4rem !important;
+        }
+
+        .ws-filing-mob-dl.mk-filing-dataset-detail .fl-dd-filter .fl-listing-filters__mob-btn-label {
+            font-size: 0.5625rem !important;
+        }
     }
 
     .ws-filing-mob-dl.mk-filing-dataset-detail .ws-filing-retention-policy--compact {
@@ -533,8 +979,8 @@
     }
 
     .ws-filing-mob-dl.mk-filing-dataset-detail .mk-filter-active {
-        margin-top: 0.15rem;
-        padding-bottom: 0.1rem;
+        margin-top: 0.45rem !important;
+        padding-bottom: 0;
     }
 
     /* Stats sheet (More → آمار پوشه) */
@@ -584,7 +1030,7 @@
         color: var(--ws-text-muted);
     }
 
-    /* Listing cards — unified composition (.mk-lcard--ds-detail-mob) */
+    /* Listing cards — premium minimal (.mk-lcard--ds-detail-mob) */
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob {
         position: relative;
         display: flex !important;
@@ -592,12 +1038,10 @@
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
-        border-radius: 16px !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 46%, transparent) !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 58%, transparent) !important;
         background: var(--ws-surface) !important;
-        box-shadow:
-            0 1px 2px rgba(15, 23, 42, 0.04),
-            0 10px 28px rgba(15, 23, 42, 0.07) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.035) !important;
         overflow: hidden !important;
         transform: none !important;
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -605,10 +1049,8 @@
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob:active {
         transform: none !important;
-        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
-        box-shadow:
-            0 1px 2px rgba(15, 23, 42, 0.05),
-            0 6px 18px rgba(15, 23, 42, 0.07) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border)) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob:has(.mk-lcard-more[open]) {
@@ -619,7 +1061,7 @@
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__media {
         position: relative;
         flex-shrink: 0;
-        aspect-ratio: 4 / 3 !important;
+        aspect-ratio: 16 / 10 !important;
         height: auto !important;
         min-height: 0 !important;
         max-height: none !important;
@@ -627,14 +1069,16 @@
         border-radius: 0 !important;
         overflow: hidden !important;
         isolation: isolate;
+        background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-surface));
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__media:has(.mk-lcard-cover-link--empty),
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__media--broken,
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob-no-photo .mk-lcard-native__media {
-        aspect-ratio: auto !important;
-        height: 6.25rem !important;
-        max-height: 7rem !important;
+        aspect-ratio: 16 / 10 !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 5.5rem !important;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-cover-link,
@@ -653,22 +1097,18 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
+        gap: 0.3rem;
         width: 100%;
         height: 100%;
-        background: linear-gradient(
-            165deg,
-            color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)) 0%,
-            color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface)) 100%
-        ) !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)) !important;
         color: var(--ws-text-muted) !important;
         font-size: 0.6875rem;
         font-weight: 650;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-cover-empty--compact i {
-        font-size: 1.125rem;
-        opacity: 0.55;
+        font-size: 1rem;
+        opacity: 0.45;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-cover-shade--ds-mob {
@@ -677,19 +1117,11 @@
         inset: 0;
         z-index: 1;
         pointer-events: none;
-        background:
-            linear-gradient(
+        background: linear-gradient(
                 180deg,
-                rgba(15, 23, 42, 0.11) 0%,
-                transparent 36%,
+            rgba(15, 23, 42, 0.18) 0%,
+            transparent 42%,
                 transparent 100%
-            ),
-            linear-gradient(
-                180deg,
-                transparent 0%,
-                transparent calc(100% - 2.35rem),
-                color-mix(in srgb, var(--ws-surface) 22%, transparent) calc(100% - 1.1rem),
-                color-mix(in srgb, var(--ws-surface) 38%, transparent) 100%
             ) !important;
     }
 
@@ -701,37 +1133,69 @@
         display: none !important;
     }
 
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-cover-bottom {
+        position: absolute !important;
+        bottom: 0.45rem !important;
+        inset-inline-start: 0.5rem !important;
+        inset-inline-end: auto !important;
+        z-index: 4;
+        display: flex !important;
+        pointer-events: none;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-market--cover {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.28rem;
+        padding: 0.18rem 0.45rem !important;
+        border-radius: 999px !important;
+        font-size: 0.625rem !important;
+        font-weight: 750 !important;
+        line-height: 1.2;
+        background: rgba(15, 23, 42, 0.55) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #fff !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-market--cover .mk-lcard-market__ico {
+        font-size: 0.55rem;
+        opacity: 0.9;
+    }
+
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__photos {
         position: absolute !important;
-        bottom: 0.5rem !important;
-        inset-inline-end: auto !important;
-        inset-inline-start: 0.55rem !important;
+        bottom: 0.45rem !important;
+        inset-inline-end: 0.5rem !important;
+        inset-inline-start: auto !important;
         top: auto !important;
         z-index: 4;
         display: inline-flex !important;
         align-items: center;
-        gap: 0.22rem;
-        padding: 0.18rem 0.45rem !important;
+        gap: 0.2rem;
+        padding: 0.16rem 0.4rem !important;
         font-size: 0.625rem !important;
-        font-weight: 750;
+        font-weight: 700;
         line-height: 1.2;
         border-radius: 999px !important;
-        background: rgba(15, 23, 42, 0.52) !important;
+        background: rgba(15, 23, 42, 0.48) !important;
         backdrop-filter: blur(6px);
         -webkit-backdrop-filter: blur(6px);
         color: #fff !important;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+        box-shadow: none !important;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__photos i {
-        font-size: 0.58rem;
-        opacity: 0.92;
+        font-size: 0.55rem;
+        opacity: 0.9;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__cover-meta {
         position: absolute !important;
-        top: 0.5rem !important;
-        inset-inline-end: 0.5rem !important;
+        top: 0.45rem !important;
+        inset-inline-end: 0.45rem !important;
         inset-inline-start: auto !important;
         z-index: 4;
         display: flex !important;
@@ -740,37 +1204,37 @@
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__cover-meta .mk-adv-tag {
-        padding: 0.16rem 0.5rem;
+        padding: 0.14rem 0.45rem;
         border-radius: 999px;
         font-size: 0.625rem;
-        font-weight: 800;
-        background: rgba(255, 255, 255, 0.88);
-        border: 1px solid rgba(255, 255, 255, 0.55);
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.1);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        font-weight: 750;
+        background: rgba(255, 255, 255, 0.92);
+        border: none;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__owner-pill {
         display: inline-flex;
         align-items: center;
         gap: 0.28rem;
-        padding: 0.16rem 0.5rem;
+        padding: 0.14rem 0.45rem;
         border-radius: 999px;
         font-size: 0.625rem;
-        font-weight: 800;
+        font-weight: 750;
         line-height: 1.2;
-        background: rgba(255, 255, 255, 0.88);
-        border: 1px solid rgba(255, 255, 255, 0.55);
+        background: rgba(255, 255, 255, 0.92);
+        border: none;
         color: var(--ws-text);
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.1);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__owner-pill-dot {
-        width: 0.35rem;
-        height: 0.35rem;
+        width: 0.32rem;
+        height: 0.32rem;
         border-radius: 999px;
         background: #22c55e;
     }
@@ -789,8 +1253,9 @@
         flex-direction: column !important;
         align-items: stretch !important;
         text-align: start !important;
+        gap: 0.4rem;
         margin: 0 !important;
-        padding: 0.7rem 0.85rem 0;
+        padding: 0.7rem 0.8rem 0.55rem !important;
         min-width: 0 !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
@@ -808,7 +1273,7 @@
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob-no-photo .mk-lcard-native__content {
         margin-top: 0 !important;
-        padding-top: 0.65rem !important;
+        padding-top: 0.7rem !important;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__panel,
@@ -816,9 +1281,118 @@
         all: unset;
     }
 
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__head {
-        margin: 0 0 0.55rem;
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__pricebox {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: baseline !important;
+        gap: 0.3rem 0.5rem !important;
+        margin: 0.1rem 0 0 !important;
+        padding: 0.45rem 0 0 !important;
+        border: none !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        border-radius: 0;
+        background: transparent !important;
+        order: unset !important;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__price {
+        font-size: 1.1875rem !important;
+        font-weight: 850 !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.022em !important;
+        color: var(--ws-text) !important;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__ppm {
+        display: inline !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        font-size: 0.6875rem !important;
+        font-weight: 650 !important;
+        line-height: 1.25;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__ppm--deal {
+        color: color-mix(in srgb, var(--ws-primary) 70%, var(--ws-text-secondary)) !important;
+        font-weight: 700 !important;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 0.55rem;
+        width: 100%;
+        max-width: 100%;
         min-width: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col {
+        flex: 0 1 auto;
+        min-width: 0;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 0.28rem;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col--deposit,
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col--rent {
+        padding: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__label {
+        font-size: 0.6875rem;
+        font-weight: 650;
+        line-height: 1.2;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__amount {
+        display: inline;
+        max-width: 100%;
+        min-width: 0;
+        font-size: 1.0625rem !important;
+        font-weight: 850 !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-text) !important;
+        font-variant-numeric: tabular-nums;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col--deposit .mk-lcard-rent-dual__amount {
+        font-size: 1.1875rem !important;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__divider {
+        flex: 0 0 auto;
+        width: auto;
+        align-self: center;
+        margin: 0;
+        background: transparent;
+        color: color-mix(in srgb, var(--ws-border) 80%, var(--ws-text-muted));
+        font-size: 0.75rem;
+        line-height: 1;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__divider::before {
+        content: "·";
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__head {
+        margin: 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.28rem;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__title {
@@ -828,10 +1402,11 @@
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__title a {
         font-size: 0.875rem !important;
-        font-weight: 900 !important;
-        line-height: 1.42 !important;
+        font-weight: 800 !important;
+        line-height: 1.4 !important;
         letter-spacing: -0.012em !important;
         color: var(--ws-text) !important;
+        text-decoration: none !important;
         display: -webkit-box !important;
         -webkit-line-clamp: 2 !important;
         -webkit-box-orient: vertical !important;
@@ -840,20 +1415,21 @@
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__meta {
         display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        margin: 0.32rem 0 0;
+        align-items: flex-start;
+        gap: 0.35rem;
+        margin: 0;
         padding: 0;
         min-width: 0;
-        font-size: 0.6875rem;
-        font-weight: 650;
-        line-height: 1.35;
-        color: var(--ws-text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--ws-text-secondary);
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__meta i {
         flex-shrink: 0;
-        font-size: 0.58rem;
+        margin-top: 0.18rem;
+        font-size: 0.72rem;
         opacity: 1;
         color: var(--ws-danger, #EF4444);
     }
@@ -865,120 +1441,34 @@
         min-width: 0;
     }
 
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__pricebox {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 0.35rem !important;
-        margin: 0 0 0.5rem !important;
-        padding: 0 !important;
-        border: none !important;
-        border-radius: 0;
-        background: transparent !important;
-        order: unset !important;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__price {
-        font-size: 1.2rem !important;
-        font-weight: 900 !important;
-        line-height: 1.12 !important;
-        letter-spacing: -0.028em !important;
-        color: var(--ws-primary) !important;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__ppm {
-        display: inline-flex !important;
-        align-items: center;
-        padding: 0.14rem 0.45rem;
-        border-radius: 999px;
-        font-size: 0.6875rem !important;
-        font-weight: 650 !important;
-        line-height: 1.25;
-        color: var(--ws-text-muted) !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 62%, var(--ws-surface));
-        border: 1px solid color-mix(in srgb, var(--ws-border) 35%, transparent);
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__ppm--deal {
-        color: color-mix(in srgb, var(--ws-primary) 72%, var(--ws-text-secondary)) !important;
-        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
-        border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
-        font-weight: 750 !important;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual {
-        display: flex;
-        flex-direction: row;
-        align-items: stretch;
-        gap: 0;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col {
-        flex: 1 1 0;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.22rem;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col--deposit {
-        padding-inline-end: 0.35rem;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col--rent {
-        padding-inline-start: 0.35rem;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__label {
-        font-size: 0.6875rem;
-        font-weight: 750;
-        line-height: 1.2;
-        color: var(--ws-text-muted);
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__amount {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        font-size: 1.0625rem !important;
-        font-weight: 900 !important;
-        line-height: 1.14 !important;
-        letter-spacing: -0.024em !important;
-        color: var(--ws-primary) !important;
-        font-variant-numeric: tabular-nums;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col--deposit .mk-lcard-rent-dual__amount {
-        font-size: 1.125rem !important;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__divider {
-        flex: 0 0 1px;
-        align-self: stretch;
-        margin-block: 0.12rem;
-        background: color-mix(in srgb, var(--ws-border) 42%, transparent);
-    }
-
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__loc {
         display: none !important;
     }
 
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-market-row {
+        margin: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-market--inline {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        font-size: 0.6875rem;
+    }
+
+    /* Specs: quiet inline facts with icons */
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__rail {
         display: flex !important;
         flex-wrap: wrap !important;
         align-items: center !important;
-        gap: 0.4rem !important;
+        column-gap: 0.65rem !important;
+        row-gap: 0.3rem !important;
         margin: 0 !important;
-        padding: 0.1rem 0 0 !important;
+        padding: 0 !important;
         list-style: none !important;
         order: unset !important;
     }
@@ -987,21 +1477,25 @@
         display: inline-flex !important;
         align-items: center;
         gap: 0.32rem;
-        padding: 0.28rem 0.55rem !important;
+        padding: 0 !important;
         margin: 0 !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent) !important;
-        border-radius: 999px !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 48%, var(--ws-surface)) !important;
-        font-size: 0.71875rem !important;
-        font-weight: 750 !important;
-        line-height: 1.25 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        font-size: 0.75rem !important;
+        font-weight: 650 !important;
+        line-height: 1.3 !important;
         color: var(--ws-text-secondary) !important;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__rail-item i {
-        font-size: 0.625rem;
+        display: inline-block !important;
+        flex-shrink: 0;
+        width: 0.85rem;
+        font-size: 0.7rem;
+        text-align: center;
         opacity: 0.78;
-        color: color-mix(in srgb, var(--ws-primary) 65%, var(--ws-text-muted));
+        color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-text-muted));
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__rail-item:nth-child(n + 5) {
@@ -1010,8 +1504,9 @@
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__rail-item span {
         max-width: 100%;
-        white-space: normal !important;
-        overflow-wrap: anywhere;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__foot {
@@ -1019,14 +1514,14 @@
         flex-direction: row !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 0.65rem !important;
-        min-height: 2.75rem;
+        gap: 0.5rem !important;
+        min-height: 2.25rem;
         min-width: 0 !important;
         max-width: 100%;
         overflow-x: clip;
-        margin: 0.5rem 0 0 !important;
-        padding: 0.55rem 0 0.65rem !important;
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+        margin: 0 !important;
+        padding: 0.15rem 0 0 !important;
+        border-top: none !important;
         background: transparent !important;
         order: unset !important;
     }
@@ -1035,50 +1530,50 @@
         display: inline-flex !important;
         flex: 1 1 auto !important;
         min-width: 0 !important;
-        min-height: 2.75rem !important;
+        min-height: 2.25rem !important;
         padding: 0 !important;
         margin: 0 !important;
-        justify-content: flex-end !important;
+        justify-content: flex-start !important;
         align-items: center !important;
-        gap: 0.4rem !important;
+        gap: 0.35rem !important;
         border: none !important;
         border-radius: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
-        font-size: 0.78125rem !important;
-        font-weight: 850 !important;
+        font-size: 0.75rem !important;
+        font-weight: 750 !important;
         color: var(--ws-primary) !important;
         text-decoration: none !important;
-        transition: opacity 0.15s ease, color 0.15s ease;
-    }
-
-    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob:active .mk-lcard-native__cta {
-        opacity: 0.88;
+        transition: opacity 0.15s ease;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__cta:active {
         transform: none !important;
-        opacity: 0.75;
+        opacity: 0.72;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__cta i {
-        font-size: 0.65rem !important;
+        font-size: 0.62rem !important;
         color: var(--ws-primary) !important;
-        opacity: 0.85;
+        opacity: 0.8;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__menu {
         flex-shrink: 0;
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        min-width: 2.5rem !important;
-        min-height: 2.5rem !important;
-        border-radius: 11px !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent) !important;
-        background: var(--ws-surface) !important;
-        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05) !important;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-width: 2.25rem !important;
+        min-height: 2.25rem !important;
+        border-radius: 10px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: transparent !important;
+        box-shadow: none !important;
         color: var(--ws-text-muted);
         transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__menu:active {
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)) !important;
     }
 
     .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-action-menu-panel {
@@ -1103,135 +1598,118 @@
 
     .ws-filing-mob-dl.mk-listing-page.mk-filing-dataset-detail .mk-listing-panel .mk-listing-cards-shell {
         padding-inline: 0 !important;
-        gap: 0.65rem !important;
+        gap: 0.75rem !important;
     }
 
-    /* ── Listing detail: section bar + sheet (CRM language) ── */
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-sections {
+    @media (max-width: 359px) {
+        .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__content {
+            padding-inline: 0.7rem !important;
+            gap: 0.4rem;
+        }
+
+        .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-native__price,
+        .ws-filing-mob-dl.ws-ds-mobile.mk-filing-dataset-detail .mk-lcard--ds-detail-mob .mk-lcard-rent-dual__col--deposit .mk-lcard-rent-dual__amount {
+            font-size: 1.05rem !important;
+        }
+    }
+
+    /* ── Listing detail: accordion sections (default closed) ── */
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-sections,
+    .ws-filing-mob-dl.ws-ld-detail .ws-crm-pd-mob-section-ui,
+    .ws-filing-mob-dl.ws-ld-detail .ws-filing-mob-section-sheet {
         display: none !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-segrail {
-        margin: 0 0 0.35rem !important;
+        margin: 0 !important;
         padding: 0 !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
     }
 
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-ui {
-        display: block;
-        margin: 0 0 0.35rem;
-        padding: 0;
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-main {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.65rem !important;
     }
 
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.65rem;
-        width: 100%;
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel] {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        overflow: hidden;
         box-sizing: border-box;
-        min-height: 2.75rem;
-        max-height: 3rem;
-        padding: 0.35rem 0.35rem 0.35rem 0.75rem;
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
     }
 
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-bar__label {
-        min-width: 0;
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.875rem;
-        font-weight: 850;
-        color: var(--ws-text);
-        overflow: hidden;
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="overview"] {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        min-height: 0 !important;
     }
 
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-bar__label [data-filing-mob-section-label-text] {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        min-width: 0;
-    }
-
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-bar__label-ico {
-        flex-shrink: 0;
-        width: 1.75rem;
-        height: 1.75rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 9px;
-        font-size: 0.72rem;
-        color: var(--ws-primary);
-        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
-    }
-
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-bar__trigger {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        flex-shrink: 0;
-        min-height: 2.25rem;
-        padding: 0.35rem 0.55rem;
-        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
-        border-radius: 10px;
-        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
-        font-family: inherit;
-        font-size: 0.75rem;
-        font-weight: 750;
-        color: var(--ws-text-secondary);
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-bar__chev {
-        font-size: 0.625rem;
-        opacity: 0.8;
-        transition: transform 0.18s ease;
-    }
-
-    .ws-filing-mob-dl .ws-crm-pd-mob-section-bar__trigger[aria-expanded="true"] .ws-crm-pd-mob-section-bar__chev {
-        transform: rotate(180deg);
-    }
-
-    .ws-filing-mob-dl .ws-filing-mob-section-sheet {
-        z-index: 225;
-    }
-
-    .ws-filing-mob-dl .ws-filing-mob-section-sheet:not(.is-open) {
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="overview"] > .crm-prop-panel-head {
         display: none !important;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel-head {
-        display: none;
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) {
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        border-radius: 16px !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+        min-height: 0 !important;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) > .crm-prop-panel-head {
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) > .crm-prop-panel-head,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) > .ws-ld-mob-acc-head {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        margin: 0 !important;
+        padding: 0.8rem 0.85rem !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__ico {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.05rem;
+        height: 2.05rem;
+        flex-shrink: 0;
+        border-radius: 11px;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
+        color: var(--ws-primary);
+        font-size: 0.82rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__text {
+        flex: 1 1 auto;
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        align-items: stretch;
-        gap: 0.15rem;
-        margin: 0 0 0.35rem;
-        padding: 0.8rem 0.85rem;
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
-        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+        gap: 0.12rem;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) .crm-prop-panel-head h2 {
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) .crm-prop-panel-head h2,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__text h2 {
         margin: 0;
         font-size: 0.875rem;
         font-weight: 850;
-        line-height: 1.35;
+        line-height: 1.3;
+        color: var(--ws-text);
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) .crm-prop-panel-head p {
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) .crm-prop-panel-head p,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__text p {
         margin: 0;
         font-size: 0.6875rem;
         font-weight: 600;
@@ -1239,29 +1717,426 @@
         line-height: 1.35;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__desk-actions {
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__chev {
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
+        color: var(--ws-text-muted);
+        font-size: 0.62rem;
+        transition: transform 0.18s ease;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]):not(.is-acc-open) > .crm-prop-panel-body {
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]).is-acc-open > .crm-prop-panel-body {
+        display: block !important;
+        padding: 0 0.85rem 0.9rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]).is-acc-open > .ws-ld-mob-acc-head .ws-ld-mob-acc-head__chev {
+        transform: rotate(180deg);
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__chev {
+            transition: none;
+        }
+    }
+
+    /* Premium listing summary — photo → identity → price → specs → act */
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero {
+        margin: 0 0 0.75rem !important;
+        border-radius: 18px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 24px rgba(15, 23, 42, 0.04) !important;
+        overflow: hidden !important;
+        background: var(--ws-surface) !important;
+    }
+
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts {
-        margin-inline: 0;
-        padding: 0.65rem 0.85rem 0.75rem;
-        border-radius: 0;
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.65rem;
+        margin: 0;
+        padding: 0.8rem 0.95rem 0.95rem;
         border: none;
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
         background: transparent;
         box-shadow: none;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero {
-        margin-inline: 0;
-        border-radius: 16px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-        overflow: hidden;
-        background: var(--ws-surface);
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__head {
+        display: flex;
+        flex-direction: column;
+        gap: 0.28rem;
+        min-width: 0;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail.mk-page {
-        padding-inline: 14px !important;
-        padding-bottom: calc(7.35rem + env(safe-area-inset-bottom, 0px)) !important;
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__deal {
+        display: inline-flex;
+        align-self: flex-start;
+        margin: 0 0 0.1rem;
+        padding: 0;
+        border: none;
+        background: transparent;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        line-height: 1.2;
+        color: color-mix(in srgb, var(--ws-primary) 78%, var(--ws-text-secondary));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__title {
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 850;
+        line-height: 1.36;
+        letter-spacing: -0.022em;
+        color: var(--ws-text);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__loc {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.32rem;
+        margin: 0.05rem 0 0;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--ws-text-secondary);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__loc i {
+        flex-shrink: 0;
+        margin-top: 0.18rem;
+        margin-inline-end: 0;
+        font-size: 0.72rem;
+        color: var(--ws-danger, #EF4444);
+        opacity: 0.9;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__loc span {
+        min-width: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__pricing {
+        margin: 0.05rem 0 0;
+        padding: 0.55rem 0 0;
+        border: none;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent);
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__price {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 850;
+        letter-spacing: -0.028em;
+        line-height: 1.2;
+        color: var(--ws-text) !important;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__price--muted {
+        font-size: 0.9375rem !important;
+        font-weight: 700 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__price-lbl {
+        display: block;
+        margin-bottom: 0.18rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__ppsqm {
+        margin: 0.2rem 0 0;
+        font-size: 0.75rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__ppsqm span {
+        font-weight: 600;
+        opacity: 0.85;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-dual {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 1fr);
+        align-items: stretch;
+        gap: 0;
+        width: 100%;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-col {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.22rem !important;
+        min-width: 0;
+        padding: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-lbl {
+        font-size: 0.6875rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.01em;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-val {
+        font-size: 1.0625rem !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.024em !important;
+        color: var(--ws-text) !important;
+        font-variant-numeric: tabular-nums;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-col:first-child .ws-ld-mob-keyfacts__rent-val {
+        font-size: 1.1875rem !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-sep {
+        flex: none !important;
+        width: 1px !important;
+        align-self: stretch !important;
+        margin: 0.1rem 0.85rem !important;
+        background: color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__deal-tag {
+        display: inline-flex;
+        margin: 0.35rem 0 0;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        font-size: 0.6875rem;
+        font-weight: 750;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.45rem;
+        margin: 0.55rem 0 0;
+        padding: 0.5rem 0.6rem;
+        border-radius: 11px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench-ico {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.55rem;
+        height: 1.55rem;
+        flex-shrink: 0;
+        margin-top: 0.05rem;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        color: var(--ws-primary);
+        font-size: 0.7rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench-copy {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.2rem 0.45rem;
+        min-width: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench-verdict {
+        font-size: 0.75rem;
+        font-weight: 800;
+        line-height: 1.35;
+        color: var(--ws-text);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench-pct {
+        font-style: normal;
+        font-size: 0.71875rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--ws-text-secondary);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-below {
+        border-color: color-mix(in srgb, #10b981 28%, var(--ws-border));
+        background: color-mix(in srgb, #10b981 8%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-below .ws-ld-mob-keyfacts__bench-ico {
+        background: color-mix(in srgb, #10b981 14%, var(--ws-surface));
+        color: #059669;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-below .ws-ld-mob-keyfacts__bench-verdict,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-below .ws-ld-mob-keyfacts__bench-pct {
+        color: #047857;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-above {
+        border-color: color-mix(in srgb, #ef4444 26%, var(--ws-border));
+        background: color-mix(in srgb, #ef4444 7%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-above .ws-ld-mob-keyfacts__bench-ico {
+        background: color-mix(in srgb, #ef4444 12%, var(--ws-surface));
+        color: #dc2626;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-above .ws-ld-mob-keyfacts__bench-verdict,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-above .ws-ld-mob-keyfacts__bench-pct {
+        color: #b91c1c;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-fair {
+        border-color: color-mix(in srgb, #0ea5e9 24%, var(--ws-border));
+        background: color-mix(in srgb, #0ea5e9 7%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-fair .ws-ld-mob-keyfacts__bench-ico {
+        background: color-mix(in srgb, #0ea5e9 12%, var(--ws-surface));
+        color: #0284c7;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-fair .ws-ld-mob-keyfacts__bench-verdict,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench.is-fair .ws-ld-mob-keyfacts__bench-pct {
+        color: #0369a1;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__meta {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.15rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.75rem;
+        font-weight: 650;
+        color: var(--ws-text-secondary);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__meta span:not(:last-child)::after {
+        content: none;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__fact {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        padding: 0;
+        margin: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__fact:not(:last-child)::after {
+        content: "";
+        display: inline-block;
+        width: 3px;
+        height: 3px;
+        margin-inline: 0.55rem 0.4rem;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--ws-border) 70%, var(--ws-text-muted));
+        opacity: 0.9;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__fact i {
+        width: auto;
+        font-size: 0.68rem;
+        text-align: center;
+        opacity: 0.72;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem 0.65rem;
+        margin: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__status span,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__chip,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__adv {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        font-size: 0.71875rem;
+        font-weight: 700;
+        line-height: 1.25;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__adv {
+        color: var(--ws-text-secondary);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__adv i {
+        font-size: 0.62rem;
+        color: color-mix(in srgb, var(--ws-primary) 70%, var(--ws-text-muted));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__warn {
+        color: #b45309 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    /* Use .ws-main canvas — no nested page bg / no double content gutter */
+    body.ws-body:has(.ws-filing-mob-dl.ws-ld-detail) .ws-content {
+        padding-inline: 0 !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-page,
+    .ws-filing-mob-dl.ws-ld-detail,
+    .ws-filing-mob-dl.ws-ld-detail.crm-page-chrome {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+        padding-inline: 0.85rem !important;
+        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
         overflow-x: clip;
+        box-sizing: border-box;
+        background: transparent !important;
     }
 
     body.ws-body:has(.ws-filing-mob-dl.ws-ld-detail) .ws-mobile-topbar-title {
@@ -1293,87 +2168,32 @@
         border-radius: 0;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-dual {
-        display: flex;
-        flex-direction: row;
-        align-items: stretch;
-        gap: 0;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-col {
-        flex: 1 1 0;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.2rem;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-lbl {
-        font-size: 0.6875rem;
-        font-weight: 750;
-        line-height: 1.2;
-        color: var(--ws-text-muted);
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-val {
-        font-size: 1.0625rem;
-        font-weight: 900;
-        line-height: 1.15;
-        letter-spacing: -0.024em;
-        color: var(--ws-primary);
-        font-variant-numeric: tabular-nums;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-col:first-child .ws-ld-mob-keyfacts__rent-val {
-        font-size: 1.125rem;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__rent-sep {
-        flex: 0 0 1px;
-        align-self: stretch;
-        margin-block: 0.1rem;
-        margin-inline: 0.55rem;
-        background: color-mix(in srgb, var(--ws-border) 42%, transparent);
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__adv {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__adv i {
-        font-size: 0.62rem;
-        opacity: 0.85;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__deal-tag {
-        display: inline-flex;
-        margin: 0.35rem 0 0;
-        padding: 0.14rem 0.45rem;
-        border-radius: 999px;
-        font-size: 0.6875rem;
-        font-weight: 750;
-        color: color-mix(in srgb, var(--ws-primary) 72%, var(--ws-text-secondary));
-        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
-        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+    /* Align dossier cards with hero — kill nested horizontal gutters */
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-detail-grid,
+    .ws-filing-mob-dl.ws-ld-detail.crm-prop-detail-mobile .crm-prop-detail-grid {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+        padding: 0 !important;
+        padding-inline: 0 !important;
+        gap: 0.65rem !important;
+        box-sizing: border-box !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-main,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-aside,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel-pro,
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel-body {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
         padding-inline: 0 !important;
+        box-sizing: border-box !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="overview"] {
         margin-top: 0.35rem;
+        margin-inline: 0 !important;
         border: none !important;
         box-shadow: none !important;
         background: transparent !important;
@@ -1386,76 +2206,147 @@
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-grid {
         display: flex;
         flex-direction: column;
-        gap: 0;
-        margin: 0;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section {
+        gap: 0.7rem;
+        width: 100%;
+        max-width: none;
         margin: 0;
         padding: 0;
-        border: none;
-        border-radius: 0;
-        background: transparent;
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section:last-child {
-        border-bottom: none;
+        box-sizing: border-box;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section {
-        padding-bottom: 1.25rem;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0.85rem 0.9rem 0.9rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        border-radius: 16px !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+        box-sizing: border-box !important;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section:last-child {
-        padding-bottom: 0.35rem;
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--specs {
+        background:
+            linear-gradient(180deg, color-mix(in srgb, var(--ws-primary) 4.5%, var(--ws-surface)) 0%, var(--ws-surface) 42%),
+            var(--ws-surface) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--finance {
+        background:
+            linear-gradient(180deg, color-mix(in srgb, #059669 5%, var(--ws-surface)) 0%, var(--ws-surface) 44%),
+            var(--ws-surface) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location {
+        background:
+            linear-gradient(180deg, color-mix(in srgb, #0284c7 5%, var(--ws-surface)) 0%, var(--ws-surface) 36%),
+            var(--ws-surface) !important;
+        padding-bottom: 0.85rem !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--contact {
+        background:
+            linear-gradient(180deg, color-mix(in srgb, #7c3aed 4.5%, var(--ws-surface)) 0%, var(--ws-surface) 42%),
+            var(--ws-surface) !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-h {
         display: flex;
         align-items: center;
         gap: 0.55rem;
-        margin: 0;
-        padding: 0.35rem 0 0.65rem;
+        margin: 0 0 0.55rem !important;
+        padding: 0 !important;
         border: none;
         background: transparent;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-h__ico {
         display: inline-flex;
-        width: 1.85rem;
-        height: 1.85rem;
-        border-radius: 9px;
+        width: 2.05rem;
+        height: 2.05rem;
+        border-radius: 11px;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        border: 1px solid color-mix(in srgb, var(--ws-primary) 17%, var(--ws-border));
-        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
         color: var(--ws-primary);
-        font-size: 0.82rem;
+        font-size: 0.84rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--finance .ws-ld-dossier-h__ico {
+        border-color: color-mix(in srgb, #059669 22%, var(--ws-border));
+        background: color-mix(in srgb, #059669 12%, var(--ws-surface));
+        color: #047857;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-dossier-h__ico {
+        border-color: color-mix(in srgb, #0284c7 22%, var(--ws-border));
+        background: color-mix(in srgb, #0284c7 12%, var(--ws-surface));
+        color: #0369a1;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--contact .ws-ld-dossier-h__ico {
+        border-color: color-mix(in srgb, #7c3aed 22%, var(--ws-border));
+        background: color-mix(in srgb, #7c3aed 12%, var(--ws-surface));
+        color: #6d28d9;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-h__text {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.5rem;
+        min-width: 0;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-h__text strong {
         display: block;
-        font-size: 0.875rem;
+        font-size: 0.9rem;
         font-weight: 850;
-        line-height: 1.35;
+        line-height: 1.3;
+        letter-spacing: -0.015em;
         color: var(--ws-text);
     }
 
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-h__chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.14rem 0.45rem;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, #059669 20%, var(--ws-border));
+        background: color-mix(in srgb, #059669 8%, var(--ws-surface));
+        font-size: 0.625rem;
+        font-weight: 750;
+        color: #047857;
+    }
+
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section .ws-field-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
         padding: 0;
-        margin-top: 0.1rem;
+        margin: 0;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-row {
         display: flex;
         flex-direction: row;
-        align-items: baseline;
+        align-items: center;
         justify-content: space-between;
         gap: 0.65rem;
-        padding: 0.38rem 0;
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
+        min-height: 2.35rem;
+        padding: 0.4rem 0.45rem;
+        margin: 0;
+        border: none;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-surface-2) 42%, transparent);
+        border-bottom: none;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-field-row:nth-child(even) {
+        background: color-mix(in srgb, var(--ws-surface-2) 22%, transparent);
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-row:last-child {
@@ -1463,20 +2354,55 @@
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-key {
-        flex: 0 0 auto;
-        max-width: 42%;
-        font-size: 0.6875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex: 0 1 auto;
+        max-width: 52%;
+        min-width: 0;
+        font-size: 0.71875rem;
         font-weight: 700;
         color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-field-key__ico {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.35rem;
+        height: 1.35rem;
+        flex-shrink: 0;
+        border-radius: 7px;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
+        color: color-mix(in srgb, var(--ws-primary) 72%, var(--ws-text-muted));
+        font-size: 0.62rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--finance .ws-field-key__ico {
+        background: color-mix(in srgb, #059669 10%, var(--ws-surface));
+        color: #047857;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-field-key__ico {
+        background: color-mix(in srgb, #0284c7 10%, var(--ws-surface));
+        color: #0369a1;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-field-key__txt {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-val {
         flex: 1 1 auto;
         min-width: 0;
         text-align: end;
-        font-size: 0.8125rem;
-        font-weight: 650;
-        line-height: 1.45;
+        font-size: 0.84375rem;
+        font-weight: 750;
+        line-height: 1.35;
+        color: var(--ws-text);
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale-coords.ws-ld-map-coords-secondary {
@@ -1515,8 +2441,152 @@
         z-index: 240;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock {
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Listing detail: never replace workspace bottom nav with a page dock */
+    body.ws-body:has(.ws-filing-mob-dl.ws-ld-detail) .ws-bottom-nav {
+        display: flex !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock.crm-prop-mobile-dock,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-mobile-dock.ws-ld-mob-dock {
+        display: none !important;
+    }
+
+    /* Inline listing actions — premium icon rail */
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 0.45rem 0.4rem;
+        margin: 0.2rem 0 0;
+        padding: 0.65rem 0 0;
+        border: none;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act-form {
+        display: flex;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act-form .ws-ld-mob-act {
+        width: 100%;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.38rem;
+        min-width: 0;
+        min-height: 4.35rem;
+        margin: 0;
+        padding: 0.55rem 0.25rem 0.5rem;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent);
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface));
+        color: var(--ws-text);
+        font-family: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act__ico {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        color: var(--ws-primary);
+        font-size: 0.95rem;
+        line-height: 1;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act__lbl {
+        max-width: 100%;
+        padding-inline: 0.15rem;
+        font-size: 0.6875rem;
+        font-weight: 750;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        color: var(--ws-text-secondary);
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act--primary {
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act--primary .ws-ld-mob-act__ico {
+        background: var(--ws-primary);
+        color: #fff;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act--primary .ws-ld-mob-act__lbl {
+        color: var(--ws-text);
+        font-weight: 800;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act--more .ws-ld-mob-act__ico {
+        background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-surface));
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act.is-on .ws-ld-mob-act__ico {
+        background: color-mix(in srgb, #f59e0b 16%, var(--ws-surface));
+        color: #d97706;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act.is-on .ws-ld-mob-act__lbl {
+        color: #b45309;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act:active {
+        transform: scale(0.97);
+    }
+
+    @media (max-width: 360px) {
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-actions {
+            gap: 0.38rem 0.32rem;
+        }
+
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act {
+            min-height: 4.1rem;
+            padding-block: 0.45rem 0.4rem;
+            border-radius: 12px;
+        }
+
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act__ico {
+            width: 2.15rem;
+            height: 2.15rem;
+            border-radius: 11px;
+            font-size: 0.88rem;
+        }
+
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act__lbl {
+            font-size: 0.625rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act {
+            transition: none;
+        }
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-mobile-dock__inner {
+        display: none !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dock-form--personal {
@@ -1533,24 +2603,59 @@
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dock-personal-link {
         display: flex !important;
+        flex-direction: column !important;
         min-width: 0;
         text-decoration: none;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal:not(.crm-prop-dock-btn--primary) {
-        color: var(--ws-text-secondary);
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn {
+        min-height: 2.85rem !important;
+        border-radius: 12px !important;
+        gap: 0.2rem !important;
+        font-size: 0.625rem !important;
+        font-weight: 750 !important;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal:not(.crm-prop-dock-btn--primary) i {
-        color: var(--ws-primary);
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn i {
+        font-size: 0.95rem !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary {
+        flex-direction: row !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+        padding-inline: 0.65rem !important;
+        color: #fff !important;
+        background: var(--ws-primary) !important;
+        box-shadow: 0 2px 10px color-mix(in srgb, var(--ws-primary) 28%, transparent) !important;
         white-space: nowrap;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary i {
+        color: #fff !important;
+        font-size: 0.85rem !important;
+    }
+
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary .crm-prop-dock-btn__label {
-        white-space: normal;
+        display: inline !important;
+        white-space: nowrap;
+        font-size: 0.75rem !important;
+        font-weight: 800 !important;
+        color: #fff !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary .crm-prop-dock-btn__short {
+        display: none;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal:not(.crm-prop-dock-btn--primary) {
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal:not(.crm-prop-dock-btn--primary) i {
+        color: var(--ws-primary) !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--personal > span {
@@ -1558,9 +2663,210 @@
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 100%;
+        font-size: 0.6875rem !important;
     }
 
-    /* ── Listing detail: hero (image-first, no duplicate back) ── */
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--more {
+        min-width: 2.85rem !important;
+        width: 2.85rem !important;
+        padding-inline: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--more span {
+        font-size: 0.5625rem !important;
+    }
+
+    @media (max-width: 360px) {
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary .crm-prop-dock-btn__long {
+            display: none;
+        }
+
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary .crm-prop-dock-btn__short {
+            display: inline;
+        }
+    }
+
+    /* More sheet — grouped action list (standard) */
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__panel {
+        width: min(100%, 440px) !important;
+        max-height: min(82vh, 640px) !important;
+        padding: 0.45rem 0.7rem 0.85rem !important;
+        border-radius: 20px 20px 16px 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.16) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+        margin: 0 0 0.55rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__title {
+        margin: 0 !important;
+        font-size: 0.9375rem !important;
+        font-weight: 850 !important;
+        text-align: start !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        border-radius: 10px;
+        background: transparent;
+        color: var(--ws-text-muted);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__groups {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__group-label {
+        margin: 0 0 0.35rem;
+        padding-inline: 0.15rem;
+        font-size: 0.6875rem;
+        font-weight: 750;
+        letter-spacing: 0.01em;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface));
+        overflow: hidden;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__form {
+        display: block !important;
+        margin: 0 !important;
+        width: 100%;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__grid {
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.7rem !important;
+        width: 100% !important;
+        min-height: 3.35rem !important;
+        margin: 0 !important;
+        padding: 0.65rem 0.75rem !important;
+        border: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: var(--ws-text) !important;
+        font-family: inherit;
+        text-align: start !important;
+        text-decoration: none !important;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__list > :last-child,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__list > :last-child .ws-ld-mob-more__row {
+        border-bottom: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row:active {
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) !important;
+        transform: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row-ico {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
+        color: var(--ws-primary);
+        font-size: 0.85rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row-ico--wa {
+        background: color-mix(in srgb, #25d366 14%, var(--ws-surface));
+        color: #128c7e;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row-copy {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row-copy strong {
+        font-size: 0.8125rem;
+        font-weight: 800;
+        line-height: 1.3;
+        color: var(--ws-text);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row-copy em {
+        font-style: normal;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        line-height: 1.3;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row-chev {
+        flex-shrink: 0;
+        font-size: 0.65rem;
+        color: var(--ws-text-muted);
+        opacity: 0.65;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row--accent .ws-ld-mob-more__row-ico {
+        background: color-mix(in srgb, var(--ws-primary) 16%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row--accent .ws-ld-mob-more__row-copy strong {
+        color: var(--ws-primary);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row--danger .ws-ld-mob-more__row-ico {
+        background: color-mix(in srgb, #ef4444 10%, var(--ws-surface));
+        color: #dc2626;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row--danger .ws-ld-mob-more__row-copy strong {
+        color: #dc2626;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__row.is-on .ws-ld-mob-more__row-ico {
+        background: color-mix(in srgb, #f59e0b 14%, var(--ws-surface));
+        color: #d97706;
+    }
+
+    /* ── Listing detail: hero media ── */
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-nav {
         display: none !important;
     }
@@ -1579,70 +2885,132 @@
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-visual {
-        display: contents !important;
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
         min-height: 0 !important;
+        margin: 0 !important;
         border: none !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+        isolation: isolate;
+        background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-visual::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 3rem;
+        pointer-events: none;
+        background: linear-gradient(
+            180deg,
+            transparent 0%,
+            color-mix(in srgb, var(--ws-surface) 18%, transparent) 45%,
+            color-mix(in srgb, var(--ws-surface) 72%, transparent) 100%
+        );
+        z-index: 2;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-cover,
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-cover img,
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-cover--empty {
-        order: 1 !important;
+        position: relative !important;
+        display: block !important;
         width: 100% !important;
-        max-height: min(52vw, 240px) !important;
+        max-height: min(42vw, 188px) !important;
         min-height: 0 !important;
-        aspect-ratio: 4 / 3;
+        aspect-ratio: 16 / 10;
         object-fit: cover;
+        border-radius: 0 !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-deal-pill {
-        order: 2 !important;
-        position: static !important;
-        align-self: flex-start !important;
-        margin: 0.45rem 0.85rem 0 !important;
-        padding: 0.2rem 0.55rem !important;
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-img-badge {
+        position: absolute !important;
+        top: 0.6rem !important;
+        bottom: auto !important;
+        inset-inline-end: 0.6rem !important;
+        inset-inline-start: auto !important;
+        z-index: 4 !important;
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.26rem;
+        min-height: 1.55rem;
+        padding: 0.18rem 0.5rem !important;
+        margin: 0 !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        background: rgba(15, 23, 42, 0.52) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #fff !important;
         font-size: 0.6875rem !important;
         font-weight: 750 !important;
-        box-shadow: none !important;
-        backdrop-filter: none !important;
+        line-height: 1.2;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-img-badge,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero-img-badge i {
+        font-size: 0.58rem;
+        opacity: 0.92;
+    }
+
     .ws-filing-mob-dl.ws-ld-detail .mk-img-auth--hero {
-        order: 1 !important;
+        position: absolute !important;
+        top: 0.6rem !important;
+        bottom: auto !important;
+        inset-inline-start: 0.6rem !important;
+        inset-inline-end: auto !important;
+        z-index: 4 !important;
+        margin: 0 !important;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail.mk-page {
-        padding-bottom: calc(7.35rem + env(safe-area-inset-bottom, 0px)) !important;
+    /* Soften dossier money values — less shouty than before */
+    .ws-filing-mob-dl.ws-ld-detail .ws-field-row .ws-field-val.mk-money,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section .ws-field-val {
+        font-size: 0.84375rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-page,
+    .ws-filing-mob-dl.ws-ld-detail {
+        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale,
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-crm-form--mob,
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-mobile-dock {
-        scroll-margin-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-crm-form--mob {
+        scroll-margin-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
     }
 
-    /* ── Description / متن — full-width RTL ── */
+    /* ── Description / متن — same card language ── */
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--text,
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--full {
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
+        margin: 0.7rem 0 0 !important;
+        padding: 0.85rem 0.9rem 0.95rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        border-radius: 16px !important;
+        background:
+            linear-gradient(180deg, color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)) 0%, var(--ws-surface) 50%),
+            var(--ws-surface) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-row--long {
         flex-direction: column !important;
         align-items: stretch !important;
-        gap: 0.35rem !important;
-        padding: 0.55rem 0 0.65rem !important;
+        gap: 0.4rem !important;
+        min-height: 0 !important;
+        padding: 0.6rem 0.55rem !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-row--long .ws-field-key {
         max-width: none !important;
-        font-size: 0.6875rem !important;
+        font-size: 0.71875rem !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-val--long {
@@ -1681,9 +3049,6 @@
     }
 
     /* ── Amenities — flat rows (no card-in-card) ── */
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="specs"] > .crm-prop-panel-head {
-        display: none !important;
-    }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-features {
         padding: 0 !important;
@@ -1882,10 +3247,6 @@
     }
 
     /* ── Supplementary / مشخصات بیشتر — flat rows + icons ── */
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="extra"] > .crm-prop-panel-head {
-        display: none !important;
-    }
-
     .ws-filing-mob-dl.ws-ld-detail .ws-extra-groups {
         display: flex;
         flex-direction: column;
@@ -1997,22 +3358,18 @@
     }
 
     /* ── Contacts — compact empty + progressive form ── */
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="contacts"] > .crm-prop-panel-head {
-        display: none !important;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-contacts-head-desk {
-        display: none !important;
-    }
-
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="contacts"] .crm-prop-panel-body {
-        padding-top: 0 !important;
+        padding-top: 0.65rem !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-contacts-bar {
         margin: 0 0 0.55rem;
         padding: 0 0 0.5rem;
         border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 35%, transparent);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-contacts-bar__title {
+        display: none !important;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-contacts-bar__top {
@@ -2113,57 +3470,225 @@
         margin-top: 0.15rem;
     }
 
-    /* ── Map inside بخش مکان (single instance) ── */
+    /* ── Map inside بخش مکان (premium card) ── */
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.65rem !important;
+        align-items: stretch !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta {
+        display: block !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-list,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-row,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 0.3rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 3.35rem !important;
+        padding: 0.6rem 0.7rem !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, #0284c7 14%, var(--ws-border)) !important;
+        background: color-mix(in srgb, #0284c7 6%, var(--ws-surface)) !important;
+        box-shadow: none !important;
+        grid-template-columns: unset !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.35rem;
+        max-width: 100% !important;
+        font-size: 0.6875rem !important;
+        font-weight: 700 !important;
+        color: var(--ws-text-muted) !important;
+        white-space: nowrap;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key::after {
+        content: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-key__ico {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 6px;
+        background: color-mix(in srgb, #0284c7 12%, var(--ws-surface));
+        color: #0369a1;
+        font-size: 0.58rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-val,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-val {
+        width: 100% !important;
+        font-size: 0.9375rem !important;
+        font-weight: 850 !important;
+        color: var(--ws-text) !important;
+        text-align: start !important;
+        line-height: 1.3 !important;
+        letter-spacing: -0.015em;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-list:has(> .ws-field-row:only-child) {
+        grid-template-columns: 1fr !important;
+    }
+
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-embed {
-        margin: 0.65rem 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        margin: 0 !important;
         padding: 0;
+        min-width: 0;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger,
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
         width: 100%;
-        margin: 0 0 0.55rem;
+        min-height: 2.7rem;
+        margin: 0 !important;
+        padding: 0 0.9rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, #0284c7 24%, var(--ws-border));
+        background: linear-gradient(180deg, color-mix(in srgb, #0284c7 12%, var(--ws-surface)), color-mix(in srgb, #0284c7 6%, var(--ws-surface)));
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 800;
+        color: #0369a1;
+        box-shadow: 0 1px 2px rgba(2, 132, 199, 0.08);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger i {
+        font-size: 0.9rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-canvas,
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas {
         position: relative;
-        overflow: hidden;
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+        overflow: hidden !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, #0284c7 16%, var(--ws-border)) !important;
+        background: color-mix(in srgb, #e2e8f0 55%, var(--ws-surface)) !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
         isolation: isolate;
+        padding: 0 !important;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-canvas .ws-ld-location-map-wrap,
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-wrap {
-        margin: 0;
-        border: none;
-        background: transparent;
+        margin: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: hidden;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-head {
-        max-width: min(calc(100% - 1rem), 220px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.45rem;
+        max-width: none;
+        width: 100%;
+        padding: 0.45rem 0.55rem !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 92%, #0284c7);
         z-index: 25;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-head-main {
-        display: none;
+        display: flex !important;
+        align-items: center;
+        gap: 0.35rem;
+        min-width: 0;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-title {
+        display: block !important;
+        margin: 0;
+        font-size: 0.71875rem;
+        font-weight: 800;
+        color: var(--ws-text);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-accuracy {
+        font-size: 0.625rem;
+        font-weight: 750;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-basemap-toggle {
+        min-height: 1.9rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 9px;
+        font-size: 0.625rem;
+        font-weight: 750;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-stage,
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map,
+    .ws-filing-mob-dl.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map.leaflet-container,
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-stage,
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map,
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map.leaflet-container {
-        height: clamp(260px, 42vw, 320px) !important;
-        min-height: 260px !important;
-        max-height: 320px !important;
+        height: clamp(220px, 58vw, 280px) !important;
+        min-height: 220px !important;
+        max-height: 280px !important;
         width: 100% !important;
-        background: #f4f6f8;
+        background: #eef2f6 !important;
+        border-radius: 0 !important;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-stage {
-        background: transparent;
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-chrome {
+        z-index: 26;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location {
-        border-bottom: none;
-        padding-bottom: 0.5rem;
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-badge {
+        border-radius: 999px;
+        font-size: 0.625rem;
+        font-weight: 750;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-tool {
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 10px;
     }
 
     /* ── Hub dataset cards — compact scan layout ── */
@@ -2180,165 +3705,359 @@
         display: none !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-glass {
-        padding: 0.5rem 0.6rem 0.42rem !important;
-        transition: border-color 0.12s, box-shadow 0.12s, background 0.12s;
+    /* ── Hub dataset cards — sit on .ws-main background ── */
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-panel.ws-glass-panel,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-filing-panel,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-ds-layout,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-ds-layout-grid,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-layout,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-layout-grid,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-cards,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-filing-mob-cards {
+        background: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        border-color: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets.fl-mob-ds-select-mode:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .mk-ds-card-glass {
-        border-color: color-mix(in srgb, var(--ws-primary) 36%, var(--ws-border)) !important;
-        box-shadow: 0 0 0 1px color-mix(in srgb, var(--ws-primary) 12%, transparent) !important;
-        background: color-mix(in srgb, var(--ws-primary) 3.5%, var(--ws-surface)) !important;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-panel.ws-glass-panel,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-filing-panel {
+        border: none !important;
+        border-radius: 0 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-cards {
+        gap: 0.75rem !important;
+        padding: 0 !important;
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card,
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card {
         min-height: 0 !important;
         padding: 0 !important;
+        background: transparent !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-primary {
-        display: grid;
-        grid-template-columns: 3.25rem minmax(0, 1fr) auto;
-        gap: 0.45rem 0.35rem;
-        align-items: center;
-        text-decoration: none;
-        color: inherit;
-        min-width: 0;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__shell.mk-ds-card-glass,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-glass {
+        position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        border-radius: 20px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background:
+            radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--ws-primary) 7%, transparent), transparent 52%),
+            linear-gradient(180deg, color-mix(in srgb, var(--ws-surface) 96%, #fff), var(--ws-surface)) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.04),
+            0 10px 26px rgba(15, 23, 42, 0.06) !important;
+        transform: none !important;
+        transition:
+            border-color 0.18s ease,
+            box-shadow 0.18s ease,
+            background 0.18s ease,
+            transform 0.14s ease !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-glass::before {
+        content: none !important;
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card:active .mk-ds-card-glass {
+        transform: scale(0.985) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__hit.mk-ds-card-primary {
+        display: grid !important;
+        grid-template-columns: 5.1rem minmax(0, 1fr) !important;
+        gap: 0.85rem !important;
+        align-items: stretch !important;
+        min-width: 0 !important;
+        padding: 0.8rem 0.85rem 0.7rem !important;
+        text-decoration: none !important;
+        color: inherit !important;
         -webkit-tap-highlight-color: transparent;
         cursor: pointer;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-primary:active {
-        opacity: 0.92;
-    }
-
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-primary__chev {
-        align-self: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.25rem;
-        min-height: 2.5rem;
-        font-size: 0.625rem;
-        color: color-mix(in srgb, var(--ws-text-muted) 72%, transparent);
-        opacity: 0.85;
+        display: none !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover {
-        width: 3.25rem !important;
-        aspect-ratio: 1 / 1 !important;
-        min-height: 0 !important;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__media.mk-ds-card-cover {
+        position: relative !important;
+        width: 5.1rem !important;
+        min-width: 5.1rem !important;
+        aspect-ratio: 5 / 6 !important;
         height: auto !important;
-        border-radius: 10px !important;
-        overflow: hidden;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
-        background: color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface-2));
-        box-shadow: none !important;
+        min-height: 0 !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        background:
+            linear-gradient(160deg, color-mix(in srgb, var(--ws-primary) 18%, #1e1b4b), color-mix(in srgb, var(--ws-primary) 45%, #0f172a)) !important;
+        box-shadow:
+            inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),
+            0 8px 18px rgba(15, 23, 42, 0.12) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card--sale .fl-mob-card__media {
+        background:
+            linear-gradient(160deg, #14532d, color-mix(in srgb, #16a34a 55%, #0f172a)) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card--rent .fl-mob-card__media {
+        background:
+            linear-gradient(160deg, #0f766e, color-mix(in srgb, #14b8a6 50%, #0f172a)) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card--mixed .fl-mob-card__media {
+        background:
+            linear-gradient(160deg, #92400e, color-mix(in srgb, #f59e0b 55%, #0f172a)) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-img.is-failed {
         display: none !important;
     }
 
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__media-shade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 35%, rgba(15, 23, 42, 0.28) 100%);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__media-fallback,
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-fallback {
         display: none;
-        flex-direction: column;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
-        width: 100%;
-        height: 100%;
-        color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-text-muted));
+        color: rgba(255, 255, 255, 0.88);
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-fallback i {
-        font-size: 1rem;
-        opacity: 0.72;
-    }
-
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-fmt-mini {
-        display: none !important;
-    }
-
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-empty .fl-mob-card__media-fallback,
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-empty .mk-ds-card-cover-fallback,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover:has(.mk-ds-card-cover-img.is-failed) .fl-mob-card__media-fallback,
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover:has(.mk-ds-card-cover-img.is-failed) .mk-ds-card-cover-fallback {
-        display: flex;
+        display: flex !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-body {
-        padding: 0 !important;
-        gap: 0.2rem !important;
-        min-width: 0;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__media-fallback i,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-fallback i {
+        font-size: 1.45rem !important;
+        opacity: 0.92 !important;
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-title {
-        margin: 0;
-        font-size: 0.9375rem !important;
-        font-weight: 900 !important;
-        line-height: 1.32 !important;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__fmt {
+        position: absolute !important;
+        inset-inline-start: 0.35rem !important;
+        bottom: 0.35rem !important;
+        z-index: 2 !important;
+        font-size: 0.5625rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.04em;
+        padding: 0.14rem 0.34rem !important;
+        border-radius: 7px !important;
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+        background: rgba(15, 23, 42, 0.55) !important;
+        color: #fff !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: none !important;
+        line-height: 1.1;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-summary {
-        display: flex;
-        flex-wrap: nowrap;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__selected-mark {
+        position: absolute;
+        inset-inline-end: 0.3rem;
+        top: 0.3rem;
+        z-index: 3;
+        width: 1.35rem;
+        height: 1.35rem;
+        display: none;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ws-primary);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.22);
+        font-size: 0.65rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .fl-mob-card__selected-mark {
+        display: inline-flex;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__main.mk-ds-card-body {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 0.38rem !important;
+        min-width: 0 !important;
+        padding: 0.05rem 0 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__kicker {
+        display: flex;
+        align-items: center;
         gap: 0.35rem;
         min-width: 0;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-summary__main {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.28rem 0.35rem;
-        min-width: 0;
-        flex: 1;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__kicker .fl-badge--tx {
+        font-size: 0.625rem !important;
+        font-weight: 800 !important;
+        padding: 0.18rem 0.45rem !important;
+        border-radius: 999px !important;
+        letter-spacing: -0.01em;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-summary .mk-ds-chip--count {
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__kicker-muted {
         font-size: 0.6875rem;
+        font-weight: 650;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__title.mk-ds-card-title {
+        margin: 0 !important;
+        font-size: 0.98rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.025em !important;
+        line-height: 1.35 !important;
+        color: var(--ws-text) !important;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__metrics.mk-ds-card-summary {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: baseline !important;
+        gap: 0.35rem 0.7rem !important;
+        min-width: 0 !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__count {
+        display: inline-flex !important;
+        align-items: baseline !important;
+        gap: 0.28rem !important;
+        background: transparent !important;
+        border: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__count strong {
+        font-size: 1.35rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        color: var(--ws-text);
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__count em {
+        font-style: normal;
+        font-size: 0.72rem;
         font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__place {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        min-width: 0;
+        max-width: 100%;
+        font-size: 0.72rem;
+        font-weight: 650;
         color: var(--ws-text-secondary);
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-fmt-inline {
-        flex-shrink: 0;
-        font-size: 0.5625rem !important;
-        font-weight: 700 !important;
-        padding: 0.08rem 0.3rem !important;
-        border-radius: 5px !important;
-        box-shadow: none !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
-        background: color-mix(in srgb, var(--ws-border) 22%, var(--ws-surface)) !important;
-        color: var(--ws-text-muted) !important;
-        line-height: 1.25;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__place span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-foot {
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__place i {
+        font-size: 0.65rem;
+        opacity: 0.75;
+        color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-text-muted));
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .mk-ds-card-glass,
+    .ws-filing-mob-dl.mk-filing-datasets.fl-mob-ds-select-mode:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .mk-ds-card-glass {
+        border-color: color-mix(in srgb, var(--ws-primary) 48%, var(--ws-border)) !important;
+        background:
+            radial-gradient(100% 80% at 0% 0%, color-mix(in srgb, var(--ws-primary) 16%, transparent), transparent 55%),
+            linear-gradient(180deg, color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)), var(--ws-surface)) !important;
+        box-shadow:
+            0 0 0 1.5px color-mix(in srgb, var(--ws-primary) 22%, transparent),
+            0 12px 28px color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .fl-mob-card__title {
+        color: color-mix(in srgb, var(--ws-primary) 42%, var(--ws-text)) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .fl-mob-card__count strong {
+        color: var(--ws-primary);
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .fl-mob-card__media {
+        box-shadow:
+            0 0 0 1.5px color-mix(in srgb, var(--ws-primary) 35%, transparent),
+            0 10px 22px color-mix(in srgb, var(--ws-primary) 22%, transparent) !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__foot.mk-ds-card-foot {
         display: flex !important;
         flex-direction: row !important;
-        align-items: center;
-        gap: 0.35rem;
-        margin-top: 0.32rem;
-        padding-top: 0.32rem;
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
+        align-items: center !important;
+        gap: 0.45rem !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.75rem 0.65rem !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        background: transparent !important;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .fl-mob-card__foot {
+        border-top-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border)) !important;
+        background: transparent !important;
     }
 
     .ws-filing-mob-dl.mk-filing-datasets.fl-mob-ds-select-mode:not(.mk-filing-dataset-detail) .mk-ds-card-foot {
         display: grid !important;
-        grid-template-columns: 1.65rem minmax(0, 1fr);
-        column-gap: 0.35rem;
+        grid-template-columns: 1.75rem minmax(0, 1fr);
+        column-gap: 0.45rem;
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-foot-meta {
         display: contents !important;
     }
 
-    /* Checkbox: fully removed from layout unless selection mode (overrides premium + mk-filing-mobile) */
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail):not(.fl-mob-ds-select-mode) .mk-ds-card-check,
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail):not(.fl-mob-ds-select-mode) .fl-mob-card__check {
         display: none !important;
@@ -2354,8 +4073,6 @@
         pointer-events: none !important;
         border: none !important;
         box-shadow: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
         clip: rect(0, 0, 0, 0) !important;
         clip-path: inset(50%) !important;
     }
@@ -2366,8 +4083,8 @@
         top: auto !important;
         inset-inline-start: auto !important;
         inset-inline-end: auto !important;
-        width: 1.65rem !important;
-        height: 1.65rem !important;
+        width: 1.75rem !important;
+        height: 1.75rem !important;
         margin: 0 !important;
         padding: 0 !important;
         overflow: visible !important;
@@ -2376,23 +4093,35 @@
         clip: auto !important;
         clip-path: none !important;
         place-items: center;
-        border-radius: 8px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        border-radius: 11px;
+        border: 1.5px solid color-mix(in srgb, var(--ws-border) 58%, transparent);
         background: var(--ws-surface) !important;
-        box-shadow: none !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent) !important;
         z-index: 1;
+        transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets.fl-mob-ds-select-mode:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .mk-ds-card-check {
+        border-color: var(--ws-primary) !important;
+        background: var(--ws-primary) !important;
+        box-shadow: 0 6px 14px color-mix(in srgb, var(--ws-primary) 30%, transparent) !important;
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-check .mk-checkbox {
         width: 1rem !important;
         height: 1rem !important;
+        accent-color: var(--ws-primary);
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-foot-end {
+    .ws-filing-mob-dl.mk-filing-datasets.fl-mob-ds-select-mode:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .mk-ds-card-check .mk-checkbox {
+        filter: brightness(0) invert(1);
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__foot-end.mk-ds-card-foot-end {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.35rem;
+        gap: 0.45rem;
         flex: 1;
         min-width: 0;
     }
@@ -2401,7 +4130,7 @@
         grid-column: 2;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-date {
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__date.mk-ds-card-date {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
@@ -2417,9 +4146,9 @@
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-date__val {
-        font-weight: 750;
+        font-weight: 780;
         font-variant-numeric: tabular-nums;
-        color: color-mix(in srgb, var(--ws-text) 78%, var(--ws-text-muted));
+        color: color-mix(in srgb, var(--ws-text) 80%, var(--ws-text-muted));
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-act--open {
@@ -2427,13 +4156,21 @@
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-menu > summary.mk-ds-card-act--more {
-        min-width: 2.35rem !important;
-        min-height: 2.35rem !important;
-        border-radius: 9px !important;
-        box-shadow: none !important;
+        min-width: 2.4rem !important;
+        min-height: 2.4rem !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 88%, var(--ws-surface-2)) !important;
+        color: var(--ws-text-secondary) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
     }
 
-    /* Foot ⋮ menu: no panel clip, stack above search row, open upward */
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card.is-selected .mk-ds-card-menu > summary.mk-ds-card-act--more {
+        border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border)) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-panel.ws-glass-panel,
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-filing-panel {
         overflow: visible !important;
@@ -2460,8 +4197,39 @@
         display: contents !important;
     }
 
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-cards {
-        gap: 0.5rem !important;
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-fmt-inline,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-fmt-mini,
+    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-cover-orb {
+        display: none !important;
+    }
+
+    @media (max-width: 360px) {
+        .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__hit.mk-ds-card-primary {
+            grid-template-columns: 4.5rem minmax(0, 1fr) !important;
+            gap: 0.7rem !important;
+            padding: 0.7rem 0.7rem 0.6rem !important;
+        }
+
+        .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__media.mk-ds-card-cover {
+            width: 4.5rem !important;
+            min-width: 4.5rem !important;
+        }
+
+        .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__count strong {
+            font-size: 1.2rem;
+        }
+
+        .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-mob-card__title.mk-ds-card-title {
+            font-size: 0.9rem !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card-glass,
+        .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-ds-card:active .mk-ds-card-glass {
+            transition: none !important;
+            transform: none !important;
+        }
     }
 
     .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .mk-filing-fab,
@@ -2584,6 +4352,392 @@
         width: 2.5rem;
         color: var(--ws-text-muted);
     }
+
+    /* ═══════════════════════════════════════════════════════════
+       Listing detail — final premium polish (unified rhythm)
+       ═══════════════════════════════════════════════════════════ */
+    .ws-filing-mob-dl.ws-ld-detail.crm-page-chrome,
+    .ws-filing-mob-dl.ws-ld-detail.mk-page {
+        gap: 0.7rem !important;
+        padding-inline: 0.85rem !important;
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        background: transparent !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-aside {
+        display: none !important;
+    }
+
+    /* ── Owner capture — premium slot under hero ── */
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-detail-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.65rem !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-side-col {
+        display: contents;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot {
+        order: 0;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-main {
+        order: 1;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 0;
+        padding: 0 !important;
+        overflow: hidden;
+        border-radius: 18px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border)) !important;
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) 0%,
+                var(--ws-surface) 42%,
+                var(--ws-surface) 100%
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 12px 28px rgba(15, 23, 42, 0.05) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot.is-empty .mk-owner-box {
+        border-color: color-mix(in srgb, var(--ws-primary) 24%, var(--ws-border)) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 0 0 1px color-mix(in srgb, var(--ws-primary) 8%, transparent),
+            0 14px 32px color-mix(in srgb, var(--ws-primary) 10%, transparent) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot.is-filled .mk-owner-box {
+        border-color: color-mix(in srgb, #10b981 22%, var(--ws-border)) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__head {
+        align-items: center;
+        gap: 0.65rem;
+        margin: 0 !important;
+        padding: 0.85rem 0.95rem 0.75rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent);
+        background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--ws-primary) 6%, transparent) 0%,
+            transparent 100%
+        );
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__title {
+        font-size: 0.95rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em;
+        color: var(--ws-text) !important;
+        gap: 0.5rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__title i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 11px;
+        font-size: 0.85rem;
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border));
+        opacity: 1;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot.is-empty .mk-owner-box__title::after {
+        content: "ثبت نشده";
+        margin-inline-start: 0.35rem;
+        padding: 0.18rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 750;
+        letter-spacing: 0;
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, transparent);
+        vertical-align: middle;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot.is-filled .mk-owner-box__title::after {
+        content: "ثبت‌شده";
+        margin-inline-start: 0.35rem;
+        padding: 0.18rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 750;
+        letter-spacing: 0;
+        color: #047857;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        vertical-align: middle;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__link--sub {
+        margin-top: 0.35rem;
+        font-size: 0.78rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__head-aside {
+        max-width: min(9.5rem, 46%);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__acts {
+        margin: 0;
+        padding: 0.7rem 0.95rem 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-contact-acts {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.4rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-contact-act,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-contact-act-form,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-contact-act-form button {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-contact-act,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-contact-act-form button {
+        height: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__fields {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+        margin: 0;
+        padding: 0.85rem 0.95rem 0.15rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__label {
+        font-size: 0.72rem;
+        font-weight: 750;
+        color: var(--ws-text-secondary);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__input {
+        min-height: 2.85rem !important;
+        border-radius: 13px !important;
+        font-size: 1rem !important;
+        padding: 0 0.85rem !important;
+        border-color: color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface)) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__input:focus {
+        border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border)) !important;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent);
+        background: var(--ws-surface) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-divar-fetch {
+        min-height: 1.85rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 750;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__hint {
+        margin: 0;
+        padding: 0.55rem 0.95rem 0;
+        font-size: 0.7rem;
+        line-height: 1.5;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__submit {
+        width: auto;
+        align-self: stretch;
+        margin: 0.8rem 0.95rem 0.95rem !important;
+        min-height: 2.95rem !important;
+        border-radius: 13px !important;
+        font-size: 0.9rem !important;
+        font-weight: 800 !important;
+        justify-content: center;
+        box-shadow: 0 3px 14px color-mix(in srgb, var(--ws-primary) 24%, transparent);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__dl {
+        margin: 0;
+        padding: 0.75rem 0.95rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-owner-slot .mk-owner-box__empty {
+        margin: 0;
+        padding: 0.85rem 0.95rem 1rem;
+        font-size: 0.82rem;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-hero {
+        margin-bottom: 0.55rem !important;
+        border-radius: 18px !important;
+        border-color: color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.028),
+            0 10px 28px rgba(15, 23, 42, 0.045) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts {
+        gap: 0.6rem;
+        padding: 0.75rem 0.9rem 0.9rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__title {
+        font-size: 1.1rem;
+        letter-spacing: -0.024em;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__pricing {
+        padding-top: 0.5rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__bench {
+        margin-top: 0.5rem;
+        border-radius: 12px;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-actions {
+        gap: 0.4rem;
+        padding-top: 0.6rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act {
+        min-height: 4.2rem;
+        border-radius: 13px;
+        border-color: color-mix(in srgb, var(--ws-border) 32%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 22%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act__ico {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 11px;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act--primary {
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-grid,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-main {
+        gap: 0.6rem !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]),
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--text,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--full {
+        border-radius: 16px !important;
+        border-color: color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.028) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]) > .ws-ld-mob-acc-head:active {
+        background: color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface)) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]).is-acc-open {
+        border-color: color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border)) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 20px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]).is-acc-open > .crm-prop-panel-body {
+        padding-top: 0.7rem !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-field-row {
+        border-radius: 11px;
+        min-height: 2.4rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location .ws-ld-location-meta .ws-field-row {
+        min-height: 3.45rem !important;
+        border-radius: 13px !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger {
+        min-height: 2.8rem;
+        border-radius: 13px;
+        font-size: 0.8125rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas {
+        border-radius: 14px !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-retention-warning,
+    .ws-filing-mob-dl.ws-ld-detail .mk-notice--banner {
+        margin: 0 0 0.55rem !important;
+        border-radius: 14px !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ai-card--listing,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale {
+        margin-inline: 0 !important;
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.028) !important;
+        overflow: hidden;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-more__panel {
+        border-radius: 20px 20px 0 0 !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-contact-tile {
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 25%, var(--ws-surface));
+        padding: 0.65rem 0.7rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-feat-core-card {
+        padding-block: 0.45rem;
+    }
+
+    @media (max-width: 360px) {
+        .ws-filing-mob-dl.ws-ld-detail.crm-page-chrome,
+        .ws-filing-mob-dl.ws-ld-detail.mk-page,
+        .ws-filing-mob-dl.ws-ld-detail {
+            padding-inline: 0.7rem !important;
+        }
+
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-keyfacts__title {
+            font-size: 1.05rem;
+        }
+
+        .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-act {
+            min-height: 4rem;
+        }
+    }
 }
 
 @media (min-width: 769px) {
@@ -2622,5 +4776,24 @@
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-crm-form--mob {
         display: block !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__ico,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__chev {
+        display: none !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head__desk-actions {
+        display: inline-flex !important;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-acc-head {
+        cursor: default;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]).is-acc-open > .crm-prop-panel-body,
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel:not([data-panel="overview"]):not(.is-acc-open) > .crm-prop-panel-body {
+        display: block !important;
+        border-top: none;
     }
 }

@@ -9,7 +9,7 @@ MATCH_TIER_ALTERNATIVE = 'alternative'
 MATCH_TIER_INSUFFICIENT = 'insufficient_info'
 MATCH_TIER_REJECTED = 'rejected'
 
-MATCH_ENGINE_VERSION = '3.3.2-deal-intent'
+MATCH_ENGINE_VERSION = '3.3.3-detail-reasons'
 
 from workspace.services.crm_matching_geo import (  # noqa: E402 — shared geo contract
     LOC_STATUS_DIFFERENT,
@@ -78,6 +78,7 @@ class DimensionScores:
     hood_note: str = ''
     type_note: str = ''
     room_note: str = ''
+    detail_notes: List[str] = field(default_factory=list)
     geo_level: str = ''
     location_match_status: str = ''
     location_confidence: str = ''
@@ -113,9 +114,18 @@ def compute_match_score(d: DimensionScores) -> int:
     return min(100, max(0, int(round(total * 100))))
 
 
-def build_reasons(d: DimensionScores, *, limit: int = 4) -> List[str]:
+def build_reasons(d: DimensionScores, *, limit: int = 8) -> List[str]:
     raw = [n for n in (d.price_label, d.area_note, d.hood_note, d.type_note, d.room_note) if n]
-    return raw[:limit]
+    raw.extend([n for n in (d.detail_notes or []) if n])
+    # حفظ ترتیب و حذف تکراری
+    seen = set()
+    unique: List[str] = []
+    for note in raw:
+        if note in seen:
+            continue
+        seen.add(note)
+        unique.append(note)
+    return unique[:limit]
 
 
 def _profile_has_sale_criteria(profile) -> bool:

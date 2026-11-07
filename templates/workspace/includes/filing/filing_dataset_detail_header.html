@@ -74,18 +74,15 @@
     </div>
 </header>
 
-<header class="fl-dd-mob-header fl-mob-header">
-    <div class="fl-dd-mob-header__mesh" aria-hidden="true"></div>
-    <div class="fl-dd-mob-header__inner">
-        <div class="fl-dd-mob-header__main">
-            <a href="{% url 'workspace:dataset_list' %}" class="fl-dd-mob-back" aria-label="بازگشت به فایلینگ">
+<header class="fl-mob-header mk-filing-mob-header fl-dd-mob-header" aria-label="پوشه استخراج">
+    <div class="fl-mob-header__inner">
+        <div class="fl-mob-header__main fl-mob-header__main--with-back">
+            <a href="{% url 'workspace:dataset_list' %}" class="fl-mob-header__icon fl-mob-header__icon--back" aria-label="بازگشت به فایلینگ">
                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
-            <div class="fl-dd-mob-header__text">
-                <div class="fl-dd-mob-header__title-row">
-                    <h1 class="fl-dd-mob-header__title">{{ dataset.name }}</h1>
-                </div>
-                <p class="fl-dd-mob-header__sub">
+            <div class="fl-mob-header__copy">
+                <h1 class="fl-mob-header__title">{{ dataset.name }}</h1>
+                <p class="fl-mob-header__sub">
                     {% if dataset.city %}{{ dataset.city }}{% if dataset.district %} · {{ dataset.district }}{% endif %} · {% endif %}
                     {{ tx.badge }} ·
                     <strong>{{ total_count|intcomma }}</strong> فایل ·
@@ -93,7 +90,7 @@
                 </p>
             </div>
         </div>
-        <div class="fl-dd-mob-header__actions" role="toolbar" aria-label="عملیات">
+        <div class="fl-mob-header__actions" role="toolbar" aria-label="عملیات">
             <button type="button" class="fl-mob-header__icon fl-mob-header__icon--help" title="راهنما" aria-label="راهنما" data-modal-open="modal-dataset-detail-help">
                 <span class="fl-mob-header__help-pulse" aria-hidden="true"></span>
                 <span class="fl-header__help-bulb" aria-hidden="true">
@@ -101,22 +98,24 @@
                     <span class="fl-header__help-bulb-glow"></span>
                 </span>
             </button>
-            <details class="fl-dd-mob-more" id="mkDsMobileMore">
-                <summary class="fl-dd-mob-header__icon" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
-                <div class="fl-dd-mob-more-panel" role="menu">
-                    <button type="button" class="fl-dd-mob-more-item" role="menuitem" data-ds-stats-open><i class="fas fa-chart-column" aria-hidden="true"></i> آمار پوشه</button>
-                    <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-dd-mob-more-item" role="menuitem"><i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل بازار</a>
-                    <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-dd-mob-more-item" role="menuitem"><i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه آگهی‌ها</a>
-                    <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-dd-mob-more-item js-secure-export" data-export-label="خروجی CSV مجموعه" role="menuitem"><i class="fas fa-download" aria-hidden="true"></i> خروجی CSV</a>
+            <details class="fl-mob-header__more fl-dd-mob-more" id="mkDsMobileMore">
+                <summary class="fl-mob-header__icon fl-mob-header__icon--more" title="بیشتر" aria-label="عملیات بیشتر">
+                    <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                </summary>
+                <div class="fl-mob-header__more-panel fl-dd-mob-more-panel" role="menu">
+                    <button type="button" class="fl-mob-header__more-item fl-dd-mob-more-item" role="menuitem" data-ds-stats-open><i class="fas fa-chart-column" aria-hidden="true"></i><span>آمار پوشه</span></button>
+                    <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-mob-header__more-item fl-dd-mob-more-item" role="menuitem"><i class="fas fa-chart-line" aria-hidden="true"></i><span>تحلیل بازار</span></a>
+                    <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-mob-header__more-item fl-dd-mob-more-item" role="menuitem"><i class="fas fa-map-location-dot" aria-hidden="true"></i><span>نقشه آگهی‌ها</span></a>
+                    <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-mob-header__more-item fl-dd-mob-more-item js-secure-export" data-export-label="خروجی CSV مجموعه" role="menuitem"><i class="fas fa-download" aria-hidden="true"></i><span>خروجی CSV</span></a>
                     {% if filing_video.available %}
-                    <a href="{% url 'education' %}#edu-filing-video-title" class="fl-dd-mob-more-item" role="menuitem"><i class="fas fa-circle-play" aria-hidden="true"></i> آموزش ویدیویی</a>
+                    <a href="{% url 'education' %}#edu-filing-video-title" class="fl-mob-header__more-item fl-dd-mob-more-item" role="menuitem"><i class="fas fa-circle-play" aria-hidden="true"></i><span>آموزش ویدیویی</span></a>
                     {% endif %}
-                    <button type="button" class="fl-dd-mob-more-item" role="menuitem" data-modal-open="modal-rename"><i class="fas fa-pen" aria-hidden="true"></i> تغییر نام</button>
+                    <button type="button" class="fl-mob-header__more-item fl-dd-mob-more-item" role="menuitem" data-modal-open="modal-rename"><i class="fas fa-pen" aria-hidden="true"></i><span>تغییر نام</span></button>
                     {% if consultant_count %}
-                    <button type="button" class="fl-dd-mob-more-item fl-dd-mob-more-item--danger" role="menuitem" data-modal-open="modal-delete-consultants"><i class="fas fa-user-slash" aria-hidden="true"></i> حذف مشاورین</button>
+                    <button type="button" class="fl-mob-header__more-item fl-dd-mob-more-item fl-dd-mob-more-item--danger" role="menuitem" data-modal-open="modal-delete-consultants"><i class="fas fa-user-slash" aria-hidden="true"></i><span>حذف مشاورین</span></button>
                     {% endif %}
                     {% if disguised_consultant_count %}
-                    <button type="button" class="fl-dd-mob-more-item fl-dd-mob-more-item--danger" role="menuitem" data-modal-open="modal-delete-disguised"><i class="fas fa-user-secret" aria-hidden="true"></i> حذف مشاور پنهان</button>
+                    <button type="button" class="fl-mob-header__more-item fl-dd-mob-more-item fl-dd-mob-more-item--danger" role="menuitem" data-modal-open="modal-delete-disguised"><i class="fas fa-user-secret" aria-hidden="true"></i><span>حذف مشاور پنهان</span></button>
                     {% endif %}
                 </div>
             </details>

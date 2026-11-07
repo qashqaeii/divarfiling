@@ -923,6 +923,7 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
         'city': p.city or '',
         'district': p.district or '',
         'neighborhood': p.neighborhood or '',
+        'street': '',
         'sale_price': p.sale_price,
         'rent': p.monthly_rent,
         'deposit': p.deposit,
@@ -947,7 +948,9 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
     data['archived_at'] = p.archived_at.isoformat() if p.archived_at else None
     data['archive_reason'] = (getattr(p, 'archive_reason', '') or '').strip()
     from workspace.services.crm_property_folders import folders_for_property
+    from workspace.services.listing_street_data import property_street_for_display
     data['folders'] = folders_for_property(p)
+    data['street'] = property_street_for_display(p) or ''
     if detailed:
         from workspace.services.property_features import vacancy_date_from_property
         data.update({
@@ -1014,6 +1017,12 @@ def property_detail_to_dict(
         property_data['address'] = ''
         property_data['notes'] = ''
         property_data['neighborhood'] = ''
+        property_data['street'] = ''
+        if isinstance(property_data.get('feature_data'), dict):
+            fd = dict(property_data['feature_data'])
+            fd.pop('خیابان', None)
+            fd.pop('مکان_خیابان', None)
+            property_data['feature_data'] = fd
     from workspace.services.listing_map import parse_map_coordinates
     from workspace.services.nearby_pois import nearby_pois_page_context
     from workspace.services.public_share_common import build_map_navigation

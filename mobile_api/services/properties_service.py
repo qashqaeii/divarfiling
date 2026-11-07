@@ -33,11 +33,28 @@ def _sync_property_postal_feature(prop: CRMProperty) -> None:
     prop.feature_data = fd
 
 
+def _sync_property_street_feature(prop: CRMProperty, street: Any = None) -> None:
+    from workspace.services.listing_street_data import (
+        normalize_street_storage_value,
+        property_street_for_display,
+        sync_street_in_feature_data,
+    )
+
+    if street is None:
+        street = property_street_for_display(prop)
+    prop.feature_data = sync_street_in_feature_data(
+        prop.feature_data,
+        normalize_street_storage_value(street),
+    )
+
+
 def _apply_mobile_spec_fields(prop: CRMProperty, data: Dict[str, Any]) -> None:
     if 'postal_code' in data and data.get('postal_code') is not None:
         from contracts.services.party_sanitize import sanitize_postal_code
         prop.postal_code = sanitize_postal_code(str(data.get('postal_code') or ''))
         _sync_property_postal_feature(prop)
+    if 'street' in data and data.get('street') is not None:
+        _sync_property_street_feature(prop, data.get('street'))
     if 'land_area' in data:
         prop.land_area = _parse_float(data.get('land_area'))
     if 'frontage_width' in data:
@@ -384,6 +401,13 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> tuple[CRMProperty
         prop.tenant_phone = (data.get('tenant_phone') or '')[:20]
     _apply_mobile_extended_fields(prop, data)
     _sync_property_postal_feature(prop)
+    if 'street' in data and data.get('street') is not None:
+        _sync_property_street_feature(prop, data.get('street'))
+    elif isinstance(data.get('feature_data'), dict):
+        fd = data.get('feature_data') or {}
+        incoming_street = fd.get('خیابان') or fd.get('مکان_خیابان')
+        if incoming_street:
+            _sync_property_street_feature(prop, incoming_street)
     prop.save()
 
     if prop.phone or prop.owner_name:
@@ -486,6 +510,10 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
 
     if 'feature_data' in data:
         _merge_mobile_feature_data(prop, data.get('feature_data'))
+        if 'street' not in data:
+            fd = prop.feature_data or {}
+            if isinstance(fd, dict) and (fd.get('خیابان') or fd.get('مکان_خیابان')):
+                _sync_property_street_feature(prop, fd.get('خیابان') or fd.get('مکان_خیابان'))
     if 'images' in data and data.get('images') is not None:
         prop.images = list(data.get('images') or [])
     old_lat, old_lng = prop.latitude, prop.longitude

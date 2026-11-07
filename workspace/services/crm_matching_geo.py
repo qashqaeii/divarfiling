@@ -440,7 +440,7 @@ def evaluate_soft_location_match(
         return GeographicMatchResult(
             status=LOC_STATUS_EXACT,
             confidence='high',
-            reason=f'محله {nb_label or areas[0]}',
+            reason=f'محله — {nb_label or areas[0]}',
             hood_s=1.0,
             geo_level=nb_level,
         )
@@ -451,7 +451,7 @@ def evaluate_soft_location_match(
         return GeographicMatchResult(
             status=LOC_STATUS_DISTRICT,
             confidence='medium',
-            reason=f'محدوده {dist_label or district or areas[0]}',
+            reason=f'محدوده موردنظر — {dist_label or district or areas[0]}',
             hood_s=0.82,
             geo_level=GEO_MATCH_STRUCTURED,
         )
@@ -466,7 +466,7 @@ def evaluate_soft_location_match(
             return GeographicMatchResult(
                 status=LOC_STATUS_STREET,
                 confidence='medium',
-                reason=f'خیابان {st_label or street}',
+                reason=f'خیابان موردنظر — {st_label or street}',
                 hood_s=0.78,
                 geo_level=GEO_MATCH_STRUCTURED,
             )
@@ -481,7 +481,7 @@ def evaluate_soft_location_match(
             return GeographicMatchResult(
                 status=LOC_STATUS_HINT,
                 confidence='low',
-                reason='نشانه موقعیت در عنوان — نیاز به بررسی',
+                reason='محله فقط از عنوان حدس زده شده — بررسی کنید',
                 hood_s=0.38,
                 geo_level=GEO_MATCH_NONE,
             )
@@ -490,7 +490,7 @@ def evaluate_soft_location_match(
         return GeographicMatchResult(
             status=LOC_STATUS_DIFFERENT,
             confidence='medium',
-            reason='محله متفاوت از ترجیح',
+            reason='محله با ترجیح مخاطب فرق دارد',
             hood_s=0.22,
             geo_level=GEO_MATCH_NONE,
         )
@@ -498,7 +498,7 @@ def evaluate_soft_location_match(
     return GeographicMatchResult(
         status=LOC_STATUS_UNKNOWN,
         confidence='low',
-        reason='موقعیت دقیق نامشخص',
+        reason='محله فایل مشخص نیست',
         hood_s=0.5,
         geo_level=GEO_MATCH_UNKNOWN,
     )

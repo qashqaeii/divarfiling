@@ -71,10 +71,7 @@
 }
 
 .crm-contact-dossier .crm-activity-event {
-    display: grid;
-    grid-template-columns: var(--crm-act-rail-w) minmax(0, 1fr);
-    gap: 0.55rem;
-    align-items: stretch;
+    display: block;
     min-width: 0;
     margin: 0;
     padding: 0;
@@ -82,47 +79,21 @@
 }
 
 .crm-contact-dossier .crm-activity-event__rail {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    padding-top: 0.55rem;
-}
-
-.crm-contact-dossier .crm-activity-event__rail::after {
-    content: "";
-    position: absolute;
-    top: 2.15rem;
-    bottom: -0.5rem;
-    inset-inline-end: 50%;
-    width: 2px;
-    transform: translateX(50%);
-    border-radius: 1px;
-    background: linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)),
-        color-mix(in srgb, var(--ws-border) 40%, transparent)
-    );
-    pointer-events: none;
-}
-
-.crm-contact-dossier .crm-activity-day__events .crm-activity-event:last-child .crm-activity-event__rail::after {
     display: none;
 }
 
 .crm-contact-dossier .crm-activity-event__node {
-    position: relative;
-    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 999px;
+    width: 1.7rem;
+    height: 1.7rem;
+    flex-shrink: 0;
+    border-radius: 10px;
     border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
     background: var(--ws-surface);
     font-size: 0.65rem;
     color: var(--ws-text-muted);
-    box-shadow: 0 0 0 3px var(--ws-surface);
 }
 
 .crm-contact-dossier .crm-activity-event__content {
@@ -147,6 +118,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.crm-contact-dossier .crm-activity-event__lead {
+    display: inline-flex;
+    align-items: center;
     gap: 0.45rem;
     min-width: 0;
 }
@@ -400,27 +378,39 @@
         --crm-act-rail-w: 1.75rem;
     }
 
-    /* ── Tab header (Activities only) ── */
+    /* ── Tab header (Activities) — row layout, start-aligned ── */
     .crm-contact-dossier [data-panel="timeline"] .crm-contact-tab-head__sub {
-        display: block !important;
-        margin-top: 0.12rem;
-        font-size: 0.68rem !important;
-        font-weight: 600;
-        color: var(--ws-text-muted);
-        line-height: 1.35;
+        display: none !important;
     }
 
     .crm-contact-dossier [data-panel="timeline"] .crm-contact-tab-head {
-        padding: 0.45rem var(--crm-act-gutter) 0.5rem !important;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
         align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        padding: 0 0 0.5rem !important;
+        text-align: start;
         border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
     }
 
+    .crm-contact-dossier [data-panel="timeline"] .crm-contact-panel-head-text {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.4rem;
+        flex: 1 1 auto;
+        text-align: start;
+    }
+
     .crm-contact-dossier [data-panel="timeline"] .crm-contact-tab-head__cta {
-        width: auto !important;
-        min-height: 2.15rem !important;
-        padding: 0 0.65rem !important;
-        font-size: 0.68rem !important;
+        width: 2.05rem !important;
+        min-width: 2.05rem !important;
+        min-height: 2.05rem !important;
+        padding: 0 !important;
+        margin-inline-start: auto;
         flex-shrink: 0;
     }
 
@@ -510,49 +500,28 @@
         gap: var(--crm-act-event-gap);
     }
 
-    /* ── Event row + timeline rail ── */
+    /* ── Event card (icon inside content) ── */
     .crm-contact-dossier .crm-activity-event {
-        gap: 0.5rem;
+        display: block;
     }
 
     .crm-contact-dossier .crm-activity-event__rail {
-        position: relative;
-        display: flex;
-        justify-content: center;
-        padding-top: 0.15rem;
-        min-height: 100%;
-    }
-
-    .crm-contact-dossier .crm-activity-event__rail::after {
-        content: "";
-        position: absolute;
-        top: 1.85rem;
-        bottom: -0.65rem;
-        inset-inline-end: 50%;
-        width: 1px;
-        transform: translateX(50%);
-        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-border) 55%);
-        pointer-events: none;
-    }
-
-    .crm-contact-dossier .crm-activity-day__events .crm-activity-event:last-child .crm-activity-event__rail::after {
-        display: none;
+        display: none !important;
     }
 
     .crm-contact-dossier .crm-activity-event__node {
-        position: relative;
-        z-index: 1;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 1.65rem;
         height: 1.65rem;
-        border-radius: 999px;
+        flex-shrink: 0;
+        border-radius: 10px;
         border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
         background: var(--ws-surface);
         font-size: 0.62rem;
         color: var(--ws-text-muted);
-        box-shadow: 0 0 0 2px var(--ws-surface);
+        box-shadow: none;
     }
 
     .crm-contact-dossier .crm-activity-event__content {
@@ -568,6 +537,13 @@
         align-items: center;
         justify-content: space-between;
         gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .crm-contact-dossier .crm-activity-event__lead {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
         min-width: 0;
     }
 

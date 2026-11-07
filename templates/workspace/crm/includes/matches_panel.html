@@ -1,6 +1,6 @@
 {% load workspace_tags crm_tags %}
 
-<section class="crm-matches crm-matches-v3" id="crmMatches" data-crm-matches-panel
+<section class="crm-matches crm-matches-v3 crm-cd-matches-panel" id="crmMatches" data-crm-matches-panel
          data-matches-more-url="{% url 'workspace:crm_contact_matches_more' customer.pk %}"
          data-crm-total="{{ match_data.crm_total_count|default:0 }}"
          data-divar-total="{{ match_data.divar_total_count|default:0 }}">
@@ -23,7 +23,7 @@
         </div>
         {% endif %}
         {% if match_data.eligible %}
-        <details class="crm-matches-precision">
+        <details class="crm-matches-precision" id="crm-matches-precision-panel">
             <summary>
                 دقت پیشنهادها: <span data-crm-match-precision-value>{{ match_data.matching_tolerance_percent|default:20 }}٪</span>
             </summary>

@@ -1161,11 +1161,31 @@
 }
 
 @media (max-width: 767px) {
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-kpi-pro {
+    /* فایلینگ هاب + جزئیات دیتاست — مثل میزکار: همیشه ۲×۲ روی موبایل */
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro {
         display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.65rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.55rem;
         margin: 0 0 0.75rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro__card {
+        min-height: 7.6rem;
+        padding: 0.75rem 0.75rem 0.65rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro__value {
+        font-size: 1.45rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro__label {
+        font-size: 0.78rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro__hero-deco {
+        font-size: 3.25rem;
+        inset-inline-end: -0.35rem;
+        top: -0.2rem;
     }
 
     .fl-kpi-pro__card {
@@ -1183,9 +1203,25 @@
 }
 
 @media (max-width: 420px) {
-    .fl-kpi-pro,
-    .ws-filing-mob-dl.mk-filing-datasets:not(.mk-filing-dataset-detail) .fl-kpi-pro {
+    .fl-kpi-pro {
         grid-template-columns: 1fr;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.5rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro__label {
+        font-size: 0.72rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro__value {
+        font-size: 1.35rem;
+    }
+
+    .ws-filing-mob-dl.mk-filing-datasets .fl-kpi-pro__meta {
+        font-size: 0.68rem;
     }
 }
 

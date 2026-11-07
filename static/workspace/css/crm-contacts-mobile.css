@@ -1920,12 +1920,21 @@
         grid-template-columns: minmax(0, 1fr) !important;
     }
     .crm-contact-mobile #crmMatches.crm-matches-v3 .crm-match-card-v3 {
-        grid-template-columns: 2.25rem minmax(0, 1fr) !important;
+        grid-template-columns: minmax(0, 1fr) 5.35rem !important;
+        grid-template-areas:
+            "body media"
+            "why why" !important;
         max-width: 100%;
     }
     .crm-contact-mobile img {
         max-width: 100%;
         height: auto;
+    }
+    .crm-contact-mobile #crmMatches.crm-matches-v3 .crm-match-media__img {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        object-fit: cover;
     }
     .crm-contact-mobile .crm-contact-panel-head {
         flex-wrap: wrap;

@@ -85,44 +85,14 @@
         font-size: 0.56rem;
     }
 
-    /* KPI strip hidden on mobile — stats in header (#43) */
-    .mk-filing-dataset-detail .fl-dd-kpi {
-        display: none !important;
-    }
+    /* KPI strip: shown via ws-filing-mobile-dl-v1 (aligned with filing hub 2×2) */
 
-    /* ── Filter bar: search row + bottom sheet (#44) ── */
-    .mk-filing-dataset-detail .fl-dd-filter {
-        position: sticky;
-        top: calc(2.5rem + env(safe-area-inset-top, 0px));
-        z-index: 28;
-        margin-inline: 0.65rem;
-        padding: 0.5rem 0.6rem;
-        border-radius: 16px;
-    }
-
+    /* ── Filter bar chrome: owned by ws-filing-mobile-dl-v1 (hub-aligned) ── */
     .mk-filing-dataset-detail .mk-filter-primary__fields,
     .mk-filing-dataset-detail .mk-filter-actions--desk,
     .mk-filing-dataset-detail .fl-listing-filters__fields,
     .mk-filing-dataset-detail .fl-listing-filters__actions {
         display: none !important;
-    }
-
-    .mk-filing-dataset-detail .ws-mob-search-bar__btn {
-        min-width: 2.75rem;
-        min-height: 2.75rem;
-        height: 2.75rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-    }
-
-    .mk-filing-dataset-detail .ws-mob-search-bar__search {
-        min-height: 2.75rem !important;
-        height: 2.75rem !important;
-        border-radius: 12px !important;
-    }
-
-    .mk-filing-dataset-detail .ws-mob-search-bar__search input {
-        font-size: 0.875rem !important;
     }
 
     .mk-filing-dataset-detail .mk-filter-active {

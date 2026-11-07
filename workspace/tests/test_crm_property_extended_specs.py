@@ -81,6 +81,24 @@ class CRMPropertyExtendedFormTests(TestCase):
         form = CRMPropertyForm(instance=prop)
         self.assertEqual(form.initial.get('postal_code'), '1122334455')
 
+    def test_create_and_edit_street_field(self):
+        form = CRMPropertyForm(data=self._base_form_data(street='  خ ولیعصر  '))
+        self.assertTrue(form.is_valid(), form.errors)
+        prop = form.save(commit=False)
+        prop.user = self.user
+        prop.save()
+        prop.refresh_from_db()
+        self.assertEqual(prop.feature_data.get('خیابان'), 'خ ولیعصر')
+        self.assertEqual(prop.feature_data.get('مکان_خیابان'), 'خ ولیعصر')
+        edit = CRMPropertyForm(instance=prop)
+        self.assertEqual(edit.initial.get('street'), 'خ ولیعصر')
+        clear = CRMPropertyForm(data=self._base_form_data(street=''), instance=prop)
+        self.assertTrue(clear.is_valid(), clear.errors)
+        cleared = clear.save()
+        cleared.refresh_from_db()
+        self.assertNotIn('خیابان', cleared.feature_data or {})
+        self.assertNotIn('مکان_خیابان', cleared.feature_data or {})
+
     def test_ceramic_in_facade_choices(self):
         self.assertIn('سرامیک', CHOICES_FACADE)
 
@@ -99,6 +117,7 @@ class CRMPropertyExtendedApiTests(TestCase):
                 'title': 'ملک API',
                 'deal_mode': 'فروش',
                 'postal_code': '1987654321',
+                'street': 'خ شریعتی',
                 'area': 90,
                 'land_area': 200,
                 'frontage_width': 10,
@@ -114,6 +133,8 @@ class CRMPropertyExtendedApiTests(TestCase):
         self.assertEqual(detail.status_code, 200)
         body = detail.json()['data']['property']
         self.assertEqual(body['postal_code'], '1987654321')
+        self.assertEqual(body['street'], 'خ شریعتی')
+        self.assertEqual(body['feature_data'].get('خیابان'), 'خ شریعتی')
         self.assertEqual(body['land_area'], 200.0)
         self.assertEqual(body['frontage_width'], 10.0)
         self.assertTrue(body['has_two_access'])

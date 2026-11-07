@@ -676,8 +676,8 @@
     }
 
     /* ── Listing detail modals (#077–081) ── */
+    /* #modal-share: premium sheet styles live in ws-share-modal-mobile.css */
     #modal-meta.is-open,
-    #modal-share.is-open,
     #modal-delete-listing.is-open,
     #modal-listing-detail-help.is-open {
         align-items: flex-end;
@@ -685,7 +685,6 @@
     }
 
     #modal-meta.is-open .ws-modal-panel,
-    #modal-share.is-open .ws-modal-panel,
     #modal-delete-listing.is-open .ws-modal-panel {
         width: 100%;
         max-width: 100%;
@@ -697,7 +696,6 @@
     }
 
     #modal-meta.is-open .ws-modal-body,
-    #modal-share.is-open .ws-modal-body,
     #modal-delete-listing.is-open .ws-modal-body {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -705,7 +703,6 @@
     }
 
     #modal-meta.is-open .ws-modal-foot,
-    #modal-share.is-open .ws-modal-foot,
     #modal-delete-listing.is-open .ws-modal-foot {
         flex-shrink: 0;
         padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
@@ -713,7 +710,6 @@
     }
 
     #modal-meta.is-open .ws-modal-foot .ws-btn,
-    #modal-share.is-open .ws-modal-foot .ws-btn,
     #modal-delete-listing.is-open .ws-modal-foot .ws-btn {
         min-height: 2.75rem;
         font-size: 0.9375rem;
@@ -722,8 +718,7 @@
 
     #modal-meta.is-open .ws-input,
     #modal-meta.is-open .ws-select,
-    #modal-meta.is-open textarea,
-    #modal-share.is-open .ws-input {
+    #modal-meta.is-open textarea {
         min-height: 2.75rem;
         font-size: 1rem;
     }

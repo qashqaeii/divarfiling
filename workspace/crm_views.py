@@ -481,6 +481,35 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
             'archived': archived_cqs.count(),
             'all': cqs.count(),
         }
+        if archive_scope == ARCHIVE_SCOPE_ARCHIVED:
+            role_base_qs = archived_cqs
+            role_chip_total = ctx['stats']['archived']
+        elif archive_scope == ARCHIVE_SCOPE_ALL:
+            role_base_qs = cqs
+            role_chip_total = ctx['stats']['all']
+        else:
+            role_base_qs = active_cqs
+            role_chip_total = ctx['stats']['total']
+        type_order = {name: idx for idx, name in enumerate(CRM_TYPES)}
+        role_rows = list(
+            role_base_qs.exclude(customer_type='')
+            .exclude(customer_type__isnull=True)
+            .values('customer_type')
+            .annotate(count=Count('id'))
+        )
+        role_rows.sort(
+            key=lambda row: (
+                -int(row['count'] or 0),
+                type_order.get(row['customer_type'], 999),
+                row['customer_type'] or '',
+            )
+        )
+        ctx['contact_role_chip_total'] = int(role_chip_total or 0)
+        ctx['contact_role_chips'] = [
+            {'type': row['customer_type'], 'count': int(row['count'] or 0)}
+            for row in role_rows
+            if row.get('customer_type') and int(row['count'] or 0) > 0
+        ]
         view_mode_param = (self.request.GET.get('view') or 'table').strip()
         if view_mode_param not in ('table', 'pipeline'):
             view_mode_param = 'table'
@@ -622,6 +651,46 @@ class CustomerStatusUpdateView(LoginRequiredMixin, View):
             'status': customer.status,
             'display_status': contact_display_status(customer),
             'archived': is_contact_archived(customer),
+            'customer_id': customer.pk,
+        })
+
+
+class CustomerPhotoUpdateView(LoginRequiredMixin, View):
+    """آپلود یا حذف تصویر اختصاصی مخاطب (فیلد Customer.photo)."""
+
+    def post(self, request, customer_id):
+        customer = customer_for_user(request.user, customer_id)
+        if not customer:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        if not can_edit_customer(request.user, customer):
+            return JsonResponse({'ok': False, 'error': 'فقط مالک می‌تواند تصویر را تغییر دهد'}, status=403)
+
+        clear = (request.POST.get('clear') or '').strip().lower() in ('1', 'true', 'yes')
+        if clear:
+            if customer.photo:
+                customer.photo.delete(save=False)
+            customer.photo = None
+            customer.save(update_fields=['photo'])
+        else:
+            uploaded = request.FILES.get('photo')
+            if not uploaded:
+                return JsonResponse({'ok': False, 'error': 'تصویری ارسال نشده'}, status=400)
+            from workspace.services.property_images import validate_image_file
+            try:
+                validate_image_file(uploaded)
+            except ValueError as exc:
+                return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+            if customer.photo:
+                customer.photo.delete(save=False)
+            customer.photo = uploaded
+            customer.save(update_fields=['photo'])
+
+        from accounts.avatar_catalog import resolve_contact_avatar_display
+        display = resolve_contact_avatar_display(customer, request=request)
+        return JsonResponse({
+            'ok': True,
+            'has_photo': bool(display.get('has_photo')),
+            'photo_url': display.get('photo_url') or '',
             'customer_id': customer.pk,
         })
 

@@ -23,6 +23,19 @@ def normalize_street_storage_value(val: Any) -> str:
     return s
 
 
+def sync_street_in_feature_data(feature_data: Dict[str, Any] | None, street: Any) -> Dict[str, Any]:
+    """هم‌ترازی کلیدهای خیابان در feature_data فایل شخصی."""
+    out = dict(feature_data or {})
+    normalized = normalize_street_storage_value(street)
+    if normalized:
+        out['خیابان'] = normalized
+        out['مکان_خیابان'] = normalized
+    else:
+        out.pop('خیابان', None)
+        out.pop('مکان_خیابان', None)
+    return out
+
+
 def sync_street_keys_in_listing_data(data: Dict[str, Any] | None) -> Dict[str, Any]:
     """
     اگر فقط ستون/کلید «خیابان» پر باشد، مکان_خیابان را تکمیل می‌کند.

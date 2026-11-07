@@ -460,6 +460,19 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'placeholder': 'مثلاً توضیح آزاد که در فیلدهای بالا نیست…',
         }),
     )
+    street = forms.CharField(
+        required=False,
+        label='خیابان',
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input',
+            'placeholder': 'مثلاً خ ولیعصر، خ شریعتی',
+            'autocomplete': 'off',
+            'inputmode': 'text',
+            'spellcheck': 'false',
+            'data-prop-street': '1',
+        }),
+    )
 
     class Meta:
         model = CRMProperty
@@ -625,6 +638,11 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 fd_pc = str((instance.feature_data or {}).get('کد پستی') or '').strip()
             if fd_pc:
                 self.initial['postal_code'] = fd_pc
+        if instance is not None and not self.is_bound:
+            from workspace.services.listing_street_data import property_street_for_display
+            street_val = property_street_for_display(instance)
+            if street_val:
+                self.initial['street'] = street_val
         if instance is not None and not self.is_bound and not (instance.district or '').strip():
             from workspace.services.crm import resolve_district_for_property
             resolved_district = resolve_district_for_property(instance)
@@ -771,6 +789,10 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         from contracts.services.party_sanitize import sanitize_postal_code
         return sanitize_postal_code(self.cleaned_data.get('postal_code') or '')
 
+    def clean_street(self):
+        from workspace.services.listing_street_data import normalize_street_storage_value
+        return normalize_street_storage_value(self.cleaned_data.get('street') or '')
+
     def clean_land_area(self):
         val = self.cleaned_data.get('land_area')
         if val is not None and val < 0:
@@ -849,6 +871,8 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
+        from workspace.services.listing_street_data import sync_street_in_feature_data
+
         instance = super().save(commit=False)
         instance.feature_data = dict(getattr(self, '_parsed_feature_data', None) or {})
         pc = (instance.postal_code or '').strip()
@@ -856,6 +880,10 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             instance.feature_data['کد پستی'] = pc
         else:
             instance.feature_data.pop('کد پستی', None)
+        instance.feature_data = sync_street_in_feature_data(
+            instance.feature_data,
+            self.cleaned_data.get('street') or '',
+        )
         if commit:
             instance.save()
             self.save_m2m()

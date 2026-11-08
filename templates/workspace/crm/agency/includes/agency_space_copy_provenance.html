@@ -1,16 +1,26 @@
 {% if agency_space_copy_provenance %}
-
-<p class="agency-space-provenance crm-muted">
-
-    منبع: {{ agency_space_copy_provenance.label }}
-
-    {% if agency_space_copy_provenance.publisher_name %}
-    · منتشرشده توسط: {{ agency_space_copy_provenance.publisher_name }}
-    {% endif %}
+<aside class="agency-space-provenance" aria-label="منبع فضای آژانس">
+    <span class="agency-space-provenance__mark" aria-hidden="true">
+        <i class="fas fa-building-columns"></i>
+    </span>
+    <div class="agency-space-provenance__body">
+        <span class="agency-space-provenance__chip">
+            <span class="agency-space-provenance__label">منبع</span>
+            <strong class="agency-space-provenance__value">{{ agency_space_copy_provenance.label }}</strong>
+        </span>
+        {% if agency_space_copy_provenance.publisher_name %}
+        <span class="agency-space-provenance__dot" aria-hidden="true"></span>
+        <span class="agency-space-provenance__chip">
+            <span class="agency-space-provenance__label">منتشرکننده</span>
+            <strong class="agency-space-provenance__value">{{ agency_space_copy_provenance.publisher_name }}</strong>
+        </span>
+        {% endif %}
+    </div>
     {% if agency_space_copy_provenance.space_item_url %}
-    · <a href="{{ agency_space_copy_provenance.space_item_url }}">مشاهده در فضای آژانس</a>
+    <a class="agency-space-provenance__cta" href="{{ agency_space_copy_provenance.space_item_url }}">
+        <span>مشاهده در فضای آژانس</span>
+        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+    </a>
     {% endif %}
-</p>
-
+</aside>
 {% endif %}
-

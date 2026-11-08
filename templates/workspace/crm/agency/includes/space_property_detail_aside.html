@@ -42,7 +42,7 @@
         {% endif %}
         <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-users"></i></span><span class="agency-space-pro-timeline__label">مخاطبان</span><strong>{% if space_payload.audience_count %}{{ space_payload.audience_count }} عضو{% else %}—{% endif %}</strong></li>
         {% if space_payload.is_publisher and space_payload.copy_count != None %}
-        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-copy"></i></span><span class="agency-space-pro-timeline__label">کپی CRM</span><strong>{{ space_payload.copy_count }}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-copy"></i></span><span class="agency-space-pro-timeline__label">ذخیره توسط تیم</span><strong>{{ space_payload.copy_count }}</strong></li>
         {% endif %}
         {% if space_payload.archived_at %}
         <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-box-archive"></i></span><span class="agency-space-pro-timeline__label">بایگانی</span><strong>{{ space_payload.archived_at_display|default:space_payload.archived_at|slice:":16" }}</strong></li>

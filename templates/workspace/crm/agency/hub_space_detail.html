@@ -71,33 +71,33 @@
                 <header class="agency-space-detail__aside-head">
                     <span class="agency-space-detail__aside-head-icon" aria-hidden="true"><i class="fas fa-briefcase"></i></span>
                     <div>
-                        <h2 id="space-crm-heading" class="agency-space-detail__aside-title">وضعیت CRM من</h2>
-                        <p class="agency-space-detail__aside-sub">نسخه شخصی در فایل‌های شما</p>
+                        <h2 id="space-crm-heading" class="agency-space-detail__aside-title">ذخیره شخصی</h2>
+                        <p class="agency-space-detail__aside-sub">نسخهٔ شما برای پیگیری</p>
                     </div>
                 </header>
                 <div class="agency-space-detail__aside-body">
                     {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
                     <p class="agency-space-detail__crm-ok">
                         <i class="fas fa-circle-check" aria-hidden="true"></i>
-                        {% if space_payload.source_kind == 'property' %}این انتشار از فایل CRM شماست{% else %}این انتشار از مخاطب CRM شماست{% endif %}
+                        {% if space_payload.source_kind == 'property' %}این فایل را خودتان منتشر کرده‌اید{% else %}این مخاطب را خودتان منتشر کرده‌اید{% endif %}
                     </p>
                     <a href="{{ space_payload.source_crm_url }}" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block">
-                        {% if space_payload.source_kind == 'property' %}مشاهده فایل در CRM{% else %}مشاهده مخاطب در CRM{% endif %}
+                        {% if space_payload.source_kind == 'property' %}باز کردن فایل شخصی{% else %}باز کردن مخاطب{% endif %}
                     </a>
                     {% elif space_payload.already_copied and space_payload.copy_target_url %}
                     <p class="agency-space-detail__crm-ok">
                         <i class="fas fa-circle-check" aria-hidden="true"></i>
-                        ذخیره در CRM{% if space_payload.copy_created_at_display %} · {{ space_payload.copy_created_at_display }}{% endif %}
+                        نسخهٔ شخصی شما ذخیره شده{% if space_payload.copy_created_at_display %} · {{ space_payload.copy_created_at_display }}{% endif %}
                     </p>
-                    <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block">مشاهده نسخه من</a>
+                    <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block">{% if space_payload.source_kind == 'property' %}باز کردن فایل شخصی{% else %}باز کردن مخاطب{% endif %}</a>
         {% elif space_payload.can_copy %}
-                    <p class="agency-space-detail__aside-hint">برای پیگیری شخصی، یک نسخه در CRM خود بسازید.</p>
+                    <p class="agency-space-detail__aside-hint">برای پیگیری شخصی، یک نسخه در فهرست خود ذخیره کنید.</p>
                     <button type="button" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block" data-space-copy data-item-id="{{ space_item.pk }}">
                         <i class="fas fa-plus" aria-hidden="true"></i>
-            {% if space_payload.source_kind == 'property' %}افزودن به فایل‌های من{% else %}افزودن به مخاطبین من{% endif %}
+            {% if space_payload.source_kind == 'property' %}ذخیره در فایل‌های من{% else %}ذخیره در مخاطبین من{% endif %}
         </button>
         {% else %}
-                    <p class="agency-space-detail__aside-hint crm-muted">کپی در دسترس نیست.</p>
+                    <p class="agency-space-detail__aside-hint crm-muted">فعلاً امکان ذخیره نیست.</p>
                     {% endif %}
                 </div>
             </article>
@@ -174,7 +174,7 @@
                         <li><i class="fas fa-eye" aria-hidden="true"></i><span>سطح</span><strong>{{ space_payload.visibility_label }}{% if space_payload.audience_count %} ({{ space_payload.audience_count }} عضو){% endif %}</strong></li>
                         <li><i class="fas fa-signal" aria-hidden="true"></i><span>وضعیت</span><strong>{{ space_payload.status_label }}</strong></li>
                         {% if space_payload.is_publisher and space_payload.copy_count != None %}
-                        <li><i class="fas fa-copy" aria-hidden="true"></i><span>کپی CRM</span><strong>{{ space_payload.copy_count }}</strong></li>
+                        <li><i class="fas fa-copy" aria-hidden="true"></i><span>ذخیره توسط تیم</span><strong>{{ space_payload.copy_count }}</strong></li>
         {% endif %}
                     </ul>
                 </div>
@@ -230,18 +230,18 @@
             </a>
             {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
             <a href="{{ space_payload.source_crm_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-crm-link>
-                {% if space_payload.source_kind == 'property' %}فایل CRM من{% else %}مخاطب CRM من{% endif %}
+                {% if space_payload.source_kind == 'property' %}باز کردن فایل شخصی{% else %}باز کردن مخاطب{% endif %}
                 <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif space_payload.already_copied and space_payload.copy_target_url %}
             <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-crm-link>
-                مشاهده در CRM
+                {% if space_payload.source_kind == 'property' %}باز کردن فایل شخصی{% else %}باز کردن مخاطب{% endif %}
                 <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif space_payload.can_copy %}
             <button type="button" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary agency-space-btn--copy" data-space-copy data-item-id="{{ space_item.pk }}">
                 <i class="fas fa-plus" aria-hidden="true"></i>
-                {% if space_payload.source_kind == 'property' %}افزودن به CRM{% else %}کپی به CRM من{% endif %}
+                {% if space_payload.source_kind == 'property' %}ذخیره در فایل‌های من{% else %}ذخیره در مخاطبین من{% endif %}
             </button>
             {% endif %}
         </div>
@@ -314,5 +314,5 @@ window.AGENCY_SPACE_API = {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{% static 'workspace/js/listing-map.js' %}?v=9"></script>
 {% endif %}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=24" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=27" defer></script>
 {% endblock %}

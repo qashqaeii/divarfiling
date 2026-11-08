@@ -2,24 +2,24 @@
     <header class="agency-space-pro-aside-card__head">
         <span class="agency-space-pro-aside-card__icon" aria-hidden="true"><i class="fas fa-folder-plus"></i></span>
         <div>
-            <h2 {% if crm_heading_id %}id="{{ crm_heading_id }}"{% endif %} class="agency-space-property-detail__aside-h">افزودن به CRM من</h2>
-            <p class="agency-space-pro-aside-card__sub">کپی مستقل در فایل‌های شما</p>
+            <h2 {% if crm_heading_id %}id="{{ crm_heading_id }}"{% endif %} class="agency-space-property-detail__aside-h">ذخیره در فایل‌های شخصی</h2>
+            <p class="agency-space-pro-aside-card__sub">برای کار و پیگیری روی همین فایل</p>
         </div>
     </header>
-    <p class="agency-space-property-detail__aside-lead">نسخهٔ مستقل در فایل‌های شما — بدون تغییر در فایل منتشرشدهٔ تیم.</p>
+    <p class="agency-space-property-detail__aside-lead">یک نسخه برای خودتان ساخته می‌شود؛ فایل منتشرشدهٔ تیم عوض نمی‌شود.</p>
     <div class="agency-space-property-detail__aside-body agency-space-prop-aside__body" data-space-crm-panel>
         {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
-        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این فایل از CRM شما منتشر شده</p>
-        <a href="{{ space_payload.source_crm_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block">مشاهده فایل در CRM</a>
+        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این فایل را خودتان منتشر کرده‌اید</p>
+        <a href="{{ space_payload.source_crm_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block">باز کردن فایل شخصی</a>
         {% elif space_payload.already_copied and space_payload.copy_target_url %}
-        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این فایل در CRM شماست{% if space_payload.copy_created_at_display %}<br><span class="agency-space-property-detail__crm-time">ذخیره: {{ space_payload.copy_created_at_display }}</span>{% endif %}</p>
-        <a href="{{ space_payload.copy_target_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-crm-link>باز کردن CRM</a>
+        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> نسخهٔ شخصی شما ذخیره شده{% if space_payload.copy_created_at_display %}<br><span class="agency-space-property-detail__crm-time">ذخیره: {{ space_payload.copy_created_at_display }}</span>{% endif %}</p>
+        <a href="{{ space_payload.copy_target_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-crm-link>باز کردن فایل شخصی</a>
         {% elif space_payload.can_copy %}
         <button type="button" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-copy data-item-id="{{ space_item.pk }}">
-            <i class="fas fa-plus" aria-hidden="true"></i> کپی به CRM من
+            <i class="fas fa-plus" aria-hidden="true"></i> ذخیره در فایل‌های من
         </button>
         {% else %}
-        <p class="agency-space-property-detail__muted">کپی در دسترس نیست.</p>
+        <p class="agency-space-property-detail__muted">فعلاً امکان ذخیره نیست.</p>
         {% endif %}
     </div>
 </article>

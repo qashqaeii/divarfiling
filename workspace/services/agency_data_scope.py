@@ -356,12 +356,16 @@ def get_member_activity_qs(viewer, member: CRMAgencyMember, *, limit: int = 100)
         AgencyActivityEvent.objects.filter(agency_id=member.agency_id, actor_id=member.user_id)
         .order_by('-created_at')[:limit]
     ):
+        meta = ev.metadata if isinstance(ev.metadata, dict) else {}
+        # فقط نام/عنوان واقعی رکورد؛ کلید انگلیسی object_type هرگز به UI نرود
+        title = str(meta.get('title') or meta.get('name') or '').strip()
         events.append({
             'at': ev.created_at,
             'type': 'agency_event',
             'label': ev.event_type,
-            'title': ev.object_type or ev.event_type,
+            'title': title,
             'detail': '',
+            'object_type': ev.object_type or '',
         })
 
     events.sort(key=lambda e: e['at'], reverse=True)

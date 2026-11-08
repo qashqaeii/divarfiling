@@ -140,6 +140,24 @@ def a360_activity_label(event):
 
 
 @register.filter
+def a360_activity_ref(event):
+    """عنوان فرعی فعالیت برای مشاور — فقط نام واقعی؛ بدون کلید انگلیسی."""
+    if not event:
+        return ''
+    from workspace.services.agency_activity import object_type_label
+
+    raw = str(event.get('title') or '').strip()
+    if not raw:
+        return ''
+    # کلید فنی object_type / event_type را هرگز به‌عنوان متا نشان نده
+    if object_type_label(raw) or _OBJECT_TYPE_LABELS.get(raw.lower()):
+        return ''
+    if raw in EVENT_TYPE_LABELS or raw in _EVENT_KEY_LABELS:
+        return ''
+    return raw
+
+
+@register.filter
 def a360_activity_icon(event):
     """Decor icon key for activity timeline (Lucide via icon_slot)."""
     if not event:

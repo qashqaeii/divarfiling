@@ -57,7 +57,7 @@
         </div>
         {% if item.owns_source_in_crm or item.already_copied %}
         <p class="agency-space-contact-card__crm-badge">
-            <i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من
+            <i class="fas fa-circle-check" aria-hidden="true"></i> در مخاطبین من
         </p>
         {% endif %}
         <div class="agency-space-contact-card__actions agency-space-contact-card__actions--list">
@@ -66,15 +66,15 @@
             </a>
             {% if item.owns_source_in_crm and item.source_crm_url %}
             <a href="{{ item.source_crm_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary">
-                باز کردن CRM <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
+                باز کردن مخاطب <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif item.already_copied and item.copy_target_url %}
             <a href="{{ item.copy_target_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-crm-link>
-                باز کردن CRM <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
+                باز کردن مخاطب <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif item.can_copy %}
             <button type="button" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-copy data-item-id="{{ item.id }}">
-                کپی به CRM <i class="fas fa-plus" aria-hidden="true"></i>
+                ذخیره در مخاطبین من <i class="fas fa-plus" aria-hidden="true"></i>
             </button>
             {% endif %}
         </div>
@@ -182,7 +182,7 @@
             </div>
             {% if item.owns_source_in_crm or item.already_copied %}
             <p class="agency-space-contact-card__crm-badge agency-space-contact-card__crm-badge--foot">
-                <i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من
+                <i class="fas fa-circle-check" aria-hidden="true"></i> در مخاطبین من
             </p>
             {% endif %}
         </div>
@@ -192,15 +192,15 @@
             </a>
             {% if item.owns_source_in_crm and item.source_crm_url %}
             <a href="{{ item.source_crm_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary">
-                باز کردن CRM <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
+                باز کردن مخاطب <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif item.already_copied and item.copy_target_url %}
             <a href="{{ item.copy_target_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-crm-link>
-                باز کردن CRM <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
+                باز کردن مخاطب <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif item.can_copy %}
             <button type="button" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-copy data-item-id="{{ item.id }}">
-                کپی به CRM <i class="fas fa-plus" aria-hidden="true"></i>
+                ذخیره در مخاطبین من <i class="fas fa-plus" aria-hidden="true"></i>
             </button>
             {% endif %}
         </div>

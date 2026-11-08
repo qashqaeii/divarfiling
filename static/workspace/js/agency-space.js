@@ -342,13 +342,13 @@
       const status = document.createElement('p');
       status.className = 'agency-space-pro-status agency-space-pro-status--ok';
       status.innerHTML = isContact
-        ? '<i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب در CRM شماست'
-        : '<i class="fas fa-circle-check" aria-hidden="true"></i> این فایل در CRM شماست';
+        ? '<i class="fas fa-circle-check" aria-hidden="true"></i> نسخهٔ شخصی مخاطب ذخیره شده'
+        : '<i class="fas fa-circle-check" aria-hidden="true"></i> نسخهٔ شخصی شما ذخیره شده';
       const link = document.createElement('a');
       link.href = targetUrl;
       link.className = linkClass;
       link.setAttribute('data-space-crm-link', '');
-      link.textContent = isContact ? 'باز کردن مخاطب در CRM' : 'باز کردن CRM';
+      link.textContent = isContact ? 'باز کردن مخاطب' : 'باز کردن فایل شخصی';
       container.appendChild(status);
       container.appendChild(link);
     }
@@ -379,8 +379,8 @@
           : 'agency-space-property-card__btn agency-space-property-card__btn--primary agency-space-card__btn agency-space-card__btn--primary';
         link.setAttribute('data-space-crm-link', '');
         link.innerHTML = isContact
-          ? 'باز کردن CRM <i class="fas fa-arrow-up-left" aria-hidden="true"></i>'
-          : 'باز کردن CRM';
+          ? 'باز کردن مخاطب <i class="fas fa-arrow-up-left" aria-hidden="true"></i>'
+          : 'باز کردن فایل شخصی';
         const actionBlocks = getVisibleSpaceActionBlocks(card);
         const targets = actionBlocks.length
           ? actionBlocks
@@ -394,7 +394,7 @@
         });
         if (isContact && !card.querySelector('.agency-space-contact-card__crm-badge:not(.agency-space-contact-card__crm-badge--foot)')) {
           const badgeHtml =
-            '<i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من';
+            '<i class="fas fa-circle-check" aria-hidden="true"></i> در مخاطبین من';
           const statusCol = card.querySelector('.agency-space-contact-card__status-col');
           if (statusCol && isElementVisible(statusCol)) {
             const p = document.createElement('p');
@@ -417,7 +417,7 @@
         if (propertyCommerce && !card.querySelector('.agency-space-property-card__crm-state')) {
           const p = document.createElement('p');
           p.className = 'agency-space-property-card__crm-state';
-          p.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من';
+          p.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i> نسخه من';
           const propertyActions = propertyCommerce.querySelector('.agency-space-property-card__actions');
           if (propertyActions) propertyCommerce.insertBefore(p, propertyActions);
           else propertyCommerce.appendChild(p);
@@ -426,7 +426,7 @@
           if (row && !card.querySelector('.agency-space-card__crm-flag')) {
             const span = document.createElement('span');
             span.className = 'agency-space-card__crm-flag';
-            span.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
+            span.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>نسخه من';
             row.appendChild(span);
           }
         }
@@ -441,7 +441,7 @@
           stickyLink.href = targetUrl;
           stickyLink.className = 'crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary';
           stickyLink.setAttribute('data-space-crm-link', '');
-          stickyLink.textContent = 'مشاهده در CRM';
+          stickyLink.textContent = isContact ? 'باز کردن مخاطب' : 'باز کردن فایل شخصی';
           sticky.appendChild(stickyLink);
         }
         renderDetailCrmSuccess(detail, targetUrl, isContact);
@@ -485,12 +485,17 @@
           if (res.ok && res.data && res.data.target_url) {
             promoteCopyButton(btn, res.data.target_url);
             if (typeof window.showToast === 'function') {
-              window.showToast('به CRM شما اضافه شد', 'success');
+              window.showToast(
+                detailIsContact(detailRoot) || (card && card.classList.contains('agency-space-contact-card'))
+                  ? 'در مخاطبین شما ذخیره شد'
+                  : 'در فایل‌های شخصی شما ذخیره شد',
+                'success',
+              );
             }
           } else {
             copyButtonsForItem(id).forEach((b) => { b.dataset.copying = '0'; });
             setCopyLoading(btn, false);
-            alert(res.error || 'خطا در کپی');
+            alert(res.error || 'خطا در ذخیره');
           }
         }).catch(() => {
           copyButtonsForItem(id).forEach((b) => { b.dataset.copying = '0'; });

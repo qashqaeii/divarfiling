@@ -2,24 +2,24 @@
     <header class="agency-space-pro-aside-card__head">
         <span class="agency-space-pro-aside-card__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
         <div class="agency-space-prop-aside__head-text">
-            <h2 {% if crm_heading_id %}id="{{ crm_heading_id }}"{% else %}id="space-contact-crm-heading"{% endif %} class="agency-space-contact-detail__aside-h">افزودن به CRM من</h2>
-            <p class="agency-space-pro-aside-card__sub">نسخه مستقل در فایل‌های شخصی</p>
+            <h2 {% if crm_heading_id %}id="{{ crm_heading_id }}"{% else %}id="space-contact-crm-heading"{% endif %} class="agency-space-contact-detail__aside-h">ذخیره در مخاطبین من</h2>
+            <p class="agency-space-pro-aside-card__sub">برای پیگیری شخصی همین مخاطب</p>
         </div>
     </header>
-    <p class="agency-space-contact-detail__aside-lead">نسخه CRM شما مستقل است؛ بدون تغییر در مخاطب منتشرشدهٔ تیم.</p>
+    <p class="agency-space-contact-detail__aside-lead">یک نسخه برای خودتان ذخیره می‌شود؛ مخاطب منتشرشدهٔ تیم عوض نمی‌شود.</p>
     <div class="agency-space-contact-detail__aside-body agency-space-prop-aside__body" data-space-crm-panel>
         {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
-        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب از CRM شما منتشر شده</p>
-        <a href="{{ space_payload.source_crm_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block">باز کردن در CRM</a>
+        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب را خودتان منتشر کرده‌اید</p>
+        <a href="{{ space_payload.source_crm_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block">باز کردن مخاطب</a>
         {% elif space_payload.already_copied and space_payload.copy_target_url %}
-        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب در CRM شماست{% if space_payload.copy_created_at_display %}<br><span class="agency-space-property-detail__crm-time">ذخیره: {{ space_payload.copy_created_at_display }}</span>{% endif %}</p>
-        <a href="{{ space_payload.copy_target_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-crm-link>باز کردن مخاطب در CRM</a>
+        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> نسخهٔ شخصی مخاطب ذخیره شده{% if space_payload.copy_created_at_display %}<br><span class="agency-space-property-detail__crm-time">ذخیره: {{ space_payload.copy_created_at_display }}</span>{% endif %}</p>
+        <a href="{{ space_payload.copy_target_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-crm-link>باز کردن مخاطب</a>
         {% elif space_payload.can_copy %}
         <button type="button" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-copy data-item-id="{{ space_item.pk }}">
-            <i class="fas fa-plus" aria-hidden="true"></i> کپی به CRM من
+            <i class="fas fa-plus" aria-hidden="true"></i> ذخیره در مخاطبین من
         </button>
         {% else %}
-        <p class="agency-space-contact-detail__muted">کپی در دسترس نیست.</p>
+        <p class="agency-space-contact-detail__muted">فعلاً امکان ذخیره نیست.</p>
         {% endif %}
     </div>
 </article>

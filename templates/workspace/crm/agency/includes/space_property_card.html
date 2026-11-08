@@ -14,7 +14,7 @@
                 <span class="agency-space-badge agency-space-badge--{{ item.visibility }} agency-space-property-card__badge agency-space-property-card__badge--vis"{% if item.audience_count %} title="فقط {{ item.audience_count }} عضو"{% endif %}>{{ item.visibility_label }}</span>
             </div>
             {% if item.owns_source_in_crm or item.already_copied %}
-            <p class="agency-space-property-card__crm-state agency-space-property-card__crm-state--on-media"{% if item.owns_source_in_crm %} title="این فایل در CRM شماست"{% else %} title="نسخه شخصی در CRM شما ذخیره شده"{% endif %}>
+            <p class="agency-space-property-card__crm-state agency-space-property-card__crm-state--on-media"{% if item.owns_source_in_crm %} title="این فایل را خودتان منتشر کرده‌اید"{% else %} title="نسخهٔ شخصی شما ذخیره شده"{% endif %}>
                 <i class="fas fa-circle-check" aria-hidden="true"></i>
                 <span>{% if item.owns_source_in_crm %}فایل شما{% else %}نسخه من{% endif %}</span>
             </p>
@@ -83,18 +83,18 @@
             </a>
             {% if item.owns_source_in_crm and item.source_crm_url %}
             <a href="{{ item.source_crm_url }}" class="agency-space-property-card__btn agency-space-property-card__btn--primary">
-                <span>باز کردن CRM</span>
+                <span>باز کردن فایل شخصی</span>
                 <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif item.already_copied and item.copy_target_url %}
             <a href="{{ item.copy_target_url }}" class="agency-space-property-card__btn agency-space-property-card__btn--primary" data-space-crm-link>
-                <span>باز کردن CRM</span>
+                <span>باز کردن فایل شخصی</span>
                 <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif item.can_copy %}
             <button type="button" class="agency-space-property-card__btn agency-space-property-card__btn--primary" data-space-copy data-item-id="{{ item.id }}">
                 <i class="fas fa-plus" aria-hidden="true"></i>
-                <span>کپی به CRM</span>
+                <span>ذخیره در فایل‌های من</span>
             </button>
             {% endif %}
         </div>

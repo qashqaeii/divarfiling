@@ -7,7 +7,7 @@
     </a>
     {% if space_tab != 'crm' %}
     <a href="?tab={{ base_tab }}&scope=published_by_me" class="agency-space-scope__item{% if space_scope == 'published_by_me' %} is-active{% endif %}"{% if space_scope == 'published_by_me' %} aria-current="true"{% endif %} aria-label="منتشرشده توسط من">انتشارهای من</a>
-    <a href="?tab={{ base_tab }}&scope=copied_by_me" class="agency-space-scope__item{% if space_scope == 'copied_by_me' %} is-active{% endif %}"{% if space_scope == 'copied_by_me' %} aria-current="true"{% endif %} aria-label="کپی‌شده به CRM من">کپی‌شده‌ها</a>
+    <a href="?tab={{ base_tab }}&scope=copied_by_me" class="agency-space-scope__item{% if space_scope == 'copied_by_me' %} is-active{% endif %}"{% if space_scope == 'copied_by_me' %} aria-current="true"{% endif %} aria-label="نسخه‌های ذخیره‌شده من">ذخیره‌شده‌ها</a>
     {% else %}
     <a href="?tab=crm&kind=property" class="agency-space-scope__item{% if space_filters.kind == 'property' %} is-active{% endif %}"{% if space_filters.kind == 'property' %} aria-current="true"{% endif %} aria-label="فقط فایل‌ها">فایل‌ها</a>
     <a href="?tab=crm&kind=customer" class="agency-space-scope__item{% if space_filters.kind == 'customer' %} is-active{% endif %}"{% if space_filters.kind == 'customer' %} aria-current="true"{% endif %} aria-label="فقط مخاطبین">مخاطبین</a>

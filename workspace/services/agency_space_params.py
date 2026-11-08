@@ -320,9 +320,9 @@ def build_space_filter_chips(filters: SpaceListFilters) -> list:
         lbl = 'اطلاعات کامل' if filters.contact_share_level == 'full' else 'خلاصه'
         chips.append(_chip('contact_share_level', lbl))
     if filters.crm_copy == 'copied':
-        chips.append(_chip('crm_copy', 'در CRM من'))
+        chips.append(_chip('crm_copy', 'نسخه من ذخیره شده'))
     elif filters.crm_copy == 'not_copied':
-        chips.append(_chip('crm_copy', 'کپی نشده'))
+        chips.append(_chip('crm_copy', 'هنوز ذخیره نشده'))
     if filters.publisher_id:
         chips.append(_chip('publisher', f'ناشر #{filters.publisher_id}'))
     if filters.published_after is not None or filters.published_before is not None:

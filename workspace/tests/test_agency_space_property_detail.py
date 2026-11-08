@@ -35,4 +35,4 @@ class AgencySpacePropertyDetailTests(AgencySpaceTestBase):
         self.assertContains(resp, 'جزئیات فایل')
         self.assertContains(resp, 'مشخصات اصلی')
         self.assertContains(resp, 'agency-space-property-detail')
-        self.assertContains(resp, 'کپی به CRM من')
+        self.assertContains(resp, 'ذخیره در فایل‌های من')

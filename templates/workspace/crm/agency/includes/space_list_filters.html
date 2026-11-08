@@ -101,15 +101,15 @@
 
                 <label class="agency-space-filters__field">
 
-                    <span class="agency-space-filters__label">وضعیت CRM</span>
+                    <span class="agency-space-filters__label">وضعیت ذخیره</span>
 
                     <select name="crm_copy" class="crm-input crm-input-sm">
 
                         <option value="">همه</option>
 
-                        <option value="not_copied"{% if space_filters.crm_copy == 'not_copied' %} selected{% endif %}>کپی نشده</option>
+                        <option value="not_copied"{% if space_filters.crm_copy == 'not_copied' %} selected{% endif %}>هنوز ذخیره نشده</option>
 
-                        <option value="copied"{% if space_filters.crm_copy == 'copied' %} selected{% endif %}>در CRM من</option>
+                        <option value="copied"{% if space_filters.crm_copy == 'copied' %} selected{% endif %}>نسخه من ذخیره شده</option>
 
                     </select>
 

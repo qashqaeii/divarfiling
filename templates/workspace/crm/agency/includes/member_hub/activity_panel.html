@@ -11,7 +11,7 @@
             </span>
             <div class="agency-timeline__body">
                 <div class="agency-timeline__action">{{ ev|a360_activity_label }}</div>
-                {% if ev.title %}<div class="agency-timeline__meta">«{{ ev.title }}»</div>{% endif %}
+                {% with ref=ev|a360_activity_ref %}{% if ref %}<div class="agency-timeline__meta">«{{ ref }}»</div>{% endif %}{% endwith %}
             </div>
             <time class="agency-timeline__time">{{ ev.at|ws_jalali_datetime }}</time>
         </li>

@@ -81,5 +81,5 @@ class AgencySpaceContactDetailTests(AgencySpaceTestBase):
         self.client.force_login(self.advisor2)
         url = reverse('workspace:agency_hub_space_item', kwargs={'item_id': item.pk})
         resp = self.client.get(url)
-        self.assertContains(resp, 'کپی به CRM من')
-        self.assertContains(resp, 'نسخه CRM شما مستقل')
+        self.assertContains(resp, 'ذخیره در مخاطبین من')
+        self.assertContains(resp, 'مخاطب منتشرشدهٔ تیم عوض نمی‌شود')

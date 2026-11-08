@@ -25,9 +25,9 @@
             <span class="agency-space-badge agency-space-badge--status">{{ item.status_label }}</span>
             {% endif %}
             {% if item.owns_source_in_crm or item.already_copied %}
-            <span class="agency-space-card__crm-flag" title="در CRM شما">
+            <span class="agency-space-card__crm-flag" title="نسخهٔ شخصی شما ذخیره شده">
                 <i class="fas fa-circle-check" aria-hidden="true"></i>
-                {% if item.owns_source_in_crm %}{% if item.source_kind == 'property' %}فایل CRM{% else %}مخاطب CRM{% endif %}{% else %}در CRM من{% endif %}
+                {% if item.owns_source_in_crm %}{% if item.source_kind == 'property' %}فایل شما{% else %}مخاطب شما{% endif %}{% else %}نسخه من{% endif %}
             </span>
             {% endif %}
         </div>
@@ -72,7 +72,7 @@
                         {% if item.owns_source_in_crm or item.already_copied %}
                         <span class="agency-space-card__crm-flag">
                             <i class="fas fa-circle-check" aria-hidden="true"></i>
-                            {% if item.owns_source_in_crm %}CRM{% else %}کپی{% endif %}
+                            {% if item.owns_source_in_crm %}مخاطب شما{% else %}نسخه من{% endif %}
                         </span>
                         {% endif %}
                     </div>
@@ -113,7 +113,7 @@
         <time class="agency-space-card__time" datetime="{{ item.published_at }}">{{ item.published_at_display }}</time>
         {% endif %}
         {% if item.is_publisher and item.copy_count != None %}
-        <span class="agency-space-card__copy-count">{{ item.copy_count }} کپی</span>
+        <span class="agency-space-card__copy-count">{{ item.copy_count }} ذخیره</span>
         {% endif %}
     </footer>
 
@@ -122,12 +122,12 @@
             {% if item.is_publisher %}مدیریت{% else %}جزئیات{% endif %}
         </a>
         {% if item.owns_source_in_crm and item.source_crm_url %}
-        <a href="{{ item.source_crm_url }}" class="agency-space-card__btn agency-space-card__btn--primary">باز کردن CRM</a>
+        <a href="{{ item.source_crm_url }}" class="agency-space-card__btn agency-space-card__btn--primary">{% if item.source_kind == 'property' %}باز کردن فایل شخصی{% else %}باز کردن مخاطب{% endif %}</a>
         {% elif item.already_copied and item.copy_target_url %}
-        <a href="{{ item.copy_target_url }}" class="agency-space-card__btn agency-space-card__btn--primary">نسخه CRM</a>
+        <a href="{{ item.copy_target_url }}" class="agency-space-card__btn agency-space-card__btn--primary">{% if item.source_kind == 'property' %}باز کردن فایل شخصی{% else %}باز کردن مخاطب{% endif %}</a>
         {% elif item.can_copy %}
         <button type="button" class="agency-space-card__btn agency-space-card__btn--primary" data-space-copy data-item-id="{{ item.id }}">
-            {% if item.source_kind == 'property' %}افزودن به CRM{% else %}افزودن مخاطب{% endif %}
+            {% if item.source_kind == 'property' %}ذخیره در فایل‌های من{% else %}ذخیره در مخاطبین من{% endif %}
         </button>
         {% endif %}
     </div>

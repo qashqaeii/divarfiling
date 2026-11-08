@@ -33,7 +33,7 @@
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="فایل فعال" value=space_kpis.active_properties decor="building" tone="orange" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="مخاطب فعال" value=space_kpis.active_contacts decor="users" tone="blue" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="مشارکت‌کننده" value=space_kpis.active_publishers decor="team" tone="purple" %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="کپی به CRM" value=space_kpis.total_copies decor="clipboard_list" tone="teal" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="ذخیره توسط تیم" value=space_kpis.total_copies decor="clipboard_list" tone="teal" %}
     </div>
     {% endif %}
 
@@ -123,15 +123,15 @@
                 {% empty %}
                 <div class="agency-space-empty agency-space-empty--panel">
                     {% if space_scope == 'published_by_me' and can_publish_space %}
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="file_edit" title="هنوز انتشاری ندارید" description="از CRM فایل یا مخاطب خود را در فضای تیم منتشر کنید." action_url=space_publish_property_url action_label="رفتن به فایل‌ها" %}
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="file_edit" title="هنوز انتشاری ندارید" description="از فایل‌های شخصی یا مخاطبین، موردی را در فضای تیم منتشر کنید." action_url=space_publish_property_url action_label="رفتن به فایل‌ها" %}
                     {% elif space_filter_chips %}
                     {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="نتیجه‌ای پیدا نشد" description="فیلترهای فعلی نتیجه‌ای ندارند." action_url='?tab='|add:space_tab action_label="پاک کردن فیلترها" %}
                     {% elif space_tab == 'crm' %}
                     <div class="agency-empty agency-empty--compact agency-space-empty--crm">
                         <span class="agency-empty__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='inbox' size='lg' only %}</span>
                         <div class="agency-empty__body">
-                            <h3 class="agency-empty__title">هنوز به CRM شما اضافه نشده</h3>
-                            <p class="agency-empty__desc">از فضای آژانس فایل یا مخاطب را کپی کنید.</p>
+                            <h3 class="agency-empty__title">هنوز نسخه‌ای ذخیره نکرده‌اید</h3>
+                            <p class="agency-empty__desc">از فضای آژانس فایل یا مخاطب را در فهرست شخصی خود ذخیره کنید.</p>
                         </div>
                         <div class="agency-empty__actions agency-empty__actions--row">
                             <a href="?tab=properties" class="crm-btn crm-btn-primary crm-btn-sm">مشاهده فایل‌ها</a>

@@ -34,9 +34,11 @@
         </span>
         <div class="agency-timeline__body">
             <div class="agency-timeline__action">{{ ev|a360_activity_label }}</div>
-            {% if ev.title %}
-            <div class="agency-timeline__meta a360-timeline__ref">«{{ ev.title }}»</div>
+            {% with ref=ev|a360_activity_ref %}
+            {% if ref %}
+            <div class="agency-timeline__meta a360-timeline__ref">«{{ ref }}»</div>
             {% endif %}
+            {% endwith %}
             {% if ev.detail %}
             <p class="a360-timeline__detail">{{ ev.detail }}</p>
             {% endif %}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#7C3AED">
+  <title>قطع اتصال | فایلینگ دیوار</title>
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --text: #0F172A;
+      --muted: #64748B;
+      --primary: #7C3AED;
+      --surface: #FFFFFF;
+      --border: rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Vazirmatn, Tahoma, "Segoe UI", sans-serif;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    }
+    .card {
+      width: min(100%, 420px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+    }
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    p {
+      margin: 0 0 1.25rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      padding: 0.7rem 1.25rem;
+      cursor: pointer;
+    }
+    button:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>اتصال اینترنت برقرار نیست</h1>
+    <p>میزکار فایلینگ دیوار برای نمایش اطلاعات به‌روز به اینترنت نیاز دارد. داده‌های قبلی به‌صورت آفلاین نمایش داده نمی‌شوند.</p>
+    <button type="button" onclick="location.reload()">تلاش مجدد</button>
+  </main>
+</body>
+</html>

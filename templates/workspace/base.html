@@ -15,16 +15,30 @@
                     document.documentElement.setAttribute('data-theme', t);
                 }
             } catch (e) {}
+            try {
+                var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                    || window.navigator.standalone === true;
+                document.documentElement.setAttribute('data-ws-display', standalone ? 'standalone' : 'browser');
+            } catch (e2) {}
         })();
     </script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#7C3AED" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#070B17" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="فایلینگ دیوار">
+    <meta name="application-name" content="فایلینگ دیوار">
 
     <title>{% block title %}میزکار{% endblock %} | فایلینگ دیوار</title>
 
+    <link rel="manifest" href="{% url 'workspace:web_manifest' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'logo.ico' %}">
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'logo.ico' %}">
-    <link rel="apple-touch-icon" href="{% static 'logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'workspace/pwa/icons/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'workspace/pwa/icons/icon-192.png' %}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'workspace/pwa/icons/icon-512.png' %}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
 
@@ -65,10 +79,16 @@
     <link rel="stylesheet" href="{% static 'workspace/css/ws-shell-mobile-v4.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'workspace/css/workspace-kpi.css' %}?v=4">
     <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-modals-mobile.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'workspace/css/pwa.css' %}?v=1">
 
 </head>
 
 <body class="ws-body{% block body_extra_class %}{% endblock %}"{% if open_modal %} data-open-modal="{{ open_modal }}"{% endif %}>
+
+    <div id="wsPwaOfflineBanner" class="ws-pwa-offline" hidden aria-hidden="true" role="status">
+        <i class="fas fa-cloud-slash" aria-hidden="true"></i>
+        <span>اتصال اینترنت قطع است — میزکار برای داده‌های به‌روز به اینترنت نیاز دارد.</span>
+    </div>
 
     <div class="ws-layout">
         <div class="ws-shell-backdrop" id="wsShellBackdrop" hidden aria-hidden="true"></div>
@@ -253,6 +273,7 @@
     {% endif %}
     <script src="{% static 'workspace/js/workspace.js' %}?v=110"></script>
     <script src="{% static 'workspace/js/export-security.js' %}?v=4"></script>
+    <script src="{% static 'workspace/js/pwa.js' %}?v=1"></script>
 
     {% include 'workspace/includes/signup_welcome_gift.html' %}
     {% include 'workspace/includes/onboarding_tour.html' %}

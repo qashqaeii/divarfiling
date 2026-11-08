@@ -28,10 +28,15 @@ from workspace.divar_contact_views import (
     DivarContactOtpVerifyView,
     DivarContactStatusView,
 )
+from workspace.pwa_views import WorkspaceServiceWorkerView, WorkspaceWebManifestView
 
 app_name = 'workspace'
 
 urlpatterns = [
+    # PWA (public; scope limited to /workspace/)
+    path('manifest.webmanifest', WorkspaceWebManifestView.as_view(), name='web_manifest'),
+    path('sw.js', WorkspaceServiceWorkerView.as_view(), name='service_worker'),
+
     path('app-bridge/<str:token>/', WorkspaceAppBridgeView.as_view(), name='app_bridge'),
     path('', views.WorkspaceHomeView.as_view(), name='home'),
     path('api/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='onboarding_complete'),

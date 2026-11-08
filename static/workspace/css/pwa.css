@@ -1,0 +1,108 @@
+/* Workspace PWA — install + offline + update (design-system aligned) */
+
+.ws-pwa-offline {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  padding-top: calc(0.55rem + env(safe-area-inset-top, 0px));
+  background: color-mix(in srgb, #D97706 14%, var(--ws-surface, #fff));
+  color: #92400E;
+  border-bottom: 1px solid color-mix(in srgb, #D97706 28%, transparent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+html[data-theme="dark"] .ws-pwa-offline {
+  color: #FDE68A;
+  background: color-mix(in srgb, #D97706 22%, var(--ws-surface, #111827));
+}
+
+.ws-pwa-offline[hidden] {
+  display: none !important;
+}
+
+.ws-pwa-offline i {
+  opacity: 0.9;
+}
+
+.ws-settings-section--pwa .ws-pwa-install {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ws-pwa-install__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.85rem;
+}
+
+.ws-pwa-install__status,
+.ws-pwa-install__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--ws-text-muted, #64748B);
+}
+
+.ws-pwa-install__status {
+  color: var(--ws-primary, #7C3AED);
+  font-weight: 600;
+}
+
+.ws-pwa-update {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: var(--ws-surface, #fff);
+  border: 1px solid color-mix(in srgb, var(--ws-primary, #7C3AED) 28%, transparent);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  max-width: 420px;
+}
+
+.ws-pwa-update__body {
+  display: grid;
+  gap: 0.2rem;
+  flex: 1 1 200px;
+}
+
+.ws-pwa-update__body strong {
+  font-size: 0.875rem;
+}
+
+.ws-pwa-update__body span {
+  font-size: 0.75rem;
+  color: var(--ws-text-muted, #64748B);
+  line-height: 1.55;
+}
+
+.ws-pwa-update__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* Hide install CTA when already running as installed app */
+html[data-ws-display="standalone"] .ws-settings-section--pwa {
+  display: none !important;
+}
+
+/* Standalone: rely on existing safe-area; avoid double chrome feel */
+html[data-ws-display="standalone"] .ws-body {
+  min-height: 100dvh;
+}
+
+html[data-ws-display="standalone"] .ws-mobile-topbar {
+  padding-top: env(safe-area-inset-top, 0px);
+}

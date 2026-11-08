@@ -334,11 +334,20 @@ def seat_usage_summary(subscription: AgencySubscription) -> dict[str, Any]:
 
     seats = License.objects.filter(agency_subscription=subscription)
     assigned = seats.filter(assigned_user__isnull=False).count()
+    total = int(subscription.seat_count or 0)
+    # Align with list_available_seats: only paid, non-suspended/expired keys.
+    unassigned_usable = (
+        seats.filter(assigned_user__isnull=True, order__status='paid')
+        .exclude(status__in=['suspended', 'expired'])
+        .count()
+    )
+    capacity_free = max(0, total - assigned)
     return {
-        'total': subscription.seat_count,
+        'total': total,
         'purchased': seats.count(),
         'assigned': assigned,
-        'available': max(0, seats.filter(assigned_user__isnull=True).count()),
+        # Never report more free seats than plan capacity or usable keys.
+        'available': min(capacity_free, unassigned_usable),
         'expires_at': subscription.expires_at,
         'status': subscription.status,
     }

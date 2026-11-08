@@ -118,9 +118,14 @@ def _property_amenity_flags(prop: CRMProperty) -> List[Dict[str, str]]:
     return out
 
 
+_STREET_FEATURE_LABELS = frozenset({'خیابان', 'مکان خیابان', 'مکان_خیابان'})
+
+
 def _property_feature_data_rows(prop: CRMProperty) -> List[Dict[str, str]]:
     raw = prop.feature_data if isinstance(prop.feature_data, dict) else {}
-    return feature_data_rows_for_display(raw)
+    rows = feature_data_rows_for_display(raw)
+    # Street is rendered in the location panel; avoid duplicate feature rows.
+    return [r for r in rows if (r.get('label') or '').strip() not in _STREET_FEATURE_LABELS]
 
 
 def _property_price_label(prop: CRMProperty) -> str:
@@ -301,7 +306,10 @@ def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, A
         'price_per_meter_label': price_per_meter_label,
     }
     if include_sensitive:
+        from workspace.services.listing_street_data import property_street_for_display
+
         data['address'] = _property_address_for_display(prop)
+        data['street'] = property_street_for_display(prop) or ''
         data['phone'] = prop.phone
         data['tenant_phone'] = prop.tenant_phone or ''
         data['owner_name'] = prop.owner_name or ''

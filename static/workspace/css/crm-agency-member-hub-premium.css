@@ -1,0 +1,630 @@
+/* ═══════════════════════════════════════════════════════════
+   Agency Member Hub — Premium shell (desktop + mobile)
+   Shared language for: overview, performance, messages,
+   announcements, membership, agency space.
+   ═══════════════════════════════════════════════════════════ */
+
+.agency-member-hub--premium {
+    --amh-border: color-mix(in srgb, var(--ws-primary, #7c3aed) 12%, var(--ws-border, #e2e8f0));
+    --amh-text: var(--ws-text, #0f172a);
+    --amh-muted: var(--ws-text-muted, #64748b);
+    --amh-surface: var(--ws-surface, #fff);
+    --amh-surface-2: color-mix(in srgb, var(--ws-bg, #f4f6fb) 55%, var(--ws-surface, #fff));
+    --amh-purple: var(--ws-primary, #7c3aed);
+    --amh-purple-deep: #6d28d9;
+    --amh-purple-soft: color-mix(in srgb, var(--ws-primary, #7c3aed) 8%, #fff);
+    --amh-radius: 18px;
+    --amh-radius-sm: 14px;
+    --amh-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.03),
+        0 14px 28px -20px rgba(15, 23, 42, 0.22),
+        inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* ── Hero ── */
+.agency-member-hub--premium .amh-hero {
+    border-radius: var(--amh-radius);
+    border: 1px solid var(--amh-border);
+    box-shadow: var(--amh-shadow);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+
+.agency-member-hub--premium .amh-hero__mesh {
+    background:
+        radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--amh-purple) 10%, transparent), transparent 55%),
+        radial-gradient(90% 70% at 0% 100%, color-mix(in srgb, #818cf8 8%, transparent), transparent 50%),
+        linear-gradient(165deg, #faf8ff 0%, #f5f3ff 40%, #fff 100%);
+}
+
+.agency-member-hub--premium .amh-hero__chip {
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--amh-border) 70%, transparent);
+    background: color-mix(in srgb, var(--amh-surface) 78%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+.agency-member-hub--premium .amh-hero__insight {
+    border-radius: var(--amh-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--amh-border) 65%, transparent);
+    background: color-mix(in srgb, var(--amh-surface) 82%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+/* ── Tabs — shared premium strip ── */
+.agency-member-hub--premium .amh-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0.22rem;
+    margin-bottom: 0.85rem;
+    padding: 0.28rem;
+    border-radius: 16px;
+    border: 1px solid var(--amh-border);
+    background:
+        radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--amh-purple) 6%, transparent), transparent 55%),
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--ws-bg, #f4f6fb) 28%, var(--amh-surface)),
+            var(--amh-surface)
+        );
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.03),
+        inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.agency-member-hub--premium .amh-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.agency-member-hub--premium .amh-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2.55rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--amh-muted);
+    font-size: 0.78rem;
+    font-weight: 750;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    transition:
+        background 140ms ease,
+        color 140ms ease,
+        border-color 140ms ease,
+        box-shadow 140ms ease;
+}
+
+.agency-member-hub--premium .amh-tab__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    opacity: 0.85;
+}
+
+.agency-member-hub--premium .amh-tab:hover {
+    background: color-mix(in srgb, var(--amh-purple) 6%, var(--amh-surface));
+    color: var(--amh-text);
+}
+
+.agency-member-hub--premium .amh-tab.is-active {
+    background: var(--amh-surface);
+    color: var(--amh-purple);
+    border-color: color-mix(in srgb, var(--amh-purple) 18%, transparent);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 14px -10px color-mix(in srgb, var(--amh-purple) 35%, transparent);
+}
+
+.agency-member-hub--premium .amh-tab__badge {
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.32rem;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+/* ── Panels / cards ── */
+.agency-member-hub--premium .amh-panel,
+.agency-member-hub--premium .amh-quick {
+    border-radius: var(--amh-radius);
+    border: 1px solid var(--amh-border);
+    background:
+        radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--amh-purple) 4.5%, transparent), transparent 55%),
+        var(--amh-surface);
+    box-shadow: var(--amh-shadow);
+    padding: 0.95rem 1rem 1rem;
+}
+
+.agency-member-hub--premium .amh-quick {
+    margin-top: 0.75rem;
+}
+
+.agency-member-hub--premium .amh-section-title {
+    font-size: 0.92rem;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+}
+
+.agency-member-hub--premium .amh-panel__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.85rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--amh-purple) 16%, transparent);
+    background: color-mix(in srgb, var(--amh-purple) 7%, #fff);
+    color: var(--amh-purple);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.agency-member-hub--premium .amh-panel__link:hover {
+    text-decoration: none;
+    background: color-mix(in srgb, var(--amh-purple) 12%, #fff);
+}
+
+/* ── KPI strip ── */
+.agency-member-hub--premium .amh-kpi-strip {
+    gap: 0.55rem;
+    margin-bottom: 0.85rem;
+}
+
+.agency-member-hub--premium .amh-kpi {
+    border-radius: var(--amh-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--amh-purple) 10%, var(--ws-border, #e2e8f0));
+    background:
+        linear-gradient(
+            165deg,
+            color-mix(in srgb, var(--ws-bg, #f4f6fb) 40%, var(--amh-surface)),
+            var(--amh-surface)
+        );
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+    padding: 0.7rem 0.75rem;
+}
+
+.agency-member-hub--premium .amh-kpi:hover {
+    border-color: color-mix(in srgb, var(--amh-purple) 22%, var(--ws-border, #e2e8f0));
+    box-shadow:
+        0 8px 18px -14px color-mix(in srgb, var(--amh-purple) 35%, transparent),
+        inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+}
+
+.agency-member-hub--premium .amh-kpi__value {
+    font-size: 1.28rem;
+    font-weight: 850;
+    letter-spacing: -0.03em;
+    color: var(--amh-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.agency-member-hub--premium .amh-kpi__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+/* ── Performance stats ── */
+.agency-member-hub--premium .amh-perf-stat {
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+    background:
+        linear-gradient(
+            165deg,
+            color-mix(in srgb, var(--ws-bg, #f4f6fb) 38%, #fff),
+            #fff
+        );
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+.agency-member-hub--premium .amh-perf-stat strong {
+    font-weight: 850;
+    letter-spacing: -0.02em;
+}
+
+/* ── Activity / timeline ── */
+.agency-member-hub--premium .amh-timeline .agency-timeline__item {
+    padding: 0.55rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    transition: background 140ms ease, border-color 140ms ease;
+}
+
+.agency-member-hub--premium .amh-timeline .agency-timeline__item:hover {
+    border-color: color-mix(in srgb, var(--amh-border) 80%, transparent);
+    background: color-mix(in srgb, var(--amh-purple) 3.5%, var(--amh-surface));
+}
+
+/* ── Goals empty ── */
+.agency-member-hub--premium .amh-inline-empty {
+    padding: 1.35rem 0.85rem;
+    border-radius: var(--amh-radius-sm);
+    border: 1px dashed color-mix(in srgb, var(--ws-border, #e2e8f0) 65%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 40%, #fff);
+}
+
+/* ── Announcements mini list ── */
+.agency-member-hub--premium .amh-ann-item {
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+    background:
+        linear-gradient(
+            165deg,
+            color-mix(in srgb, var(--ws-bg, #f4f6fb) 35%, #fff),
+            #fff
+        );
+}
+
+.agency-member-hub--premium .amh-ann-item.is-unread {
+    border-color: color-mix(in srgb, var(--amh-purple) 22%, transparent);
+    background:
+        linear-gradient(
+            165deg,
+            color-mix(in srgb, var(--amh-purple) 7%, #fff),
+            #fff
+        );
+}
+
+/* ── Membership ── */
+.agency-member-hub--premium .amh-membership > div {
+    align-items: center;
+    padding: 0.55rem 0.15rem;
+    border-bottom-color: color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+}
+
+.agency-member-hub--premium .amh-membership dt {
+    font-size: 0.76rem;
+    font-weight: 650;
+}
+
+.agency-member-hub--premium .amh-membership dd {
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-align: end;
+}
+
+.agency-member-hub--premium .amh-membership__note {
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--amh-purple) 12%, var(--ws-border, #e2e8f0));
+    background: color-mix(in srgb, var(--amh-purple) 5%, #fff);
+    color: #475569;
+}
+
+/* ── Quick actions ── */
+.agency-member-hub--premium .amh-quick__grid {
+    gap: 0.5rem;
+}
+
+.agency-member-hub--premium .amh-quick__btn {
+    min-height: 4.35rem;
+    padding: 0.7rem 0.55rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--amh-purple) 10%, var(--ws-border, #e2e8f0));
+    background:
+        linear-gradient(
+            165deg,
+            color-mix(in srgb, var(--ws-bg, #f4f6fb) 42%, #fff),
+            #fff
+        );
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+    font-weight: 800;
+    font-size: 0.74rem;
+}
+
+.agency-member-hub--premium .amh-quick__btn:hover {
+    border-color: color-mix(in srgb, var(--amh-purple) 24%, var(--ws-border, #e2e8f0));
+    box-shadow:
+        0 8px 18px -14px color-mix(in srgb, var(--amh-purple) 35%, transparent),
+        inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+    transform: translateY(-1px);
+}
+
+/* ── Messages / announcements host ── */
+.agency-member-hub--premium .amh-messages-host {
+    min-width: 0;
+}
+
+.agency-member-hub--premium .amh-body .crm-msg-hub,
+.agency-member-hub--premium .amh-body .crm-ann-hub {
+    border-radius: var(--amh-radius);
+    border: 1px solid var(--amh-border);
+    box-shadow: var(--amh-shadow);
+    overflow: hidden;
+    background: var(--amh-surface);
+}
+
+/* ── Agency space inside member hub ── */
+.agency-member-hub--premium.agency-member-hub--space .amh-body--space {
+    min-width: 0;
+}
+
+.agency-member-hub--premium.agency-member-hub--space .agency-space-panel,
+.agency-member-hub--premium.agency-member-hub--space .agency-space-panel--premium {
+    border-radius: var(--amh-radius);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile — intentional product layout (not compressed desktop)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+    body.ws-body:has(.agency-member-hub--premium) .ws-content {
+        padding-inline: var(--ws-mob-gutter, 16px) !important;
+        padding-top: var(--mobile-section-padding, var(--ws-mob-gutter, 16px)) !important;
+    }
+
+    .agency-member-hub--premium {
+        padding: 0 0 calc(5.35rem + env(safe-area-inset-bottom, 0px));
+        overflow-x: clip;
+    }
+
+    /* Compact hero for every tab */
+    .agency-member-hub--premium .amh-hero {
+        margin-bottom: 0.55rem;
+        border-radius: 18px;
+    }
+
+    .agency-member-hub--premium .amh-hero__shell {
+        padding: 0.75rem 0.8rem 0.7rem;
+        gap: 0.55rem;
+        grid-template-columns: 1fr;
+    }
+
+    .agency-member-hub--premium .amh-hero__orb {
+        display: none;
+    }
+
+    .agency-member-hub--premium .amh-hero__avatar,
+    .agency-member-hub--premium .amh-hero__avatar--logo img,
+    .agency-member-hub--premium .amh-hero__avatar-fallback {
+        width: 3.15rem;
+        height: 3.15rem;
+        border-radius: 13px;
+    }
+
+    .agency-member-hub--premium .amh-hero__title {
+        font-size: 1.02rem;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+    }
+
+    .agency-member-hub--premium .amh-hero__sub {
+        font-size: 0.72rem;
+    }
+
+    .agency-member-hub--premium .amh-hero__chips {
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-bottom: 0.05rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .agency-member-hub--premium .amh-hero__chips::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-member-hub--premium .amh-hero__chip {
+        flex: 0 0 auto;
+        min-height: 1.7rem;
+        padding: 0.18rem 0.5rem;
+        font-size: 0.64rem;
+        font-weight: 750;
+    }
+
+    .agency-member-hub--premium .amh-hero__chip:nth-child(n + 4) {
+        display: none;
+    }
+
+    .agency-member-hub--premium .amh-hero__insights {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+    }
+
+    .agency-member-hub--premium .amh-hero__insight {
+        min-height: 3.1rem;
+        padding: 0.45rem 0.5rem;
+    }
+
+    /* Sticky tab rail */
+    .agency-member-hub--premium .amh-tabs {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        margin: 0 0 0.65rem;
+        padding: 0.28rem;
+        border-radius: 16px;
+        gap: 0.18rem;
+        background:
+            color-mix(in srgb, var(--amh-surface) 92%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.04),
+            0 10px 22px -18px rgba(15, 23, 42, 0.2);
+    }
+
+    .agency-member-hub--premium .amh-tab {
+        min-height: 2.75rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: 12px;
+        font-size: 0.74rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .agency-member-hub--premium .amh-tab__icon {
+        width: 1.15rem;
+        height: 1.15rem;
+    }
+
+    /* Body density */
+    .agency-member-hub--premium .amh-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    .agency-member-hub--premium .amh-grid,
+    .agency-member-hub--premium .amh-grid--overview,
+    .agency-member-hub--premium .amh-grid--split,
+    .agency-member-hub--premium .amh-grid__main,
+    .agency-member-hub--premium .amh-grid__aside {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        margin: 0;
+        width: 100%;
+    }
+
+    .agency-member-hub--premium .amh-kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+        margin: 0;
+    }
+
+    .agency-member-hub--premium .amh-kpi {
+        min-height: 4.1rem;
+        padding: 0.65rem 0.7rem;
+        border-radius: 14px;
+    }
+
+    .agency-member-hub--premium .amh-kpi__value {
+        font-size: 1.2rem;
+    }
+
+    .agency-member-hub--premium .amh-kpi__label {
+        font-size: 0.66rem;
+    }
+
+    .agency-member-hub--premium .amh-panel,
+    .agency-member-hub--premium .amh-quick {
+        margin: 0;
+        padding: 0.8rem 0.75rem 0.85rem;
+        border-radius: 18px;
+    }
+
+    .agency-member-hub--premium .amh-perf-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+    }
+
+    .agency-member-hub--premium .amh-perf-stat {
+        padding: 0.55rem 0.6rem;
+        border-radius: 12px;
+    }
+
+    .agency-member-hub--premium .amh-quick {
+        margin-top: 0;
+    }
+
+    .agency-member-hub--premium .amh-quick__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+    }
+
+    .agency-member-hub--premium .amh-quick__btn {
+        min-height: 4.5rem;
+        border-radius: 14px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .agency-member-hub--premium .amh-membership > div {
+        padding: 0.55rem 0;
+        gap: 0.75rem;
+    }
+
+    .agency-member-hub--premium .amh-membership dd {
+        text-align: end;
+        max-width: 58%;
+        word-break: break-word;
+    }
+
+    .agency-member-hub--premium .amh-membership__note {
+        margin-top: 0.65rem;
+        padding: 0.65rem 0.7rem;
+        border-radius: 12px;
+        font-size: 0.74rem;
+        line-height: 1.45;
+    }
+
+    /* Hide duplicate membership on overview mobile */
+    .agency-member-hub--premium[data-amh-tab="overview"] .amh-panel--membership {
+        display: none;
+    }
+
+    /* Messages / announcements: fuller viewport use */
+    .agency-member-hub--premium[data-amh-tab="messages"] .amh-hero__insights,
+    .agency-member-hub--premium[data-amh-tab="announcements"] .amh-hero__insights {
+        display: none;
+    }
+
+    .agency-member-hub--premium .amh-messages-host {
+        margin: 0;
+        min-width: 0;
+    }
+
+    .agency-member-hub--premium .amh-body .crm-msg-hub,
+    .agency-member-hub--premium .amh-body .crm-ann-hub {
+        border-radius: 18px;
+        min-height: min(70vh, 36rem);
+    }
+
+    /* Space tab: no double chrome padding fight */
+    .agency-member-hub--premium.agency-member-hub--space .amh-body--space {
+        margin: 0;
+        padding: 0;
+        min-width: 0;
+    }
+
+    .agency-member-hub--premium.agency-member-hub--space .agency-space-page {
+        margin: 0;
+    }
+}
+
+@media (max-width: 390px) {
+    .agency-member-hub--premium .amh-tab {
+        padding: 0.32rem 0.58rem;
+        font-size: 0.7rem;
+        min-height: 2.65rem;
+    }
+
+    .agency-member-hub--premium .amh-kpi-strip {
+        gap: 0.38rem;
+    }
+
+    .agency-member-hub--premium .amh-kpi__value {
+        font-size: 1.1rem;
+    }
+
+    .agency-member-hub--premium .amh-quick__btn {
+        min-height: 4.2rem;
+        font-size: 0.7rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .agency-member-hub--premium .amh-tab,
+    .agency-member-hub--premium .amh-kpi,
+    .agency-member-hub--premium .amh-quick__btn {
+        transition: none;
+    }
+}

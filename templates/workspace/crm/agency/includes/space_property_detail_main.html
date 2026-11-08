@@ -248,7 +248,7 @@
         </section>
         {% endif %}
 
-        {% if prop.city or prop.district or prop.neighborhood or prop.address or prop.postal_code or prop.has_map %}
+        {% if prop.city or prop.district or prop.neighborhood or prop.street or prop.address or prop.postal_code or prop.has_map %}
         <section class="agency-space-pro-panel" aria-labelledby="space-prop-loc-heading">
             <header class="agency-space-pro-panel__head">
                 <span class="agency-space-pro-panel__icon" aria-hidden="true"><i class="fas fa-map-location-dot"></i></span>
@@ -263,6 +263,9 @@
                 {% endif %}
                 {% if prop.neighborhood %}
                 {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-location-crosshairs" label="محله" value=prop.neighborhood %}
+                {% endif %}
+                {% if prop.street %}
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-road" label="خیابان" value=prop.street %}
                 {% endif %}
                 {% if prop.postal_code %}
                 <li class="agency-space-pro-spec-cell">

@@ -1,16 +1,19 @@
 /**
- * Workspace PWA client — install prompt, SW lifecycle, offline banner.
- * Non-intrusive: no auto popup on login; install lives in settings.
+ * Workspace PWA client — install prompt, auto mobile suggest, SW lifecycle, offline banner.
+ * System install prompt is only opened from a user click (never auto).
  */
 (function () {
   'use strict';
 
   var SW_URL = '/workspace/sw.js';
-  var STORAGE_DISMISS = 'ws-pwa-install-dismissed';
+  var policy = window.wsPwaInstallPolicy || {};
   var deferredPrompt = null;
   var registration = null;
   var formDirty = false;
   var updateBannerEl = null;
+  var suggestShownThisSession = false;
+  var suggestSchedulerStarted = false;
+  var suggestWaitStartedAt = 0;
 
   function isStandalone() {
     try {
@@ -29,10 +32,23 @@
     return Array.prototype.slice.call((root || document).querySelectorAll(sel));
   }
 
+  function storageGet(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function storageSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) { /* ignore */ }
+  }
+
   function toast(message, type, opts) {
     if (typeof window.showToast === 'function') {
       window.showToast(message, type || 'info', opts || {});
-      return;
     }
   }
 
@@ -55,6 +71,132 @@
       return 'در Chrome از منوی ⋮ یا آیکن نصب در نوار آدرس استفاده کنید.';
     }
     return 'مرورگر فعلی ممکن است نصب PWA را پشتیبانی نکند. Chrome یا Edge توصیه می‌شود.';
+  }
+
+  function isMobile() {
+    if (typeof policy.isMobileUa === 'function') {
+      return policy.isMobileUa(navigator.userAgent || '');
+    }
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+  }
+
+  function isSuggestDismissed() {
+    if (typeof policy.isDismissed === 'function') {
+      return policy.isDismissed(Date.now(), storageGet);
+    }
+    return false;
+  }
+
+  function isMarkedInstalled() {
+    if (typeof policy.isMarkedInstalled === 'function') {
+      return policy.isMarkedInstalled(storageGet);
+    }
+    return storageGet(policy.STORAGE_INSTALLED || 'ws-pwa-installed') === '1';
+  }
+
+  function markInstalled() {
+    storageSet(policy.STORAGE_INSTALLED || 'ws-pwa-installed', '1');
+  }
+
+  function dismissSuggestForDays() {
+    var key = policy.STORAGE_DISMISS_UNTIL || 'ws-pwa-suggest-dismiss-until';
+    var until = typeof policy.dismissUntilTimestamp === 'function'
+      ? policy.dismissUntilTimestamp(Date.now())
+      : Date.now() + (7 * 24 * 60 * 60 * 1000);
+    storageSet(key, String(until));
+  }
+
+  function hasBlockingUi() {
+    if (document.body.classList.contains('ws-modal-open')) return true;
+    if (document.body.classList.contains('ws-tour-active')) return true;
+    if (qs('.ws-modal.is-open')) return true;
+    if (qs('.ws-signup-welcome.is-active') || qs('.ws-signup-welcome')) return true;
+    if (qs('#wsMobileMoreSheet.is-open')) return true;
+    return false;
+  }
+
+  function getSuggestModal() {
+    return document.getElementById('modal-pwa-install');
+  }
+
+  function closeSuggestModal() {
+    var modal = getSuggestModal();
+    if (!modal) return;
+    if (window.WSModal && typeof window.WSModal.close === 'function') {
+      window.WSModal.close(modal);
+      return;
+    }
+    modal.classList.remove('is-open');
+    document.body.classList.remove('ws-modal-open');
+  }
+
+  function openSuggestModal() {
+    var modal = getSuggestModal();
+    if (!modal || suggestShownThisSession) return false;
+
+    var canShow = typeof policy.shouldAutoSuggest === 'function'
+      ? policy.shouldAutoSuggest({
+          isStandalone: isStandalone(),
+          isMobile: isMobile(),
+          hasDeferredPrompt: !!deferredPrompt,
+          isMarkedInstalled: isMarkedInstalled(),
+          isDismissed: isSuggestDismissed(),
+          hasBlockingUi: hasBlockingUi(),
+          alreadyShownThisSession: suggestShownThisSession,
+        })
+      : (!!deferredPrompt && isMobile() && !isStandalone() && !hasBlockingUi());
+
+    if (!canShow) return false;
+
+    suggestShownThisSession = true;
+    if (window.WSModal && typeof window.WSModal.open === 'function') {
+      window.WSModal.open(modal);
+    } else {
+      modal.classList.add('is-open');
+      document.body.classList.add('ws-modal-open');
+    }
+    return true;
+  }
+
+  function scheduleAutoSuggest() {
+    if (suggestSchedulerStarted) return;
+    if (isStandalone() || !isMobile() || isMarkedInstalled() || isSuggestDismissed()) return;
+    suggestSchedulerStarted = true;
+    suggestWaitStartedAt = Date.now();
+
+    var delay = policy.SUGGEST_DELAY_MS || 1800;
+    var retry = policy.SUGGEST_RETRY_MS || 2000;
+    var maxWait = policy.SUGGEST_MAX_WAIT_MS || 45000;
+
+    function attempt() {
+      if (suggestShownThisSession || isStandalone() || isMarkedInstalled() || isSuggestDismissed()) {
+        return;
+      }
+      if (!deferredPrompt) {
+        // No beforeinstallprompt yet / unavailable — do not fake system UI; keep waiting briefly.
+        if (Date.now() - suggestWaitStartedAt < maxWait) {
+          window.setTimeout(attempt, retry);
+        }
+        return;
+      }
+      if (hasBlockingUi()) {
+        if (Date.now() - suggestWaitStartedAt < maxWait) {
+          window.setTimeout(attempt, retry);
+        }
+        return;
+      }
+      openSuggestModal();
+    }
+
+    var start = function () {
+      window.setTimeout(attempt, delay);
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(function () { start(); }, { timeout: delay + 800 });
+    } else {
+      start();
+    }
   }
 
   function markDirty() {
@@ -122,19 +264,10 @@
       return;
     }
 
-    // manual / unsupported
     if (btn) btn.hidden = true;
     if (hint) {
       hint.hidden = false;
       hint.textContent = platformHint();
-    }
-  }
-
-  function wasDismissed() {
-    try {
-      return localStorage.getItem(STORAGE_DISMISS) === '1';
-    } catch (e) {
-      return false;
     }
   }
 
@@ -146,22 +279,13 @@
     }
     document.documentElement.setAttribute('data-ws-display', 'browser');
 
-    if (deferredPrompt) {
-      setInstallUiState('prompt');
+    if (isMarkedInstalled()) {
+      setInstallUiState('installed');
       return;
     }
 
-    // Heuristic: if related SW controlling and getInstalledRelatedApps available — optional.
-    if (navigator.getInstalledRelatedApps) {
-      navigator.getInstalledRelatedApps().then(function (apps) {
-        if (apps && apps.length) {
-          setInstallUiState('installed');
-        } else {
-          setInstallUiState('manual');
-        }
-      }).catch(function () {
-        setInstallUiState('manual');
-      });
+    if (deferredPrompt) {
+      setInstallUiState('prompt');
       return;
     }
 
@@ -173,18 +297,33 @@
       toast(platformHint(), 'info', { duration: 7000 });
       return;
     }
-    deferredPrompt.prompt();
+
+    var promptEvent = deferredPrompt;
+    deferredPrompt = null;
+
+    // Must run inside the user gesture (click) — do not await before prompt().
+    promptEvent.prompt();
+
+    closeSuggestModal();
+
     try {
-      var choice = await deferredPrompt.userChoice;
+      var choice = await promptEvent.userChoice;
       if (choice && choice.outcome === 'accepted') {
-        toast('میزکار با موفقیت نصب شد.', 'success');
+        markInstalled();
         setInstallUiState('installed');
+        toast('میزکار با موفقیت نصب شد.', 'success');
+      } else {
+        refreshInstallUi();
       }
     } catch (e) {
       toast('نصب انجام نشد. از منوی مرورگر امتحان کنید.', 'warning');
+      refreshInstallUi();
     }
-    deferredPrompt = null;
-    refreshInstallUi();
+  }
+
+  function dismissSuggest() {
+    dismissSuggestForDays();
+    closeSuggestModal();
   }
 
   function bindInstallControls() {
@@ -194,6 +333,31 @@
         triggerInstall();
       });
     });
+
+    qsa('[data-ws-pwa-suggest-install]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerInstall();
+      });
+    });
+
+    qsa('[data-ws-pwa-suggest-dismiss]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        dismissSuggest();
+      });
+    });
+
+    var suggestModal = getSuggestModal();
+    if (suggestModal) {
+      // Overlay / close = soft dismiss (7 days), same as «فعلاً نه»
+      qsa('[data-modal-close]', suggestModal).forEach(function (el) {
+        el.addEventListener('click', function () {
+          dismissSuggestForDays();
+        });
+      });
+    }
   }
 
   function showOfflineBanner(online) {
@@ -280,11 +444,9 @@
 
   function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
-    // Only register on workspace pages (this script is only on workspace base).
     navigator.serviceWorker.register(SW_URL, { scope: '/workspace/' }).then(function (reg) {
       registration = reg;
       watchRegistration(reg);
-      // Periodic update check (safe; does not activate automatically).
       try {
         reg.update();
       } catch (e) { /* ignore */ }
@@ -313,20 +475,20 @@
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       deferredPrompt = e;
-      if (!wasDismissed()) {
-        refreshInstallUi();
-      } else {
-        setInstallUiState('prompt');
-      }
+      refreshInstallUi();
+      scheduleAutoSuggest();
     });
 
     window.addEventListener('appinstalled', function () {
       deferredPrompt = null;
-      try { localStorage.setItem(STORAGE_DISMISS, '1'); } catch (e) { /* ignore */ }
+      markInstalled();
+      closeSuggestModal();
       setInstallUiState('installed');
       toast('میزکار فایلینگ دیوار نصب شد.', 'success');
     });
 
+    // If prompt already happened before listeners (rare), still arm scheduler for mobile.
+    scheduleAutoSuggest();
     registerServiceWorker();
   }
 
@@ -339,6 +501,8 @@
   window.wsPwa = {
     install: triggerInstall,
     isStandalone: isStandalone,
-    refresh: refreshInstallUi
+    refresh: refreshInstallUi,
+    dismissSuggest: dismissSuggest,
+    openSuggestModal: openSuggestModal,
   };
 })();

@@ -1,6 +1,12 @@
-"""Tests for workspace PWA manifest and service worker endpoints."""
-from django.test import SimpleTestCase, override_settings
+"""Tests for workspace PWA manifest, service worker, and install-suggest UX."""
+from pathlib import Path
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+
+User = get_user_model()
 
 
 @override_settings(ROOT_URLCONF='divar_shop.urls')
@@ -50,3 +56,55 @@ class WorkspacePwaEndpointsTests(SimpleTestCase):
         """Installability tooling must fetch these without a session."""
         self.assertEqual(self.client.get(reverse('workspace:web_manifest')).status_code, 200)
         self.assertEqual(self.client.get(reverse('workspace:service_worker')).status_code, 200)
+
+
+class WorkspacePwaInstallSuggestAssetTests(SimpleTestCase):
+    def test_policy_and_client_contract(self):
+        base = Path(settings.BASE_DIR)
+        policy = (base / 'static' / 'workspace' / 'js' / 'pwa-install-policy.js').read_text(encoding='utf-8')
+        client_js = (base / 'static' / 'workspace' / 'js' / 'pwa.js').read_text(encoding='utf-8')
+
+        self.assertIn('DISMISS_DAYS = 7', policy)
+        self.assertIn('shouldAutoSuggest', policy)
+        self.assertIn('ws-pwa-suggest-dismiss-until', policy)
+        self.assertIn('ws-pwa-installed', policy)
+
+        self.assertIn('beforeinstallprompt', client_js)
+        self.assertIn('promptEvent.prompt()', client_js)
+        self.assertIn('modal-pwa-install', client_js)
+        self.assertIn('data-ws-pwa-suggest-install', client_js)
+        self.assertIn('data-ws-pwa-suggest-dismiss', client_js)
+        self.assertIn('scheduleAutoSuggest', client_js)
+        self.assertIn('hasBlockingUi', client_js)
+        self.assertIn('appinstalled', client_js)
+        # Never auto-call the system prompt without a click path.
+        self.assertNotRegex(client_js, r'beforeinstallprompt[\s\S]{0,400}\.prompt\(')
+
+
+@override_settings(ROOT_URLCONF='divar_shop.urls')
+class WorkspacePwaInstallSuggestMarkupTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='09129990011',
+            phone='09129990011',
+            password='pass12345',
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_workspace_shell_includes_suggest_modal_and_scripts(self):
+        resp = self.client.get(reverse('workspace:home'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'id="modal-pwa-install"')
+        self.assertContains(resp, 'میزکار فایلینگ دیوار، همیشه در دسترس')
+        self.assertContains(
+            resp,
+            'میزکارت رو مثل یک اپلیکیشن مستقل روی گوشی نصب کن و سریع‌تر به فایل‌ها، مشتری‌ها و کارهات دسترسی داشته باش.',
+        )
+        self.assertContains(resp, 'نصب اپلیکیشن')
+        self.assertContains(resp, 'فعلاً نه')
+        self.assertContains(resp, 'data-ws-pwa-suggest-install')
+        self.assertContains(resp, 'data-ws-pwa-suggest-dismiss')
+        self.assertContains(resp, 'workspace/js/pwa-install-policy.js')
+        self.assertContains(resp, 'workspace/js/pwa.js')
+        self.assertContains(resp, 'workspace/css/pwa.css')

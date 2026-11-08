@@ -526,3 +526,32 @@
 </div>
 
 {% include 'workspace/includes/listing_add_personal_modal.html' %}
+
+{# ─── پیشنهاد نصب PWA (موبایل — فقط با beforeinstallprompt) ─── #}
+<div class="ws-modal ws-pwa-suggest-modal" id="modal-pwa-install" role="dialog" aria-modal="true" aria-labelledby="modal-pwa-install-title">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm ws-pwa-suggest-panel">
+        <div class="ws-modal-head ws-pwa-suggest-head">
+            <div class="ws-pwa-suggest-brand" aria-hidden="true">
+                <img src="{% static 'workspace/pwa/icons/icon-192.png' %}" alt="" width="56" height="56" class="ws-pwa-suggest-logo" decoding="async">
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="ws-modal-body ws-pwa-suggest-body">
+            <h2 id="modal-pwa-install-title" class="ws-modal-title ws-pwa-suggest-title">میزکار فایلینگ دیوار، همیشه در دسترس</h2>
+            <p class="ws-pwa-suggest-desc">
+                میزکارت رو مثل یک اپلیکیشن مستقل روی گوشی نصب کن و سریع‌تر به فایل‌ها، مشتری‌ها و کارهات دسترسی داشته باش.
+            </p>
+        </div>
+        <div class="ws-modal-foot ws-pwa-suggest-foot">
+            <button type="button" class="ws-btn ws-btn-ghost" data-ws-pwa-suggest-dismiss>فعلاً نه</button>
+            <button type="button" class="ws-btn ws-btn-primary" data-ws-pwa-suggest-install>
+                <i class="fas fa-download" aria-hidden="true"></i>
+                نصب اپلیکیشن
+            </button>
+        </div>
+    </div>
+</div>
+

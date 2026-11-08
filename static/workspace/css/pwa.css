@@ -93,8 +93,70 @@ html[data-theme="dark"] .ws-pwa-offline {
   flex-wrap: wrap;
 }
 
+/* ── Auto install suggestion (mobile) ── */
+.ws-pwa-suggest-modal .ws-pwa-suggest-panel {
+  max-width: 400px;
+}
+
+.ws-pwa-suggest-head {
+  align-items: flex-start;
+  padding-top: 1.35rem;
+}
+
+.ws-pwa-suggest-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ws-primary, #7C3AED) 10%, var(--ws-surface, #fff));
+  border: 1px solid color-mix(in srgb, var(--ws-primary, #7C3AED) 18%, transparent);
+}
+
+.ws-pwa-suggest-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+}
+
+.ws-pwa-suggest-body {
+  padding-top: 0.35rem;
+}
+
+.ws-pwa-suggest-title {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin: 0 0 0.55rem;
+}
+
+.ws-pwa-suggest-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--ws-text-secondary, #64748B);
+}
+
+.ws-pwa-suggest-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: stretch;
+}
+
+.ws-pwa-suggest-foot .ws-btn {
+  flex: 1 1 8.5rem;
+}
+
+html[data-theme="dark"] .ws-pwa-suggest-brand {
+  background: color-mix(in srgb, var(--ws-primary, #7C3AED) 18%, var(--ws-surface, #111827));
+}
+
 /* Hide install CTA when already running as installed app */
-html[data-ws-display="standalone"] .ws-settings-section--pwa {
+html[data-ws-display="standalone"] .ws-settings-section--pwa,
+html[data-ws-display="standalone"] #modal-pwa-install {
   display: none !important;
 }
 

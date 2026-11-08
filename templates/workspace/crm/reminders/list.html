@@ -12,7 +12,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=18">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=11">
 {% endblock %}
 
 {% block crm_content %}
@@ -21,51 +21,87 @@
     <div class="crm-rm-mob-chrome" aria-label="یادآورها — موبایل">
         <div class="crm-rm-mob-toolbar-sticky">
             <div class="crm-rm-mob-toolbar-panel">
-            <div class="crm-rm-mob-toolbar-row" role="toolbar" aria-label="عملیات یادآورها">
-                <div class="crm-rm-mob-stats" aria-live="polite">
-                    {% if stats.active %}
-                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--active"><strong data-stat="active">{{ stats.active }}</strong> فعال</span>
-                    {% if stats.overdue %}
-                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--warn" data-stat-wrap="overdue">معوق <strong data-stat="overdue">{{ stats.overdue }}</strong></span>
-                    {% endif %}
-                    {% if stats.today %}
-                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--today">امروز <strong data-stat="today">{{ stats.today }}</strong></span>
-                    {% endif %}
-                    {% else %}
-                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--muted">بدون یادآور فعال</span>
-                    {% endif %}
-                </div>
-                <div class="crm-rm-mob-toolbar-actions">
-                    <details class="crm-rm-mob-more-menu">
-                        <summary class="crm-rm-mob-toolbar-btn crm-rm-mob-toolbar-btn--ghost" aria-label="منوی بیشتر">
-                            <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
-                        </summary>
-                        <div class="crm-rm-mob-more-panel" role="menu">
-                            <button type="button" class="crm-rm-mob-more-item" role="menuitem" data-modal-open="modal-crm-reminders-help">
-                                <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
-                            </button>
-                            <a href="{% url 'workspace:crm_today' %}" class="crm-rm-mob-more-item" role="menuitem">
-                                <i class="fas fa-list-check" aria-hidden="true"></i><span>کارهای امروز</span>
-                            </a>
-                            <a href="{% url 'workspace:crm_calendar' %}" class="crm-rm-mob-more-item" role="menuitem">
-                                <i class="fas fa-calendar-days" aria-hidden="true"></i><span>تقویم</span>
-                            </a>
+                <div class="crm-rm-mob-toolbar-row">
+                    <div class="crm-rm-mob-head">
+                        <div class="crm-rm-mob-brand">
+                            <span class="crm-rm-mob-brand-ico" aria-hidden="true"><i class="fas fa-bell"></i></span>
+                            <div class="crm-rm-mob-brand-copy">
+                                <h1 class="crm-rm-mob-title">یادآورها</h1>
+                                <p class="crm-rm-mob-sub" aria-live="polite">
+                                    {% if stats.overdue %}
+                                    {{ stats.overdue }} مورد نیاز به پیگیری فوری
+                                    {% elif stats.today %}
+                                    {{ stats.today }} یادآور برای امروز
+                                    {% elif stats.active %}
+                                    {{ stats.active }} یادآور فعال
+                                    {% else %}
+                                    پیگیری‌ها را اینجا مدیریت کنید
+                                    {% endif %}
+                                </p>
+                            </div>
                         </div>
-                    </details>
-                    <button type="button" class="crm-rm-mob-toolbar-add" data-drawer-open="drawer-reminder" title="یادآور جدید" aria-label="یادآور جدید">
-                        <i class="fas fa-plus" aria-hidden="true"></i>
-                    </button>
+                    </div>
+                    <div class="crm-rm-mob-toolbar-actions" role="toolbar" aria-label="عملیات یادآورها">
+                        <details class="crm-rm-mob-more-menu">
+                            <summary class="crm-rm-mob-toolbar-btn" aria-label="منوی بیشتر">
+                                <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                            </summary>
+                            <div class="crm-rm-mob-more-panel" role="menu">
+                                <button type="button" class="crm-rm-mob-more-item" role="menuitem" data-modal-open="modal-crm-reminders-help">
+                                    <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
+                                </button>
+                                <a href="{% url 'workspace:crm_today' %}" class="crm-rm-mob-more-item" role="menuitem">
+                                    <i class="fas fa-list-check" aria-hidden="true"></i><span>کارهای امروز</span>
+                                </a>
+                                <a href="{% url 'workspace:crm_calendar' %}" class="crm-rm-mob-more-item" role="menuitem">
+                                    <i class="fas fa-calendar-days" aria-hidden="true"></i><span>تقویم</span>
+                                </a>
+                            </div>
+                        </details>
+                        <button type="button" class="crm-rm-mob-toolbar-add" data-drawer-open="drawer-reminder" title="یادآور جدید" aria-label="یادآور جدید">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <nav class="crm-rm-mob-tabs" role="tablist" aria-label="فیلتر یادآورها">
-                <a href="?show=active" class="crm-rm-mob-tab{% if show == 'active' %} is-active{% endif %}" role="tab" {% if show == 'active' %}aria-selected="true"{% endif %}>
-                    فعال{% if stats.active %}<em class="crm-rm-seg-count" data-stat="active">{{ stats.active }}</em>{% endif %}
-                </a>
-                <a href="?show=done" class="crm-rm-mob-tab{% if show == 'done' %} is-active{% endif %}" role="tab" {% if show == 'done' %}aria-selected="true"{% endif %}>
-                    انجام‌شده{% if stats.done %}<em class="crm-rm-seg-count" data-stat="done">{{ stats.done }}</em>{% endif %}
-                </a>
-                <a href="?show=all" class="crm-rm-mob-tab{% if show == 'all' %} is-active{% endif %}" role="tab" {% if show == 'all' %}aria-selected="true"{% endif %}>همه</a>
-            </nav>
+
+                <div class="crm-rm-mob-metrics" aria-label="خلاصه یادآورها" aria-live="polite">
+                    {% if stats.active or stats.overdue or stats.today %}
+                    <a href="{{ kpi_links.active }}" class="crm-rm-mob-metric crm-rm-mob-metric--active{% if show == 'active' and not due %} is-selected{% endif %}">
+                        <strong data-stat="active">{{ stats.active }}</strong>
+                        <span>فعال</span>
+                    </a>
+                    <a href="{{ kpi_links.overdue }}" class="crm-rm-mob-metric crm-rm-mob-metric--warn{% if not stats.overdue %} is-empty{% endif %}{% if due == 'overdue' %} is-selected{% endif %}" data-stat-wrap="overdue">
+                        <strong data-stat="overdue">{{ stats.overdue }}</strong>
+                        <span>معوق</span>
+                    </a>
+                    <a href="{{ kpi_links.today }}" class="crm-rm-mob-metric crm-rm-mob-metric--today{% if not stats.today %} is-empty{% endif %}{% if due == 'today' %} is-selected{% endif %}" data-stat-wrap="today">
+                        <strong data-stat="today">{{ stats.today }}</strong>
+                        <span>امروز</span>
+                    </a>
+                    {% else %}
+                    <div class="crm-rm-mob-metric crm-rm-mob-metric--muted">
+                        <strong>۰</strong>
+                        <span>یادآور فعالی نیست</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <nav class="crm-rm-mob-tabs" role="tablist" aria-label="فیلتر یادآورها">
+                    <a href="?show=active" class="crm-rm-mob-tab{% if show == 'active' %} is-active{% endif %}" role="tab" {% if show == 'active' %}aria-selected="true"{% else %}aria-selected="false"{% endif %}>
+                        <i class="fas fa-bolt" aria-hidden="true"></i>
+                        <span class="crm-rm-mob-tab-label">فعال</span>
+                        <em class="crm-rm-seg-count" data-stat="active"{% if not stats.active %} hidden{% endif %}>{{ stats.active|default:0 }}</em>
+                    </a>
+                    <a href="?show=done" class="crm-rm-mob-tab{% if show == 'done' %} is-active{% endif %}" role="tab" {% if show == 'done' %}aria-selected="true"{% else %}aria-selected="false"{% endif %}>
+                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        <span class="crm-rm-mob-tab-label">انجام‌شده</span>
+                        <em class="crm-rm-seg-count" data-stat="done"{% if not stats.done %} hidden{% endif %}>{{ stats.done|default:0 }}</em>
+                    </a>
+                    <a href="?show=all" class="crm-rm-mob-tab{% if show == 'all' %} is-active{% endif %}" role="tab" {% if show == 'all' %}aria-selected="true"{% else %}aria-selected="false"{% endif %}>
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        <span class="crm-rm-mob-tab-label">همه</span>
+                    </a>
+                </nav>
             </div>
         </div>
     </div>
@@ -216,5 +252,5 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/crm-reminders-list.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/crm-reminders-list.js' %}?v=4"></script>
 {% endblock %}

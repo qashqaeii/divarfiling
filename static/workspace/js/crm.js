@@ -4846,6 +4846,26 @@ function initCRMPropertyImages(scope) {
     render();
 }
 
+function syncCrmTeamShareCards() {
+    const cards = document.querySelectorAll('details.crm-team-share-card[data-crm-team-share-card]');
+    if (!cards.length) return;
+    const mq = window.matchMedia('(min-width: 769px)');
+    const apply = () => {
+        cards.forEach((el) => {
+            if (mq.matches) {
+                el.open = true;
+                el.setAttribute('data-desktop-forced', '1');
+            } else if (el.getAttribute('data-desktop-forced') === '1') {
+                el.open = false;
+                el.removeAttribute('data-desktop-forced');
+            }
+        });
+    };
+    apply();
+    if (typeof mq.addEventListener === 'function') mq.addEventListener('change', apply);
+    else if (typeof mq.addListener === 'function') mq.addListener(apply);
+}
+
 function initCRMPropertyTeam() {
     const bar = document.querySelector('[data-crm-property-team]');
     if (!bar) return;
@@ -7243,6 +7263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMCommissionSplit();
     initCRMContactTeam();
     initCRMContactStatusPicker();
+    try { syncCrmTeamShareCards(); } catch (err) { console.error(err); }
     try { initCRMDealsPage(); } catch (err) { console.error('initCRMDealsPage', err); }
     try { initCRMPropGalleryLightbox(); } catch (err) { console.error(err); }
     try { initCRMPropertyTeam(); } catch (err) { console.error(err); }

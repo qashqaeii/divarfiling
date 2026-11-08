@@ -6,21 +6,24 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-premium.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <div class="mk-page sup-page sup-page-mobile">
 
-    <header class="sup-mob-header">
-        <div class="sup-mob-header-mesh" aria-hidden="true"></div>
-        <div class="sup-mob-header-accent" aria-hidden="true"></div>
+    <div class="sup-mob-chrome">
+    <div class="sup-mob-toolbar-sticky">
+    <header class="sup-mob-header sup-mob-toolbar-panel">
         <div class="sup-mob-header-inner">
-            <div class="sup-mob-header-main">
-                <span class="sup-mob-kicker"><i class="fas fa-headset" aria-hidden="true"></i> مرکز پشتیبانی</span>
-                <h1 class="sup-mob-title">تیکت جدید</h1>
-                <p class="sup-mob-sub"><span>مشکل یا سوال خود را ارسال کنید</span></p>
+            <div class="sup-mob-brand">
+                <span class="sup-mob-brand-ico" aria-hidden="true"><i class="fas fa-headset"></i></span>
+                <div class="sup-mob-header-main">
+                    <h1 class="sup-mob-title">تیکت جدید</h1>
+                    <p class="sup-mob-sub">مشکل یا سوال خود را ارسال کنید</p>
+                </div>
             </div>
             <div class="sup-mob-header-actions">
                 <a href="{% url 'workspace:support_list' %}" class="sup-mob-icon-btn" title="بازگشت" aria-label="بازگشت به لیست">
@@ -29,6 +32,8 @@
             </div>
         </div>
     </header>
+    </div>
+    </div>
 
     <header class="mk-page-hero sup-create-hero sup-desk-header">
         <div class="mk-page-hero-main">

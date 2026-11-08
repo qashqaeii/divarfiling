@@ -6,7 +6,11 @@
 
 /* Desktop: hide mobile-only chrome */
 .ws-crm-pd-mob-hero-more,
-.ws-crm-pd-mob-actions {
+.ws-crm-pd-mob-hero-end,
+.ws-crm-pd-mob-hero-cta,
+.ws-crm-pd-mob-hero-kicker,
+.ws-crm-pd-mob-actions,
+.ws-crm-pd-mob-studio {
     display: none;
 }
 
@@ -324,6 +328,11 @@
 }
 
 @media (max-width: 767px) {
+    /* Hide duplicate global topbar — page owns its premium header */
+    body.ws-body:has(.ws-crm-pd-mob) .ws-mobile-topbar {
+        display: none !important;
+    }
+
     /* Listing-detail parity: keep workspace bottom nav, never replace with page dock */
     body.ws-body:has(.ws-crm-pd-mob) .ws-bottom-nav {
         display: flex !important;
@@ -356,15 +365,17 @@
     .crm-prop-detail-mobile.ws-crm-pd-mob.crm-page-chrome {
         --crm-pd-gutter: 0.85rem;
         --crm-pd-inner: 0.85rem;
+        --crm-pd-head-h: 3.55rem;
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
         padding-inline: var(--crm-pd-gutter) !important;
-        padding-top: 0.55rem !important;
+        padding-top: 0 !important;
         padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
         gap: 0.7rem !important;
         background: transparent !important;
-        overflow-x: clip !important;
+        /* visible — overflow-x clip/hidden breaks sticky page header */
+        overflow-x: visible !important;
         box-sizing: border-box !important;
     }
 
@@ -414,7 +425,7 @@
         display: none !important;
     }
 
-    /* ── Hero shell — full-bleed + listing-detail surface ── */
+    /* ── Hero shell — full-bleed; overflow visible so sticky header works ── */
     .ws-crm-pd-mob.crm-prop-detail-mobile .crm-prop-hero {
         width: calc(100% + (2 * var(--crm-pd-gutter))) !important;
         max-width: none !important;
@@ -427,7 +438,7 @@
         box-shadow:
             0 1px 2px rgba(15, 23, 42, 0.03),
             0 18px 36px -22px rgba(15, 23, 42, 0.22) !important;
-        overflow: hidden !important;
+        overflow: visible !important;
         box-sizing: border-box !important;
     }
 
@@ -437,92 +448,227 @@
         background: var(--ws-surface) !important;
         padding: 0 !important;
         gap: 0 !important;
+        overflow: visible !important;
+        border-radius: inherit !important;
     }
 
     .ws-crm-pd-mob .crm-prop-hero-content,
     .ws-crm-pd-mob .crm-prop-hero-amenities,
     .ws-crm-pd-mob .crm-prop-hero-deal-pill,
-    .ws-crm-pd-mob .crm-prop-hero-gallery-wrap,
-    .ws-crm-pd-mob .crm-prop-hero-share-block,
-    .ws-crm-pd-mob .crm-prop-hero-share-view {
+    .ws-crm-pd-mob .crm-prop-hero-gallery-wrap {
         display: none !important;
     }
 
-    /* Nav: back | title | more */
+    /* Reading order: sticky header → media → keyfacts → team share
+       (hero-main must NOT stay at default order:0 or it buries the header) */
     .ws-crm-pd-mob .crm-prop-hero-nav {
+        order: 1 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-main {
+        order: 2 !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts {
+        order: 3 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-view,
+    .ws-crm-pd-mob .crm-prop-hero-share-block {
+        order: 4 !important;
+    }
+
+    /* ── Premium sticky page header: back | identity | CTA + more ── */
+    .ws-crm-pd-mob .crm-prop-hero-nav {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 60 !important;
         display: grid !important;
-        grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem !important;
-        grid-template-areas: "back title more" !important;
+        grid-template-columns: 2.55rem minmax(0, 1fr) auto !important;
+        grid-template-areas: "back title end" !important;
         align-items: center !important;
-        gap: 0.45rem !important;
-        padding: 0.7rem var(--crm-pd-inner) 0.55rem !important;
+        gap: 0.5rem !important;
+        min-height: var(--crm-pd-head-h, 3.55rem) !important;
+        margin: 0 !important;
+        padding:
+            max(0.55rem, env(safe-area-inset-top, 0px))
+            var(--crm-pd-inner)
+            0.55rem !important;
+        border: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 0 !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 94%, #fff) 0%,
+                color-mix(in srgb, var(--ws-surface) 88%, transparent) 100%
+            ) !important;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+            0 10px 28px -22px rgba(15, 23, 42, 0.28) !important;
+        backdrop-filter: blur(18px) saturate(1.15) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
         box-sizing: border-box !important;
     }
 
     .ws-crm-pd-mob .crm-prop-hero-back,
-    .ws-crm-pd-mob-hero-more {
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        min-width: 2.5rem !important;
-        min-height: 2.5rem !important;
-        border-radius: 12px !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent) !important;
-        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 50%, var(--ws-surface)) !important;
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-more {
+        width: 2.55rem !important;
+        height: 2.55rem !important;
+        min-width: 2.55rem !important;
+        min-height: 2.55rem !important;
+        border-radius: 13px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
         color: var(--ws-text-secondary) !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent) !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
         -webkit-tap-highlight-color: transparent;
+        text-decoration: none !important;
     }
 
     .ws-crm-pd-mob .crm-prop-hero-back {
         grid-area: back !important;
+        font-size: 0.92rem !important;
     }
 
-    .ws-crm-pd-mob-hero-bar {
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-bar {
         grid-area: title !important;
         display: flex !important;
-        align-items: center !important;
-        gap: 0.4rem !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 0.08rem !important;
         min-width: 0 !important;
     }
 
-    .ws-crm-pd-mob-hero-bar__ico {
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-bar__ico {
         display: none !important;
     }
 
-    .ws-crm-pd-mob-hero-title {
-        font-size: 0.88rem !important;
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-kicker {
+        display: block !important;
+        max-width: 100% !important;
+        font-size: 0.62rem !important;
+        font-weight: 750 !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1.2 !important;
+        color: var(--ws-text-muted) !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-title {
+        display: block !important;
+        max-width: 100% !important;
+        font-size: 0.9rem !important;
         font-weight: 850 !important;
         letter-spacing: -0.02em !important;
+        line-height: 1.25 !important;
         color: var(--ws-text) !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
     }
 
-    .ws-crm-pd-mob-hero-more {
-        grid-area: more !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        font-size: 0.92rem !important;
-        cursor: pointer !important;
-        font-family: inherit !important;
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-end {
+        grid-area: end !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 0.35rem !important;
+        min-width: 0 !important;
+        flex-shrink: 0 !important;
     }
 
-    .ws-crm-pd-mob-hero-more:active,
+    /* Primary header CTA — premium pill */
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-cta {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.38rem !important;
+        min-height: 2.55rem !important;
+        margin: 0 !important;
+        padding: 0 0.95rem 0 0.8rem !important;
+        border: none !important;
+        border-radius: 999px !important;
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--ws-primary) 92%, #fff) 0%,
+                var(--ws-primary) 48%,
+                color-mix(in srgb, var(--ws-primary) 82%, #0f172a) 100%
+            ) !important;
+        color: #fff !important;
+        font-family: inherit !important;
+        font-size: 0.8125rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.015em !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        cursor: pointer !important;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
+            0 8px 18px -10px color-mix(in srgb, var(--ws-primary) 65%, transparent) !important;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-cta i {
+        font-size: 0.72rem !important;
+        opacity: 0.95 !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-cta:active {
+        transform: scale(0.97) !important;
+        filter: brightness(0.96) !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-more {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 0.95rem !important;
+        cursor: pointer !important;
+        font-family: inherit !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-more:active,
     .ws-crm-pd-mob .crm-prop-hero-back:active {
-        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
         color: var(--ws-primary) !important;
     }
 
-    /* Media — full-bleed inside hero */
+    @media (max-width: 360px) {
+        .ws-crm-pd-mob .ws-crm-pd-mob-hero-cta span {
+            display: none !important;
+        }
+
+        .ws-crm-pd-mob .ws-crm-pd-mob-hero-cta {
+            width: 2.55rem !important;
+            min-width: 2.55rem !important;
+            padding: 0 !important;
+            border-radius: 13px !important;
+        }
+
+        .ws-crm-pd-mob .ws-crm-pd-mob-hero-cta i {
+            font-size: 0.82rem !important;
+        }
+    }
+
+    /* Media — full-bleed inside hero (clip lives here, not on sticky ancestors) */
     .ws-crm-pd-mob .crm-prop-hero-main {
         display: block !important;
         border: none !important;
         margin: 0 !important;
         padding: 0 !important;
+        overflow: hidden !important;
+        border-radius: 0 !important;
     }
 
     .ws-crm-pd-mob .crm-prop-hero-visual {
@@ -913,7 +1059,7 @@
 
     .ws-crm-pd-mob.crm-prop-detail-mobile .crm-prop-segrail {
         position: sticky !important;
-        top: 0 !important;
+        top: var(--crm-pd-head-h, 3.55rem) !important;
         z-index: 40 !important;
         margin: 0 0 0.55rem !important;
         padding: 0.15rem 0 !important;
@@ -1030,15 +1176,109 @@
         color: var(--ws-primary) !important;
     }
 
-    /* Inline actions — listing-detail icon rail */
+    /* Content studio — first-glance premium entry */
+    .ws-crm-pd-mob .ws-crm-pd-mob-studio {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.65rem !important;
+        width: 100% !important;
+        margin: 0.75rem 0 0 !important;
+        padding: 0.7rem 0.75rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
+        border-radius: 16px !important;
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface)) 0%,
+                color-mix(in srgb, var(--ws-primary) 4%, var(--ws-surface)) 55%,
+                var(--ws-surface) 100%
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 24px -16px color-mix(in srgb, var(--ws-primary) 45%, transparent),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        color: inherit !important;
+        font: inherit !important;
+        text-align: start !important;
+        cursor: pointer !important;
+        box-sizing: border-box !important;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-studio:active {
+        transform: scale(0.985);
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--ws-primary) 16%, var(--ws-surface)) 0%,
+                color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) 100%
+            ) !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-studio__ico {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.55rem !important;
+        height: 2.55rem !important;
+        flex-shrink: 0 !important;
+        border-radius: 13px !important;
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        font-size: 0.95rem !important;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ws-primary) 32%, transparent) !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-studio__copy {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.14rem !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-studio__copy strong {
+        font-size: 0.88rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.25 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-studio__copy em {
+        font-style: normal !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        line-height: 1.3 !important;
+        color: var(--ws-text-secondary) !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-studio__chev {
+        flex-shrink: 0 !important;
+        width: 1.65rem !important;
+        height: 1.65rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 999px !important;
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        font-size: 0.62rem !important;
+    }
+
+    /* Inline actions — primary hero CTA + secondary icon rail */
     .ws-crm-pd-mob .ws-crm-pd-mob-actions {
         display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(4.35rem, 1fr)) !important;
+        grid-template-columns: repeat(auto-fit, minmax(4.1rem, 1fr)) !important;
         align-items: stretch !important;
         gap: 0.45rem 0.4rem !important;
         width: 100% !important;
-        margin: 0.15rem 0 0 !important;
-        padding: 0.7rem 0 0 !important;
+        margin: 0.65rem 0 0 !important;
+        padding: 0.75rem 0 0 !important;
         border: none !important;
         border-top: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
         box-sizing: border-box !important;
@@ -1051,9 +1291,9 @@
         justify-content: center !important;
         gap: 0.38rem !important;
         min-width: 0 !important;
-        min-height: 4.35rem !important;
+        min-height: 4.2rem !important;
         margin: 0 !important;
-        padding: 0.55rem 0.25rem 0.5rem !important;
+        padding: 0.5rem 0.25rem 0.45rem !important;
         border-radius: 14px !important;
         border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
         background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 28%, var(--ws-surface)) !important;
@@ -1077,10 +1317,10 @@
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 2.35rem !important;
-        height: 2.35rem !important;
+        width: 2.3rem !important;
+        height: 2.3rem !important;
         border-radius: 12px !important;
-        font-size: 0.95rem !important;
+        font-size: 0.92rem !important;
         line-height: 1 !important;
         background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
         color: var(--ws-primary) !important;
@@ -1100,22 +1340,344 @@
         white-space: nowrap !important;
     }
 
+    /* Full-bleed primary action in the keyfacts rail */
     .ws-crm-pd-mob .ws-crm-pd-mob-act--primary {
-        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
-        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) !important;
-        color: var(--ws-text) !important;
-        box-shadow: none !important;
+        grid-column: 1 / -1 !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        gap: 0.55rem !important;
+        min-height: 3.05rem !important;
+        padding: 0.65rem 1rem !important;
+        border: none !important;
+        border-radius: 999px !important;
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--ws-primary) 92%, #fff) 0%,
+                var(--ws-primary) 48%,
+                color-mix(in srgb, var(--ws-primary) 82%, #0f172a) 100%
+            ) !important;
+        color: #fff !important;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
+            0 12px 24px -14px color-mix(in srgb, var(--ws-primary) 70%, transparent) !important;
     }
 
     .ws-crm-pd-mob .ws-crm-pd-mob-act--primary .ws-crm-pd-mob-act__ico {
-        background: var(--ws-primary) !important;
+        width: 1.85rem !important;
+        height: 1.85rem !important;
+        border-radius: 999px !important;
+        background: rgba(255, 255, 255, 0.18) !important;
         color: #fff !important;
-        box-shadow: 0 2px 8px color-mix(in srgb, var(--ws-primary) 28%, transparent) !important;
+        box-shadow: none !important;
+        font-size: 0.82rem !important;
     }
 
     .ws-crm-pd-mob .ws-crm-pd-mob-act--primary .ws-crm-pd-mob-act__lbl {
-        color: var(--ws-text) !important;
+        color: #fff !important;
+        font-size: 0.875rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    /* ── Team share card (collapsible / premium) ── */
+    .ws-crm-pd-mob .crm-prop-hero-share-view {
+        display: block !important;
+        margin: 0.45rem var(--crm-pd-inner) 0.65rem !important;
+        padding: 0.55rem 0.65rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 22px rgba(15, 23, 42, 0.04),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block,
+    .ws-crm-pd-mob details.crm-team-share-card {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        margin: 0.45rem var(--crm-pd-inner) 0.75rem !important;
+        padding: 0.2rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 22px rgba(15, 23, 42, 0.04),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        box-sizing: border-box !important;
+        max-width: none !important;
+        overflow: hidden !important;
+    }
+
+    .ws-crm-pd-mob details.crm-team-share-card > .crm-team-share-card__summary {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        min-height: 3.1rem !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.55rem 0.55rem 0.6rem !important;
+        border: none !important;
+        border-radius: 15px !important;
+        background: transparent !important;
+        color: inherit !important;
+        font: inherit !important;
+        text-align: start !important;
+        cursor: pointer !important;
+        list-style: none !important;
+        box-sizing: border-box !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-pd-mob details.crm-team-share-card > .crm-team-share-card__summary::-webkit-details-marker {
+        display: none !important;
+    }
+
+    .ws-crm-pd-mob details.crm-team-share-card > .crm-team-share-card__summary:active {
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-pd-mob .crm-team-share-card__ico {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.35rem !important;
+        height: 2.35rem !important;
+        flex-shrink: 0 !important;
+        border-radius: 12px !important;
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent) !important;
+        font-size: 0.82rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-team-share-card__copy {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.12rem !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    .ws-crm-pd-mob .crm-team-share-card__copy strong {
+        font-size: 0.84rem !important;
         font-weight: 800 !important;
+        letter-spacing: -0.015em !important;
+        color: var(--ws-text) !important;
+        line-height: 1.25 !important;
+    }
+
+    .ws-crm-pd-mob .crm-team-share-card__copy em {
+        font-style: normal !important;
+        font-size: 0.68rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.3 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .ws-crm-pd-mob .crm-team-share-card__chev {
+        flex-shrink: 0 !important;
+        width: 1.65rem !important;
+        height: 1.65rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 999px !important;
+        color: var(--ws-text-secondary) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface)) !important;
+        font-size: 0.62rem !important;
+        transition: transform 0.18s ease, color 0.18s ease, background 0.18s ease;
+    }
+
+    .ws-crm-pd-mob details.crm-team-share-card[open] > .crm-team-share-card__summary .crm-team-share-card__chev {
+        transform: rotate(180deg);
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-pd-mob details.crm-team-share-card > .crm-team-share-card__panel {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+        padding: 0.15rem 0.45rem 0.55rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar.crm-prop-share-bar--pro {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.55rem !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar-vrule {
+        display: none !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar__cluster--mode {
+        flex: none !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+        padding: 0.55rem 0.6rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 35%, var(--ws-surface)) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar-label {
+        align-self: flex-start !important;
+        font-size: 0.68rem !important;
+        padding: 0.2rem 0.45rem !important;
+        border-radius: 8px !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-segment {
+        display: flex !important;
+        width: 100% !important;
+        padding: 3px !important;
+        border-radius: 11px !important;
+        gap: 3px !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-seg {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-seg > span {
+        justify-content: center !important;
+        width: 100% !important;
+        min-height: 2.5rem !important;
+        padding: 0.35rem 0.4rem !important;
+        font-size: 0.7rem !important;
+        border-radius: 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-seg input:checked + span {
+        background: var(--ws-surface) !important;
+        color: var(--ws-primary) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar__cluster--agency {
+        display: flex !important;
+        width: 100% !important;
+        justify-content: stretch !important;
+        gap: 0.4rem !important;
+        flex-shrink: 1 !important;
+        padding: 0 0.05rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar__cluster--agency .crm-prop-share-bar__link-btn,
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar__cluster--agency .agency-space-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        flex: 1 !important;
+        justify-content: center !important;
+        min-height: 2.5rem !important;
+        border-radius: 12px !important;
+        font-size: 0.72rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-bar__cluster--send {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.6rem 0.6rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 35%, var(--ws-surface)) !important;
+        flex-shrink: 1 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-contact-team-actions--grouped {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-contact-team-actions--grouped .crm-select-sm {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        min-height: 2.75rem !important;
+        height: auto !important;
+        padding-inline: 0.65rem !important;
+        border-radius: 11px !important;
+        font-size: 0.78rem !important;
+        font-weight: 600 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-contact-team-actions--grouped .crm-dash-act {
+        min-height: 2.75rem !important;
+        height: auto !important;
+        min-width: 5.25rem !important;
+        padding-inline: 0.9rem !important;
+        border-radius: 11px !important;
+        font-size: 0.76rem !important;
+        font-weight: 800 !important;
+        justify-content: center !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-out-list {
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0.4rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-out-item {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.45rem !important;
+        padding: 0.55rem 0.65rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 28%, var(--ws-surface)) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-hero-share-block .crm-prop-share-out-flow {
+        width: 100% !important;
+        justify-content: space-between !important;
     }
 
     /* Panels — identical full-width cards */
@@ -1453,28 +2015,30 @@
         gap: 0.38rem 0.32rem !important;
     }
 
-    .ws-crm-pd-mob .ws-crm-pd-mob-act {
+    .ws-crm-pd-mob .ws-crm-pd-mob-act:not(.ws-crm-pd-mob-act--primary) {
         min-height: 4.1rem !important;
         padding-block: 0.45rem 0.4rem !important;
         border-radius: 12px !important;
     }
 
-    .ws-crm-pd-mob .ws-crm-pd-mob-act__ico {
+    .ws-crm-pd-mob .ws-crm-pd-mob-act:not(.ws-crm-pd-mob-act--primary) .ws-crm-pd-mob-act__ico {
         width: 2.15rem !important;
         height: 2.15rem !important;
         border-radius: 11px !important;
         font-size: 0.88rem !important;
     }
 
-    .ws-crm-pd-mob .ws-crm-pd-mob-act__lbl {
+    .ws-crm-pd-mob .ws-crm-pd-mob-act:not(.ws-crm-pd-mob-act--primary) .ws-crm-pd-mob-act__lbl {
         font-size: 0.625rem !important;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .ws-crm-pd-mob-hero-more:active,
+    .ws-crm-pd-mob .ws-crm-pd-mob-hero-cta:active,
     .ws-crm-pd-mob .ws-crm-pd-mob-act:active {
         transform: none !important;
+        filter: none !important;
     }
 }
 
@@ -3215,7 +3779,10 @@
     }
 
     .ws-crm-pd-mob .crm-prop-hero-nav {
-        padding: 0.7rem var(--crm-pd-inner) 0.55rem !important;
+        padding:
+            max(0.55rem, env(safe-area-inset-top, 0px))
+            var(--crm-pd-inner)
+            0.55rem !important;
     }
 
     .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts {
@@ -3445,11 +4012,205 @@
     .ws-crm-pd-mob .crm-prop-dossier-group--text .crm-prop-dossier-h__ico i { color: #b45309 !important; }
 
     .ws-crm-pd-mob .crm-prop-dossier-group--schedule .crm-prop-dossier-h__ico {
-        color: #475569 !important;
-        border-color: color-mix(in srgb, #64748b 22%, transparent) !important;
-        background: linear-gradient(145deg, color-mix(in srgb, #64748b 10%, var(--ws-surface)), var(--ws-surface)) !important;
+        color: #334155 !important;
+        border-color: color-mix(in srgb, #64748b 24%, transparent) !important;
+        background: linear-gradient(145deg, color-mix(in srgb, #64748b 12%, var(--ws-surface)), var(--ws-surface)) !important;
     }
-    .ws-crm-pd-mob .crm-prop-dossier-group--schedule .crm-prop-dossier-h__ico i { color: #475569 !important; }
+    .ws-crm-pd-mob .crm-prop-dossier-group--schedule .crm-prop-dossier-h__ico i { color: #334155 !important; }
+
+    /* Schedule / meta rows — beat v1 tiny 0.625rem styles */
+    .ws-crm-pd-mob .crm-prop-dossier-row--meta,
+    .ws-crm-pd-mob .crm-prop-dossier-dl--schedule > .crm-prop-dossier-row--meta {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.7rem !important;
+        min-height: 3rem !important;
+        margin: 0 0 0.4rem !important;
+        padding: 0.55rem 0.6rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        border-radius: 13px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)),
+                var(--ws-surface)
+            ) !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-dl--schedule > .crm-prop-dossier-row--meta:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-row--meta dt,
+    .ws-crm-pd-mob .crm-prop-dossier-dl--schedule .crm-prop-dossier-row--meta dt {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        max-width: 42% !important;
+        font-size: 0.74rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-secondary) !important;
+        line-height: 1.35 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-row--meta dd,
+    .ws-crm-pd-mob .crm-prop-dossier-dl--schedule .crm-prop-dossier-row--meta dd {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 0.35rem !important;
+        min-width: 0 !important;
+        font-size: 0.82rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text) !important;
+        line-height: 1.4 !important;
+        text-align: end !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-row--meta.crm-prop-dossier-dl--full,
+    .ws-crm-pd-mob .crm-prop-dossier-row--link {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.45rem !important;
+        padding: 0.65rem 0.7rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-row--link dt {
+        max-width: none !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-row--link dd {
+        display: block !important;
+        width: 100% !important;
+        text-align: start !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-meta-val {
+        display: inline-block !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.01em !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-meta-val--mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+        font-size: 0.78rem !important;
+        direction: ltr !important;
+        unicode-bidi: isolate !important;
+        padding: 0.18rem 0.45rem !important;
+        border-radius: 8px !important;
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-meta-act {
+        display: inline-grid !important;
+        place-items: center !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        flex-shrink: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 9px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+        font-size: 0.7rem !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-pd-mob .crm-prop-meta-act:active {
+        color: var(--ws-primary) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-meta-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        max-width: 100% !important;
+        min-height: 1.85rem !important;
+        padding: 0.2rem 0.55rem !important;
+        border-radius: 999px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface)) !important;
+        font-size: 0.74rem !important;
+        font-weight: 750 !important;
+        line-height: 1.3 !important;
+        color: var(--ws-text) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-meta-chip--accent {
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, transparent) !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-meta-chip--count {
+        color: #0f766e !important;
+        background: color-mix(in srgb, #14b8a6 10%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, #14b8a6 18%, transparent) !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--schedule > .crm-prop-dossier-dl {
+        padding: 0.55rem 0.65rem 0.75rem !important;
+        gap: 0 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--schedule .ws-fv-url {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.45rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0.45rem 0.5rem !important;
+        border-radius: 11px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 55%, var(--ws-surface)) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--schedule .ws-fv-url-label {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        font-size: 0.72rem !important;
+        font-weight: 650 !important;
+        color: var(--ws-text-secondary) !important;
+        direction: ltr !important;
+        text-align: start !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--schedule .ws-fv-url-actions {
+        display: inline-flex !important;
+        gap: 0.25rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--schedule .ws-fv-btn {
+        width: 2rem !important;
+        height: 2rem !important;
+        min-width: 2rem !important;
+        min-height: 2rem !important;
+        border-radius: 9px !important;
+        display: inline-grid !important;
+        place-items: center !important;
+    }
 
     .ws-crm-pd-mob .crm-prop-dossier-h__text {
         display: flex !important;
@@ -3479,28 +4240,42 @@
     .ws-crm-pd-mob .crm-prop-dossier-group > .crm-prop-dossier-text,
     .ws-crm-pd-mob .crm-prop-dossier-group > .crm-prop-mask-notice,
     .ws-crm-pd-mob .crm-prop-dossier-group > .crm-prop-mask-blur {
-        padding: 0.35rem 0.7rem 0.7rem !important;
+        padding: 0.55rem 0.65rem 0.75rem !important;
     }
 
     .ws-crm-pd-mob .crm-prop-dossier-dl {
         display: flex !important;
         flex-direction: column !important;
-        gap: 0 !important;
+        gap: 0.4rem !important;
         margin: 0 !important;
     }
 
-    .ws-crm-pd-mob .crm-prop-dossier-dl > div {
+    /* Premium field cards — not hairline desktop rows */
+    .ws-crm-pd-mob .crm-prop-dossier-dl > div:not(.crm-prop-mask-notice):not(.crm-prop-mask-blur):not(.crm-prop-dossier-row--meta) {
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 0.75rem !important;
-        min-height: 2.85rem !important;
-        padding: 0.55rem 0.2rem !important;
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 24%, transparent) !important;
+        gap: 0.7rem !important;
+        min-height: 3.05rem !important;
+        margin: 0 !important;
+        padding: 0.62rem 0.7rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 14px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface-2, #f8fafc) 42%, var(--ws-surface)) 0%,
+                var(--ws-surface) 100%
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        box-sizing: border-box !important;
     }
 
-    .ws-crm-pd-mob .crm-prop-dossier-dl > div:last-child {
-        border-bottom: none !important;
+    .ws-crm-pd-mob .crm-prop-dossier-dl > div:not(.crm-prop-dossier-row--meta):last-child {
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
     }
 
     .ws-crm-pd-mob .crm-prop-dossier-dl dt {
@@ -3508,27 +4283,26 @@
         align-items: center !important;
         gap: 0.45rem !important;
         flex: 0 1 auto !important;
-        max-width: 52% !important;
+        max-width: 48% !important;
         margin: 0 !important;
-        font-size: 0.72rem !important;
-        font-weight: 700 !important;
-        color: var(--ws-text-muted) !important;
+        font-size: 0.74rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-secondary) !important;
         line-height: 1.35 !important;
     }
 
-    /* Restore field icons — v1 had display:none */
     .ws-crm-pd-mob .crm-prop-dossier-dl dt i,
     .ws-crm-pd-mob .crm-prop-dossier-dl dt .crm-prop-amenity-icon {
         display: inline-grid !important;
         place-items: center !important;
-        width: 1.55rem !important;
-        height: 1.55rem !important;
+        width: 1.7rem !important;
+        height: 1.7rem !important;
         flex-shrink: 0 !important;
-        border-radius: 8px !important;
-        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, transparent) !important;
-        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) !important;
+        border-radius: 9px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface)) !important;
         color: var(--ws-primary) !important;
-        font-size: 0.64rem !important;
+        font-size: 0.68rem !important;
         line-height: 1 !important;
     }
 
@@ -3537,21 +4311,134 @@
         min-width: 0 !important;
         margin: 0 !important;
         text-align: end !important;
-        font-size: 0.84rem !important;
-        font-weight: 750 !important;
+        font-size: 0.88rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.015em !important;
         line-height: 1.4 !important;
         color: var(--ws-text) !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    /* Deal — price rows as hero value cards */
+    .ws-crm-pd-mob .crm-prop-dossier-group--deal .crm-prop-dossier-dl > div:has(.crm-prop-dl-price) {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.35rem !important;
+        min-height: 0 !important;
+        padding: 0.75rem 0.8rem !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border)) !important;
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) 0%,
+                var(--ws-surface) 70%
+            ) !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--deal .crm-prop-dossier-dl > div:has(.crm-prop-dl-price) dt {
+        max-width: none !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--deal .crm-prop-dossier-dl > div:has(.crm-prop-dl-price) dd {
+        text-align: start !important;
     }
 
     .ws-crm-pd-mob .crm-prop-dossier-dl .crm-prop-dl-price {
-        font-size: 0.9rem !important;
-        font-weight: 850 !important;
+        display: inline-block !important;
+        font-size: 1.05rem !important;
+        font-weight: 900 !important;
         font-variant-numeric: tabular-nums !important;
+        letter-spacing: -0.03em !important;
+        line-height: 1.25 !important;
     }
 
-    .ws-crm-pd-mob .crm-prop-dl-price--sale { color: #2563eb !important; }
+    .ws-crm-pd-mob .crm-prop-dl-price--sale { color: #1d4ed8 !important; }
     .ws-crm-pd-mob .crm-prop-dl-price--dep { color: var(--ws-primary) !important; }
     .ws-crm-pd-mob .crm-prop-dl-price--rent { color: #0f766e !important; }
+
+    /* Specs — creative 2-column scan tiles */
+    .ws-crm-pd-mob .crm-prop-dossier-group--specs > .crm-prop-dossier-dl {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--specs .crm-prop-dossier-dl > div:not(.crm-prop-mask-notice) {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: 0.45rem !important;
+        min-height: 4.5rem !important;
+        padding: 0.7rem 0.65rem 0.65rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--specs .crm-prop-dossier-dl > div dt {
+        max-width: none !important;
+        width: 100% !important;
+        font-size: 0.7rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--specs .crm-prop-dossier-dl > div dd {
+        width: 100% !important;
+        text-align: start !important;
+        font-size: 0.95rem !important;
+        font-weight: 850 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--specs .crm-prop-dossier-dl > div:has(.crm-prop-dl-amenity) {
+        min-height: 4.35rem !important;
+    }
+
+    /* Location — address / display as story cards */
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div.crm-prop-dossier-dl--full,
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.4rem !important;
+        padding: 0.75rem 0.75rem !important;
+        grid-column: 1 / -1 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div.crm-prop-dossier-dl--full dt,
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div:first-child dt {
+        max-width: none !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div.crm-prop-dossier-dl--full dd,
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div:first-child dd {
+        text-align: start !important;
+        font-size: 0.9rem !important;
+        font-weight: 750 !important;
+        line-height: 1.55 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--location > .crm-prop-dossier-dl {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div.crm-prop-dossier-row--meta,
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div.crm-prop-dossier-dl--full,
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div:first-child {
+        grid-column: 1 / -1 !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div:not(.crm-prop-dossier-dl--full):not(.crm-prop-dossier-row--meta):not(:first-child) {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: 0.4rem !important;
+        min-height: 4.15rem !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div:not(.crm-prop-dossier-dl--full):not(.crm-prop-dossier-row--meta):not(:first-child) dt {
+        max-width: none !important;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-dl > div:not(.crm-prop-dossier-dl--full):not(.crm-prop-dossier-row--meta):not(:first-child) dd {
+        text-align: start !important;
+    }
 
     .ws-crm-pd-mob .crm-prop-dl-amenity {
         display: inline-flex !important;

@@ -19152,6 +19152,27 @@ button.crm-prop-hero-cover {
     gap: 0.45rem;
 }
 
+/* Team share disclosure — desktop keeps toolbar visible; mobile collapses */
+.crm-team-share-card {
+    list-style: none;
+}
+
+.crm-team-share-card > .crm-team-share-card__summary {
+    display: none;
+    list-style: none;
+}
+
+.crm-team-share-card > .crm-team-share-card__summary::-webkit-details-marker {
+    display: none;
+}
+
+.crm-team-share-card__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
 /* Main grid */
 .crm-prop-detail-grid {
     display: grid;
@@ -19461,6 +19482,11 @@ button.crm-prop-hero-cover {
     gap: 0.55rem;
     flex-wrap: nowrap;
     min-height: 34px;
+}
+
+/* Mobile-only section title — shown in property/contact mobile CSS */
+.crm-prop-share-bar__mob-head {
+    display: none;
 }
 
 .crm-prop-share-bar--pro {

@@ -1,4 +1,4 @@
-<nav class="agency-hub-nav agency-hub-nav--ref" aria-label="بخش‌های آژانس">
+<nav class="agency-hub-nav agency-hub-nav--ref agency-hub-nav--premium" aria-label="بخش‌های آژانس">
     <div class="agency-hub-nav__track agency-hub-nav__track--desk">
         {% for key, label, url in hub_nav %}
         <a href="{{ url }}" class="agency-hub-nav__item{% if hub_section == key %} is-active{% endif %}"{% if hub_section == key %} aria-current="page"{% endif %}>
@@ -20,18 +20,18 @@
                 <span class="agency-hub-nav__label">{{ label }}</span>
             </a>
             {% endfor %}
+            {% if hub_nav_more %}
+            <button type="button"
+                    class="agency-hub-nav__primary-item agency-hub-nav__more-btn"
+                    id="agencyHubNavMoreBtn"
+                    aria-expanded="false"
+                    aria-controls="agencyHubNavSheet"
+                    data-agency-hub-nav-more-open>
+                <span class="agency-hub-nav__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='more_vertical' size='nav' only %}</span>
+                <span class="agency-hub-nav__label">بیشتر</span>
+            </button>
+            {% endif %}
         </div>
-        {% if hub_nav_more %}
-        <button type="button"
-                class="agency-hub-nav__more-btn"
-                id="agencyHubNavMoreBtn"
-                aria-expanded="false"
-                aria-controls="agencyHubNavSheet"
-                data-agency-hub-nav-more-open>
-            <span class="agency-hub-nav__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='more_vertical' size='nav' only %}</span>
-            <span class="agency-hub-nav__label">بیشتر</span>
-        </button>
-        {% endif %}
     </div>
 </nav>
 

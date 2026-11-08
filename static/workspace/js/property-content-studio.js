@@ -6141,14 +6141,37 @@
         const url = state.session?.property?.public_share_url || '';
         const canCreate = !!state.session?.can_create_public_share;
         grid.innerHTML = `
-            <div class="pcs-share-card">
-                <p class="pcs-share-card__label">لینک عمومی فایل</p>
-                <input type="text" class="pcs-input" id="pcsShareUrlField" readonly dir="ltr" value="${esc(url)}">
-                <button type="button" class="pcs-btn pcs-btn--soft pcs-btn--block" id="pcsShareTabCopy">کپی لینک</button>
-                ${!url && canCreate ? '<button type="button" class="pcs-btn pcs-btn--primary pcs-btn--block" id="pcsShareCreateLink">ایجاد لینک عمومی</button>' : ''}
+            <article class="pcs-share-card pcs-share-card--link">
+                <div class="pcs-share-card__head">
+                    <span class="pcs-share-card__ico" aria-hidden="true"><i class="fas fa-globe"></i></span>
+                    <div class="pcs-share-card__head-copy">
+                        <p class="pcs-share-card__label">لینک عمومی فایل</p>
+                        <span class="pcs-share-card__sub">${url ? 'آماده اشتراک با مشتری' : 'هنوز لینکی ساخته نشده'}</span>
+                    </div>
+                </div>
+                <div class="pcs-share-card__field">
+                    <input type="text" class="pcs-input pcs-share-card__input" id="pcsShareUrlField" readonly dir="ltr" value="${esc(url)}" placeholder="https://…">
+                </div>
+                <div class="pcs-share-card__actions">
+                    <button type="button" class="pcs-btn pcs-btn--soft pcs-btn--block" id="pcsShareTabCopy">
+                        <i class="fas fa-copy" aria-hidden="true"></i><span>کپی لینک</span>
+                    </button>
+                    ${!url && canCreate ? '<button type="button" class="pcs-btn pcs-btn--primary pcs-btn--block" id="pcsShareCreateLink"><i class="fas fa-plus" aria-hidden="true"></i><span>ایجاد لینک عمومی</span></button>' : ''}
+                </div>
                 ${!url && !canCreate ? '<p class="pcs-share-card__hint">لینک عمومی فعالی وجود ندارد.</p>' : ''}
-            </div>
-            <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--block" id="pcsShareTabDivar">رفتن به تب آگهی دیوار</button>`;
+            </article>
+            <article class="pcs-share-card pcs-share-card--tip">
+                <div class="pcs-share-card__head">
+                    <span class="pcs-share-card__ico pcs-share-card__ico--soft" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+                    <div class="pcs-share-card__head-copy">
+                        <p class="pcs-share-card__label">مسیر انتشار</p>
+                        <span class="pcs-share-card__sub">دیوار با متن AI · شبکه‌ها با کپشن · اینستاگرام با دانلود پوستر</span>
+                    </div>
+                </div>
+                <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--block" id="pcsShareTabDivar">
+                    <i class="fas fa-store" aria-hidden="true"></i><span>رفتن به آگهی دیوار</span>
+                </button>
+            </article>`;
         $('#pcsShareTabCopy')?.addEventListener('click', () => {
             const current = $('#pcsShareUrlField')?.value || url;
             if (!current) { toast('لینک عمومی موجود نیست'); return; }

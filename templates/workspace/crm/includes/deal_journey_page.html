@@ -23,35 +23,45 @@
                         <span>{{ deal.title|truncatechars:36 }}</span>
                     </nav>
                 </div>
-                <div class="dj-deal__header-actions" role="toolbar" aria-label="عملیات سریع">
-                    <button type="button" class="dj-deal__act dj-deal__act--primary" data-drawer-open="drawer-followup" title="ثبت پیگیری">
-                        <i class="fas fa-comment-dots" aria-hidden="true"></i><span>پیگیری</span>
+                <div class="dj-deal__mob-bar" aria-hidden="true">
+                    <span class="dj-deal__mob-bar-kicker">معامله</span>
+                    <span class="dj-deal__mob-bar-title">{{ deal.title|truncatechars:28 }}</span>
+                </div>
+                <div class="dj-deal__header-end">
+                    <button type="button" class="dj-deal__mob-cta" data-drawer-open="drawer-followup" title="ثبت پیگیری" aria-label="ثبت پیگیری">
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                        <span>پیگیری</span>
                     </button>
-                    <button type="button" class="dj-deal__act" data-drawer-open="drawer-next-action" title="اقدام بعدی">
-                        <i class="fas fa-bolt" aria-hidden="true"></i><span class="dj-deal__act-label">اقدام</span>
-                    </button>
-                    {% if deal.customer_id and deal.customer.phone %}
-                    <a href="{{ deal.customer.phone|phone_tel_href }}" class="dj-deal__act" title="تماس" aria-label="تماس"><i class="fas fa-phone"></i></a>
-                    {% endif %}
-                    <button type="button" class="dj-deal__act" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش"><i class="fas fa-pen"></i></button>
-                    <button type="button" class="dj-deal__act dj-deal__act--help" title="راهنمای معامله" aria-label="راهنمای معامله" data-modal-open="modal-crm-deal-detail-help">
-                        <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>
-                    </button>
-                    <div class="dj-deal__more-wrap">
-                        <button type="button" class="dj-deal__act" id="djDealMoreBtn" aria-haspopup="true" aria-expanded="false" aria-label="بیشتر"><i class="fas fa-ellipsis-h"></i></button>
-                        <div class="dj-deal__more-menu" id="djDealMoreMenu" role="menu" hidden>
-                            <button type="button" role="menuitem" data-drawer-open="drawer-followup">ثبت پیگیری</button>
-                            <button type="button" role="menuitem" data-drawer-open="drawer-next-action">اقدام بعدی</button>
-                            <button type="button" role="menuitem" data-drawer-open="drawer-finance">مالی و کمیسیون</button>
-                            {% if deal.customer_id %}<a href="{% url 'workspace:crm_detail' deal.customer_id %}" role="menuitem">مخاطب</a>{% endif %}
-                            {% if deal.property_id %}<a href="{% url 'workspace:crm_property_detail' deal.property_id %}" role="menuitem">ملک</a>{% endif %}
-                            <a href="{{ deal_contracts_url }}" role="menuitem">قراردادها</a>
-                            <button type="button" role="menuitem" data-drawer-open="drawer-edit">ویرایش معامله</button>
-                            <form method="post" action="{% url 'workspace:crm_deal_detail' deal.pk %}" class="dj-deal__more-danger" onsubmit="return confirm('این معامله حذف شود؟ این کار قابل بازگشت نیست.');">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="delete">
-                                <button type="submit" role="menuitem">حذف معامله</button>
-                            </form>
+                    <div class="dj-deal__header-actions" role="toolbar" aria-label="عملیات سریع">
+                        <button type="button" class="dj-deal__act dj-deal__act--primary" data-drawer-open="drawer-followup" title="ثبت پیگیری">
+                            <i class="fas fa-comment-dots" aria-hidden="true"></i><span>پیگیری</span>
+                        </button>
+                        <button type="button" class="dj-deal__act" data-drawer-open="drawer-next-action" title="اقدام بعدی">
+                            <i class="fas fa-bolt" aria-hidden="true"></i><span class="dj-deal__act-label">اقدام</span>
+                        </button>
+                        {% if deal.customer_id and deal.customer.phone %}
+                        <a href="{{ deal.customer.phone|phone_tel_href }}" class="dj-deal__act" title="تماس" aria-label="تماس"><i class="fas fa-phone"></i></a>
+                        {% endif %}
+                        <button type="button" class="dj-deal__act" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش"><i class="fas fa-pen"></i></button>
+                        <button type="button" class="dj-deal__act dj-deal__act--help" title="راهنمای معامله" aria-label="راهنمای معامله" data-modal-open="modal-crm-deal-detail-help">
+                            <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>
+                        </button>
+                        <div class="dj-deal__more-wrap">
+                            <button type="button" class="dj-deal__act" id="djDealMoreBtn" aria-haspopup="true" aria-expanded="false" aria-label="بیشتر"><i class="fas fa-ellipsis"></i></button>
+                            <div class="dj-deal__more-menu" id="djDealMoreMenu" role="menu" hidden>
+                                <button type="button" role="menuitem" data-drawer-open="drawer-followup">ثبت پیگیری</button>
+                                <button type="button" role="menuitem" data-drawer-open="drawer-next-action">اقدام بعدی</button>
+                                <button type="button" role="menuitem" data-drawer-open="drawer-finance">مالی و کمیسیون</button>
+                                {% if deal.customer_id %}<a href="{% url 'workspace:crm_detail' deal.customer_id %}" role="menuitem">مخاطب</a>{% endif %}
+                                {% if deal.property_id %}<a href="{% url 'workspace:crm_property_detail' deal.property_id %}" role="menuitem">ملک</a>{% endif %}
+                                <a href="{{ deal_contracts_url }}" role="menuitem">قراردادها</a>
+                                <button type="button" role="menuitem" data-drawer-open="drawer-edit">ویرایش معامله</button>
+                                <form method="post" action="{% url 'workspace:crm_deal_detail' deal.pk %}" class="dj-deal__more-danger" onsubmit="return confirm('این معامله حذف شود؟ این کار قابل بازگشت نیست.');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <button type="submit" role="menuitem">حذف معامله</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -119,23 +129,43 @@
         </nav>
 
         <div class="dj-deal-mob-summary" aria-label="خلاصه مالی معامله">
-            <dl class="dj-deal-mob-summary__rows">
-                <div class="dj-deal-mob-summary__row">
-                    <dt>ارزش معامله</dt>
-                    <dd>{% if deal.value %}{{ deal.value|ws_money }}{% else %}ثبت نشده{% endif %}</dd>
+            <div class="dj-deal-mob-summary__cards">
+                <div class="dj-deal-mob-summary__card dj-deal-mob-summary__card--value">
+                    <em>ارزش معامله</em>
+                    <strong>{% if deal.value %}{{ deal.value|ws_money }}{% else %}ثبت نشده{% endif %}</strong>
+                </div>
+                <div class="dj-deal-mob-summary__card dj-deal-mob-summary__card--prob">
+                    <em>احتمال</em>
+                    <strong>{{ deal.probability|to_persian_digits }}٪</strong>
                 </div>
                 {% if finance.net_advisor %}
-                <div class="dj-deal-mob-summary__row dj-deal-mob-summary__row--accent">
-                    <dt>سهم شما</dt>
-                    <dd>{{ finance.net_advisor|ws_money }}</dd>
+                <div class="dj-deal-mob-summary__card dj-deal-mob-summary__card--share">
+                    <em>سهم شما</em>
+                    <strong>{{ finance.net_advisor|ws_money }}</strong>
                 </div>
                 {% elif finance.advisor_commission %}
-                <div class="dj-deal-mob-summary__row dj-deal-mob-summary__row--accent">
-                    <dt>سهم مشاور</dt>
-                    <dd>{{ finance.advisor_commission|ws_money }}</dd>
+                <div class="dj-deal-mob-summary__card dj-deal-mob-summary__card--share">
+                    <em>سهم مشاور</em>
+                    <strong>{{ finance.advisor_commission|ws_money }}</strong>
                 </div>
                 {% endif %}
-            </dl>
+            </div>
+            <div class="dj-deal-mob-summary__links">
+                {% if deal.customer_id %}
+                <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="dj-deal-mob-summary__link">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <span>{{ deal.customer.name }}</span>
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if deal.property_id %}
+                <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="dj-deal-mob-summary__link">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    <span>{{ deal.property.title|truncatechars:26 }}</span>
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 

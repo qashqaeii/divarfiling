@@ -308,15 +308,20 @@
                 <span class="crm-prop-dossier-h__sub">تاریخ ثبت و به‌روزرسانی فایل</span>
             </span>
         </h3>
-        <dl class="crm-prop-dossier-dl">
+        <dl class="crm-prop-dossier-dl crm-prop-dossier-dl--schedule">
             {% if property.token and not mask_sensitive %}
-            <div class="crm-prop-dossier-row--meta">
+            <div class="crm-prop-dossier-row--meta crm-prop-dossier-row--token">
                 <dt><i class="fas fa-fingerprint" aria-hidden="true"></i> شناسه</dt>
-                <dd dir="ltr">{{ property.token }}</dd>
+                <dd>
+                    <span class="crm-prop-meta-val crm-prop-meta-val--mono" dir="ltr">{{ property.token }}</span>
+                    <button type="button" class="crm-prop-meta-act" data-copy="{{ property.token }}" title="کپی شناسه" aria-label="کپی شناسه">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
+                </dd>
             </div>
             {% endif %}
             {% if property.link and not mask_sensitive %}
-            <div class="crm-prop-dossier-row--meta crm-prop-dossier-dl--full">
+            <div class="crm-prop-dossier-row--meta crm-prop-dossier-row--link crm-prop-dossier-dl--full">
                 <dt><i class="fas fa-link" aria-hidden="true"></i> لینک</dt>
                 <dd>
                     <span class="ws-fv-url">
@@ -329,24 +334,24 @@
                 </dd>
             </div>
             {% endif %}
-            <div class="crm-prop-dossier-row--meta">
+            <div class="crm-prop-dossier-row--meta crm-prop-dossier-row--date">
                 <dt><i class="fas fa-calendar-plus" aria-hidden="true"></i> ثبت</dt>
-                <dd>{{ property.created_at|ws_jalali }}</dd>
+                <dd><span class="crm-prop-meta-chip">{{ property.created_at|ws_jalali }}</span></dd>
             </div>
-            <div class="crm-prop-dossier-row--meta">
+            <div class="crm-prop-dossier-row--meta crm-prop-dossier-row--date">
                 <dt><i class="fas fa-rotate" aria-hidden="true"></i> بروزرسانی</dt>
-                <dd>{{ property.updated_at|ws_jalali }}</dd>
+                <dd><span class="crm-prop-meta-chip crm-prop-meta-chip--accent">{{ property.updated_at|ws_jalali }}</span></dd>
             </div>
             {% if property.images %}
-            <div class="crm-prop-dossier-row--meta">
+            <div class="crm-prop-dossier-row--meta crm-prop-dossier-row--media">
                 <dt><i class="fas fa-images" aria-hidden="true"></i> تصاویر</dt>
-                <dd>{{ property.images|length }} عدد</dd>
+                <dd><span class="crm-prop-meta-chip crm-prop-meta-chip--count">{{ property.images|length }} عدد</span></dd>
             </div>
             {% endif %}
             {% if property.videos %}
-            <div class="crm-prop-dossier-row--meta">
+            <div class="crm-prop-dossier-row--meta crm-prop-dossier-row--media">
                 <dt><i class="fas fa-video" aria-hidden="true"></i> ویدئو</dt>
-                <dd>{{ property.videos|length }} عدد</dd>
+                <dd><span class="crm-prop-meta-chip crm-prop-meta-chip--count">{{ property.videos|length }} عدد</span></dd>
             </div>
             {% endif %}
         </dl>

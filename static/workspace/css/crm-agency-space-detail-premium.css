@@ -1,0 +1,1325 @@
+/* Agency Space — property & contact detail premium (desktop + mobile)
+   Scoped to .agency-space-detail--premium — does not rewrite base contracts. */
+
+.agency-space-detail--premium {
+    --as-detail-radius: 18px;
+    --as-detail-radius-sm: 14px;
+    --as-detail-primary: var(--ws-primary, #7c3aed);
+    --as-detail-border: color-mix(in srgb, var(--as-detail-primary) 12%, var(--ws-border, #e2e8f0));
+    --as-detail-soft:
+        radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--as-detail-primary) 7%, transparent), transparent 55%);
+    --as-detail-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.03),
+        0 14px 30px -20px rgba(15, 23, 42, 0.24),
+        inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+    /* Match agency hub header/body width (no centered narrow column) */
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.agency-hub--space .agency-space-detail--premium,
+.agency-hub--closure .agency-space-detail--premium {
+    max-width: none;
+    width: 100%;
+}
+
+/* ── Crumb ── */
+.agency-space-detail--premium .agency-space-detail__crumb--premium {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 0 0.75rem;
+    padding: 0.4rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--as-detail-primary) 10%, var(--ws-border, #e2e8f0));
+    background:
+        var(--as-detail-soft),
+        color-mix(in srgb, var(--ws-bg, #f4f6fb) 45%, var(--ws-surface, #fff));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-detail__crumb-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 750;
+    color: #475569;
+    text-decoration: none;
+    transition: background 140ms ease, color 140ms ease;
+}
+
+.agency-space-detail--premium .agency-space-detail__crumb-link:hover {
+    background: var(--ws-surface, #fff);
+    color: var(--as-detail-primary);
+}
+
+.agency-space-detail--premium .agency-space-detail__crumb-link i {
+    font-size: 0.68rem;
+    opacity: 0.85;
+}
+
+.agency-space-detail--premium .agency-space-detail__nav-sep {
+    color: #cbd5e1;
+    font-size: 0.58rem;
+}
+
+.agency-space-detail--premium .agency-space-detail__crumb-current {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-inline-start: auto;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    background: var(--ws-surface, #fff);
+    border: 1px solid color-mix(in srgb, var(--as-detail-primary) 14%, transparent);
+    color: var(--as-detail-primary);
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.agency-space-detail--premium .agency-space-detail__crumb-current i {
+    font-size: 0.66rem;
+}
+
+/* ── Layout ── */
+.agency-space-detail--premium .agency-space-detail__layout--property,
+.agency-space-detail--premium .agency-space-detail__layout--contact {
+    gap: 1rem;
+}
+
+.agency-space-detail--premium .agency-space-detail__main {
+    gap: 0.85rem;
+}
+
+.agency-space-detail--premium .agency-space-pro-detail--premium {
+    gap: 0.85rem;
+}
+
+/* ── Hero shell ── */
+.agency-space-detail--premium .agency-space-pro-hero--premium {
+    border-radius: var(--as-detail-radius);
+    border: 1px solid var(--as-detail-border);
+    background:
+        var(--as-detail-soft),
+        linear-gradient(165deg, color-mix(in srgb, var(--as-detail-primary) 4%, #fff) 0%, #fff 48%, #fff 100%);
+    box-shadow: var(--as-detail-shadow);
+    overflow: hidden;
+}
+
+.agency-space-detail--premium .agency-space-pro-hero__mesh {
+    background:
+        radial-gradient(ellipse 90% 70% at 100% 0%, color-mix(in srgb, var(--as-detail-primary) 14%, transparent), transparent 58%),
+        radial-gradient(ellipse 55% 45% at 0% 100%, color-mix(in srgb, #0ea5e9 7%, transparent), transparent 52%);
+    opacity: 0.95;
+}
+
+.agency-space-detail--premium .agency-space-pro-hero__body {
+    padding: 1.05rem 1.15rem 1rem;
+}
+
+/* ── Unified property showcase — stacked, minimal premium ── */
+.agency-space-detail--premium .agency-space-prop-showcase--premium {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-radius: var(--as-detail-radius);
+    border: 1px solid var(--as-detail-border);
+    background: #fff;
+    box-shadow: var(--as-detail-shadow);
+    overflow: hidden;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__media {
+    order: 1;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__thumbs {
+    order: 2;
+    margin: 0;
+    padding: 0.55rem 0.85rem;
+    gap: 0.4rem;
+    background: #fff;
+    border-top: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 32%, transparent);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__info {
+    order: 3;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__stage.agency-space-prop-gallery__stage {
+    border-radius: 0 !important;
+    border: none;
+    box-shadow: none;
+    max-height: min(52vh, 26rem);
+    aspect-ratio: 16 / 9;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__chips {
+    position: absolute;
+    top: 0.7rem;
+    inset-inline-start: 0.7rem;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0;
+    pointer-events: none;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__chips .agency-space-property-detail__chip {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__info.agency-space-pro-hero--premium {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    overflow: visible;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__info .agency-space-pro-hero__mesh {
+    display: none;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__body {
+    padding: 0.9rem 1.05rem 1.05rem !important;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__chips-inline {
+    display: none;
+}
+
+.agency-space-detail--premium .agency-space-prop-showcase__empty {
+    min-height: 10rem;
+    border-radius: 0;
+    border: none;
+}
+
+/* Hide legacy count badge inside showcase — overlay is the single CTA */
+.agency-space-detail--premium .agency-space-prop-showcase .agency-space-prop-gallery__badge,
+.agency-space-detail--premium .agency-space-prop-showcase .agency-space-property-detail__gallery-count {
+    display: none !important;
+}
+
+/* Property hero chips / title inside showcase */
+.agency-space-detail--premium .agency-space-property-detail__chips {
+    gap: 0.35rem;
+    margin-bottom: 0.4rem;
+}
+
+.agency-space-detail--premium .agency-space-property-detail__chip {
+    min-height: 1.45rem;
+    padding: 0.16rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 45%, #fff);
+    color: #475569;
+}
+
+.agency-space-detail--premium .agency-space-property-detail__chip--deal {
+    background: color-mix(in srgb, #0f172a 88%, transparent);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+
+.agency-space-detail--premium .agency-space-property-detail__chip--muted {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.agency-space-detail--premium .agency-space-pro-detail--premium .agency-space-property-detail__title {
+    margin: 0;
+    font-size: clamp(1.2rem, 1.05rem + 0.45vw, 1.45rem);
+    font-weight: 850;
+    letter-spacing: -0.03em;
+    line-height: 1.3;
+    color: #0f172a;
+}
+
+.agency-space-detail--premium .agency-space-property-detail__location {
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 650;
+    color: #64748b;
+}
+
+.agency-space-detail--premium .agency-space-prop-hero__quickfacts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.65rem;
+    margin-top: 0.7rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 42%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-prop-hero__quickfact--price {
+    font-size: 1.2rem;
+    font-weight: 850;
+    letter-spacing: -0.03em;
+    color: var(--as-detail-primary);
+    line-height: 1.2;
+}
+
+.agency-space-detail--premium .agency-space-prop-hero__quickfact--area,
+.agency-space-detail--premium .agency-space-prop-hero__quickfact--ppm {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    min-height: 1.55rem;
+    padding: 0.14rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 50%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 48%, #fff);
+    font-size: 0.72rem;
+    font-weight: 750;
+    color: #475569;
+}
+
+/* Hero highlight cards (desktop) */
+.agency-space-detail--premium .agency-space-prop-hero__highlights {
+    margin-top: 0.75rem;
+    gap: 0.55rem;
+}
+
+.agency-space-detail--premium .agency-space-prop-hero-highlight__card {
+    border-radius: var(--as-detail-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--as-detail-primary) 12%, var(--ws-border, #e2e8f0));
+    background:
+        radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--as-detail-primary) 6%, transparent), transparent 55%),
+        #fff;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-prop-hero-highlight__card--contact {
+    border-color: color-mix(in srgb, #10b981 16%, var(--ws-border, #e2e8f0));
+    background:
+        radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, #10b981 7%, transparent), transparent 55%),
+        #fff;
+}
+
+.agency-space-detail--premium .agency-space-prop-hero-highlight__value {
+    font-weight: 850;
+    letter-spacing: -0.02em;
+}
+
+.agency-space-detail--premium .agency-space-prop-hero-contact__call {
+    border-radius: 12px;
+    min-height: 2.75rem;
+    border: 1px solid color-mix(in srgb, #10b981 18%, transparent);
+    background: color-mix(in srgb, #ecfdf5 70%, #fff);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-prop-hero-contact__copy {
+    border-radius: 11px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+    background: #fff;
+}
+
+/* Contact hero */
+.agency-space-detail--premium .agency-space-pro-detail--premium .agency-space-contact-detail__avatar {
+    width: 5.25rem;
+    height: 5.25rem;
+    border-radius: 18px;
+    border: 2px solid #fff;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--as-detail-primary) 14%, transparent),
+        0 12px 28px -12px color-mix(in srgb, var(--as-detail-primary) 45%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__avatar--initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--as-detail-primary) 18%, #fff),
+            color-mix(in srgb, var(--as-detail-primary) 7%, #fff)
+        );
+    color: var(--as-detail-primary);
+    font-size: 1.65rem;
+    font-weight: 850;
+}
+
+.agency-space-detail--premium .agency-space-pro-detail--premium .agency-space-contact-detail__name {
+    margin: 0;
+    font-size: clamp(1.2rem, 1.05rem + 0.4vw, 1.45rem);
+    font-weight: 850;
+    letter-spacing: -0.03em;
+    line-height: 1.28;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__role {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__role i {
+    color: var(--as-detail-primary);
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__meta-row {
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__status,
+.agency-space-detail--premium .agency-space-pro-detail--premium .agency-space-contact-detail__priority {
+    min-height: 1.45rem;
+    padding: 0.16rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__status {
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 55%, #fff);
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+    color: #475569;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__budget-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.65rem;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__budget-item {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+    padding: 0.4rem 0.65rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--as-detail-primary) 14%, transparent);
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--as-detail-primary) 7%, #fff), #fff);
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__budget-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__budget-value {
+    font-size: 0.82rem;
+    font-weight: 850;
+    color: var(--as-detail-primary);
+    letter-spacing: -0.02em;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__access-row {
+    margin-top: 0.7rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 42%, transparent);
+    gap: 0.35rem;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__share {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    min-height: 1.45rem;
+    padding: 0.16rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, #0ea5e9 18%, transparent);
+    background: color-mix(in srgb, #e0f2fe 55%, #fff);
+    color: #0369a1;
+    font-size: 0.66rem;
+    font-weight: 800;
+}
+
+/* ── Gallery media inside showcase ── */
+.agency-space-detail--premium .agency-space-prop-gallery__stage {
+    position: relative;
+    width: 100%;
+    border-radius: 0;
+    overflow: hidden;
+    background: linear-gradient(145deg, #eef2f7, #d9e2ec);
+}
+
+.agency-space-detail--premium .agency-space-prop-gallery__main-hit {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent;
+    overflow: hidden;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.agency-space-detail--premium .agency-space-prop-gallery__main-hit img,
+.agency-space-detail--premium .agency-space-property-detail__gallery-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0 !important;
+}
+
+.agency-space-detail--premium .agency-space-prop-gallery__overlay {
+    top: auto;
+    bottom: 0.7rem;
+    inset-inline-start: auto;
+    inset-inline-end: 0.7rem;
+    width: auto;
+    height: auto;
+    max-width: calc(100% - 1.4rem);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.7rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, #0f172a 74%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-size: 0.72rem;
+    font-weight: 750;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22);
+    opacity: 1;
+    pointer-events: none;
+}
+
+.agency-space-detail--premium .agency-space-prop-gallery__overlay i {
+    font-size: 0.72rem;
+    opacity: 0.95;
+}
+
+.agency-space-detail--premium .agency-space-prop-gallery__thumb {
+    width: 3.75rem;
+    height: 2.85rem;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+    box-shadow: 0 4px 12px -8px rgba(15, 23, 42, 0.2);
+    opacity: 0.82;
+    transition: opacity 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.agency-space-detail--premium .agency-space-prop-gallery__thumb:hover,
+.agency-space-detail--premium .agency-space-prop-gallery__thumb.is-active {
+    opacity: 1;
+    border-color: color-mix(in srgb, var(--as-detail-primary) 45%, transparent);
+    transform: translateY(-1px);
+}
+
+.agency-space-detail--premium .agency-space-prop-gallery__empty {
+    border-radius: var(--as-detail-radius);
+    border: 1px dashed color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+    background:
+        var(--as-detail-soft),
+        color-mix(in srgb, var(--ws-bg, #f4f6fb) 40%, #fff);
+    min-height: 10rem;
+}
+
+/* ── Metrics strip ── */
+.agency-space-detail--premium .agency-space-prop-detail__metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 1.7rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 48%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 42%, #fff);
+    font-size: 0.7rem;
+    font-weight: 750;
+    color: #475569;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__metric i {
+    color: var(--as-detail-primary);
+    font-size: 0.66rem;
+    opacity: 0.9;
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__metric--budget {
+    border-color: color-mix(in srgb, var(--as-detail-primary) 16%, transparent);
+    background: color-mix(in srgb, var(--as-detail-primary) 6%, #fff);
+    color: var(--as-detail-primary);
+}
+
+/* ── Panels / specs / contact / prose ── */
+.agency-space-detail--premium .agency-space-pro-panel {
+    border-radius: var(--as-detail-radius);
+    border: 1px solid var(--as-detail-border);
+    background:
+        var(--as-detail-soft),
+        #fff;
+    box-shadow: var(--as-detail-shadow);
+    padding: 0.95rem 1.05rem;
+}
+
+.agency-space-detail--premium .agency-space-pro-panel:hover {
+    transform: none;
+}
+
+.agency-space-detail--premium .agency-space-pro-panel--accent {
+    border-color: color-mix(in srgb, #10b981 18%, var(--ws-border, #e2e8f0));
+    background:
+        radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, #10b981 8%, transparent), transparent 55%),
+        #fff;
+}
+
+.agency-space-detail--premium .agency-space-pro-panel--muted {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--ws-bg, #f4f6fb) 55%, #fff) 0%, #fff 100%);
+}
+
+.agency-space-detail--premium .agency-space-pro-panel__head {
+    margin-bottom: 0.7rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 38%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-pro-panel__icon {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 12px;
+    background:
+        linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--as-detail-primary) 16%, #fff),
+            color-mix(in srgb, var(--as-detail-primary) 8%, #fff)
+        );
+    color: var(--as-detail-primary);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--as-detail-primary) 10%, transparent),
+        0 6px 14px -8px color-mix(in srgb, var(--as-detail-primary) 40%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-pro-panel__icon--green {
+    background: linear-gradient(145deg, #d1fae5, #a7f3d0);
+    color: #047857;
+    box-shadow: 0 0 0 1px color-mix(in srgb, #10b981 14%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-pro-panel__title {
+    font-size: 0.98rem;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+}
+
+.agency-space-detail--premium .agency-space-pro-spec-grid {
+    gap: 0.5rem;
+}
+
+.agency-space-detail--premium .agency-space-pro-spec-cell {
+    padding: 0.6rem 0.65rem;
+    border-radius: 13px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 48%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 28%, #fff);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-pro-spec-cell--accent {
+    border-color: color-mix(in srgb, var(--as-detail-primary) 16%, transparent);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--as-detail-primary) 7%, #fff), #fff);
+}
+
+.agency-space-detail--premium .agency-space-pro-spec-cell__icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 9px;
+}
+
+.agency-space-detail--premium .agency-space-pro-spec-cell__value {
+    font-size: 0.84rem;
+    font-weight: 850;
+    letter-spacing: -0.015em;
+}
+
+.agency-space-detail--premium .agency-space-pro-contact a {
+    min-height: 2.85rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 13px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 50%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 30%, #fff);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent);
+    font-weight: 800;
+}
+
+.agency-space-detail--premium .agency-space-pro-contact a:hover {
+    border-color: color-mix(in srgb, var(--as-detail-primary) 28%, transparent);
+    box-shadow:
+        0 8px 18px -12px color-mix(in srgb, var(--as-detail-primary) 35%, transparent),
+        inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-pro-prose {
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: #475569;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__chips {
+    gap: 0.35rem;
+}
+
+.agency-space-detail--premium .agency-space-contact-detail__chip {
+    min-height: 1.55rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 48%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 42%, #fff);
+    font-size: 0.7rem;
+    font-weight: 750;
+    color: #475569;
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__address {
+    margin-top: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 13px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 45%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 35%, #fff);
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__address-text {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #475569;
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__map-wrap {
+    margin-top: 0.75rem;
+    border-radius: var(--as-detail-radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--as-detail-border);
+    box-shadow: var(--as-detail-shadow);
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__amenity-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__amenity-chips li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 1.7rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 48%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 40%, #fff);
+    font-size: 0.7rem;
+    font-weight: 750;
+    color: #475569;
+}
+
+.agency-space-detail--premium .agency-space-prop-detail__amenity-chips li i {
+    color: var(--as-detail-primary);
+    font-size: 0.66rem;
+}
+
+.agency-space-detail--premium .agency-space-detail__section--note {
+    border-radius: var(--as-detail-radius);
+    border: 1px solid color-mix(in srgb, var(--as-detail-primary) 14%, transparent);
+    background:
+        radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--as-detail-primary) 8%, transparent), transparent 55%),
+        #fff;
+    box-shadow: var(--as-detail-shadow);
+    padding: 0.9rem 1rem;
+}
+
+/* ── Aside cards ── */
+.agency-space-detail--premium .agency-space-prop-aside,
+.agency-space-detail--premium .agency-space-contact-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.agency-space-detail--premium .agency-space-prop-aside__card.agency-space-pro-aside-card,
+.agency-space-detail--premium .agency-space-pro-aside-card {
+    border-radius: var(--as-detail-radius) !important;
+    border: 1px solid var(--as-detail-border) !important;
+    background:
+        var(--as-detail-soft),
+        #fff !important;
+    box-shadow: var(--as-detail-shadow) !important;
+    padding: 0.95rem 1rem !important;
+}
+
+.agency-space-detail--premium .agency-space-prop-aside__card--crm,
+.agency-space-detail--premium .agency-space-pro-aside-card.agency-space-contact-detail__aside-card--crm,
+.agency-space-detail--premium .agency-space-pro-aside-card.agency-space-property-detail__aside-card--crm {
+    border-color: color-mix(in srgb, var(--as-detail-primary) 22%, var(--ws-border, #e2e8f0)) !important;
+    background:
+        radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--as-detail-primary) 10%, transparent), transparent 55%),
+        linear-gradient(165deg, color-mix(in srgb, var(--as-detail-primary) 5%, #fff) 0%, #fff 55%) !important;
+}
+
+.agency-space-detail--premium .agency-space-pro-aside-card__icon {
+    width: 2.45rem;
+    height: 2.45rem;
+    border-radius: 12px;
+    box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 22%, transparent) inset,
+        0 8px 16px -8px color-mix(in srgb, var(--as-detail-primary) 50%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-property-detail__aside-h,
+.agency-space-detail--premium .agency-space-contact-detail__aside-h {
+    font-size: 0.95rem;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+}
+
+.agency-space-detail--premium .agency-space-property-detail__aside-lead,
+.agency-space-detail--premium .agency-space-contact-detail__aside-lead {
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: #64748b;
+}
+
+.agency-space-detail--premium .agency-space-pro-status--ok {
+    border-radius: 12px;
+    padding: 0.5rem 0.65rem;
+    background: color-mix(in srgb, #ecfdf5 78%, #fff);
+    border: 1px solid color-mix(in srgb, #10b981 22%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-pro-btn {
+    min-height: 2.7rem;
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+.agency-space-detail--premium .agency-space-pro-btn--primary {
+    background: var(--as-detail-primary);
+    box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 20%, transparent) inset,
+        0 10px 20px -10px color-mix(in srgb, var(--as-detail-primary) 55%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-pro-btn--ghost {
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 45%, #fff);
+    border-color: color-mix(in srgb, var(--ws-border, #e2e8f0) 60%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-prop-aside__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.15rem 0 0.65rem;
+}
+
+.agency-space-detail--premium .agency-space-prop-aside__badge {
+    min-height: 1.45rem;
+    padding: 0.16rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 50%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 45%, #fff);
+    color: #475569;
+}
+
+.agency-space-detail--premium .agency-space-prop-aside__publisher {
+    padding: 0.65rem 0.7rem;
+    border-radius: 13px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 45%, transparent);
+    background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 38%, #fff);
+}
+
+.agency-space-detail--premium .agency-space-prop-aside__mine {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    margin: 0.45rem 0 0;
+    padding: 0.16rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, #fef3c7 70%, #fff);
+    border: 1px solid color-mix(in srgb, #f59e0b 22%, transparent);
+    color: #b45309;
+    font-size: 0.66rem;
+    font-weight: 800;
+}
+
+.agency-space-detail--premium .agency-space-pro-timeline li {
+    padding: 0.45rem 0;
+}
+
+.agency-space-detail--premium .agency-space-pro-timeline__icon {
+    background: color-mix(in srgb, var(--as-detail-primary) 8%, #fff);
+    color: var(--as-detail-primary);
+}
+
+/* Generic fallback aside cards (non property/contact payload) */
+.agency-space-detail--premium .agency-space-detail__aside-card {
+    border-radius: var(--as-detail-radius);
+    border: 1px solid var(--as-detail-border);
+    background:
+        var(--as-detail-soft),
+        #fff;
+    box-shadow: var(--as-detail-shadow);
+    padding: 0.95rem 1rem;
+}
+
+.agency-space-detail--premium .agency-space-detail__aside-card--crm {
+    border-color: color-mix(in srgb, var(--as-detail-primary) 22%, var(--ws-border, #e2e8f0));
+}
+
+/* ── Sticky CTA (above bottom nav on mobile) ── */
+.agency-space-detail--premium .agency-space-detail__sticky--premium {
+    border-top: 1px solid color-mix(in srgb, var(--as-detail-primary) 12%, var(--ws-border, #e2e8f0));
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, #fff 78%, transparent),
+            color-mix(in srgb, var(--ws-bg, #f4f6fb) 90%, #fff)
+        );
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 -12px 28px -20px rgba(15, 23, 42, 0.28);
+    z-index: 45;
+}
+
+.agency-space-detail--premium .agency-space-detail__sticky-inner {
+    gap: 0.45rem;
+}
+
+.agency-space-detail--premium .agency-space-detail__sticky-back,
+.agency-space-detail--premium .agency-space-detail__sticky-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2.75rem;
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+.agency-space-detail--premium .agency-space-detail__sticky-primary {
+    box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 20%, transparent) inset,
+        0 10px 20px -10px color-mix(in srgb, var(--as-detail-primary) 55%, transparent);
+}
+
+.agency-space-detail--premium .agency-space-detail__sticky-back i,
+.agency-space-detail--premium .agency-space-detail__sticky-primary i {
+    font-size: 0.7rem;
+    opacity: 0.9;
+}
+
+/* ── Desktop refinements ── */
+@media (min-width: 960px) {
+    .agency-space-detail--premium .agency-space-detail__layout,
+    .agency-space-detail--premium .agency-space-detail__layout--property,
+    .agency-space-detail--premium .agency-space-detail__layout--contact {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(17rem, 20rem);
+        gap: 1.15rem;
+        align-items: start;
+        width: 100%;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__main {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__aside--property,
+    .agency-space-detail--premium .agency-space-detail__aside--contact,
+    .agency-space-detail--premium .agency-space-detail__layout--property .agency-space-detail__aside--property,
+    .agency-space-detail--premium .agency-space-detail__layout--contact .agency-space-detail__aside--contact {
+        position: sticky;
+        top: 0.85rem;
+        width: 100%;
+        max-width: none;
+        flex: none;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-aside,
+    .agency-space-detail--premium .agency-space-contact-aside {
+        width: 100%;
+    }
+
+    /* Desktop: stacked media → thumbs → info, full main-column width */
+    .agency-space-detail--premium .agency-space-prop-showcase--premium {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: none;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__media {
+        order: 1;
+        width: 100%;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__thumbs {
+        order: 2;
+        padding: 0.65rem 1.05rem;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__info {
+        order: 3;
+        border: none;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 32%, transparent);
+        background: transparent;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__stage.agency-space-prop-gallery__stage {
+        aspect-ratio: 16 / 9;
+        max-height: min(48vh, 32rem);
+        min-height: 18rem;
+        width: 100%;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__body {
+        padding: 1.05rem 1.15rem 1.2rem !important;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__chips {
+        display: flex;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__chips-inline {
+        display: none;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-gallery__overlay {
+        bottom: 0.85rem;
+        inset-inline-end: 0.85rem;
+        inset-inline-start: auto;
+        font-size: 0.74rem;
+        padding: 0.42rem 0.8rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-spec-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .agency-space-detail--premium .agency-space-pro-detail--premium {
+        width: 100%;
+    }
+}
+
+@media (min-width: 1100px) {
+    .agency-space-detail--premium .agency-space-pro-spec-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .agency-space-detail--premium .agency-space-pro-spec-grid--features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ── Mobile premium ── */
+@media (max-width: 767px) {
+    .agency-space-detail--premium .agency-space-detail__crumb--premium {
+        margin-bottom: 0.55rem;
+        padding: 0.28rem 0.4rem;
+        border-radius: 14px;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__nav-sep {
+        display: none;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__crumb-current {
+        font-size: 0.66rem;
+        padding: 0.22rem 0.5rem;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__layout {
+        gap: 0.6rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-detail--premium {
+        gap: 0.6rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-hero--premium {
+        border-radius: 16px;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 12px 26px -18px rgba(15, 23, 42, 0.28),
+            inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+    }
+
+    .agency-space-detail--premium .agency-space-pro-hero__mesh {
+        display: block;
+        opacity: 0.7;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-detail--premium .agency-space-property-detail__title {
+        font-size: 1.08rem;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-hero__quickfact--price {
+        font-size: 1.08rem;
+        width: auto;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase--premium {
+        border-radius: 16px;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__stage.agency-space-prop-gallery__stage {
+        aspect-ratio: 16 / 10;
+        max-height: min(58vw, 16rem);
+        min-height: 0;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-gallery__main-hit,
+    .agency-space-detail--premium .agency-space-prop-gallery__main-hit img,
+    .agency-space-detail--premium .agency-space-property-detail__gallery-img {
+        border-radius: 0 !important;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-gallery__overlay {
+        bottom: 0.55rem;
+        inset-inline-end: 0.55rem;
+        inset-inline-start: auto;
+        opacity: 1;
+        padding: 0.3rem 0.55rem;
+        font-size: 0.66rem;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__chips-inline {
+        display: none;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__chips {
+        display: flex;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__body {
+        padding: 0.7rem 0.8rem 0.85rem !important;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__media {
+        order: 1;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__thumbs {
+        order: 2;
+        padding: 0.45rem 0.7rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 32%, transparent);
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__info {
+        order: 3;
+        border-top: none;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-gallery__thumb {
+        width: 3.15rem;
+        height: 2.4rem;
+        border-radius: 8px;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-showcase__highlights {
+        display: none;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-panel {
+        padding: 0.75rem 0.8rem;
+        border-radius: 16px;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 22px -16px rgba(15, 23, 42, 0.24);
+    }
+
+    .agency-space-detail--premium .agency-space-pro-panel__head {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.45rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-panel__title {
+        font-size: 0.9rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-panel__icon {
+        width: 2.1rem;
+        height: 2.1rem;
+        border-radius: 10px;
+        font-size: 0.78rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-spec-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.4rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-spec-cell {
+        padding: 0.5rem 0.5rem;
+        border-radius: 12px;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-spec-cell__value {
+        font-size: 0.78rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-contact a {
+        min-height: 2.95rem;
+        border-radius: 12px;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-detail--premium .agency-space-contact-detail__avatar {
+        width: 3.85rem !important;
+        height: 3.85rem !important;
+        border-radius: 14px;
+        border-width: 2px;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-detail--premium .agency-space-contact-detail__name {
+        font-size: 1.05rem !important;
+    }
+
+    .agency-space-detail--premium .agency-space-contact-detail__budget-item {
+        flex: 1 1 auto;
+        min-width: min(100%, 8.5rem);
+    }
+
+    .agency-space-detail--premium .agency-space-property-detail__crm-slot--mobile .agency-space-pro-aside-card,
+    .agency-space-detail--premium .agency-space-contact-detail__crm-slot--mobile .agency-space-pro-aside-card,
+    .agency-space-detail--premium .agency-space-prop-aside__card.agency-space-pro-aside-card {
+        border-radius: 16px !important;
+        padding: 0.8rem 0.85rem !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 12px 26px -18px rgba(15, 23, 42, 0.26) !important;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-aside__card:hover {
+        transform: none;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-timeline.agency-space-prop-aside__timeline {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
+        margin-top: 0.55rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-timeline.agency-space-prop-aside__timeline li {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.12rem;
+        padding: 0.45rem 0.5rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 45%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 45%, transparent);
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 40%, #fff);
+        font-size: 0.66rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-timeline.agency-space-prop-aside__timeline .agency-space-pro-timeline__icon {
+        display: none;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-btn {
+        min-height: 2.85rem;
+        border-radius: 12px;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__sticky--premium {
+        left: 0;
+        right: 0;
+        bottom: calc(var(--ws-mob-nav-offset, 5.25rem)) !important;
+        padding: 0.45rem 0.7rem;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .agency-space-detail--premium.agency-space-detail--mob {
+        padding-bottom: calc(var(--ws-mob-nav-offset, 5.25rem) + 4.25rem) !important;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__sticky-back,
+    .agency-space-detail--premium .agency-space-detail__sticky-primary {
+        min-height: 2.85rem;
+        border-radius: 12px;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__sticky-back {
+        flex: 0 0 auto;
+        max-width: 34%;
+        gap: 0.28rem;
+        font-size: 0.74rem;
+    }
+
+    .agency-space-detail--premium .agency-space-detail__sticky-primary {
+        flex: 1 1 auto;
+        font-size: 0.78rem;
+    }
+
+    .agency-space-detail--premium .agency-space-pro-hero__body {
+        padding: 0.7rem 0.75rem !important;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-hero__quickfacts {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+    }
+
+    .agency-space-detail--premium .agency-space-property-detail__crm-slot--mobile .agency-space-property-detail__aside-lead,
+    .agency-space-detail--premium .agency-space-contact-detail__crm-slot--mobile .agency-space-contact-detail__aside-lead {
+        display: none;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-detail__metrics {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-detail__metrics::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-space-detail--premium .agency-space-prop-detail__metric {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}

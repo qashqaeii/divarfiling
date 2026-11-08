@@ -43,18 +43,18 @@
         });
 
         document.querySelectorAll('[data-stat-wrap="' + key + '"]').forEach(function (el) {
+            if (el.classList.contains('crm-rm-mob-metric')) {
+                el.classList.toggle('is-empty', !(value > 0));
+                return;
+            }
             if (key === 'overdue') {
                 if (value > 0) {
                     el.hidden = false;
-                    if (el.classList.contains('crm-rm-mob-stat-pill--warn')) {
-                        el.innerHTML = 'معوق <strong data-stat="overdue">' + value + '</strong>';
-                    } else {
-                        el.innerHTML = '<i class="fas fa-circle" aria-hidden="true"></i> ' + value + ' مورد نیاز به پیگیری فوری';
-                    }
+                    el.innerHTML = '<i class="fas fa-circle" aria-hidden="true"></i> ' + value + ' مورد نیاز به پیگیری فوری';
                 } else {
                     el.hidden = true;
                 }
-            } else if (key === 'today' && el.hasAttribute('data-stat-wrap')) {
+            } else if (key === 'today') {
                 if (value > 0) {
                     el.hidden = false;
                     el.textContent = value + ' امروز';

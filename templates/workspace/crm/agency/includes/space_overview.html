@@ -1,22 +1,26 @@
 {% load static humanize %}
-<section class="agency-space-overview agency-space-overview--pro" aria-label="نمای کلی فضای آژانس">
+<section class="agency-space-overview agency-space-overview--pro agency-space-overview--premium" aria-label="نمای کلی فضای آژانس">
     {% with k=space_overview.kpis %}
     {% if k %}
     <div class="agency-space-overview__snapshot" aria-label="خلاصه وضعیت فضا">
         <div class="agency-space-overview__snapshot-grid">
-            <div class="agency-space-overview__stat">
+            <div class="agency-space-overview__stat agency-space-overview__stat--properties">
+                <em class="agency-space-overview__stat-ico" aria-hidden="true"><i class="fas fa-building"></i></em>
                 <span class="agency-space-overview__stat-value">{{ k.active_properties|intcomma }}</span>
                 <span class="agency-space-overview__stat-label">فایل فعال</span>
             </div>
-            <div class="agency-space-overview__stat">
+            <div class="agency-space-overview__stat agency-space-overview__stat--contacts">
+                <em class="agency-space-overview__stat-ico" aria-hidden="true"><i class="fas fa-user-group"></i></em>
                 <span class="agency-space-overview__stat-value">{{ k.active_contacts|intcomma }}</span>
                 <span class="agency-space-overview__stat-label">مخاطب فعال</span>
             </div>
-            <div class="agency-space-overview__stat">
+            <div class="agency-space-overview__stat agency-space-overview__stat--publishers">
+                <em class="agency-space-overview__stat-ico" aria-hidden="true"><i class="fas fa-users"></i></em>
                 <span class="agency-space-overview__stat-value">{{ k.active_publishers|intcomma }}</span>
                 <span class="agency-space-overview__stat-label">مشارکت‌کننده</span>
             </div>
-            <div class="agency-space-overview__stat agency-space-overview__stat--muted">
+            <div class="agency-space-overview__stat agency-space-overview__stat--copies agency-space-overview__stat--muted">
+                <em class="agency-space-overview__stat-ico" aria-hidden="true"><i class="fas fa-copy"></i></em>
                 <span class="agency-space-overview__stat-value">{{ k.total_copies|intcomma }}</span>
                 <span class="agency-space-overview__stat-label">کپی به CRM</span>
             </div>
@@ -24,18 +28,6 @@
     </div>
     {% endif %}
     {% endwith %}
-    {% if can_publish_space %}
-    <div class="agency-space-overview__quick-actions" aria-label="اقدامات سریع">
-        <a href="{{ space_publish_property_url }}" class="agency-space-overview__quick-action agency-space-overview__quick-action--primary">
-            <i class="fas fa-building" aria-hidden="true"></i>
-            <span>انتشار فایل</span>
-        </a>
-        <a href="{{ space_publish_contact_url }}" class="agency-space-overview__quick-action">
-            <i class="fas fa-user-plus" aria-hidden="true"></i>
-            <span>انتشار مخاطب</span>
-        </a>
-    </div>
-    {% endif %}
     <div class="agency-space-overview__mosaic">
         <article class="agency-space-overview-card agency-space-overview-card--feed agency-space-overview-card--properties">
             <header class="agency-space-overview-card__head">
@@ -77,6 +69,18 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% if can_publish_space %}
+            <footer class="agency-space-overview__quick-actions agency-space-overview__quick-actions--in-card" aria-label="انتشار فایل">
+                <a href="{{ space_publish_property_url }}" class="agency-space-overview__quick-action agency-space-overview__quick-action--primary agency-space-overview__quick-action--block">
+                    <span class="agency-space-overview__quick-ico" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    <span class="agency-space-overview__quick-copy">
+                        <strong>انتشار فایل</strong>
+                        <em>افزودن فایل جدید به فضای تیم</em>
+                    </span>
+                    <i class="fas fa-arrow-left agency-space-overview__quick-chev" aria-hidden="true"></i>
+                </a>
+            </footer>
+            {% endif %}
         </article>
 
         <article class="agency-space-overview-card agency-space-overview-card--feed agency-space-overview-card--contacts">
@@ -128,9 +132,21 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% if can_publish_space %}
+            <footer class="agency-space-overview__quick-actions agency-space-overview__quick-actions--in-card" aria-label="انتشار مخاطب">
+                <a href="{{ space_publish_contact_url }}" class="agency-space-overview__quick-action agency-space-overview__quick-action--contact agency-space-overview__quick-action--block">
+                    <span class="agency-space-overview__quick-ico" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
+                    <span class="agency-space-overview__quick-copy">
+                        <strong>انتشار مخاطب</strong>
+                        <em>افزودن نیاز مشتری به فضای تیم</em>
+                    </span>
+                    <i class="fas fa-arrow-left agency-space-overview__quick-chev" aria-hidden="true"></i>
+                </a>
+            </footer>
+            {% endif %}
         </article>
 
-        <article class="agency-space-overview-card agency-space-overview-card--leaders">
+        <article class="agency-space-overview-card agency-space-overview-card--leaders agency-space-overview-card--panel">
             <header class="agency-space-overview-card__head">
                 <span class="agency-space-overview-card__icon agency-space-overview-card__icon--purple" aria-hidden="true"><i class="fas fa-ranking-star"></i></span>
                 <div class="agency-space-overview-card__titles">
@@ -138,16 +154,19 @@
                     <p class="agency-space-overview-card__sub">بر اساس انتشار فایل و مخاطب</p>
                 </div>
             </header>
-            <ol class="agency-space-overview-leaders">
+            <ol class="agency-space-overview-leaders agency-space-overview-leaders--premium">
                 {% for row in space_overview.contributors %}
-                <li class="agency-space-overview-leader">
+                <li class="agency-space-overview-leader{% if forloop.counter <= 3 %} agency-space-overview-leader--top agency-space-overview-leader--top-{{ forloop.counter }}{% endif %}">
                     <span class="agency-space-overview-leader__rank" aria-hidden="true">{{ forloop.counter }}</span>
                     <span class="agency-space-overview-leader__avatar" aria-hidden="true">{{ row.name|slice:":1"|upper }}</span>
                     <div class="agency-space-overview-leader__body">
-                        <span class="agency-space-overview-leader__name">{{ row.name }}</span>
+                        <div class="agency-space-overview-leader__topline">
+                            <span class="agency-space-overview-leader__name">{{ row.name }}</span>
+                            <span class="agency-space-overview-leader__score" aria-hidden="true">{{ row.score_percent }}٪</span>
+                        </div>
                         <span class="agency-space-overview-leader__stats">
-                            <span><i class="fas fa-building" aria-hidden="true"></i> {{ row.properties_published }} فایل</span>
-                            <span><i class="fas fa-user" aria-hidden="true"></i> {{ row.contacts_published }} مخاطب</span>
+                            <span class="agency-space-overview-leader__stat"><i class="fas fa-building" aria-hidden="true"></i> {{ row.properties_published }} فایل</span>
+                            <span class="agency-space-overview-leader__stat"><i class="fas fa-user" aria-hidden="true"></i> {{ row.contacts_published }} مخاطب</span>
                         </span>
                         <span class="agency-space-overview-leader__bar" aria-hidden="true"><span style="width: {{ row.score_percent }}%"></span></span>
                     </div>
@@ -161,7 +180,7 @@
             </ol>
         </article>
 
-        <article class="agency-space-overview-card agency-space-overview-card--activity">
+        <article class="agency-space-overview-card agency-space-overview-card--activity agency-space-overview-card--panel">
             <header class="agency-space-overview-card__head">
                 <span class="agency-space-overview-card__icon agency-space-overview-card__icon--teal" aria-hidden="true"><i class="fas fa-bolt"></i></span>
                 <div class="agency-space-overview-card__titles">
@@ -169,14 +188,14 @@
                     <p class="agency-space-overview-card__sub">رویدادهای تیم در آژانس</p>
                 </div>
             </header>
-            <ul class="agency-space-overview-timeline">
+            <ul class="agency-space-overview-timeline agency-space-overview-timeline--premium">
                 {% for ev in space_overview.activity %}
                 <li class="agency-space-overview-timeline__item">
                     <span class="agency-space-overview-timeline__icon" aria-hidden="true"><i class="fas {{ ev.icon }}"></i></span>
                     <div class="agency-space-overview-timeline__body">
                         <p class="agency-space-overview-timeline__text">
                             {% if ev.actor_name %}<strong>{{ ev.actor_name }}</strong>{% endif %}
-                            <span>{{ ev.label }}</span>
+                            <span class="agency-space-overview-timeline__label">{{ ev.label }}</span>
                             {% if ev.detail %}<span class="agency-space-overview-timeline__detail">{{ ev.detail }}</span>{% endif %}
                         </p>
                         {% if ev.created_at_display %}

@@ -176,8 +176,10 @@
         function openDrawerViaCrm(drawerId) {
             if (!drawerId) return;
             var wired = root.querySelector(
+                '.crm-cal-mob-toolbar-add[data-drawer-open="' + drawerId + '"], ' +
                 '.crm-cal-mob-cta[data-drawer-open="' + drawerId + '"], ' +
-                '.crm-cal-page-head-actions [data-drawer-open="' + drawerId + '"]'
+                '.crm-cal-page-head-actions [data-drawer-open="' + drawerId + '"], ' +
+                '.fl-header__btn--primary[data-drawer-open="' + drawerId + '"]'
             );
             if (wired) {
                 wired.click();

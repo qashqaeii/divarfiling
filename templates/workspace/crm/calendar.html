@@ -10,9 +10,9 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=37">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -21,15 +21,59 @@
      data-today-jkey="{{ calendar.today_jkey }}">
     {{ calendar.events_flat|json_script:"crmCalEventsData" }}
 
-    <header class="crm-cal-mob-header" aria-label="عملیات تقویم">
-        <div class="crm-cal-mob-header-inner">
-            <button type="button" class="crm-cal-mob-cta" data-drawer-open="drawer-reminder">
-                <i class="fas fa-plus" aria-hidden="true"></i>
-                <span>یادآوری</span>
-            </button>
-            {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-calendar-help' help_title='راهنمای تقویم' help_mob_class='crm-cal-mob-icon-btn crm-cal-mob-icon-btn--ghost' %}
+    <div class="crm-cal-mob-chrome" aria-label="تقویم — موبایل">
+        <div class="crm-cal-mob-toolbar-sticky">
+            <div class="crm-cal-mob-toolbar-panel">
+                <div class="crm-cal-mob-toolbar-row">
+                    <div class="crm-cal-mob-head">
+                        <div class="crm-cal-mob-brand">
+                            <span class="crm-cal-mob-brand-ico" aria-hidden="true"><i class="fas fa-calendar-days"></i></span>
+                            <div class="crm-cal-mob-brand-copy">
+                                <h1 class="crm-cal-mob-title">تقویم</h1>
+                                <p class="crm-cal-mob-sub">{{ calendar.today_weekday }} · {{ calendar.today_full_label }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="crm-cal-mob-toolbar-actions" role="toolbar" aria-label="عملیات تقویم">
+                        <details class="crm-cal-mob-more-menu">
+                            <summary class="crm-cal-mob-toolbar-btn" aria-label="منوی بیشتر">
+                                <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                            </summary>
+                            <div class="crm-cal-mob-more-panel" role="menu">
+                                <button type="button" class="crm-cal-mob-more-item" role="menuitem" data-modal-open="modal-crm-calendar-help">
+                                    <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
+                                </button>
+                                <a href="{% url 'workspace:crm_today' %}" class="crm-cal-mob-more-item" role="menuitem">
+                                    <i class="fas fa-list-check" aria-hidden="true"></i><span>کارهای امروز</span>
+                                </a>
+                                <a href="{% url 'workspace:crm_reminders' %}" class="crm-cal-mob-more-item" role="menuitem">
+                                    <i class="fas fa-bell" aria-hidden="true"></i><span>یادآورها</span>
+                                </a>
+                            </div>
+                        </details>
+                        <button type="button" class="crm-cal-mob-toolbar-add crm-cal-mob-cta" data-drawer-open="drawer-reminder" title="یادآور جدید" aria-label="یادآور جدید">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="crm-cal-mob-metrics" aria-label="خلاصه تقویم">
+                    <button type="button" class="crm-cal-mob-metric crm-cal-mob-metric--today{% if not calendar.kpis.today %} is-empty{% endif %}" data-cal-goto-today>
+                        <strong>{{ calendar.kpis.today|default:0 }}</strong>
+                        <span>امروز</span>
+                    </button>
+                    <button type="button" class="crm-cal-mob-metric crm-cal-mob-metric--warn{% if not calendar.kpis.overdue %} is-empty{% endif %}" data-cal-goto-overdue>
+                        <strong>{{ calendar.kpis.overdue|default:0 }}</strong>
+                        <span>معوق</span>
+                    </button>
+                    <button type="button" class="crm-cal-mob-metric crm-cal-mob-metric--month" data-cal-filter="all">
+                        <strong>{{ calendar.kpis.month_total|default:0 }}</strong>
+                        <span>این ماه</span>
+                    </button>
+                </div>
+            </div>
         </div>
-    </header>
+    </div>
 
     <header class="fl-header mk-filing-desk-header crm-cal-desk-header">
         <div class="fl-header__main">
@@ -169,17 +213,26 @@
                     </div>
 
                     <div class="crm-cal-toolbar-actions">
-                        <a href="?jy={{ calendar.today.jyear }}&jm={{ calendar.today.jmonth }}" class="crm-cal-btn crm-cal-btn--ghost crm-cal-btn--sm">امروز</a>
+                        <a href="?jy={{ calendar.today.jyear }}&jm={{ calendar.today.jmonth }}" class="crm-cal-btn crm-cal-btn--ghost crm-cal-btn--sm crm-cal-btn--today">امروز</a>
                         <div class="crm-cal-view-switch" role="tablist" aria-label="نمای تقویم">
-                            <button type="button" class="crm-cal-view-btn is-active" data-cal-view="month" role="tab" aria-selected="true">ماه</button>
-                            <button type="button" class="crm-cal-view-btn" data-cal-view="week" role="tab" aria-selected="false">هفته</button>
-                            <button type="button" class="crm-cal-view-btn" data-cal-view="list" role="tab" aria-selected="false">لیست</button>
+                            <button type="button" class="crm-cal-view-btn is-active" data-cal-view="month" role="tab" aria-selected="true">
+                                <i class="fas fa-calendar-days" aria-hidden="true"></i><span>ماه</span>
+                            </button>
+                            <button type="button" class="crm-cal-view-btn crm-cal-view-btn--desk" data-cal-view="week" role="tab" aria-selected="false">
+                                <i class="fas fa-calendar-week" aria-hidden="true"></i><span>هفته</span>
+                            </button>
+                            <button type="button" class="crm-cal-view-btn" data-cal-view="list" role="tab" aria-selected="false">
+                                <i class="fas fa-list-ul" aria-hidden="true"></i><span>لیست</span>
+                            </button>
                         </div>
                     </div>
                 </header>
 
                 <div class="crm-cal-mob-filter-bar" aria-label="فیلتر رویدادها">
-                    <p class="crm-cal-mob-filter-active" id="crmCalFilterActive" data-filter-label="همه دسته‌ها">همه دسته‌ها</p>
+                    <div class="crm-cal-mob-filter-summary">
+                        <span class="crm-cal-mob-filter-label">نمایش</span>
+                        <p class="crm-cal-mob-filter-active" id="crmCalFilterActive" data-filter-label="همه دسته‌ها">همه دسته‌ها</p>
+                    </div>
                     <button type="button"
                             class="crm-cal-mob-filter-open"
                             id="crmCalFilterOpen"
@@ -288,13 +341,16 @@
 
             <section class="crm-cal-mob-agenda" id="crmCalMobAgenda" aria-label="برنامه روز انتخاب‌شده" aria-live="polite">
                 <header class="crm-cal-mob-agenda-head">
-                    <div class="crm-cal-mob-agenda-head-copy">
-                        <h2 id="crmCalMobAgendaTitle">{{ calendar.today_weekday }} · {{ calendar.today_full_label }}</h2>
-                        <p id="crmCalMobAgendaMeta">{% if calendar.today_agenda_count %}{{ calendar.today_agenda_count_label }} برنامه{% else %}بدون برنامه{% endif %}</p>
+                    <div class="crm-cal-mob-agenda-head-brand">
+                        <span class="crm-cal-mob-agenda-head-ico" aria-hidden="true"><i class="fas fa-sun"></i></span>
+                        <div class="crm-cal-mob-agenda-head-copy">
+                            <h2 id="crmCalMobAgendaTitle">{{ calendar.today_weekday }} · {{ calendar.today_full_label }}</h2>
+                            <p id="crmCalMobAgendaMeta">{% if calendar.today_agenda_count %}{{ calendar.today_agenda_count_label }} برنامه{% else %}بدون برنامه{% endif %}</p>
+                        </div>
                     </div>
-                    <button type="button" class="crm-cal-mob-agenda-add" data-drawer-open="drawer-reminder" aria-label="ثبت یادآوری">
+                    <button type="button" class="crm-cal-mob-agenda-add crm-cal-mob-cta" data-drawer-open="drawer-reminder" aria-label="ثبت یادآوری">
                         <i class="fas fa-plus" aria-hidden="true"></i>
-                        <span class="crm-cal-mob-agenda-add-label">ثبت یادآوری</span>
+                        <span class="crm-cal-mob-agenda-add-label">یادآور</span>
                     </button>
                 </header>
                 <div class="crm-cal-mob-agenda-body" id="crmCalMobAgendaBody"></div>
@@ -353,5 +409,5 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/crm-calendar.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/crm-calendar.js' %}?v=5"></script>
 {% endblock %}

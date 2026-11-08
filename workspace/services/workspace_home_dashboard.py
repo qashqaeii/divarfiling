@@ -393,7 +393,7 @@ def _build_quick_actions(*, has_bot_license: bool, show_agency: bool) -> List[Di
     actions.append({
         'key': 'ai',
         'label': 'دستیار هوشمند',
-        'icon': 'fa-sparkles',
+        'icon': 'fa-wand-magic-sparkles',
         'url': '#wsHomeSmartCommand',
         'tone': 'rose',
         'is_anchor': True,

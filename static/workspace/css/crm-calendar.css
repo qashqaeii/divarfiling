@@ -388,6 +388,10 @@
 }
 
 .crm-cal-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
     border: none;
     background: transparent;
     color: var(--ws-text-muted);
@@ -398,6 +402,12 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.12s, color 0.12s;
+}
+
+.crm-cal-view-btn > i {
+    display: none;
+    font-size: 0.68rem;
+    opacity: 0.9;
 }
 
 .crm-cal-view-btn.is-active {

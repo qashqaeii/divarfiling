@@ -117,9 +117,18 @@ a.crm-rm-kpi {
 }
 
 @media (max-width: 768px) {
-    /* گاتر فقط از .ws-content — toolbar و timeline هم‌عرض */
+    /*
+     * Single page gutter = .ws-content --ws-mob-gutter (16px).
+     * Toolbar + timeline share the same content width.
+     */
+    body.ws-body:has(.crm-reminders-mobile) .ws-content {
+        padding-inline: var(--ws-mob-gutter, 16px) !important;
+        padding-top: var(--mobile-section-padding, var(--ws-mob-gutter, 16px)) !important;
+    }
+
     .crm-app .crm-reminders-mobile.crm-page-chrome {
         padding: 0 0 calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        padding-inline: 0 !important;
         gap: 0 !important;
         row-gap: 0 !important;
         width: 100% !important;
@@ -127,7 +136,9 @@ a.crm-rm-kpi {
         min-width: 0;
         overflow-x: clip;
         box-sizing: border-box;
-        background: var(--ws-bg, #f4f6fb);
+        background: transparent;
+        display: flex;
+        flex-direction: column;
     }
 
     .crm-app .crm-reminders-mobile.crm-page-chrome > .crm-rm-mob-chrome,
@@ -143,27 +154,24 @@ a.crm-rm-kpi {
     .crm-reminders-mobile .crm-rm-desk-segment,
     .crm-reminders-mobile .crm-rm-desk-meta,
     .crm-reminders-mobile .crm-rm-desk-tip,
-    .crm-reminders-mobile .crm-rm-desk-fab {
+    .crm-reminders-mobile .crm-rm-desk-fab,
+    .crm-reminders-mobile .fl-kpi-pro--reminders.crm-rm-desk-kpis {
         display: none !important;
     }
 
-    /* fl-kpi-pro: روی موبایل هم نمایش داده شود */
-    .crm-reminders-mobile .fl-kpi-pro--reminders.crm-rm-desk-kpis {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.65rem;
-        margin: 0.45rem 0 0.55rem;
-        padding: 0 0.5rem;
-    }
-
     .crm-reminders-mobile .crm-shell-body {
-        padding: 0.25rem 0 0.65rem !important;
+        order: 2;
+        padding: 0.55rem 0 0.65rem !important;
         gap: 0 !important;
+        width: 100%;
         max-width: 100%;
         min-width: 0;
+        box-sizing: border-box;
     }
 
+    /* ── Sticky premium header ── */
     .crm-rm-mob-chrome {
+        order: 1;
         display: block;
         min-width: 0;
         max-width: 100%;
@@ -173,23 +181,30 @@ a.crm-rm-kpi {
         position: sticky;
         top: calc(var(--ws-mob-topbar-h, 3rem) + env(safe-area-inset-top, 0px));
         z-index: 24;
-        padding: 0.32rem 0 0.42rem;
-        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 92%, var(--ws-surface));
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent);
+        padding: 0.28rem 0 0.4rem;
+        background: transparent;
+        border: none;
+        box-shadow: none;
     }
 
     .crm-rm-mob-toolbar-panel {
         display: flex;
         flex-direction: column;
-        gap: 0.32rem;
+        gap: 0.55rem;
         width: 100%;
-        padding: 0.45rem 0.5rem 0.42rem;
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-        background: var(--ws-surface);
+        padding: 0.65rem 0.7rem 0.7rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface)) 0%,
+                var(--ws-surface) 42%,
+                var(--ws-surface) 100%
+            );
         box-shadow:
             0 1px 2px rgba(15, 23, 42, 0.04),
-            0 4px 14px rgba(15, 23, 42, 0.03);
+            0 12px 28px -18px rgba(15, 23, 42, 0.22);
         box-sizing: border-box;
     }
 
@@ -197,151 +212,140 @@ a.crm-rm-kpi {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.55rem;
         width: 100%;
         min-width: 0;
-        padding-bottom: 0.32rem;
-        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
+        padding: 0;
+        border: none;
+    }
+
+    .crm-rm-mob-head {
+        min-width: 0;
+    }
+
+    .crm-rm-mob-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+    }
+
+    .crm-rm-mob-brand-ico {
+        display: inline-grid;
+        place-items: center;
+        width: 2.45rem;
+        height: 2.45rem;
+        flex-shrink: 0;
+        border-radius: 13px;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
+        background:
+            linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface)),
+                color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface))
+            );
+        color: var(--ws-primary);
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+        font-size: 0.92rem;
+    }
+
+    .crm-rm-mob-brand-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 0.08rem;
+        min-width: 0;
+    }
+
+    .crm-rm-mob-title {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 850;
+        letter-spacing: -0.025em;
+        line-height: 1.25;
+        color: var(--ws-text);
+    }
+
+    .crm-rm-mob-sub {
+        margin: 0;
+        font-size: 0.7rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        color: var(--ws-text-muted);
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .crm-rm-mob-toolbar-actions {
         display: inline-flex;
         align-items: center;
-        gap: 0.22rem;
+        gap: 0.28rem;
         flex-shrink: 0;
-        padding: 0.1rem;
-        border-radius: 10px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
-        background: color-mix(in srgb, var(--ws-bg) 40%, var(--ws-surface));
-    }
-
-    .crm-rm-mob-toolbar-actions .crm-rm-mob-toolbar-btn {
+        padding: 0;
         border: none;
         background: transparent;
-        width: 2.25rem;
-        height: 2.25rem;
-        min-width: 2.25rem;
-        min-height: 2.25rem;
-    }
-
-    .crm-rm-mob-toolbar-actions .crm-rm-mob-toolbar-add {
-        width: 2.25rem;
-        height: 2.25rem;
-        min-width: 2.25rem;
-        min-height: 2.25rem;
-    }
-
-    .crm-rm-mob-stats {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.25rem;
-        min-width: 0;
-    }
-
-    .crm-rm-mob-stat-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.15rem;
-        min-height: 1.5rem;
-        padding: 0.08rem 0.38rem;
-        border-radius: 999px;
-        font-size: 0.64rem;
-        font-weight: 700;
-        color: var(--ws-text-secondary);
-        background: var(--ws-surface);
-        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
-        white-space: nowrap;
-    }
-
-    .crm-rm-mob-stat-pill strong {
-        font-weight: 800;
-        font-variant-numeric: tabular-nums;
-        color: var(--ws-text);
-    }
-
-    .crm-rm-mob-stat-pill--active strong {
-        color: var(--ws-primary);
-    }
-
-    .crm-rm-mob-stat-pill--warn {
-        color: #b91c1c;
-        border-color: color-mix(in srgb, #ef4444 22%, var(--ws-border));
-        background: color-mix(in srgb, #fef2f2 45%, var(--ws-surface));
-    }
-
-    .crm-rm-mob-stat-pill--warn strong {
-        color: #b91c1c;
-    }
-
-    .crm-rm-mob-stat-pill--today strong {
-        color: #b45309;
-    }
-
-    .crm-rm-mob-stat-pill--muted {
-        color: var(--ws-text-muted);
-        background: transparent;
-        border-color: transparent;
-        padding-inline: 0;
-    }
-
-    .crm-rm-mob-toolbar-btn {
-        flex-shrink: 0;
-        width: 2.35rem;
-        height: 2.35rem;
-        min-width: 2.35rem;
-        min-height: 2.35rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
-        background: var(--ws-surface);
-        color: var(--ws-text-secondary);
-        cursor: pointer;
-        list-style: none;
-        font-size: 0.85rem;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .crm-rm-mob-toolbar-btn--ghost {
-        background: color-mix(in srgb, var(--ws-bg) 45%, var(--ws-surface));
-    }
-
-    .crm-rm-mob-toolbar-add {
-        flex-shrink: 0;
-        width: 2.35rem;
-        height: 2.35rem;
-        min-width: 2.35rem;
-        min-height: 2.35rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        border-radius: 10px;
-        background: var(--ws-primary);
-        color: #fff;
-        cursor: pointer;
-        font-size: 0.95rem;
-        box-shadow: 0 3px 10px color-mix(in srgb, var(--ws-primary) 28%, transparent);
-        -webkit-tap-highlight-color: transparent;
+        border-radius: 0;
     }
 
     .crm-rm-mob-more-menu {
         position: relative;
+        margin: 0;
+    }
+
+    .crm-rm-mob-toolbar-btn {
+        width: 2.45rem;
+        height: 2.45rem;
+        min-width: 2.45rem;
+        min-height: 2.45rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--ws-bg) 35%, var(--ws-surface));
+        color: var(--ws-text-muted);
+        list-style: none;
+        cursor: pointer;
+        font-size: 0.88rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-rm-mob-toolbar-btn::-webkit-details-marker {
+        display: none;
+    }
+
+    .crm-rm-mob-toolbar-add {
+        width: 2.45rem;
+        height: 2.45rem;
+        min-width: 2.45rem;
+        min-height: 2.45rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 12px;
+        background: var(--ws-primary);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.95rem;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 22%, transparent) inset,
+            0 6px 16px -6px color-mix(in srgb, var(--ws-primary) 55%, transparent);
+        -webkit-tap-highlight-color: transparent;
     }
 
     .crm-rm-mob-more-panel {
         position: absolute;
         inset-inline-end: 0;
-        top: calc(100% + 0.2rem);
+        top: calc(100% + 0.35rem);
         z-index: 40;
-        min-width: 10rem;
-        padding: 0.25rem;
-        border-radius: 10px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        min-width: 11.5rem;
+        padding: 0.3rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
         background: var(--ws-surface);
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
     }
 
     .crm-rm-mob-more-menu:not([open]) .crm-rm-mob-more-panel {
@@ -351,67 +355,264 @@ a.crm-rm-kpi {
     .crm-rm-mob-more-item {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.5rem;
         width: 100%;
-        min-height: 2.5rem;
-        padding: 0.4rem 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.4rem 0.55rem;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         background: transparent;
         color: var(--ws-text-secondary);
         font-family: inherit;
-        font-size: 0.75rem;
+        font-size: 0.78rem;
         font-weight: 650;
         text-decoration: none;
         cursor: pointer;
     }
 
-    .crm-rm-mob-tabs {
-        display: flex;
-        gap: 0.2rem;
-        margin-top: 0;
-        padding: 0.14rem;
+    .crm-rm-mob-more-item:hover,
+    .crm-rm-mob-more-item:active {
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
+        color: var(--ws-text);
+    }
+
+    .crm-rm-mob-more-item i {
+        width: 1.05rem;
+        text-align: center;
+        color: var(--ws-primary);
+        opacity: 0.85;
+    }
+
+    /* Compact status metrics — replace desk KPI wall */
+    .crm-rm-mob-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem;
         width: 100%;
-        border-radius: 9px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+        min-width: 0;
+    }
+
+    .crm-rm-mob-metrics:has(.crm-rm-mob-metric--muted:only-child) {
+        grid-template-columns: 1fr;
+    }
+
+    .crm-rm-mob-metric {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 0.12rem;
+        min-width: 0;
+        min-height: 3.15rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
         background: color-mix(in srgb, var(--ws-bg) 45%, var(--ws-surface));
+        box-sizing: border-box;
+        text-decoration: none;
+        color: inherit;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-rm-mob-metric strong {
+        font-size: 1.15rem;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        color: var(--ws-text);
+    }
+
+    .crm-rm-mob-metric span {
+        font-size: 0.66rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+        line-height: 1.2;
+    }
+
+    .crm-rm-mob-metric--active {
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent);
+        background:
+            linear-gradient(
+                160deg,
+                color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)),
+                var(--ws-surface)
+            );
+    }
+
+    .crm-rm-mob-metric--active strong {
+        color: var(--ws-primary);
+    }
+
+    .crm-rm-mob-metric--warn {
+        border-color: color-mix(in srgb, #ef4444 28%, transparent);
+        background:
+            linear-gradient(
+                160deg,
+                color-mix(in srgb, #fef2f2 72%, var(--ws-surface)),
+                var(--ws-surface)
+            );
+    }
+
+    .crm-rm-mob-metric--warn strong {
+        color: #b91c1c;
+    }
+
+    .crm-rm-mob-metric--today {
+        border-color: color-mix(in srgb, #f59e0b 28%, transparent);
+        background:
+            linear-gradient(
+                160deg,
+                color-mix(in srgb, #fffbeb 70%, var(--ws-surface)),
+                var(--ws-surface)
+            );
+    }
+
+    .crm-rm-mob-metric--today strong {
+        color: #b45309;
+    }
+
+    .crm-rm-mob-metric.is-empty {
+        opacity: 0.72;
+        border-color: color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: color-mix(in srgb, var(--ws-bg) 45%, var(--ws-surface));
+    }
+
+    .crm-rm-mob-metric.is-empty strong {
+        color: var(--ws-text-muted);
+    }
+
+    .crm-rm-mob-metric.is-selected {
+        box-shadow:
+            0 0 0 1.5px color-mix(in srgb, var(--ws-primary) 45%, transparent),
+            0 4px 12px -6px color-mix(in srgb, var(--ws-primary) 35%, transparent);
+    }
+
+    .crm-rm-mob-metric--muted {
+        align-items: center;
+        text-align: center;
+        min-height: 2.85rem;
+    }
+
+    .crm-rm-mob-metric--muted strong {
+        color: var(--ws-text-muted);
+        font-size: 1rem;
+    }
+
+    .crm-rm-mob-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.3rem;
+        margin: 0;
+        padding: 0.22rem;
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-bg) 62%, var(--ws-surface)),
+                color-mix(in srgb, var(--ws-bg) 38%, var(--ws-surface))
+            );
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
         box-sizing: border-box;
     }
 
     .crm-rm-mob-tab {
-        flex: 1;
+        position: relative;
         min-width: 0;
-        display: inline-flex;
+        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.2rem;
-        min-height: 1.85rem;
-        padding: 0.15rem 0.25rem;
-        border-radius: 7px;
-        border: none;
+        gap: 0.18rem;
+        min-height: 3.35rem;
+        padding: 0.42rem 0.28rem 0.4rem;
+        border-radius: 11px;
+        border: 1px solid transparent;
         background: transparent;
         color: var(--ws-text-secondary);
-        font-size: 0.65rem;
-        font-weight: 750;
         text-decoration: none;
         -webkit-tap-highlight-color: transparent;
+        transition:
+            background 160ms ease,
+            border-color 160ms ease,
+            color 160ms ease,
+            box-shadow 160ms ease;
+    }
+
+    .crm-rm-mob-tab > i {
+        display: inline-grid;
+        place-items: center;
+        width: 1.35rem;
+        height: 1.35rem;
+        border-radius: 8px;
+        font-size: 0.68rem;
+        color: var(--ws-text-muted);
+        background: color-mix(in srgb, var(--ws-bg) 55%, transparent);
+    }
+
+    .crm-rm-mob-tab-label {
+        max-width: 100%;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .crm-rm-mob-tab em {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.35rem;
+        min-height: 1.15rem;
+        padding: 0 0.35rem;
+        border-radius: 999px;
         font-style: normal;
-        font-size: 0.55rem;
-        font-weight: 800;
+        font-size: 0.62rem;
+        font-weight: 850;
         font-variant-numeric: tabular-nums;
+        line-height: 1;
+        color: var(--ws-text-muted);
+        background: color-mix(in srgb, var(--ws-bg) 70%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+    }
+
+    .crm-rm-mob-tab em[hidden] {
+        display: none !important;
     }
 
     .crm-rm-mob-tab.is-active {
-        background: var(--ws-surface);
+        background:
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface)),
+                var(--ws-surface)
+            );
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, transparent);
         color: var(--ws-primary);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.04),
+            0 8px 16px -10px color-mix(in srgb, var(--ws-primary) 40%, transparent),
+            inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+    }
+
+    .crm-rm-mob-tab.is-active > i {
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
     }
 
     .crm-rm-mob-tab.is-active em {
-        color: var(--ws-primary);
+        color: #fff;
+        background: var(--ws-primary);
+        border-color: transparent;
+    }
+
+    .crm-rm-mob-tab:active {
+        transform: scale(0.985);
     }
 
     .crm-rm-desk-only {
@@ -426,8 +627,8 @@ a.crm-rm-kpi {
     .crm-reminders-mobile .crm-rm-timeline {
         display: flex;
         flex-direction: column;
-        gap: 0.32rem;
-        padding: 0.28rem 0 0.3rem;
+        gap: 0.45rem;
+        padding: 0.1rem 0 0.3rem;
         width: 100%;
         box-sizing: border-box;
     }
@@ -440,10 +641,12 @@ a.crm-rm-kpi {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-        border-radius: 11px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent);
+        border-radius: 14px;
         background: var(--ws-surface);
-        box-shadow: none;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 18px -14px rgba(15, 23, 42, 0.18);
         overflow: hidden;
     }
 
@@ -451,10 +654,10 @@ a.crm-rm-kpi {
         content: "";
         position: absolute;
         inset-inline-start: 0;
-        top: 0.45rem;
-        bottom: 0.45rem;
-        width: 2px;
-        border-radius: 2px;
+        top: 0.55rem;
+        bottom: 0.55rem;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
         background: color-mix(in srgb, var(--ws-border) 75%, transparent);
         pointer-events: none;
     }
@@ -477,7 +680,7 @@ a.crm-rm-kpi {
     }
 
     .crm-reminders-mobile .crm-rm-card--done {
-        background: color-mix(in srgb, var(--ws-bg) 35%, var(--ws-surface));
+        background: color-mix(in srgb, var(--ws-bg) 28%, var(--ws-surface));
     }
 
     .crm-reminders-mobile .crm-rm-card--done::before {
@@ -492,11 +695,11 @@ a.crm-rm-kpi {
             "title title"
             "note note"
             "foot action";
-        column-gap: 0.4rem;
+        column-gap: 0.45rem;
         row-gap: 0;
         width: 100%;
         margin: 0;
-        padding: 0.42rem 0.5rem 0.42rem 0.58rem !important;
+        padding: 0.7rem 0.75rem 0.7rem 0.85rem !important;
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
@@ -511,7 +714,7 @@ a.crm-rm-kpi {
         align-items: center;
         justify-content: space-between;
         gap: 0.25rem 0.4rem;
-        margin: 0 0 0.22rem;
+        margin: 0 0 0.35rem;
         padding: 0;
     }
 
@@ -524,13 +727,13 @@ a.crm-rm-kpi {
         display: flex;
         align-items: flex-start;
         gap: 0.3rem;
-        margin: 0 0 0.2rem;
+        margin: 0 0 0.28rem;
     }
 
     .crm-reminders-mobile .crm-rm-title {
         flex: 1;
         margin: 0;
-        font-size: 0.88rem !important;
+        font-size: 0.9rem !important;
         font-weight: 800 !important;
         line-height: 1.35;
         letter-spacing: -0.02em;
@@ -546,10 +749,10 @@ a.crm-rm-kpi {
 
     .crm-reminders-mobile .crm-rm-note {
         grid-area: note;
-        margin: 0 0 0.22rem;
+        margin: 0 0 0.35rem;
         padding: 0;
-        font-size: 0.7rem;
-        line-height: 1.4;
+        font-size: 0.72rem;
+        line-height: 1.45;
         color: var(--ws-text-secondary);
     }
 
@@ -561,10 +764,10 @@ a.crm-rm-kpi {
     }
 
     .crm-reminders-mobile .crm-rm-chip {
-        min-height: 1.6rem;
-        padding: 0.12rem 0.38rem 0.12rem 0.24rem;
-        border-radius: 7px;
-        font-size: 0.65rem;
+        min-height: 1.7rem;
+        padding: 0.14rem 0.42rem 0.14rem 0.28rem;
+        border-radius: 8px;
+        font-size: 0.66rem;
         font-weight: 700;
         background: color-mix(in srgb, var(--ws-bg) 40%, var(--ws-surface));
         border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
@@ -586,8 +789,8 @@ a.crm-rm-kpi {
 
     .crm-reminders-mobile .crm-rm-tone-badge {
         margin: 0 !important;
-        padding: 0.1rem 0.36rem !important;
-        font-size: 0.58rem !important;
+        padding: 0.14rem 0.42rem !important;
+        font-size: 0.6rem !important;
         font-weight: 750;
         border-radius: 999px;
         line-height: 1.2;
@@ -624,14 +827,14 @@ a.crm-rm-kpi {
         align-items: center;
         gap: 0.2rem 0.3rem;
         margin: 0;
-        font-size: 0.64rem;
+        font-size: 0.66rem;
         font-weight: 650;
         color: var(--ws-text-muted);
         font-variant-numeric: tabular-nums;
     }
 
     .crm-reminders-mobile .crm-rm-datetime .crm-rm-time {
-        font-size: 0.64rem !important;
+        font-size: 0.66rem !important;
         font-weight: 700 !important;
         color: var(--ws-text-muted) !important;
     }
@@ -656,12 +859,12 @@ a.crm-rm-kpi {
     .crm-reminders-mobile .crm-rm-complete-btn {
         width: auto !important;
         min-width: 0 !important;
-        min-height: 2rem !important;
-        padding: 0 0.45rem !important;
+        min-height: 2.35rem !important;
+        padding: 0 0.55rem !important;
         flex-direction: row !important;
         justify-content: center;
         gap: 0.28rem;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-family: inherit;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -674,8 +877,8 @@ a.crm-rm-kpi {
     }
 
     .crm-reminders-mobile .crm-rm-complete-btn.is-pending .crm-rm-complete-icon {
-        width: 1.05rem;
-        height: 1.05rem;
+        width: 1.1rem;
+        height: 1.1rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -702,11 +905,10 @@ a.crm-rm-kpi {
 
     .crm-reminders-mobile .crm-rm-complete-label {
         display: inline !important;
-        font-size: 0.66rem !important;
+        font-size: 0.68rem !important;
         font-weight: 700;
     }
 
-    /* بدون چیپ: دکمه در ردیف پایین راست */
     .crm-reminders-mobile .crm-rm-panel:not(:has(.crm-rm-chips)) .crm-rm-action-col {
         grid-area: foot;
         justify-self: end;
@@ -725,9 +927,60 @@ a.crm-rm-kpi {
     }
 }
 
+@media (max-width: 360px) {
+    .crm-rm-mob-toolbar-panel {
+        padding: 0.55rem 0.55rem 0.6rem;
+        gap: 0.45rem;
+    }
+
+    .crm-rm-mob-brand-ico,
+    .crm-rm-mob-toolbar-btn,
+    .crm-rm-mob-toolbar-add {
+        width: 2.3rem;
+        height: 2.3rem;
+        min-width: 2.3rem;
+        min-height: 2.3rem;
+    }
+
+    .crm-rm-mob-title {
+        font-size: 0.92rem;
+    }
+
+    .crm-rm-mob-metric {
+        min-height: 2.9rem;
+        padding: 0.38rem 0.42rem;
+    }
+
+    .crm-rm-mob-metric strong {
+        font-size: 1.05rem;
+    }
+
+    .crm-rm-mob-tab {
+        min-height: 3.1rem;
+        padding: 0.34rem 0.18rem 0.32rem;
+        gap: 0.14rem;
+    }
+
+    .crm-rm-mob-tab-label {
+        font-size: 0.66rem;
+    }
+
+    .crm-rm-mob-tab > i {
+        width: 1.25rem;
+        height: 1.25rem;
+        font-size: 0.62rem;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .crm-rm-mob-toolbar-add:active,
-    .crm-rm-mob-toolbar-btn:active {
+    .crm-rm-mob-toolbar-btn:active,
+    .crm-rm-mob-metric:active,
+    .crm-rm-mob-tab:active {
         transform: none;
+    }
+
+    .crm-rm-mob-tab {
+        transition: none;
     }
 }

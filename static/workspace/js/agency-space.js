@@ -502,7 +502,7 @@
 
     const grid = document.querySelector('[data-space-grid]');
     const viewBtns = document.querySelectorAll('[data-space-view]');
-    const viewKey = 'agency-space-view-mode';
+    const viewKey = 'agency-space-view-mode-v2';
     function setView(mode) {
       if (!grid) return;
       grid.classList.toggle('is-list-view', mode === 'list');
@@ -525,10 +525,10 @@
       if (saved === 'list' || saved === 'grid') {
         setView(saved);
       } else {
-        setView('list');
+        setView('grid');
       }
     } catch (e) {
-      setView('list');
+      setView('grid');
     }
 
     const detail = document.querySelector('.agency-space-detail');

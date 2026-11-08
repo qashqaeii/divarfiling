@@ -7,7 +7,7 @@
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
-        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(var(--ws-mob-nav-offset, 5.25rem) + 4.25rem);
     }
 
     .agency-space-detail--mob .agency-space-detail__layout,
@@ -132,29 +132,25 @@
         gap: 0.5rem;
     }
 
-    .agency-space-detail--mob .agency-space-property-detail .agency-space-property-detail__hero {
+    .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-showcase {
         order: 1;
     }
 
-    .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-gallery {
+    .agency-space-detail--mob .agency-space-property-detail .agency-space-property-detail__crm-slot--mobile {
         order: 2;
     }
 
-    .agency-space-detail--mob .agency-space-property-detail .agency-space-property-detail__crm-slot--mobile {
-        order: 3;
-    }
-
     .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-contact-panel--mob {
-        order: 4;
+        order: 3;
         display: block;
     }
 
     .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-detail__metrics {
-        order: 5;
+        order: 4;
     }
 
     .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-detail__stack {
-        order: 6;
+        order: 5;
     }
 
     .agency-space-detail--mob .agency-space-prop-hero-highlight--price,
@@ -170,22 +166,36 @@
 
     .agency-space-detail--mob .agency-space-prop-hero__quickfact--price {
         font-size: 1.12rem;
-        width: 100%;
+        width: auto;
     }
 
-    .agency-space-detail--mob .agency-space-prop-gallery {
-        border: none;
+    .agency-space-detail--mob .agency-space-prop-showcase.agency-space-prop-gallery {
+        border: 1px solid color-mix(in srgb, #7c3aed 10%, #e2e8f0);
         box-shadow: none;
         padding: 0;
-        background: transparent;
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
     }
 
-    .agency-space-detail--mob .agency-space-prop-gallery__stage {
-        border-radius: 14px;
+    .agency-space-detail--mob .agency-space-prop-showcase .agency-space-prop-gallery__stage {
+        border-radius: 0;
         overflow: hidden;
         aspect-ratio: 16 / 10;
-        max-height: min(52vw, 13.5rem);
-        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+        max-height: min(58vw, 16rem);
+        border: none;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-showcase .agency-space-pro-hero {
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        border-radius: 0;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-gallery__main-hit {
+        border-radius: 0;
+        overflow: hidden;
     }
 
     .agency-space-detail--mob .agency-space-prop-gallery__main-hit img,
@@ -193,6 +203,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        border-radius: 0;
     }
 
     .agency-space-detail--mob .agency-space-prop-gallery__thumbs {
@@ -495,16 +506,18 @@
         justify-content: center;
     }
 
-    /* Sticky CTA */
+    /* Sticky CTA — sit above bottom nav */
     .agency-space-detail--mob .agency-space-detail__sticky {
-        padding: 0.45rem 0.65rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+        left: 0;
+        right: 0;
+        bottom: calc(var(--ws-mob-nav-offset, 5.25rem));
+        padding: 0.45rem 0.65rem;
+        box-sizing: border-box;
         background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 92%, #fff);
         border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+        border-radius: 16px 16px 0 0;
         backdrop-filter: blur(10px);
-    }
-
-    .agency-space-detail--mob .agency-space-detail__sticky {
-        box-sizing: border-box;
+        z-index: 45;
     }
 
     .agency-space-detail--mob .agency-space-detail__sticky-inner {

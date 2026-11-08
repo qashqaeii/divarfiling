@@ -7,76 +7,83 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/fl-kpi-pro.css' %}?v=22">
 <link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-premium.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <div class="mk-page sup-page sup-page-mobile{% if search_q or status_filter or priority_filter %} sup-page-mobile--filtered{% endif %}">
 
-    {# ── Mobile header ── #}
-    <header class="sup-mob-header">
-        <div class="sup-mob-header-mesh" aria-hidden="true"></div>
-        <div class="sup-mob-header-accent" aria-hidden="true"></div>
-        <div class="sup-mob-header-inner">
-            <div class="sup-mob-header-main">
-                <h1 class="sup-mob-title">پشتیبانی</h1>
-                <p class="sup-mob-sub" aria-live="polite">
-                    {% if status_filter or priority_filter or search_q %}
-                    <span class="sup-mob-sub-plain">نمایش فیلترشده</span>
-                    {% else %}
-                    <span class="sup-mob-sub-plain">{{ stats.total }} تیکت</span>
-                    {% endif %}
-                    {% if stats.unread_replies %}<span class="sup-mob-sub-chip is-unread">{{ stats.unread_replies }} پاسخ جدید</span>{% endif %}
-                    {% if stats.waiting_user %}<span class="sup-mob-sub-chip is-wait">{{ stats.waiting_user }} منتظر شما</span>{% endif %}
-                </p>
-            </div>
-            <div class="sup-mob-header-actions" role="toolbar" aria-label="عملیات پشتیبانی">
-                <button type="button" class="sup-mob-icon-btn" data-modal-open="modal-ticket-filters" title="فیلتر و جستجو" aria-label="فیلتر و جستجو">
-                    <i class="fas fa-sliders" aria-hidden="true"></i>
-                    {% if search_q or status_filter or priority_filter %}<span class="sup-mob-icon-dot" aria-hidden="true"></span>{% endif %}
-                </button>
-                {% if tickets %}
-                <button type="button" class="sup-mob-icon-btn sup-mob-icon-btn--primary" data-modal-open="modal-ticket-create" title="تیکت جدید" aria-label="تیکت جدید">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </button>
-                {% endif %}
-            </div>
-        </div>
-        <form method="get" class="sup-mob-search" role="search" aria-label="جستجوی تیکت">
-            <label class="sup-mob-search-field">
-                <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="search" name="q" value="{{ search_q }}" class="sup-mob-search-input" placeholder="عنوان یا شماره تیکت…" autocomplete="off">
-            </label>
-            {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
-            {% if priority_filter %}<input type="hidden" name="priority" value="{{ priority_filter }}">{% endif %}
-        </form>
-    </header>
+    {# ── Mobile premium chrome ── #}
+    <div class="sup-mob-chrome" aria-label="پشتیبانی — موبایل">
+        <div class="sup-mob-toolbar-sticky">
+            <header class="sup-mob-header sup-mob-toolbar-panel">
+                <div class="sup-mob-header-inner">
+                    <div class="sup-mob-brand">
+                        <span class="sup-mob-brand-ico" aria-hidden="true"><i class="fas fa-headset"></i></span>
+                        <div class="sup-mob-header-main">
+                            <h1 class="sup-mob-title">پشتیبانی</h1>
+                            <p class="sup-mob-sub" aria-live="polite">
+                                {% if stats.unread_replies %}
+                                {{ stats.unread_replies }} پاسخ جدید
+                                {% elif stats.waiting_user %}
+                                {{ stats.waiting_user }} تیکت منتظر شما
+                                {% elif status_filter or priority_filter or search_q %}
+                                نمایش فیلترشده
+                                {% else %}
+                                {{ stats.total }} تیکت ثبت‌شده
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="sup-mob-header-actions" role="toolbar" aria-label="عملیات پشتیبانی">
+                        <button type="button" class="sup-mob-icon-btn" data-modal-open="modal-ticket-filters" title="فیلتر" aria-label="فیلتر و جستجو">
+                            <i class="fas fa-sliders" aria-hidden="true"></i>
+                            {% if search_q or status_filter or priority_filter %}<span class="sup-mob-icon-dot" aria-hidden="true"></span>{% endif %}
+                        </button>
+                        <button type="button" class="sup-mob-icon-btn sup-mob-icon-btn--primary" data-modal-open="modal-ticket-create" title="تیکت جدید" aria-label="تیکت جدید">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
 
-    <nav class="sup-mob-status" aria-label="فیلتر وضعیت تیکت">
-        <div class="sup-mob-status-track">
-            <a href="{% url 'workspace:support_list' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if not status_filter %} is-active{% endif %}" data-tone="purple">
-                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
-                <span class="sup-mob-status-val">{{ stats.total }}</span>
-                <span class="sup-mob-status-lbl">همه</span>
-            </a>
-            <a href="?status=open{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'open' %} is-active{% endif %}" data-tone="blue">
-                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
-                <span class="sup-mob-status-val">{{ stats.open }}</span>
-                <span class="sup-mob-status-lbl">باز</span>
-            </a>
-            <a href="?status=waiting_user{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'waiting_user' %} is-active{% endif %}" data-tone="amber">
-                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
-                <span class="sup-mob-status-val">{{ stats.waiting_user }}</span>
-                <span class="sup-mob-status-lbl">منتظر شما</span>
-            </a>
-            <a href="?status=closed{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'closed' %} is-active{% endif %}" data-tone="gray">
-                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
-                <span class="sup-mob-status-val">{{ stats.closed }}</span>
-                <span class="sup-mob-status-lbl">بسته</span>
-            </a>
+                <form method="get" class="sup-mob-search" role="search" aria-label="جستجوی تیکت">
+                    <label class="sup-mob-search-field">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" name="q" value="{{ search_q }}" class="sup-mob-search-input" placeholder="عنوان یا شماره تیکت…" autocomplete="off">
+                    </label>
+                    {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                    {% if priority_filter %}<input type="hidden" name="priority" value="{{ priority_filter }}">{% endif %}
+                </form>
+
+                <nav class="sup-mob-status" aria-label="فیلتر وضعیت تیکت">
+                    <div class="sup-mob-status-track">
+                        <a href="{% url 'workspace:support_list' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if not status_filter %} is-active{% endif %}" data-tone="purple">
+                            <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                            <span class="sup-mob-status-val">{{ stats.total }}</span>
+                            <span class="sup-mob-status-lbl">همه</span>
+                        </a>
+                        <a href="?status=open{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'open' %} is-active{% endif %}" data-tone="blue">
+                            <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+                            <span class="sup-mob-status-val">{{ stats.open }}</span>
+                            <span class="sup-mob-status-lbl">باز</span>
+                        </a>
+                        <a href="?status=waiting_user{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'waiting_user' %} is-active{% endif %}" data-tone="amber">
+                            <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
+                            <span class="sup-mob-status-val">{{ stats.waiting_user }}</span>
+                            <span class="sup-mob-status-lbl">منتظر شما</span>
+                        </a>
+                        <a href="?status=closed{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'closed' %} is-active{% endif %}" data-tone="gray">
+                            <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+                            <span class="sup-mob-status-val">{{ stats.closed }}</span>
+                            <span class="sup-mob-status-lbl">بسته</span>
+                        </a>
+                    </div>
+                </nav>
+            </header>
         </div>
-    </nav>
+    </div>
 
     {# ── Desktop header ── #}
     <header class="mk-hub-head sup-desk-header">

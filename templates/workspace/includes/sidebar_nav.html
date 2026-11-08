@@ -26,6 +26,13 @@
     </a>
     {% endif %}
 
+    {% if ws_show_agency_nav %}
+    <a href="{{ ws_agency_nav_url }}" class="ws-nav-item {% if '/crm/agency' in path %}active{% endif %}" data-tour="nav-team-top" data-nav-team-badge>
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
+        <span class="ws-nav-badge" data-nav-team-hub-badge {% if not crm_nav_counts.team_hub_unread %}hidden{% endif %}>{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</span>
+    </a>
+    {% endif %}
+
     <div class="ws-nav-section">مدیریت مشتری (CRM)</div>
 
     <a href="{% url 'workspace:crm_today' %}" class="ws-nav-item ws-nav-item--sub {% if url_name == 'crm_today' %}active{% endif %}" data-tour="nav-today">
@@ -69,13 +76,6 @@
     <a href="{% url 'workspace:crm_calendar' %}" class="ws-nav-item ws-nav-item--sub {% if url_name == 'crm_calendar' %}active{% endif %}" data-tour="nav-calendar">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='nav' only %}</span><span>تقویم</span>
     </a>
-
-    {% if ws_show_agency_nav %}
-    <a href="{{ ws_agency_nav_url }}" class="ws-nav-item {% if '/crm/agency' in path %}active{% endif %}" data-tour="nav-team-top" data-nav-team-badge>
-        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
-        <span class="ws-nav-badge" data-nav-team-hub-badge {% if not crm_nav_counts.team_hub_unread %}hidden{% endif %}>{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</span>
-    </a>
-    {% endif %}
 
     <details class="ws-nav-more" data-tour="nav-more"{% if ws_nav_more_open or show_onboarding %} open{% endif %}>
         <summary class="ws-nav-more-summary">

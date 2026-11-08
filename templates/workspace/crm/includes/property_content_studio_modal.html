@@ -2,21 +2,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Estedad:wght@400;600;700;800&family=Lalezar&family=Markazi+Text:wght@400;600;700&family=Gulzar&family=Parastoo:wght@400;500;600;700&display=swap" rel="stylesheet">
-<div id="pcsModal" class="pcs-modal" role="dialog" aria-modal="true" aria-labelledby="pcsModalTitle" hidden>
+<div id="pcsModal" class="pcs-modal pcs-modal--pro" role="dialog" aria-modal="true" aria-labelledby="pcsModalTitle" hidden>
     <div class="pcs-modal__backdrop" data-pcs-close tabindex="-1"></div>
     <div class="pcs-modal__panel">
-        <div class="pcs-modal__grab" aria-hidden="true"></div>
+        <div class="pcs-modal__grab" aria-hidden="true"><span></span></div>
         <header class="pcs-header">
             <div class="pcs-header__top">
                 <div class="pcs-header__brand">
                     <span class="pcs-header__sparkle" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
-                    <div>
+                    <div class="pcs-header__brand-copy">
                         <h2 id="pcsModalTitle" class="pcs-header__title">استودیوی هوشمند ملک</h2>
                         <p class="pcs-header__sub">از فایل ملک، محتوای آماده انتشار بسازید</p>
                     </div>
                 </div>
                 <div class="pcs-header__actions">
-                    <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon pcs-mob-settings-head" id="pcsOpenSettingsHead" aria-label="تنظیمات برند">
+                    <button type="button" class="pcs-btn pcs-btn--ghost pcs-btn--icon pcs-mob-settings-head" id="pcsOpenSettingsHead" aria-label="تنظیمات برند" title="تنظیمات برند">
                         <i class="fas fa-sliders" aria-hidden="true"></i>
                     </button>
                     <button type="button" class="pcs-btn pcs-btn--primary pcs-btn--glow" id="pcsPrimaryAction" hidden>
@@ -42,15 +42,15 @@
         <nav class="pcs-tabs" id="pcsTabs" role="tablist" aria-label="بخش‌های استودیو">
             <button type="button" class="pcs-tab is-active" role="tab" data-pcs-tab="posters" aria-selected="true">
                 <i class="fas fa-palette" aria-hidden="true"></i>
-                <span class="pcs-tab__text"><span class="pcs-tab__short">پوستر</span><span class="pcs-tab__long">پوسترها و استوری‌برد</span></span>
+                <span class="pcs-tab__text"><span class="pcs-tab__short">پوستر</span><span class="pcs-tab__long">پوستر و استوری</span></span>
             </button>
             <button type="button" class="pcs-tab" role="tab" data-pcs-tab="divar">
                 <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                <span class="pcs-tab__text"><span class="pcs-tab__short">دیوار</span><span class="pcs-tab__long">آگهی دیوار با AI</span></span>
+                <span class="pcs-tab__text"><span class="pcs-tab__short">دیوار</span><span class="pcs-tab__long">آگهی دیوار</span></span>
             </button>
             <button type="button" class="pcs-tab" role="tab" data-pcs-tab="social">
                 <i class="fas fa-hashtag" aria-hidden="true"></i>
-                <span class="pcs-tab__text"><span class="pcs-tab__short">شبکه‌ها</span><span class="pcs-tab__long">کپشن و شبکه‌ها</span></span>
+                <span class="pcs-tab__text"><span class="pcs-tab__short">شبکه‌ها</span><span class="pcs-tab__long">کپشن و شبکه</span></span>
             </button>
             <button type="button" class="pcs-tab" role="tab" data-pcs-tab="share">
                 <i class="fas fa-share-nodes" aria-hidden="true"></i>
@@ -90,46 +90,51 @@
                     </section>
 
                     <section class="pcs-panel pcs-divar-panel" data-pcs-panel="divar" role="tabpanel" hidden>
-                        <div class="pcs-divar-studio">
-                            <header class="pcs-divar-studio__intro">
-                                <h3 class="pcs-divar-studio__title">آگهی دیوار</h3>
-                                <p class="pcs-divar-studio__lead">عنوان و متن حرفه‌ای با مشخصات کامل و ایموجی استاندارد (مثل ✅) — آماده paste در اپ دیوار.</p>
+                        <div class="pcs-divar-studio pcs-studio-pane pcs-studio-pane--divar">
+                            <header class="pcs-studio-hero pcs-studio-hero--divar">
+                                <div class="pcs-studio-hero__top">
+                                    <span class="pcs-studio-hero__icon" aria-hidden="true"><i class="fas fa-store"></i></span>
+                                    <div class="pcs-studio-hero__copy">
+                                        <span class="pcs-studio-hero__kicker"><i class="fas fa-sparkles" aria-hidden="true"></i> AI · آماده paste</span>
+                                        <h3 class="pcs-divar-studio__title pcs-studio-hero__title">آگهی دیوار</h3>
+                                        <p class="pcs-divar-studio__lead pcs-studio-hero__lead">عنوان و متن حرفه‌ای با مشخصات کامل — مستقیم در اپ دیوار استفاده کنید.</p>
+                                    </div>
+                                </div>
+                                <div class="pcs-divar-studio__toolbar pcs-studio-hero__toolbar" role="group" aria-label="تولید با AI">
+                                    <button type="button" class="pcs-divar-chip" id="pcsGenDivarTitles">
+                                        <i class="fas fa-heading" aria-hidden="true"></i>
+                                        <span>عنوان‌ها</span>
+                                    </button>
+                                    <div class="pcs-divar-studio__compose">
+                                        <label class="pcs-divar-tone" for="pcsDivarBodyStyle">
+                                            <span class="pcs-divar-tone__label">لحن</span>
+                                            <select id="pcsDivarBodyStyle" class="pcs-divar-tone__select" aria-label="سبک متن آگهی">
+                                                <option value="formal">رسمی حرفه‌ای</option>
+                                                <option value="full">کامل با همه مشخصات</option>
+                                                <option value="consultant">مشاورانه</option>
+                                                <option value="luxury">لوکس</option>
+                                                <option value="promo">تبلیغاتی جذاب</option>
+                                                <option value="friendly">صمیمی حرفه‌ای</option>
+                                                <option value="short">مختصر</option>
+                                            </select>
+                                        </label>
+                                        <button type="button" class="pcs-divar-chip pcs-divar-chip--accent" id="pcsGenDivarBody">
+                                            <i class="fas fa-sparkles" aria-hidden="true"></i>
+                                            <span>متن آگهی</span>
+                                        </button>
+                                    </div>
+                                </div>
                             </header>
 
-                            <div class="pcs-divar-studio__toolbar" role="group" aria-label="تولید با AI">
-                                <button type="button" class="pcs-divar-chip" id="pcsGenDivarTitles">
-                                    <i class="fas fa-heading" aria-hidden="true"></i>
-                                    <span>عنوان‌ها</span>
-                                </button>
-                                <div class="pcs-divar-studio__compose">
-                                    <label class="pcs-divar-tone" for="pcsDivarBodyStyle">
-                                        <span class="pcs-divar-tone__label">لحن</span>
-                                        <select id="pcsDivarBodyStyle" class="pcs-divar-tone__select" aria-label="سبک متن آگهی">
-                                            <option value="formal">رسمی حرفه‌ای</option>
-                                            <option value="full">کامل با همه مشخصات</option>
-                                            <option value="consultant">مشاورانه</option>
-                                            <option value="luxury">لوکس</option>
-                                            <option value="promo">تبلیغاتی جذاب</option>
-                                            <option value="friendly">صمیمی حرفه‌ای</option>
-                                            <option value="short">مختصر</option>
-                                        </select>
-                                    </label>
-                                    <button type="button" class="pcs-divar-chip pcs-divar-chip--accent" id="pcsGenDivarBody">
-                                        <i class="fas fa-sparkles" aria-hidden="true"></i>
-                                        <span>متن آگهی</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <section class="pcs-divar-block" aria-labelledby="pcsDivarTitlesLabel">
-                                <div class="pcs-divar-block__head">
+                            <section class="pcs-divar-block pcs-studio-section" aria-labelledby="pcsDivarTitlesLabel">
+                                <div class="pcs-divar-block__head pcs-studio-section__head">
                                     <h4 class="pcs-divar-block__title" id="pcsDivarTitlesLabel">عنوان‌های پیشنهادی</h4>
                                     <span class="pcs-divar-block__meta">۵ پیشنهاد · حداکثر ۵۰ کاراکتر</span>
                                 </div>
                                 <div class="pcs-divar-titles" id="pcsDivarTitles" aria-label="عنوان‌های پیشنهادی"></div>
                             </section>
 
-                            <section class="pcs-divar-block pcs-divar-block--sheet" aria-labelledby="pcsDivarBodyLabel">
+                            <section class="pcs-divar-block pcs-divar-block--sheet pcs-studio-section" aria-labelledby="pcsDivarBodyLabel">
                                 <div class="pcs-divar-sheet">
                                     <div class="pcs-divar-sheet__bar">
                                         <h4 class="pcs-divar-block__title" id="pcsDivarBodyLabel">متن آگهی</h4>
@@ -154,25 +159,32 @@
                     </section>
 
                     <section class="pcs-panel pcs-social-panel" data-pcs-panel="social" role="tabpanel" hidden>
-                        <div class="pcs-social-studio">
-                            <header class="pcs-social-studio__intro">
-                                <h3 class="pcs-social-studio__title">کپشن و پیام</h3>
-                                <p class="pcs-social-studio__lead">چند لحن برای پست، واتساپ و تلگرام — یک‌جا تولید و کپی کنید.</p>
+                        <div class="pcs-social-studio pcs-studio-pane pcs-studio-pane--social">
+                            <header class="pcs-studio-hero pcs-studio-hero--social">
+                                <div class="pcs-studio-hero__top">
+                                    <span class="pcs-studio-hero__icon" aria-hidden="true"><i class="fas fa-hashtag"></i></span>
+                                    <div class="pcs-studio-hero__copy">
+                                        <span class="pcs-studio-hero__kicker"><i class="fas fa-bolt" aria-hidden="true"></i> پست · واتساپ · تلگرام</span>
+                                        <h3 class="pcs-social-studio__title pcs-studio-hero__title">کپشن و شبکه</h3>
+                                        <p class="pcs-social-studio__lead pcs-studio-hero__lead">چند لحن آماده انتشار — یک‌جا تولید کنید و با یک لمس کپی کنید.</p>
+                                    </div>
+                                </div>
+                                <div class="pcs-studio-hero__toolbar pcs-studio-hero__toolbar--single">
+                                    <button type="button" class="pcs-divar-chip pcs-divar-chip--accent pcs-social-studio__gen" id="pcsGenSocial">
+                                        <i class="fas fa-sparkles" aria-hidden="true"></i>
+                                        <span>تولید محتوای شبکه‌ها</span>
+                                    </button>
+                                </div>
                             </header>
 
-                            <button type="button" class="pcs-divar-chip pcs-divar-chip--accent pcs-social-studio__gen" id="pcsGenSocial">
-                                <i class="fas fa-sparkles" aria-hidden="true"></i>
-                                <span>تولید محتوای شبکه‌ها</span>
-                            </button>
-
-                            <section class="pcs-social-block" aria-labelledby="pcsSocialCaptionsLabel">
-                                <div class="pcs-divar-block__head">
+                            <section class="pcs-social-block pcs-studio-section" aria-labelledby="pcsSocialCaptionsLabel">
+                                <div class="pcs-divar-block__head pcs-studio-section__head">
                                     <h4 class="pcs-divar-block__title" id="pcsSocialCaptionsLabel">کپشن‌های پیشنهادی</h4>
                                 </div>
                                 <div class="pcs-social-captions" id="pcsSocialCaptions" aria-label="کپشن‌های شبکه‌ها"></div>
                             </section>
 
-                            <section class="pcs-social-block" aria-labelledby="pcsHashtagsLabel">
+                            <section class="pcs-social-block pcs-studio-section" aria-labelledby="pcsHashtagsLabel">
                                 <div class="pcs-social-tag-sheet">
                                     <div class="pcs-divar-sheet__bar">
                                         <h4 class="pcs-divar-block__title" id="pcsHashtagsLabel">هشتگ‌ها</h4>
@@ -212,9 +224,20 @@
                         </div>
                     </section>
 
-                    <section class="pcs-panel" data-pcs-panel="share" role="tabpanel" hidden>
-                        <div class="pcs-share-grid" id="pcsShareGrid"></div>
-                        <p class="pcs-hint">برای اینستاگرام و سایر شبکه‌ها بدون API رسمی، فایل را دانلود کنید و دستی منتشر کنید.</p>
+                    <section class="pcs-panel pcs-share-panel" data-pcs-panel="share" role="tabpanel" hidden>
+                        <div class="pcs-share-studio pcs-studio-pane pcs-studio-pane--share">
+                            <header class="pcs-studio-hero pcs-studio-hero--share">
+                                <div class="pcs-studio-hero__top">
+                                    <span class="pcs-studio-hero__icon" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
+                                    <div class="pcs-studio-hero__copy">
+                                        <span class="pcs-studio-hero__kicker"><i class="fas fa-link" aria-hidden="true"></i> انتشار سریع</span>
+                                        <h3 class="pcs-studio-hero__title">اشتراک‌گذاری</h3>
+                                        <p class="pcs-studio-hero__lead">لینک عمومی فایل را بسازید یا کپی کنید؛ برای اینستاگرام از دانلود پوستر استفاده کنید.</p>
+                                    </div>
+                                </div>
+                            </header>
+                            <div class="pcs-share-grid" id="pcsShareGrid"></div>
+                        </div>
                     </section>
                 </main>
 
@@ -400,10 +423,10 @@
     </div>
 </div>
 
-<div class="pcs-settings-sheet" id="pcsSettingsSheet" hidden>
+<div class="pcs-settings-sheet pcs-settings-sheet--pro" id="pcsSettingsSheet" hidden>
     <button type="button" class="pcs-settings-sheet__backdrop" data-pcs-settings-close aria-label="بستن"></button>
     <div class="pcs-settings-sheet__panel" id="pcsSettingsSheetPanel" role="dialog" aria-label="تنظیمات برند">
-        <div class="pcs-settings-sheet__grab" aria-hidden="true"></div>
+        <div class="pcs-settings-sheet__grab" aria-hidden="true"><span></span></div>
         <header class="pcs-settings-sheet__head">
             <div class="pcs-settings-sheet__head-text">
                 <strong>تنظیمات برند و نمایش</strong>

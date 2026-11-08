@@ -37,21 +37,26 @@
     </div>
     {% endif %}
 
-    <section class="agency-panel agency-space-panel" aria-label="فضای آژانس">
-        {% if space_kpis %}
-        <p class="agency-space-page__mob-context" aria-label="خلاصه فضای آژانس">
-            <span class="agency-space-page__mob-context-title">فضای آژانس</span>
-            <span class="agency-space-page__mob-context-stats">
-                <span>{{ space_kpis.active_properties|intcomma }} فایل</span>
-                <span class="agency-space-page__mob-context-sep" aria-hidden="true">·</span>
-                <span>{{ space_kpis.active_contacts|intcomma }} مخاطب</span>
-            </span>
-        </p>
-        {% else %}
-        <p class="agency-space-page__mob-context" aria-label="فضای آژانس">
-            <span class="agency-space-page__mob-context-title">فضای آژانس</span>
-        </p>
-        {% endif %}
+    <section class="agency-panel agency-space-panel agency-space-panel--premium" aria-label="فضای آژانس">
+        <div class="agency-space-page__mob-context agency-space-page__mob-context--premium" aria-label="خلاصه فضای آژانس">
+            <div class="agency-space-page__mob-context-copy">
+                <span class="agency-space-page__mob-context-eyebrow">تیم</span>
+                <span class="agency-space-page__mob-context-title">فضای آژانس</span>
+                <span class="agency-space-page__mob-context-sub">اشتراک فایل و مخاطب بدون انتقال مالکیت</span>
+            </div>
+            {% if space_kpis %}
+            <div class="agency-space-page__mob-context-stats" aria-label="شاخص فشرده">
+                <span class="agency-space-page__mob-context-pill">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    {{ space_kpis.active_properties|intcomma }} فایل
+                </span>
+                <span class="agency-space-page__mob-context-pill">
+                    <i class="fas fa-user-group" aria-hidden="true"></i>
+                    {{ space_kpis.active_contacts|intcomma }} مخاطب
+                </span>
+            </div>
+            {% endif %}
+        </div>
         {% include "workspace/crm/agency/includes/space_nav.html" %}
         {% include "workspace/crm/agency/includes/space_scope_nav.html" %}
 
@@ -61,8 +66,8 @@
         {% endif %}
         {% else %}
 
-        <div class="agency-space-discovery">
-            <form class="agency-space-toolbar" method="get" action="" id="agency-space-list-form">
+        <div class="agency-space-discovery agency-space-discovery--premium">
+            <form class="agency-space-toolbar agency-space-toolbar--premium" method="get" action="" id="agency-space-list-form">
                 {% include "workspace/crm/agency/includes/space_query_hidden.html" %}
 
                 <div class="agency-space-toolbar__row">
@@ -88,11 +93,14 @@
 
                     <div class="agency-space-toolbar__meta">
                         <p class="agency-space-toolbar__count" aria-live="polite">
-                            {% if space_tab == 'properties' %}<strong>{{ space_result_total|intcomma }}</strong> فایل{% elif space_tab == 'contacts' %}<strong>{{ space_result_total|intcomma }}</strong> مخاطب{% else %}<strong>{{ space_result_total|intcomma }}</strong> مورد{% endif %}
+                            <span class="agency-space-toolbar__count-pill">
+                                <strong>{{ space_result_total|intcomma }}</strong>
+                                <span>{% if space_tab == 'properties' %}فایل{% elif space_tab == 'contacts' %}مخاطب{% else %}مورد{% endif %}</span>
+                            </span>
                         </p>
                         <div class="agency-space-view-toggle agency-space-toolbar__view" role="group" aria-label="نمای نتایج">
-                            <button type="button" class="agency-space-view-toggle__btn" data-space-view="grid" title="کارت" aria-label="نمای کارت" aria-pressed="false"><i class="fas fa-th-large" aria-hidden="true"></i><span class="agency-space-view-toggle__label">کارت</span></button>
-                            <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="list" title="لیست" aria-label="نمای لیست" aria-pressed="true"><i class="fas fa-list" aria-hidden="true"></i><span class="agency-space-view-toggle__label">لیست</span></button>
+                            <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="کارت" aria-label="نمای کارت" aria-pressed="true"><i class="fas fa-th-large" aria-hidden="true"></i><span class="agency-space-view-toggle__label">کارت</span></button>
+                            <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست" aria-label="نمای لیست" aria-pressed="false"><i class="fas fa-list" aria-hidden="true"></i><span class="agency-space-view-toggle__label">لیست</span></button>
                         </div>
                     </div>
                 </div>
@@ -104,8 +112,8 @@
 
         {% include "workspace/crm/agency/includes/space_filter_chips.html" %}
 
-        <div class="agency-space-results">
-            <div class="agency-space-grid is-list-view{% if space_tab == 'contacts' %} agency-space-grid--contacts{% endif %}{% if not space_items %} agency-space-grid--empty{% endif %}" data-space-grid>
+        <div class="agency-space-results agency-space-results--premium">
+            <div class="agency-space-grid agency-space-grid--premium{% if space_tab == 'contacts' %} agency-space-grid--contacts{% endif %}{% if not space_items %} agency-space-grid--empty{% endif %}" data-space-grid>
                 {% for item in space_items %}
                 {% if item.source_kind == 'property' %}
                 {% include "workspace/crm/agency/includes/space_property_card.html" with item=item %}

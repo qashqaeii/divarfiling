@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="{% static 'contracts/css/contracts-dashboard.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'contracts/css/contracts-dashboard-filters.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-contracts.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-premium-closure.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -44,24 +45,42 @@
             </div>
         </header>
 
-        <header class="ct-dash-mob-header">
-            <div class="ct-dash-mob-header__mesh" aria-hidden="true"></div>
-            <div class="ct-dash-mob-header__inner">
-                <div>
-                    <h1 class="ct-dash-mob-title">قراردادها</h1>
-                    <p class="ct-dash-mob-desc">مدیریت چرخه عمر قراردادها از پیش‌نویس تا نهایی‌سازی</p>
+        <header class="ct-contracts-mob-pagehead" aria-label="خلاصه قراردادها">
+            <div class="ct-contracts-mob-pagehead__main">
+                <span class="ct-contracts-mob-pagehead__icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+                <div class="ct-contracts-mob-pagehead__copy">
+                    <h1 class="ct-contracts-mob-pagehead__title">قراردادها</h1>
+                    <p class="ct-contracts-mob-pagehead__sub">از پیش‌نویس تا تأیید نهایی — مستقل یا متصل به معامله</p>
                 </div>
-                <div class="ct-dash-mob-header-actions" role="toolbar" aria-label="عملیات قراردادها">
-                    {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-contracts-help' help_title='راهنمای قراردادها' help_mob_class='crm-help-mob-btn ct-dash-mob-help' %}
-                {% if contracts_locked %}
-                <span class="ct-dash-mob-add is-disabled" title="نیاز به لایسنس فعال" aria-disabled="true" aria-label="قرارداد جدید — قفل">
-                    <i class="fas fa-lock" aria-hidden="true"></i>
-                </span>
-                {% else %}
-                <a href="{% url 'workspace:contract_create_standalone' %}" class="ct-dash-mob-add" title="قرارداد جدید" aria-label="قرارداد جدید">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </a>
+            </div>
+            <div class="ct-contracts-mob-pagehead__side">
+                {% if not contracts_locked %}
+                <div class="ct-contracts-mob-pagehead__pulse" aria-label="آمار سریع">
+                    <span class="ct-contracts-mob-pagehead__pulse-item ct-contracts-mob-pagehead__pulse-item--live">
+                        <strong>{{ stats.total|to_persian_digits }}</strong>
+                        <em>کل</em>
+                    </span>
+                    <span class="ct-contracts-mob-pagehead__pulse-divider" aria-hidden="true"></span>
+                    <span class="ct-contracts-mob-pagehead__pulse-item{% if stats.needs_action %} ct-contracts-mob-pagehead__pulse-item--warn{% endif %}">
+                        <strong>{{ stats.needs_action|to_persian_digits }}</strong>
+                        <em>اقدام</em>
+                    </span>
+                </div>
                 {% endif %}
+                <div class="ct-contracts-mob-pagehead__actions" role="toolbar" aria-label="میانبرها">
+                    {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-contracts-help' help_title='راهنمای قراردادها' help_mob_class='ct-contracts-mob-pagehead__act' %}
+                    <a href="{% url 'workspace:crm_deals' %}" class="ct-contracts-mob-pagehead__act" title="قیف معاملات" aria-label="قیف معاملات">
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                    </a>
+                    {% if contracts_locked %}
+                    <span class="ct-contracts-mob-pagehead__act ct-contracts-mob-pagehead__act--primary is-disabled" title="نیاز به لایسنس فعال" aria-disabled="true" aria-label="قرارداد جدید — قفل">
+                        <i class="fas fa-lock" aria-hidden="true"></i>
+                    </span>
+                    {% else %}
+                    <a href="{% url 'workspace:contract_create_standalone' %}" class="ct-contracts-mob-pagehead__act ct-contracts-mob-pagehead__act--primary" title="قرارداد جدید" aria-label="قرارداد جدید">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </header>
@@ -90,6 +109,7 @@
 
         {% include 'contracts/includes/contracts_kpi.html' %}
 
+        <div class="ct-dash-mob-chrome">
         <nav class="ct-dash-quick" aria-label="فیلتر سریع وضعیت">
             <a href="?{% if filter_deal %}deal={{ filter_deal.pk }}{% endif %}"
                class="ct-dash-quick__tab{% if not request.GET.status and not request.GET.focus %} is-active{% endif %}">
@@ -174,6 +194,7 @@
             </div>
             {% endif %}
         </form>
+        </div>
 
         {% if stats.needs_action %}
         <div class="ct-dash-alert" role="status">
@@ -234,6 +255,34 @@
                                     {% endif %}
                                 </strong>
                                 <em>{{ c.internal_number }}</em>
+                                <article class="ct-dash-mcard" aria-label="کارت قرارداد">
+                                    <div class="ct-dash-mcard__top">
+                                        <div class="ct-dash-mcard__identity">
+                                            <span class="ct-dash-mcard__ico" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+                                            <div>
+                                                <h3 class="ct-dash-mcard__title">
+                                                    {% if c.deal %}
+                                                    <a href="{% ct_manage_url c %}">{{ c.deal.title|truncatechars:42 }}</a>
+                                                    {% elif c.title %}
+                                                    <a href="{% ct_manage_url c %}">{{ c.title|truncatechars:42 }}</a>
+                                                    {% else %}
+                                                    <a href="{% ct_manage_url c %}">{{ c.get_contract_type_display }}</a>
+                                                    {% endif %}
+                                                </h3>
+                                                <p class="ct-dash-mcard__sub">{{ c.internal_number }} · {{ c.get_contract_type_display }}</p>
+                                            </div>
+                                        </div>
+                                        <span class="crm-contract-status crm-contract-status--{{ c.status }}">{{ c.get_status_display }}</span>
+                                    </div>
+                                    <div class="ct-dash-mcard__meta">
+                                        {% if c.deal and c.deal.customer %}
+                                        <span class="ct-dash-mcard__meta-item"><i class="fas fa-user" aria-hidden="true"></i> {{ c.deal.customer.name }}</span>
+                                        {% else %}
+                                        <span class="ct-dash-mcard__meta-item"><i class="fas fa-file" aria-hidden="true"></i> مستقل</span>
+                                        {% endif %}
+                                        <span class="ct-dash-mcard__meta-item"><i class="fas fa-clock" aria-hidden="true"></i> {{ c.created_at|ws_jalali_datetime }}</span>
+                                    </div>
+                                </article>
                             </td>
                             <td class="ct-dash-cell-type" data-label="نوع">{{ c.get_contract_type_display }}</td>
                             <td data-label="مخاطب">
@@ -258,6 +307,7 @@
                                 <time datetime="{{ c.created_at|date:'c' }}">{{ c.created_at|ws_jalali_datetime }}</time>
                             </td>
                             <td class="ct-dash-cell-actions" data-label="عملیات">
+                                <div class="ct-dash-mcard-actions">
                                 {% if c.status == 'draft' %}
                                 <a href="{% ct_wizard_url c %}" class="crm-dash-act crm-dash-act--primary">شروع قرارداد</a>
                                 {% elif c.status == 'ready' %}
@@ -300,6 +350,7 @@
                                         <a href="{% ct_pdf_url c %}" role="menuitem">دانلود PDF</a>
                                         {% endif %}
                                     </div>
+                                </div>
                                 </div>
                             </td>
                         </tr>

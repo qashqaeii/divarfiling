@@ -168,9 +168,9 @@
             </div>
         </section>
 
-        <section class="agency-section agency-dash-grid__aside">
+        <section class="agency-section agency-dash-grid__aside agency-dash-aside--premium">
             {% include "workspace/crm/agency/includes/section_head.html" with title="فعالیت اخیر" decor="history" subtitle="آخرین رویدادهای تیم" link_url=activity_url link_label="مشاهده همه" %}
-            <div class="agency-panel agency-panel--activity agency-panel--timeline">
+            <div class="agency-panel agency-panel--activity agency-panel--timeline agency-dash-aside__panel">
                 {% if recent_events %}
                 {% with events=recent_events|slice:":8" %}
                 {% include "workspace/crm/agency/includes/agency_hub_activity_timeline.html" %}

@@ -1,0 +1,844 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Deal Detail — Mobile Premium (final surface)
+   Scoped: .dj-deal @ max-width 767px
+   Loads LAST after crm-mobile-v2-deals / journey
+   ═══════════════════════════════════════════════════════════ */
+
+/* Desktop: keep masthead flex contract; hide mobile-only chrome */
+.dj-deal__header-end {
+    display: contents;
+}
+
+.dj-deal__mob-bar,
+.dj-deal__mob-cta,
+.dj-deal-mob-summary__cards,
+.dj-deal-mob-summary__links {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .dj-deal.crm-page-chrome {
+        --dj-gutter: 0.85rem;
+        --dj-head-h: 3.55rem;
+        padding: 0 0 calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        gap: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        /* visible — overflow clip/hidden breaks sticky header */
+        overflow-x: visible !important;
+        background:
+            radial-gradient(120% 42% at 50% 0%, color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 10%, transparent), transparent 58%),
+            var(--ws-bg, #f4f6fb) !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ── Sticky premium top chrome ── */
+    .dj-deal__masthead {
+        margin: 0 !important;
+        border: none !important;
+        border-radius: 0 0 24px 24px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    .dj-deal__masthead::before {
+        display: none !important;
+    }
+
+    .dj-deal__header {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
+    }
+
+    .dj-deal__header-top {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 60 !important;
+        display: grid !important;
+        grid-template-columns: 2.55rem minmax(0, 1fr) auto !important;
+        grid-template-areas: "back title end" !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        min-height: var(--dj-head-h) !important;
+        margin: 0 !important;
+        padding:
+            max(0.55rem, env(safe-area-inset-top, 0px))
+            var(--dj-gutter)
+            0.55rem !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 94%, #fff) 0%,
+                color-mix(in srgb, var(--ws-surface) 88%, transparent) 100%
+            ) !important;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+            0 10px 28px -22px rgba(15, 23, 42, 0.28) !important;
+        backdrop-filter: blur(18px) saturate(1.15) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+        box-sizing: border-box !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .dj-deal__header-nav {
+        grid-area: back !important;
+        flex: none !important;
+        width: auto !important;
+        min-width: 0 !important;
+        gap: 0 !important;
+    }
+
+    .dj-deal__header-nav .dj-deal__crumb {
+        display: none !important;
+    }
+
+    .dj-deal__back {
+        width: 2.55rem !important;
+        height: 2.55rem !important;
+        min-width: 2.55rem !important;
+        min-height: 2.55rem !important;
+        border-radius: 13px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 55%, var(--ws-surface)) !important;
+        color: var(--ws-text-secondary) !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+    }
+
+    .dj-deal__back:active {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
+    }
+
+    .dj-deal__mob-bar {
+        grid-area: title !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 0.08rem !important;
+        min-width: 0 !important;
+    }
+
+    .dj-deal__mob-bar-kicker {
+        font-size: 0.62rem !important;
+        font-weight: 750 !important;
+        letter-spacing: 0.02em !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.2 !important;
+    }
+
+    .dj-deal__mob-bar-title {
+        max-width: 100% !important;
+        font-size: 0.9rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.25 !important;
+        color: var(--ws-text) !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .dj-deal__header-end {
+        grid-area: end !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    .dj-deal__mob-cta {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.38rem !important;
+        min-height: 2.55rem !important;
+        margin: 0 !important;
+        padding: 0 0.95rem 0 0.8rem !important;
+        border: none !important;
+        border-radius: 999px !important;
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 92%, #fff) 0%,
+                var(--deal-accent, var(--ws-primary)) 48%,
+                color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 82%, #0f172a) 100%
+            ) !important;
+        color: #fff !important;
+        font-family: inherit !important;
+        font-size: 0.8125rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.015em !important;
+        white-space: nowrap !important;
+        cursor: pointer !important;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
+            0 8px 18px -10px color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 65%, transparent) !important;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .dj-deal__mob-cta i {
+        font-size: 0.72rem !important;
+    }
+
+    .dj-deal__mob-cta:active {
+        transform: scale(0.97) !important;
+        filter: brightness(0.96) !important;
+    }
+
+    .dj-deal__header-actions {
+        display: inline-flex !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0.14rem !important;
+        gap: 0.22rem !important;
+        flex-wrap: nowrap !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent) !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent) !important;
+    }
+
+    .dj-deal__header-actions .dj-deal__act--primary,
+    .dj-deal__header-actions .dj-deal__act[data-drawer-open="drawer-next-action"],
+    .dj-deal__header-actions .dj-deal__act[data-drawer-open="drawer-edit"] {
+        display: none !important;
+    }
+
+    .dj-deal__header-actions .dj-deal__act {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-width: 2.25rem !important;
+        min-height: 2.25rem !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 11px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .dj-deal__header-actions .dj-deal__act:active {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    /* Hero identity block */
+    .dj-deal__header-main {
+        margin: 0.55rem var(--dj-gutter) 0.35rem !important;
+        padding: 0.95rem 0.95rem 0.9rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 20px !important;
+        background:
+            radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 14%, transparent), transparent 58%),
+            linear-gradient(
+                165deg,
+                color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 7%, var(--ws-surface)) 0%,
+                var(--ws-surface) 52%
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 12px 28px rgba(15, 23, 42, 0.05),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        box-sizing: border-box !important;
+    }
+
+    .dj-deal__title-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.45rem !important;
+    }
+
+    .dj-deal__stage-pill {
+        align-self: flex-start !important;
+        min-height: 1.55rem !important;
+        padding: 0.2rem 0.65rem !important;
+        border-radius: 999px !important;
+        font-size: 0.7rem !important;
+        font-weight: 800 !important;
+    }
+
+    .dj-deal__title {
+        margin: 0 !important;
+        font-size: 1.2rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.03em !important;
+        line-height: 1.3 !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .dj-deal__meta-line {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.25rem 0.4rem !important;
+        margin: 0.45rem 0 0 !important;
+        font-size: 0.72rem !important;
+        font-weight: 650 !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.4 !important;
+    }
+
+    .dj-deal__meta-chips {
+        display: none !important;
+    }
+
+    /* Value summary cards */
+    .dj-deal-mob-summary {
+        display: block !important;
+        margin: 0.35rem var(--dj-gutter) 0.55rem !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .dj-deal-mob-summary__cards {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem !important;
+    }
+
+    .dj-deal-mob-summary__card--share {
+        grid-column: 1 / -1 !important;
+    }
+
+    .dj-deal-mob-summary__card {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.28rem !important;
+        min-width: 0 !important;
+        padding: 0.7rem 0.75rem !important;
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent) !important;
+        box-sizing: border-box !important;
+    }
+
+    .dj-deal-mob-summary__card em {
+        font-style: normal !important;
+        font-size: 0.66rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .dj-deal-mob-summary__card strong {
+        font-size: 0.95rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-text) !important;
+        font-variant-numeric: tabular-nums !important;
+        overflow-wrap: anywhere !important;
+        line-height: 1.3 !important;
+    }
+
+    .dj-deal-mob-summary__card--value strong {
+        color: var(--deal-accent, var(--ws-primary)) !important;
+    }
+
+    .dj-deal-mob-summary__card--share {
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, #10b981 10%, var(--ws-surface)) 0%,
+                var(--ws-surface) 60%
+            ) !important;
+        border-color: color-mix(in srgb, #10b981 22%, var(--ws-border)) !important;
+    }
+
+    .dj-deal-mob-summary__card--share strong {
+        color: #047857 !important;
+        font-size: 1.05rem !important;
+    }
+
+    .dj-deal-mob-summary__links {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.35rem !important;
+        margin-top: 0.45rem !important;
+    }
+
+    .dj-deal-mob-summary__link {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        min-height: 2.65rem !important;
+        padding: 0.45rem 0.7rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text) !important;
+        text-decoration: none !important;
+        font-size: 0.8rem !important;
+        font-weight: 750 !important;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent) !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .dj-deal-mob-summary__link > i:first-child {
+        color: var(--ws-primary) !important;
+        font-size: 0.78rem !important;
+        width: 1rem !important;
+        text-align: center !important;
+    }
+
+    .dj-deal-mob-summary__link span {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .dj-deal-mob-summary__link > i:last-child {
+        color: var(--ws-text-muted) !important;
+        font-size: 0.62rem !important;
+        opacity: 0.75 !important;
+    }
+
+    .dj-deal-mob-summary__link:active {
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 20%, var(--ws-border)) !important;
+    }
+
+    /* Stage rail */
+    .dj-stage-rail {
+        position: static !important;
+        margin: 0 var(--dj-gutter) 0.55rem !important;
+        padding: 0.75rem 0.8rem 0.8rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface-2, #f8fafc) 40%, var(--ws-surface))
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .dj-stage-rail__head {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.5rem !important;
+        margin-bottom: 0.55rem !important;
+    }
+
+    .dj-stage-rail__kicker {
+        font-size: 0.62rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .dj-stage-rail__head-copy strong {
+        display: block !important;
+        margin-top: 0.12rem !important;
+        font-size: 0.88rem !important;
+        font-weight: 850 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .dj-stage-rail__progress-badge {
+        flex-shrink: 0 !important;
+        min-height: 1.55rem !important;
+        padding: 0.18rem 0.55rem !important;
+        border-radius: 999px !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        font-size: 0.66rem !important;
+        font-weight: 800 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border)) !important;
+    }
+
+    .dj-stage-rail__track-wrap {
+        margin-bottom: 0.55rem !important;
+    }
+
+    .dj-stage-rail__track {
+        height: 0.35rem !important;
+        border-radius: 999px !important;
+        background: color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        overflow: hidden !important;
+    }
+
+    .dj-stage-rail__fill {
+        height: 100% !important;
+        border-radius: inherit !important;
+        background: linear-gradient(90deg, var(--deal-accent, var(--ws-primary)), color-mix(in srgb, var(--deal-accent, var(--ws-primary)) 70%, #2563eb)) !important;
+    }
+
+    .dj-stage-rail__steps {
+        gap: 0.3rem !important;
+        padding-bottom: 0.1rem !important;
+    }
+
+    .dj-stage-rail__step {
+        min-width: 3.65rem !important;
+    }
+
+    .dj-stage-rail__btn {
+        min-height: 3rem !important;
+        border-radius: 12px !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .dj-stage-rail__dot {
+        width: 2rem !important;
+        height: 2rem !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+    }
+
+    .dj-stage-rail__step.is-current .dj-stage-rail__dot {
+        width: 2.2rem !important;
+        height: 2.2rem !important;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 20%, transparent) !important;
+    }
+
+    .dj-stage-rail__label {
+        font-size: 0.64rem !important;
+        font-weight: 750 !important;
+        max-width: 4.2rem !important;
+    }
+
+    /* Next-action hero */
+    .dj-deal .dj-hero {
+        order: 1 !important;
+        width: auto !important;
+        margin: 0 var(--dj-gutter) 0.55rem !important;
+        padding: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 20px !important;
+        overflow: hidden !important;
+        background: var(--ws-surface) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 12px 28px -18px rgba(15, 23, 42, 0.16) !important;
+    }
+
+    .dj-deal .dj-hero--danger {
+        border-color: color-mix(in srgb, #ef4444 28%, var(--ws-border)) !important;
+        background:
+            linear-gradient(165deg, color-mix(in srgb, #ef4444 8%, var(--ws-surface)) 0%, var(--ws-surface) 48%) !important;
+    }
+
+    .dj-deal .dj-hero--success {
+        border-color: color-mix(in srgb, #10b981 28%, var(--ws-border)) !important;
+        background:
+            linear-gradient(165deg, color-mix(in srgb, #10b981 8%, var(--ws-surface)) 0%, var(--ws-surface) 48%) !important;
+    }
+
+    .dj-deal .dj-hero__inner {
+        gap: 0.7rem !important;
+        padding: 0.9rem 0.95rem 0.95rem !important;
+        background: transparent !important;
+    }
+
+    .dj-deal .dj-hero__mark {
+        display: inline-flex !important;
+        width: 2.55rem !important;
+        height: 2.55rem !important;
+        margin: 0 0 0.45rem !important;
+        border-radius: 13px !important;
+        font-size: 0.95rem !important;
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border)) !important;
+    }
+
+    .dj-deal .dj-hero__lead {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    .dj-deal .dj-hero__kicker {
+        font-size: 0.66rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.02em !important;
+        color: var(--ws-primary) !important;
+        margin-bottom: 0.2rem !important;
+    }
+
+    .dj-deal .dj-hero__title {
+        font-size: 1.02rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.35 !important;
+        margin: 0 0 0.25rem !important;
+    }
+
+    .dj-deal .dj-hero__sub {
+        font-size: 0.78rem !important;
+        line-height: 1.5 !important;
+        margin: 0 !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .dj-deal .dj-hero__next-hint {
+        margin-top: 0.45rem !important;
+        border-radius: 12px !important;
+        padding: 0.45rem 0.65rem !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 36%, transparent) !important;
+        font-size: 0.74rem !important;
+        font-weight: 700 !important;
+    }
+
+    .dj-deal .dj-hero__actions {
+        gap: 0.4rem !important;
+    }
+
+    .dj-deal .dj-hero__cta {
+        min-height: 3rem !important;
+        border-radius: 999px !important;
+        font-size: 0.88rem !important;
+        font-weight: 850 !important;
+        border: none !important;
+        background:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--ws-primary) 92%, #fff) 0%,
+                var(--ws-primary) 48%,
+                color-mix(in srgb, var(--ws-primary) 82%, #0f172a) 100%
+            ) !important;
+        color: #fff !important;
+        box-shadow:
+            0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
+            0 12px 24px -14px color-mix(in srgb, var(--ws-primary) 70%, transparent) !important;
+    }
+
+    .dj-deal .dj-hero__cta--danger {
+        background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
+        box-shadow: 0 12px 24px -14px rgba(239, 68, 68, 0.55) !important;
+    }
+
+    .dj-deal .dj-hero__cta--success {
+        background: linear-gradient(135deg, #10b981, #047857) !important;
+        box-shadow: 0 12px 24px -14px rgba(16, 185, 129, 0.5) !important;
+    }
+
+    .dj-deal .dj-hero__secondary {
+        min-height: 2.75rem !important;
+        border-radius: 14px !important;
+        font-size: 0.8rem !important;
+        font-weight: 750 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 40%, var(--ws-surface)) !important;
+    }
+
+    /* Context aside */
+    .dj-deal__context {
+        order: 2 !important;
+        width: auto !important;
+        margin: 0 var(--dj-gutter) 0.55rem !important;
+        padding: 0.15rem 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        border-radius: 18px !important;
+        background: var(--ws-surface) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 24px -18px rgba(15, 23, 42, 0.14) !important;
+        overflow: hidden !important;
+    }
+
+    .dj-deal .dj-context-card {
+        padding: 0.75rem 0.85rem !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
+    }
+
+    .dj-deal .dj-context-card:last-child {
+        border-bottom: none !important;
+    }
+
+    .dj-deal .dj-context-btn {
+        min-height: 2.75rem !important;
+        border-radius: 999px !important;
+        font-weight: 800 !important;
+    }
+
+    /* Tabs + panels */
+    .dj-deal .dj-workspace {
+        order: 3 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 0.5rem !important;
+        gap: 0.55rem !important;
+    }
+
+    .dj-deal .dj-tabs--pro {
+        position: sticky !important;
+        top: var(--dj-head-h) !important;
+        z-index: 40 !important;
+        display: flex !important;
+        gap: 0.35rem !important;
+        margin: 0 var(--dj-gutter) !important;
+        padding: 0.35rem !important;
+        width: auto !important;
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 24px -18px rgba(15, 23, 42, 0.14) !important;
+        backdrop-filter: blur(14px) saturate(1.1) !important;
+        -webkit-backdrop-filter: blur(14px) saturate(1.1) !important;
+        overflow-x: auto !important;
+    }
+
+    .dj-deal .dj-tabs--pro .dj-tabs__item {
+        min-height: 3rem !important;
+        min-width: 3.85rem !important;
+        padding: 0.35rem 0.5rem !important;
+        border-radius: 12px !important;
+        border: 1px solid transparent !important;
+        gap: 0.18rem !important;
+    }
+
+    .dj-deal .dj-tabs--pro .dj-tabs__item span {
+        font-size: 0.64rem !important;
+        font-weight: 750 !important;
+        max-width: 4.5rem !important;
+    }
+
+    .dj-deal .dj-tabs--pro .dj-tabs__item i {
+        font-size: 0.78rem !important;
+    }
+
+    .dj-deal .dj-tabs--pro .dj-tabs__item.is-active {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
+        color: var(--ws-primary) !important;
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--ws-primary) 12%, transparent) !important;
+    }
+
+    .dj-deal .dj-workspace .dj-tab-panels,
+    .dj-deal .dj-tab-panels {
+        margin: 0 var(--dj-gutter) !important;
+        padding: 0 !important;
+        width: auto !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .dj-deal .dj-panel--overview .dj-overview {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+        padding: 0.15rem 0 0.35rem !important;
+    }
+
+    .dj-deal .dj-panel--overview .dj-overview__card {
+        margin: 0 !important;
+        padding: 0.85rem 0.9rem !important;
+        min-height: 0 !important;
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                var(--ws-surface)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 22px -18px rgba(15, 23, 42, 0.14) !important;
+    }
+
+    .dj-deal .dj-panel--overview .dj-overview__card:last-child {
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+    }
+
+    .dj-deal .dj-overview__icon {
+        width: 2.15rem !important;
+        height: 2.15rem !important;
+        border-radius: 11px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        font-size: 0.82rem !important;
+    }
+
+    .dj-deal .dj-overview__kicker {
+        font-size: 0.66rem !important;
+        font-weight: 750 !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .dj-deal .dj-overview__value {
+        font-size: 0.95rem !important;
+        font-weight: 850 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.35 !important;
+    }
+
+    .dj-deal .dj-overview__hint {
+        font-size: 0.72rem !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .dj-deal .dj-panel.is-active > .dj-panel-card,
+    .dj-deal .dj-panel.is-active > .dj-finance-panel,
+    .dj-deal .dj-panel.is-active > .dj-contracts-panel,
+    .dj-deal .dj-panel.is-active > .dj-checklist-panel,
+    .dj-deal .dj-panel.is-active > .crm-deal-timeline,
+    .dj-deal .dj-panel.is-active > .dj-timeline {
+        margin: 0.15rem 0 0.45rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 16px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 34%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 10px 22px -18px rgba(15, 23, 42, 0.14) !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    @media (max-width: 360px) {
+        .dj-deal__mob-cta span {
+            display: none !important;
+        }
+
+        .dj-deal__mob-cta {
+            width: 2.55rem !important;
+            min-width: 2.55rem !important;
+            padding: 0 !important;
+            border-radius: 13px !important;
+        }
+
+        .dj-deal__title {
+            font-size: 1.08rem !important;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dj-deal__mob-cta:active,
+        .dj-deal .dj-hero__cta:active {
+            transform: none !important;
+            filter: none !important;
+        }
+    }
+}

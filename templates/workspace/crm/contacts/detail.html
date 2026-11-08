@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-tabs.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-activities.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-scan.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-filing.css' %}?v=33">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-filing.css' %}?v=35">
 {% endblock %}
 
 {% block crm_content %}
@@ -317,15 +317,27 @@
 
     {% include 'workspace/crm/includes/contact_workflow.html' %}
     {% if can_share_team_resources %}
+    {% if customer_is_shared %}
     <div id="crm-contact-team-bar" class="crm-prop-hero-share-block crm-contact-hero-share-block" data-crm-contact-team data-customer-id="{{ customer.pk }}">
-        {% if customer_is_shared %}
         <div class="crm-contact-agency-strip__shared-only">
             {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
         </div>
-        {% elif is_customer_owner %}
-        {% include 'workspace/crm/includes/contact_detail_agency_team_strip.html' %}
-        {% endif %}
     </div>
+    {% elif is_customer_owner %}
+    <details id="crm-contact-team-bar" class="crm-prop-hero-share-block crm-contact-hero-share-block crm-team-share-card" data-crm-contact-team data-crm-team-share-card data-customer-id="{{ customer.pk }}">
+        <summary class="crm-team-share-card__summary">
+            <span class="crm-team-share-card__ico" aria-hidden="true"><i class="fas fa-user-group"></i></span>
+            <span class="crm-team-share-card__copy">
+                <strong>اشتراک با هم‌تیمی</strong>
+                <em>{% if customer_shares %}{{ customer_shares|length }} اشتراک فعال{% elif agency_space_item %}در فضای آژانس{% else %}ارسال مستقیم یا فضای آژانس{% endif %}</em>
+            </span>
+            <i class="fas fa-chevron-down crm-team-share-card__chev" aria-hidden="true"></i>
+        </summary>
+        <div class="crm-team-share-card__panel">
+            {% include 'workspace/crm/includes/contact_detail_agency_team_strip.html' %}
+        </div>
+    </details>
+    {% endif %}
     {% endif %}
     </header>
 

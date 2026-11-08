@@ -24,7 +24,7 @@
                         <span class="ws-mob-sheet-quick-label">فایل شخصی</span>
                     </a>
                     {% if ws_show_agency_nav %}
-                    <a href="{% url 'workspace:agency_hub_dashboard' %}" class="ws-mob-sheet-quick-btn">
+                    <a href="{{ ws_agency_nav_url }}" class="ws-mob-sheet-quick-btn">
                         <span class="ws-mob-sheet-quick-icon" aria-hidden="true"><i class="fas fa-people-group"></i></span>
                         <span class="ws-mob-sheet-quick-label">آژانس</span>
                     </a>
@@ -91,6 +91,12 @@
             <section class="ws-mob-sheet-section" aria-label="ابزارها و بیشتر">
                 <p class="ws-mob-sheet-kicker">ابزارها</p>
                 <nav class="ws-mob-sheet-nav ws-mob-sheet-nav--compact">
+                    {% if ws_show_agency_nav %}
+                    <a href="{{ ws_agency_nav_url }}" class="ws-mob-sheet-link{% if '/crm/agency' in request.path %} is-active{% endif %}">
+                        <i class="fas fa-people-group" aria-hidden="true"></i><span>آژانس</span>
+                        <span class="ws-mob-sheet-badge" data-nav-team-hub-badge {% if not crm_nav_counts.team_hub_unread %}hidden{% endif %}>{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</span>
+                    </a>
+                    {% endif %}
                     {% if has_bot_license %}
                     <a href="{% url 'workspace:tools' %}" class="ws-mob-sheet-link{% if request.resolver_match.url_name == 'tools' %} is-active{% endif %}">
                         <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>ابزارهای هوشمند</span>
@@ -105,11 +111,6 @@
                     <a href="{% url 'workspace:crm_automation' %}" class="ws-mob-sheet-link{% if request.resolver_match.url_name == 'crm_automation' %} is-active{% endif %}">
                         <i class="fas fa-bolt" aria-hidden="true"></i><span>اتوماسیون</span>
                     </a>
-                    {% if ws_show_agency_nav %}
-                    <a href="{% url 'workspace:agency_hub_dashboard' %}" class="ws-mob-sheet-link{% if '/crm/agency' in request.path %} is-active{% endif %}">
-                        <i class="fas fa-people-group" aria-hidden="true"></i><span>آژانس</span>
-                    </a>
-                    {% endif %}
                     <a href="{% url 'workspace:academy_home' %}" class="ws-mob-sheet-link{% if '/academy' in request.path %} is-active{% endif %}">
                         <i class="fas fa-graduation-cap" aria-hidden="true"></i><span>آکادمی</span>
                     </a>

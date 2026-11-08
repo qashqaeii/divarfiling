@@ -4,21 +4,23 @@
 {% block crm_extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=49">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-detail-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-detail-mobile.css' %}?v=6">
 {% if space_payload.source_kind == 'property' and space_payload.property and space_payload.property.has_map %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=6">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 {% endif %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-mobile-premium.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-detail-premium.css' %}?v=5">
 {% endblock %}
 
 {% block agency_hub_content %}
-<div class="agency-space agency-space-detail agency-space-detail--polished agency-space-detail--mob"
+<div class="agency-space agency-space-detail agency-space-detail--polished agency-space-detail--mob agency-space-detail--premium"
      data-item-id="{{ space_item.pk }}"
      data-api-url="{{ space_api_item_url }}"
      data-moderate-url="{{ space_api_moderate_url }}"
      data-can-edit="{% if space_payload.can_edit %}1{% else %}0{% endif %}">
 
-    <nav class="agency-space-detail__nav agency-space-detail__crumb" aria-label="مسیر">
+    <nav class="agency-space-detail__nav agency-space-detail__crumb agency-space-detail__crumb--premium" aria-label="مسیر">
         <a href="{% url 'workspace:agency_hub_space' %}" class="agency-space-detail__crumb-link">
             <i class="fas fa-arrow-right" aria-hidden="true"></i>
             فضای آژانس
@@ -220,17 +222,25 @@
     {% endif %}
     {% endif %}
 
-    <div class="agency-space-detail__sticky" aria-hidden="false">
+    <div class="agency-space-detail__sticky agency-space-detail__sticky--premium" aria-hidden="false">
         <div class="agency-space-detail__sticky-inner">
-            <a href="{% url 'workspace:agency_hub_space' %}" class="crm-btn crm-btn-ghost crm-btn-sm agency-space-detail__sticky-back">فهرست</a>
+            <a href="{% url 'workspace:agency_hub_space' %}" class="crm-btn crm-btn-ghost crm-btn-sm agency-space-detail__sticky-back">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                <span>فهرست</span>
+            </a>
             {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
             <a href="{{ space_payload.source_crm_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-crm-link>
                 {% if space_payload.source_kind == 'property' %}فایل CRM من{% else %}مخاطب CRM من{% endif %}
+                <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
             </a>
             {% elif space_payload.already_copied and space_payload.copy_target_url %}
-            <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-crm-link>مشاهده در CRM</a>
+            <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-crm-link>
+                مشاهده در CRM
+                <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
+            </a>
             {% elif space_payload.can_copy %}
             <button type="button" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary agency-space-btn--copy" data-space-copy data-item-id="{{ space_item.pk }}">
+                <i class="fas fa-plus" aria-hidden="true"></i>
                 {% if space_payload.source_kind == 'property' %}افزودن به CRM{% else %}کپی به CRM من{% endif %}
             </button>
             {% endif %}

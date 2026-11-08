@@ -1065,10 +1065,306 @@
     }
 
     .ws-crm-cd-mob .crm-contact-workflow__snapshot,
-    .ws-crm-cd-mob .crm-contact-snapshot-block,
-    .ws-crm-cd-mob #crm-contact-team-bar,
-    .ws-crm-cd-mob .crm-contact-hero-share-block {
+    .ws-crm-cd-mob .crm-contact-snapshot-block {
         display: none !important;
+    }
+
+    /* ── Team share card (collapsible / premium) ── */
+    .ws-crm-cd-mob #crm-contact-team-bar,
+    .ws-crm-cd-mob .crm-contact-hero-share-block,
+    .ws-crm-cd-mob details.crm-team-share-card {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0.55rem 0 0.15rem !important;
+        padding: 0.2rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 30%, transparent) !important;
+        border-radius: 18px !important;
+        background:
+            linear-gradient(
+                180deg,
+                color-mix(in srgb, var(--ws-surface) 96%, #fff),
+                color-mix(in srgb, var(--ws-surface) 90%, transparent)
+            ) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 8px 22px rgba(15, 23, 42, 0.04),
+            inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent) !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
+    .ws-crm-cd-mob details.crm-team-share-card > .crm-team-share-card__summary {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        min-height: 3.1rem !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.55rem 0.55rem 0.6rem !important;
+        border: none !important;
+        border-radius: 15px !important;
+        background: transparent !important;
+        color: inherit !important;
+        font: inherit !important;
+        text-align: start !important;
+        cursor: pointer !important;
+        list-style: none !important;
+        box-sizing: border-box !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-crm-cd-mob details.crm-team-share-card > .crm-team-share-card__summary::-webkit-details-marker {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob details.crm-team-share-card > .crm-team-share-card__summary:active {
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob .crm-team-share-card__ico {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2.35rem !important;
+        height: 2.35rem !important;
+        flex-shrink: 0 !important;
+        border-radius: 12px !important;
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent) !important;
+        font-size: 0.82rem !important;
+    }
+
+    .ws-crm-cd-mob .crm-team-share-card__copy {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.12rem !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    .ws-crm-cd-mob .crm-team-share-card__copy strong {
+        font-size: 0.84rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.015em !important;
+        color: var(--ws-text) !important;
+        line-height: 1.25 !important;
+    }
+
+    .ws-crm-cd-mob .crm-team-share-card__copy em {
+        font-style: normal !important;
+        font-size: 0.68rem !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.3 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .ws-crm-cd-mob .crm-team-share-card__chev {
+        flex-shrink: 0 !important;
+        width: 1.65rem !important;
+        height: 1.65rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 999px !important;
+        color: var(--ws-text-secondary) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface)) !important;
+        font-size: 0.62rem !important;
+        transition: transform 0.18s ease, color 0.18s ease, background 0.18s ease;
+    }
+
+    .ws-crm-cd-mob details.crm-team-share-card[open] > .crm-team-share-card__summary .crm-team-share-card__chev {
+        transform: rotate(180deg);
+        color: var(--ws-primary) !important;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+    }
+
+    .ws-crm-cd-mob details.crm-team-share-card > .crm-team-share-card__panel {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.55rem !important;
+        padding: 0.15rem 0.45rem 0.55rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-contact-share-bar.crm-prop-share-bar--pro {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.55rem !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-bar-vrule {
+        display: none !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-bar__cluster--mode {
+        flex: none !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+        padding: 0.55rem 0.6rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 35%, var(--ws-surface)) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-bar-label {
+        align-self: flex-start !important;
+        font-size: 0.68rem !important;
+        padding: 0.2rem 0.45rem !important;
+        border-radius: 8px !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-segment {
+        display: flex !important;
+        width: 100% !important;
+        padding: 3px !important;
+        border-radius: 11px !important;
+        gap: 3px !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-seg {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-seg > span {
+        justify-content: center !important;
+        width: 100% !important;
+        min-height: 2.5rem !important;
+        padding: 0.35rem 0.4rem !important;
+        font-size: 0.7rem !important;
+        border-radius: 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-seg input:checked + span {
+        background: var(--ws-surface) !important;
+        color: var(--ws-primary) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-bar__cluster--agency {
+        display: flex !important;
+        width: 100% !important;
+        justify-content: stretch !important;
+        gap: 0.4rem !important;
+        flex-shrink: 1 !important;
+        padding: 0 0.05rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-bar__cluster--agency .crm-prop-share-bar__link-btn,
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-bar__cluster--agency .agency-space-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        flex: 1 !important;
+        justify-content: center !important;
+        min-height: 2.5rem !important;
+        border-radius: 12px !important;
+        font-size: 0.72rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-bar__cluster--send {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0.55rem 0.6rem 0.6rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 35%, var(--ws-surface)) !important;
+        flex-shrink: 1 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-contact-team-actions--grouped {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-contact-team-actions--grouped .crm-select-sm {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        min-height: 2.75rem !important;
+        height: auto !important;
+        padding-inline: 0.65rem !important;
+        border-radius: 11px !important;
+        font-size: 0.78rem !important;
+        font-weight: 600 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-contact-team-actions--grouped .crm-dash-act {
+        grid-column: 1 !important;
+        min-height: 2.75rem !important;
+        height: auto !important;
+        border-radius: 11px !important;
+        font-size: 0.76rem !important;
+        font-weight: 800 !important;
+        justify-content: center !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-contact-team-actions--grouped .crm-prop-share-bar__link-btn {
+        grid-column: 2 !important;
+        min-height: 2.75rem !important;
+        justify-content: center !important;
+        border-radius: 11px !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-out-list {
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0.4rem !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-out-item {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.45rem !important;
+        padding: 0.55rem 0.65rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 28%, var(--ws-surface)) !important;
+        box-sizing: border-box !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-hero-share-block .crm-prop-share-out-flow {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    .ws-crm-cd-mob .crm-contact-agency-strip__shared-only {
+        margin: 0 !important;
+        padding: 0.45rem 0.5rem !important;
     }
 
     /* ── Premium segmented tabs (primary nav) ── */

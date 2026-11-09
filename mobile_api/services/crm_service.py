@@ -119,7 +119,7 @@ def _contact_patch_has_writes(data: Dict[str, Any]) -> bool:
     if not data:
         return False
     scalar_fields = (
-        'full_name', 'name', 'phone', 'email', 'status', 'customer_type', 'priority', 'notes',
+        'full_name', 'name', 'phone', 'email', 'status', 'customer_type', 'priority', 'notes', 'tags',
         'property_type', 'property_types', 'rooms', 'areas', 'streets', 'budget', 'budget_min', 'budget_max',
         'deposit_min', 'deposit_max', 'rent_min', 'rent_max', 'builder_buy_property_types',
         'builder_buy_types', 'builder_buy_areas', 'builder_buy_budget_min', 'builder_buy_budget_max',
@@ -246,6 +246,8 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         c.priority = data['priority']
     if _field_present(data, 'notes'):
         c.notes = data['notes'] or ''
+    if _field_present(data, 'tags'):
+        c.tags = (data.get('tags') or '').strip()[:500]
     if _field_present(data, 'property_type'):
         from workspace.services.customer_search_property_types import (
             apply_customer_search_property_types,

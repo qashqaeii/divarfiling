@@ -25,6 +25,7 @@ VACANCY_DATE_KEYS = ('تاریخ تخلیه', 'vacancy_date', 'تاریخ تخل
 ADDRESS_KEYS = ('آدرس', 'address', 'مکان_آدرس')
 NOTE_DATA_KEYS = ('یادداشت', 'notes', 'note', 'internal_note')
 DISTRICT_KEYS = ('منطقه', 'district', 'district_persian', 'مکان_منطقه')
+STREET_KEYS = ('خیابان', 'مکان_خیابان', 'street')
 
 # امکانات اضافه (علاوه بر آسانسور/پارکینگ/انباری)
 EXTRA_AMENITY_FIELDS = (
@@ -282,6 +283,11 @@ def filing_notes_for_personal_property(user, listing) -> str:
     return _unique_note_parts(meta_note, data_note, description)
 
 
+def _street_from_listing(listing) -> str:
+    from workspace.services.listing_street_data import listing_street_for_display
+    return listing_street_for_display(listing) or ''
+
+
 def district_from_listing(listing) -> str:
     data = listing.data or {}
     for key in DISTRICT_KEYS:
@@ -459,6 +465,7 @@ def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]
         'neighborhood': listing.neighborhood or '',
         'city': listing.city or '',
         'district': district_from_listing(listing),
+        'street': _street_from_listing(listing),
         'address': address_from_listing(listing),
         'latitude': listing.latitude,
         'longitude': listing.longitude,
@@ -757,6 +764,14 @@ def apply_listing_edit_post(listing, post) -> None:
         _apply_data_text(listing, ADDRESS_KEYS, post.get('address', ''), 'آدرس')
     if 'district' in post:
         _apply_data_text(listing, DISTRICT_KEYS, post.get('district', ''), 'منطقه')
+    if 'street' in post:
+        from workspace.services.listing_street_data import (
+            normalize_street_storage_value,
+            sync_street_keys_in_listing_data,
+        )
+        street_val = normalize_street_storage_value(post.get('street', ''))
+        _apply_data_text(listing, STREET_KEYS, street_val, 'خیابان')
+        listing.data = sync_street_keys_in_listing_data(listing.data or {})
 
     if 'owner_phone' in post:
         _apply_owner_phone(listing, post.get('owner_phone', ''))

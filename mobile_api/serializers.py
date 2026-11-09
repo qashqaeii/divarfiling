@@ -335,6 +335,7 @@ def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
         'status': c.status,
         'source': c.source or '',
         'priority': c.priority,
+        'tags': getattr(c, 'tags', '') or '',
         'budget': budget,
         'budget_min': c.budget_min,
         'budget_max': c.budget_max,

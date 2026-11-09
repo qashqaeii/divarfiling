@@ -95,6 +95,7 @@
             neighborhood: qs('#editNeighborhood'),
             city: qs('#editCity'),
             district: qs('#editDistrict'),
+            street: qs('#editStreet'),
             address: qs('#editAddress'),
             latitude: qs('#editLatitude'),
             longitude: qs('#editLongitude'),
@@ -640,6 +641,7 @@
         setField(f.neighborhood, data.neighborhood);
         setField(f.city, data.city);
         setField(f.district, data.district);
+        setField(f.street, data.street);
         setField(f.address, data.address);
         setField(f.latitude, data.latitude);
         setField(f.longitude, data.longitude);

@@ -348,6 +348,10 @@
                         {% include 'workspace/includes/ws_field_voice.html' with voice_name='neighborhood' voice_id='editNeighborhood' %}
                     </div>
                     <div class="ws-field">
+                        <label class="ws-label" for="editStreet">خیابان</label>
+                        {% include 'workspace/includes/ws_field_voice.html' with voice_name='street' voice_id='editStreet' voice_placeholder='نام خیابان' %}
+                    </div>
+                    <div class="ws-field">
                         <label class="ws-label" for="editLatitude">عرض جغرافیایی</label>
                         <input type="number" name="latitude" id="editLatitude" class="ws-input" step="any" inputmode="decimal" dir="ltr" placeholder="35.6892">
                     </div>

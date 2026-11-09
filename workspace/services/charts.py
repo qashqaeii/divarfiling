@@ -590,6 +590,15 @@ def map_markers(
         ds_tx = transaction_profile(getattr(lst.dataset, 'transaction_type', '') or transaction_type)
         ds_tx_mode = 'rent' if ds_tx['is_rent'] and not ds_tx['is_sale'] else 'sale'
         feat = extract_listing_features(lst)
+        from workspace.services.listing_street_data import listing_street_for_display
+        listing_data = lst.data or {}
+        district = ''
+        for key in ('منطقه', 'مکان_منطقه', 'district'):
+            raw = str(listing_data.get(key) or '').strip()
+            if raw and raw not in ('-', '—', 'nan', 'None'):
+                district = raw
+                break
+        street = listing_street_for_display(lst) or ''
 
         if val_mode == 'rent':
             filter_value = full_dep or lst.deposit or lst.rent or 0
@@ -619,6 +628,8 @@ def map_markers(
             'full_deposit_label': format_toman(full_dep) if full_dep else '',
             'neighborhood': lst.neighborhood or '',
             'city': lst.city or '',
+            'district': district,
+            'street': street,
             'business_type': lst.business_type or '',
             'seller_type': seller_type,
             'advertiser_signal': signal,

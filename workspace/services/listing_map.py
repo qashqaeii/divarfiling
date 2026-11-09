@@ -100,6 +100,8 @@ def build_listing_map_marker(
         'pps_label': format_toman(pps_value, per_sqm=True) if pps_value else '',
         'neighborhood': listing.neighborhood or '',
         'city': listing.city or '',
+        'district': '',
+        'street': '',
         'is_consultant': is_consultant,
         'is_disguised': is_disguised,
         'advertiser_signal': signal,
@@ -116,6 +118,16 @@ def build_listing_map_marker(
         'market_tier': market_tier,
         'verdict': verdict,
     }
+    for key in ('منطقه', 'مکان_منطقه', 'district'):
+        raw = str(raw_data.get(key) or '').strip()
+        if raw and raw not in ('-', '—', 'nan', 'None'):
+            marker['district'] = raw
+            break
+    try:
+        from workspace.services.listing_street_data import listing_street_for_display
+        marker['street'] = listing_street_for_display(listing) or ''
+    except Exception:
+        marker['street'] = ''
     if public:
         marker['token'] = ''
         marker['platform_url'] = ''

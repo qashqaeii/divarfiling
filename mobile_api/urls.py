@@ -7,6 +7,7 @@ from mobile_api import (
     commerce_views,
     content_studio_views,
     contracts_views,
+    divar_contact_views,
     epic03_views,
     export_security_views,
     forum_views,
@@ -223,6 +224,20 @@ urlpatterns = [
     path('filing/listings/<str:token>/contacts/<int:link_id>', views.ListingLinkedContactDeleteView.as_view(), name='listing_linked_contact_delete'),
     path('filing/listings/<str:token>/public-share', views.ListingPublicShareView.as_view(), name='listing_public_share'),
     path('filing/listings/<str:token>/advertiser-feedback', views.ListingAdvertiserFeedbackView.as_view(), name='listing_advertiser_feedback'),
+    path('filing/divar-contact/status', divar_contact_views.DivarContactStatusView.as_view(), name='divar_contact_status'),
+    path(
+        'filing/listings/<str:token>/divar-contact/status',
+        divar_contact_views.DivarContactListingStatusView.as_view(),
+        name='divar_contact_listing_status',
+    ),
+    path('filing/divar-contact/otp/send', divar_contact_views.DivarContactOtpSendView.as_view(), name='divar_contact_otp_send'),
+    path('filing/divar-contact/otp/verify', divar_contact_views.DivarContactOtpVerifyView.as_view(), name='divar_contact_otp_verify'),
+    path('filing/divar-contact/disconnect', divar_contact_views.DivarContactDisconnectView.as_view(), name='divar_contact_disconnect'),
+    path(
+        'filing/listings/<str:token>/divar-contact/fetch',
+        divar_contact_views.DivarContactFetchPhoneView.as_view(),
+        name='divar_contact_fetch_phone',
+    ),
 
     path('support/tickets', views.SupportTicketsListCreateView.as_view(), name='support_tickets'),
     path('support/tickets/<int:ticket_id>', views.SupportTicketDetailView.as_view(), name='support_ticket_detail'),

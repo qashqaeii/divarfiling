@@ -454,6 +454,13 @@ def serialize_space_item(
         and item.status == AgencySpaceItem.STATUS_ACTIVE
         and item.visibility == AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC
     )
+    # Restore is a separate permission/state from hide: a hidden item cannot
+    # satisfy can_moderate (active) but a manager may still restore it.
+    payload['can_restore'] = (
+        can_moderate_agency_space(viewer, item.agency)
+        and item.status == AgencySpaceItem.STATUS_MODERATION_HIDDEN
+        and item.visibility == AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC
+    )
     if item.property_id and item.property:
         payload['property'] = _property_card(item.property, include_sensitive=include_sensitive)
     elif item.property_id:

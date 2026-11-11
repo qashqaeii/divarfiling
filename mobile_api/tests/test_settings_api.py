@@ -9,6 +9,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from licenses.models import License
 from mobile_api.models import MobileDevice, MobileNotification
+from mobile_api.services.crm_service import today_payload, complete_follow_up_task
+from workspace.models import Customer
 from mobile_api.services.notification_scheduler import process_license_expiry, user_push_enabled
 from shop.models import LicensePlan, Order, Product
 
@@ -118,6 +120,21 @@ class SettingsApiTests(TestCase):
         self.assertFalse(data['crm_reminders'])
         self.assertEqual(data['digest_hour'], 9)
         self.assertFalse(data['license_alerts'])
+
+    def test_completed_followup_contributes_to_daily_progress(self):
+        customer = Customer.objects.create(
+            user=self.user,
+            name='مشتری پیگیری',
+            next_follow_up=timezone.now().date(),
+        )
+        before = today_payload(self.user)['stats']
+        self.assertGreaterEqual(before['total'], 1)
+        self.assertEqual(before['done'], 0)
+
+        complete_follow_up_task(self.user, customer.pk)
+        after = today_payload(self.user)['stats']
+        self.assertEqual(after['total'], 0)
+        self.assertEqual(after['done'], 1)
 
     def test_license_status_includes_days_remaining(self):
         _create_active_license(self.user, days_until_expiry=12)

@@ -30,6 +30,10 @@ def dashboard_payload(user) -> Dict[str, Any]:
         ).count()
 
     deals_count = CRMDeal.objects.filter(user=user).count()
+    # CRM today queue contains only unfinished items; completed reminders are
+    # counted separately. The progress denominator must include both.
+    open_tasks = today['stats']['total']
+    completed_tasks = today['stats']['done']
 
     return {
         'stats': {
@@ -39,8 +43,8 @@ def dashboard_payload(user) -> Dict[str, Any]:
             'deals': deals_count,
             'properties': stats['total_properties'],
             'new_files_today': new_files_today,
-            'today_tasks_total': today['stats']['total'],
-            'today_tasks_done': today['stats']['done'],
+            'today_tasks_total': open_tasks + completed_tasks,
+            'today_tasks_done': completed_tasks,
             'overdue_count': len(today['overdue']),
             'active_reminders': stats['active_reminders'],
             'overdue_followups': stats['overdue_followups'],

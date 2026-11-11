@@ -8,11 +8,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.urls import reverse
-from django.utils import timezone
 
 from contracts.constants import LEGAL_DISCLAIMER_SHORT
 from contracts.models import ContractVersion
 from contracts.services.audit import log_audit_event
+from contracts.services.date_display import jalali_pdf_datetime
 from contracts.services.contract_display import build_contract_display
 from contracts.services.persian_text import (
     prepare_rtl_text,
@@ -484,7 +484,7 @@ def generate_contract_pdf_bytes(
             ),
             Paragraph(
                 rtl_paragraph_html(
-                    f'تاریخ نهایی‌سازی: {timezone.localtime(contract.finalized_at).strftime("%Y/%m/%d %H:%M")}'
+                    f'تاریخ نهایی‌سازی: {jalali_pdf_datetime(contract.finalized_at)}'
                     if contract.finalized_at else 'پیش‌نمایش قرارداد',
                 ),
                 styles['subtitle'],
@@ -671,7 +671,7 @@ def _build_signature_pdf_block(
     def _signature_cell(acc):
         party = acc.party
         role = PARTY_ROLE_LABELS.get(party.role, party.role)
-        dt = timezone.localtime(acc.accepted_at).strftime('%Y/%m/%d %H:%M')
+        dt = jalali_pdf_datetime(acc.accepted_at)
         cell = [
             Paragraph(rtl_paragraph_html(role, bold=True), styles['card_role']),
             Spacer(1, 4),

@@ -10,6 +10,8 @@ from django.utils import timezone
 
 from contracts.constants import HANDOVER_CONDITION_STATUSES, HANDOVER_METER_UTILITIES
 from contracts.models import ContractHandover
+from contracts.services.date_display import jalali_pdf_date, jalali_pdf_datetime
+from workspace.services.jalali_input import to_persian_digits
 from contracts.services.persian_text import (
     prepare_rtl_text,
     resolve_persian_font_paths,
@@ -233,7 +235,6 @@ def render_handover_pdf_bytes(handover: ContractHandover, *, preview: bool = Fal
         return b''
 
     from contracts.services.handover_wizard import build_handover_wizard_context
-    from workspace.services.jalali_input import format_jalali_date, format_jalali_datetime
 
     wizard = build_handover_wizard_context(handover, step='review')
     review = wizard.get('review') or {}
@@ -250,11 +251,13 @@ def render_handover_pdf_bytes(handover: ContractHandover, *, preview: bool = Fal
     margin_b = 2.6 * cm
     content_width = page_w - margin_l - margin_r
 
-    date_label = review.get('date_display') or (
-        format_jalali_date(handover.handover_date) if handover.handover_date else '—'
+    date_label = to_persian_digits(
+        review.get('date_display') or jalali_pdf_date(handover.handover_date)
     )
-    time_label = review.get('time_display') or (
-        handover.handover_time.strftime('%H:%M') if handover.handover_time else '—'
+    time_label = to_persian_digits(
+        review.get('time_display') or (
+            handover.handover_time.strftime('%H:%M') if handover.handover_time else '—'
+        )
     )
 
     def _on_page(canvas, doc):
@@ -262,7 +265,7 @@ def render_handover_pdf_bytes(handover: ContractHandover, *, preview: bool = Fal
         canvas.setFillColor(colors.HexColor(_C_PRIMARY))
         canvas.rect(0, page_h - 0.35 * cm, page_w, 0.35 * cm, fill=1, stroke=0)
         canvas.setFont(font_name, 7)
-        canvas.drawCentredString(page_w / 2, 0.6 * cm, prepare_rtl_text(f'صفحه {canvas.getPageNumber()}'))
+        canvas.drawCentredString(page_w / 2, 0.6 * cm, prepare_rtl_text(f'صفحه {to_persian_digits(canvas.getPageNumber())}'))
         brand = prepare_rtl_text('فایلینگ دیوار — صورت‌جلسه تحویل ملک')
         canvas.drawRightString(page_w - margin_r, page_h - 0.85 * cm, brand)
         canvas.restoreState()
@@ -429,7 +432,7 @@ def render_handover_pdf_bytes(handover: ContractHandover, *, preview: bool = Fal
         sig_rows = []
         for acc in acceptances:
             side = 'تحویل‌دهنده' if acc.side == 'delivered_by' else 'تحویل‌گیرنده'
-            dt = format_jalali_datetime(acc.accepted_at)
+            dt = jalali_pdf_datetime(acc.accepted_at)
             sig_rows.append([
                 side,
                 acc.mobile or '—',

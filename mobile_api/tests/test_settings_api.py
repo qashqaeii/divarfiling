@@ -77,6 +77,32 @@ class SettingsApiTests(TestCase):
         self.assertEqual(self.user.first_name, 'رضا')
         self.assertEqual(self.user.phone, '09120000000')
 
+    def test_preset_avatar_json_is_saved_and_returned(self):
+        response = self.client.post(
+            '/api/mobile/v1/settings/profile/avatar',
+            {'avatar_key': 'avatar_09'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['data']['avatar_key'], 'avatar_09')
+        self.assertFalse(response.json()['data']['has_custom_avatar'])
+        self.assertEqual(
+            self.client.get('/api/mobile/v1/settings/profile').json()['data']['avatar_key'],
+            'avatar_09',
+        )
+
+    def test_invalid_preset_avatar_is_rejected(self):
+        response = self.client.post(
+            '/api/mobile/v1/settings/profile/avatar',
+            {'avatar_key': 'avatar_99'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertNotEqual(
+            self.client.get('/api/mobile/v1/settings/profile').json()['data']['avatar_key'],
+            'avatar_99',
+        )
+
     def test_notification_prefs_roundtrip(self):
         get_resp = self.client.get('/api/mobile/v1/settings/notifications')
         self.assertEqual(get_resp.status_code, 200)

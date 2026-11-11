@@ -911,6 +911,15 @@ def today_payload(user) -> Dict[str, Any]:
         is_done=True,
         due_at__date=timezone.now().date(),
     ).count()
+    # Follow-ups do not have an is_done flag: completion clears
+    # next_follow_up and writes a structured CustomerActivity. Count these
+    # explicitly or dashboard progress can stay at zero all day.
+    done_followups = CustomerActivity.objects.filter(
+        customer__in=customers_qs(user),
+        metadata__has_key='completed_follow_up',
+        created_at__date=timezone.now().date(),
+    ).count()
+    done_today += done_followups
     return {
         'date': timezone.now().date().isoformat(),
         'overdue': overdue,

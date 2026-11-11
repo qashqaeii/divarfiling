@@ -863,16 +863,18 @@ class ProfileAvatarView(APIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
-        if not request.FILES.get('avatar'):
-            data = _parse_body(request)
-            if isinstance(data, dict) and 'avatar_key' in data:
-                try:
-                    return api_ok(
-                        set_profile_avatar_key(request.user, data.get('avatar_key'), request=request),
-                    )
-                except ValueError as exc:
-                    return api_error(str(exc), code='VALIDATION_ERROR')
+        # DRF has already parsed the payload when request.FILES is accessed.
+        # Reading request.body afterwards can raise RawPostDataException for JSON
+        # avatar presets, making the Android save action appear unresponsive.
+        data = request.data
         avatar = request.FILES.get('avatar')
+        if not avatar and 'avatar_key' in data:
+            try:
+                return api_ok(
+                    set_profile_avatar_key(request.user, data.get('avatar_key'), request=request),
+                )
+            except ValueError as exc:
+                return api_error(str(exc), code='VALIDATION_ERROR')
         if not avatar:
             return api_error('فایل تصویر یا کلید آواتار ارسال نشده است.', code='VALIDATION_ERROR')
         try:

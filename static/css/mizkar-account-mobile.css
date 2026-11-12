@@ -646,8 +646,39 @@
 
     body.mk-account-dashboard .mk-order-modal__panel {
         width: 100%;
-        max-height: min(92dvh, 44rem);
-        border-radius: 20px 20px 0 0;
+        max-height: min(94dvh, 100%);
+        border-radius: 22px 22px 0 0;
+        border-bottom: 0;
+        box-shadow: 0 -8px 48px -20px rgba(15, 23, 42, 0.35);
+    }
+
+    body.mk-account-dashboard .mk-order-modal__panel::after {
+        content: '';
+        display: block;
+        height: max(0.35rem, env(safe-area-inset-bottom, 0px));
+        flex-shrink: 0;
+        background: inherit;
+    }
+
+    body.mk-account-dashboard .mk-order-modal__head {
+        padding-top: 0.85rem;
+    }
+
+    body.mk-account-dashboard .mk-order-modal__head::before {
+        content: '';
+        position: absolute;
+        top: 0.45rem;
+        left: 50%;
+        width: 2.25rem;
+        height: 0.22rem;
+        margin-left: -1.125rem;
+        border-radius: 999px;
+        background: rgba(26, 32, 53, 0.12);
+        pointer-events: none;
+    }
+
+    body.mk-account-dashboard .mk-order-modal__head {
+        position: relative;
     }
 
     body.mk-account-dashboard .mk-order-modal__close {
@@ -656,13 +687,26 @@
     }
 
     body.mk-account-dashboard .mk-order-modal__foot {
-        flex-direction: column;
-        gap: 0.45rem;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
     }
 
-    body.mk-account-dashboard .mk-order-modal__foot .mk-acc-btn {
-        width: 100%;
+    body.mk-account-dashboard .mk-order-modal__foot::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-order-modal__foot .mk-ord-modal-act {
+        flex: 1 1 0;
+        min-width: max(5.5rem, 22vw);
+        width: auto;
         justify-content: center;
+        font-size: 0.62rem;
+        padding: 0.5rem 0.35rem;
     }
 
     /* ─── Licenses ─── */

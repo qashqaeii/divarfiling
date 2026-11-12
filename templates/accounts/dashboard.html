@@ -20,11 +20,11 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-premium.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=11">
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-orders.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-orders.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-tabs.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-mobile.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-mobile.css' %}?v=11">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-overview-mobile.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-profile-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell-v2.css' %}?v=6">
@@ -60,149 +60,6 @@
     {% include 'includes/site_footer.html' %}
     </div>
 </div>
-</div>
-
-{% include 'accounts/partials/account_avatar_picker_shell.html' %}
-
-<!-- Modal برای ویرایش اطلاعات کاربری -->
-<div id="userInfoModal" class="modal-professional prof-premium-modal" onclick="closeProfessionalModal(event, 'userInfoModal')" role="dialog" aria-modal="true" aria-labelledby="userInfoModalTitle" aria-hidden="true">
-    <div class="modal-content-professional" onclick="event.stopPropagation()">
-        <div class="modal-header-professional">
-            <h2 id="userInfoModalTitle" class="modal-title-professional">
-                <i class="fas fa-user-edit" aria-hidden="true"></i>
-                ویرایش اطلاعات کاربری
-            </h2>
-            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'userInfoModal')" aria-label="بستن پنجره">
-                <i class="fas fa-times" aria-hidden="true"></i>
-            </button>
-        </div>
-        <div class="modal-body-professional">
-            <form id="userInfoForm" onsubmit="submitUserInfoForm(event)">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label" for="userInfoUsername">
-                        <i class="fas fa-user" aria-hidden="true"></i>
-                        نام کاربری
-                    </label>
-                    <input type="text" name="username" id="userInfoUsername" class="form-control modal-input" value="{{ user.username }}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="userInfoEmail">
-                        <i class="fas fa-envelope" aria-hidden="true"></i>
-                        ایمیل
-                    </label>
-                    <input type="email" name="email" id="userInfoEmail" class="form-control modal-input" value="{{ user.email }}" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="userInfoPhone">
-                        <i class="fas fa-phone" aria-hidden="true"></i>
-                        شماره تلفن
-                    </label>
-                    <input type="text" name="phone" id="userInfoPhone" class="form-control modal-input" inputmode="tel" autocomplete="tel" value="{{ user.phone|default:'' }}">
-                </div>
-                <div id="userInfoError" class="alert alert-danger modal-error" role="alert" aria-live="assertive" style="display: none;"></div>
-            </form>
-        </div>
-        <div class="modal-footer-professional">
-            <button type="button" class="btn btn-secondary" onclick="closeProfessionalModal(event, 'userInfoModal')">
-                <i class="fas fa-times" aria-hidden="true"></i> انصراف
-            </button>
-            <button type="submit" id="userInfoSubmitBtn" form="userInfoForm" class="btn btn-primary">
-                <i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal برای ویرایش اطلاعات تکمیلی -->
-<div id="profileModal" class="modal-professional prof-premium-modal prof-profile-modal" onclick="closeProfessionalModal(event, 'profileModal')" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" aria-hidden="true">
-    <div class="modal-content-professional prof-profile-modal__sheet" onclick="event.stopPropagation()">
-        <div class="prof-profile-modal__accent" aria-hidden="true"></div>
-        <header class="modal-header-professional prof-profile-modal__head">
-            <div class="prof-profile-modal__head-copy">
-                <p class="prof-profile-modal__eyebrow">حساب کاربری</p>
-                <h2 id="profileModalTitle" class="modal-title-professional prof-profile-modal__title">پروفایل تکمیلی</h2>
-            </div>
-            <button type="button" class="modal-close-btn prof-profile-modal__close" onclick="closeProfessionalModal(event, 'profileModal')" aria-label="بستن پنجره">
-                <i class="fas fa-times" aria-hidden="true"></i>
-            </button>
-        </header>
-        <div class="modal-body-professional prof-profile-modal__body">
-            <form id="profileForm" class="prof-profile-modal__form" onsubmit="submitProfileForm(event)" enctype="multipart/form-data">
-                {% csrf_token %}
-                <section class="prof-profile-modal__block" aria-labelledby="profileModalAvatarLegend">
-                    <h3 id="profileModalAvatarLegend" class="prof-profile-modal__legend">تصویر پروفایل</h3>
-                    <div class="prof-profile-modal__avatar">
-                        <div class="prof-profile-modal__avatar-preview avatar-preview-container">
-                            {% if user.profile.avatar %}
-                                <img id="avatarPreview" src="{{ user.profile.avatar.url }}" alt="" class="avatar-preview prof-profile-modal__avatar-img">
-                            {% else %}
-                                <img id="avatarPreview" src="" alt="" class="avatar-preview prof-profile-modal__avatar-img" hidden>
-                            {% endif %}
-                            <div id="avatarPlaceholder" class="avatar-placeholder prof-profile-modal__avatar-ph" {% if user.profile.avatar %}hidden{% endif %}>
-                                <i class="fas fa-user" aria-hidden="true"></i>
-                            </div>
-                        </div>
-                        <div class="prof-profile-modal__avatar-copy">
-                            <p class="prof-profile-modal__avatar-hint">اختیاری — در بخش‌های عمومی حساب شما نمایش داده می‌شود.</p>
-                            <button type="button" class="prof-profile-modal__avatar-btn" onclick="document.getElementById('profileAvatar').click()">
-                                <i class="fas fa-image" aria-hidden="true"></i>
-                                انتخاب تصویر
-                            </button>
-                            <input type="file" name="avatar" id="profileAvatar" class="prof-profile-modal__file" accept="image/*" onchange="previewAvatar(event)" hidden>
-                        </div>
-                    </div>
-                </section>
-                <section class="prof-profile-modal__block">
-                    <label class="prof-profile-modal__label" for="profileBio">درباره من</label>
-                    <textarea name="bio" id="profileBio" class="prof-profile-modal__control prof-profile-modal__control--area" rows="4" placeholder="معرفی کوتاه برای مشتریان و همکاران">{{ user.profile.bio|default:'' }}</textarea>
-                </section>
-                <div class="prof-profile-modal__duo">
-                    <section class="prof-profile-modal__block">
-                        <label class="prof-profile-modal__label" for="profileCity">شهر</label>
-                        <input type="text" name="city" id="profileCity" class="prof-profile-modal__control" autocomplete="address-level2" value="{{ user.profile.city|default:'' }}">
-                    </section>
-                    <section class="prof-profile-modal__block">
-                        <label class="prof-profile-modal__label" for="profilePostalCode">کد پستی</label>
-                        <input type="text" name="postal_code" id="profilePostalCode" class="prof-profile-modal__control prof-profile-modal__control--num" inputmode="numeric" autocomplete="postal-code" value="{{ user.profile.postal_code|default:'' }}">
-                    </section>
-                </div>
-                <section class="prof-profile-modal__block">
-                    <label class="prof-profile-modal__label" for="profileAddress">آدرس</label>
-                    <textarea name="address" id="profileAddress" class="prof-profile-modal__control prof-profile-modal__control--area prof-profile-modal__control--short" rows="3" placeholder="آدرس پستی یا محل فعالیت">{{ user.profile.address|default:'' }}</textarea>
-                </section>
-                <div id="profileError" class="prof-profile-modal__error" role="alert" aria-live="assertive" hidden></div>
-            </form>
-        </div>
-        <footer class="modal-footer-professional prof-profile-modal__foot">
-            <button type="submit" id="profileSubmitBtn" form="profileForm" class="btn btn-primary prof-profile-modal__action prof-profile-modal__action--primary">
-                ذخیره تغییرات
-            </button>
-            <button type="button" class="btn btn-secondary prof-profile-modal__action prof-profile-modal__action--ghost" onclick="closeProfessionalModal(event, 'profileModal')">
-                انصراف
-            </button>
-        </footer>
-    </div>
-</div>
-
-<!-- Order detail modal -->
-<div id="mkOrderDetailModal" class="mk-order-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mkOrderDetailTitle"
-     data-detail-url="{% url 'dashboard_order_detail' '00000000-0000-0000-0000-000000000000' %}">
-    <div class="mk-order-modal__overlay" data-order-modal-close></div>
-    <div class="mk-order-modal__panel" role="document">
-        <div class="mk-order-modal__accent" aria-hidden="true"></div>
-        <header class="mk-order-modal__head">
-            <div>
-                <h2 id="mkOrderDetailTitle" class="mk-order-modal__title">جزئیات سفارش</h2>
-                <p id="mkOrderDetailSub" class="mk-order-modal__sub"></p>
-            </div>
-            <button type="button" class="mk-order-modal__close" data-order-modal-close aria-label="بستن">
-                <i class="fas fa-xmark" aria-hidden="true"></i>
-            </button>
-        </header>
-        <div id="mkOrderDetailBody" class="mk-order-modal__body"></div>
-        <footer id="mkOrderDetailFoot" class="mk-order-modal__foot"></footer>
-    </div>
 </div>
 
 <script>
@@ -1039,9 +896,155 @@ function copyAffiliateLinkOverview() {
 
 {% endblock %}
 
+{% block page_overlays %}
+{% include 'accounts/partials/account_avatar_picker_shell.html' %}
+
+<!-- Modal برای ویرایش اطلاعات کاربری -->
+<div id="userInfoModal" class="modal-professional prof-premium-modal" onclick="closeProfessionalModal(event, 'userInfoModal')" role="dialog" aria-modal="true" aria-labelledby="userInfoModalTitle" aria-hidden="true">
+    <div class="modal-content-professional" onclick="event.stopPropagation()">
+        <div class="modal-header-professional">
+            <h2 id="userInfoModalTitle" class="modal-title-professional">
+                <i class="fas fa-user-edit" aria-hidden="true"></i>
+                ویرایش اطلاعات کاربری
+            </h2>
+            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'userInfoModal')" aria-label="بستن پنجره">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="modal-body-professional">
+            <form id="userInfoForm" onsubmit="submitUserInfoForm(event)">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="userInfoUsername">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        نام کاربری
+                    </label>
+                    <input type="text" name="username" id="userInfoUsername" class="form-control modal-input" value="{{ user.username }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="userInfoEmail">
+                        <i class="fas fa-envelope" aria-hidden="true"></i>
+                        ایمیل
+                    </label>
+                    <input type="email" name="email" id="userInfoEmail" class="form-control modal-input" value="{{ user.email }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="userInfoPhone">
+                        <i class="fas fa-phone" aria-hidden="true"></i>
+                        شماره تلفن
+                    </label>
+                    <input type="text" name="phone" id="userInfoPhone" class="form-control modal-input" inputmode="tel" autocomplete="tel" value="{{ user.phone|default:'' }}">
+                </div>
+                <div id="userInfoError" class="alert alert-danger modal-error" role="alert" aria-live="assertive" style="display: none;"></div>
+            </form>
+        </div>
+        <div class="modal-footer-professional">
+            <button type="button" class="btn btn-secondary" onclick="closeProfessionalModal(event, 'userInfoModal')">
+                <i class="fas fa-times" aria-hidden="true"></i> انصراف
+            </button>
+            <button type="submit" id="userInfoSubmitBtn" form="userInfoForm" class="btn btn-primary">
+                <i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal برای ویرایش اطلاعات تکمیلی -->
+<div id="profileModal" class="modal-professional prof-premium-modal prof-profile-modal" onclick="closeProfessionalModal(event, 'profileModal')" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" aria-hidden="true">
+    <div class="modal-content-professional prof-profile-modal__sheet" onclick="event.stopPropagation()">
+        <div class="prof-profile-modal__accent" aria-hidden="true"></div>
+        <header class="modal-header-professional prof-profile-modal__head">
+            <div class="prof-profile-modal__head-copy">
+                <p class="prof-profile-modal__eyebrow">حساب کاربری</p>
+                <h2 id="profileModalTitle" class="modal-title-professional prof-profile-modal__title">پروفایل تکمیلی</h2>
+            </div>
+            <button type="button" class="modal-close-btn prof-profile-modal__close" onclick="closeProfessionalModal(event, 'profileModal')" aria-label="بستن پنجره">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="modal-body-professional prof-profile-modal__body">
+            <form id="profileForm" class="prof-profile-modal__form" onsubmit="submitProfileForm(event)" enctype="multipart/form-data">
+                {% csrf_token %}
+                <section class="prof-profile-modal__block" aria-labelledby="profileModalAvatarLegend">
+                    <h3 id="profileModalAvatarLegend" class="prof-profile-modal__legend">تصویر پروفایل</h3>
+                    <div class="prof-profile-modal__avatar">
+                        <div class="prof-profile-modal__avatar-preview avatar-preview-container">
+                            {% if user.profile.avatar %}
+                                <img id="avatarPreview" src="{{ user.profile.avatar.url }}" alt="" class="avatar-preview prof-profile-modal__avatar-img">
+                            {% else %}
+                                <img id="avatarPreview" src="" alt="" class="avatar-preview prof-profile-modal__avatar-img" hidden>
+                            {% endif %}
+                            <div id="avatarPlaceholder" class="avatar-placeholder prof-profile-modal__avatar-ph" {% if user.profile.avatar %}hidden{% endif %}>
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="prof-profile-modal__avatar-copy">
+                            <p class="prof-profile-modal__avatar-hint">اختیاری — در بخش‌های عمومی حساب شما نمایش داده می‌شود.</p>
+                            <button type="button" class="prof-profile-modal__avatar-btn" onclick="document.getElementById('profileAvatar').click()">
+                                <i class="fas fa-image" aria-hidden="true"></i>
+                                انتخاب تصویر
+                            </button>
+                            <input type="file" name="avatar" id="profileAvatar" class="prof-profile-modal__file" accept="image/*" onchange="previewAvatar(event)" hidden>
+                        </div>
+                    </div>
+                </section>
+                <section class="prof-profile-modal__block">
+                    <label class="prof-profile-modal__label" for="profileBio">درباره من</label>
+                    <textarea name="bio" id="profileBio" class="prof-profile-modal__control prof-profile-modal__control--area" rows="4" placeholder="معرفی کوتاه برای مشتریان و همکاران">{{ user.profile.bio|default:'' }}</textarea>
+                </section>
+                <div class="prof-profile-modal__duo">
+                    <section class="prof-profile-modal__block">
+                        <label class="prof-profile-modal__label" for="profileCity">شهر</label>
+                        <input type="text" name="city" id="profileCity" class="prof-profile-modal__control" autocomplete="address-level2" value="{{ user.profile.city|default:'' }}">
+                    </section>
+                    <section class="prof-profile-modal__block">
+                        <label class="prof-profile-modal__label" for="profilePostalCode">کد پستی</label>
+                        <input type="text" name="postal_code" id="profilePostalCode" class="prof-profile-modal__control prof-profile-modal__control--num" inputmode="numeric" autocomplete="postal-code" value="{{ user.profile.postal_code|default:'' }}">
+                    </section>
+                </div>
+                <section class="prof-profile-modal__block">
+                    <label class="prof-profile-modal__label" for="profileAddress">آدرس</label>
+                    <textarea name="address" id="profileAddress" class="prof-profile-modal__control prof-profile-modal__control--area prof-profile-modal__control--short" rows="3" placeholder="آدرس پستی یا محل فعالیت">{{ user.profile.address|default:'' }}</textarea>
+                </section>
+                <div id="profileError" class="prof-profile-modal__error" role="alert" aria-live="assertive" hidden></div>
+            </form>
+        </div>
+        <footer class="modal-footer-professional prof-profile-modal__foot">
+            <button type="submit" id="profileSubmitBtn" form="profileForm" class="btn btn-primary prof-profile-modal__action prof-profile-modal__action--primary">
+                ذخیره تغییرات
+            </button>
+            <button type="button" class="btn btn-secondary prof-profile-modal__action prof-profile-modal__action--ghost" onclick="closeProfessionalModal(event, 'profileModal')">
+                انصراف
+            </button>
+        </footer>
+    </div>
+</div>
+
+<!-- Order detail modal -->
+<div id="mkOrderDetailModal" class="mk-order-modal mk-order-modal--premium" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mkOrderDetailTitle"
+     data-detail-url="{% url 'dashboard_order_detail' '00000000-0000-0000-0000-000000000000' %}">
+    <div class="mk-order-modal__overlay" data-order-modal-close></div>
+    <div class="mk-order-modal__panel" role="document">
+        <div class="mk-order-modal__accent" aria-hidden="true"></div>
+        <header class="mk-order-modal__head">
+            <div class="mk-order-modal__head-copy">
+                <p class="mk-order-modal__eyebrow">سفارش و پرداخت</p>
+                <h2 id="mkOrderDetailTitle" class="mk-order-modal__title">جزئیات سفارش</h2>
+                <p id="mkOrderDetailSub" class="mk-order-modal__sub"></p>
+            </div>
+            <button type="button" class="mk-order-modal__close" data-order-modal-close aria-label="بستن">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div id="mkOrderDetailBody" class="mk-order-modal__body"></div>
+        <footer id="mkOrderDetailFoot" class="mk-order-modal__foot"></footer>
+    </div>
+</div>
+{% endblock %}
+
 {% block extra_js %}
 <script src="{% static 'js/mizkar-account-shell.js' %}?v=4"></script>
-<script src="{% static 'js/mk-order-detail-modal.js' %}?v=2"></script>
+<script src="{% static 'js/mk-order-detail-modal.js' %}?v=4"></script>
 <script src="{% static 'js/mizkar-account-licenses-v2.js' %}?v=3"></script>
 <script>
 (function initDashboardFooterAccordion() {

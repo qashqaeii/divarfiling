@@ -26,34 +26,41 @@
 
     function renderTimeline(items) {
         if (!items || !items.length) return '';
-        return '<ol class="mk-order-modal__timeline">' + items.map(function (item) {
-            var classes = ['mk-order-modal__timeline-item'];
-            if (item.done) classes.push('is-done');
-            if (item.active) classes.push('is-active');
-            return (
-                '<li class="' + classes.join(' ') + '">' +
-                    '<span class="mk-order-modal__timeline-dot" aria-hidden="true"></span>' +
-                    '<div>' +
-                        '<span class="mk-order-modal__timeline-label">' + escapeHtml(item.label) + '</span>' +
-                        (item.at ? '<span class="mk-order-modal__timeline-at">' + escapeHtml(item.at) + '</span>' : '') +
-                    '</div>' +
-                '</li>'
-            );
-        }).join('') + '</ol>';
+        return (
+            '<section class="mk-order-modal__block mk-order-modal__block--flow" aria-labelledby="mkOrderModalTimelineTitle">' +
+                '<h3 id="mkOrderModalTimelineTitle" class="mk-order-modal__block-title">روند</h3>' +
+                '<ol class="mk-order-modal__timeline mk-order-modal__timeline--rail">' +
+                items.map(function (item) {
+                    var classes = ['mk-order-modal__timeline-item'];
+                    if (item.done) classes.push('is-done');
+                    if (item.active) classes.push('is-active');
+                    return (
+                        '<li class="' + classes.join(' ') + '">' +
+                            '<span class="mk-order-modal__timeline-dot" aria-hidden="true"></span>' +
+                            '<div>' +
+                                '<span class="mk-order-modal__timeline-label">' + escapeHtml(item.label) + '</span>' +
+                                (item.at ? '<span class="mk-order-modal__timeline-at">' + escapeHtml(item.at) + '</span>' : '') +
+                            '</div>' +
+                        '</li>'
+                    );
+                }).join('') +
+                '</ol>' +
+            '</section>'
+        );
     }
 
     function renderLicenses(licenses) {
         if (!licenses || !licenses.length) return '';
         return (
-            '<section class="mk-order-modal__licenses" aria-label="کلیدهای لایسنس">' +
-            '<p class="mk-order-modal__licenses-note">برای امنیت، کلید در اینجا نمایش داده نمی‌شود — فقط کپی کنید.</p>' +
+            '<section class="mk-order-modal__block mk-order-modal__block--license" aria-label="کلیدهای لایسنس">' +
+            '<p class="mk-order-modal__licenses-note">کلید نمایش داده نمی‌شود — فقط کپی.</p>' +
             licenses.map(function (lic) {
                 var planLabel = lic.plan ? escapeHtml(lic.plan) : 'کلید لایسنس';
                 return (
-                    '<div class="mk-order-modal__license mk-order-modal__license--secure">' +
+                    '<div class="mk-order-modal__license">' +
                         '<span class="mk-order-modal__license-label">' + planLabel + '</span>' +
-                        '<button type="button" class="mk-acc-btn mk-acc-btn--ghost mk-acc-btn--sm" data-copy-license-value="' + escapeHtml(lic.key) + '">' +
-                            '<i class="fas fa-copy" aria-hidden="true"></i> کپی کلید' +
+                        '<button type="button" class="mk-ord-modal-act mk-ord-modal-act--inline" data-copy-license-value="' + escapeHtml(lic.key) + '">' +
+                            '<i class="fas fa-copy" aria-hidden="true"></i> کپی' +
                         '</button>' +
                     '</div>'
                 );
@@ -85,17 +92,25 @@
             }
         }
         return (
-            '<div class="mk-order-modal__grid">' +
-            fields.map(function (field) {
-                return (
-                    '<div class="mk-order-modal__field">' +
-                        '<span class="mk-order-modal__field-label">' + escapeHtml(field.label) + '</span>' +
-                        '<span class="mk-order-modal__field-value">' + escapeHtml(field.value) + '</span>' +
-                    '</div>'
-                );
-            }).join('') +
-            '</div>'
+            '<section class="mk-order-modal__block mk-order-modal__block--meta" aria-labelledby="mkOrderModalMetaTitle">' +
+                '<h3 id="mkOrderModalMetaTitle" class="mk-order-modal__block-title">جزئیات</h3>' +
+                '<dl class="mk-order-modal__meta mk-order-modal__meta--dense">' +
+                fields.map(function (field) {
+                    return (
+                        '<div class="mk-order-modal__meta-row">' +
+                            '<dt>' + escapeHtml(field.label) + '</dt>' +
+                            '<dd>' + escapeHtml(field.value) + '</dd>' +
+                        '</div>'
+                    );
+                }).join('') +
+                '</dl>' +
+            '</section>'
         );
+    }
+
+    function actionButtonClass(kind) {
+        if (kind === 'primary' || kind === 'accent') return 'mk-ord-modal-act mk-ord-modal-act--primary';
+        return 'mk-ord-modal-act mk-ord-modal-act--soft';
     }
 
     function renderActions(actions) {
@@ -106,20 +121,15 @@
         footEl.innerHTML = actions.map(function (action) {
             if (action.action === 'copy_order_id') {
                 return (
-                    '<button type="button" class="mk-acc-btn mk-acc-btn--ghost" data-copy-order-id>' +
+                    '<button type="button" class="' + actionButtonClass(action.kind) + '" data-copy-order-id>' +
                         '<i class="fas fa-' + escapeHtml(action.icon) + '" aria-hidden="true"></i> ' +
                         escapeHtml(action.label) +
                     '</button>'
                 );
             }
             var iconClass = action.icon_style === 'fab' ? 'fab' : 'fas';
-            var btnClass = 'mk-acc-btn';
-            if (action.kind === 'primary') btnClass += ' mk-acc-btn--primary';
-            else if (action.kind === 'accent') btnClass += ' mk-acc-btn--primary';
-            else if (action.kind === 'warning') btnClass += ' mk-acc-btn--ghost';
-            else btnClass += ' mk-acc-btn--ghost';
             return (
-                '<a href="' + escapeHtml(action.url) + '" class="' + btnClass + '">' +
+                '<a href="' + escapeHtml(action.url) + '" class="' + actionButtonClass(action.kind) + '">' +
                     '<i class="' + iconClass + ' fa-' + escapeHtml(action.icon) + '" aria-hidden="true"></i> ' +
                     escapeHtml(action.label) +
                 '</a>'
@@ -127,20 +137,43 @@
         }).join('');
     }
 
+    function renderSummary(order) {
+        var compare = order.original_price
+            ? '<p class="mk-order-modal__compare">قیمت اصلی: ' + escapeHtml(order.original_price) + ' تومان</p>'
+            : '';
+        return (
+            '<div class="mk-order-modal__summary">' +
+                '<p class="mk-order-modal__summary-label">مبلغ پرداختی</p>' +
+                '<div class="mk-order-modal__amount-row">' +
+                    '<div class="mk-order-modal__amount">' +
+                        escapeHtml(order.amount_display) +
+                        '<span class="mk-order-modal__amount-unit">تومان</span>' +
+                    '</div>' +
+                    '<span class="mk-orders-status ' + toneClass(order.status_tone) + '">' + escapeHtml(order.status_label) + '</span>' +
+                '</div>' +
+                compare +
+            '</div>'
+        );
+    }
+
     function renderOrder(order) {
         titleEl.textContent = 'جزئیات سفارش';
         subEl.textContent = '#' + order.id_short + ' · ' + order.product_title;
+        var timelineHtml = renderTimeline(order.timeline);
+        var fieldsHtml = renderFields(order);
+        var licensesHtml = renderLicenses(order.licenses);
+        var layoutHtml = '';
+        if (timelineHtml || fieldsHtml) {
+            layoutHtml =
+                '<div class="mk-order-modal__layout">' +
+                    (timelineHtml ? '<div class="mk-order-modal__layout-flow">' + timelineHtml + '</div>' : '') +
+                    (fieldsHtml ? '<div class="mk-order-modal__layout-meta">' + fieldsHtml + '</div>' : '') +
+                '</div>';
+        }
         bodyEl.innerHTML =
-            '<div class="mk-order-modal__hero">' +
-                '<div>' +
-                    '<div class="mk-order-modal__amount">' + escapeHtml(order.amount_display) + ' <small>تومان</small></div>' +
-                    (order.original_price ? '<div style="font-size:0.64rem;color:var(--acc-text-muted);margin-top:0.15rem;">قیمت اصلی: ' + escapeHtml(order.original_price) + ' تومان</div>' : '') +
-                '</div>' +
-                '<span class="mk-orders-status ' + toneClass(order.status_tone) + '">' + escapeHtml(order.status_label) + '</span>' +
-            '</div>' +
-            renderTimeline(order.timeline) +
-            renderFields(order) +
-            renderLicenses(order.licenses);
+            renderSummary(order) +
+            layoutHtml +
+            licensesHtml;
 
         renderActions(order.actions);
         bodyEl.dataset.orderId = order.id;
@@ -174,7 +207,7 @@
 
     function showError(message) {
         bodyEl.innerHTML = '<div class="mk-order-modal__error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i><p>' + escapeHtml(message) + '</p></div>';
-        footEl.innerHTML = '<button type="button" class="mk-acc-btn mk-acc-btn--ghost" data-order-modal-close>بستن</button>';
+        footEl.innerHTML = '<button type="button" class="mk-ord-modal-act mk-ord-modal-act--soft" data-order-modal-close>بستن</button>';
     }
 
     function openModal() {

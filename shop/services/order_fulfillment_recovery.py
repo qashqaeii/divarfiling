@@ -202,9 +202,16 @@ def run_fulfillment_reconcile_batch(*, limit: int = 100) -> dict[str, int]:
     }
     for order in orders_needing_fulfillment_reconcile_qs()[:limit]:
         before = order.fulfillment_status
-        reconcile_order_fulfillment(order)
-        order.refresh_from_db(fields=['fulfillment_status'])
+        # Count attempts even when one order fails; never let a malformed
+        # legacy renewal prevent subsequent paid customers from receiving
+        # their entitlements. Leave failed orders for the next bounded run.
         stats['fulfillment_retried'] += 1
+        try:
+            reconcile_order_fulfillment(order)
+            order.refresh_from_db(fields=['fulfillment_status'])
+        except Exception:
+            logger.exception('fulfillment reconcile failed order_id=%s', order.pk)
+            continue
         if order.fulfillment_status == Order.FulfillmentStatus.COMPLETE and before != Order.FulfillmentStatus.COMPLETE:
             stats['fulfillment_completed'] += 1
     return stats

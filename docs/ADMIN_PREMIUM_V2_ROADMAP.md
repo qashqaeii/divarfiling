@@ -21,7 +21,7 @@
 | 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A–01C committed; 01D sensitive admin access guarded; runtime validation remains OPEN |
 | 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A–02B committed; 02C functional table/filter fixes prepared; runtime/browser QA remains open |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | 03A committed; 03B lean chart + accurate export range prepared; runtime/CI QA remains OPEN |
-| 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
+| 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | 04A per-order recovery isolation prepared; integrated payment tests and staging QA pending |
 | 05 | Licenses, renewals and device seats | Transparent lifecycle and safe entitlement operations | Pending |
 | 06 | Unified user 360° | Journey across orders, devices, usage and support | Pending |
 | 07 | Support, operations, activity and forum | Triage queues, moderation, health and incident tracking | Pending |
@@ -231,12 +231,29 @@ python manage.py test accounts.tests.test_admin_command_center_integration accou
 
 **Next:** run the accumulated 00–03 tests in isolated PostgreSQL staging and review the Command page in a browser at desktop/mobile widths before moving to phase 04 payment and sales workflows. Do not diagnose another speculative UI issue in lieu of this gate.
 
-## Remaining gates before phase 04
+## Phase 04A — resilient per-order license fulfillment reconciliation
+
+- Confirmed a concrete reliability flaw in `run_fulfillment_reconcile_batch`: unlike the Zibal mismatch reconciliation loop, one unexpected exception from `reconcile_order_fulfillment(order)` **or its status refresh** aborted the whole scheduled batch, leaving later paid orders waiting for entitlement delivery.
+- Keep the existing bounded queryset, gateway verification and known three-field stats contract. Increment `fulfillment_retried` when an order is actually attempted, wrap that order's retry and status refresh in a single per-order `try/except`, log its order UUID, and proceed to remaining orders. Only count `fulfillment_completed` after confirming a persisted COMPLETE status.
+- The failed order remains in the pending/partial/failed cohort for the next scheduled attempt. No new silent state transition or fake completion is added.
+- Three focused regression tests mock payment reconciliation and license issuing: an older order fails while a newer one still completes; the batch limit and existing stats shape remain stable; a refresh exception is isolated.
+- No changes to actual payment verification, SMS, discount, affiliate commission, license issuance internals, schema, or Production deployments.
+
+### Phase 04A validation gate — unexecuted in connector-only environment
+
+```bash
+python manage.py check
+python manage.py test shop.tests.test_fulfillment_reconcile_resilience accounts.tests.test_admin_financial_integrity shop.tests.test_card_transfer_workflow accounts.tests.test_admin_sales_center --keepdb
+```
+
+The test DB must be isolated from Production. Run reconciliation tests with patched gateway calls and deliberately simulated fulfillment failures. A source-only review is not a successful Django run.
+
+## Remaining gates before phase 04B
 
 - Execute the accumulated phase 00–01 Django suites in isolated staging, with real PostgreSQL test DB. Resolve failures once from evidence; avoid speculative edit/revert cycles.
 - Audit existing affiliate payout concurrency and run proper DB transaction tests before activating concurrent settlement; no new auto-payout feature was added here.
 - Remaining platform privileged operations (forum moderation input limits and service-rollout toggles) should be handled as real, reproducible defects when their module phases arrive.
-- Stage 04 follows validation: sales/order/payment operations, with one reliable lifecycle and clear recovery states. Avoid entering a cosmetic rewrite loop.
+- Stage 04B follows runtime validation: audit the Sales triage workflow for no-action errors, role-aware followups and idempotent retry mechanics without changing payment amounts or automatic issuance.
 
 
 

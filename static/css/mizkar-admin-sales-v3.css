@@ -1,0 +1,72 @@
+/* Sales V3: scoped, presentation-only; financial logic and JS hooks unchanged. */
+.sales-v3{--sv-line:var(--adm-v2-border,#e5e8f1);--sv-surface:var(--adm-v2-surface,#fff);--sv-muted:var(--adm-v2-muted,#667085);--sv-text:var(--adm-v2-text,#20263b);--sv-purple:var(--adm-v2-accent,#5b4fcf);--sv-soft:var(--adm-v2-subtle,#fafaff);--sv-shadow:var(--adm-v2-shadow,0 10px 32px -26px rgba(35,38,77,.24));min-width:0}
+.sales-v3 .sales-v3-intro{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:12px 3px 22px}
+.sales-v3-eyebrow{display:inline-flex;gap:8px;align-items:center;color:var(--sv-purple);font-size:.75rem;font-weight:750}
+.sales-v3-intro h2{margin:7px 0 5px;font-size:clamp(1.18rem,1.6vw,1.6rem);font-weight:850;line-height:1.5;color:var(--sv-text)}
+.sales-v3-intro p{margin:0;font-size:.8rem;line-height:1.85;color:var(--sv-muted)}
+.sales-v3-links{display:flex;gap:8px;flex-wrap:wrap}
+.sales-v3-links a{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 14px;border:1px solid var(--sv-line);border-radius:11px;background:var(--sv-surface);color:var(--sv-text);text-decoration:none;font-size:.76rem;font-weight:700}
+.sales-v3-links a:hover{color:var(--sv-purple);border-color:var(--sv-purple)}
+.sales-v3 :is(.ecc-section,.ecc-card,.ecc-kpi,.ecc-cmd-summary-card){min-width:0}
+.sales-v3 .adm-prime-today-block{margin-bottom:18px}
+.sales-v3 .adm-prime-today__item{border:1px solid var(--sv-line);border-radius:16px;background:var(--sv-surface);box-shadow:var(--sv-shadow);padding:17px 19px;min-width:0}
+.sales-v3 .adm-prime-today__item em{color:var(--sv-muted);font-size:.76rem}
+.sales-v3 .adm-prime-today__item strong{color:var(--sv-text);font-size:clamp(1.25rem,1.8vw,1.85rem);font-weight:850;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.sales-v3 .sales-v3-hero{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.85fr);gap:16px;align-items:stretch;margin-bottom:22px}
+.sales-v3 .sales-v3-hero>*{min-width:0}
+.sales-v3 .sales-v3-hero :is(.ecc-card--chart,.ecc-cmd-actions){border:1px solid var(--sv-line);border-radius:18px;background:var(--sv-surface);box-shadow:var(--sv-shadow);min-height:280px}
+.sales-v3 .sales-v3-hero .ecc-card--chart{padding:16px 18px}
+.sales-v3 .sales-v3-hero .ecc-chart-wrap--tall{min-height:275px;max-height:375px}
+.sales-v3 .adm-prime-section-tag{margin-bottom:11px}
+.sales-v3 .adm-prime-section-tag strong{font-size:.9rem;color:var(--sv-text);font-weight:800}
+.sales-v3 .adm-prime-section-tag em{font-size:.73rem;color:var(--sv-muted)}
+.sales-v3 .ecc-kpi-grid--cmd{gap:13px}
+.sales-v3 .ecc-kpi{border:1px solid var(--sv-line);border-radius:16px;background:var(--sv-surface);box-shadow:var(--sv-shadow);padding:17px 18px}
+.sales-v3 .ecc-kpi-val{color:var(--sv-text);font-weight:850;overflow-wrap:anywhere}
+.sales-v3 .ecc-kpi-lbl{font-size:.78rem;color:var(--sv-text);font-weight:700}
+.sales-v3 .ecc-kpi-sub{font-size:.72rem;color:var(--sv-muted)}
+.sales-v3 .sales-v3-fold{display:grid;gap:18px;padding-top:4px}
+.sales-v3 .sales-v3-fold>.ecc-section{margin-block:0}
+.sales-v3 :is(#sales-actions,#sales-card-transfers,#sales-table-recent,#sales-queue-fulfillment,#sales-table-failed,#sales-table-pending,#sales-integrity){scroll-margin-top:24px}
+.sales-v3 .ecc-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.sales-v3 .ecc-section-head h2{font-size:clamp(.9rem,1.15vw,1.06rem);font-weight:800;color:var(--sv-text);line-height:1.6}
+.sales-v3 .ecc-section-head p{font-size:.74rem;color:var(--sv-muted);line-height:1.8}
+.sales-v3 :is(.ecc-card--chart,.ecc-cmd-summary-card,.adm-v2-audit){border:1px solid var(--sv-line);border-radius:18px;background:var(--sv-surface);box-shadow:var(--sv-shadow)}
+.sales-v3 .ecc-cmd-summary-grid{gap:14px}
+.sales-v3 .ecc-cmd-summary-card{padding:18px}
+.sales-v3 .ecc-cmd-summary-card h3{font-size:.87rem;color:var(--sv-text)}
+.sales-v3 .ecc-cmd-summary-card li{display:flex;justify-content:space-between;gap:12px;padding-block:10px;border-bottom:1px solid var(--sv-line);line-height:1.7}
+.sales-v3 .ecc-cmd-summary-card li:last-child{border-bottom:0}
+.sales-v3 .ecc-cmd-summary-card li span{color:var(--sv-muted);font-size:.77rem;overflow-wrap:anywhere}
+.sales-v3 .ecc-cmd-summary-card li strong{color:var(--sv-text);font-size:.79rem;text-align:end;overflow-wrap:anywhere}
+.sales-v3 .adm-v2-audit{overflow:hidden}
+.sales-v3 .adm-v2-audit__summary{min-height:60px;padding:16px 19px;cursor:pointer}
+.sales-v3 .adm-v2-audit__body{padding:0 19px 20px}
+.sales-v3 .adm-v2-audit__meta{font-size:.72rem;color:var(--sv-muted)}
+.sales-v3 .adm-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;border:1px solid var(--sv-line);border-radius:14px;background:var(--sv-surface)}
+.sales-v3 .adm-table{width:100%;min-width:620px;border-collapse:separate;border-spacing:0;font-size:.78rem}
+.sales-v3 .adm-table th{padding:13px 14px;background:var(--sv-soft);color:var(--sv-muted);font-weight:750;white-space:nowrap;text-align:start;border-bottom:1px solid var(--sv-line)}
+.sales-v3 .adm-table td{padding:13px 14px;line-height:1.8;color:var(--sv-text);vertical-align:middle;border-bottom:1px solid var(--sv-line)}
+.sales-v3 .adm-table tbody tr:last-child td{border-bottom:0}
+.sales-v3 .adm-table tbody tr:hover td{background:var(--sv-soft)}
+.sales-v3 .adm-table td a:not(.ecc-btn){color:var(--sv-purple);text-underline-offset:3px}
+.sales-v3 .adm-table caption{padding:10px 14px;text-align:start;color:var(--sv-muted);font-size:.73rem}
+.sales-v3 .adm-table--card-transfer{min-width:860px}
+.sales-v3 .adm-table-actions{min-width:175px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sales-v3 .ecc-card-transfer-alert{padding:17px 19px;border:1px solid var(--sv-line);border-radius:16px;background:var(--sv-surface)}
+.sales-v3 .ecc-card-transfer-preview{border:1px solid var(--sv-line);background:var(--sv-soft);border-radius:12px}
+.sales-v3 .ecc-module-dock{gap:12px}
+.sales-v3 .ecc-module{border:1px solid var(--sv-line);border-radius:14px;background:var(--sv-surface);box-shadow:var(--sv-shadow)}
+.sales-v3 .ecc-btn{min-height:35px;border-radius:10px;font-size:.76rem;font-weight:700}
+.sales-v3 .ecc-btn--primary{background:#5b4fcf;color:#fff}
+.sales-v3 :is(a,button,input,textarea,summary):focus-visible{outline:3px solid var(--sv-purple);outline-offset:3px}
+.sales-v3 .ecc-ct-modal-dialog{width:min(100%,470px);border:1px solid var(--sv-line);border-radius:18px;background:var(--sv-surface);box-shadow:0 25px 70px rgba(12,17,40,.22)}
+.sales-v3 :is(.ecc-ct-modal-head,.ecc-ct-modal-foot){padding:16px 19px;border-color:var(--sv-line)}
+.sales-v3 .ecc-ct-modal-head h3{color:var(--sv-text)}
+.sales-v3 .ecc-ct-modal-body{padding:18px 19px;color:var(--sv-text)}
+.sales-v3 .ecc-ct-field textarea{border:1px solid var(--sv-line);border-radius:11px;background:var(--sv-soft);color:var(--sv-text);padding:11px 12px;min-height:90px}
+html[data-theme="dark"] .sales-v3 .ecc-btn--primary{background:#5b4fcf;color:#fff}
+@media(max-width:1100px){.sales-v3 .sales-v3-hero{grid-template-columns:minmax(0,1fr)}.sales-v3 .sales-v3-hero .ecc-cmd-actions{min-height:0}}
+@media(max-width:760px){.sales-v3 .sales-v3-intro{padding:8px 2px 16px}.sales-v3-links{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.sales-v3-links a{padding:9px 6px;font-size:.71rem}.sales-v3 .adm-prime-today{grid-template-columns:repeat(2,minmax(0,1fr))}.sales-v3 .adm-prime-today__item{padding:14px}.sales-v3 .ecc-cmd-summary-grid{grid-template-columns:minmax(0,1fr)}.sales-v3 .ecc-kpi-grid--cmd{grid-template-columns:repeat(2,minmax(0,1fr))}.sales-v3 .ecc-section-head-actions{display:flex;gap:7px;flex-wrap:wrap}.sales-v3 .adm-v2-audit__summary{flex-wrap:wrap;gap:9px}.sales-v3 .adm-v2-audit__body{padding-inline:12px}.sales-v3 .ecc-ct-modal-dialog{max-height:calc(100dvh - 28px);overflow:auto}.sales-v3 .adm-table{min-width:580px}}
+@media(max-width:420px){.sales-v3 .ecc-kpi-grid--cmd{gap:8px}.sales-v3 .ecc-kpi{padding:12px}.sales-v3 .ecc-kpi-val{font-size:1.25rem}}
+@media(prefers-reduced-motion:reduce){.sales-v3 *{scroll-behavior:auto}}

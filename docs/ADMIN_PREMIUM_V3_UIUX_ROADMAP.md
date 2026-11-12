@@ -11,7 +11,7 @@ Approved reference: right-hand navy sidebar, purple #5B4FCF selection, clean whi
 |---|---|---|---|
 | 01 | نمای کلی | In progress — first visual pass committed; browser/Django validation pending | [a2d19bff](https://github.com/qashqaeii/divarfiling/commit/a2d19bff84508f6572164a19b5908b203c4664c3) |
 | 02 | دستیار مدیریت | In progress — UI presentation pass committed; runtime/browser QA pending | [pending stage-02 commit](#2026-11-13--stage-02-ui-pass) |
-| 03 | فروش و درآمد | Not started | — |
+| 03 | فروش و درآمد | In progress — UI pass committed; browser/Django validation pending | [stage 03 UI pass](#2026-11-13--stage-03-ui-pass) |
 | 04 | رشد | Not started | — |
 | 05 | بازاریابی | Not started | — |
 | 06 | بازیابی | Not started | — |
@@ -49,3 +49,8 @@ Complete stage 01 through visual/runtime QA if an environment becomes available,
 - `templates/accounts/admin_management_assistant.html`: added a concise executive heading, accessibility state for the active navigation tab and a scoped V3 stylesheet link. Existing permissions, data bindings, modals, form IDs and JavaScript hooks preserved.
 - `static/css/mizkar-admin-assistant-v3.css`: aligned summary KPI cards, recommendations, automation tables/mobile cards, history, send/automation dialogs, form controls and dark/mobile variants with the approved design language.
 - Source-only structural inspection; no Django runtime or browser QA. Stage 02 remains **in progress** until visual/runtime validation. Stage 01 also remains pending visual/runtime validation and additional widgets needing backend context; no backend changes authorized.
+
+### 2026-11-13 — Stage 03 UI pass
+- `templates/accounts/admin_sales_center.html`: added executive intro and in-page shortcuts; kept existing chart canvas IDs, payment permissions, review modals, table IDs, export links and data bindings; improved chart accessibility.
+- `static/css/mizkar-admin-sales-v3.css`: sales-scoped responsive light/dark styles for KPIs, revenue chart, action queue, audits, sales mix, order tables, card transfer review and modals.
+- Source-only structural inspection. No Python, backend, API, business logic or JavaScript changed. No Django runtime or browser QA performed. Stage 03 remains in progress; stages 01 and 02 also await visual/runtime validation. Next: Growth stage 04 after validation where possible.

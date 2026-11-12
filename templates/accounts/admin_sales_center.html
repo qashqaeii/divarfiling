@@ -25,9 +25,12 @@
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-card-transfer.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-sales-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
+<div class="sales-v3">
+<header class="sales-v3-intro"><div><span class="sales-v3-eyebrow"><i class="fas fa-chart-line" aria-hidden="true"></i> مدیریت فروش</span><h2>درآمد، سفارش‌ها و پیگیری پرداخت‌ها</h2><p>روند فروش و موارد نیازمند رسیدگی را در یک نگاه ببینید.</p></div><nav class="sales-v3-links" aria-label="دسترسی سریع فروش"><a href="#sales-actions">اقدامات</a><a href="#sales-table-recent">سفارش‌ها</a><a href="#sales-card-transfers">کارت‌به‌کارت</a></nav></header>
 
 {% include 'accounts/partials/admin_card_transfer_review.html' %}
 
@@ -35,21 +38,21 @@
 
 {% include 'accounts/partials/admin_prime_today_strip.html' %}
 
-<div class="adm-prime-hero">
+<div class="adm-prime-hero sales-v3-hero">
     <div class="adm-prime-hero__chart">
         <div class="adm-prime-section-tag">
-            <strong>چه چیزی تغییر کرده؟</strong>
+            <strong>روند درآمد</strong>
             <em>روند درآمد · {{ range_label }}</em>
         </div>
         <article class="ecc-card ecc-card--chart">
             <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-revenue"></canvas>
+                <canvas id="chart-revenue" role="img" aria-label="نمودار روند درآمد"></canvas>
             </div>
         </article>
     </div>
     <aside class="adm-prime-hero__rail">
         <div class="adm-prime-section-tag">
-            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
+            <strong>اقدامات اولویت‌دار</strong>
             <em>وضعیت فعلی</em>
         </div>
         {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='sales-actions' title='نیازمند اقدام فروش' subtitle='پرداخت، fulfillment و معلق' empty_title='مورد فوری در فروش نیست' empty_hint='صف خالی است' %}
@@ -75,7 +78,7 @@
     </div>
 </section>
 
-<div class="adm-prime-fold">
+<div class="adm-prime-fold sales-v3-fold">
 
 {% if financial_integrity %}
 <details class="ecc-section adm-v2-audit" id="sales-integrity" {% if financial_integrity.selected %}open{% endif %}>
@@ -149,13 +152,13 @@
                 </div>
             </div>
             <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-sales-trend"></canvas>
+                <canvas id="chart-sales-trend" role="img" aria-label="نمودار روند سفارش‌ها"></canvas>
             </div>
         </article>
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-summary" aria-label="ترکیب فروش">
+<section class="ecc-section ecc-cmd-summary sales-v3-composition" aria-label="ترکیب فروش">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
             <h2><i class="fas fa-layer-group"></i> ترکیب فروش</h2>
@@ -395,6 +398,7 @@
 </section>
 {% endif %}
 
+</div>
 </div>
 
 {% endblock %}

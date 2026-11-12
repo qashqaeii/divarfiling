@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-account-profile-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell-v2.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-overview-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-profile-v2.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -64,14 +65,14 @@
 {% include 'accounts/partials/account_avatar_picker_shell.html' %}
 
 <!-- Modal برای ویرایش اطلاعات کاربری -->
-<div id="userInfoModal" class="modal-professional" onclick="closeProfessionalModal(event, 'userInfoModal')">
+<div id="userInfoModal" class="modal-professional prof-premium-modal" onclick="closeProfessionalModal(event, 'userInfoModal')" role="dialog" aria-modal="true" aria-labelledby="userInfoModalTitle" aria-hidden="true">
     <div class="modal-content-professional" onclick="event.stopPropagation()">
         <div class="modal-header-professional">
-            <h2 class="modal-title-professional">
+            <h2 id="userInfoModalTitle" class="modal-title-professional">
                 <i class="fas fa-user-edit" aria-hidden="true"></i>
                 ویرایش اطلاعات کاربری
             </h2>
-            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'userInfoModal')">
+            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'userInfoModal')" aria-label="بستن پنجره">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </div>
@@ -79,27 +80,27 @@
             <form id="userInfoForm" onsubmit="submitUserInfoForm(event)">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="userInfoUsername">
                         <i class="fas fa-user" aria-hidden="true"></i>
                         نام کاربری
                     </label>
                     <input type="text" name="username" id="userInfoUsername" class="form-control modal-input" value="{{ user.username }}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="userInfoEmail">
                         <i class="fas fa-envelope" aria-hidden="true"></i>
                         ایمیل
                     </label>
                     <input type="email" name="email" id="userInfoEmail" class="form-control modal-input" value="{{ user.email }}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="userInfoPhone">
                         <i class="fas fa-phone" aria-hidden="true"></i>
                         شماره تلفن
                     </label>
-                    <input type="text" name="phone" id="userInfoPhone" class="form-control modal-input" value="{{ user.phone|default:'' }}">
+                    <input type="text" name="phone" id="userInfoPhone" class="form-control modal-input" inputmode="tel" autocomplete="tel" value="{{ user.phone|default:'' }}">
                 </div>
-                <div id="userInfoError" class="alert alert-danger modal-error" style="display: none;"></div>
+                <div id="userInfoError" class="alert alert-danger modal-error" role="alert" aria-live="assertive" style="display: none;"></div>
             </form>
         </div>
         <div class="modal-footer-professional">
@@ -114,14 +115,14 @@
 </div>
 
 <!-- Modal برای ویرایش اطلاعات تکمیلی -->
-<div id="profileModal" class="modal-professional" onclick="closeProfessionalModal(event, 'profileModal')">
+<div id="profileModal" class="modal-professional prof-premium-modal" onclick="closeProfessionalModal(event, 'profileModal')" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" aria-hidden="true">
     <div class="modal-content-professional" onclick="event.stopPropagation()">
         <div class="modal-header-professional">
-            <h2 class="modal-title-professional">
+            <h2 id="profileModalTitle" class="modal-title-professional">
                 <i class="fas fa-user-cog" aria-hidden="true"></i>
                 ویرایش اطلاعات تکمیلی
             </h2>
-            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'profileModal')">
+            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'profileModal')" aria-label="بستن پنجره">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </div>
@@ -129,7 +130,7 @@
             <form id="profileForm" onsubmit="submitProfileForm(event)" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="profileAvatar">
                         <i class="fas fa-image" aria-hidden="true"></i>
                         تصویر پروفایل
                     </label>
@@ -149,34 +150,34 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="profileBio">
                         <i class="fas fa-info-circle" aria-hidden="true"></i>
                         درباره من
                     </label>
                     <textarea name="bio" id="profileBio" class="form-control modal-input" rows="4">{{ user.profile.bio|default:'' }}</textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="profileAddress">
                         <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
                         آدرس
                     </label>
                     <textarea name="address" id="profileAddress" class="form-control modal-input" rows="3">{{ user.profile.address|default:'' }}</textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="profileCity">
                         <i class="fas fa-building" aria-hidden="true"></i>
                         شهر
                     </label>
-                    <input type="text" name="city" id="profileCity" class="form-control modal-input" value="{{ user.profile.city|default:'' }}">
+                    <input type="text" name="city" id="profileCity" class="form-control modal-input" autocomplete="address-level2" value="{{ user.profile.city|default:'' }}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">
+                    <label class="form-label" for="profilePostalCode">
                         <i class="fas fa-mail-bulk" aria-hidden="true"></i>
                         کد پستی
                     </label>
-                    <input type="text" name="postal_code" id="profilePostalCode" class="form-control modal-input" value="{{ user.profile.postal_code|default:'' }}">
+                    <input type="text" name="postal_code" id="profilePostalCode" class="form-control modal-input" inputmode="numeric" autocomplete="postal-code" value="{{ user.profile.postal_code|default:'' }}">
                 </div>
-                <div id="profileError" class="alert alert-danger modal-error" style="display: none;"></div>
+                <div id="profileError" class="alert alert-danger modal-error" role="alert" aria-live="assertive" style="display: none;"></div>
             </form>
         </div>
         <div class="modal-footer-professional">

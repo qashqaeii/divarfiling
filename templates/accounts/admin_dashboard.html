@@ -3,10 +3,10 @@
 {% load persian_tags %}
 {% load currency_tags %}
 
-{% block title %}مرکز فرمان | پنل مدیریت{% endblock %}
+{% block title %}نمای کلی | پنل مدیریت{% endblock %}
 
-{% block admin_panel_title %}مرکز فرمان{% endblock %}
-{% block admin_panel_breadcrumb %}<span aria-current="page">مرکز فرمان</span>{% endblock %}
+{% block admin_panel_title %}نمای کلی{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">نمای کلی</span>{% endblock %}
 
 {% block admin_panel_header_meta %}
 <span class="ecc-status-pill">{{ system_meta.server_label }}</span>
@@ -46,11 +46,50 @@
 {% endif %}
 {% endblock %}
 
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-overview-v3.css' %}?v=1">
+{% endblock %}
+
 {% block admin_panel_content %}
 
-{% include 'accounts/partials/admin_prime_today_strip.html' %}
-
-<div class="adm-prime-hero">
+<div class="cmd-v3-intro">
+  <div>
+    <span class="cmd-v3-eyebrow"><i class="fas fa-circle-nodes" aria-hidden="true"></i> دید مدیریتی در یک نگاه</span>
+    <h2>تصویر روشن از کسب‌وکار، تصمیم سریع‌تر</h2>
+    <p>آمار واقعی، روند درآمد و کارهایی که به توجه شما نیاز دارند؛ همه در یک صفحه.</p>
+  </div>
+  <a class="cmd-v3-intro-link" href="#ecc-glance">مشاهده اقدامات فوری <i class="fas fa-arrow-down" aria-hidden="true"></i></a>
+</div>
+<div class="cmd-v3-kpi-lead">
+  <div class="cmd-v3-kpi-lead__title"><h2>شاخص‌های کلیدی</h2><span>بر اساس بازه انتخاب‌شده و وضعیت فعلی</span></div>
+  <div class="cmd-v3-kpi-lead__grid">
+    <a href="{% url 'admin_panel_users' %}" class="cmd-v3-lead-card cmd-v3-lead-card--violet">
+      <span class="cmd-v3-lead-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+      <span class="cmd-v3-lead-card__label">کاربران فعال</span>
+      <strong>{{ users_analytics.active|default:0|to_persian_digits }}</strong>
+      <small>مشاهده کاربران <i class="fas fa-arrow-left" aria-hidden="true"></i></small>
+    </a>
+    <a href="{% url 'admin_panel_licenses' %}" class="cmd-v3-lead-card cmd-v3-lead-card--mint">
+      <span class="cmd-v3-lead-card__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+      <span class="cmd-v3-lead-card__label">لایسنس فعال</span>
+      <strong>{{ licensing_stats.active|default:0|to_persian_digits }}</strong>
+      <small>مدیریت لایسنس <i class="fas fa-arrow-left" aria-hidden="true"></i></small>
+    </a>
+    <a href="{% url 'admin_panel_sales' %}" class="cmd-v3-lead-card cmd-v3-lead-card--blue">
+      <span class="cmd-v3-lead-card__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+      <span class="cmd-v3-lead-card__label">درآمد امروز</span>
+      <strong data-count-up="{{ today_stats.revenue_today }}" data-format="money">{{ today_stats.revenue_today|default:0|to_persian_digits }}</strong>
+      <small>جزئیات فروش <i class="fas fa-arrow-left" aria-hidden="true"></i></small>
+    </a>
+    <a href="{% url 'admin_panel_sales' %}" class="cmd-v3-lead-card cmd-v3-lead-card--peach">
+      <span class="cmd-v3-lead-card__icon"><i class="fas fa-bag-shopping" aria-hidden="true"></i></span>
+      <span class="cmd-v3-lead-card__label">سفارش موفق امروز</span>
+      <strong data-count-up="{{ today_stats.orders_paid_today }}">{{ today_stats.orders_paid_today|default:0|to_persian_digits }}</strong>
+      <small>مشاهده سفارش‌ها <i class="fas fa-arrow-left" aria-hidden="true"></i></small>
+    </a>
+  </div>
+</div>
+<div class="adm-prime-hero cmd-v3-hero">
     <div class="adm-prime-hero__chart">
         <div class="adm-prime-section-tag">
             <strong>چه چیزی تغییر کرده؟</strong>
@@ -74,6 +113,23 @@
     </aside>
 </div>
 
+<section class="cmd-v3-health ecc-section" aria-label="وضعیت سرویس‌ها">
+  <div class="cmd-v3-section-heading">
+    <div><h2>وضعیت سرویس‌ها</h2><p>شاخص‌های سلامت موجود در سامانه؛ بدون امتیاز تخمینی</p></div>
+    <span class="cmd-v3-system-label">{{ system_meta.server_label }}</span>
+  </div>
+  <div class="cmd-v3-health-grid">
+    {% for indicator in health_indicators %}
+    <div class="cmd-v3-health-item" data-health="{{ indicator.status }}">
+      <span class="cmd-v3-health-marker" aria-hidden="true"></span>
+      <span><strong>{{ indicator.label }}</strong><small>{{ indicator.detail }}</small></span>
+    </div>
+    {% empty %}
+    <p class="cmd-v3-empty">هنوز شاخصی برای نمایش موجود نیست.</p>
+    {% endfor %}
+  </div>
+</section>
+<div class="cmd-v3-deep-dive">
 <div class="adm-prime-section-tag">
     <strong>گزارش بازه</strong>
     <em>{{ admin_panel_range_label_fa|default:"کل بازه" }}</em>
@@ -102,7 +158,8 @@
     </div>
 </section>
 
-<div class="adm-prime-fold">
+</div>
+<div class="adm-prime-fold cmd-v3-fold">
 
 <section class="ecc-section ecc-cmd-assistant" aria-label="دستیار مدیریت">
     <header class="ecc-cmd-actions-head">
@@ -197,7 +254,7 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-summary" id="ecc-summary" aria-label="خلاصه حوزه‌ها">
+<section class="ecc-section ecc-cmd-summary cmd-v3-summary" id="ecc-summary" aria-label="خلاصه حوزه‌ها">
     <header class="ecc-cmd-section-label">
         <span>خلاصه حوزه‌ها</span>
     </header>
@@ -246,7 +303,7 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-order-modules" aria-label="میانبرهای مدیریت">
+<section class="ecc-section ecc-order-modules cmd-v3-modules" aria-label="میانبرهای مدیریت">
     <div class="ecc-module-dock">
         {% for mod in command_modules %}
         <a

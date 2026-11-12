@@ -14,7 +14,7 @@
                     {% endblock %}
                 </p>
                 <nav class="adm-prime-breadcrumb" aria-label="مسیر">
-                    <a href="{% url 'admin_panel' %}{{ admin_panel_query_suffix|default:'?days=all' }}">فرمان</a>
+                    <a href="{% url 'admin_panel' %}{{ admin_panel_query_suffix|default:'?days=all' }}">نمای کلی</a>
                     <span aria-hidden="true">/</span>
                     {% block admin_panel_breadcrumb %}<span aria-current="page">صفحه جاری</span>{% endblock %}
                 </nav>

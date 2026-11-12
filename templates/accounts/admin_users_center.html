@@ -229,7 +229,8 @@
         data-users-detail-url-template="{{ users_detail_url_template }}"
     >
         <div class="ecc-users-mgmt-tools">
-            <input type="search" id="eccUsersMgmtSearch" class="ecc-table-search" placeholder="جستجو نام، موبایل، ایمیل…" autocomplete="off">
+            <label class="adm-v2-sr-only" for="eccUsersMgmtSearch">جستجوی کاربران بر اساس نام، موبایل یا ایمیل</label>
+            <input type="search" id="eccUsersMgmtSearch" class="ecc-table-search" placeholder="جستجو نام، موبایل، ایمیل…" autocomplete="off" aria-controls="eccUsersMgmtBody">
             <div class="ecc-users-mgmt-filters">
                 <select id="eccUsersMgmtLicense" class="ecc-users-mgmt-select" aria-label="لایسنس">
                     <option value="">لایسنس — همه</option>
@@ -263,7 +264,9 @@
                     <option value="no">بدون پرداخت</option>
                 </select>
             </div>
+            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="eccUsersMgmtReset" hidden>پاک‌کردن فیلترها</button>
         </div>
+        <p class="adm-v2-table-status" id="eccUsersMgmtStatus" role="status" aria-live="polite">برای دریافت فهرست کاربران آماده است.</p>
         <div class="adm-table-wrap adm-table-wrap--tall">
             <table class="adm-table adm-table--pro ecc-users-mgmt-table">
                 <thead>
@@ -278,7 +281,7 @@
                         <th>آخرین ورود</th>
                     </tr>
                 </thead>
-                <tbody id="eccUsersMgmtBody">
+                <tbody id="eccUsersMgmtBody" aria-live="off">
                     <tr><td colspan="8" class="adm-empty">در حال بارگذاری…</td></tr>
                 </tbody>
             </table>
@@ -327,7 +330,7 @@
 {% if admin_can_view_user_management %}
 <div class="ecc-user-drawer" id="eccUserDrawer" hidden aria-hidden="true">
     <div class="ecc-user-drawer-overlay" data-user-drawer-close tabindex="-1" aria-hidden="true"></div>
-    <aside class="ecc-user-drawer-panel" role="dialog" aria-labelledby="eccUserDrawerTitle">
+    <aside class="ecc-user-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="eccUserDrawerTitle" tabindex="-1">
         <header class="ecc-user-drawer-head">
             <div>
                 <h2 id="eccUserDrawerTitle">جزئیات کاربر</h2>
@@ -349,6 +352,6 @@
 {% include 'accounts/partials/admin_prime_charts_boot.html' %}
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=17"></script>
 {% if admin_can_view_user_management %}
-<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=2"></script>
+<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=3"></script>
 {% endif %}
 {% endblock %}

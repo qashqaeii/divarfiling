@@ -292,36 +292,43 @@ def _apply_filters(qs, *, q: str = '', filters: Optional[Dict[str, str]] = None)
         )
 
     license_f = filters.get('license') or ''
-    if license_f == 'active':
+    if license_f in ('active', 'yes'):
         qs = qs.filter(has_active_license=True)
-    elif license_f == 'none':
+    elif license_f in ('none', 'no'):
         qs = qs.filter(has_active_license=False)
     elif license_f == 'paid_no_license':
         qs = qs.filter(has_active_license=False, paid_orders_count__gt=0)
 
-    if filters.get('windows') == '1':
+    windows_f = filters.get('windows') or ''
+    if windows_f == 'downloaded':
+        qs = qs.filter(windows_downloaded=True)
+    elif windows_f == 'activated':
+        qs = qs.filter(windows_activated=True)
+    elif windows_f == 'launched':
+        qs = qs.filter(windows_first_launch=True)
+    elif windows_f in ('1', 'yes'):
         qs = qs.filter(Q(windows_downloaded=True) | Q(windows_activated=True) | Q(windows_first_launch=True))
-    elif filters.get('windows') == '0':
+    elif windows_f in ('0', 'no'):
         qs = qs.filter(windows_downloaded=False, windows_activated=False, windows_first_launch=False)
 
-    if filters.get('android') == '1':
+    if filters.get('android') in ('1', 'yes'):
         qs = qs.filter(has_android=True)
-    elif filters.get('android') == '0':
+    elif filters.get('android') in ('0', 'no'):
         qs = qs.filter(has_android=False)
 
-    if filters.get('datasets') == '1':
+    if filters.get('datasets') in ('1', 'yes'):
         qs = qs.filter(has_datasets=True)
-    elif filters.get('datasets') == '0':
+    elif filters.get('datasets') in ('0', 'no'):
         qs = qs.filter(has_datasets=False)
 
-    if filters.get('crm') == '1':
+    if filters.get('crm') in ('1', 'yes'):
         qs = qs.filter(has_crm=True)
-    elif filters.get('crm') == '0':
+    elif filters.get('crm') in ('0', 'no'):
         qs = qs.filter(has_crm=False)
 
-    if filters.get('paid') == '1':
+    if filters.get('paid') in ('1', 'yes'):
         qs = qs.filter(paid_orders_count__gt=0)
-    elif filters.get('paid') == '0':
+    elif filters.get('paid') in ('0', 'no'):
         qs = qs.filter(paid_orders_count=0)
 
     return qs

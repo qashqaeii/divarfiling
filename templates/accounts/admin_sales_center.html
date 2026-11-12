@@ -254,9 +254,11 @@
             <h2><i class="fas fa-key"></i> پرداخت موفق · صدور/تمدید ناقص</h2>
             <p>{{ fulfillment_incomplete_count|to_persian_digits }} مورد · وضعیت fulfillment</p>
         </div>
-        <a href="/admin/shop/order/?status__exact=paid" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
-            Django Admin <i class="fas fa-external-link-alt"></i>
+        {% if perms.shop.view_order %}
+        <a href="{% url 'admin:shop_order_changelist' %}?status__exact=paid" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
+            مشاهده سفارش‌ها <i class="fas fa-external-link-alt"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">

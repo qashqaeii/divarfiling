@@ -19,7 +19,7 @@
 |---|---|---|---|
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
 | 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A–01C committed; 01D sensitive admin access guarded; runtime validation remains OPEN |
-| 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A committed; 02B four-center hierarchy and reusable KPI cards prepared; browser/Django QA pending |
+| 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A–02B committed; 02C functional table/filter fixes prepared; runtime/browser QA remains open |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
 | 05 | Licenses, renewals and device seats | Transparent lifecycle and safe entitlement operations | Pending |
@@ -173,12 +173,32 @@ python manage.py test accounts.tests.test_admin_premium_v2_hierarchy accounts.te
 
 **Open gate:** Browser QA at mobile/tablet/desktop widths, RTL focus, anchor-to-expanded financial audit, and the accumulated Django suite. Static assertions and source validation are not evidence that Django passed.
 
-## Remaining gates before phase 02C
+## Phase 02C — operational table filters and recoverable AJAX UX
+
+- Correct a confirmed backend/frontend mismatch in the user-management table: the UI sends `license=yes/no`, `windows=downloaded/activated/launched`, and `android/datasets/crm/paid=yes/no` but the backend previously recognized different values. Both canonical UI values and legacy API filter values now work, with Windows options matching distinct annotated facts.
+- Improve AJAX list behavior without changing its API: stale response guards, stable filter reset, explicit loading/result/error status, a retry action for failures, proper one-page pager hiding, and empty-state reset. A filter change clears any waiting search debounce to avoid resurrecting stale results.
+- Harden user detail drawer error handling, asynchronous close behavior, focus return, Escape and Tab confinement, plus accessible dialog semantics. The drawer never resurrects a stale response after being closed.
+- License center table links to Excel exports are now permission-aware, and its "Users without license" cross-page drilldown only appears when the manager has access to the destination. The latest renewal table classifies multi-key renewal items as formal renewals rather than incorrectly labeling them a new key.
+- Sales fulfillment table now offers the Django Admin order list link only to users with `shop.view_order`; internal route resolution replaces a fragile hard-coded URL.
+- User table includes a live-result status, filter-reset control and explicit search label, styled by the existing shared Premium V2 stylesheet without changing the layout of every page.
+- Nine Django test cases are added for live UI/backend filter contracts (including compound queries and legacy filters), non-privileged export links, renewal labels, and retry/focus code hooks.
+- No database migrations, production writes, payments, SMS, or new dashboard-only decorative widgets.
+
+### Phase 02C verification (disposable DB)
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_premium_v2_tables accounts.tests.test_admin_users_management accounts.tests.test_admin_users_center accounts.tests.test_admin_licenses_center accounts.tests.test_admin_sales_center accounts.tests.test_admin_premium_v2_hierarchy --keepdb
+```
+
+**Release gate:** Validate AJAX search, filters, reset, pagination, 403/500 retry, detail drawer and all exports in a browser at mobile and desktop widths; run the Django suite in an isolated database. The connected GitHub tools do not execute these tests.
+
+## Remaining gates before phase 03
 
 - Execute the accumulated phase 00–01 Django suites in isolated staging, with real PostgreSQL test DB. Resolve failures once from evidence; avoid speculative edit/revert cycles.
 - Audit existing affiliate payout concurrency and run proper DB transaction tests before activating concurrent settlement; no new auto-payout feature was added here.
 - Remaining platform privileged operations (forum moderation input limits and service-rollout toggles) should be handled as real, reproducible defects when their module phases arrive.
-- Stage 02C next: audit the most critical operational table/filter and empty/error states in Command, Sales, Users and Licenses against reusable patterns, then shift into the Command Center phase after runtime QA.
+- Stage 03 next: action-oriented Command Center refinement and decision shortcuts. Do not add new cosmetic cards; validate the accumulated phase 00–02 integration and browser responsiveness first.
 
 
 

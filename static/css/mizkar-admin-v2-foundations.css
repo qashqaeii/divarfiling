@@ -419,3 +419,46 @@ body.mk-admin-dashboard :is(button,input,select,textarea):disabled {
     .ecc-page--shell .adm-v2-audit__meta { margin-inline-start: 0; }
     .ecc-page--shell .adm-v2-audit__body { padding: 8px 10px 12px; }
 }
+
+/* Phase 02C — usable table filters, inline states and assistive labels. */
+.adm-v2-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.ecc-page--shell .adm-v2-table-status {
+    margin: 6px 0 10px;
+    min-height: 20px;
+    font-size: .76rem;
+    color: var(--adm-v2-muted);
+}
+.ecc-page--shell .ecc-users-mgmt-tools {
+    display: flex;
+    gap: 10px 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.ecc-page--shell .ecc-users-mgmt-tools .ecc-users-mgmt-filters {
+    min-width: 0;
+    flex: 1 1 460px;
+}
+.ecc-page--shell #eccUsersMgmtReset:not([hidden]) {
+    white-space: nowrap;
+}
+.ecc-page--shell .adm-empty button {
+    margin-inline-start: 10px;
+}
+@media (max-width: 640px) {
+    .ecc-page--shell .ecc-users-mgmt-tools .ecc-table-search {
+        width: 100%;
+    }
+    .ecc-page--shell .ecc-users-mgmt-tools .ecc-users-mgmt-filters {
+        flex-basis: 100%;
+    }
+}

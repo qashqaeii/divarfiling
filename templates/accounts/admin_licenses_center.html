@@ -134,9 +134,11 @@
             <h2><i class="fas fa-hourglass-half"></i> در شرف انقضا</h2>
             <p>{{ table_preview_rows|to_persian_digits }} مورد · پیش‌نمایش</p>
         </div>
+        {% if 'expiring_licenses' in admin_export_allowed_keys %}
         <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -185,7 +187,7 @@
                 <tr>
                     <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
                     <td>{{ order.product.title }}</td>
-                    <td>{% if order.renewal_license %}تمدید رسمی{% else %}کلید جدید{% endif %}</td>
+                    <td>{% if order.renewal_license or order.renewal_items.exists %}تمدید رسمی{% else %}کلید جدید{% endif %}</td>
                     <td>{{ order.amount|currency }}</td>
                     <td>{{ order.paid_at|to_jalali_fa }}</td>
                 </tr>
@@ -203,9 +205,11 @@
             <h2><i class="fas fa-user-slash"></i> کاربران بدون لایسنس</h2>
             <p>{{ snapshot_counts.users_without_license|to_persian_digits }} کاربر</p>
         </div>
+        {% if admin_can_view_user_management %}
         <a href="{{ users_center_url }}#users-table-no-license" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-arrow-left"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -237,9 +241,11 @@
             <h2><i class="fas fa-ban"></i> منقضی اخیر</h2>
             <p>پیش‌نمایش</p>
         </div>
+        {% if 'expired_licenses' in admin_export_allowed_keys %}
         <a href="{% url 'admin_panel_export' 'expired_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">

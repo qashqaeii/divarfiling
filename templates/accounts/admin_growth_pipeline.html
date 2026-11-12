@@ -4,7 +4,8 @@
 
 {% block title %}پایپلاین رشد | پنل مدیریت{% endblock %}
 
-{% block admin_panel_title %}پایپلاین رشد{% endblock %}
+{% block admin_panel_title %}رشد{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">رشد</span>{% endblock %}
 
 {% block admin_panel_header_subtitle %}
 داشبورد زنده مسیر سرنخ تا خرید و تمدید
@@ -15,10 +16,23 @@
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/admin-growth-pipeline.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-growth-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
-<div class="adm-page adm-mkt-page adm-lac-page adm-gp-page biz-page biz-page--growth">
+<div class="adm-page adm-mkt-page adm-lac-page adm-gp-page biz-page biz-page--growth growth-v3">
+    <header class="growth-v3-intro">
+        <div>
+            <span class="growth-v3-eyebrow"><i class="fas fa-route" aria-hidden="true"></i> مسیر تبدیل مشتری</span>
+            <h2>رشد را از اولین سرنخ تا خرید دنبال کنید</h2>
+            <p>قیف تبدیل، وضعیت پرونده‌ها و حرکت‌های اخیر در یک نمای منظم.</p>
+        </div>
+        <nav class="growth-v3-shortcuts" aria-label="دسترسی سریع رشد">
+            <a href="#gp-funnel">نمودارها</a>
+            <a href="#gp-stage-board">مراحل</a>
+            <a href="#gp-recent-moves">فعالیت‌ها</a>
+        </nav>
+    </header>
 
     <div class="biz-toolbar">
         <div class="biz-toolbar-meta">
@@ -110,7 +124,7 @@
     </div>
     {% endif %}
 
-    <div class="adm-gp-charts">
+    <div class="adm-gp-charts" id="gp-funnel">
         <article class="adm-gp-card adm-gp-card--wide">
             <header class="adm-gp-card__head">
                 <strong>قیف مسیر</strong>
@@ -162,7 +176,7 @@
         </article>
     </div>
 
-    <section class="adm-lac-section" style="margin-top:0">
+    <section class="adm-lac-section" id="gp-stage-board">
         <div class="adm-lac-section-head">
             <div>
                 <h2>تخته وضعیت</h2>
@@ -174,7 +188,7 @@
         </div>
         <div class="adm-gp-stages">
             {% for s in overview.stages %}
-            <a class="adm-gp-stage {% if selected_stage == s.key %}is-active{% endif %}"
+            <a class="adm-gp-stage {% if selected_stage == s.key %}is-active{% endif %}"{% if selected_stage == s.key %} aria-current="true"{% endif %}
                href="?stage={{ s.key }}"
                title="{{ s.meaning }}">
                 <b>{{ s.count|to_persian_digits }}</b>

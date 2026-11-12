@@ -1257,6 +1257,14 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
     users_analytics = get_users_analytics_stats(stats)
     licensing_stats = get_licensing_center_stats()
     action_items = build_command_action_items(stats, sms_balance)
+    critical_queues = sum(item['priority'] == 'critical' for item in action_items)
+    high_queues = sum(item['priority'] == 'high' for item in action_items)
+    if critical_queues:
+        decision_summary = f'{critical_queues} دسته بحرانی؛ ابتدا این موارد بررسی شوند'
+    elif high_queues:
+        decision_summary = f'{high_queues} دسته اولویت‌دار برای پیگیری'
+    else:
+        decision_summary = 'هیچ دسته بحرانی یا با اولویت بالا در صف نیست'
     charts_full = build_charts_payload(days)
 
     return {
@@ -1268,6 +1276,7 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
             stats, today_stats, yesterday_stats, users_analytics, days,
         ),
         'command_action_items': action_items,
+        'command_decision_summary': decision_summary,
         'alert_count': len(action_items),
         'command_modules': build_command_modules(stats, alert_count=len(action_items)),
         'growth_snapshot': get_growth_pipeline_snapshot(),
@@ -1912,6 +1921,7 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
 
 def build_command_modules(stats: Dict[str, Any], *, alert_count: int = 0) -> List[Dict[str, Any]]:
     """میانبرهای سطح‌بالا برای مدیر — یک نگاه."""
+    del alert_count  # Queue size must not masquerade as a Django Admin badge.
     return [
         {
             'title': 'پایپلاین رشد',
@@ -1975,7 +1985,7 @@ def build_command_modules(stats: Dict[str, Any], *, alert_count: int = 0) -> Lis
             'icon': 'fa-gears',
             'accent': 'slate',
             'href': '/admin/',
-            'badge': alert_count or None,
+            'badge': None,
         },
     ]
 

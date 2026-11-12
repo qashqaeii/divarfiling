@@ -142,6 +142,13 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
             spark = card.get('sparkline')
             card['sparkline_json'] = json.dumps(spark) if spark else ''
         ctx.update(dashboard)
+        if not self.request.user.is_superuser:
+            # Delegated staff retain readable queues; hide only the
+            # owner-only shortcut rather than advertising an unusable action.
+            ctx['command_modules'] = [
+                item for item in ctx['command_modules']
+                if item.get('href') != '/admin/'
+            ]
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)

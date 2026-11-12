@@ -20,7 +20,7 @@
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
 | 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A–01C committed; 01D sensitive admin access guarded; runtime validation remains OPEN |
 | 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A–02B committed; 02C functional table/filter fixes prepared; runtime/browser QA remains open |
-| 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
+| 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | 03A command decision integrity prepared; remaining Command UX and integration QA open |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
 | 05 | Licenses, renewals and device seats | Transparent lifecycle and safe entitlement operations | Pending |
 | 06 | Unified user 360° | Journey across orders, devices, usage and support | Pending |
@@ -193,12 +193,32 @@ python manage.py test accounts.tests.test_admin_premium_v2_tables accounts.tests
 
 **Release gate:** Validate AJAX search, filters, reset, pagination, 403/500 retry, detail drawer and all exports in a browser at mobile and desktop widths; run the Django suite in an isolated database. The connected GitHub tools do not execute these tests.
 
-## Remaining gates before phase 03
+## Phase 03A — actionable Command Center, accurate queue metrics
+
+- Queue age and count now come from **one aggregate query** instead of two. For nullable message/payment dates, `created_at` is used as a fallback rather than falsely showing “unknown age” or selecting only a newer ticket.
+- Alert semantics corrected: a **low SMS balance is a monetary warning, not N affected cases**. The money amount stays in description, the numeric case badge is not rendered, and the CTA becomes “بررسی اعتبار” instead of promising an unsupported top-up action.
+- Queue sorting delegates to `prioritize_management_actions` already introduced in 02B; no parallel ranking policy or duplicate rules. Withdrawal CTA says “مشاهده” rather than implying any staff member can approve payouts.
+- Command first-screen queue subtitle now conveys *the number of critical/high issue categories*, with a safe empty-state description. No new graphs, notifications, financial mutations or database queries were introduced to create a decorative module.
+- Paid-order Excel and the Users/Licenses summary exports respect the exact report authorization policy; non-authorized staff receive ordinary navigation links rather than misleading downloads.
+- Owner-only Django Admin shortcut is hidden from delegated staff in Command header and modules, and its unrelated “pending issues” count badge is removed.
+- Nine regression tests cover aged tickets lacking last-message timestamps, null paid timestamps, financial-vs-case-count distinction for SMS, deterministic queue links, owner/delegate navigation and authorization, and truthful decision text.
+- No changes to actual payment, license, SMS delivery, source event states, database migrations or Production deployment.
+
+### Phase 03A validation (isolated DB, still required)
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_command_center_decisions accounts.tests.test_admin_dashboard accounts.tests.test_admin_panel_phase1 accounts.tests.test_admin_premium_v2_hierarchy accounts.tests.test_admin_export_security --keepdb
+```
+
+A browser check must verify responsive Command queue, the no-count SMS alert, RTL focus, authorized download links, drilldowns into the original queues, and light/dark variants. Source-level checks are **not** a green Django/CI result.
+
+## Remaining gates before phase 03B
 
 - Execute the accumulated phase 00–01 Django suites in isolated staging, with real PostgreSQL test DB. Resolve failures once from evidence; avoid speculative edit/revert cycles.
 - Audit existing affiliate payout concurrency and run proper DB transaction tests before activating concurrent settlement; no new auto-payout feature was added here.
 - Remaining platform privileged operations (forum moderation input limits and service-rollout toggles) should be handled as real, reproducible defects when their module phases arrive.
-- Stage 03 next: action-oriented Command Center refinement and decision shortcuts. Do not add new cosmetic cards; validate the accumulated phase 00–02 integration and browser responsiveness first.
+- Stage 03B next: prioritize any remaining real Command Center regressions from full Django/browser QA and integrate only if reproducible; then proceed to operations and support workflows.
 
 
 

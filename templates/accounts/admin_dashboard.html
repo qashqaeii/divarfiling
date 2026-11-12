@@ -29,15 +29,19 @@
 {% endblock %}
 
 {% block admin_panel_header_actions %}
-<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--primary" title="خروجی اکسل">
-    <i class="fas fa-file-excel"></i>
+{% if 'paid_orders' in admin_export_allowed_keys %}
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--primary" title="خروجی سفارش‌های پرداخت‌شده" aria-label="دریافت گزارش سفارش‌های پرداخت‌شده">
+    <i class="fas fa-file-excel" aria-hidden="true"></i>
 </a>
+{% endif %}
 <a href="{% url 'admin_panel_system_summary' %}?days={{ admin_panel_range_key }}&download=1" class="ecc-btn ecc-btn--ghost" title="JSON">
     <i class="fas fa-file-code"></i>
 </a>
-<a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
-    <i class="fas fa-cog"></i>
+{% if request.user.is_superuser %}
+<a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin" aria-label="ورود به Django Admin">
+    <i class="fas fa-cog" aria-hidden="true"></i>
 </a>
+{% endif %}
 {% endblock %}
 
 {% block admin_panel_content %}
@@ -64,7 +68,7 @@
             <strong>کدام مورد نیاز به اقدام دارد؟</strong>
             <em>وضعیت فعلی</em>
         </div>
-        {% include 'accounts/partials/admin_prime_action_queue.html' with items=command_action_items section_id='ecc-glance' %}
+        {% include 'accounts/partials/admin_prime_action_queue.html' with items=command_action_items section_id='ecc-glance' subtitle=command_decision_summary empty_title='صف اقدام فوری خالی است' empty_hint='در صف‌های فوری موردی برای رسیدگی ثبت نشده' %}
     </aside>
 </div>
 
@@ -84,7 +88,7 @@
 
 <div class="adm-prime-section-tag">
     <strong>وضعیت فعلی</strong>
-    <em>Snapshot · مستقل از بازه</em>
+    <em>مستقل از بازه زمانی گزارش</em>
 </div>
 <section class="ecc-section ecc-cmd-kpi ecc-cmd-kpi--snapshot adm-prime-kpi-band" aria-label="وضعیت فعلی">
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd ecc-kpi-grid--compact">
@@ -210,7 +214,11 @@
         <article class="ecc-cmd-summary-card" data-accent="blue">
             <header>
                 <h3><i class="fas fa-users"></i> کاربران</h3>
+                {% if 'all_users' in admin_export_allowed_keys %}
                 <a href="{% url 'admin_panel_export' 'all_users' %}?format=xlsx">خروجی</a>
+                {% else %}
+                <a href="{% url 'admin_panel_users' %}">مشاهده</a>
+                {% endif %}
             </header>
             <ul>
                 <li><span>فعال</span><strong>{{ users_analytics.active|to_persian_digits }}</strong></li>
@@ -221,7 +229,11 @@
         <article class="ecc-cmd-summary-card" data-accent="amber">
             <header>
                 <h3><i class="fas fa-key"></i> لایسنس</h3>
+                {% if 'expiring_licenses' in admin_export_allowed_keys %}
                 <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx">انقضا</a>
+                {% else %}
+                <a href="{% url 'admin_panel_licenses' %}#licenses-table-expiring">مشاهده</a>
+                {% endif %}
             </header>
             <ul>
                 <li><span>فعال</span><strong>{{ licensing_stats.active|to_persian_digits }}</strong></li>

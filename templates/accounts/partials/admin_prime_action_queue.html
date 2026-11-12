@@ -17,7 +17,9 @@
                 <strong>{{ item.title }}</strong>
                 <em>{% firstof item.oldest_label item.detail %}</em>
             </span>
-            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
+            {% if item.count is not None %}
+            <span class="ecc-cmd-action-count" aria-label="{{ item.count|to_persian_digits }} مورد">{{ item.count|to_persian_digits }}</span>
+            {% endif %}
             <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
         </a>
         {% endfor %}

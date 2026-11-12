@@ -139,8 +139,15 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         return ctx
 
 
-class AdminDatabaseBackupView(StaffRequiredMixin, View):
-    """دانلود بک‌آپ دیتابیس — فقط staff."""
+class SuperuserRequiredMixin(StaffRequiredMixin):
+    """Restrict sensitive full-database operations to system owners."""
+
+    def test_func(self):
+        return super().test_func() and self.request.user.is_superuser
+
+
+class AdminDatabaseBackupView(SuperuserRequiredMixin, View):
+    """دانلود بک‌آپ کامل دیتابیس — فقط مدیر ارشد (superuser)."""
 
     def get(self, request):
         fmt = (request.GET.get('format') or 'auto').lower().strip()

@@ -100,7 +100,7 @@ def resolve_admin_panel_nav_active(path: str) -> str:
         ('/accounts/admin-panel/exports/', 'exports'),
         ('/accounts/admin-panel/plan-conversion/', 'plan_conversion'),
         ('/accounts/admin-panel/forum/', 'forum'),
-        ('/accounts/admin-panel/blog/systematic/', 'blog'),
+        ('/accounts/admin-panel/blog/systematic/', 'blog_systematic'),
         ('/accounts/admin-panel/blog/', 'blog'),
         ('/accounts/admin-panel/academy/', 'academy'),
         ('/accounts/admin-panel/', 'command'),

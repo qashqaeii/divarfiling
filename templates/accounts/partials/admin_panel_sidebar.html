@@ -88,8 +88,8 @@
         </div>
     </div>
 
-    <div class="ecc-nav-group{% if active == 'operations' or active == 'support' or active == 'activity' %} is-open{% endif %}" data-nav-group="operations">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'operations' or active == 'support' or active == 'activity' %}true{% else %}false{% endif %}">
+    <div class="ecc-nav-group{% if active == 'operations' or active == 'support' or active == 'activity' or active == 'forum' %} is-open{% endif %}" data-nav-group="operations">
+        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'operations' or active == 'support' or active == 'activity' or active == 'forum' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-sliders" aria-hidden="true"></i> عملیات</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
@@ -144,8 +144,8 @@
         </div>
     </div>
 
-    <div class="ecc-nav-group{% if active == 'blog' or active == 'academy' %} is-open{% endif %}" data-nav-group="content">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'blog' or active == 'academy' %}true{% else %}false{% endif %}">
+    <div class="ecc-nav-group{% if active == 'blog' or active == 'academy' or active == 'blog_systematic' %} is-open{% endif %}" data-nav-group="content">
+        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'blog' or active == 'academy' or active == 'blog_systematic' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-pen-nib" aria-hidden="true"></i> محتوا</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
@@ -161,8 +161,8 @@
                 <span>آکادمی</span>
             </a>
             <a href="{% url 'admin_panel_blog_systematic' %}"
-               class="ecc-nav-item ecc-nav-item--sub{% if active == 'blog' %} is-active{% endif %}"
-               data-nav-id="blog">
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'blog_systematic' %} is-active{% endif %}"
+               data-nav-id="blog_systematic">
                 <span>انتشار سیستماتیک</span>
             </a>
         </div>

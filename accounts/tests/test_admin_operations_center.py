@@ -93,7 +93,7 @@ class AdminOperationsCenterViewTests(TestCase):
             self.assertIn('ops-backup', content)
             self.assertIn(f'data-range="{days}"', content)
             self.assertIn(reverse('admin_panel_system_summary'), content)
-            self.assertIn(reverse('admin_panel_database_backup'), content)
+            self.assertNotIn(reverse('admin_panel_database_backup'), content)
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/operations/'), 'operations')
 
     def test_compare_and_anchor_fallback(self):

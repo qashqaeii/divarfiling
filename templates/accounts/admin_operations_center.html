@@ -11,9 +11,11 @@
 <a href="{{ system_summary_url }}&download=1" class="ecc-btn ecc-btn--primary" title="خلاصه سیستم JSON">
     <i class="fas fa-file-code"></i>
 </a>
+{% if request.user.is_superuser %}
 <a href="{{ backup_urls.auto }}" class="ecc-btn ecc-btn--ghost" title="بک‌آپ دیتابیس">
     <i class="fas fa-download"></i>
 </a>
+{% endif %}
 <a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
     <i class="fas fa-cog"></i>
 </a>
@@ -145,6 +147,7 @@
             <li><span>pg_dump</span><strong>{% if backup_info.pg_dump_available %}در دسترس{% else %}—{% endif %}</strong></li>
             <li><span>فرمت</span><strong>{{ backup_info.default_format|to_persian_digits }}</strong></li>
         </ul>
+        {% if request.user.is_superuser %}
         <div class="ecc-ops-backup-actions">
             <a href="{{ backup_urls.auto }}" class="ecc-btn ecc-btn--primary ecc-btn--sm">
                 <i class="fas fa-download"></i> بک‌آپ (خودکار)
@@ -158,6 +161,9 @@
             </a>
             {% endif %}
         </div>
+        {% else %}
+        <p class="ecc-ops-backup-note">برای حفاظت از اطلاعات کاربران، دریافت بک‌آپ کامل فقط برای مدیر ارشد فعال است.</p>
+        {% endif %}
         <p class="ecc-ops-backup-note">آخرین زمان بک‌آپ در سیستم ثبت نمی‌شود — پس از دانلود، فایل را در محل امن نگه دارید.</p>
     </article>
 </section>

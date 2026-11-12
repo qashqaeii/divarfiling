@@ -375,6 +375,8 @@ body.mk-account-dashboard .lic-premium__collection-count {
   font-size: .72rem;
   font-weight: 750;
 }
+body.mk-account-dashboard .lic-premium__toolbar[hidden],
+body.mk-account-dashboard .lic-premium__results[hidden] { display: none !important; }
 body.mk-account-dashboard .lic-premium__toolbar {
   display: flex;
   align-items: center;
@@ -473,7 +475,9 @@ body.mk-account-dashboard .lic-premium__filter-empty button {
   border-radius: 10px;
   background: var(--acc-purple-soft, rgba(91,79,207,.08));
   color: var(--lic-ui-accent);
-  font: 750 .74rem inherit;
+  font-family: inherit;
+  font-weight: 750;
+  font-size: .74rem;
   cursor: pointer;
 }
 

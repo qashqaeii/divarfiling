@@ -370,4 +370,23 @@ new_expires = base + plan.duration_days
 
 ---
 
-*این سند خروجی فاز ۰ است. پیاده‌سازی تا تأیید این ممیزی و (در صورت نیاز) تصمیم سیاست آژانس شروع نشده است.*
+---
+
+## ۱۶. تصمیم محصول (پس از فاز ۰) — معماری ترکیبی
+
+| سناریو | رفتار پیاده‌سازی‌شده |
+|--------|---------------------|
+| تمدید انتخابی | فقط `expires_at` کلیدهای انتخاب‌شده؛ **بدون** تغییر `AgencySubscription` |
+| تمدید کامل (همه لایسنس‌های مشمول سفارش مبدأ) | هماهنگ‌سازی `AgencySubscription.expires_at` و `status=active` |
+| دسترسی مشاور | `get_member_seat` بر اساس **اعتبار واقعی لایسنس** (حتی اگر اشتراک آژانس منقضی باشد) |
+| دسترسی مدیریت مالک | همچنان `AgencySubscription` فعال |
+| provisioning bulk خرید جدید | فقط سفارش‌های غیرتمدید؛ تمدید از `OrderRenewalItem` بدون `provision_subscription_from_paid_order` |
+| قیمت تمدید | `calculate_plan_pricing(..., for_renewal=True)` — tier bulk فقط روی تعداد انتخاب‌شده و ≥ min |
+
+**مدل جدید:** `shop.models.OrderRenewalItem` (migration `0022_orderrenewalitem`).
+
+**مسیر UI:** `shop/orders/<uuid>/renew/` + CTA در مودال جزئیات سفارش داشبورد.
+
+---
+
+*فاز ۰ + تصمیم محصول ثبت شد. جزئیات پیاده‌سازی در کامیت‌های مرتبط.*

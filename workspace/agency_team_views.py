@@ -144,6 +144,12 @@ class AgencyHubLicensesView(AgencyOwnerRequiredMixin, _AgencyHubTeamBase):
         if agency:
             from licenses.services.management import build_agency_license_pool
             ctx['license_pool'] = build_agency_license_pool(agency.owner)
+            sub = ctx.get('hub_subscription')
+            if sub and sub.source_order_id:
+                from django.urls import reverse
+                ctx['agency_seats_renew_url'] = reverse(
+                    'order_renew', kwargs={'source_order_id': str(sub.source_order_id)},
+                )
         return ctx
 
 

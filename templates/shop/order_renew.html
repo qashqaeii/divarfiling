@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static persian_tags %}
+
+{% block title %}تمدید لایسنس — {{ source_order.product.title }}{% endblock %}
+{% block body_class %}mk-checkout-page mk-order-renew-page{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=23">
+<link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/buy-checkout.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-orders.css' %}?v=8">
+{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="ck-flow ck-buy-flow ck-buy-flow--premium" dir="rtl" lang="fa"
+     data-order-renew
+     data-quote-url="{% url 'order_renew_quote' source_order.id %}">
+    <div class="ck-page ck-page--full">
+        <header class="ck-page-header">
+            <a href="{% url 'dashboard_tab' 'orders' %}" class="ck-page-back"><i class="fas fa-arrow-right" aria-hidden="true"></i> سفارش‌ها</a>
+            <h1 class="ck-page-title">تمدید لایسنس‌ها</h1>
+            <p class="ck-page-sub">سفارش <span class="ov2-fa-num" dir="ltr">{{ source_order.id|slice:":8" }}</span> — {{ source_order.product.title }} — {{ source_order.plan.name }}</p>
+        </header>
+
+        {% if renewable_count == 0 %}
+        <div class="ck-renew-empty">
+            <p>هیچ لایسنسی در این سفارش برای تمدید آماده نیست.</p>
+        </div>
+        {% else %}
+        <form method="post" action="{% url 'order_renew_checkout' source_order.id %}" class="ck-renew-form" id="orderRenewForm">
+            {% csrf_token %}
+            <section class="ck-renew-toolbar">
+                <button type="button" class="mk-acc-btn mk-acc-btn--ghost" data-renew-select-all>انتخاب همه</button>
+                <button type="button" class="mk-acc-btn mk-acc-btn--ghost" data-renew-select-none>پاک کردن انتخاب</button>
+            </section>
+
+            <ul class="ck-renew-list" role="list">
+                {% for row in licenses %}
+                <li class="ck-renew-row{% if not row.can_renew %} ck-renew-row--disabled{% endif %}">
+                    <label class="ck-renew-row__label">
+                        <input type="checkbox" name="license_ids" value="{{ row.id }}"
+                               class="ck-renew-check"{% if not row.can_renew %} disabled{% endif %}{% if row.can_renew %} checked{% endif %}>
+                        <span class="ck-renew-row__main">
+                            <span class="ck-renew-row__title">کلید {{ row.sequence|to_persian_digits }} <code dir="ltr">{{ row.key_masked }}</code></span>
+                            <span class="ck-renew-row__meta">
+                                {% if row.assigned_name %}تخصیص: {{ row.assigned_name }} · {% endif %}
+                                {% if row.expires_at %}انقضا: {{ row.expires_at|to_jalali_date:"%Y/%m/%d" }}{% else %}—{% endif %}
+                            </span>
+                        </span>
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <section class="ck-renew-plan">
+                <label for="renewPlan" class="ck-label">پلن تمدید</label>
+                <select name="plan_id" id="renewPlan" class="mk-acc-input">
+                    {% for p in plans %}
+                    <option value="{{ p.id }}"{% if p.id == selected_plan_id %} selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </section>
+
+            <section class="ck-renew-summary" id="renewSummary" aria-live="polite">
+                <p class="ck-renew-summary__lead">یک یا چند لایسنس را انتخاب کنید تا قیمت به‌روز شود.</p>
+            </section>
+
+            <input type="hidden" name="discount_code" id="renewDiscountCode" value="">
+            <button type="submit" class="ck-btn ck-btn--primary ck-btn--block" id="renewSubmit" disabled>پرداخت و تمدید</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+<script src="{% static 'js/order-renew.js' %}?v=1"></script>
+{% endblock %}

@@ -7,6 +7,7 @@ from django.utils import timezone
 import jdatetime
 
 from licenses.models import License
+from licenses.services.renewal import evaluate_license_renewal
 from shop.models import Order
 from shop.services.downloads import get_order_download_filename, order_can_download
 
@@ -111,16 +112,54 @@ def _build_actions(order: Order, *, android_available: bool) -> list[dict]:
     return actions
 
 
+def _license_stats(order: Order) -> dict:
+    now = timezone.now()
+    qs = License.objects.filter(order=order).select_related('order__product', 'plan')
+    total = qs.count()
+    active = 0
+    expired = 0
+    nearest = None
+    for lic in qs.only('status', 'expires_at'):
+        lic.sync_expiration_status(save=False)
+        if lic.status == 'expired' or (lic.expires_at and lic.expires_at <= now):
+            expired += 1
+        else:
+            active += 1
+        if lic.expires_at and (nearest is None or lic.expires_at < nearest):
+            nearest = lic.expires_at
+    renewable = sum(1 for lic in qs if evaluate_license_renewal(lic)[0])
+    return {
+        'total': total,
+        'active': active,
+        'expired': expired,
+        'nearest_expires_at': _jalali(nearest, '%Y/%m/%d') if nearest else None,
+        'renewable_count': renewable,
+    }
+
+
 def serialize_order_detail(order: Order, *, android_available: bool = False) -> dict:
     status = _status_meta(order.status)
+    from licenses.services.renewal_orders import order_has_renewal_items, order_is_renewal_commerce
+
     licenses = list(
         License.objects.filter(order=order).order_by('sequence', 'pk').values('license_key', 'plan__name')
     )
-    if order.renewal_license_id:
+    if order_has_renewal_items(order):
+        licenses = list(
+            License.objects.filter(renewal_items__order=order)
+            .order_by('sequence', 'pk')
+            .values('license_key', 'plan__name')
+        )
+    elif order.renewal_license_id:
         licenses = [{
             'license_key': order.renewal_license.license_key,
             'plan__name': order.renewal_license.plan.name if order.renewal_license.plan_id else '',
         }]
+
+    license_stats = _license_stats(order) if order.status == 'paid' else None
+    renew_url = None
+    if order.status == 'paid' and license_stats and license_stats.get('renewable_count', 0) > 0:
+        renew_url = reverse('order_renew', kwargs={'source_order_id': str(order.id)})
 
     transaction = getattr(order, 'transaction', None)
     card_transfer = getattr(order, 'card_transfer', None)
@@ -172,7 +211,7 @@ def serialize_order_detail(order: Order, *, android_available: bool = False) -> 
             'tone': 'muted',
         })
 
-    return {
+    result = {
         'id': str(order.id),
         'id_short': str(order.id)[:8],
         'product_title': order.product.title,
@@ -192,7 +231,9 @@ def serialize_order_detail(order: Order, *, android_available: bool = False) -> 
         'created_at': _jalali(order.created_at),
         'paid_at': _jalali(order.paid_at),
         'zibal_track_id': order.zibal_track_id or None,
-        'is_renewal': bool(order.renewal_license_id),
+        'is_renewal': order_is_renewal_commerce(order),
+        'license_stats': license_stats,
+        'renew_url': renew_url,
         'can_download': order_can_download(order),
         'download_filename': get_order_download_filename(order) if order_can_download(order) else None,
         'licenses': [
@@ -220,3 +261,11 @@ def serialize_order_detail(order: Order, *, android_available: bool = False) -> 
         'timeline': timeline,
         'actions': _build_actions(order, android_available=android_available),
     }
+    if renew_url:
+        result['actions'].insert(0, {
+            'kind': 'primary',
+            'label': 'تمدید لایسنس‌ها',
+            'url': renew_url,
+            'icon': 'rotate',
+        })
+    return result

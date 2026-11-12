@@ -26,6 +26,15 @@ def issue_licenses_for_paid_order(order: Order) -> list[License]:
     if order.status != 'paid':
         return []
 
+    from licenses.services.renewal_orders import (
+        fulfill_multi_renewal_for_paid_order,
+        order_has_renewal_items,
+    )
+
+    if order_has_renewal_items(order):
+        renewed_list = fulfill_multi_renewal_for_paid_order(order)
+        return renewed_list
+
     if order.renewal_license_id:
         from licenses.services.renewal import fulfill_renewal_for_paid_order
 

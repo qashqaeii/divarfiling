@@ -121,15 +121,12 @@ def get_advisor_agency_seat_context(user) -> Optional[dict[str, Any]]:
         return None
 
     agency = membership.agency
-    sub = get_subscription_for_agency(agency)
-    if not sub:
-        return None
-
     from workspace.services.agency_seats import get_member_seat
 
     license_obj = get_member_seat(membership)
     if not license_obj:
         return None
+    sub = get_subscription_for_agency(agency)
     return {
         'membership': membership,
         'agency': agency,
@@ -236,7 +233,11 @@ def agency_hub_access_level(user) -> str:
 
 def resolve_post_agency_payment_redirect(order) -> Optional[str]:
     """Redirect پس از پرداخت موفق پلن آژانس — idempotent."""
+    from licenses.services.renewal_orders import order_is_renewal_commerce
+
     if not is_agency_plan_order(order) or order.status != 'paid':
+        return None
+    if order_is_renewal_commerce(order):
         return None
     provision_subscription_from_paid_order(order)
     sub = get_active_subscription_for_owner(order.user)

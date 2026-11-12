@@ -2,7 +2,7 @@
 URLهای فروشگاه
 """
 from django.urls import path, include
-from . import notice_views, views
+from . import notice_views, renewal_views, views
 from .seo_landings import landing_urlpatterns
 
 urlpatterns = [
@@ -12,6 +12,21 @@ urlpatterns = [
     path('products/<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
     path('products/<slug:slug>/buy/', views.BuyView.as_view(), name='buy'),
     path('licenses/<int:license_id>/renew/', views.RenewLicenseView.as_view(), name='renew_license'),
+    path(
+        'orders/<uuid:source_order_id>/renew/',
+        renewal_views.OrderRenewView.as_view(),
+        name='order_renew',
+    ),
+    path(
+        'orders/<uuid:source_order_id>/renew/quote/',
+        renewal_views.OrderRenewQuoteView.as_view(),
+        name='order_renew_quote',
+    ),
+    path(
+        'orders/<uuid:source_order_id>/renew/checkout/',
+        renewal_views.OrderRenewCheckoutView.as_view(),
+        name='order_renew_checkout',
+    ),
     path('products/<slug:slug>/apply-discount/', views.apply_discount_code, name='apply_discount'),
     path('products/<slug:slug>/rating/', views.submit_rating, name='submit_rating'),
     path('products/<slug:slug>/review/', views.submit_review, name='submit_review'),

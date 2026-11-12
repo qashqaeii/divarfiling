@@ -79,7 +79,9 @@ def fulfill_order_after_payment(
             is_agency_plan_order,
             provision_subscription_from_paid_order,
         )
-        if is_agency_plan_order(order_ref):
+        from licenses.services.renewal_orders import order_is_renewal_commerce
+
+        if is_agency_plan_order(order_ref) and not order_is_renewal_commerce(order_ref):
             provision_subscription_from_paid_order(order_ref)
     except Exception:
         import logging

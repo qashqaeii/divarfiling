@@ -92,6 +92,18 @@ def _applied_discount(
     return Decimal('0'), '', Decimal('0'), repeat_pct
 
 
+def _renewal_quantity(plan: LicensePlan, quantity: int) -> int:
+    """تعداد واقعی انتخاب‌شده برای تمدید — بدون bump به حداقل bulk."""
+    qty = max(1, int(quantity or 1))
+    if not getattr(plan, 'allow_bulk_purchase', False):
+        return qty
+    max_q = max(
+        AGENCY_MIN_QUANTITY,
+        int(getattr(plan, 'max_quantity', AGENCY_MAX_QUANTITY) or AGENCY_MAX_QUANTITY),
+    )
+    return min(max_q, qty)
+
+
 def calculate_plan_pricing(
     plan: LicensePlan,
     product: Product,
@@ -100,16 +112,18 @@ def calculate_plan_pricing(
     request: HttpRequest | None = None,
     quantity: int = 1,
     discount_code: DiscountCode | None = None,
+    for_renewal: bool = False,
 ) -> dict:
     """
     محاسبه مرکزی قیمت — source of truth برای وب، API و checkout.
 
     bulk/repeat: applied = max(bulk, repeat) — بدون stack
-    bulk روی plan.price محاسبه می‌شود، نه compare_at_price
+    bulk روی plan.price محاسبه می‌شود، نه compare_at_price.
+    for_renewal=True: tier حجمی فقط وقتی quantity >= min_quantity پلن آژانس.
     """
     from shop.models import Order
 
-    qty = clamp_quantity(plan, quantity)
+    qty = _renewal_quantity(plan, quantity) if for_renewal else clamp_quantity(plan, quantity)
     base_unit_price = plan_unit_sale_price(plan)
     unit_list = plan_unit_list_price(plan)
 
@@ -122,7 +136,14 @@ def calculate_plan_pricing(
         ).exists()
 
     repeat_pct = _repeat_discount_percent(product, user, has_previous_purchase=has_previous_purchase)
-    bulk_pct = get_agency_bulk_discount_percent(qty) if plan.allow_bulk_purchase else Decimal('0')
+    if plan.allow_bulk_purchase:
+        min_q = max(AGENCY_MIN_QUANTITY, int(getattr(plan, 'min_quantity', AGENCY_MIN_QUANTITY) or AGENCY_MIN_QUANTITY))
+        if for_renewal and qty < min_q:
+            bulk_pct = Decimal('0')
+        else:
+            bulk_pct = get_agency_bulk_discount_percent(qty)
+    else:
+        bulk_pct = Decimal('0')
     applied_pct, applied_reason, bulk_pct, repeat_pct = _applied_discount(
         plan,
         quantity=qty,

@@ -330,6 +330,63 @@ class Order(models.Model):
         return f'سفارش {self.id} - {self.user.username}'
 
 
+class OrderRenewalItem(models.Model):
+    """ردیف تمدید — snapshot قیمت و انقضا به ازای هر لایسنس در یک سفارش تمدید."""
+
+    class ApplyStatus(models.TextChoices):
+        PENDING = 'pending', 'در انتظار'
+        APPLIED = 'applied', 'اعمال‌شده'
+        FAILED = 'failed', 'ناموفق'
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='renewal_items',
+        verbose_name='سفارش تمدید',
+    )
+    license = models.ForeignKey(
+        'licenses.License',
+        on_delete=models.PROTECT,
+        related_name='renewal_items',
+        verbose_name='لایسنس',
+    )
+    unit_original_price = models.DecimalField(
+        max_digits=12, decimal_places=0, verbose_name='قیمت واحد (قبل تخفیف)',
+    )
+    unit_discount_amount = models.DecimalField(
+        max_digits=12, decimal_places=0, default=0, verbose_name='تخفیف واحد',
+    )
+    unit_final_price = models.DecimalField(
+        max_digits=12, decimal_places=0, verbose_name='مبلغ نهایی واحد',
+    )
+    previous_expires_at = models.DateTimeField(null=True, blank=True, verbose_name='انقضای قبلی')
+    new_expires_at = models.DateTimeField(null=True, blank=True, verbose_name='انقضای پیش‌بینی‌شده')
+    applied_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان اعمال')
+    apply_status = models.CharField(
+        max_length=16,
+        choices=ApplyStatus.choices,
+        default=ApplyStatus.PENDING,
+        db_index=True,
+        verbose_name='وضعیت اعمال',
+    )
+    apply_error = models.CharField(max_length=500, blank=True, verbose_name='خطای اعمال')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+
+    class Meta:
+        verbose_name = 'آیتم تمدید سفارش'
+        verbose_name_plural = 'آیتم‌های تمدید سفارش'
+        ordering = ['license_id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['order', 'license'],
+                name='uniq_order_renewal_item_license',
+            ),
+        ]
+
+    def __str__(self):
+        return f'RenewalItem order={self.order_id} license={self.license_id}'
+
+
 class PlanFunnelEvent(models.Model):
     """رویداد قیف خرید پلن — بازدید قیمت‌گذاری، شروع خرید و ارتقا."""
 

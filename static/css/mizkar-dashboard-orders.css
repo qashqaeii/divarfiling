@@ -1044,3 +1044,15 @@ html.mk-public:not([data-theme="light"]) .mk-ord-modal-act--inline {
         padding-bottom: max(0.72rem, env(safe-area-inset-bottom, 0px));
     }
 }
+
+/* Order renewal flow */
+.ck-renew-list { list-style: none; margin: 1rem 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.ck-renew-row { border: 1px solid var(--ov2-border, #e8e8ec); border-radius: 12px; padding: 0.65rem 0.85rem; background: #fff; }
+.ck-renew-row--disabled { opacity: 0.55; }
+.ck-renew-row__label { display: flex; gap: 0.65rem; align-items: flex-start; cursor: pointer; margin: 0; }
+.ck-renew-row__title { display: block; font-weight: 600; }
+.ck-renew-row__meta { display: block; font-size: 0.85rem; color: var(--ov2-muted, #6b7280); margin-top: 0.2rem; }
+.ck-renew-toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.ck-renew-summary { margin: 1rem 0; padding: 1rem; border-radius: 12px; background: var(--ov2-surface-2, #f8f9fb); }
+.ck-renew-summary__price strong { font-size: 1.15rem; }
+.ck-renew-plan { margin-bottom: 1rem; }

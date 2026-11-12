@@ -7,10 +7,18 @@
         <h2 class="agency-page-head__title">مدیریت صندلی و لایسنس</h2>
         <p class="agency-page-head__sub">تخصیص، پیگیری وضعیت و انقضای صندلی‌های آژانس</p>
     </div>
+    <div class="agency-page-head__actions">
+    {% if agency_seats_renew_url %}
+    <a href="{{ agency_seats_renew_url }}" class="crm-btn crm-btn-secondary crm-btn-sm">
+        <i class="fas fa-rotate" aria-hidden="true"></i>
+        تمدید صندلی‌ها
+    </a>
+    {% endif %}
     <a href="{% url 'workspace:agency_hub_advisors' %}#invite" class="crm-btn crm-btn-primary crm-btn-sm">
         <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='seat' size='inline' only %}</span>
         تخصیص لایسنس
     </a>
+    </div>
 </div>
 
 {% if hub_seats %}

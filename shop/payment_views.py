@@ -546,21 +546,31 @@ class PaymentSuccessView(LoginRequiredMixin, View):
             import logging
             logging.getLogger(__name__).exception('agency post-payment redirect failed')
 
+        from licenses.services.renewal_orders import order_has_renewal_items, order_is_renewal_commerce
+
         license_obj = License.objects.filter(order=order).first()
-        if order.renewal_license_id:
+        if order_has_renewal_items(order):
+            licenses = list(
+                License.objects.filter(renewal_items__order=order)
+                .distinct()
+                .order_by('sequence', 'pk')
+            )
+            license_obj = licenses[0] if licenses else license_obj
+        elif order.renewal_license_id:
             licenses = [order.renewal_license]
+            license_obj = order.renewal_license
         else:
             licenses = list(License.objects.filter(order=order).order_by('sequence', 'pk'))
         transaction = Transaction.objects.filter(order=order).first()
 
         context = {
             'order': order,
-            'license': license_obj if not order.renewal_license_id else order.renewal_license,
+            'license': license_obj,
             'licenses': licenses,
             'transaction': transaction,
             'can_download': order_can_download(order),
             'download_filename': get_order_download_filename(order) if order_can_download(order) else '',
-            'is_renewal': bool(order.renewal_license_id),
+            'is_renewal': order_is_renewal_commerce(order),
         }
         return render(request, 'shop/payment_success.html', context)
 

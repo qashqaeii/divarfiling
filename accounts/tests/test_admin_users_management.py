@@ -63,7 +63,9 @@ class AdminUsersManagementViewTests(TestCase):
         resp = self.client.get(url)
         self.assertIn(resp.status_code, (302, 403))
 
-    def test_list_and_detail_ok_for_staff(self):
+    def test_list_and_detail_ok_for_authorized_staff(self):
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         self.client.force_login(self.staff)
         list_url = reverse('admin_panel_users_json')
         resp = self.client.get(list_url, {'q': '09123334466'})

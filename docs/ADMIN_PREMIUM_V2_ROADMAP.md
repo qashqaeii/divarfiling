@@ -18,7 +18,7 @@
 | ID | Scope | Done when | State |
 |---|---|---|---|
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
-| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A committed; 01B fixes committed pending runtime verification; remaining integrity audit in 01C |
+| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A/01B committed; 01C read-only diagnostics and dossier permissions prepared; runtime validation pending |
 | 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | Pending |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
@@ -95,10 +95,28 @@ python manage.py test accounts.tests.test_admin_financial_integrity accounts.tes
 
 Treat any passing static source checks as different from Django test execution. Payment reconciliation paths must not be exercised against live gateways in tests; patched gateway calls are used in added tests.
 
-## Known gaps and next work (01C)
+## Phase 01C — administrator integrity diagnostics and identity boundaries
 
-- Complete sensitive permissions for user-management JSON, withdrawal workflows in Django Admin, lead-acquisition sends, forum moderation, service rollout and stored audit trails.
-- Add read-only diagnostics for paid orders missing fulfilment evidence, `paid_at` timestamp and gateway transaction mismatches; audit legacy data consistency. Never silently grant licenses from diagnostics.
+- Add `admin_integrity_diagnostics.py` to describe four *read-only*, all-time anomaly cohorts in the sales center: paid without `paid_at`, paid/new-key orders marked fulfilled with fewer issued licenses than requested, Zibal transaction paid but order still unpaid (excluding `CARD-` IDs), and paid orders with pending/partial/failed fulfillment.
+- Use a correlated issued-license count and `Exists` for renewal items to catch under-issued multi-seat purchases and avoid false positives for multi-key renewals; legacy single-key renewals are explicitly excluded from the new-key cohort. Warning categories can overlap; the UI does not present their sum as unique affected orders.
+- The sales dashboard shows a concise anomaly overview only to authorized financial readers. A selected warning reveals at most five order rows, with an order-specific Django Admin link only for users holding `shop.view_order`. There is no diagnosis POST, gateway call, automatic retry, license issuance, or migration.
+- New `can_view_financial_integrity` permission: active superusers or staff holding ALL THREE `shop.view_order`, `licenses.view_license` and `accounts.view_user`.
+- User-management list and individual detail JSON APIs now require active staff superusers or delegated staff holding ALL of `accounts.view_user`, `shop.view_order` and `licenses.view_license`. Deny *before* querying any personal data; successful responses are private/no-store. The Users page keeps aggregates, but hides personally identifiable tables, the full dossier drawer and its JS when unauthorized; direct output links also respect export rules.
+- Add ten scenario tests for authorization, no-cache, view isolation, four financial diagnostic cohorts, card-transfer exclusion, invalid filters and read-only previews; align existing authorized test fixtures. Tests are not executed by the GitHub connector.
+
+### Phase 01C verification (isolated database)
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_integrity_diagnostics accounts.tests.test_admin_users_management accounts.tests.test_admin_users_center accounts.tests.test_admin_sales_center accounts.tests.test_admin_panel_phase1 accounts.tests.test_admin_financial_integrity --keepdb
+```
+
+**Expected:** staff without dossier permissions sees KPI-only users center and receives HTTP 403 from both personal JSON endpoints; fully authorized roles see records; integrity previews are bounded and never mutate payment or entitlement state.
+
+## Known gaps and next work (01D)
+
+- Continue with remaining privileged operations: affiliate withdrawals in Django Admin, lead-acquisition sends, forum moderation, feature rollout, and role-aware audit logs. User 360° JSON authorization was scoped in 01C.
+- Run the new read-only anomaly report against staging fixtures and verified legacy data; compare counts with raw records before treating production data as trustworthy.
 - Review redirection and exceptions at moderation and backup operations; audit unauthorized access logs.
 - Complete all 23 screen route/action inventory; document current UX and role permission matrix before shared design-system rollout.
 - Run focused tests with dependencies and a disposable DB; add suitable CI only after understanding the target test settings.

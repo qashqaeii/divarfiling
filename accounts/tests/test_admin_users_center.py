@@ -106,6 +106,8 @@ class AdminUsersCenterViewTests(TestCase):
         self.assertIn('compare=1', resp.content.decode())
 
     def test_ajax_users_api_and_drawer_urls(self):
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         self.client.force_login(self.staff)
         resp = self.client.get(reverse('admin_panel_users'))
         content = resp.content.decode()

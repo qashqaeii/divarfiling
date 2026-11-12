@@ -29,3 +29,27 @@ def can_send_admin_sms(user) -> bool:
         user.is_superuser
         or user.has_perms(('accounts.change_marketingcampaign', 'accounts.add_smsmessagelog'))
     )
+
+
+def can_view_user_management(user) -> bool:
+    """Full user dossiers expose identity, orders and license/device details."""
+    if not _active_staff(user):
+        return False
+    return bool(
+        user.is_superuser
+        or user.has_perms((
+            'accounts.view_user',
+            'shop.view_order',
+            'licenses.view_license',
+        ))
+    )
+
+
+def can_view_financial_integrity(user) -> bool:
+    """Read-only cross-module payment/entitlement diagnostics."""
+    if not _active_staff(user):
+        return False
+    return bool(
+        user.is_superuser
+        or user.has_perms(('shop.view_order', 'licenses.view_license', 'accounts.view_user'))
+    )

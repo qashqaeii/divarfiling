@@ -26,7 +26,13 @@ from accounts.services.admin_dashboard import get_command_center_context
 from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_export_permissions import can_export_report
-from accounts.services.admin_action_permissions import can_review_card_transfer, can_send_admin_sms
+from accounts.services.admin_action_permissions import (
+    can_review_card_transfer,
+    can_send_admin_sms,
+    can_view_financial_integrity,
+    can_view_user_management,
+)
+from accounts.services.admin_integrity_diagnostics import get_financial_integrity_context
 from accounts.services.admin_marketing import (
     AUTOMATION_FLOWS,
     MESSAGE_TEMPLATE_CATALOG,
@@ -251,6 +257,8 @@ class AdminUsersManagementListView(StaffRequiredMixin, View):
     """JSON لیست مدیریت کاربران — جستجو، فیلتر، صفحه‌بندی."""
 
     def get(self, request):
+        if not can_view_user_management(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
         filters = {
             'license': (request.GET.get('license') or '').strip(),
             'windows': (request.GET.get('windows') or '').strip(),
@@ -266,25 +274,31 @@ class AdminUsersManagementListView(StaffRequiredMixin, View):
             sort=(request.GET.get('sort') or '-date_joined').strip(),
             filters=filters,
         )
-        return JsonResponse(
+        response = JsonResponse(
             payload,
             encoder=DjangoJSONEncoder,
             json_dumps_params={'ensure_ascii': False},
         )
+        response['Cache-Control'] = 'private, no-store'
+        return response
 
 
 class AdminUsersManagementDetailView(StaffRequiredMixin, View):
     """JSON جزئیات یک کاربر برای پنل مدیریت."""
 
     def get(self, request, user_id):
+        if not can_view_user_management(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
         data = get_user_management_detail(user_id)
         if not data:
             return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
-        return JsonResponse(
+        response = JsonResponse(
             {'ok': True, 'user': data},
             encoder=DjangoJSONEncoder,
             json_dumps_params={'ensure_ascii': False},
         )
+        response['Cache-Control'] = 'private, no-store'
+        return response
 
 
 def _parse_int(raw, default=None, *, minimum=None, maximum=None):
@@ -797,6 +811,11 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
         compare = self.request.GET.get('compare') == '1'
         focus = (self.request.GET.get('focus') or '').strip() or None
         data = get_sales_center_context(days=days, compare=compare, focus=focus)
+        if can_view_financial_integrity(self.request.user):
+            data['financial_integrity'] = get_financial_integrity_context(
+                selected=(self.request.GET.get('audit') or '').strip(),
+                days=days,
+            )
         data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             spark = card.get('sparkline')
@@ -888,6 +907,10 @@ class AdminUsersCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         data = get_users_center_context(days=days, compare=compare)
+        if not can_view_user_management(self.request.user):
+            # Aggregate KPIs remain useful; personal records are not exposed.
+            for field in ('recent_users', 'top_users', 'users_without_license_list'):
+                data.pop(field, None)
         data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))

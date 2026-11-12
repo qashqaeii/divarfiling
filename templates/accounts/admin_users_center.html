@@ -18,15 +18,21 @@
 {% endblock %}
 
 {% block admin_panel_header_actions %}
+{% if 'users_management' in admin_export_allowed_keys %}
 <a href="{% url 'admin_panel_export' 'users_management' %}?format=xlsx" class="ecc-btn ecc-btn--primary" title="خروجی مدیریت کاربران">
     <i class="fas fa-file-excel"></i>
 </a>
+{% endif %}
+{% if 'all_users' in admin_export_allowed_keys %}
 <a href="{% url 'admin_panel_export' 'all_users' %}?format=xlsx" class="ecc-btn ecc-btn--ghost" title="همه کاربران">
     <i class="fas fa-users"></i>
 </a>
+{% endif %}
+{% if perms.accounts.view_user %}
 <a href="/admin/accounts/user/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
     <i class="fas fa-cog"></i>
 </a>
+{% endif %}
 {% endblock %}
 
 {% block admin_panel_content %}
@@ -130,14 +136,17 @@
     </article>
 </section>
 
+{% if admin_can_view_user_management %}
 <section class="ecc-section" id="users-recent" aria-label="ثبت‌نام‌های اخیر">
     <header class="ecc-section-head">
         <div>
             <h2><i class="fas fa-clock"></i> ثبت‌نام‌های اخیر</h2>
         </div>
+        {% if 'new_users' in admin_export_allowed_keys %}
         <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             خروجی <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -202,9 +211,11 @@
             <h2><i class="fas fa-user-slash"></i> بدون لایسنس فعال</h2>
             <p>{{ snapshot_counts.users_without_license|to_persian_digits }} کاربر</p>
         </div>
+        {% if 'users_without_license' in admin_export_allowed_keys %}
         <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             خروجی <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -328,9 +339,19 @@
     </div>
 </section>
 {% endif %}
+{% else %}
+<section class="ecc-section" id="ecc-users-mgmt" aria-label="پرونده کاربران" role="status">
+    <header class="ecc-section-head">
+        <div><h2><i class="fas fa-lock" aria-hidden="true"></i> پرونده فردی کاربران</h2>
+            <p>آمار کلی در دسترس است؛ مشاهده مشخصات، پرداخت‌ها و دستگاه‌های هر کاربر نیازمند مجوز اختصاصی است.</p>
+        </div>
+    </header>
+</section>
+{% endif %}
 
 </div>
 
+{% if admin_can_view_user_management %}
 <div class="ecc-user-drawer" id="eccUserDrawer" hidden aria-hidden="true">
     <div class="ecc-user-drawer-overlay" data-user-drawer-close tabindex="-1" aria-hidden="true"></div>
     <aside class="ecc-user-drawer-panel" role="dialog" aria-labelledby="eccUserDrawerTitle">
@@ -346,6 +367,7 @@
         <div class="ecc-user-drawer-body" id="eccUserDrawerBody"></div>
     </aside>
 </div>
+{% endif %}
 
 </div>
 {% endblock %}
@@ -353,5 +375,7 @@
 {% block admin_panel_extra_js %}
 {% include 'accounts/partials/admin_prime_charts_boot.html' %}
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=17"></script>
+{% if admin_can_view_user_management %}
 <script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=2"></script>
+{% endif %}
 {% endblock %}

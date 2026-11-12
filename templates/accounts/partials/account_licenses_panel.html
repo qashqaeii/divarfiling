@@ -266,36 +266,34 @@
             </div>
 
             {% if item.activations %}
-            <details class="lic-tile-details lic-tile__zone">
+            <details class="lic-tile-details lic-tile-details--devices lic-tile__zone">
                 <summary><span>دستگاه‌های متصل <small class="ov2-fa-num">{{ item.activations|length }}</small></span><i class="fas fa-chevron-down lic-premium__details-chevron" aria-hidden="true"></i></summary>
-                <div class="lic-seats-table-wrap">
-                    <table class="lic-seats-table">
-                        <thead>
-                            <tr>
-                                <th scope="col">سیستم</th>
-                                <th scope="col">شناسه</th>
-                                <th scope="col">وضعیت</th>
-                                {% if license_dashboard.can_assign_team %}<th scope="col">عضو اسلات</th>{% endif %}
-                                <th scope="col" class="lic-seats-th-actions"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for seat in item.activations %}
-                            <tr data-activation-id="{{ seat.id }}">
-                                <td data-label="سیستم">
-                                    <input type="text" class="lic-seat-label-input" value="{{ seat.label }}" placeholder="{{ seat.display_name }}" aria-label="نام دستگاه {{ seat.display_name }}" data-seat-label>
-                                </td>
-                                <td data-label="شناسه" dir="ltr"><code class="lic-hw-code">{{ seat.masked_fingerprint }}</code></td>
-                                <td data-label="وضعیت">
+                <div class="lic-seats-list" role="list" aria-label="فهرست دستگاه‌های متصل">
+                    {% for seat in item.activations %}
+                    <div class="lic-seat-row" data-activation-id="{{ seat.id }}" role="listitem">
+                        <div class="lic-seat-row__body">
+                            <div class="lic-seat-row__top">
+                                <label class="lic-seat-row__field lic-seat-row__field--name">
+                                    <span class="lic-seat-row__k">نام</span>
+                                    <input type="text" class="lic-seat-label-input lic-seat-label-input--minimal" value="{{ seat.label }}" placeholder="{{ seat.display_name }}" aria-label="نام دستگاه {{ seat.display_name }}" data-seat-label>
+                                </label>
+                                <span class="lic-seat-row__status">
                                     {% if seat.is_active %}
-                                    <span class="lic-seat-badge lic-seat-badge--active">فعال</span>
+                                    <span class="lic-seat-badge lic-seat-badge--active lic-seat-badge--dot">فعال</span>
                                     {% else %}
-                                    <span class="lic-seat-badge lic-seat-badge--pending">انتظار</span>
+                                    <span class="lic-seat-badge lic-seat-badge--pending lic-seat-badge--dot">انتظار</span>
                                     {% endif %}
-                                </td>
+                                </span>
+                            </div>
+                            <div class="lic-seat-row__sub">
+                                <span class="lic-seat-row__field lic-seat-row__field--id">
+                                    <span class="lic-seat-row__k">شناسه</span>
+                                    <code class="lic-hw-code" dir="ltr" title="{{ seat.masked_fingerprint }}">{{ seat.masked_fingerprint }}</code>
+                                </span>
                                 {% if license_dashboard.can_assign_team %}
-                                <td data-label="عضو اسلات">
-                                    <select class="lic-seat-member-select" data-seat-assign aria-label="تخصیص دستگاه {{ seat.display_name }} به عضو تیم">
+                                <label class="lic-seat-row__field lic-seat-row__field--member">
+                                    <span class="lic-seat-row__k">عضو</span>
+                                    <select class="lic-seat-member-select lic-seat-member-select--minimal" data-seat-assign aria-label="تخصیص دستگاه {{ seat.display_name }} به عضو تیم">
                                         <option value="">—</option>
                                         {% for member in license_dashboard.team_members %}
                                         {% if not member.is_self %}
@@ -303,18 +301,16 @@
                                         {% endif %}
                                         {% endfor %}
                                     </select>
-                                </td>
+                                </label>
                                 {% endif %}
-                                <td data-label="عملیات">
-                                    <div class="lic-seat-actions">
-                                        <button type="button" class="lic-seat-btn" data-seat-save-label title="ذخیره نام دستگاه" aria-label="ذخیره نام دستگاه {{ seat.display_name }}"><i class="fas fa-check" aria-hidden="true"></i></button>
-                                        <button type="button" class="lic-seat-btn lic-seat-btn--danger" data-seat-remove{% if seat.is_active %} data-seat-remove-active{% endif %} title="حذف دستگاه" aria-label="حذف دستگاه {{ seat.display_name }}"><i class="fas fa-trash" aria-hidden="true"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                            </div>
+                        </div>
+                        <div class="lic-seat-actions lic-seat-actions--minimal">
+                            <button type="button" class="lic-seat-btn lic-seat-btn--minimal" data-seat-save-label title="ذخیره نام" aria-label="ذخیره نام دستگاه {{ seat.display_name }}"><i class="fas fa-check" aria-hidden="true"></i></button>
+                            <button type="button" class="lic-seat-btn lic-seat-btn--minimal lic-seat-btn--danger" data-seat-remove{% if seat.is_active %} data-seat-remove-active{% endif %} title="حذف دستگاه" aria-label="حذف دستگاه {{ seat.display_name }}"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </details>
             {% else %}

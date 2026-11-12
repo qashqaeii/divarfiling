@@ -1805,6 +1805,191 @@ body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-tile-details .lic
   border-top: 0;
   padding: .35rem 0 0;
 }
+
+/* دستگاه‌های متصل — لیست مینیمال (کارت پریمیوم) */
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-tile-details--devices .lic-seats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: .38rem 0 0;
+  margin: 0;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .4rem;
+  padding: .52rem 0;
+  border-bottom: 1px solid var(--lic-divider, var(--lic-ui-border));
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row:last-child {
+  padding-bottom: .12rem;
+  border-bottom: 0;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .32rem;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__top {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__field {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  min-width: 0;
+  flex: 1 1 6rem;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__field--name {
+  flex: 1 1 8rem;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__k {
+  flex: 0 0 auto;
+  width: 2rem;
+  font-size: .56rem;
+  font-weight: 760;
+  letter-spacing: .01em;
+  color: color-mix(in srgb, var(--lic-ui-muted) 92%, transparent);
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-label-input--minimal {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 1.75rem;
+  padding: .18rem .1rem;
+  border: 0;
+  border-bottom: 1px solid var(--lic-divider, var(--lic-ui-border));
+  border-radius: 0;
+  background: transparent;
+  font-size: .71rem;
+  font-weight: 680;
+  color: var(--lic-ui-text);
+  transition: border-color .15s ease;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-label-input--minimal:hover {
+  border-bottom-color: color-mix(in srgb, var(--lic-ui-accent) 22%, var(--lic-ui-border));
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-label-input--minimal:focus {
+  outline: none;
+  border-bottom-color: var(--lic-ui-accent);
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__status {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-badge--dot {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  padding: .08rem .38rem;
+  border-radius: 99px;
+  font-size: .58rem;
+  font-weight: 760;
+  border: 1px solid transparent;
+  background: transparent;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-badge--active.lic-seat-badge--dot {
+  color: #15803d;
+  border-color: color-mix(in srgb, #22c55e 22%, transparent);
+  background: color-mix(in srgb, #22c55e 7%, transparent);
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-badge--pending.lic-seat-badge--dot {
+  color: #b45309;
+  border-color: color-mix(in srgb, #f59e0b 22%, transparent);
+  background: color-mix(in srgb, #f59e0b 7%, transparent);
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-badge--dot::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .85;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem .55rem;
+  padding-inline-start: 2.35rem;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__field--id {
+  flex: 1 1 7rem;
+  min-width: 0;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__field--id .lic-hw-code {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: color-mix(in srgb, var(--lic-ui-muted) 95%, var(--lic-ui-text));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 12rem;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-member-select--minimal {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 10rem;
+  min-height: 1.7rem;
+  padding: .12rem .38rem;
+  border: 1px solid var(--lic-divider, var(--lic-ui-border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--lic-ui-bg) 92%, transparent);
+  font-size: .64rem;
+  font-weight: 650;
+  color: var(--lic-ui-text);
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-actions--minimal {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: .22rem;
+  padding-top: .1rem;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-btn--minimal {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--lic-divider, var(--lic-ui-border));
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb, var(--lic-ui-muted) 88%, var(--lic-ui-accent));
+  font-size: .62rem;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-btn--minimal:hover {
+  color: var(--lic-ui-accent);
+  border-color: color-mix(in srgb, var(--lic-ui-accent) 28%, var(--lic-ui-border));
+  background: color-mix(in srgb, var(--lic-ui-accent) 6%, transparent);
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-btn--minimal.lic-seat-btn--danger {
+  color: #c45c6a;
+  border-color: color-mix(in srgb, #c45c6a 20%, var(--lic-ui-border));
+}
+body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-btn--minimal.lic-seat-btn--danger:hover {
+  color: #b91c1c;
+  border-color: color-mix(in srgb, #b91c1c 30%, var(--lic-ui-border));
+  background: color-mix(in srgb, #ef4444 7%, transparent);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-badge--active.lic-seat-badge--dot {
+  color: #86efac;
+  background: rgba(34, 197, 94, .09);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-badge--pending.lic-seat-badge--dot {
+  color: #fcd34d;
+  background: rgba(251, 191, 36, .08);
+}
 body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-tile-empty {
   margin: .35rem 0 0;
   padding: .55rem 0 0;
@@ -1874,6 +2059,28 @@ body.mk-account-dashboard .lic-premium .lic-premium__collection .lic-premium__to
   body.mk-account-dashboard .lic-premium .lic-alloc--minimal .lic-alloc-select {
     max-width: none;
     flex: 1 1 7rem;
+  }
+  body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row {
+    flex-wrap: wrap;
+  }
+  body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__status {
+    margin-inline-start: 2.35rem;
+  }
+  body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__sub {
+    flex: 1 1 100%;
+    padding-inline-start: 2.35rem;
+  }
+  body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-row__field--id .lic-hw-code {
+    max-width: none;
+  }
+  body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-member-select--minimal {
+    max-width: none;
+    width: 100%;
+  }
+  body.mk-account-dashboard .lic-premium .lic-tile--premium .lic-seat-actions--minimal {
+    flex-direction: row;
+    margin-inline-start: auto;
+    padding-top: 0;
   }
   body.mk-account-dashboard .lic-premium .lic-tile-foot--quiet .lic-tile-link--renew {
     margin-inline-start: 0;

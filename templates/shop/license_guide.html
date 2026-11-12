@@ -1,179 +1,225 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static decor_icons %}
 
 {% block title %}راهنمای فعال‌سازی — فایلینگ دیوار{% endblock %}
-{% block body_class %}mk-pub-page lg-guide-page{% endblock %}
+{% block body_class %}mk-pub-page lg-guide-page lg-pr-page{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="lg-pr-crumb" aria-label="مسیر صفحه">
+    <div class="container">
+        <ol class="lg-pr-crumb-list">
+            <li><a href="{% url 'home' %}">خانه</a></li>
+            <li><a href="{% url 'education' %}">آموزش</a></li>
+            <li aria-current="page">راهنمای فعال‌سازی</li>
+        </ol>
+    </div>
+</nav>
+{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-license-guide.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/mizkar-license-guide.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap">
 
-    {# ── Hero + Video ── #}
-    <header class="lg-hero">
-        <div class="lg-hero-bg" aria-hidden="true"></div>
-        <div class="container lg-hero-grid">
-            <div class="lg-hero-copy">
-                <span class="mk-pub-kicker lg-kicker">
-                    {% load decor_icons %}{% decor_icon 'rocket' size='xs' boxed=True accent='emerald' %}
-                    {{ guide.hero.eyebrow }}
-                </span>
-                <h1>{{ guide.hero.title }}</h1>
-                <p class="lg-hero-lead">{{ guide.hero.lead }}</p>
-                <ul class="lg-hero-highlights" aria-label="ویژگی‌های راهنما">
-                    {% for h in guide.hero.highlights %}
-                    <li><i class="fas {{ h.icon }}" aria-hidden="true"></i> {{ h.text }}</li>
-                    {% endfor %}
-                </ul>
-                <div class="lg-hero-actions">
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}" class="btn btn-primary"><i class="fas fa-key"></i> کلید لایسنس من</a>
-                    <a href="{% url 'education' %}" class="btn btn-secondary"><i class="fas fa-graduation-cap"></i> مرکز آموزش</a>
-                    {% else %}
-                    <a href="{{ bot_buy_url }}" class="btn btn-primary"><i class="fas fa-shopping-cart"></i> خرید ربات</a>
-                    <a href="{% url 'login' %}" class="btn btn-secondary">ورود</a>
-                    {% endif %}
-                </div>
-            </div>
+    <header class="lg-pr-hero">
+        <div class="lg-pr-hero-bg" aria-hidden="true">
+            <span class="lg-pr-mesh lg-pr-mesh--1"></span>
+            <span class="lg-pr-mesh lg-pr-mesh--2"></span>
+            <span class="lg-pr-hero-noise"></span>
+        </div>
+        <div class="container lg-pr-hero-shell">
+            <div class="lg-pr-hero-grid">
+                <div class="lg-pr-hero-copy">
+                    <div class="lg-pr-hero-meta">
+                        <span class="lg-pr-kicker">
+                            {% decor_icon 'rocket' size='xs' boxed=True accent='emerald' %}
+                            {{ guide.hero.eyebrow }}
+                        </span>
+                    </div>
+                    <h1 class="lg-pr-title">
+                        {{ guide.hero.title }}
+                        <span class="lg-pr-title-accent">گام‌به‌گام و ساده</span>
+                    </h1>
+                    <p class="lg-pr-lead">{{ guide.hero.lead }}</p>
 
-            <div class="lg-video-wrap" data-mk-vid-player>
-                <div class="lg-video-frame{% if video_mode == 'file' %} mk-vid-frame{% endif %}{% if video_mode != 'file' %} lg-video-frame--static{% endif %}">
-                    {% if video_mode == 'embed' %}
-                    <iframe src="{{ video_src }}"
-                            title="{{ guide.video.title }}"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen
-                            loading="lazy"></iframe>
-                    {% elif video_mode == 'file' %}
-                    <video class="mk-vid-el lg-video-el"
-                           controls
-                           playsinline
-                           {% if guide.video.poster %}poster="{% static guide.video.poster %}"{% endif %}
-                           preload="metadata"
-                           title="{{ guide.video.title }}">
-                        <source src="{{ video_src }}" type="video/mp4">
-                        مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
-                    </video>
-                    <button type="button" class="mk-vid-play lg-video-play-btn" data-mk-vid-play aria-label="پخش ویدیو">
-                        <span class="mk-vid-play-ring" aria-hidden="true"></span>
-                        <i class="fas fa-play" aria-hidden="true"></i>
-                    </button>
-                    <span class="mk-vid-badge" aria-hidden="true"><i class="fas fa-video"></i> HD</span>
-                    {% else %}
-                    <div class="lg-video-placeholder" aria-label="جای ویدیو آموزشی">
-                        <div class="lg-video-placeholder-bg" aria-hidden="true">
-                            <span class="lg-video-grid"></span>
-                            <span class="lg-video-glow lg-video-glow--1"></span>
-                            <span class="lg-video-glow lg-video-glow--2"></span>
-                        </div>
-                        <div class="lg-video-placeholder-body">
-                            <span class="lg-video-play" aria-hidden="true">
-                                <i class="fas fa-play"></i>
-                            </span>
-                            <span class="lg-video-badge"><i class="fas fa-video"></i> ویدیو آموزشی</span>
+                    <ul class="lg-pr-highlights" aria-label="ویژگی‌های راهنما">
+                        {% for h in guide.hero.highlights %}
+                        <li class="lg-pr-highlight">
+                            <span class="lg-pr-highlight-dot" aria-hidden="true"></span>
+                            <i class="fas {{ h.icon }}" aria-hidden="true"></i>
+                            <span>{{ h.text }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="lg-pr-hero-actions">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="lg-pr-btn lg-pr-btn--primary">
+                            <i class="fas fa-key" aria-hidden="true"></i>
+                            کلید لایسنس من
+                        </a>
+                        <a href="#download-apps" class="lg-pr-btn lg-pr-btn--ghost">
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                            دانلود اپ و ربات
+                        </a>
+                        {% else %}
+                        <a href="{{ bot_buy_url }}" class="lg-pr-btn lg-pr-btn--primary">
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                            خرید ربات
+                        </a>
+                        <a href="{% url 'login' %}" class="lg-pr-btn lg-pr-btn--ghost">ورود</a>
+                        {% endif %}
+                        <a href="#steps" class="lg-pr-btn lg-pr-btn--ghost">
+                            <i class="fas fa-list-ol" aria-hidden="true"></i>
+                            چهار قدم
+                        </a>
+                    </div>
+                </div>
+
+                <div class="lg-pr-video" data-mk-vid-player>
+                    <div class="lg-pr-video-shell{% if video_mode == 'file' %} mk-vid-frame{% endif %}{% if video_mode != 'file' %} lg-pr-video-shell--static{% endif %}">
+                        {% if video_mode == 'embed' %}
+                        <iframe src="{{ video_src }}"
+                                title="{{ guide.video.title }}"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                loading="lazy"></iframe>
+                        {% elif video_mode == 'file' %}
+                        <video class="mk-vid-el lg-pr-video-el"
+                               controls
+                               playsinline
+                               {% if guide.video.poster %}poster="{% static guide.video.poster %}"{% endif %}
+                               preload="metadata"
+                               title="{{ guide.video.title }}">
+                            <source src="{{ video_src }}" type="video/mp4">
+                            مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                        </video>
+                        <button type="button" class="mk-vid-play lg-pr-video-play" data-mk-vid-play aria-label="پخش ویدیو">
+                            <span class="mk-vid-play-ring" aria-hidden="true"></span>
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                        </button>
+                        <span class="mk-vid-badge" aria-hidden="true"><i class="fas fa-video"></i> HD</span>
+                        {% else %}
+                        <div class="lg-pr-video-placeholder" aria-label="جای ویدیو آموزشی">
+                            <span class="lg-pr-video-placeholder-icon" aria-hidden="true"><i class="fas fa-play"></i></span>
                             <strong>{{ guide.video.title }}</strong>
                             <span>{{ guide.video.subtitle }}</span>
-                            <em class="lg-video-soon"><i class="fas fa-hourglass-half"></i> به‌زودی منتشر می‌شود</em>
+                            <em class="lg-pr-video-soon"><i class="fas fa-hourglass-half" aria-hidden="true"></i> به‌زودی منتشر می‌شود</em>
                         </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                </div>
-                <div class="lg-video-meta mk-vid-meta">
-                    <span><i class="fas fa-clock"></i> {{ guide.video.duration }}</span>
-                    <span><i class="fas fa-closed-captioning"></i> فارسی</span>
-                    {% if video_mode == 'file' %}
-                    <span><i class="fab fa-windows"></i> ویندوز ۱۰ و ۱۱</span>
-                    {% elif video_mode == 'none' %}
-                    <span class="lg-video-meta-hint"><i class="fas fa-film"></i> ویدیو به‌زودی</span>
-                    {% endif %}
+                    <div class="lg-pr-video-meta mk-vid-meta">
+                        <span><i class="fas fa-clock" aria-hidden="true"></i> {{ guide.video.duration }}</span>
+                        <span><i class="fas fa-closed-captioning" aria-hidden="true"></i> فارسی</span>
+                        {% if video_mode == 'file' %}
+                        <span><i class="fab fa-windows" aria-hidden="true"></i> ویندوز ۱۰ و ۱۱</span>
+                        {% elif video_mode == 'none' %}
+                        <span class="lg-pr-video-meta-hint"><i class="fas fa-film" aria-hidden="true"></i> ویدیو به‌زودی</span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </header>
 
-    {# ── Flow pipeline ── #}
-    <section class="lg-flow-band" aria-label="خلاصه فرآیند">
+    <section class="lg-pr-pipeline" aria-label="خلاصه فرآیند">
         <div class="container">
-            <div class="lg-flow">
+            <ol class="lg-pr-pipeline-list">
                 {% for item in guide.flow %}
-                <article class="lg-flow-item">
-                    <span class="mk-icon mk-icon--md mk-icon--violet">{% include 'includes/icon_slot.html' with decor=item.decor_icon fa=item.icon only %}</span>
-                    <strong>{{ item.label }}</strong>
-                    <span>{{ item.desc }}</span>
-                </article>
-                {% if not forloop.last %}
-                <span class="lg-flow-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                {% endif %}
+                <li class="lg-pr-pipeline-item">
+                    <span class="lg-pr-pipeline-icon" aria-hidden="true">
+                        {% include 'includes/icon_slot.html' with decor=item.decor_icon fa=item.icon only %}
+                    </span>
+                    <span class="lg-pr-pipeline-copy">
+                        <strong>{{ item.label }}</strong>
+                        <span>{{ item.desc }}</span>
+                    </span>
+                </li>
                 {% endfor %}
+            </ol>
+        </div>
+    </section>
+
+    <section class="lg-pr-section lg-pr-section--dl" id="download-apps" aria-labelledby="lg-pr-dl-title">
+        <div class="container">
+            <header class="lg-pr-section-head">
+                <span class="lg-pr-section-kicker">۰۱ · دانلود</span>
+                <h2 id="lg-pr-dl-title">ربات ویندوز و اپ اندروید</h2>
+                <p>نصب رایگان است؛ برای استخراج، لایسنس فعال لازم است.</p>
+            </header>
+            <div class="lg-pr-dl-wrap">
+                {% include 'includes/app_download_hub.html' %}
             </div>
         </div>
     </section>
 
-    {# ── مرکز دانلود ── #}
-    {% include 'includes/app_download_hub.html' %}
-
-    {# ── User status ── #}
     {% if user.is_authenticated %}
-    <div class="container">
-        <div class="lg-user-status {% if has_active_license %}lg-user-status--active{% else %}lg-user-status--pending{% endif %}">
-            <span class="mk-icon mk-icon--md {% if has_active_license %}mk-icon--emerald{% else %}mk-icon--amber{% endif %}">
-                <i class="fas {% if has_active_license %}fa-circle-check{% else %}fa-hourglass-half{% endif %}"></i>
-            </span>
-            <div class="lg-user-status-body">
+    <section class="lg-pr-section lg-pr-section--status" aria-live="polite">
+        <div class="container">
+            <div class="lg-pr-status {% if has_active_license %}lg-pr-status--ok{% else %}lg-pr-status--wait{% endif %}">
+                <span class="lg-pr-status-mark" aria-hidden="true">
+                    <i class="fas {% if has_active_license %}fa-circle-check{% else %}fa-hourglass-half{% endif %}"></i>
+                </span>
+                <div class="lg-pr-status-body">
+                    {% if has_active_license %}
+                    <strong>لایسنس شما فعال است</strong>
+                    <p>ربات یا اپ را اجرا کنید و فایل را در میزکار آپلود کنید.</p>
+                    {% else %}
+                    <strong>هنوز لایسنس فعال نشده</strong>
+                    <p>بعد از خرید کلید را در ربات وارد کنید. برای <strong>پلن آزمایشی</strong> تأیید پیامکی الزامی است — <a href="{{ bot_buy_url }}">خرید پلن آزمایشی</a>. CRM میزکار تا آن موقع باز است.</p>
+                    {% endif %}
+                </div>
                 {% if has_active_license %}
-                <strong>لایسنس شما فعال است</strong>
-                <p>ربات را اجرا کنید، آگهی بکشید و فایل را در میزکار آپلود کنید.</p>
+                <a href="{% url 'workspace:home' %}" class="lg-pr-btn lg-pr-btn--sm lg-pr-btn--primary">ورود به میزکار</a>
                 {% else %}
-                <strong>هنوز لایسنس فعال نشده</strong>
-                <p>بعد از خرید، کلید را در ربات وارد کنید. برای <strong>پلن آزمایشی یک‌هفته‌ای</strong> تأیید شماره موبایل با پیامک الزامی است — <a href="{{ bot_buy_url }}">خرید پلن آزمایشی</a>. تا آن موقع CRM میزکار برایتان باز است.</p>
+                <a href="{% url 'dashboard' %}" class="lg-pr-btn lg-pr-btn--sm lg-pr-btn--primary">مشاهده کلید</a>
                 {% endif %}
             </div>
-            {% if has_active_license %}
-            <a href="{% url 'workspace:home' %}" class="btn btn-sm btn-primary">ورود به میزکار</a>
-            {% else %}
-            <a href="{% url 'dashboard' %}" class="btn btn-sm btn-primary">مشاهده کلید لایسنس</a>
-            {% endif %}
         </div>
-    </div>
+    </section>
     {% endif %}
 
-    {# ── Four steps ── #}
-    <section class="mk-pub-band lg-steps-band" id="steps" aria-labelledby="lg-steps-title">
+    <section class="lg-pr-section" id="steps" aria-labelledby="lg-pr-steps-title">
         <div class="container">
-            <header class="mk-pub-head">
-                <h2 id="lg-steps-title">چهار قدم ساده</h2>
-                <p>هر قدم را به ترتیب انجام دهید — معمولاً کمتر از ۱۰ دقیقه طول می‌کشد</p>
+            <header class="lg-pr-section-head">
+                <span class="lg-pr-section-kicker">۰۲ · مسیر فعال‌سازی</span>
+                <h2 id="lg-pr-steps-title">چهار قدم ساده</h2>
+                <p>معمولاً کمتر از ۱۰ دقیقه — به ترتیب پیش بروید.</p>
             </header>
-            <div class="lg-steps-grid">
+            <ol class="lg-pr-steps">
                 {% for step in guide.steps %}
-                <article class="lg-step-card" data-step="{{ step.num }}">
-                    <div class="lg-step-top">
-                        <span class="lg-step-num">{{ step.num }}</span>
-                        <span class="mk-icon mk-icon--sm mk-icon--emerald">{% include 'includes/icon_slot.html' with decor=step.decor_icon fa=step.icon only %}</span>
+                <li class="lg-pr-step">
+                    <div class="lg-pr-step-head">
+                        <span class="lg-pr-step-num" aria-hidden="true">{{ step.num }}</span>
+                        <span class="lg-pr-step-icon" aria-hidden="true">
+                            {% include 'includes/icon_slot.html' with decor=step.decor_icon fa=step.icon only %}
+                        </span>
                     </div>
-                    <h3>{{ step.title }}</h3>
-                    <p class="lg-step-desc">{{ step.desc }}</p>
-                    <p class="lg-step-tip"><i class="fas fa-lightbulb"></i> {{ step.tip }}</p>
-                </article>
+                    <div class="lg-pr-step-body">
+                        <h3>{{ step.title }}</h3>
+                        <p class="lg-pr-step-desc">{{ step.desc }}</p>
+                        <p class="lg-pr-step-tip"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ step.tip }}</p>
+                    </div>
+                </li>
                 {% endfor %}
-            </div>
+            </ol>
         </div>
     </section>
 
-    {# ── Notes ── #}
-    <section class="mk-pub-band mk-pub-band--alt">
+    <section class="lg-pr-section lg-pr-section--muted" aria-labelledby="lg-pr-notes-title">
         <div class="container">
-            <header class="mk-pub-head">
-                <h2>سه نکته که باید بدانید</h2>
+            <header class="lg-pr-section-head lg-pr-section-head--compact">
+                <span class="lg-pr-section-kicker">۰۳ · نکات</span>
+                <h2 id="lg-pr-notes-title">سه نکته که باید بدانید</h2>
             </header>
-            <ul class="lg-notes-grid">
+            <ul class="lg-pr-notes">
                 {% for note in guide.notes %}
-                <li class="lg-note-card">
-                    <span class="mk-icon mk-icon--md mk-icon--amber"><i class="fas {{ note.icon }}"></i></span>
+                <li class="lg-pr-note">
+                    <span class="lg-pr-note-icon" aria-hidden="true"><i class="fas {{ note.icon }}"></i></span>
                     <p>{{ note.text }}</p>
                 </li>
                 {% endfor %}
@@ -181,65 +227,77 @@
         </div>
     </section>
 
-    {# ── FAQ ── #}
-    <section class="mk-pub-band">
-        <div class="container">
-            <header class="mk-pub-head">
-                <h2>سوالات پرتکرار</h2>
+    <section class="lg-pr-section" aria-labelledby="lg-pr-faq-title">
+        <div class="container lg-pr-faq-wrap">
+            <header class="lg-pr-section-head">
+                <span class="lg-pr-section-kicker">۰۴ · FAQ</span>
+                <h2 id="lg-pr-faq-title">سوالات پرتکرار</h2>
             </header>
-            <div class="mk-pub-faq lg-faq">
+            <div class="lg-pr-faq">
                 {% for item in guide.faq %}
-                <details class="mk-pub-faq-item lg-faq-item"{% if forloop.first %} open{% endif %}>
-                    <summary>{{ item.q }}</summary>
-                    <p>{{ item.a }}</p>
+                <details class="lg-pr-faq-item"{% if forloop.first %} open{% endif %}>
+                    <summary>
+                        <span class="lg-pr-faq-q">{{ item.q }}</span>
+                        <span class="lg-pr-faq-icon" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                    </summary>
+                    <div class="lg-pr-faq-a"><p>{{ item.a }}</p></div>
                 </details>
                 {% endfor %}
             </div>
         </div>
     </section>
 
-    {# ── Related + CTA ── #}
-    <section class="lg-related-band">
+    <section class="lg-pr-section lg-pr-section--links" aria-label="صفحات مرتبط">
         <div class="container">
-            <div class="lg-related-grid">
-                <a href="{% url 'education' %}" class="lg-related-card">
-                    <span class="mk-icon mk-icon--md mk-icon--violet"><i class="fas fa-graduation-cap"></i></span>
-                    <span class="lg-related-copy">
+            <div class="lg-pr-related-grid">
+                <a href="{% url 'education' %}" class="lg-pr-related">
+                    <span class="lg-pr-related-icon lg-pr-related-icon--violet" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span>
+                    <span class="lg-pr-related-copy">
                         <strong>مرکز آموزش</strong>
                         <span>مسیرهای یادگیری CRM، ربات و تحلیل بازار</span>
                     </span>
-                    <i class="fas fa-arrow-left lg-related-arrow"></i>
+                    <i class="fas fa-arrow-left lg-pr-related-arrow" aria-hidden="true"></i>
                 </a>
-                <a href="{% url 'android_tutorial' %}" class="lg-related-card">
-                    <span class="mk-icon mk-icon--md mk-icon--emerald"><i class="fab fa-android"></i></span>
-                    <span class="lg-related-copy">
+                <a href="{% url 'android_tutorial' %}" class="lg-pr-related">
+                    <span class="lg-pr-related-icon lg-pr-related-icon--emerald" aria-hidden="true"><i class="fab fa-android"></i></span>
+                    <span class="lg-pr-related-copy">
                         <strong>آموزش اپ اندروید</strong>
-                        <span>نصب، استخراج، CRM و اعلان‌ها — ویدیو و تصویر</span>
+                        <span>نصب، استخراج، CRM و Play Protect</span>
                     </span>
-                    <i class="fas fa-arrow-left lg-related-arrow"></i>
+                    <i class="fas fa-arrow-left lg-pr-related-arrow" aria-hidden="true"></i>
                 </a>
-                <a href="{% if user.is_authenticated %}{% url 'workspace:help' %}{% else %}{% url 'register' %}{% endif %}" class="lg-related-card">
-                    <span class="mk-icon mk-icon--md mk-icon--sky"><i class="fas fa-book-open"></i></span>
-                    <span class="lg-related-copy">
+                <a href="{% if user.is_authenticated %}{% url 'workspace:help' %}{% else %}{% url 'register' %}{% endif %}" class="lg-pr-related">
+                    <span class="lg-pr-related-icon lg-pr-related-icon--sky" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+                    <span class="lg-pr-related-copy">
                         <strong>راهنمای کامل میزکار</strong>
-                        <span>آموزش تصویری تمام بخش‌های CRM و فایلینگ</span>
+                        <span>آموزش تصویری بخش‌های CRM و فایلینگ</span>
                     </span>
-                    <i class="fas fa-arrow-left lg-related-arrow"></i>
+                    <i class="fas fa-arrow-left lg-pr-related-arrow" aria-hidden="true"></i>
                 </a>
             </div>
         </div>
     </section>
 
-    <footer class="mk-pub-cta lg-cta">
-        <div class="container">
+    <footer class="lg-pr-cta">
+        <div class="lg-pr-cta-bg" aria-hidden="true"></div>
+        <div class="container lg-pr-cta-inner">
             <h2>سوال دارید؟</h2>
-            <p>تیم پشتیبانی کنار شماست — تماس بگیرید یا از داشبورد کلید لایسنس را ببینید.</p>
-            <div class="mk-pub-cta-actions">
-                <a href="{% url 'contact' %}" class="btn btn-primary"><i class="fas fa-headset"></i> تماس با پشتیبانی</a>
+            <p>تیم پشتیبانی کنار شماست — تماس بگیرید یا کلید لایسنس را در داشبورد ببینید.</p>
+            <div class="lg-pr-hero-actions lg-pr-hero-actions--center">
+                <a href="{% url 'contact' %}" class="lg-pr-btn lg-pr-btn--primary">
+                    <i class="fas fa-headset" aria-hidden="true"></i>
+                    تماس با پشتیبانی
+                </a>
                 {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}" class="btn btn-secondary"><i class="fas fa-key"></i> داشبورد</a>
+                <a href="{% url 'dashboard' %}" class="lg-pr-btn lg-pr-btn--ghost">
+                    <i class="fas fa-key" aria-hidden="true"></i>
+                    داشبورد
+                </a>
                 {% else %}
-                <a href="{{ bot_buy_url }}" class="btn btn-secondary"><i class="fas fa-shopping-cart"></i> خرید ربات</a>
+                <a href="{{ bot_buy_url }}" class="lg-pr-btn lg-pr-btn--ghost">
+                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                    خرید ربات
+                </a>
                 {% endif %}
             </div>
         </div>

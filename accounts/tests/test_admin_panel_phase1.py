@@ -270,6 +270,8 @@ class AdminPanelPhase1ViewTests(TestCase):
         self.assertContains(resp, 'کاربران قدیمی فعال')
 
     def test_paid_orders_export_http_all_days_param(self):
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         url = reverse('admin_panel_export', args=['paid_orders'])
         resp = self.client.get(url, {'format': 'xlsx', 'days': 'all'})
         self.assertEqual(resp.status_code, 200)

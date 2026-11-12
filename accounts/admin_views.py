@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseNotFound, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -23,6 +24,7 @@ from accounts.services.admin_database_backup import (
 from accounts.services.admin_dashboard import get_command_center_context
 from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
+from accounts.services.admin_export_permissions import can_export_report
 from accounts.services.admin_marketing import (
     AUTOMATION_FLOWS,
     MESSAGE_TEMPLATE_CATALOG,
@@ -185,6 +187,8 @@ class AdminExportView(StaffRequiredMixin, View):
     def get(self, request, export_key):
         if export_key not in EXPORT_REGISTRY:
             return HttpResponseNotFound('گزارش یافت نشد')
+        if not can_export_report(request.user, export_key):
+            raise PermissionDenied('مجوز دریافت این گزارش را ندارید.')
 
         fmt = request.GET.get('format', 'xlsx').lower()
         if fmt not in ('xlsx', 'csv'):
@@ -215,7 +219,10 @@ class AdminExportView(StaffRequiredMixin, View):
             if stage not in valid_stages:
                 stage = None
 
-        return build_export(export_key, fmt=fmt, days=days_int, stage=stage)
+        response = build_export(export_key, fmt=fmt, days=days_int, stage=stage)
+        response['Cache-Control'] = 'private, no-store'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 class AdminSystemSummaryView(StaffRequiredMixin, View):
@@ -784,6 +791,7 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
         compare = self.request.GET.get('compare') == '1'
         focus = (self.request.GET.get('focus') or '').strip() or None
         data = get_sales_center_context(days=days, compare=compare, focus=focus)
+        data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             spark = card.get('sparkline')
             card['sparkline_json'] = json.dumps(spark) if spark else ''
@@ -868,6 +876,7 @@ class AdminUsersCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         data = get_users_center_context(days=days, compare=compare)
+        data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(data)
@@ -887,6 +896,7 @@ class AdminLicensesCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         data = get_licenses_center_context(days=days, compare=compare)
+        data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(data)
@@ -1179,7 +1189,7 @@ class AdminExportsCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         category = self.request.GET.get('category', 'all') or 'all'
-        data = get_exports_center_context(days=days, category=category, compare=compare)
+        data = get_exports_center_context(days=days, category=category, compare=compare, user=self.request.user)
         ctx.update(data)
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key

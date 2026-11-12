@@ -109,6 +109,8 @@ class AdminLicensesCenterViewTests(TestCase):
         self.assertEqual(self.client.get(reverse('admin_panel_licenses')).status_code, 403)
 
     def test_template_render_sidebar_exports(self):
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         self.client.force_login(self.staff)
         for days in ('1', '7', '30', '90'):
             resp = self.client.get(reverse('admin_panel_licenses'), {'days': days})

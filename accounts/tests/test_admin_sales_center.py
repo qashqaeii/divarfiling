@@ -216,6 +216,8 @@ class AdminSalesCenterViewTests(TestCase):
         self.assertIn('compare=1', resp.content.decode())
 
     def test_export_links_intact(self):
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         self.client.login(username='salesstaff', password='pass1234')
         resp = self.client.get(reverse('admin_panel_sales'), {'days': '30'})
         content = resp.content.decode()

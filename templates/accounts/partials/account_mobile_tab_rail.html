@@ -22,6 +22,9 @@
             </div>
         </div>
         <div class="mk-account-mob-top__actions">
+            <button type="button" class="mk-account-mob-menu-btn" data-account-sidebar-open aria-label="نمایش همه بخش‌های حساب" aria-controls="accountSidebar" aria-expanded="false">
+                <i class="fas fa-ellipsis" aria-hidden="true"></i>
+            </button>
             <a href="{% url 'workspace:home' %}" class="mk-account-mob-cta-pill" title="میزکار" aria-label="ورود به میزکار">
                 <i class="fas fa-layer-group" aria-hidden="true"></i>
                 <span>میزکار</span>
@@ -37,39 +40,39 @@
     <nav class="mk-account-tab-rail" aria-label="بخش‌های حساب">
         <div class="mk-account-tab-rail__track" data-account-tab-track>
             <a href="{{ dashboard_tab_urls.overview }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'overview' %} is-active{% endif %}">
+               class="mk-account-tab-rail__item{% if active_tab == 'overview' %} is-active{% endif %}"{% if active_tab == 'overview' %} aria-current="page"{% endif %}>
                 <i class="fas fa-grip" aria-hidden="true"></i>
                 <span>نمای کلی</span>
             </a>
             <a href="{{ dashboard_tab_urls.orders }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'orders' %} is-active{% endif %}">
+               class="mk-account-tab-rail__item{% if active_tab == 'orders' %} is-active{% endif %}"{% if active_tab == 'orders' %} aria-current="page"{% endif %}>
                 <i class="fas fa-shopping-bag" aria-hidden="true"></i>
                 <span>سفارش‌ها</span>
             </a>
             <a href="{{ dashboard_tab_urls.licenses }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'licenses' %} is-active{% endif %}">
+               class="mk-account-tab-rail__item{% if active_tab == 'licenses' %} is-active{% endif %}"{% if active_tab == 'licenses' %} aria-current="page"{% endif %}>
                 <i class="fas fa-key" aria-hidden="true"></i>
                 <span>لایسنس‌ها</span>
             </a>
             <a href="{{ dashboard_tab_urls.downloads }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'downloads' %} is-active{% endif %}">
+               class="mk-account-tab-rail__item{% if active_tab == 'downloads' %} is-active{% endif %}"{% if active_tab == 'downloads' %} aria-current="page"{% endif %}>
                 <i class="fas fa-download" aria-hidden="true"></i>
                 <span>دانلود</span>
             </a>
             <a href="{{ dashboard_tab_urls.transactions }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'transactions' %} is-active{% endif %}">
+               class="mk-account-tab-rail__item{% if active_tab == 'transactions' %} is-active{% endif %}"{% if active_tab == 'transactions' %} aria-current="page"{% endif %}>
                 <i class="fas fa-right-left" aria-hidden="true"></i>
                 <span>تراکنش‌ها</span>
             </a>
             {% if has_paid_orders %}
             <a href="{{ dashboard_tab_urls.affiliate }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'affiliate' %} is-active{% endif %}">
+               class="mk-account-tab-rail__item{% if active_tab == 'affiliate' %} is-active{% endif %}"{% if active_tab == 'affiliate' %} aria-current="page"{% endif %}>
                 <i class="fas fa-handshake" aria-hidden="true"></i>
                 <span>همکاری</span>
             </a>
             {% endif %}
             <a href="{{ dashboard_tab_urls.profile }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'profile' %} is-active{% endif %}">
+               class="mk-account-tab-rail__item{% if active_tab == 'profile' %} is-active{% endif %}"{% if active_tab == 'profile' %} aria-current="page"{% endif %}>
                 <i class="fas fa-user-pen" aria-hidden="true"></i>
                 <span>پروفایل</span>
             </a>

@@ -4,7 +4,7 @@
 
 <div id="tab-transactions" class="mk-acc-tab-panel mk-acc-tab-shell mk-transactions-tab ov2 tab-content dash-tab-panel"{% if active_tab != 'transactions' %} hidden{% endif %}>
     <div class="mk-acc-tab-body">
-        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='تراکنش‌ها' ov2_title='تراکنش‌های مالی حساب' ov2_lead='پیگیری پرداخت‌های آنلاین، کدهای پیگیری و وضعیت هر تراکنش.' ov2_primary_href=dashboard_tab_urls.orders ov2_primary_label='سفارش‌ها' ov2_ghost_href=dashboard_tab_urls.licenses ov2_ghost_label='لایسنس‌ها' %}
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_show_quick='0' ov2_label='تراکنش‌ها' ov2_title='تراکنش‌های مالی حساب' ov2_lead='پیگیری پرداخت‌های آنلاین، کدهای پیگیری و وضعیت هر تراکنش.' ov2_primary_href=dashboard_tab_urls.orders ov2_primary_label='سفارش‌ها' ov2_ghost_href=dashboard_tab_urls.licenses ov2_ghost_label='لایسنس‌ها' %}
 
     {% if transactions %}
         <section class="ov2-kpi" aria-label="خلاصه تراکنش‌ها">
@@ -42,49 +42,48 @@
             </div>
         </section>
 
-        <section class="ov2-panel ov2-panel--tab" lang="fa" dir="rtl" aria-labelledby="acc-txn-list-title">
-            <header class="ov2-panel__header">
+        <section class="ov2-panel ov2-panel--tab ov2-panel--transactions ov2-panel--transactions-premium" lang="fa" dir="rtl" aria-labelledby="acc-txn-list-title">
+            <header class="ov2-panel__header ov2-panel__header--compact">
                 <div class="ov2-panel__heading">
-                    <span class="ov2-panel__icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+                    <span class="ov2-panel__icon ov2-panel__icon--transactions" aria-hidden="true"><i class="fas fa-receipt"></i></span>
                     <div class="ov2-panel__titles">
                         <h2 id="acc-txn-list-title" class="ov2-panel__title">فهرست تراکنش‌ها</h2>
                         <p class="ov2-panel__subtitle">جزئیات پرداخت و کد پیگیری</p>
                     </div>
                 </div>
             </header>
-    <div class="mk-acc-card-list ov2-panel__content" role="list">
-        {% for transaction in transactions %}
-        <article class="mk-txn-card" role="listitem">
-            <div class="mk-txn-card__head">
-                <div class="mk-txn-card__track-wrap">
-                    <span class="mk-txn-card__track-label">کد پیگیری</span>
-                    <code class="mk-txn-card__track" dir="ltr">{{ transaction.zibal_track_id }}</code>
-                </div>
-                <span class="mk-orders-status mk-orders-status--{{ transaction.status|transaction_status_tone }}">
-                    {{ transaction.status|transaction_status_fa }}
-                </span>
+            <div class="ov2-txn-list ov2-panel__content" role="list">
+                {% for transaction in transactions %}
+                <article class="ov2-txn" role="listitem">
+                    <div class="ov2-txn__main">
+                        <h3 class="ov2-txn__product">{{ transaction.order|account_order_product_line }}</h3>
+                        {% if transaction.order.plan %}
+                        <p class="ov2-txn__plan">{{ transaction.order.plan|account_plan_label }}</p>
+                        {% endif %}
+                        <div class="ov2-txn__ids">
+                            <span class="ov2-txn__id">
+                                <span class="ov2-txn__id-k">پیگیری</span>
+                                <code dir="ltr">{{ transaction.zibal_track_id }}</code>
+                            </span>
+                            {% if transaction.zibal_ref_number %}
+                            <span class="ov2-txn__id ov2-txn__id--ref">
+                                <span class="ov2-txn__id-k">مرجع</span>
+                                <code dir="ltr">{{ transaction.zibal_ref_number }}</code>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="ov2-txn__side">
+                        <span class="mk-orders-status mk-orders-status--{{ transaction.status|transaction_status_tone }}">{{ transaction.status|transaction_status_fa }}</span>
+                        <span class="ov2-txn__amount ov2-fa-num">{{ transaction.amount|currency|to_persian_digits }} <small>تومان</small></span>
+                        <time class="ov2-txn__when ov2-fa-num" datetime="{{ transaction.created_at|date:'c' }}">{{ transaction.created_at|to_jalali_fa:"%Y/%m/%d" }} · {{ transaction.created_at|to_jalali_fa:"%H:%M" }}</time>
+                    </div>
+                </article>
+                {% endfor %}
             </div>
-            <div class="mk-txn-card__body">
-                <h3 class="mk-txn-card__product">{{ transaction.order|account_order_product_line }}</h3>
-                {% if transaction.order.plan %}
-                <p class="mk-txn-card__plan">{{ transaction.order.plan|account_plan_label }}</p>
-                {% endif %}
-            </div>
-            <div class="mk-txn-card__foot">
-                <span class="mk-txn-card__amount">{{ transaction.amount|currency|to_persian_digits }} <small>تومان</small></span>
-                <time class="mk-txn-card__date">{{ transaction.created_at|to_jalali_fa:"%Y/%m/%d" }} · {{ transaction.created_at|to_jalali_fa:"%H:%M" }}</time>
-            </div>
-            {% if transaction.zibal_ref_number %}
-            <div class="mk-txn-card__meta">
-                <span><i class="fas fa-receipt" aria-hidden="true"></i> مرجع: <code dir="ltr">{{ transaction.zibal_ref_number }}</code></span>
-            </div>
-            {% endif %}
-        </article>
-        {% endfor %}
-    </div>
         </section>
     {% else %}
-        <section class="ov2-panel ov2-panel--tab" lang="fa" dir="rtl">
+        <section class="ov2-panel ov2-panel--tab ov2-panel--transactions ov2-panel--transactions-premium" lang="fa" dir="rtl">
             <div class="ov2-empty ov2-empty--panel">
                 <p>تراکنشی برای حساب شما ثبت نشده است.</p>
                 <a href="{{ dashboard_tab_urls.orders }}">رفتن به سفارش‌ها</a>

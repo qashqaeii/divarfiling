@@ -7,19 +7,59 @@ body.mk-account-dashboard .ov2 {
     --ov2-accent: var(--acc-purple, #5b4fcf);
     --ov2-surface: var(--acc-card-bg, #fff);
     --ov2-stroke: var(--acc-card-border, #e8ebf3);
-    --ov2-radius: 20px;
-    --ov2-elevation: 0 14px 42px -34px rgba(30, 30, 76, .3);
+    --ov2-radius: 14px;
+    --ov2-elevation: none;
     min-width: 0;
     gap: 0;
 }
 body.mk-account-dashboard .ov2 .mk-acc-tab-body {
     display: flex;
     flex-direction: column;
-    gap: 1.45rem;
+    gap: 1.1rem;
     min-width: 0;
     padding: 0;
 }
 body.mk-account-dashboard .ov2 a { -webkit-tap-highlight-color: transparent; }
+
+/* Persian copy & numerals — intro + panels */
+body.mk-account-dashboard .ov2-intro[lang="fa"],
+body.mk-account-dashboard .ov2-panel[lang="fa"] {
+    text-align: start;
+}
+body.mk-account-dashboard .ov2-intro__label,
+body.mk-account-dashboard .ov2-intro__cta,
+body.mk-account-dashboard .ov2-intro__lead,
+body.mk-account-dashboard .ov2-quick a,
+body.mk-account-dashboard .ov2-panel__title,
+body.mk-account-dashboard .ov2-panel__subtitle,
+body.mk-account-dashboard .ov2-panel__link--cta,
+body.mk-account-dashboard .ov2-license__state,
+body.mk-account-dashboard .ov2-license__meta-label,
+body.mk-account-dashboard .ov2-order__meta-label {
+    letter-spacing: 0;
+}
+body.mk-account-dashboard .ov2-fa-num {
+    font-variant-numeric: tabular-nums;
+    unicode-bidi: plaintext;
+}
+body.mk-account-dashboard .ov2-intro__lead {
+    margin: .22rem 0 0;
+    max-width: 42ch;
+    color: #7a8398;
+    font-size: .69rem;
+    font-weight: 550;
+    line-height: 1.7;
+}
+body.mk-account-dashboard .ov2-license__meta-label,
+body.mk-account-dashboard .ov2-order__meta-label {
+    color: #939cad;
+    font-weight: 650;
+    margin-inline-end: .15rem;
+}
+body.mk-account-dashboard .ov2-order__sep {
+    margin-inline: .12rem .22rem;
+    color: #b4bccb;
+}
 body.mk-account-dashboard .ov2 a:focus-visible,
 body.mk-account-dashboard .ov2 button:focus-visible,
 body.mk-account-dashboard .ov2 input:focus-visible {
@@ -38,685 +78,1085 @@ body.mk-account-dashboard .ov2 .ov2-sr-only {
     border: 0;
 }
 
-/* One deliberate focal surface, balanced by restrained utility cards. */
-body.mk-account-dashboard .ov2-hero {
+@keyframes ov2-intro-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ov2-intro-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ov2-meta-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(61, 184, 138, .35); }
+    55% { box-shadow: 0 0 0 5px rgba(61, 184, 138, 0); }
+}
+@keyframes ov2-kpi-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ov2-kpi-icon-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+
+/* Overview header — framed premium block, desktop + mobile. */
+body.mk-account-dashboard .ov2-intro {
+    margin: 0 0 .1rem;
+    padding: 0;
+    border: 0;
+}
+body.mk-account-dashboard .ov2-intro__frame {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(195px, .35fr);
-    align-items: stretch;
-    gap: clamp(1rem, 2.8vw, 2.6rem);
-    padding: clamp(1.45rem, 3vw, 2.55rem);
-    min-height: 240px;
-    border: 1px solid rgba(218, 212, 255, .18);
-    border-radius: 26px;
-    background: linear-gradient(115deg, #262044 0%, #353071 45%, #5148aa 100%);
-    color: #fff;
-    box-shadow: 0 22px 48px -35px rgba(52, 43, 132, .58);
-}
-body.mk-account-dashboard .ov2-hero::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    width: 460px;
-    height: 460px;
-    border-radius: 50%;
-    inset-inline-end: -210px;
-    inset-block-start: -250px;
-    background: radial-gradient(circle, rgba(192, 178, 255, .31), rgba(130, 119, 240, .08) 49%, transparent 70%);
-    pointer-events: none;
-}
-body.mk-account-dashboard .ov2-hero::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset-inline-start: -7%;
-    bottom: -170px;
-    width: 470px;
-    height: 260px;
-    transform: rotate(-22deg);
-    border: 1px solid rgba(255,255,255,.13);
-    border-radius: 55%;
-    box-shadow: 0 0 0 38px rgba(255,255,255,.023), 0 0 0 81px rgba(255,255,255,.018);
-    pointer-events: none;
-}
-body.mk-account-dashboard .ov2-hero__copy {
-    position: relative;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-}
-body.mk-account-dashboard .ov2-hero__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    margin: 0 0 .8rem;
-    color: #c8c4ff;
-    font-size: .71rem;
-    font-weight: 750;
-    letter-spacing: .01em;
-}
-body.mk-account-dashboard .ov2-hero__eyebrow::before {
-    content: '';
-    width: .45rem;
-    height: .45rem;
-    background: #c0b9ff;
-    border-radius: 50%;
-}
-body.mk-account-dashboard .ov2-hero__title {
-    margin: 0;
-    max-width: 55rem;
-    font-size: clamp(1.45rem, 2.65vw, 2.08rem);
-    font-weight: 850;
-    line-height: 1.45;
-    color: #fff;
-    letter-spacing: -.025em;
-    overflow-wrap: anywhere;
-}
-body.mk-account-dashboard .ov2-hero__text {
-    margin: .47rem 0 1.45rem;
-    color: #d7d4ee;
-    line-height: 1.85;
-    font-size: clamp(.78rem, .9vw, .86rem);
-}
-body.mk-account-dashboard .ov2-hero__actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: .65rem;
-}
-body.mk-account-dashboard .ov2-action {
-    min-height: 2.7rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: .55rem;
-    padding: .56rem 1rem;
-    border-radius: 12px;
-    text-decoration: none;
-    font-size: .77rem;
-    font-weight: 800;
-    line-height: 1.5;
-    transition: transform .17s, background-color .17s, border-color .17s;
-}
-body.mk-account-dashboard .ov2-action:hover { transform: translateY(-1px); }
-body.mk-account-dashboard .ov2-action--primary {
-    color: #353071;
-    background: #fff;
-    border: 1px solid #fff;
-}
-body.mk-account-dashboard .ov2-action--primary:hover { color: #5148aa; background: #f5f3ff; }
-body.mk-account-dashboard .ov2-action--ghost {
-    color: #fff;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.26);
-}
-body.mk-account-dashboard .ov2-action--ghost:hover { background: rgba(255,255,255,.16); color: #fff; }
-body.mk-account-dashboard .ov2-hero__aside {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: .48rem;
-    padding: 1.12rem 1.3rem;
-    border: 1px solid rgba(255,255,255,.18);
-    border-radius: 21px;
-    background: rgba(255,255,255,.07);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    color: #fff;
-}
-body.mk-account-dashboard .ov2-hero__aside-label {
-    font-size: .71rem;
-    color: #d5d0ff;
-    font-weight: 700;
-}
-body.mk-account-dashboard .ov2-hero__state {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    font-size: .68rem;
-    font-weight: 750;
-    color: #b6ffe0;
-}
-body.mk-account-dashboard .ov2-hero__state::before {
-    content: '';
-    flex: 0 0 auto;
-    width: .42rem;
-    height: .42rem;
-    border-radius: 50%;
-    background: #54deaa;
-}
-body.mk-account-dashboard .ov2-hero__state--inactive { color: #ffe3b0; }
-body.mk-account-dashboard .ov2-hero__state--inactive::before { background: #ffc978; }
-body.mk-account-dashboard .ov2-hero__count {
-    margin: .14rem 0 0;
-    font-size: clamp(2.7rem, 5vw, 3.9rem);
-    font-weight: 850;
-    line-height: 1.1;
-    font-variant-numeric: tabular-nums;
-    color: #fff;
-}
-body.mk-account-dashboard .ov2-hero__count-label { color: #e5e1ff; font-size: .75rem; }
-body.mk-account-dashboard .ov2-hero__aside-link {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    margin-top: .45rem;
-    padding: .3rem 0;
-    color: #fff;
-    text-decoration: none;
-    font-size: .71rem;
-    font-weight: 750;
-    border-bottom: 1px solid rgba(255,255,255,.32);
-}
-body.mk-account-dashboard .ov2-hero__aside-link:hover { color: #dcd6ff; }
-
-/* Linked, glanceable facts: labels remain legible at all widths. */
-body.mk-account-dashboard .ov2-metrics {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: .78rem;
-}
-body.mk-account-dashboard .ov2-metric {
-    display: grid;
-    align-content: start;
-    gap: .4rem;
-    min-width: 0;
-    padding: 1.02rem 1.12rem 1.05rem;
+    border: 1px solid rgba(26, 32, 53, .07);
     border-radius: 18px;
-    border: 1px solid var(--ov2-stroke);
-    background: var(--ov2-surface);
-    box-shadow: var(--ov2-elevation);
-    text-decoration: none;
-    color: var(--ov2-ink);
-    transition: transform .18s, border-color .18s, box-shadow .18s;
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, .98) 0%, rgba(250, 251, 255, .98) 48%, rgba(245, 247, 252, .98) 100%);
+    box-shadow:
+        0 1px 2px rgba(20, 24, 44, .04),
+        0 1px 0 rgba(255, 255, 255, .95) inset,
+        0 28px 56px -44px rgba(36, 42, 78, .22);
+    animation: ov2-intro-rise .55s cubic-bezier(.22, 1, .36, 1) both;
 }
-body.mk-account-dashboard .ov2-metric:hover {
-    transform: translateY(-2px);
-    border-color: rgba(91,79,207,.23);
-    box-shadow: 0 17px 38px -29px rgba(57,49,140,.28);
+body.mk-account-dashboard .ov2-intro__frame::before {
+    content: '';
+    position: absolute;
+    inset-inline: 8%;
+    top: 0;
+    height: 2px;
+    border-radius: 0 0 4px 4px;
+    background: linear-gradient(90deg, transparent, rgba(91, 79, 207, .5) 45%, rgba(123, 108, 230, .35) 55%, transparent);
+    pointer-events: none;
 }
-body.mk-account-dashboard .ov2-metric__top {
+body.mk-account-dashboard .ov2-intro__frame::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 280px;
+    height: 280px;
+    inset-inline-end: -95px;
+    inset-block-start: -150px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(91, 79, 207, .07) 0%, transparent 70%);
+    pointer-events: none;
+}
+body.mk-account-dashboard .ov2-intro__body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: .5rem;
+    gap: 1.35rem;
+    flex-wrap: wrap;
+    padding: clamp(1.05rem, 2.1vw, 1.28rem) clamp(1.05rem, 2.3vw, 1.28rem) clamp(.9rem, 1.8vw, 1.05rem);
+    animation: ov2-intro-fade-in .5s cubic-bezier(.22, 1, .36, 1) .06s both;
+}
+body.mk-account-dashboard .ov2-intro__main {
+    min-width: 0;
+    display: grid;
+    gap: .28rem;
+}
+body.mk-account-dashboard .ov2-intro__label {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: .18rem .5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(91, 79, 207, .12);
+    background: rgba(91, 79, 207, .05);
+    color: #6f5fd4;
+    font-size: .62rem;
+    font-weight: 700;
+    line-height: 1.45;
+    letter-spacing: 0;
+}
+body.mk-account-dashboard .ov2-intro__title {
+    margin: .12rem 0 0;
+    color: var(--ov2-ink);
+    font-size: clamp(1.1rem, 1.65vw, 1.36rem);
+    font-weight: 700;
+    line-height: 1.32;
+    letter-spacing: -.02em;
+}
+body.mk-account-dashboard .ov2-intro__greet {
+    font-weight: 600;
+    color: #7c859a;
+    margin-inline-end: .22rem;
+}
+body.mk-account-dashboard .ov2-intro__name {
+    font-weight: 820;
+    color: #1a2035;
+}
+body.mk-account-dashboard .ov2-intro__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .45rem .55rem;
+    margin: .2rem 0 0;
+    color: var(--ov2-muted);
+    font-size: .7rem;
+    line-height: 1.45;
+    font-weight: 500;
+}
+body.mk-account-dashboard .ov2-intro__meta-link {
+    color: var(--ov2-accent);
+    font-weight: 650;
+    text-decoration: none;
+    font-size: .68rem;
+    transition: color .18s ease;
+}
+body.mk-account-dashboard .ov2-intro__meta-link:hover { color: #4f44bc; text-decoration: underline; }
+body.mk-account-dashboard .ov2-intro__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .38rem;
+    padding: .26rem .58rem;
+    border-radius: 999px;
+    font-size: .67rem;
+    font-weight: 650;
+    line-height: 1.3;
+    border: 1px solid transparent;
+}
+body.mk-account-dashboard .ov2-intro__chip--ok {
+    color: #2f6b52;
+    border-color: rgba(61, 184, 138, .22);
+    background: rgba(61, 184, 138, .09);
+}
+body.mk-account-dashboard .ov2-intro__chip--muted {
+    color: #6f778c;
+    border-color: rgba(26, 32, 53, .08);
+    background: rgba(26, 32, 53, .04);
+}
+body.mk-account-dashboard .ov2-intro__meta-dot {
+    width: .36rem;
+    height: .36rem;
+    border-radius: 50%;
+    background: #3db88a;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(61, 184, 138, .14);
+    animation: ov2-meta-pulse 3.2s ease-in-out infinite;
+}
+body.mk-account-dashboard .ov2-intro__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .45rem;
+    flex-shrink: 0;
+    padding: .38rem;
+    border-radius: 13px;
+    border: 1px solid rgba(26, 32, 53, .06);
+    background: rgba(255, 255, 255, .62);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .85) inset;
+    animation: ov2-intro-fade-in .5s cubic-bezier(.22, 1, .36, 1) .12s both;
+}
+body.mk-account-dashboard .ov2-intro__cta {
+    min-height: 2.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .42rem .88rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-size: .71rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+    transition:
+        background-color .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s cubic-bezier(.22, 1, .36, 1),
+        box-shadow .2s ease;
+}
+body.mk-account-dashboard .ov2-intro__cta i {
+    font-size: .58rem;
+    opacity: .88;
+    transition: transform .2s cubic-bezier(.22, 1, .36, 1);
+}
+body.mk-account-dashboard .ov2-intro__cta--primary {
+    border-color: rgba(78, 68, 188, .35);
+    background: linear-gradient(180deg, #5f53d3 0%, #5146c4 52%, #4a3fb8 100%);
+    color: #fff;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, .18) inset,
+        0 12px 24px -14px rgba(76, 64, 188, .62);
+}
+body.mk-account-dashboard .ov2-intro__cta--primary:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, #5a4fce 0%, #4f44bc 100%);
+    border-color: #4f44bc;
+    color: #fff;
+    box-shadow: 0 14px 26px -12px rgba(76, 64, 188, .55);
+}
+body.mk-account-dashboard .ov2-intro__cta--primary:hover i { transform: translateX(-2px); }
+body.mk-account-dashboard .ov2-intro__cta--primary:active { transform: translateY(0) scale(.98); }
+body.mk-account-dashboard .ov2-intro__cta--ghost {
+    padding-inline: .65rem;
+    border-color: rgba(26, 32, 53, .08);
+    background: rgba(255, 255, 255, .72);
+    color: var(--ov2-muted);
+    font-weight: 650;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+body.mk-account-dashboard .ov2-intro__cta--ghost:hover {
+    color: var(--ov2-accent);
+    border-color: rgba(91, 79, 207, .18);
+    background: #fff;
+    transform: translateY(-1px);
+}
+body.mk-account-dashboard .ov2-intro__nav.ov2-quick {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .38rem;
+    margin: 0;
+    padding: .62rem clamp(1.05rem, 2.3vw, 1.28rem) .72rem;
+    border-top: 1px solid rgba(232, 235, 243, .9);
+    background: linear-gradient(180deg, rgba(255, 255, 255, .5) 0%, rgba(248, 249, 253, .65) 100%);
+    font-size: .68rem;
+    animation: ov2-intro-fade-in .5s cubic-bezier(.22, 1, .36, 1) .18s both;
+}
+body.mk-account-dashboard .ov2-quick a {
+    color: #6d778d;
+    text-decoration: none;
+    font-weight: 650;
+    padding: .34rem .62rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, .55);
+    transition:
+        color .18s ease,
+        background-color .18s ease,
+        border-color .18s ease,
+        transform .18s cubic-bezier(.22, 1, .36, 1);
+}
+body.mk-account-dashboard .ov2-quick a:hover {
+    color: var(--ov2-accent);
+    border-color: rgba(91, 79, 207, .14);
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+/* KPI — premium framed cards with icons and soft motion. */
+body.mk-account-dashboard .ov2-intro + .ov2-kpi {
+    margin-top: .72rem;
+}
+body.mk-account-dashboard .ov2-kpi {
+    min-width: 0;
+    margin: 0;
+}
+body.mk-account-dashboard .ov2-kpi__frame {
+    position: relative;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+body.mk-account-dashboard .ov2-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(.6rem, 1.4vw, .85rem);
+}
+body.mk-account-dashboard .ov2-metric {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: .95rem;
+    min-width: 0;
+    min-height: 6.35rem;
+    padding: .95rem 1rem 1.02rem;
+    border: 1px solid rgba(26, 32, 53, .07);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow:
+        0 1px 2px rgba(20, 24, 44, .03),
+        0 14px 30px -26px rgba(36, 42, 78, .2);
+    text-decoration: none;
+    color: var(--ov2-ink);
+    overflow: hidden;
+    transition:
+        transform .24s cubic-bezier(.22, 1, .36, 1),
+        border-color .24s ease,
+        box-shadow .24s ease;
+    animation: ov2-kpi-in .52s cubic-bezier(.22, 1, .36, 1) both;
+}
+body.mk-account-dashboard .ov2-metric::before {
+    content: '';
+    position: absolute;
+    inset-inline: 14%;
+    top: 0;
+    height: 2px;
+    border-radius: 0 0 3px 3px;
+    background: linear-gradient(90deg, transparent, rgba(91, 79, 207, .55), transparent);
+    opacity: .75;
+    pointer-events: none;
+}
+body.mk-account-dashboard .ov2-metric:nth-child(1) { animation-delay: .22s; }
+body.mk-account-dashboard .ov2-metric:nth-child(2) { animation-delay: .29s; }
+body.mk-account-dashboard .ov2-metric:nth-child(3) { animation-delay: .36s; }
+body.mk-account-dashboard .ov2-metric:nth-child(4) { animation-delay: .43s; }
+body.mk-account-dashboard .ov2-metric:hover {
+    transform: translateY(-3px);
+    border-color: rgba(91, 79, 207, .18);
+    box-shadow:
+        0 2px 6px rgba(20, 24, 44, .04),
+        0 20px 38px -24px rgba(56, 50, 120, .24);
+}
+body.mk-account-dashboard .ov2-metric__head {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 body.mk-account-dashboard .ov2-metric__icon {
     display: inline-grid;
     place-items: center;
-    width: 2.2rem;
-    height: 2.2rem;
-    border-radius: 11px;
-    background: rgba(91,79,207,.095);
-    color: var(--ov2-accent);
-    font-size: .92rem;
+    width: 2.05rem;
+    height: 2.05rem;
+    border-radius: 10px;
+    border: 1px solid rgba(26, 32, 53, .07);
+    background: rgba(255, 255, 255, .75);
+    color: #6b62c8;
+    font-size: .78rem;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset;
+    transition: color .22s ease, transform .22s cubic-bezier(.22, 1, .36, 1), border-color .22s ease;
+    animation: ov2-kpi-icon-float 4.8s ease-in-out infinite;
 }
-body.mk-account-dashboard .ov2-metric__arrow { color: #abb1c3; font-size: .68rem; }
+body.mk-account-dashboard .ov2-metric:nth-child(2) .ov2-metric__icon { animation-delay: .45s; }
+body.mk-account-dashboard .ov2-metric:nth-child(3) .ov2-metric__icon { animation-delay: .9s; }
+body.mk-account-dashboard .ov2-metric:nth-child(4) .ov2-metric__icon { animation-delay: 1.35s; }
+body.mk-account-dashboard .ov2-metric:hover .ov2-metric__icon {
+    animation: none;
+    transform: translateY(-2px) scale(1.03);
+    border-color: rgba(91, 79, 207, .16);
+}
+body.mk-account-dashboard .ov2-metric--licenses .ov2-metric__icon { color: #6559c8; }
+body.mk-account-dashboard .ov2-metric--licenses::before {
+    background: linear-gradient(90deg, transparent, rgba(101, 89, 200, .58), transparent);
+}
+body.mk-account-dashboard .ov2-metric--success .ov2-metric__icon { color: #3d9b74; }
+body.mk-account-dashboard .ov2-metric--success::before {
+    background: linear-gradient(90deg, transparent, rgba(61, 155, 116, .55), transparent);
+}
+body.mk-account-dashboard .ov2-metric--pending .ov2-metric__icon { color: #8f98ad; }
+body.mk-account-dashboard .ov2-metric--pending.is-alert {
+    border-color: rgba(196, 146, 67, .22);
+}
+body.mk-account-dashboard .ov2-metric--pending.is-alert .ov2-metric__icon {
+    color: #c49243;
+    border-color: rgba(196, 146, 67, .18);
+}
+body.mk-account-dashboard .ov2-metric--pending.is-alert::before {
+    background: linear-gradient(90deg, transparent, rgba(196, 146, 67, .58), transparent);
+}
+body.mk-account-dashboard .ov2-metric--money .ov2-metric__icon { color: #6673cb; }
+body.mk-account-dashboard .ov2-metric--money::before {
+    background: linear-gradient(90deg, transparent, rgba(102, 115, 203, .55), transparent);
+}
+body.mk-account-dashboard .ov2-metric__copy {
+    min-width: 0;
+    display: grid;
+    gap: .32rem;
+}
+body.mk-account-dashboard .ov2-metric__label {
+    display: block;
+    color: #8b93a8;
+    font-size: .64rem;
+    font-weight: 650;
+    line-height: 1.35;
+    letter-spacing: .02em;
+    transition: color .2s ease;
+}
 body.mk-account-dashboard .ov2-metric__value {
     display: block;
-    margin-top: .2rem;
+    margin: 0;
     color: var(--ov2-ink);
-    font-size: clamp(1.4rem, 2.15vw, 1.83rem);
-    font-weight: 850;
-    line-height: 1.32;
+    font-size: clamp(1.24rem, 1.8vw, 1.52rem);
+    font-weight: 780;
+    line-height: 1.1;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -.022em;
     overflow-wrap: anywhere;
+    transition: color .22s ease;
 }
-body.mk-account-dashboard .ov2-metric__value--money { font-size: clamp(1.1rem, 1.9vw, 1.65rem); }
-body.mk-account-dashboard .ov2-metric__label { color: var(--ov2-muted); font-size: .75rem; font-weight: 700; }
-body.mk-account-dashboard .ov2-metric__note {
-    color: #939baf;
-    font-size: .66rem;
-    line-height: 1.55;
+body.mk-account-dashboard .ov2-metric:hover .ov2-metric__label { color: #717b92; }
+body.mk-account-dashboard .ov2-metric:hover .ov2-metric__value { color: #22293f; }
+body.mk-account-dashboard .ov2-metric__value--money {
+    font-size: clamp(1.03rem, 1.55vw, 1.28rem);
 }
-body.mk-account-dashboard .ov2-metric--warning .ov2-metric__icon {
-    background: rgba(220,145,39,.11);
-    color: #b37624;
-}
-body.mk-account-dashboard .ov2-metric--success .ov2-metric__icon {
-    background: rgba(31,158,116,.095);
-    color: #138663;
-}
+body.mk-account-dashboard .ov2-metric--pending.is-alert .ov2-metric__value { color: #b37624; }
+body.mk-account-dashboard .ov2-metric--pending.is-alert:hover .ov2-metric__value { color: #9f6620; }
 
-/* Pending state — meaningful without an alarming full-width banner. */
+/* Pending orders — one-line notice. */
 body.mk-account-dashboard .ov2-attention {
     display: flex;
     align-items: center;
-    gap: .76rem;
-    padding: .87rem 1.1rem;
-    border: 1px solid rgba(209,152,67,.24);
-    border-radius: 15px;
-    background: #fff9ef;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .62rem .85rem;
+    border: 1px solid rgba(209, 152, 67, .22);
+    border-radius: 11px;
+    background: #fffbf5;
     text-decoration: none;
-    color: #72501d;
-    font-size: .77rem;
-    font-weight: 650;
-    line-height: 1.8;
+    color: #6d5528;
+    font-size: .72rem;
+    line-height: 1.45;
 }
-body.mk-account-dashboard .ov2-attention__icon {
-    display: inline-grid;
-    flex: 0 0 auto;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 10px;
-    background: #f9e9c8;
-    color: #92601a;
-}
-body.mk-account-dashboard .ov2-attention__text { min-width: 0; flex: 1; }
+body.mk-account-dashboard .ov2-attention__text { min-width: 0; flex: 1; font-weight: 550; }
+body.mk-account-dashboard .ov2-attention__text strong { font-weight: 780; }
 body.mk-account-dashboard .ov2-attention__link {
     display: inline-flex;
     align-items: center;
-    gap: .32rem;
+    gap: .28rem;
     white-space: nowrap;
-    font-weight: 800;
+    font-weight: 700;
     color: #8e5a14;
+    font-size: .68rem;
 }
 
-/* Reusable section heading. */
 body.mk-account-dashboard .ov2-section { min-width: 0; }
-body.mk-account-dashboard .ov2-section__header {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: .8rem;
-    margin-bottom: .75rem;
-}
-body.mk-account-dashboard .ov2-section__header h2,
-body.mk-account-dashboard .ov2-panel__heading h2 {
-    margin: 0;
-    color: var(--ov2-ink);
-    font-size: 1.03rem;
-    font-weight: 850;
-    line-height: 1.55;
-}
-body.mk-account-dashboard .ov2-section__header p,
-body.mk-account-dashboard .ov2-panel__heading p {
-    margin: .16rem 0 0;
-    color: var(--ov2-muted);
-    font-size: .73rem;
-    line-height: 1.7;
-}
-body.mk-account-dashboard .ov2-section__header .ov2-section__link,
-body.mk-account-dashboard .ov2-panel__link {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    flex: 0 0 auto;
-    padding: .35rem .25rem;
-    text-decoration: none;
-    color: var(--ov2-accent);
-    font-weight: 800;
-    font-size: .75rem;
-}
-body.mk-account-dashboard .ov2-section__header .ov2-section__link:hover,
-body.mk-account-dashboard .ov2-panel__link:hover { text-decoration: underline; }
 
-body.mk-account-dashboard .ov2-shortcuts {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: .7rem;
-}
-body.mk-account-dashboard .ov2-shortcut {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    min-width: 0;
-    min-height: 4.65rem;
-    padding: .8rem;
-    border: 1px solid var(--ov2-stroke);
-    border-radius: 16px;
-    background: var(--ov2-surface);
-    color: var(--ov2-ink);
-    text-decoration: none;
-    transition: border-color .17s, transform .17s, background .17s;
-}
-body.mk-account-dashboard .ov2-shortcut:hover {
-    transform: translateY(-1px);
-    border-color: rgba(91,79,207,.24);
-    background: var(--acc-surface-muted, #f8f9fc);
-}
-body.mk-account-dashboard .ov2-shortcut__icon {
-    display: inline-grid;
-    place-items: center;
-    width: 2.65rem;
-    height: 2.65rem;
-    flex: 0 0 auto;
-    border-radius: 13px;
-    color: var(--ov2-accent);
-    background: var(--acc-purple-soft, rgba(91,79,207,.08));
-    font-size: 1rem;
-}
-body.mk-account-dashboard .ov2-shortcut__copy { display: grid; gap: .17rem; min-width: 0; }
-body.mk-account-dashboard .ov2-shortcut__title {
-    color: var(--ov2-ink);
-    font-size: .78rem;
-    font-weight: 850;
-    line-height: 1.5;
-}
-body.mk-account-dashboard .ov2-shortcut__desc {
-    color: var(--ov2-muted);
-    font-size: .66rem;
-    line-height: 1.55;
-}
-body.mk-account-dashboard .ov2-shortcut__chevron {
-    margin-inline-start: auto;
-    font-size: .61rem;
-    color: #a8afc2;
-}
-body.mk-account-dashboard .ov2-shortcut--primary .ov2-shortcut__icon {
-    background: #5b4fcf;
-    color: #fff;
-}
-
-/* Two parallel activity panels */
+/* Activity panels — premium framed blocks + license cards. */
 body.mk-account-dashboard .ov2-content-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: start;
-    gap: 1rem;
+    gap: clamp(.75rem, 1.5vw, 1rem);
 }
-body.mk-account-dashboard .ov2-panel {
+body.mk-account-dashboard .ov2-panel,
+body.mk-account-dashboard .ov2-affiliate {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     min-width: 0;
-    border: 1px solid var(--ov2-stroke);
-    border-radius: var(--ov2-radius);
-    padding: 1.1rem 1.15rem 1.2rem;
-    background: var(--ov2-surface);
-    box-shadow: var(--ov2-elevation);
+    border: 1px solid rgba(26, 32, 53, .07);
+    border-radius: 16px;
+    padding: clamp(.95rem, 1.6vw, 1.08rem) clamp(1rem, 1.8vw, 1.12rem) clamp(1.02rem, 1.7vw, 1.15rem);
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, .99) 0%, rgba(250, 251, 255, .98) 52%, rgba(246, 247, 252, .98) 100%);
+    box-shadow:
+        0 1px 2px rgba(20, 24, 44, .04),
+        0 1px 0 rgba(255, 255, 255, .92) inset,
+        0 20px 44px -34px rgba(36, 42, 78, .2);
+    animation: ov2-kpi-in .52s cubic-bezier(.22, 1, .36, 1) both;
+}
+body.mk-account-dashboard .ov2-content-grid .ov2-panel:nth-child(1) { animation-delay: .48s; }
+body.mk-account-dashboard .ov2-content-grid .ov2-panel:nth-child(2) { animation-delay: .56s; }
+body.mk-account-dashboard .ov2-panel--licenses::before,
+body.mk-account-dashboard .ov2-panel--orders::before {
+    content: '';
+    position: absolute;
+    inset-inline: 10%;
+    top: 0;
+    height: 2px;
+    border-radius: 0 0 3px 3px;
+    opacity: .85;
+    pointer-events: none;
+}
+body.mk-account-dashboard .ov2-panel--licenses::before {
+    background: linear-gradient(90deg, transparent, rgba(101, 89, 200, .58), transparent);
+}
+body.mk-account-dashboard .ov2-panel--orders::before {
+    background: linear-gradient(90deg, transparent, rgba(61, 155, 116, .55), transparent);
+}
+body.mk-account-dashboard .ov2-panel__icon--orders {
+    color: #3d9b74;
+    border-color: rgba(61, 155, 116, .14);
+    background: rgba(61, 155, 116, .06);
 }
 body.mk-account-dashboard .ov2-panel__header {
     display: flex;
-    align-items: start;
+    align-items: flex-start;
     justify-content: space-between;
     gap: .75rem;
-    margin-bottom: 1rem;
+    margin-bottom: .78rem;
+    padding-bottom: 0;
+    border-bottom: 0;
 }
-body.mk-account-dashboard .ov2-panel__heading { min-width: 0; }
-body.mk-account-dashboard .ov2-records { display: grid; gap: .65rem; }
-body.mk-account-dashboard .ov2-license {
-    min-width: 0;
-    padding: .8rem .85rem;
-    border: 1px solid var(--ov2-stroke);
-    border-radius: 14px;
-    background: var(--acc-surface-muted, #f8fafd);
-}
-body.mk-account-dashboard .ov2-license__head {
+body.mk-account-dashboard .ov2-panel__heading {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: .55rem;
-}
-body.mk-account-dashboard .ov2-license__identity {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
+    align-items: flex-start;
+    gap: .62rem;
     min-width: 0;
 }
-body.mk-account-dashboard .ov2-license__icon {
-    display: grid;
+body.mk-account-dashboard .ov2-panel__icon {
+    display: inline-grid;
     place-items: center;
     flex: 0 0 auto;
-    width: 2.22rem;
-    height: 2.22rem;
-    border-radius: 11px;
-    background: rgba(91,79,207,.09);
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 10px;
+    border: 1px solid rgba(26, 32, 53, .07);
+    background: rgba(255, 255, 255, .82);
+    color: #6559c8;
+    font-size: .76rem;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .95) inset;
+}
+body.mk-account-dashboard .ov2-panel__titles {
+    min-width: 0;
+    display: grid;
+    gap: .14rem;
+}
+body.mk-account-dashboard .ov2-panel__title {
+    margin: 0;
+    color: var(--ov2-ink);
+    font-size: .86rem;
+    font-weight: 780;
+    line-height: 1.35;
+    letter-spacing: -.015em;
+}
+body.mk-account-dashboard .ov2-panel__subtitle {
+    margin: 0;
+    color: #8b93a8;
+    font-size: .64rem;
+    font-weight: 550;
+    line-height: 1.4;
+}
+body.mk-account-dashboard .ov2-panel__link {
+    flex: 0 0 auto;
+    color: var(--ov2-muted);
+    font-size: .68rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition: color .16s ease;
+}
+body.mk-account-dashboard .ov2-panel__link:hover { color: var(--ov2-accent); }
+body.mk-account-dashboard .ov2-panel__link--cta {
+    display: inline-flex;
+    align-items: center;
+    gap: .32rem;
+    padding: .36rem .62rem;
+    border-radius: 999px;
+    border: 1px solid rgba(91, 79, 207, .14);
+    background: rgba(91, 79, 207, .05);
     color: var(--ov2-accent);
+    font-size: .66rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition:
+        background-color .18s ease,
+        border-color .18s ease,
+        color .18s ease,
+        transform .18s cubic-bezier(.22, 1, .36, 1);
+}
+body.mk-account-dashboard .ov2-panel__link--cta i {
+    font-size: .55rem;
+    opacity: .85;
+    transition: transform .18s ease;
+}
+body.mk-account-dashboard .ov2-panel__link--cta:hover {
+    color: #4e44b8;
+    border-color: rgba(91, 79, 207, .24);
+    background: rgba(91, 79, 207, .1);
+    transform: translateY(-1px);
+}
+body.mk-account-dashboard .ov2-panel__link--cta:hover i { transform: translateX(-2px); }
+body.mk-account-dashboard .ov2-records {
+    display: grid;
+    gap: 0;
+}
+body.mk-account-dashboard .ov2-records--licenses,
+body.mk-account-dashboard .ov2-records--orders {
+    gap: .48rem;
+}
+body.mk-account-dashboard .ov2-license {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .65rem;
+    min-width: 0;
+    padding: .62rem 0;
+    border-bottom: 1px solid rgba(232, 235, 243, .85);
+    text-decoration: none;
+    color: inherit;
+    transition: color .16s ease;
+}
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license {
+    gap: .72rem;
+    padding: .74rem .8rem;
+    border: 1px solid rgba(26, 32, 53, .06);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .74);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .92) inset;
+    border-bottom: 1px solid rgba(26, 32, 53, .06);
+    transition:
+        transform .22s cubic-bezier(.22, 1, .36, 1),
+        border-color .22s ease,
+        box-shadow .22s ease,
+        background-color .22s ease;
+    animation: ov2-kpi-in .48s cubic-bezier(.22, 1, .36, 1) both;
+}
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:nth-child(1) { animation-delay: .58s; }
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:nth-child(2) { animation-delay: .64s; }
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:nth-child(3) { animation-delay: .7s; }
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:nth-child(4) { animation-delay: .76s; }
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:nth-child(5) { animation-delay: .82s; }
+body.mk-account-dashboard .ov2-license:last-child { border-bottom: 0; padding-bottom: 0; }
+body.mk-account-dashboard .ov2-license:first-child { padding-top: .15rem; }
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:last-child,
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:first-child {
+    padding-top: .74rem;
+    padding-bottom: .74rem;
+}
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:hover {
+    transform: translateY(-2px);
+    border-color: rgba(91, 79, 207, .16);
+    background: #fff;
+    box-shadow:
+        0 1px 2px rgba(20, 24, 44, .03),
+        0 12px 28px -22px rgba(56, 50, 120, .22);
+}
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license.is-expired {
+    opacity: .92;
+    background: rgba(252, 252, 254, .82);
+}
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license.is-expired .ov2-license__mark {
+    color: #9aa3b8;
+    border-color: rgba(26, 32, 53, .06);
+    background: rgba(248, 249, 252, .9);
+}
+body.mk-account-dashboard .ov2-license:hover .ov2-license__name { color: var(--ov2-accent); }
+body.mk-account-dashboard .ov2-license__mark {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9px;
+    border: 1px solid rgba(101, 89, 200, .12);
+    background: rgba(101, 89, 200, .06);
+    color: #6559c8;
+    font-size: .72rem;
+}
+body.mk-account-dashboard .ov2-license__copy {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: grid;
+    gap: .14rem;
 }
 body.mk-account-dashboard .ov2-license__name {
     display: block;
     min-width: 0;
-    font-weight: 800;
+    font-weight: 720;
     color: var(--ov2-ink);
-    font-size: .77rem;
-    line-height: 1.5;
+    font-size: .76rem;
+    line-height: 1.45;
     overflow-wrap: anywhere;
-}
-body.mk-account-dashboard .ov2-license__state,
-body.mk-account-dashboard .ov2-order__state {
-    display: inline-flex;
-    align-items: center;
-    gap: .35rem;
-    flex: 0 0 auto;
-    padding: .26rem .55rem;
-    border-radius: 99px;
-    background: rgba(26,150,101,.085);
-    color: #10815a;
-    font-size: .64rem;
-    font-weight: 800;
-    white-space: nowrap;
-}
-body.mk-account-dashboard .ov2-license__state--expired {
-    background: rgba(219,79,92,.09);
-    color: #ba5360;
+    transition: color .18s ease;
 }
 body.mk-account-dashboard .ov2-license__meta {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: .65rem;
     flex-wrap: wrap;
-    margin: .72rem 0 0;
-    padding-top: .65rem;
-    border-top: 1px solid var(--ov2-stroke);
-}
-body.mk-account-dashboard .ov2-license__meta-label {
+    align-items: baseline;
+    gap: .08rem .18rem;
+    font-size: .65rem;
     color: var(--ov2-muted);
-    font-size: .69rem;
+    line-height: 1.55;
 }
-body.mk-account-dashboard .ov2-license__meta-value {
-    color: var(--ov2-ink);
-    font-size: .72rem;
-    font-weight: 800;
-}
-body.mk-account-dashboard .ov2-license__manage {
+body.mk-account-dashboard .ov2-license__state {
     display: inline-flex;
     align-items: center;
-    gap: .35rem;
-    min-height: 2.15rem;
-    margin-top: .35rem;
-    font-size: .72rem;
-    color: var(--ov2-accent);
-    text-decoration: none;
-    font-weight: 850;
+    gap: .32rem;
+    flex: 0 0 auto;
+    padding: .24rem .56rem;
+    border-radius: 999px;
+    font-size: .62rem;
+    font-weight: 720;
+    color: #12815c;
+    white-space: nowrap;
+    background: rgba(18, 129, 92, .08);
+    border: 1px solid rgba(18, 129, 92, .14);
 }
-body.mk-account-dashboard .ov2-license__manage:hover { text-decoration: underline; }
-
+body.mk-account-dashboard .ov2-license__state::before {
+    content: '';
+    width: .38rem;
+    height: .38rem;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 3px rgba(18, 129, 92, .16);
+}
+body.mk-account-dashboard .ov2-license__state--expired {
+    color: #b55662;
+    background: rgba(181, 86, 98, .08);
+    border-color: rgba(181, 86, 98, .16);
+}
+body.mk-account-dashboard .ov2-license__state--expired::before {
+    box-shadow: 0 0 0 3px rgba(181, 86, 98, .14);
+}
+body.mk-account-dashboard .ov2-license__go {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 8px;
+    color: #9aa3b8;
+    font-size: .58rem;
+    opacity: 0;
+    transform: translateX(4px);
+    transition:
+        opacity .18s ease,
+        transform .18s ease,
+        color .18s ease,
+        background-color .18s ease;
+}
+body.mk-account-dashboard .ov2-panel--licenses .ov2-license:hover .ov2-license__go {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--ov2-accent);
+    background: rgba(91, 79, 207, .07);
+}
 body.mk-account-dashboard .ov2-order {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: .75rem;
     min-width: 0;
-    padding: .85rem .8rem;
-    border-radius: 14px;
-    border: 1px solid var(--ov2-stroke);
-    background: var(--acc-surface-muted, #f8fafd);
+    padding: .62rem 0;
+    border-bottom: 1px solid rgba(232, 235, 243, .85);
 }
-body.mk-account-dashboard .ov2-order__main { display: flex; gap: .65rem; align-items: start; min-width: 0; }
-body.mk-account-dashboard .ov2-order__icon {
-    display: grid;
+body.mk-account-dashboard .ov2-panel--orders .ov2-order {
+    gap: .72rem;
+    padding: .74rem .8rem;
+    border: 1px solid rgba(26, 32, 53, .06);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .74);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .92) inset;
+    border-bottom: 1px solid rgba(26, 32, 53, .06);
+    transition:
+        transform .22s cubic-bezier(.22, 1, .36, 1),
+        border-color .22s ease,
+        box-shadow .22s ease,
+        background-color .22s ease;
+    animation: ov2-kpi-in .48s cubic-bezier(.22, 1, .36, 1) both;
+}
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:nth-child(1) { animation-delay: .58s; }
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:nth-child(2) { animation-delay: .64s; }
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:nth-child(3) { animation-delay: .7s; }
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:nth-child(4) { animation-delay: .76s; }
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:nth-child(5) { animation-delay: .82s; }
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:hover {
+    transform: translateY(-2px);
+    border-color: rgba(61, 155, 116, .18);
+    background: #fff;
+    box-shadow:
+        0 1px 2px rgba(20, 24, 44, .03),
+        0 12px 28px -22px rgba(36, 88, 68, .18);
+}
+body.mk-account-dashboard .ov2-order__mark {
+    display: inline-grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 11px;
     flex: 0 0 auto;
-    background: rgba(91,79,207,.08);
-    color: var(--ov2-accent);
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9px;
+    border: 1px solid rgba(61, 155, 116, .14);
+    background: rgba(61, 155, 116, .07);
+    color: #3d9b74;
+    font-size: .7rem;
 }
-body.mk-account-dashboard .ov2-order__copy { min-width: 0; display: grid; gap: .22rem; }
+body.mk-account-dashboard .ov2-order:last-child { border-bottom: 0; padding-bottom: 0; }
+body.mk-account-dashboard .ov2-order:first-child { padding-top: .15rem; }
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:last-child,
+body.mk-account-dashboard .ov2-panel--orders .ov2-order:first-child {
+    padding-top: .74rem;
+    padding-bottom: .74rem;
+}
+body.mk-account-dashboard .ov2-order__copy { min-width: 0; flex: 1 1 auto; display: grid; gap: .14rem; }
 body.mk-account-dashboard .ov2-order__name {
-    font-size: .77rem;
-    font-weight: 800;
-    line-height: 1.5;
+    font-size: .74rem;
+    font-weight: 700;
+    line-height: 1.45;
     color: var(--ov2-ink);
     overflow-wrap: anywhere;
 }
 body.mk-account-dashboard .ov2-order__detail {
-    font-size: .68rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .08rem .12rem;
+    font-size: .66rem;
     color: var(--ov2-muted);
     line-height: 1.55;
 }
 body.mk-account-dashboard .ov2-order__side {
-    display: grid;
-    justify-items: end;
-    gap: .35rem;
+    flex: 0 0 auto;
     text-align: end;
-    min-width: 0;
+    display: grid;
+    gap: .05rem;
+    justify-items: end;
 }
 body.mk-account-dashboard .ov2-order__price {
-    font-size: .8rem;
-    font-weight: 850;
+    font-size: .76rem;
+    font-weight: 780;
     color: var(--ov2-ink);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
-body.mk-account-dashboard .ov2-order__price small { color: var(--ov2-muted); font-weight: 500; font-size: .65rem; }
+body.mk-account-dashboard .ov2-order__unit {
+    font-size: .62rem;
+    color: var(--ov2-muted);
+    font-weight: 500;
+}
 body.mk-account-dashboard .ov2-empty {
-    display: grid;
-    place-items: center;
-    gap: .5rem;
-    min-height: 175px;
+    margin: 0;
+    padding: 1rem .25rem .35rem;
     text-align: center;
-    padding: 1.25rem;
-    background: var(--acc-surface-muted, #f8fafd);
-    border: 1px dashed var(--ov2-stroke);
-    border-radius: 15px;
-}
-body.mk-account-dashboard .ov2-empty__icon {
     display: grid;
-    place-items: center;
-    width: 2.65rem;
-    height: 2.65rem;
-    border-radius: 13px;
-    color: var(--ov2-accent);
-    background: var(--acc-purple-soft, rgba(91,79,207,.08));
+    gap: .45rem;
 }
-body.mk-account-dashboard .ov2-empty strong { color: var(--ov2-ink); font-size: .79rem; }
-body.mk-account-dashboard .ov2-empty span { color: var(--ov2-muted); font-size: .71rem; line-height: 1.6; }
-body.mk-account-dashboard .ov2-empty a { color: var(--ov2-accent); font-size: .72rem; font-weight: 850; }
+body.mk-account-dashboard .ov2-empty--panel {
+    padding: 1.35rem 1rem;
+    border-radius: 12px;
+    border: 1px dashed rgba(26, 32, 53, .1);
+    background: rgba(255, 255, 255, .55);
+}
+body.mk-account-dashboard .ov2-empty p {
+    margin: 0;
+    color: var(--ov2-muted);
+    font-size: .72rem;
+    line-height: 1.55;
+}
+body.mk-account-dashboard .ov2-empty a {
+    color: var(--ov2-accent);
+    font-size: .71rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+body.mk-account-dashboard .ov2-empty a:hover { text-decoration: underline; }
 
-/* Affiliate: a single truthful card for both desktop and mobile. */
 body.mk-account-dashboard .ov2-affiliate {
     display: grid;
-    gap: 1.05rem;
-    padding: 1.1rem 1.25rem 1.3rem;
-    border-radius: var(--ov2-radius);
-    border: 1px solid var(--ov2-stroke);
-    background: var(--ov2-surface);
-    box-shadow: var(--ov2-elevation);
+    gap: .85rem;
+    animation-delay: .88s;
+}
+body.mk-account-dashboard .ov2-panel--affiliate::before {
+    content: '';
+    position: absolute;
+    inset-inline: 10%;
+    top: 0;
+    height: 2px;
+    border-radius: 0 0 3px 3px;
+    background: linear-gradient(90deg, transparent, rgba(181, 132, 58, .55), rgba(91, 79, 207, .42), transparent);
+    opacity: .9;
+    pointer-events: none;
+}
+body.mk-account-dashboard .ov2-panel__icon--affiliate {
+    color: #9a7428;
+    border-color: rgba(181, 132, 58, .16);
+    background: linear-gradient(165deg, rgba(255, 251, 242, .95) 0%, rgba(255, 255, 255, .85) 100%);
 }
 body.mk-account-dashboard .ov2-affiliate__metrics {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: .6rem;
+    gap: clamp(.48rem, 1.1vw, .62rem);
 }
 body.mk-account-dashboard .ov2-affiliate__metric {
-    display: grid;
-    gap: .25rem;
-    min-width: 0;
-    padding: .8rem .9rem;
-    background: var(--acc-surface-muted, #f8fafd);
-    border-radius: 13px;
-}
-body.mk-account-dashboard .ov2-affiliate__metric span { color: var(--ov2-muted); font-size: .68rem; }
-body.mk-account-dashboard .ov2-affiliate__metric strong {
-    color: var(--ov2-ink);
-    font-size: clamp(.95rem, 1.6vw, 1.2rem);
-    font-weight: 850;
-    line-height: 1.45;
-    overflow-wrap: anywhere;
-}
-body.mk-account-dashboard .ov2-affiliate__metric small { color: var(--ov2-muted); font-size: .63rem; }
-body.mk-account-dashboard .ov2-affiliate__invite {
+    position: relative;
     display: flex;
-    align-items: end;
+    flex-direction: column;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: .75rem;
-}
-body.mk-account-dashboard .ov2-affiliate__invite-copy {
-    display: grid;
-    gap: .28rem;
+    gap: .72rem;
     min-width: 0;
-    flex: 1;
+    min-height: 5.5rem;
+    padding: .78rem .82rem .82rem;
+    border: 1px solid rgba(26, 32, 53, .06);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .72);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .92) inset;
+    transition:
+        transform .22s cubic-bezier(.22, 1, .36, 1),
+        border-color .22s ease,
+        box-shadow .22s ease;
+    animation: ov2-kpi-in .48s cubic-bezier(.22, 1, .36, 1) both;
 }
-body.mk-account-dashboard .ov2-affiliate__invite label {
-    color: var(--ov2-ink);
-    font-size: .76rem;
-    font-weight: 800;
+body.mk-account-dashboard .ov2-affiliate__metric:nth-child(1) { animation-delay: .95s; }
+body.mk-account-dashboard .ov2-affiliate__metric:nth-child(2) { animation-delay: 1.01s; }
+body.mk-account-dashboard .ov2-affiliate__metric:nth-child(3) { animation-delay: 1.07s; }
+body.mk-account-dashboard .ov2-affiliate__metric:nth-child(4) { animation-delay: 1.13s; }
+body.mk-account-dashboard .ov2-affiliate__metric:hover {
+    transform: translateY(-2px);
+    border-color: rgba(91, 79, 207, .14);
+    box-shadow:
+        0 1px 2px rgba(20, 24, 44, .03),
+        0 12px 26px -20px rgba(56, 50, 120, .2);
 }
-body.mk-account-dashboard .ov2-affiliate__invite p {
+body.mk-account-dashboard .ov2-affiliate__metric-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.95rem;
+    height: 1.95rem;
+    border-radius: 9px;
+    border: 1px solid rgba(26, 32, 53, .07);
+    background: rgba(255, 255, 255, .85);
+    font-size: .72rem;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .95) inset;
+}
+body.mk-account-dashboard .ov2-affiliate__metric--sales .ov2-affiliate__metric-icon { color: #6673cb; border-color: rgba(102, 115, 203, .14); background: rgba(102, 115, 203, .06); }
+body.mk-account-dashboard .ov2-affiliate__metric--commission .ov2-affiliate__metric-icon { color: #9a7428; border-color: rgba(181, 132, 58, .16); background: rgba(181, 132, 58, .08); }
+body.mk-account-dashboard .ov2-affiliate__metric--wallet .ov2-affiliate__metric-icon { color: #3d9b74; border-color: rgba(61, 155, 116, .16); background: rgba(61, 155, 116, .08); }
+body.mk-account-dashboard .ov2-affiliate__metric--referrals .ov2-affiliate__metric-icon { color: #6559c8; border-color: rgba(101, 89, 200, .14); background: rgba(101, 89, 200, .07); }
+body.mk-account-dashboard .ov2-affiliate__metric-copy {
+    display: grid;
+    gap: .18rem;
+    min-width: 0;
+}
+body.mk-account-dashboard .ov2-affiliate__metric-label {
+    color: #8b93a8;
+    font-size: .62rem;
+    font-weight: 650;
+    line-height: 1.4;
+    letter-spacing: 0;
+}
+body.mk-account-dashboard .ov2-affiliate__metric-value {
     margin: 0;
-    color: var(--ov2-muted);
-    font-size: .7rem;
-    line-height: 1.6;
+    color: var(--ov2-ink);
+    font-size: clamp(1.02rem, 1.35vw, 1.18rem);
+    font-weight: 780;
+    line-height: 1.15;
+    letter-spacing: -.015em;
+}
+body.mk-account-dashboard .ov2-affiliate__metric-unit {
+    color: #9aa3b8;
+    font-size: .58rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+body.mk-account-dashboard .ov2-affiliate__linkbox {
+    padding-top: .2rem;
+    border-top: 1px solid rgba(232, 235, 243, .75);
+}
+body.mk-account-dashboard .ov2-affiliate__link-label {
+    display: block;
+    margin: 0 0 .42rem;
+    color: #7a8398;
+    font-size: .64rem;
+    font-weight: 650;
+    line-height: 1.45;
+    letter-spacing: 0;
 }
 body.mk-account-dashboard .ov2-affiliate__referral {
-    display: flex;
-    align-items: stretch;
-    gap: .5rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .45rem;
     min-width: 0;
+    padding: .38rem;
+    border-radius: 12px;
+    border: 1px solid rgba(26, 32, 53, .07);
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, .92) 0%, rgba(248, 249, 253, .88) 100%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .95) inset;
 }
-body.mk-account-dashboard .ov2-affiliate__referral input {
+body.mk-account-dashboard .ov2-affiliate__referral-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 9px;
+    border: 1px solid rgba(91, 79, 207, .12);
+    background: rgba(91, 79, 207, .06);
+    color: var(--ov2-accent);
+    font-size: .72rem;
+    flex-shrink: 0;
+}
+body.mk-account-dashboard .ov2-affiliate__referral-input {
     flex: 1 1 auto;
     min-width: 0;
     width: 100%;
-    height: 2.7rem;
-    padding: .55rem .75rem;
-    border-radius: 10px;
-    border: 1px solid var(--ov2-stroke);
-    background: var(--acc-input-bg, #fbfcfe);
-    color: var(--ov2-muted);
-    font-size: .72rem;
+    height: 2.35rem;
+    padding: .45rem .55rem;
+    border-radius: 8px;
+    border: 1px solid rgba(26, 32, 53, .06);
+    background: rgba(255, 255, 255, .88);
+    color: #5c6478;
+    font-size: .68rem;
+    font-weight: 550;
     text-align: left;
+    direction: ltr;
+    unicode-bidi: plaintext;
+}
+body.mk-account-dashboard .ov2-affiliate__referral-input:focus-visible {
+    outline: 2px solid var(--ov2-accent);
+    outline-offset: 2px;
 }
 body.mk-account-dashboard .ov2-affiliate__copy {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: .4rem;
-    min-height: 2.7rem;
-    padding: .55rem .85rem;
+    gap: .32rem;
+    min-height: 2.35rem;
+    padding: .42rem .72rem;
     flex: 0 0 auto;
-    border: 1px solid rgba(91,79,207,.15);
-    border-radius: 10px;
-    background: var(--acc-purple-soft, rgba(91,79,207,.08));
+    border: 1px solid rgba(91, 79, 207, .18);
+    border-radius: 9px;
+    background: rgba(91, 79, 207, .06);
     color: var(--ov2-accent);
-    font-size: .72rem;
-    font-weight: 850;
+    font-size: .66rem;
+    font-weight: 700;
     cursor: pointer;
+    white-space: nowrap;
+    transition:
+        background-color .18s ease,
+        border-color .18s ease,
+        transform .18s ease;
 }
-body.mk-account-dashboard .ov2-affiliate__copy.is-success { color: #137454; background: #e9f9f2; }
-body.mk-account-dashboard .ov2-affiliate__copy.is-error { color: #b3434e; background: #fff1f1; }
-body.mk-account-dashboard .ov2-affiliate__code {
-    margin: 0;
-    font-size: .7rem;
-    color: var(--ov2-muted);
+body.mk-account-dashboard .ov2-affiliate__copy i { font-size: .62rem; opacity: .9; }
+body.mk-account-dashboard .ov2-affiliate__copy:hover {
+    background: rgba(91, 79, 207, .11);
+    border-color: rgba(91, 79, 207, .26);
+    transform: translateY(-1px);
+}
+body.mk-account-dashboard .ov2-affiliate__copy.is-success { color: #137454; background: #e9f9f2; border-color: transparent; }
+body.mk-account-dashboard .ov2-affiliate__copy.is-error { color: #b3434e; background: #fff1f1; border-color: transparent; }
+body.mk-account-dashboard .ov2-affiliate__standby {
     display: flex;
-    gap: .45rem;
-    align-items: center;
+    align-items: flex-start;
+    gap: .62rem;
+    min-width: 0;
+    padding: .78rem .85rem;
+    border-radius: 12px;
+    border: 1px dashed rgba(181, 132, 58, .22);
+    background: linear-gradient(165deg, rgba(255, 251, 244, .85) 0%, rgba(255, 255, 255, .6) 100%);
 }
-body.mk-account-dashboard .ov2-affiliate__code strong { color: var(--ov2-ink); font-size: .75rem; }
-body.mk-account-dashboard .ov2-affiliate__code button {
+body.mk-account-dashboard .ov2-affiliate__standby-icon {
     display: inline-grid;
     place-items: center;
-    min-width: 2rem;
-    min-height: 2rem;
-    border: 0;
-    background: transparent;
-    color: var(--ov2-accent);
-    cursor: pointer;
+    flex: 0 0 auto;
+    width: 2.05rem;
+    height: 2.05rem;
+    border-radius: 10px;
+    border: 1px solid rgba(181, 132, 58, .18);
+    background: rgba(181, 132, 58, .1);
+    color: #9a7428;
+    font-size: .74rem;
 }
-body.mk-account-dashboard .ov2-affiliate__pending { margin: 0; color: var(--ov2-muted); font-size: .76rem; }
+body.mk-account-dashboard .ov2-affiliate__standby-copy {
+    min-width: 0;
+    display: grid;
+    gap: .2rem;
+}
+body.mk-account-dashboard .ov2-affiliate__standby-copy strong {
+    color: var(--ov2-ink);
+    font-size: .72rem;
+    font-weight: 750;
+    line-height: 1.45;
+}
+body.mk-account-dashboard .ov2-affiliate__standby-copy p {
+    margin: 0;
+    color: var(--ov2-muted);
+    font-size: .67rem;
+    line-height: 1.65;
+    font-weight: 500;
+}
 
 /* Midwidth and mobile: preserve comfortable minimums, no horizontal overflow. */
 @media (max-width: 1250px) {
-    body.mk-account-dashboard .ov2-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     body.mk-account-dashboard .ov2-content-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 1024px) {
@@ -724,66 +1164,130 @@ body.mk-account-dashboard .ov2-affiliate__pending { margin: 0; color: var(--ov2-
         padding-inline: var(--acc-m-pad, 1rem);
         padding-block: .9rem 1.4rem;
     }
-    body.mk-account-dashboard .ov2 .mk-acc-tab-body { gap: 1.15rem; }
-    body.mk-account-dashboard .ov2-hero { min-height: 0; }
+    body.mk-account-dashboard .ov2 .mk-acc-tab-body { gap: 1rem; }
 }
 @media (max-width: 767px) {
     body.mk-account-dashboard .mk-overview-tab.ov2 { padding-block: .55rem 1.25rem; }
-    body.mk-account-dashboard .ov2 .mk-acc-tab-body { padding: 0; gap: 1rem; }
-    body.mk-account-dashboard .ov2-hero {
-        grid-template-columns: minmax(0, 1fr);
-        border-radius: 22px;
-        padding: 1.25rem;
-        gap: 1rem;
+    body.mk-account-dashboard .ov2 .mk-acc-tab-body { padding: 0; gap: .9rem; }
+    body.mk-account-dashboard .ov2-intro__frame { border-radius: 15px; }
+    body.mk-account-dashboard .ov2-intro__body {
+        flex-direction: column;
+        align-items: stretch;
+        gap: .9rem;
+        padding: .95rem 1rem .85rem;
     }
-    body.mk-account-dashboard .ov2-hero__title { font-size: 1.4rem; }
-    body.mk-account-dashboard .ov2-hero__text { margin-bottom: 1rem; font-size: .76rem; }
-    body.mk-account-dashboard .ov2-hero__actions { width: 100%; gap: .5rem; }
-    body.mk-account-dashboard .ov2-action { flex: 1 1 auto; min-height: 2.7rem; padding-inline: .55rem; }
-    body.mk-account-dashboard .ov2-hero__aside {
+    body.mk-account-dashboard .ov2-intro__actions {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: .25rem .65rem;
-        padding: .8rem 1rem;
-        border-radius: 14px;
-        align-items: center;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .45rem;
+        width: 100%;
+        padding: .4rem;
+        border-radius: 12px;
+        border-color: rgba(91, 79, 207, .1);
+        background: rgba(91, 79, 207, .045);
     }
-    body.mk-account-dashboard .ov2-hero__aside-label { grid-column: 1; }
-    body.mk-account-dashboard .ov2-hero__state { grid-column: 1; }
-    body.mk-account-dashboard .ov2-hero__count { grid-column: 2; grid-row: 1 / span 2; font-size: 2.2rem; }
-    body.mk-account-dashboard .ov2-hero__count-label { grid-column: 1; font-size: .67rem; }
-    body.mk-account-dashboard .ov2-hero__aside-link { grid-column: 2; grid-row: 3; margin: 0; font-size: .67rem; }
-    body.mk-account-dashboard .ov2-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
-    body.mk-account-dashboard .ov2-metric { padding: .85rem; border-radius: 15px; gap: .3rem; }
-    body.mk-account-dashboard .ov2-metric__icon { width: 2rem; height: 2rem; }
-    body.mk-account-dashboard .ov2-metric__value { font-size: 1.48rem; }
-    body.mk-account-dashboard .ov2-metric__value--money { font-size: 1.17rem; }
-    body.mk-account-dashboard .ov2-metric__label { font-size: .7rem; }
-    body.mk-account-dashboard .ov2-metric__note { font-size: .62rem; }
-    body.mk-account-dashboard .ov2-attention { align-items: flex-start; flex-wrap: wrap; padding: .75rem .8rem; }
-    body.mk-account-dashboard .ov2-attention__link { margin-inline-start: 2.55rem; }
-    body.mk-account-dashboard .ov2-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
-    body.mk-account-dashboard .ov2-shortcut { gap: .6rem; min-height: 4.1rem; padding: .72rem; }
-    body.mk-account-dashboard .ov2-shortcut__icon { width: 2.2rem; height: 2.2rem; }
-    body.mk-account-dashboard .ov2-shortcut__desc { font-size: .62rem; }
-    body.mk-account-dashboard .ov2-shortcut__chevron { display: none; }
-    body.mk-account-dashboard .ov2-section__header h2,
-    body.mk-account-dashboard .ov2-panel__heading h2 { font-size: .96rem; }
-    body.mk-account-dashboard .ov2-panel { padding: .95rem; border-radius: 17px; }
-    body.mk-account-dashboard .ov2-affiliate { padding: .95rem; border-radius: 17px; }
-    body.mk-account-dashboard .ov2-affiliate__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 390px) {
-    body.mk-account-dashboard .ov2-hero { padding: 1rem; }
-    body.mk-account-dashboard .ov2-hero__title { font-size: 1.2rem; }
-    body.mk-account-dashboard .ov2-hero__actions { flex-wrap: nowrap; }
-    body.mk-account-dashboard .ov2-shortcut { align-items: flex-start; flex-direction: column; }
-    body.mk-account-dashboard .ov2-order { grid-template-columns: 1fr; }
-    body.mk-account-dashboard .ov2-order__side {
-        display: flex;
+    body.mk-account-dashboard .ov2-intro__cta {
+        min-height: 2.5rem;
+        width: 100%;
+    }
+    body.mk-account-dashboard .ov2-intro__cta--ghost {
+        width: auto;
+        padding-inline: .75rem;
+    }
+    body.mk-account-dashboard .ov2-intro__nav.ov2-quick {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: .15rem .45rem;
+        padding: .52rem 1rem .62rem;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+    }
+    body.mk-account-dashboard .ov2-intro__nav.ov2-quick::-webkit-scrollbar { display: none; }
+    body.mk-account-dashboard .ov2-quick a {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        padding: .32rem .45rem;
+        white-space: nowrap;
+    }
+    body.mk-account-dashboard .ov2-intro + .ov2-kpi { margin-top: .62rem; }
+    body.mk-account-dashboard .ov2-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .62rem;
+    }
+    body.mk-account-dashboard .ov2-metric {
+        min-height: 5.75rem;
+        gap: .75rem;
+        padding: .85rem .88rem .92rem;
+        border-radius: 13px;
+    }
+    body.mk-account-dashboard .ov2-metric:hover { transform: translateY(-2px); }
+    body.mk-account-dashboard .ov2-metric__icon {
+        width: 1.9rem;
+        height: 1.9rem;
+        font-size: .74rem;
+    }
+    body.mk-account-dashboard .ov2-metric__value { font-size: 1.26rem; }
+    body.mk-account-dashboard .ov2-metric__value--money { font-size: 1rem; }
+    body.mk-account-dashboard .ov2-metric__label { font-size: .62rem; }
+    body.mk-account-dashboard .ov2-attention { flex-wrap: wrap; padding: .62rem .75rem; }
+    body.mk-account-dashboard .ov2-panel,
+    body.mk-account-dashboard .ov2-affiliate { padding: .88rem .9rem .95rem; }
+    body.mk-account-dashboard .ov2-panel__header {
         flex-wrap: wrap;
         align-items: center;
-        justify-content: space-between;
+    }
+    body.mk-account-dashboard .ov2-panel--licenses .ov2-license,
+    body.mk-account-dashboard .ov2-panel--orders .ov2-order {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        padding: .72rem .75rem;
+    }
+    body.mk-account-dashboard .ov2-panel--licenses .ov2-license__state {
+        margin-inline-start: calc(2rem + .72rem);
+    }
+    body.mk-account-dashboard .ov2-panel--orders .ov2-order__side {
+        width: 100%;
+        margin-inline-start: calc(2rem + .72rem);
+        flex-direction: row;
+        align-items: baseline;
+        justify-items: start;
+        text-align: start;
+        gap: .25rem;
+    }
+    body.mk-account-dashboard .ov2-license__go { display: none; }
+    body.mk-account-dashboard .ov2-intro__lead { max-width: none; font-size: .67rem; }
+    body.mk-account-dashboard .ov2-affiliate__metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .52rem;
+    }
+    body.mk-account-dashboard .ov2-affiliate__metric {
+        min-height: 5.15rem;
+        padding: .72rem .75rem;
+    }
+    body.mk-account-dashboard .ov2-affiliate__referral {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: auto auto;
+    }
+    body.mk-account-dashboard .ov2-affiliate__copy {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+}
+@media (max-width: 390px) {
+    body.mk-account-dashboard .ov2-intro__cta--ghost { padding-inline: .35rem; }
+    body.mk-account-dashboard .ov2-order {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .35rem;
+    }
+    body.mk-account-dashboard .ov2-order__side {
+        flex-direction: row;
+        align-items: baseline;
+        gap: .25rem;
+        justify-items: start;
+        text-align: start;
     }
 }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-attention {
@@ -794,17 +1298,184 @@ html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-attentio
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-attention__link { color: #f7d28d; }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__copy.is-success { background: rgba(27,155,107,.18); color: #82e5bc; }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__copy.is-error { background: rgba(200,70,91,.16); color: #ff98a5; }
-html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-license__state {
-    background: rgba(23,166,111,.17);
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel__icon--affiliate {
+    color: #e8c078;
+    border-color: rgba(232, 192, 120, .2);
+    background: rgba(181, 132, 58, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__metric {
+    background: rgba(255, 255, 255, .03);
+    border-color: rgba(172, 180, 212, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__metric:hover {
+    border-color: rgba(169, 158, 255, .2);
+    background: rgba(140, 120, 255, .06);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__linkbox {
+    border-top-color: rgba(172, 180, 212, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__referral {
+    background: rgba(255, 255, 255, .03);
+    border-color: rgba(172, 180, 212, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__referral-input {
+    background: rgba(0, 0, 0, .15);
+    border-color: rgba(172, 180, 212, .12);
+    color: #c5cee0;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__referral-mark {
+    background: rgba(140, 120, 255, .1);
+    border-color: rgba(169, 158, 255, .16);
+    color: #d9d4ff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__standby {
+    background: rgba(181, 132, 58, .08);
+    border-color: rgba(232, 192, 120, .18);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate__standby-icon {
+    color: #e8c078;
+    border-color: rgba(232, 192, 120, .2);
+    background: rgba(181, 132, 58, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel,
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-affiliate {
+    background: linear-gradient(165deg, rgba(22, 28, 45, .96) 0%, rgba(15, 20, 34, .98) 100%);
+    border-color: rgba(172, 180, 212, .14);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .2), 0 1px 0 rgba(255, 255, 255, .04) inset, 0 20px 44px -34px rgba(0, 0, 0, .42);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel__icon {
+    background: rgba(255, 255, 255, .04);
+    border-color: rgba(172, 180, 212, .14);
+    color: #a99eff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel__subtitle { color: #9aa8c4; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel__link--cta {
+    border-color: rgba(169, 158, 255, .18);
+    background: rgba(140, 120, 255, .1);
+    color: #d9d4ff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel--licenses .ov2-license {
+    background: rgba(255, 255, 255, .03);
+    border-color: rgba(172, 180, 212, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel--licenses .ov2-license:hover {
+    background: rgba(140, 120, 255, .08);
+    border-color: rgba(169, 158, 255, .22);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__lead { color: #9aa8c4; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel__icon--orders {
+    color: #7be7b7;
+    border-color: rgba(61, 184, 138, .18);
+    background: rgba(61, 184, 138, .1);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel--orders .ov2-order {
+    background: rgba(255, 255, 255, .03);
+    border-color: rgba(172, 180, 212, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-panel--orders .ov2-order:hover {
+    background: rgba(61, 184, 138, .08);
+    border-color: rgba(61, 184, 138, .2);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-order__mark {
+    background: rgba(61, 184, 138, .1);
+    border-color: rgba(61, 184, 138, .18);
     color: #7be7b7;
 }
-html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-order__state {
-    background: rgba(23,166,111,.17);
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-license__mark {
+    background: rgba(140, 120, 255, .1);
+    border-color: rgba(169, 158, 255, .16);
+    color: #a99eff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-license__state {
     color: #7be7b7;
+    background: rgba(61, 184, 138, .12);
+    border-color: rgba(61, 184, 138, .2);
 }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-license__state--expired {
-    background: rgba(219,79,92,.16);
     color: #ffa4ae;
+    background: rgba(255, 120, 130, .1);
+    border-color: rgba(255, 120, 130, .18);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-empty--panel {
+    border-color: rgba(172, 180, 212, .14);
+    background: rgba(255, 255, 255, .03);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__frame {
+    border-color: rgba(172, 180, 212, .14);
+    background: linear-gradient(165deg, rgba(22, 28, 45, .96) 0%, rgba(15, 20, 34, .98) 100%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .2), 0 1px 0 rgba(255, 255, 255, .04) inset, 0 28px 56px -44px rgba(0, 0, 0, .4);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__label {
+    border-color: rgba(169, 158, 255, .18);
+    background: rgba(140, 120, 255, .1);
+    color: #c8c0ff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__name { color: #f1f4ff; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__chip--ok {
+    color: #8ee4bd;
+    border-color: rgba(61, 184, 138, .22);
+    background: rgba(61, 184, 138, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__chip--muted {
+    color: #a5afc4;
+    border-color: rgba(172, 180, 212, .14);
+    background: rgba(255, 255, 255, .04);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__nav.ov2-quick {
+    border-top-color: rgba(172, 180, 212, .12);
+    background: linear-gradient(180deg, rgba(255, 255, 255, .03) 0%, rgba(255, 255, 255, .02) 100%);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-quick a {
+    color: #a5afc4;
+    background: rgba(255, 255, 255, .04);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-quick a:hover {
+    color: #d9d4ff;
+    border-color: rgba(169, 158, 255, .2);
+    background: rgba(140, 120, 255, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__cta--ghost {
+    background: rgba(255, 255, 255, .04);
+    border-color: rgba(172, 180, 212, .12);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__actions {
+    border-color: rgba(169, 158, 255, .12);
+    background: rgba(140, 120, 255, .08);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric {
+    background: rgba(20, 26, 42, .82);
+    border-color: rgba(172, 180, 212, .13);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 14px 30px -26px rgba(0, 0, 0, .42);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric:hover {
+    border-color: rgba(169, 158, 255, .22);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric__icon {
+    background: rgba(255, 255, 255, .04);
+    border-color: rgba(172, 180, 212, .14);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric--licenses .ov2-metric__icon { color: #a99eff; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric--success .ov2-metric__icon { color: #7be7b7; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric--pending .ov2-metric__icon { color: #9aa8c4; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric--pending.is-alert .ov2-metric__icon { color: #f0c070; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric--money .ov2-metric__icon { color: #aeb6e8; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-metric:hover .ov2-metric__value { color: #f1f4ff; }
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__label {
+    color: #8b96b3;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__greet {
+    color: #9aa8c4;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__cta--primary {
+    background: rgba(140, 120, 255, .32);
+    border-color: rgba(169, 158, 255, .35);
+    color: #fff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__cta--ghost {
+    color: #9aa8c4;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .ov2-intro__cta--ghost:hover {
+    color: #d9d4ff;
 }
 @media (prefers-reduced-motion: reduce) {
     body.mk-account-dashboard .ov2 * { transition-duration: 0s !important; animation: none !important; }

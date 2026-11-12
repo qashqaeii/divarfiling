@@ -1,270 +1,328 @@
-/* Account Center — Stage 1 / Quiet Luxury shell
-   This file owns only the shared account chrome (not business-tab content).
-   Loaded after the legacy dashboard styles to avoid changing payment/licensing UX. */
+/* Account Center — Quiet Luxury shell (sidebar + page chrome)
+   Loaded after legacy dashboard styles. Sidebar: minimal premium rail. */
 body.mk-account-dashboard {
   --acc-purple: #5b4fcf;
   --acc-purple-dark: #473bb7;
-  --acc-purple-soft: rgba(91,79,207,.085);
-  --acc-sidebar-w: 17.25rem;
-  --acc-main-bg: #f7f8fc;
-  --acc-sidebar-bg: #fff;
-  --acc-sidebar-text: #647085;
-  --acc-sidebar-text-strong: #20263b;
-  --acc-card-border: #e9ebf3;
-  --acc-radius: 16px;
-  --acc-shadow: 0 7px 26px -18px rgba(31,37,79,.18);
+  --acc-purple-soft: rgba(91, 79, 207, .06);
+  --acc-sidebar-w: 15.75rem;
+  --acc-main-bg: #f6f7fb;
+  --acc-sidebar-bg: #fcfcfd;
+  --acc-sidebar-text: #6b7386;
+  --acc-sidebar-text-strong: #1a2035;
+  --acc-card-border: #e8eaf1;
+  --acc-radius: 14px;
+  --acc-shadow: 0 7px 26px -18px rgba(31, 37, 79, .16);
 }
 body.mk-account-dashboard .mk-account-shell {
   background: var(--acc-main-bg);
   isolation: isolate;
 }
 body.mk-account-dashboard .mk-account-sidebar {
-  padding: 1.35rem 1rem 1.05rem;
+  padding: 1.25rem .85rem .95rem;
   background: var(--acc-sidebar-bg);
   background-image: none;
-  border-inline-start: 1px solid var(--acc-sidebar-border);
-  box-shadow: -9px 0 34px -32px rgba(40,34,105,.28);
+  border-inline-start: 1px solid var(--acc-card-border);
+  box-shadow: none;
   gap: 0;
 }
 body.mk-account-dashboard .mk-account-sidebar::before {
-  background: radial-gradient(circle at 95% 0%, rgba(91,79,207,.07), transparent 38%);
+  display: none;
+}
+body.mk-account-dashboard .mk-account-sidebar__top {
+  flex-shrink: 0;
+  margin-bottom: .2rem;
+  padding: .15rem .12rem .85rem;
+  border-bottom: 1px solid var(--acc-card-border);
 }
 body.mk-account-dashboard .mk-account-sidebar__brand {
   display: flex;
   align-items: center;
-  gap: .75rem;
-  padding: .15rem .4rem 1.1rem;
+  gap: .62rem;
+  padding: 0 .35rem .85rem;
   color: var(--acc-sidebar-text-strong);
   text-decoration: none;
-  flex: none;
 }
 body.mk-account-dashboard .mk-account-sidebar__brand-mark {
-  width: 2.8rem;
-  height: 2.8rem;
+  width: 2.35rem;
+  height: 2.35rem;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(91,79,207,.13);
-  border-radius: 14px;
-  background: #f3f1ff;
+  border-radius: 10px;
+  background: transparent;
   overflow: hidden;
   flex: 0 0 auto;
 }
 body.mk-account-dashboard .mk-account-sidebar__brand-mark img {
-  width: 2.15rem;
-  height: 2.15rem;
+  width: 2rem;
+  height: 2rem;
   object-fit: contain;
 }
 body.mk-account-dashboard .mk-account-sidebar__brand-copy {
   min-width: 0;
   display: grid;
-  gap: .12rem;
+  gap: .06rem;
 }
 body.mk-account-dashboard .mk-account-sidebar__brand-copy strong {
   color: var(--acc-sidebar-text-strong);
-  font-size: .96rem;
-  line-height: 1.4;
-  font-weight: 850;
+  font-size: .88rem;
+  line-height: 1.35;
+  font-weight: 800;
+  letter-spacing: -.02em;
 }
 body.mk-account-dashboard .mk-account-sidebar__brand-copy small {
   color: var(--acc-sidebar-text);
-  font-size: .71rem;
+  font-size: .68rem;
   font-weight: 500;
 }
 body.mk-account-dashboard .mk-account-sidebar__user {
   display: flex;
   align-items: center;
   gap: .72rem;
-  margin: .1rem 0 1.15rem;
-  padding: .9rem .78rem;
-  border: 1px solid rgba(91,79,207,.10);
-  border-radius: 17px;
-  background: linear-gradient(135deg, rgba(91,79,207,.07), rgba(91,79,207,.025) 75%);
-  box-shadow: none;
+  margin: 0;
+  padding: .7rem .72rem;
+  border: 1px solid rgba(26, 32, 53, .06);
+  border-bottom: none;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset;
 }
-body.mk-account-dashboard .mk-account-sidebar__avatar-btn { flex: 0 0 auto; }
+body.mk-account-dashboard .mk-account-sidebar__avatar-btn {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+body.mk-account-dashboard .mk-account-sidebar__avatar-btn:focus-visible {
+  outline: 2px solid var(--acc-purple);
+  outline-offset: 3px;
+}
 body.mk-account-dashboard .mk-account-sidebar__avatar {
-  width: 3.1rem;
-  height: 3.1rem;
-  border: 2px solid #fff;
-  border-radius: 15px;
-  box-shadow: 0 3px 13px rgba(41,34,116,.13);
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 11px;
+  background: #f2f3f7;
+  box-shadow: 0 0 0 1px rgba(26, 32, 53, .07);
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+body.mk-account-dashboard .mk-account-sidebar__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+body.mk-account-dashboard .mk-account-sidebar__avatar-btn:hover .mk-account-sidebar__avatar,
+body.mk-account-dashboard .mk-account-sidebar__avatar-btn:focus-visible .mk-account-sidebar__avatar {
+  box-shadow: 0 0 0 2px rgba(91, 79, 207, .22);
 }
 body.mk-account-dashboard .mk-account-sidebar__avatar-edit {
-  border: 2px solid var(--acc-sidebar-bg);
-  box-shadow: none;
+  position: absolute;
+  inset-inline-end: -3px;
+  inset-block-end: -3px;
+  width: 1.2rem;
+  height: 1.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--acc-purple);
+  color: #fff;
+  font-size: .48rem;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(71, 59, 183, .22);
+  opacity: 0;
+  transform: scale(.88);
+  transition: opacity .16s ease, transform .16s ease;
+  pointer-events: none;
 }
-body.mk-account-dashboard .mk-account-sidebar__user-copy { min-width: 0; }
+body.mk-account-dashboard .mk-account-sidebar__avatar-btn:hover .mk-account-sidebar__avatar-edit,
+body.mk-account-dashboard .mk-account-sidebar__avatar-btn:focus-visible .mk-account-sidebar__avatar-edit {
+  opacity: 1;
+  transform: scale(1);
+}
+body.mk-account-dashboard .mk-account-sidebar__user-copy {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: .14rem;
+  align-content: center;
+}
 body.mk-account-dashboard .mk-account-sidebar__user-name {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: .83rem;
-  line-height: 1.55;
+  font-size: .84rem;
+  line-height: 1.35;
+  font-weight: 780;
+  letter-spacing: -.015em;
   color: var(--acc-sidebar-text-strong);
 }
-body.mk-account-dashboard .mk-account-sidebar__user-meta {
+body.mk-account-dashboard .mk-account-sidebar__user-handle {
   display: block;
-  direction: ltr;
-  text-align: right;
-  unicode-bidi: plaintext;
-  font-size: .69rem;
-  margin-top: .08rem;
-  color: var(--acc-sidebar-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: .68rem;
+  line-height: 1.3;
+  font-weight: 550;
+  color: #8a92a6;
 }
-body.mk-account-dashboard .mk-account-sidebar__account-type {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  margin-top: .45rem;
-  color: var(--acc-purple);
-  font-size: .65rem;
-  font-weight: 750;
-}
-body.mk-account-dashboard .mk-account-sidebar__account-type::before {
-  content: '';
-  width: .35rem;
-  height: .35rem;
-  border-radius: 50%;
-  background: currentColor;
-}
-body.mk-account-dashboard .mk-account-sidebar__avatar-link {
-  display: inline-flex;
-  margin-top: .38rem;
-  font-size: .69rem;
+body.mk-account-dashboard .mk-account-sidebar__user-phone {
+  display: block;
+  margin-top: .02rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .66rem;
+  line-height: 1.3;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #9aa3b7;
+  direction: ltr;
+  text-align: right;
+  unicode-bidi: plaintext;
 }
 body.mk-account-dashboard .mk-account-sidebar__nav {
-  gap: .2rem;
-  padding: 0 .08rem .45rem;
+  gap: .12rem;
+  padding: .35rem .15rem .5rem;
   scrollbar-width: thin;
-  scrollbar-color: rgba(91,79,207,.15) transparent;
+  scrollbar-color: rgba(91, 79, 207, .12) transparent;
 }
 body.mk-account-dashboard .mk-account-sidebar__nav-label {
   display: block;
-  margin: .73rem .65rem .37rem;
-  color: #9aa1b3;
-  font-size: .65rem;
-  font-weight: 800;
-  letter-spacing: .005em;
+  margin: .85rem .55rem .32rem;
+  color: #9ba3b6;
+  font-size: .62rem;
+  font-weight: 750;
+  letter-spacing: .04em;
 }
-body.mk-account-dashboard .mk-account-sidebar__nav-label:first-child { margin-top: .15rem; }
+body.mk-account-dashboard .mk-account-sidebar__nav-label:first-child { margin-top: 0; }
 body.mk-account-dashboard .mk-account-sidebar__link {
   display: flex;
-  gap: .72rem;
-  min-height: 2.75rem;
-  padding: .48rem .68rem;
-  border: 1px solid transparent;
-  border-radius: 12px;
+  align-items: center;
+  gap: .62rem;
+  min-height: 2.5rem;
+  padding: .42rem .55rem;
+  border: 0;
+  border-radius: 10px;
   background: transparent;
   color: var(--acc-sidebar-text);
-  font-size: .79rem;
-  font-weight: 650;
-  transition: background-color .18s, color .18s, border-color .18s, transform .18s;
+  font-size: .78rem;
+  font-weight: 620;
+  text-decoration: none;
+  transition: background-color .16s ease, color .16s ease;
 }
 body.mk-account-dashboard .mk-account-sidebar__link > .mk-account-sidebar__link-icon {
   display: inline-grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.15rem;
+  height: 1.15rem;
   flex: 0 0 auto;
-  border-radius: 9px;
-  background: rgba(111,118,145,.07);
-  color: #81899d;
+  border-radius: 0;
+  background: transparent;
+  color: #8b93a8;
 }
 body.mk-account-dashboard .mk-account-sidebar__link .mk-account-sidebar__link-icon i {
   width: auto;
-  opacity: 1;
-  font-size: .81rem;
-}
-body.mk-account-dashboard .mk-account-sidebar__link .mk-account-sidebar__chevron {
-  width: auto;
-  margin-inline-start: auto;
-  opacity: 0;
-  font-size: .65rem;
+  opacity: .92;
+  font-size: .78rem;
 }
 body.mk-account-dashboard .mk-account-sidebar__link:hover {
   color: var(--acc-sidebar-text-strong);
-  background: rgba(91,79,207,.045);
-  border-color: rgba(91,79,207,.075);
+  background: var(--acc-purple-soft);
 }
-body.mk-account-dashboard .mk-account-sidebar__link:hover .mk-account-sidebar__chevron { opacity: .7; }
+body.mk-account-dashboard .mk-account-sidebar__link:hover .mk-account-sidebar__link-icon { color: var(--acc-purple-dark); }
 body.mk-account-dashboard .mk-account-sidebar__link.is-active {
-  color: #4c40be;
-  background: #f0effe;
-  border-color: rgba(91,79,207,.10);
-  box-shadow: inset 3px 0 0 var(--acc-purple);
+  color: var(--acc-purple-dark);
+  background: var(--acc-purple-soft);
+  font-weight: 720;
+  box-shadow: inset 2px 0 0 var(--acc-purple);
 }
 body.mk-account-dashboard .mk-account-sidebar__link.is-active .mk-account-sidebar__link-icon {
-  background: #e1ddfc;
-  color: #5044c2;
-}
-body.mk-account-dashboard .mk-account-sidebar__link.is-active .mk-account-sidebar__chevron {
-  opacity: 1;
-  color: #7166cb;
+  color: var(--acc-purple);
 }
 body.mk-account-dashboard .mk-account-sidebar__foot {
-  padding-top: .85rem;
-  gap: .6rem;
+  padding-top: .75rem;
+  margin-top: auto;
+  gap: .55rem;
+  border-top: 1px solid var(--acc-card-border);
 }
 body.mk-account-dashboard .mk-account-sidebar__workspace {
   display: flex;
   align-items: center;
-  gap: .65rem;
-  padding: .72rem .75rem;
-  min-height: 3.25rem;
-  border-radius: 14px;
-  background: linear-gradient(115deg, #6055d4, #4c40bc);
-  color: #fff;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .62rem .68rem;
+  min-height: auto;
+  border-radius: 11px;
+  border: 1px solid rgba(91, 79, 207, .22);
+  background: #fff;
+  color: var(--acc-purple-dark);
   text-decoration: none;
-  box-shadow: 0 12px 26px -17px rgba(76,64,188,.7);
-  transition: transform .18s, box-shadow .18s;
+  box-shadow: none;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
 }
 body.mk-account-dashboard .mk-account-sidebar__workspace:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px -14px rgba(76,64,188,.6);
-  color: #fff;
-}
-body.mk-account-dashboard .mk-account-sidebar__workspace-icon {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 10px;
-  background: rgba(255,255,255,.17);
+  transform: none;
+  background: var(--acc-purple-soft);
+  border-color: rgba(91, 79, 207, .32);
+  color: var(--acc-purple-dark);
 }
 body.mk-account-dashboard .mk-account-sidebar__workspace-copy {
   display: grid;
-  gap: .1rem;
+  gap: .06rem;
   min-width: 0;
   font-size: .76rem;
-  font-weight: 800;
+  font-weight: 780;
+  line-height: 1.35;
 }
 body.mk-account-dashboard .mk-account-sidebar__workspace-copy small {
-  color: rgba(255,255,255,.7);
+  color: var(--acc-sidebar-text);
   font-weight: 500;
   font-size: .64rem;
 }
-body.mk-account-dashboard .mk-account-sidebar__workspace > .fa-chevron-left {
-  font-size: .66rem;
-  margin-inline-start: auto;
+body.mk-account-dashboard .mk-account-sidebar__workspace-arrow {
+  flex-shrink: 0;
+  font-size: .68rem;
+  opacity: .65;
 }
 body.mk-account-dashboard .mk-account-sidebar__foot-links {
   display: grid;
-  gap: .14rem;
+  gap: .06rem;
 }
 body.mk-account-dashboard .mk-account-sidebar__foot-link {
   display: flex;
-  min-height: 2.5rem;
   align-items: center;
-  border-radius: 11px;
-  font-size: .74rem;
+  gap: .45rem;
+  min-height: 2.25rem;
+  padding: .35rem .45rem;
+  border-radius: 8px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--acc-sidebar-text);
+  text-decoration: none;
+  transition: background-color .16s ease, color .16s ease;
+}
+body.mk-account-dashboard .mk-account-sidebar__foot-link i {
+  width: .95rem;
+  font-size: .72rem;
+  opacity: .8;
+  text-align: center;
+}
+body.mk-account-dashboard .mk-account-sidebar__foot-link:hover {
+  color: var(--acc-sidebar-text-strong);
+  background: rgba(26, 32, 53, .04);
 }
 body.mk-account-dashboard .mk-account-sidebar__foot-link--logout:hover {
-  color: #be3e56;
-  background: rgba(220,69,95,.065);
+  color: #b63d54;
+  background: rgba(220, 69, 95, .06);
 }
 body.mk-account-dashboard .mk-account-main {
   width: 100%;
@@ -275,65 +333,103 @@ body.mk-account-dashboard .mk-account-main {
 body.mk-account-dashboard .mk-account-page-head--premium {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.45rem;
-  padding: .25rem .15rem .9rem;
-  border-bottom: 1px solid var(--acc-card-border);
+  align-items: flex-end;
+  gap: 1.15rem;
+  margin-bottom: 1.15rem;
+  padding: 0 0 .15rem;
+  border-bottom: 0;
 }
-body.mk-account-dashboard .mk-account-page-head__content { min-width: 0; }
+body.mk-account-dashboard .mk-account-page-head__content {
+  min-width: 0;
+  display: grid;
+  gap: .28rem;
+}
 body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb {
-  margin: 0 0 .85rem;
-  font-size: .73rem;
-}
-body.mk-account-dashboard .mk-account-breadcrumb__home {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: .35rem;
+  flex-wrap: wrap;
+  gap: .38rem;
+  margin: 0;
+  padding: 0;
+  font-size: .67rem;
+  line-height: 1.4;
+  color: #9aa3b6;
 }
-body.mk-account-dashboard .mk-account-page-head__eyebrow {
-  display: block;
-  margin-bottom: .32rem;
-  font-size: .69rem;
-  color: var(--acc-purple);
-  font-weight: 800;
+body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb a {
+  color: #9aa3b6;
+  font-weight: 550;
+  text-decoration: none;
+  transition: color .16s ease;
+}
+body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb a:hover {
+  color: var(--acc-purple-dark);
+}
+body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb__sep {
+  opacity: .45;
+  user-select: none;
+}
+body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb__current {
+  color: #757f95;
+  font-weight: 600;
 }
 body.mk-account-dashboard .mk-account-page-head--premium .mk-account-page-head__title {
   margin: 0;
-  color: var(--acc-text);
-  font-size: clamp(1.38rem, 2.2vw, 1.9rem);
-  line-height: 1.45;
-  font-weight: 850;
-  letter-spacing: -.025em;
+  color: var(--acc-sidebar-text-strong, #1a2035);
+  font-size: clamp(1.08rem, 1.65vw, 1.38rem);
+  line-height: 1.35;
+  font-weight: 760;
+  letter-spacing: -.022em;
 }
 body.mk-account-dashboard .mk-account-page-head--premium .mk-account-page-head__sub {
-  font-size: .79rem;
-  line-height: 1.9;
-  max-width: 50rem;
-  margin-top: .15rem;
+  margin: .12rem 0 0;
+  font-size: .73rem;
+  line-height: 1.55;
+  font-weight: 500;
+  color: #8a92a6;
+  max-width: 34rem;
 }
-body.mk-account-dashboard .mk-account-page-head__actions { flex: 0 0 auto; }
+body.mk-account-dashboard .mk-account-page-head__actions {
+  flex: 0 0 auto;
+  padding-bottom: .12rem;
+}
 body.mk-account-dashboard .mk-account-page-head__cta {
-  min-height: 2.7rem;
+  min-height: 2.35rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .55rem;
-  padding: .55rem .94rem;
-  background: var(--acc-card-bg);
-  border: 1px solid var(--acc-card-border);
-  border-radius: 12px;
-  color: var(--acc-text);
+  gap: .42rem;
+  padding: .42rem .78rem;
+  background: transparent;
+  border: 1px solid rgba(91, 79, 207, .18);
+  border-radius: 999px;
+  color: var(--acc-purple-dark);
   text-decoration: none;
-  box-shadow: 0 6px 16px -17px rgba(28,34,64,.25);
-  font-size: .77rem;
-  font-weight: 750;
-  transition: border-color .18s, color .18s, transform .18s;
+  box-shadow: none;
+  font-size: .71rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+body.mk-account-dashboard .mk-account-page-head__cta i {
+  font-size: .62rem;
+  opacity: .75;
 }
 body.mk-account-dashboard .mk-account-page-head__cta:hover {
-  color: var(--acc-purple);
-  border-color: rgba(91,79,207,.22);
-  transform: translateY(-1px);
+  color: var(--acc-purple-dark);
+  border-color: rgba(91, 79, 207, .32);
+  background: var(--acc-purple-soft);
+  transform: none;
+}
+@media (max-width: 720px) {
+  body.mk-account-dashboard .mk-account-page-head--premium {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .65rem;
+  }
+  body.mk-account-dashboard .mk-account-page-head__actions {
+    padding-bottom: 0;
+  }
 }
 body.mk-account-dashboard .mk-account-sidebar a:focus-visible,
 body.mk-account-dashboard .mk-account-mob-shell a:focus-visible,
@@ -390,7 +486,7 @@ body.mk-account-dashboard .mk-account-page-head a:focus-visible {
     border-radius: 12px;
     z-index: 3;
   }
-  body.mk-account-dashboard .mk-account-sidebar__brand { padding-inline-end: 2.8rem; }
+  body.mk-account-dashboard .mk-account-sidebar__nav { padding-top: 3rem; padding-inline-end: .35rem; }
   body.mk-account-dashboard .mk-account-page-head--premium { display: none; }
   body.mk-account-dashboard .mk-account-mob-shell {
     background: var(--acc-sidebar-bg);
@@ -515,27 +611,68 @@ html.mk-public:not([data-theme="light"]) body.mk-account-dashboard {
   --acc-purple-dark: #b8afff;
   --acc-purple-soft: rgba(169,158,255,.13);
 }
-html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar::before {
-  background: radial-gradient(circle at 95% 0%, rgba(140,120,255,.095), transparent 45%);
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__top {
+  border-bottom-color: rgba(172, 180, 212, .13);
 }
-html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__brand-mark,
-html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__user,
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__foot {
+  border-top-color: rgba(172, 180, 212, .13);
+}
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-mob-cta-pill,
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-tab-rail__item.is-active,
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__link.is-active {
-  background: rgba(140,120,255,.13);
+  background: rgba(140, 120, 255, .13);
   color: #d9d4ff;
-  border-color: rgba(169,158,255,.15);
+  border-color: rgba(169, 158, 255, .15);
 }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__link.is-active .mk-account-sidebar__link-icon {
-  background: rgba(169,158,255,.16);
+  background: transparent;
   color: #d9d4ff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__workspace {
+  background: rgba(17, 23, 38, .55);
+  border-color: rgba(169, 158, 255, .22);
+  color: #d9d4ff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__workspace-copy small {
+  color: #a5afc4;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__user {
+  background: rgba(17, 23, 38, .72);
+  border-color: rgba(172, 180, 212, .12);
+  box-shadow: none;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__avatar {
+  background: rgba(140, 120, 255, .1);
+  box-shadow: 0 0 0 1px rgba(172, 180, 212, .14);
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__avatar-edit {
+  border-color: #111726;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__user-handle {
+  color: #9aa8c4;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar__user-phone {
+  color: #8b96b3;
 }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-tab-rail__item.is-active i { color: #d9d4ff; }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-mob-shell { background: #111726; }
 html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-mob-menu-btn {
   background: rgba(169,158,255,.13);
   border-color: rgba(169,158,255,.16);
+  color: #d9d4ff;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb,
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb a {
+  color: #8b96b3;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-page-head--premium .mk-account-breadcrumb__current {
+  color: #a5afc4;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-page-head--premium .mk-account-page-head__sub {
+  color: #8b96b3;
+}
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-page-head__cta {
+  border-color: rgba(169, 158, 255, .22);
   color: #d9d4ff;
 }
 @media (prefers-reduced-motion: reduce) {

@@ -1,86 +1,50 @@
-{% load static account_avatar_tags %}
 <aside class="mk-account-sidebar" id="accountSidebar" aria-label="منوی حساب کاربری" tabindex="-1">
     <button type="button" class="mk-account-sidebar__close" data-account-sidebar-close aria-label="بستن منوی حساب">
         <i class="fas fa-xmark" aria-hidden="true"></i>
     </button>
 
-    <a class="mk-account-sidebar__brand" href="{{ dashboard_tab_urls.overview }}" aria-label="نمای کلی حساب فایلینگ دیوار">
-        <span class="mk-account-sidebar__brand-mark">
-            <img src="{% static 'logo.png' %}" alt="" width="35" height="35" loading="eager">
-        </span>
-        <span class="mk-account-sidebar__brand-copy">
-            <strong>فایلینگ دیوار</strong>
-            <small>مرکز مدیریت حساب</small>
-        </span>
-    </a>
-
-    <div class="mk-account-sidebar__user">
-        <button type="button" class="mk-account-sidebar__avatar-btn" onclick="openAccountAvatarPicker()" aria-label="تغییر آواتار">
-            <span class="mk-account-sidebar__avatar">
-                <img id="accountAvatarSidebarImg" src="{% account_user_avatar_url user %}" alt="" width="48" height="48" loading="lazy" decoding="async">
-            </span>
-            <span class="mk-account-sidebar__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
-        </button>
-        <div class="mk-account-sidebar__user-copy">
-            <strong class="mk-account-sidebar__user-name" title="{{ user.get_full_name|default:user.username }}">{{ user.get_full_name|default:user.username }}</strong>
-            <span class="mk-account-sidebar__user-meta">@{{ user.username }}</span>
-            {% if user.phone %}<span class="mk-account-sidebar__user-meta" dir="ltr">{{ user.phone }}</span>{% endif %}
-            <span class="mk-account-sidebar__account-type">حساب شخصی</span>
-            {% if active_tab != 'profile' %}
-            <button type="button" class="mk-account-sidebar__avatar-link" onclick="openAccountAvatarPicker()">تغییر آواتار</button>
-            {% endif %}
-        </div>
-    </div>
-
     <nav class="mk-account-sidebar__nav" aria-label="بخش‌های حساب">
-        <span class="mk-account-sidebar__nav-label">مدیریت حساب</span>
         <a href="{{ dashboard_tab_urls.overview }}" class="mk-account-sidebar__link{% if active_tab == 'overview' %} is-active{% endif %}"{% if active_tab == 'overview' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-grip" aria-hidden="true"></i></span>
             <span>نمای کلی</span>
-            <i class="fas fa-chevron-left mk-account-sidebar__chevron" aria-hidden="true"></i>
         </a>
         <a href="{{ dashboard_tab_urls.orders }}" class="mk-account-sidebar__link{% if active_tab == 'orders' %} is-active{% endif %}"{% if active_tab == 'orders' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
             <span>سفارش‌ها</span>
-            <i class="fas fa-chevron-left mk-account-sidebar__chevron" aria-hidden="true"></i>
         </a>
         <a href="{{ dashboard_tab_urls.licenses }}" class="mk-account-sidebar__link{% if active_tab == 'licenses' %} is-active{% endif %}"{% if active_tab == 'licenses' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
             <span>لایسنس‌ها</span>
-            <i class="fas fa-chevron-left mk-account-sidebar__chevron" aria-hidden="true"></i>
         </a>
         <a href="{{ dashboard_tab_urls.downloads }}" class="mk-account-sidebar__link{% if active_tab == 'downloads' %} is-active{% endif %}"{% if active_tab == 'downloads' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-download" aria-hidden="true"></i></span>
             <span>دانلود اپ‌ها</span>
-            <i class="fas fa-chevron-left mk-account-sidebar__chevron" aria-hidden="true"></i>
         </a>
 
-        <span class="mk-account-sidebar__nav-label">مالی و همکاری</span>
         <a href="{{ dashboard_tab_urls.transactions }}" class="mk-account-sidebar__link{% if active_tab == 'transactions' %} is-active{% endif %}"{% if active_tab == 'transactions' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-right-left" aria-hidden="true"></i></span>
             <span>تراکنش‌ها</span>
-            <i class="fas fa-chevron-left mk-account-sidebar__chevron" aria-hidden="true"></i>
         </a>
         {% if has_paid_orders %}
         <a href="{{ dashboard_tab_urls.affiliate }}" class="mk-account-sidebar__link{% if active_tab == 'affiliate' %} is-active{% endif %}"{% if active_tab == 'affiliate' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-handshake" aria-hidden="true"></i></span>
             <span>همکاری در فروش</span>
-            <i class="fas fa-chevron-left mk-account-sidebar__chevron" aria-hidden="true"></i>
         </a>
         {% endif %}
-        <span class="mk-account-sidebar__nav-label">تنظیمات</span>
+
         <a href="{{ dashboard_tab_urls.profile }}" class="mk-account-sidebar__link{% if active_tab == 'profile' %} is-active{% endif %}"{% if active_tab == 'profile' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-user-pen" aria-hidden="true"></i></span>
             <span>پروفایل</span>
-            <i class="fas fa-chevron-left mk-account-sidebar__chevron" aria-hidden="true"></i>
         </a>
     </nav>
 
     <div class="mk-account-sidebar__foot">
         <a href="{% url 'workspace:home' %}" class="mk-account-sidebar__workspace">
-            <span class="mk-account-sidebar__workspace-icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
-            <span class="mk-account-sidebar__workspace-copy">ورود به میزکار<small>مدیریت فایل‌ها و مشتریان</small></span>
-            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            <span class="mk-account-sidebar__workspace-copy">
+                <span>ورود به میزکار</span>
+                <small>مدیریت فایل‌ها و مشتریان</small>
+            </span>
+            <i class="fas fa-arrow-left mk-account-sidebar__workspace-arrow" aria-hidden="true"></i>
         </a>
         <div class="mk-account-sidebar__foot-links">
             <a href="{% url 'home' %}" class="mk-account-sidebar__foot-link">

@@ -1,0 +1,356 @@
+/* Order renewal — premium layout (هم‌راستا با buy-checkout) */
+
+body.mk-order-renew-page > .mk-notices,
+body.mk-order-renew-page > .banners-section {
+    display: none !important;
+}
+
+.mk-order-renew-page.ck-buy-flow--premium .ck-renew-shell.ck-buy-shell:has(.ck-renew-form) {
+    display: grid;
+    grid-template-columns: minmax(17.5rem, 23.5rem) minmax(0, 1fr);
+    align-items: start;
+    min-height: 0;
+}
+
+.mk-order-renew-page .ck-renew-shell > .ck-page-head--buy {
+    grid-column: 1 / -1;
+}
+
+.mk-order-renew-page .ck-renew-form.ck-form--checkout {
+    display: contents;
+}
+
+.mk-order-renew-page .ck-renew-main {
+    padding: clamp(1.1rem, 2vw, 1.55rem) clamp(1.15rem, 2.2vw, 1.65rem);
+    background: #fff;
+    min-height: 0;
+}
+
+.mk-order-renew-page .ck-renew-main-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.mk-order-renew-page .ck-renew-main-title {
+    margin: 0 0 0.35rem;
+    font-size: clamp(1rem, 1.4vw, 1.18rem);
+    font-weight: 800;
+    color: var(--ck-pay-ink, #1a2035);
+}
+
+.mk-order-renew-page .ck-renew-main-sub {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--ck-pay-muted, #64748b);
+    max-width: 36rem;
+}
+
+.mk-order-renew-page .ck-renew-back {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--ck-pay-muted, #64748b);
+    text-decoration: none;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(255, 255, 255, 0.85);
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.mk-order-renew-page .ck-renew-back:hover {
+    color: var(--ck-pay-violet, #6d28d9);
+    border-color: rgba(109, 40, 217, 0.25);
+}
+
+.mk-order-renew-page .ck-renew-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+}
+
+.mk-order-renew-page .ck-renew-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.42rem 0.78rem;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    background: rgba(124, 58, 237, 0.06);
+    color: #5b21b6;
+    font-size: 0.76rem;
+    font-weight: 650;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.mk-order-renew-page .ck-renew-chip:hover {
+    background: rgba(124, 58, 237, 0.1);
+}
+
+.mk-order-renew-page .ck-renew-chip--muted {
+    border-color: rgba(148, 163, 184, 0.22);
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.mk-order-renew-page .ck-renew-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.mk-order-renew-page .ck-renew-row {
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.mk-order-renew-page .ck-renew-row:not(.ck-renew-row--disabled):hover {
+    border-color: rgba(124, 58, 237, 0.22);
+    box-shadow: 0 8px 24px -20px rgba(79, 70, 229, 0.35);
+}
+
+.mk-order-renew-page .ck-renew-row.is-selected:not(.ck-renew-row--disabled) {
+    border-color: rgba(124, 58, 237, 0.35);
+    background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+    box-shadow:
+        0 0 0 1px rgba(124, 58, 237, 0.08),
+        0 12px 28px -22px rgba(79, 70, 229, 0.45);
+}
+
+.mk-order-renew-page .ck-renew-row--disabled {
+    opacity: 0.5;
+    filter: grayscale(0.15);
+}
+
+.mk-order-renew-page .ck-renew-row__label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+.mk-order-renew-page .ck-renew-check {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+.mk-order-renew-page .ck-renew-row__check {
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.15rem;
+    border-radius: 8px;
+    border: 2px solid rgba(148, 163, 184, 0.45);
+    background: #fff;
+    position: relative;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.mk-order-renew-page .ck-renew-row__check::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    opacity: 0;
+    transform: scale(0.75);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.mk-order-renew-page .ck-renew-check:checked + .ck-renew-row__check {
+    border-color: #7c3aed;
+}
+
+.mk-order-renew-page .ck-renew-check:checked + .ck-renew-row__check::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.mk-order-renew-page .ck-renew-check:focus-visible + .ck-renew-row__check {
+    outline: 2px solid rgba(124, 58, 237, 0.45);
+    outline-offset: 2px;
+}
+
+.mk-order-renew-page .ck-renew-row__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.mk-order-renew-page .ck-renew-row__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.65rem;
+}
+
+.mk-order-renew-page .ck-renew-row__seq {
+    font-size: 0.82rem;
+    font-weight: 750;
+    color: var(--ck-pay-ink, #1a2035);
+}
+
+.mk-order-renew-page .ck-renew-row__key {
+    font-size: 0.74rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.06);
+    color: #334155;
+    font-family: ui-monospace, 'Cascadia Code', monospace;
+}
+
+.mk-order-renew-page .ck-renew-row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-top: 0.4rem;
+    font-size: 0.76rem;
+    color: var(--ck-pay-muted, #64748b);
+}
+
+.mk-order-renew-page .ck-renew-row__meta i {
+    margin-inline-end: 0.25rem;
+    opacity: 0.75;
+}
+
+.mk-order-renew-page .ck-renew-plan-field {
+    margin: 0.25rem 0 1rem;
+}
+
+.mk-order-renew-page .ck-renew-select-wrap {
+    position: relative;
+    margin-top: 0.35rem;
+}
+
+.mk-order-renew-page .ck-renew-select {
+    width: 100%;
+    appearance: none;
+    padding: 0.62rem 2.25rem 0.62rem 0.85rem;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: #f8fafc;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ck-pay-ink, #1a2035);
+    font-family: inherit;
+}
+
+.mk-order-renew-page .ck-renew-select:focus {
+    outline: none;
+    border-color: rgba(124, 58, 237, 0.45);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.mk-order-renew-page .ck-renew-select-chevron {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.mk-order-renew-page .ck-renew-summary__lead {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--ck-pay-muted, #64748b);
+}
+
+.mk-order-renew-page .ck-renew-summary__error {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #dc2626;
+}
+
+.mk-order-renew-page .ck-renew-summary__items {
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.72rem;
+    color: var(--ck-pay-muted, #64748b);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mk-order-renew-page .ck-renew-summary__items li::before {
+    content: '·';
+    margin-inline-end: 0.35rem;
+    color: #a78bfa;
+}
+
+.mk-order-renew-page .ck-renew-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    font-weight: 750;
+    min-height: 2.85rem;
+}
+
+.mk-order-renew-page .ck-renew-submit:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.mk-order-renew-page .ck-renew-trust {
+    margin: 0.65rem 0 0;
+    text-align: center;
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.mk-order-renew-page .ck-renew-trust i {
+    color: #059669;
+    margin-inline-end: 0.3rem;
+}
+
+.mk-order-renew-page .ck-renew-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--ck-pay-muted, #64748b);
+}
+
+.mk-order-renew-page .ck-renew-empty i {
+    font-size: 2rem;
+    color: #c4b5fd;
+    margin-bottom: 0.75rem;
+}
+
+@media (max-width: 900px) {
+    .mk-order-renew-page.ck-buy-flow--premium .ck-renew-shell.ck-buy-shell:has(.ck-renew-form) {
+        grid-template-columns: 1fr;
+    }
+
+    .mk-order-renew-page .ck-renew-form .ck-order {
+        border-inline-end: none;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .mk-order-renew-page .ck-renew-main-head {
+        flex-direction: column;
+    }
+}

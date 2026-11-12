@@ -8,6 +8,7 @@ from public_assistant.services.public_links import (
     normalize_public_answer_links,
     plan_purchase_markdown,
 )
+from public_assistant.services.public_paths import canonical_public_path
 from public_assistant.services.security import is_allowed_public_link
 
 
@@ -52,3 +53,6 @@ class PublicLinksTests(TestCase):
         ans = compose_no_catalog_answer()
         self.assertIn('[', ans)
         self.assertNotIn('`/products', ans)
+
+    def test_canonical_contact_us(self):
+        self.assertEqual(canonical_public_path('/contact-us/'), '/contact/')

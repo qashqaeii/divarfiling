@@ -175,6 +175,18 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         boost += 4.0
     if article_id == 'support-common-errors' and any(w in query_norm for w in ('مشکل', 'خطا', 'نمی')):
         boost += 3.0
+    if article_id == 'support-common-errors' and any(
+        w in query_norm for w in ('تیکت', 'پشتیبانی', 'support')
+    ):
+        boost += 8.0
+    if article_id == 'support-wave1-crm-filing' and any(
+        w in query_norm for w in ('تیکت', 'پشتیبانی', 'support')
+    ):
+        boost += 7.0
+    if article_id == 'content-studio-story' and any(
+        w in query_norm for w in ('استودیو', 'استوری', 'story', 'پوستر', 'محتوا')
+    ) and any(w in query_norm for w in ('ملک', 'فایل شخصی', 'فایلینگ', 'اندروید', 'وب', 'میزکار')):
+        boost += 12.0
     if article_id == 'support-wave1-crm-filing' and 'لینک' in query_norm and any(
         w in query_norm for w in ('باز', 'نمی', 'کار نمی', 'خطا')
     ):

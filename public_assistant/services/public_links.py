@@ -52,8 +52,10 @@ _HTML_TAG_RE = re.compile(r'<[^>]+>')
 
 def md_link(label: str, url: str) -> str:
     """[عنوان فارسی](url) — در صورت مسیر نامعتبر فقط عنوان."""
+    from public_assistant.services.public_paths import canonical_public_path
+
     label = (label or '').strip() or 'لینک'
-    url = (url or '').strip()
+    url = canonical_public_path((url or '').strip())
     if not is_allowed_public_link(url):
         return label
     return f'[{label}]({url})'
@@ -164,8 +166,21 @@ def _protect_markdown_links(text: str) -> tuple[str, list[str]]:
     return _MD_LINK_RE.sub(_keep, text), links
 
 
+def _canonicalize_md_link_urls(text: str) -> str:
+    from public_assistant.services.public_paths import canonical_public_path
+
+    def _fix(m: re.Match[str]) -> str:
+        label, url = m.group(1), canonical_public_path(m.group(2).strip())
+        if not is_allowed_public_link(url):
+            return label
+        return f'[{label}]({url})'
+
+    return _MD_LINK_RE.sub(_fix, text)
+
+
 def _restore_markdown_links(text: str, links: list[str]) -> str:
-    for i, raw in enumerate(links):
+    canon_links = [_canonicalize_md_link_urls(raw) for raw in links]
+    for i, raw in enumerate(canon_links):
         text = text.replace(_MD_PLACEHOLDER.format(i), raw)
     return text
 
@@ -180,10 +195,17 @@ def _path_to_md(path: str, prefix_label: str | None = None) -> str:
 
 def normalize_public_answer_links(text: str) -> str:
     """تبدیل مسیرهای خام و backtick به لینک مارک‌داون مجاز."""
+    from public_assistant.services.public_paths import canonical_public_path
+
     if not text:
         return text
     cleaned = _HTML_TAG_RE.sub('', text)
     protected, saved = _protect_markdown_links(cleaned)
+
+    def _fix_bare_contact_us(m: re.Match[str]) -> str:
+        return canonical_public_path(m.group(0))
+
+    protected = re.sub(r'/contact-us/?', _fix_bare_contact_us, protected, flags=re.I)
 
     def prefix_repl(m: re.Match[str]) -> str:
         prefix = m.group('prefix')

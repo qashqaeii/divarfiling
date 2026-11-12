@@ -23,6 +23,7 @@ from public_assistant.services.public_copy import (
     finalize_public_answer,
     format_public_fallback,
     polish_public_answer,
+    reconcile_escalation_paths,
     sanitize_public_knowledge_text,
     strip_unsolicited_subscription_pitch,
 )
@@ -43,6 +44,7 @@ from public_assistant.services.plan_intent import (
     is_product_operations_topic,
 )
 from public_assistant.services.public_plans import load_public_plan_catalog
+from public_assistant.services.public_paths import is_commerce_path, scrub_commerce_links_from_answer
 from public_assistant.services.security import (
     filter_sources,
     looks_like_prompt_injection,
@@ -200,12 +202,24 @@ def _history_lines(session: PublicChatSession) -> str:
     return '\n'.join(lines)
 
 
-def _collect_sources(chunks: list[RetrievedChunk]) -> list[dict]:
+def _collect_sources(
+    chunks: list[RetrievedChunk],
+    *,
+    allow_commerce: bool = False,
+    max_score_gap: float = 5.0,
+) -> list[dict]:
     seen = set()
     out: list[dict] = []
+    if not chunks:
+        return out
+    top_score = chunks[0].score
     for ch in chunks:
+        if ch.score < top_score - max_score_gap:
+            continue
         for link in filter_sources(ch.related_links):
             url = link['url']
+            if not allow_commerce and is_commerce_path(url):
+                continue
             if url in seen:
                 continue
             seen.add(url)
@@ -213,14 +227,14 @@ def _collect_sources(chunks: list[RetrievedChunk]) -> list[dict]:
     return out[:8]
 
 
-def _fallback_from_chunks(chunks: list[RetrievedChunk]) -> str:
+def _fallback_from_chunks(chunks: list[RetrievedChunk], *, query: str = '') -> str:
     if not chunks:
-        return format_public_fallback([])
-    return format_public_fallback(chunks)
+        return format_public_fallback([], query=query)
+    return format_public_fallback(chunks, query=query)
 
 
-def _low_confidence_answer() -> str:
-    return format_public_fallback([])
+def _low_confidence_answer(query: str = '') -> str:
+    return format_public_fallback([], query=query)
 
 
 def answer_question(
@@ -254,7 +268,7 @@ def answer_question(
         return {
             'ok': True,
             'answer': finalize_public_answer(deflect_internal_question()),
-            'sources': _collect_sources(chunks) if chunks else [],
+            'sources': _collect_sources(chunks, allow_commerce=sub_ctx.is_subscription) if chunks else [],
             'session_id': str(session.id),
         }
 
@@ -275,18 +289,18 @@ def answer_question(
             return {
                 'ok': True,
                 'answer': finalize_public_answer(compose_no_catalog_answer()),
-                'sources': _collect_sources(chunks) if chunks else [],
+                'sources': _collect_sources(chunks, allow_commerce=sub_ctx.is_subscription) if chunks else [],
                 'session_id': str(session.id),
             }
         return {
             'ok': True,
-            'answer': finalize_public_answer(_low_confidence_answer()),
+            'answer': finalize_public_answer(_low_confidence_answer(user_text)),
             'sources': [],
             'session_id': str(session.id),
             'low_confidence': True,
         }
 
-    sources = _collect_sources(chunks)
+    sources = _collect_sources(chunks, allow_commerce=sub_ctx.is_subscription)
     context = _format_context(chunks)
     history = _history_lines(session)
 
@@ -317,9 +331,9 @@ def answer_question(
         if plan_catalog and sub_ctx.is_subscription and not product_ops:
             text = compose_subscription_answer(sub_ctx, plan_catalog)
         if not text:
-            text = _fallback_from_chunks(chunks)
+            text = _fallback_from_chunks(chunks, query=user_text)
     else:
-        text = polish_public_answer(text, chunks=chunks)
+        text = polish_public_answer(text, chunks=chunks, query=user_text)
         if sub_ctx.is_subscription:
             text = reconcile_subscription_answer(text, sub_ctx, plan_catalog)
             text = strip_unverified_subscription_prices(text, sub_ctx, plan_catalog)
@@ -346,7 +360,10 @@ def answer_question(
     if not sub_ctx.is_subscription:
         text = strip_unsolicited_subscription_pitch(text or '')
     text = sanitize_public_knowledge_text(text or '')
+    text = reconcile_escalation_paths(text or '', user_text)
     text = finalize_public_answer(text)
+    if not sub_ctx.is_subscription:
+        text = scrub_commerce_links_from_answer(text)
 
     PublicChatMessage.objects.create(
         session=session,

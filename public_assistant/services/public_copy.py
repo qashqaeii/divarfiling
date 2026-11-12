@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import re
 
-from public_assistant.services.public_links import contact_link, license_guide_link
+from public_assistant.services.persian_text import normalize_persian
+from public_assistant.services.public_links import contact_link, license_guide_link, support_link
 from public_assistant.services.retrieval import RetrievedChunk
 
 # الگوهایی که در پاسخ کاربر عمومی نباید دیده شوند (مسیرهای عمومی مثل `/workspace/` مجازند)
@@ -39,15 +40,46 @@ _EXTRACTOR_AUTO_DISCLAIMER_RE = re.compile(
     re.IGNORECASE,
 )
 
-def _insufficient_info() -> str:
+def _escalation_hint(query: str = '') -> str:
+    norm = normalize_persian(query or '')
+    ticket_hint = any(
+        w in norm for w in ('تیکت', 'پشتیبانی', 'support', 'باگ', 'خطا', 'مشکل فنی')
+    )
+    if ticket_hint:
+        return (
+            f'از {support_link(inline=True)} ثبت کنید '
+            f'یا برای هماهنگی مستقیم {contact_link()}.'
+        )
     return (
-        'برای این مورد اطلاعات تأییدشدهٔ کافی در راهنمای فعلی ندارم. '
-        f'می‌توانید سؤال را دقیق‌تر بپرسید یا از {contact_link()} با پشتیبانی فایلینگ دیوار '
-        'در ارتباط باشید.'
+        f'سؤال را دقیق‌تر بپرسید، از {support_link()} کمک بگیرید '
+        f'یا {contact_link()} با پشتیبانی در ارتباط باشید.'
     )
 
 
-_INSUFFICIENT_INFO = _insufficient_info()
+def _insufficient_info(query: str = '') -> str:
+    return (
+        'برای این مورد اطلاعات تأییدشدهٔ کافی در راهنمای فعلی ندارم. '
+        + _escalation_hint(query)
+    )
+
+
+def insufficient_info_message(query: str = '') -> str:
+    return _insufficient_info(query)
+
+
+def reconcile_escalation_paths(text: str, query: str) -> str:
+    """برای سؤال تیکت/پشتیبانی، مسیر میزکار را در پاسخ حفظ می‌کند."""
+    norm = normalize_persian(query or '')
+    if not any(w in norm for w in ('تیکت', 'پشتیبانی', 'support')):
+        return text
+    if '/workspace/support/' in (text or ''):
+        return text
+    body = (text or '').strip()
+    hint = f'برای ثبت تیکت، {support_link(inline=True)}.'
+    if not body:
+        return hint
+    return f'{body}\n\n{hint}'
+
 
 _INTERNAL_QUESTION_RE = re.compile(
     r'(?i)(feature\s*flag|متغیر\s*محیط|env\b|django|'
@@ -104,9 +136,9 @@ def sanitize_public_knowledge_text(text: str) -> str:
     return out.strip()
 
 
-def format_public_fallback(chunks: list[RetrievedChunk]) -> str:
+def format_public_fallback(chunks: list[RetrievedChunk], *, query: str = '') -> str:
     if not chunks:
-        return _INSUFFICIENT_INFO
+        return _insufficient_info(query)
     parts: list[str] = []
     for ch in chunks[:3]:
         body = sanitize_public_knowledge_text((ch.body or '').strip())
@@ -115,7 +147,7 @@ def format_public_fallback(chunks: list[RetrievedChunk]) -> str:
         heading = f' — {ch.heading}' if ch.heading else ''
         parts.append(f'**{ch.title}{heading}**\n\n{body}')
     if not parts:
-        return _INSUFFICIENT_INFO
+        return _insufficient_info(query)
     text = '\n\n'.join(parts)
     note = (chunks[0].subscription_note or '').strip()
     if note and not contains_internal_leak(note):
@@ -123,14 +155,19 @@ def format_public_fallback(chunks: list[RetrievedChunk]) -> str:
     return text
 
 
-def polish_public_answer(text: str, *, chunks: list[RetrievedChunk] | None = None) -> str:
+def polish_public_answer(
+    text: str,
+    *,
+    chunks: list[RetrievedChunk] | None = None,
+    query: str = '',
+) -> str:
     cleaned = sanitize_public_knowledge_text(_strip_citations(text))
     if not cleaned:
-        return _INSUFFICIENT_INFO if not chunks else format_public_fallback(chunks)
+        return _insufficient_info(query) if not chunks else format_public_fallback(chunks, query=query)
     if contains_internal_leak(cleaned):
         if chunks:
-            return format_public_fallback(chunks)
-        return _INSUFFICIENT_INFO
+            return format_public_fallback(chunks, query=query)
+        return _insufficient_info(query)
     return finalize_public_answer(cleaned)
 
 

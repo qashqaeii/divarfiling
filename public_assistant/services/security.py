@@ -67,13 +67,15 @@ def is_allowed_public_link(url: str) -> bool:
 
 
 def filter_sources(links: list) -> list[dict]:
+    from public_assistant.services.public_paths import canonical_public_path
+
     out = []
     for item in links or []:
         if isinstance(item, str):
             item = {'label': item, 'url': item}
         if not isinstance(item, dict):
             continue
-        url = (item.get('url') or '').strip()
+        url = canonical_public_path((item.get('url') or '').strip())
         if not is_allowed_public_link(url):
             continue
         label = (item.get('label') or url).strip()[:200]

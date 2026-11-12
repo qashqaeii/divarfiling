@@ -6,8 +6,8 @@ from django.test import TestCase, override_settings
 from public_assistant.models import PublicChatSession
 from public_assistant.services.chat import answer_question
 from public_assistant.services.public_copy import (
-    _INSUFFICIENT_INFO,
     contains_internal_leak,
+    insufficient_info_message,
     polish_public_answer,
 )
 
@@ -141,7 +141,7 @@ class PublicResponsePolicyTest(TestCase):
         )
         cleaned = polish_public_answer(raw)
         self.assertIn('/workspace/crm/contacts/', cleaned)
-        self.assertNotEqual(cleaned, _INSUFFICIENT_INFO)
+        self.assertNotEqual(cleaned, insufficient_info_message())
 
     @patch('public_assistant.services.chat.llm.complete')
     def test_howto_contact_not_replaced_by_insufficient(self, mock_complete):
@@ -168,7 +168,7 @@ class PublicResponsePolicyTest(TestCase):
             fallback = polish_public_answer('', chunks=chunks)
             self.assertNotEqual(
                 fallback,
-                _INSUFFICIENT_INFO,
+                insufficient_info_message(),
                 msg=f'fallback empty for: {q}',
             )
             self.assertNotIn('اطلاعات تأییدشدهٔ کافی', fallback, msg=q)

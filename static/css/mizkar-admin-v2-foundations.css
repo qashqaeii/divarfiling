@@ -261,3 +261,161 @@ body.mk-admin-dashboard :is(button,input,select,textarea):disabled {
   .ecc-page--shell .ecc-nav-item[aria-current="page"] { outline: 2px solid Highlight; }
   .ecc-page--shell .ecc-btn--primary { border: 1px solid ButtonText; }
 }
+
+/* Phase 02B — First-screen decision hierarchy and a shared KPI contract. */
+.ecc-page--shell .adm-prime-hero {
+    align-items: stretch;
+    margin-block: 14px 18px;
+    gap: 14px;
+}
+.ecc-page--shell .adm-prime-hero__chart,
+.ecc-page--shell .adm-prime-hero__rail { min-width: 0; }
+.ecc-page--shell .adm-prime-hero__chart .ecc-card--chart {
+    border-radius: 17px;
+    min-width: 0;
+    height: 100%;
+}
+.ecc-page--shell .adm-prime-hero__rail .ecc-cmd-actions {
+    border-radius: 17px;
+    height: 100%;
+}
+.ecc-page--shell .adm-prime-section-tag {
+    gap: 10px;
+    align-items: baseline;
+}
+.ecc-page--shell .adm-prime-section-tag strong {
+    color: var(--adm-v2-text);
+    font-size: .86rem;
+    font-weight: 750;
+}
+.ecc-page--shell .adm-prime-section-tag em {
+    color: var(--adm-v2-muted);
+    font-style: normal;
+    font-size: .73rem;
+}
+.ecc-page--shell .adm-prime-kpi-band .ecc-kpi-grid--cmd,
+.ecc-page--shell .cust-kpi-block .ecc-kpi-grid--cmd {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ecc-page--shell .biz-page--licenses .ecc-kpi-grid--cmd {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.ecc-page--shell .adm-v2-kpi-card {
+    position: relative;
+    min-width: 0;
+    padding: 14px 16px;
+    box-shadow: var(--adm-v2-shadow);
+    transition: border-color .15s ease;
+}
+.ecc-page--shell .adm-v2-kpi-card:hover { border-color: var(--adm-v2-accent); }
+.ecc-page--shell .adm-v2-kpi-card .ecc-kpi-val {
+    display: block;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.45;
+    font-weight: 800;
+}
+.ecc-page--shell .adm-v2-kpi-card .ecc-kpi-lbl {
+    font-size: .79rem;
+    font-weight: 700;
+}
+.ecc-page--shell .adm-v2-kpi-card .ecc-kpi-sub {
+    color: var(--adm-v2-muted);
+    line-height: 1.6;
+}
+.ecc-page--shell .adm-v2-kpi-card .ecc-kpi-val--pending {
+    color: var(--adm-v2-muted);
+}
+.ecc-page--shell .adm-v2-audit {
+    margin-block: 10px 20px;
+    padding: 0;
+    border: 1px solid var(--adm-v2-border);
+    background: var(--adm-v2-surface);
+    border-radius: 16px;
+    box-shadow: var(--adm-v2-shadow);
+}
+.ecc-page--shell .adm-v2-audit__summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    min-height: 54px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 750;
+    color: var(--adm-v2-text);
+}
+.ecc-page--shell .adm-v2-audit__summary::-webkit-details-marker { display: none; }
+.ecc-page--shell .adm-v2-audit__summary > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+.ecc-page--shell .adm-v2-audit__meta {
+    margin-inline-start: auto;
+    font-size: .73rem;
+    font-weight: 500;
+    color: var(--adm-v2-muted);
+}
+.ecc-page--shell .adm-v2-audit__chevron {
+    color: var(--adm-v2-muted);
+    font-size: .68rem;
+    transition: transform .16s ease;
+}
+.ecc-page--shell details[open].adm-v2-audit .adm-v2-audit__chevron {
+    transform: rotate(180deg);
+}
+.ecc-page--shell .adm-v2-audit__body {
+    padding: 8px 16px 16px;
+    border-top: 1px solid var(--adm-v2-border);
+}
+.ecc-page--shell .adm-v2-audit__body .ecc-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 10px;
+}
+.ecc-page--shell .adm-v2-integrity-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 11px;
+    background: var(--adm-v2-accent-soft);
+    color: var(--adm-v2-accent);
+    text-decoration: none;
+    font-size: .77rem;
+    font-weight: 700;
+    border: 1px solid var(--adm-v2-border);
+}
+.ecc-page--shell .adm-v2-integrity-link span { flex: 1; }
+.ecc-page--shell .adm-v2-integrity-link:hover {
+    border-color: var(--adm-v2-accent);
+}
+.ecc-page--shell .ecc-cmd-action[data-priority="critical"] {
+    border-inline-start: 3px solid #d94868;
+}
+.ecc-page--shell .ecc-cmd-action[data-priority="high"] {
+    border-inline-start: 3px solid #d4a052;
+}
+@media (max-width: 1099px) {
+    /* On one-column screens urgent tasks must precede decorative charts. */
+    .ecc-page--shell .adm-prime-hero__rail { order: -1; }
+    .ecc-page--shell .adm-prime-hero__rail .ecc-cmd-actions { height: auto; }
+}
+@media (max-width: 900px) {
+    .ecc-page--shell .adm-prime-kpi-band .ecc-kpi-grid--cmd,
+    .ecc-page--shell .cust-kpi-block .ecc-kpi-grid--cmd,
+    .ecc-page--shell .biz-page--licenses .ecc-kpi-grid--cmd {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .ecc-page--shell .adm-v2-audit__body .ecc-kpi-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+@media (max-width: 640px) {
+    .ecc-page--shell .adm-prime-hero { gap: 10px; }
+    .ecc-page--shell .adm-v2-kpi-card { padding: 12px; }
+    .ecc-page--shell .adm-v2-audit__meta { margin-inline-start: 0; }
+    .ecc-page--shell .adm-v2-audit__body { padding: 8px 10px 12px; }
+}

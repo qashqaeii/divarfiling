@@ -19,7 +19,7 @@
 |---|---|---|---|
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
 | 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A–01C committed; 01D sensitive admin access guarded; runtime validation remains OPEN |
-| 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A shared shell foundation prepared; per-module components and browser QA remain |
+| 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A committed; 02B four-center hierarchy and reusable KPI cards prepared; browser/Django QA pending |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
 | 05 | Licenses, renewals and device seats | Transparent lifecycle and safe entitlement operations | Pending |
@@ -153,12 +153,32 @@ python manage.py test accounts.tests.test_admin_premium_v2_foundations accounts.
 
 Browser QA needed at 390px, 768px, 1024px and desktop widths in light/dark themes: open/close the menu by click, Tab, Shift+Tab and Escape; switch date range with `audit`/search filters; verify exactly one active sidebar destination. The GitHub connector cannot execute the Django suite or interact with a browser.
 
-## Remaining gates before phase 02B
+## Phase 02B — information hierarchy and shared KPI component on four hubs
+
+- **Command, Sales, Users, Licenses** now share `admin_prime_kpi_card.html` for the same value/delta/status/empty/sparkline contract, preserving existing chart IDs and API datasets. The server renders real KPI values as fallback; it never shows a fake zero for unavailable cohort data.
+- Keep the deliberate first-screen sequence: current pulse → priority action queue / revenue or activity trend → period KPIs → deeper diagnostics, tables and exports. A shared CSS layout makes actionable queues appear **before** large charts on one-column/mobile screens without duplicating HTML.
+- Sales financial-integrity anomalies move from a four-card block **above** today's stats into an accessible, collapsible details section **after** the top-line KPIs. A subtle drilldown remains beside the action queue only when warnings exist. Targeted `audit` queries or hash deep links automatically open the details.
+- Use one *stable, shared* priority sort for Sales, Users and Licenses: critical first, then high, medium, and opportunities, breaking ties by affected count. Command was already priority-sorted; no duplicate implementation.
+- On read-only Users dashboards, remove search buttons/action destinations pointing to protected personal tables. Aggregate pulse remains visible but is rendered as a non-clickable metric if its destination requires the dossier role.
+- The action-queue badge explicitly represents the number of **issue categories**, not the total number of affected records; each row still shows its own affected count. Center pulse subtitles use Persian wording rather than unexplained “Snapshot”.
+- Add eight regression scenarios for deterministic priority sorting, SSR KPI fallback and pending states, CSS mobile order, four-center shared components, folded Sales audit, and read-only Users navigation.
+- No changes to financial calculations, campaign sending, data migrations, live operations, or production deployment.
+
+### Phase 02B validation (isolated database)
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_premium_v2_hierarchy accounts.tests.test_admin_premium_v2_foundations accounts.tests.test_admin_sales_center accounts.tests.test_admin_users_center accounts.tests.test_admin_licenses_center accounts.tests.test_admin_integrity_diagnostics --keepdb
+```
+
+**Open gate:** Browser QA at mobile/tablet/desktop widths, RTL focus, anchor-to-expanded financial audit, and the accumulated Django suite. Static assertions and source validation are not evidence that Django passed.
+
+## Remaining gates before phase 02C
 
 - Execute the accumulated phase 00–01 Django suites in isolated staging, with real PostgreSQL test DB. Resolve failures once from evidence; avoid speculative edit/revert cycles.
 - Audit existing affiliate payout concurrency and run proper DB transaction tests before activating concurrent settlement; no new auto-payout feature was added here.
 - Remaining platform privileged operations (forum moderation input limits and service-rollout toggles) should be handled as real, reproducible defects when their module phases arrive.
-- Stage 02B next: unify the first-screen information hierarchy and reusable KPI/chart/action/empty-state components on Command, Sales, Users and Licenses, with actual responsive QA rather than arbitrary color changes.
+- Stage 02C next: audit the most critical operational table/filter and empty/error states in Command, Sales, Users and Licenses against reusable patterns, then shift into the Command Center phase after runtime QA.
 
 
 

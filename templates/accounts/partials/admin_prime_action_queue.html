@@ -5,7 +5,7 @@
             <h2><i class="fas fa-bolt"></i> {{ title|default:'نیازمند اقدام' }}</h2>
             <p>{{ subtitle|default:'شمارش و سن از همان صف مقصد' }}</p>
         </div>
-        <span class="ecc-cmd-actions-count">{{ items|length|to_persian_digits }}</span>
+        <span class="ecc-cmd-actions-count" title="تعداد دسته‌های نیازمند اقدام" aria-label="{{ items|length|to_persian_digits }} دسته نیازمند اقدام">{{ items|length|to_persian_digits }}</span>
     </header>
     {% if items %}
     <div class="ecc-cmd-actions-list">

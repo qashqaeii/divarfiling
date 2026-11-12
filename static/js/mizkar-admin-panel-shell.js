@@ -154,11 +154,26 @@
         });
     }
 
+    function initDetailsDeepLinks() {
+        // The financial integrity report stays folded until explicitly opened.
+        function revealHashTarget() {
+            var id = decodeURIComponent(window.location.hash.slice(1));
+            if (!id) return;
+            var target = document.getElementById(id);
+            if (!target) return;
+            var details = target.tagName === 'DETAILS' ? target : target.closest('details');
+            if (details && !details.open) details.open = true;
+        }
+        window.addEventListener('hashchange', revealHashTarget);
+        revealHashTarget();
+    }
+
     function init() {
         initSidebarGroups();
         initMobileSidebar();
         initCompareToggle();
         initRefresh();
+        initDetailsDeepLinks();
     }
 
     if (document.readyState === 'loading') {

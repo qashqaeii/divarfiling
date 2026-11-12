@@ -908,9 +908,21 @@ class AdminUsersCenterView(StaffRequiredMixin, TemplateView):
         compare = self.request.GET.get('compare') == '1'
         data = get_users_center_context(days=days, compare=compare)
         if not can_view_user_management(self.request.user):
-            # Aggregate KPIs remain useful; personal records are not exposed.
+            # Preserve aggregate KPIs, but never offer actions leading to
+            # hidden personal tables or an inaccessible user dossier.
             for field in ('recent_users', 'top_users', 'users_without_license_list'):
                 data.pop(field, None)
+            data['action_items'] = [
+                item for item in data.get('action_items', [])
+                if item.get('href') not in (
+                    '#users-table-no-license', '#ecc-users-mgmt',
+                )
+            ]
+            for chip in data.get('center_pulse', []):
+                if chip.get('href') in (
+                    '#users-table-no-license', '#ecc-users-mgmt',
+                ):
+                    chip.pop('href', None)
         data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))

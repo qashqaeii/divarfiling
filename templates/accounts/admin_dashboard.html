@@ -76,28 +76,7 @@
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd adm-prime-kpi-band">
         {% for card in kpi_cards %}
         {% if card.kpi_tier == 'range' %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-                {% if card.delta is not None %}
-                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
-                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
-                </span>
-                {% endif %}
-            </div>
-            {% if card.value is None %}
-            <strong class="ecc-kpi-val">—</strong>
-            {% else %}
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            {% endif %}
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
-            {% if card.sparkline_json %}
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-            {% endif %}
-        </article>
+        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='range' %}
         {% endif %}
         {% endfor %}
     </div>
@@ -111,14 +90,7 @@
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd ecc-kpi-grid--compact">
         {% for card in kpi_cards %}
         {% if card.kpi_tier == 'snapshot' %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-            </div>
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
-        </article>
+        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='snapshot' %}
         {% endif %}
         {% endfor %}
     </div>

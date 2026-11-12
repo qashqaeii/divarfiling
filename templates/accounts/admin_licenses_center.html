@@ -69,23 +69,7 @@
     <p class="cust-kpi-group-label">بازه زمانی</p>
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
         {% for card in range_kpi_cards %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-                {% if card.delta is not None %}
-                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
-                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
-                </span>
-                {% endif %}
-            </div>
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
-            {% if card.coverage_note %}<span class="ecc-kpi-coverage">{{ card.coverage_note }}</span>{% endif %}
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-        </article>
+        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='range' %}
         {% endfor %}
     </div>
     <div class="adm-prime-section-tag" style="margin-top:12px">
@@ -94,17 +78,7 @@
     </div>
     <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
         {% for card in snapshot_kpi_cards %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-            </div>
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-        </article>
+        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='snapshot' %}
         {% endfor %}
     </div>
 </section>

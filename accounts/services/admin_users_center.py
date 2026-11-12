@@ -7,6 +7,8 @@ from typing import Any, Dict, List
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Exists, OuterRef, Q
 from django.urls import reverse
+
+from accounts.services.admin_presentation import prioritize_management_actions
 from django.utils import timezone
 
 from mobile_api.models import MobileDevice
@@ -429,7 +431,7 @@ def build_users_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
             'cta': 'فروش',
             'href': reverse('admin_panel_sales') + '#sales-table-pending',
         })
-    return items
+    return prioritize_management_actions(items)
 
 
 def get_users_export_links(days: int) -> List[Dict[str, Any]]:

@@ -8,6 +8,8 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Exists, OuterRef, Q, Sum
 from django.db.models.functions import TruncDate
 from django.urls import reverse
+
+from accounts.services.admin_presentation import prioritize_management_actions
 from django.utils import timezone
 
 from accounts.services.admin_dashboard import (
@@ -428,7 +430,7 @@ def build_licenses_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]
             'cta': 'کمپین تمدید',
             'href': reverse('admin_panel_marketing'),
         })
-    return items
+    return prioritize_management_actions(items)
 
 
 def get_licenses_export_links() -> List[Dict[str, Any]]:

@@ -1,0 +1,27 @@
+<header class="ov2-intro" lang="fa" dir="rtl" aria-label="{{ ov2_aria_label|default:ov2_label }}">
+    <div class="ov2-intro__frame">
+        <div class="ov2-intro__body">
+            <div class="ov2-intro__main">
+                <span class="ov2-intro__label">{{ ov2_label }}</span>
+                <h1 class="ov2-intro__title">{{ ov2_title }}</h1>
+                {% if ov2_lead %}<p class="ov2-intro__lead">{{ ov2_lead }}</p>{% endif %}
+            </div>
+            {% if ov2_primary_href or ov2_ghost_href %}
+            <div class="ov2-intro__actions">
+                {% if ov2_primary_href %}
+                <a href="{{ ov2_primary_href }}" class="ov2-intro__cta ov2-intro__cta--primary">
+                    <span>{{ ov2_primary_label|default:'ادامه' }}</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                {% if ov2_ghost_href %}
+                <a href="{{ ov2_ghost_href }}" class="ov2-intro__cta ov2-intro__cta--ghost">{{ ov2_ghost_label|default:'بیشتر' }}</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% if ov2_show_quick != '0' %}
+        {% include 'accounts/partials/account_ov2_quick_nav.html' %}
+        {% endif %}
+    </div>
+</header>

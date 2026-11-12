@@ -2,40 +2,48 @@
 {% load currency_tags %}
 
 {% if has_paid_orders %}
-<div id="tab-affiliate" class="mk-acc-tab-panel mk-acc-tab-shell mk-affiliate-tab tab-content dash-tab-panel"{% if active_tab != 'affiliate' %} hidden{% endif %}>
-    {% if affiliate %}
-    <div class="mk-acc-desk-only text-end mb-3">
-        <a href="{% url 'affiliate_dashboard' %}" class="mk-acc-btn mk-acc-btn--ghost" target="_blank" rel="noopener">
-            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-            داشبورد کامل
-        </a>
-    </div>
-    {% endif %}
+<div id="tab-affiliate" class="mk-acc-tab-panel mk-acc-tab-shell mk-affiliate-tab ov2 tab-content dash-tab-panel"{% if active_tab != 'affiliate' %} hidden{% endif %}>
+    <div class="mk-acc-tab-body">
+        {% url 'affiliate_dashboard' as aff_full_dash_url %}
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='همکاری در فروش' ov2_title='داشبورد همکاری در فروش' ov2_lead='لینک معرف، کمیسیون، کیف پول و فروش‌های ثبت‌شده از یکجا.' ov2_primary_href=aff_full_dash_url ov2_primary_label='داشبورد کامل' ov2_ghost_href=dashboard_tab_urls.overview ov2_ghost_label='نمای کلی' %}
 
     {% if affiliate %}
-    <div class="mk-acc-kpi-grid" aria-label="آمار همکاری">
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--violet">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-chart-column" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ affiliate_stats.total_sales_count }}</span>
-            <span class="mk-acc-kpi-card__lbl">فروش</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--green">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-coins" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ affiliate_stats.total_commission|currency }}</span>
-            <span class="mk-acc-kpi-card__lbl">کل کمیسیون</span>
-        </article>
-        <article class="mk-acc-kpi-card">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ affiliate_wallet.balance|currency }}</span>
-            <span class="mk-acc-kpi-card__lbl">موجودی</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--amber">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ affiliate_stats.referred_users_count|default:0 }}</span>
-            <span class="mk-acc-kpi-card__lbl">زیرمجموعه</span>
-        </article>
-    </div>
+        <section class="ov2-affiliate ov2-panel--affiliate" lang="fa" dir="rtl" aria-label="آمار همکاری در فروش">
+            <div class="ov2-affiliate__metrics" role="list">
+                <article class="ov2-affiliate__metric ov2-affiliate__metric--sales" role="listitem">
+                    <span class="ov2-affiliate__metric-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                    <div class="ov2-affiliate__metric-copy">
+                        <span class="ov2-affiliate__metric-label">تعداد فروش</span>
+                        <strong class="ov2-affiliate__metric-value ov2-fa-num">{{ affiliate_stats.total_sales_count|default:0|to_persian_digits }}</strong>
+                    </div>
+                </article>
+                <article class="ov2-affiliate__metric ov2-affiliate__metric--commission" role="listitem">
+                    <span class="ov2-affiliate__metric-icon" aria-hidden="true"><i class="fas fa-coins"></i></span>
+                    <div class="ov2-affiliate__metric-copy">
+                        <span class="ov2-affiliate__metric-label">کل کمیسیون</span>
+                        <strong class="ov2-affiliate__metric-value ov2-fa-num">{{ affiliate_stats.total_commission|default:0|currency|to_persian_digits }}</strong>
+                        <span class="ov2-affiliate__metric-unit">تومان</span>
+                    </div>
+                </article>
+                <article class="ov2-affiliate__metric ov2-affiliate__metric--wallet" role="listitem">
+                    <span class="ov2-affiliate__metric-icon" aria-hidden="true"><i class="fas fa-wallet"></i></span>
+                    <div class="ov2-affiliate__metric-copy">
+                        <span class="ov2-affiliate__metric-label">موجودی کیف پول</span>
+                        <strong class="ov2-affiliate__metric-value ov2-fa-num">{{ affiliate_wallet.balance|currency|to_persian_digits }}</strong>
+                        <span class="ov2-affiliate__metric-unit">تومان</span>
+                    </div>
+                </article>
+                <article class="ov2-affiliate__metric ov2-affiliate__metric--referrals" role="listitem">
+                    <span class="ov2-affiliate__metric-icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
+                    <div class="ov2-affiliate__metric-copy">
+                        <span class="ov2-affiliate__metric-label">کاربران معرفی‌شده</span>
+                        <strong class="ov2-affiliate__metric-value ov2-fa-num">{{ affiliate_stats.referred_users_count|default:0|to_persian_digits }}</strong>
+                    </div>
+                </article>
+            </div>
+        </section>
 
+        <section class="ov2-panel ov2-panel--tab" lang="fa" dir="rtl">
     <section class="mk-aff-wallet-hero">
         <div class="mk-aff-wallet-hero__copy">
             <span class="mk-aff-wallet-hero__label"><i class="fas fa-wallet" aria-hidden="true"></i> موجودی قابل برداشت</span>
@@ -95,12 +103,18 @@
         <p class="mk-acc-empty">هنوز فروشی ثبت نشده است. لینک معرف را به اشتراک بگذارید.</p>
         {% endif %}
     </section>
+        </section>
     {% else %}
-    <div class="mk-acc-empty-state">
-        <span class="mk-acc-empty-state__icon"><i class="fas fa-hourglass" aria-hidden="true"></i></span>
-        <p class="mk-acc-empty-state__title">در حال ایجاد حساب افیلیت</p>
-        <p class="mk-acc-empty-state__text">لطفاً چند لحظه صبر کنید و صفحه را رفرش کنید.</p>
-    </div>
+        <section class="ov2-panel ov2-panel--tab">
+            <div class="ov2-affiliate__standby">
+                <span class="ov2-affiliate__standby-icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
+                <div class="ov2-affiliate__standby-copy">
+                    <strong>در حال ایجاد حساب همکاری در فروش</strong>
+                    <p>لطفاً چند لحظه صبر کنید و صفحه را رفرش کنید.</p>
+                </div>
+            </div>
+        </section>
     {% endif %}
+    </div>
 </div>
 {% endif %}

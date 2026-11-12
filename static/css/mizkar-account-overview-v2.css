@@ -1,6 +1,26 @@
 /* Account Center / Phase 2: overview — Quiet Luxury, RTL, responsive.
    Scoped under .ov2 so order/license/payment screens remain untouched. */
 
+body.mk-account-dashboard .mk-acc-tab-shell.ov2 {
+    min-width: 0;
+}
+body.mk-account-dashboard .mk-acc-tab-shell.ov2 .mk-acc-tab-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    min-width: 0;
+    padding: 0;
+}
+body.mk-account-dashboard .ov2-panel--tab .ov2-panel__content {
+    min-width: 0;
+}
+body.mk-account-dashboard .ov2-panel--tab .mk-orders-toolbar {
+    margin: 0;
+}
+body.mk-account-dashboard .ov2-panel--downloads::before {
+    background: linear-gradient(90deg, transparent, rgba(102, 115, 203, .55), transparent);
+}
+
 body.mk-account-dashboard .ov2 {
     --ov2-ink: var(--acc-text, #20263b);
     --ov2-muted: var(--acc-text-muted, #66738b);
@@ -1160,14 +1180,14 @@ body.mk-account-dashboard .ov2-affiliate__standby-copy p {
     body.mk-account-dashboard .ov2-content-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 1024px) {
-    body.mk-account-dashboard .mk-overview-tab.ov2 {
+    body.mk-account-dashboard .mk-acc-tab-shell.ov2 {
         padding-inline: var(--acc-m-pad, 1rem);
         padding-block: .9rem 1.4rem;
     }
     body.mk-account-dashboard .ov2 .mk-acc-tab-body { gap: 1rem; }
 }
 @media (max-width: 767px) {
-    body.mk-account-dashboard .mk-overview-tab.ov2 { padding-block: .55rem 1.25rem; }
+    body.mk-account-dashboard .mk-acc-tab-shell.ov2 { padding-block: .55rem 1.25rem; }
     body.mk-account-dashboard .ov2 .mk-acc-tab-body { padding: 0; gap: .9rem; }
     body.mk-account-dashboard .ov2-intro__frame { border-radius: 15px; }
     body.mk-account-dashboard .ov2-intro__body {

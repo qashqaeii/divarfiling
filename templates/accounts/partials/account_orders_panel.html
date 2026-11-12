@@ -1,40 +1,65 @@
 {% load persian_tags %}
 {% load currency_tags %}
+{% load account_avatar_tags %}
 
-<div id="tab-orders" class="mk-acc-tab-panel mk-acc-tab-shell mk-orders-tab tab-content dash-tab-panel"{% if active_tab != 'orders' %} hidden{% endif %} data-orders-tab>
-    {% if pending_orders_count %}
-    <div class="mk-acc-desk-only mb-3">
-        <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-head-badge mk-acc-head-badge--warn">
-            <i class="fas fa-clock" aria-hidden="true"></i>
-            {{ pending_orders_count }} در انتظار
+<div id="tab-orders" class="mk-acc-tab-panel mk-acc-tab-shell mk-orders-tab ov2 tab-content dash-tab-panel"{% if active_tab != 'orders' %} hidden{% endif %} data-orders-tab>
+    <div class="mk-acc-tab-body">
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='سفارش‌ها' ov2_title='مدیریت سفارش‌ها و پرداخت' ov2_lead='پیگیری وضعیت خرید، تکمیل پرداخت و دریافت لایسنس از یکجا.' ov2_primary_href=dashboard_tab_urls.licenses ov2_primary_label='لایسنس‌های من' ov2_ghost_href=dashboard_tab_urls.downloads ov2_ghost_label='دانلود اپلیکیشن' %}
+
+        <section class="ov2-kpi" aria-label="خلاصه سفارش‌ها">
+            <div class="ov2-kpi__frame">
+            <div class="ov2-metrics">
+                <div class="ov2-metric ov2-metric--money" aria-label="کل سفارش‌ها">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-receipt"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">کل سفارش</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ total_orders|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--success">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">پرداخت‌شده</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ paid_orders|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--pending{% if pending_orders_count %} is-alert{% endif %}">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-clock"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">در انتظار</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ pending_orders_count|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--licenses">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-wallet"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">مجموع خرید (تومان)</span>
+                        <strong class="ov2-metric__value ov2-metric__value--money ov2-fa-num">{{ total_spent|currency|to_persian_digits }}</strong>
+                    </span>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        {% if pending_orders_count %}
+        <a class="ov2-attention" href="{{ dashboard_tab_urls.orders }}?order_status=pending">
+            <span class="ov2-attention__text"><strong class="ov2-fa-num">{{ pending_orders_count|to_persian_digits }}</strong> سفارش در انتظار پرداخت یا بررسی دارید</span>
+            <span class="ov2-attention__link">مشاهده <i class="fas fa-chevron-left" aria-hidden="true"></i></span>
         </a>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    <div class="mk-acc-kpi-grid" aria-label="خلاصه سفارش‌ها">
-        <article class="mk-acc-kpi-card">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ total_orders }}</span>
-            <span class="mk-acc-kpi-card__lbl">کل سفارش</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--green">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ paid_orders }}</span>
-            <span class="mk-acc-kpi-card__lbl">پرداخت‌شده</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--amber">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ pending_orders_count }}</span>
-            <span class="mk-acc-kpi-card__lbl">در انتظار</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--violet">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ total_spent|currency }}</span>
-            <span class="mk-acc-kpi-card__lbl">تومان خرید</span>
-        </article>
-    </div>
+        <section class="ov2-panel ov2-panel--tab" lang="fa" dir="rtl" aria-labelledby="acc-orders-list-title">
+            <header class="ov2-panel__header">
+                <div class="ov2-panel__heading">
+                    <span class="ov2-panel__icon ov2-panel__icon--orders" aria-hidden="true"><i class="fas fa-shopping-bag"></i></span>
+                    <div class="ov2-panel__titles">
+                        <h2 id="acc-orders-list-title" class="ov2-panel__title">فهرست سفارش‌ها</h2>
+                        <p class="ov2-panel__subtitle">جستجو و فیلتر بر اساس وضعیت پرداخت</p>
+                    </div>
+                </div>
+            </header>
 
-    <div class="mk-orders-toolbar">
+    <div class="mk-orders-toolbar ov2-panel__content">
         <form method="get" class="mk-orders-search" role="search">
             <i class="fas fa-search mk-orders-search__icon" aria-hidden="true"></i>
             <input type="search" name="order_search" value="{{ order_search }}" placeholder="جستجو در شماره سفارش یا محصول..." class="mk-acc-input mk-orders-search__input" autocomplete="off">
@@ -58,8 +83,8 @@
                     <div class="mk-order-card__product">
                         <span class="mk-order-card__product-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
                         <div class="mk-order-card__product-copy">
-                            <h3 class="mk-order-card__title">{{ order.product.title }}</h3>
-                            <p class="mk-order-card__plan">{{ order.plan.name }}{% if order.quantity > 1 %} · {{ order.quantity }} لایسنس{% endif %}</p>
+                            <h3 class="mk-order-card__title">{{ order|account_order_product_line }}</h3>
+                            <p class="mk-order-card__plan">{% if order.plan %}{{ order.plan|account_plan_label }}{% endif %}{% if order.quantity > 1 %} · {{ order.quantity|to_persian_digits }} لایسنس{% endif %}</p>
                         </div>
                     </div>
                     <span class="mk-orders-status mk-orders-status--{{ order.status }}">{{ order.get_status_display }}</span>
@@ -71,12 +96,12 @@
                     </span>
                     <span class="mk-order-card__meta-item">
                         <i class="fas fa-calendar" aria-hidden="true"></i>
-                        {{ order.created_at|to_jalali_date:"%Y/%m/%d" }}
-                        <span class="mk-order-card__time">{{ order.created_at|to_jalali_date:"%H:%M" }}</span>
+                        {{ order.created_at|to_jalali_fa:"%Y/%m/%d" }}
+                        <span class="mk-order-card__time">{{ order.created_at|to_jalali_fa:"%H:%M" }}</span>
                     </span>
                     <span class="mk-order-card__meta-item mk-order-card__amount">
                         <i class="fas fa-coins" aria-hidden="true"></i>
-                        {{ order.amount|currency }} <small>تومان</small>
+                        {{ order.amount|currency|to_persian_digits }} <small>تومان</small>
                     </span>
                 </div>
             </div>
@@ -115,4 +140,6 @@
         {% endif %}
     </div>
     {% endif %}
+        </section>
+    </div>
 </div>

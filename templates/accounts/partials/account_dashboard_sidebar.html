@@ -8,6 +8,10 @@
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-grip" aria-hidden="true"></i></span>
             <span>نمای کلی</span>
         </a>
+        <a href="{{ dashboard_tab_urls.profile }}" class="mk-account-sidebar__link{% if active_tab == 'profile' %} is-active{% endif %}"{% if active_tab == 'profile' %} aria-current="page"{% endif %}>
+            <span class="mk-account-sidebar__link-icon"><i class="fas fa-user-pen" aria-hidden="true"></i></span>
+            <span>پروفایل</span>
+        </a>
         <a href="{{ dashboard_tab_urls.orders }}" class="mk-account-sidebar__link{% if active_tab == 'orders' %} is-active{% endif %}"{% if active_tab == 'orders' %} aria-current="page"{% endif %}>
             <span class="mk-account-sidebar__link-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
             <span>سفارش‌ها</span>
@@ -31,11 +35,6 @@
             <span>همکاری در فروش</span>
         </a>
         {% endif %}
-
-        <a href="{{ dashboard_tab_urls.profile }}" class="mk-account-sidebar__link{% if active_tab == 'profile' %} is-active{% endif %}"{% if active_tab == 'profile' %} aria-current="page"{% endif %}>
-            <span class="mk-account-sidebar__link-icon"><i class="fas fa-user-pen" aria-hidden="true"></i></span>
-            <span>پروفایل</span>
-        </a>
     </nav>
 
     <div class="mk-account-sidebar__foot">

@@ -1,0 +1,9 @@
+<nav class="ov2-intro__nav ov2-quick" aria-label="میانبرهای حساب">
+    <a href="{{ dashboard_tab_urls.overview }}">نمای کلی</a>
+    <a href="{{ dashboard_tab_urls.profile }}">پروفایل</a>
+    <a href="{{ dashboard_tab_urls.orders }}">سفارش‌ها</a>
+    <a href="{{ dashboard_tab_urls.licenses }}">لایسنس‌ها</a>
+    <a href="{{ dashboard_tab_urls.downloads }}">دانلود اپلیکیشن</a>
+    {% if has_paid_orders %}<a href="{{ dashboard_tab_urls.affiliate }}">همکاری در فروش</a>{% endif %}
+    <a href="{{ dashboard_tab_urls.transactions }}">تراکنش‌ها</a>
+</nav>

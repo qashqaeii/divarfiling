@@ -1,53 +1,50 @@
 {% load persian_tags %}
 
-<div id="tab-licenses" class="mk-acc-tab-panel mk-acc-tab-shell mk-licenses-tab tab-content dash-tab-panel lic-premium"{% if active_tab != 'licenses' %} hidden{% endif %} data-license-mgmt>
-    <section class="lic-premium__hero" aria-labelledby="lic-premium-title">
-        <div class="lic-premium__hero-main">
-            <span class="lic-premium__eyebrow"><i class="fas fa-shield-halved" aria-hidden="true"></i> مرکز مدیریت اشتراک‌ها</span>
-            <h2 id="lic-premium-title">لایسنس‌های شما، همیشه تحت کنترل</h2>
-            <p>اعتبار اشتراک، دستگاه‌های فعال و دسترسی اعضای تیم را در یک صفحه مدیریت کنید.</p>
-        </div>
-        <div class="lic-premium__hero-actions">
-            {% if products %}
-            <a href="{% url 'product_list' %}" class="lic-premium__btn lic-premium__btn--primary">
-                <i class="fas fa-plus" aria-hidden="true"></i> خرید لایسنس
-            </a>
-            {% endif %}
-            <a href="{% url 'license_guide' %}" class="lic-premium__btn lic-premium__btn--quiet">
-                <i class="fas fa-circle-question" aria-hidden="true"></i> راهنمای لایسنس
-            </a>
-        </div>
-    </section>
+<div id="tab-licenses" class="mk-acc-tab-panel mk-acc-tab-shell mk-licenses-tab ov2 tab-content dash-tab-panel lic-premium"{% if active_tab != 'licenses' %} hidden{% endif %} data-license-mgmt>
+    <div class="mk-acc-tab-body">
+        {% url 'product_list' as lic_buy_url %}
+        {% url 'license_guide' as lic_guide_url %}
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='لایسنس‌ها' ov2_title='مرکز مدیریت لایسنس' ov2_lead='اعتبار اشتراک، دستگاه‌های فعال و دسترسی اعضای تیم را در یک صفحه مدیریت کنید.' ov2_primary_href=lic_buy_url ov2_primary_label='خرید لایسنس' ov2_ghost_href=lic_guide_url ov2_ghost_label='راهنمای لایسنس' %}
 
-    <section class="lic-premium__metrics" aria-labelledby="lic-premium-metrics-title">
-        <h3 id="lic-premium-metrics-title" class="lic-premium__sr-only">خلاصه وضعیت لایسنس‌ها</h3>
-    <div class="mk-acc-kpi-grid" aria-label="خلاصه لایسنس">
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--violet">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ total_licenses }}</span>
-            <span class="mk-acc-kpi-card__lbl">کل کلیدها</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--green">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-circle-check" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ active_licenses }}</span>
-            <span class="mk-acc-kpi-card__lbl">فعال</span>
-        </article>
-        {% if license_dashboard.pool %}
-        <article class="mk-acc-kpi-card">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-box-open" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ license_dashboard.pool.available }}</span>
-            <span class="mk-acc-kpi-card__lbl">آماده تخصیص</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--amber">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-user-tag" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ license_dashboard.pool.assigned }}</span>
-            <span class="mk-acc-kpi-card__lbl">تخصیص تیم</span>
-        </article>
-        {% endif %}
-    </div>
-    </section>
+        <section class="ov2-kpi" aria-label="خلاصه لایسنس">
+            <div class="ov2-kpi__frame">
+            <div class="ov2-metrics">
+                <div class="ov2-metric ov2-metric--licenses">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-key"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">کل کلیدها</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ total_licenses|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--success">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">فعال</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ active_licenses|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                {% if license_dashboard.pool %}
+                <div class="ov2-metric ov2-metric--money">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-box-open"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">آماده تخصیص</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.available|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--pending">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-user-tag"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">تخصیص تیم</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.assigned|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            </div>
+        </section>
 
-    {% if license_dashboard.portfolios %}
+        <section class="ov2-panel ov2-panel--tab ov2-panel--licenses" lang="fa" dir="rtl" aria-labelledby="lic-premium-pool-title">
+    {% if license_dashboard.pool %}
     <section class="lic-premium__pool" aria-labelledby="lic-premium-pool-title">
       <div class="lic-premium__section-title">
         <div><h3 id="lic-premium-pool-title">مدیریت ظرفیت</h3><p>نمای کلی از مالکیت و تخصیص کلیدها</p></div>
@@ -387,4 +384,6 @@
         {% endif %}
     </div>
     {% endif %}
+        </section>
+    </div>
 </div>

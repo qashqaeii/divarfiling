@@ -28,8 +28,8 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-account-overview-mobile.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-profile-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell-v2.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-overview-v2.css' %}?v=12">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-profile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-overview-v2.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-profile-v2.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-licenses-v2.css' %}?v=1">
 {% endblock %}
 
@@ -115,79 +115,73 @@
 </div>
 
 <!-- Modal برای ویرایش اطلاعات تکمیلی -->
-<div id="profileModal" class="modal-professional prof-premium-modal" onclick="closeProfessionalModal(event, 'profileModal')" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" aria-hidden="true">
-    <div class="modal-content-professional" onclick="event.stopPropagation()">
-        <div class="modal-header-professional">
-            <h2 id="profileModalTitle" class="modal-title-professional">
-                <i class="fas fa-user-cog" aria-hidden="true"></i>
-                ویرایش اطلاعات تکمیلی
-            </h2>
-            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'profileModal')" aria-label="بستن پنجره">
+<div id="profileModal" class="modal-professional prof-premium-modal prof-profile-modal" onclick="closeProfessionalModal(event, 'profileModal')" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" aria-hidden="true">
+    <div class="modal-content-professional prof-profile-modal__sheet" onclick="event.stopPropagation()">
+        <div class="prof-profile-modal__accent" aria-hidden="true"></div>
+        <header class="modal-header-professional prof-profile-modal__head">
+            <div class="prof-profile-modal__head-copy">
+                <p class="prof-profile-modal__eyebrow">حساب کاربری</p>
+                <h2 id="profileModalTitle" class="modal-title-professional prof-profile-modal__title">پروفایل تکمیلی</h2>
+            </div>
+            <button type="button" class="modal-close-btn prof-profile-modal__close" onclick="closeProfessionalModal(event, 'profileModal')" aria-label="بستن پنجره">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
-        </div>
-        <div class="modal-body-professional">
-            <form id="profileForm" onsubmit="submitProfileForm(event)" enctype="multipart/form-data">
+        </header>
+        <div class="modal-body-professional prof-profile-modal__body">
+            <form id="profileForm" class="prof-profile-modal__form" onsubmit="submitProfileForm(event)" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label" for="profileAvatar">
-                        <i class="fas fa-image" aria-hidden="true"></i>
-                        تصویر پروفایل
-                    </label>
-                    <div class="avatar-upload-container">
-                        <div class="avatar-preview-container">
+                <section class="prof-profile-modal__block" aria-labelledby="profileModalAvatarLegend">
+                    <h3 id="profileModalAvatarLegend" class="prof-profile-modal__legend">تصویر پروفایل</h3>
+                    <div class="prof-profile-modal__avatar">
+                        <div class="prof-profile-modal__avatar-preview avatar-preview-container">
                             {% if user.profile.avatar %}
-                                <img id="avatarPreview" src="{{ user.profile.avatar.url }}" alt="پیش‌نمایش آواتار" class="avatar-preview">
+                                <img id="avatarPreview" src="{{ user.profile.avatar.url }}" alt="" class="avatar-preview prof-profile-modal__avatar-img">
                             {% else %}
-                                <img id="avatarPreview" src="" alt="پیش‌نمایش آواتار" class="avatar-preview" style="display: none;">
+                                <img id="avatarPreview" src="" alt="" class="avatar-preview prof-profile-modal__avatar-img" hidden>
                             {% endif %}
-                            <div id="avatarPlaceholder" class="avatar-placeholder" {% if user.profile.avatar %}style="display: none;"{% endif %}>
-                                <i class="fas fa-user-circle" aria-hidden="true"></i>
-                                <span>تصویر پروفایل</span>
+                            <div id="avatarPlaceholder" class="avatar-placeholder prof-profile-modal__avatar-ph" {% if user.profile.avatar %}hidden{% endif %}>
+                                <i class="fas fa-user" aria-hidden="true"></i>
                             </div>
                         </div>
-                        <input type="file" name="avatar" id="profileAvatar" class="form-control modal-input" accept="image/*" onchange="previewAvatar(event)">
+                        <div class="prof-profile-modal__avatar-copy">
+                            <p class="prof-profile-modal__avatar-hint">اختیاری — در بخش‌های عمومی حساب شما نمایش داده می‌شود.</p>
+                            <button type="button" class="prof-profile-modal__avatar-btn" onclick="document.getElementById('profileAvatar').click()">
+                                <i class="fas fa-image" aria-hidden="true"></i>
+                                انتخاب تصویر
+                            </button>
+                            <input type="file" name="avatar" id="profileAvatar" class="prof-profile-modal__file" accept="image/*" onchange="previewAvatar(event)" hidden>
+                        </div>
                     </div>
+                </section>
+                <section class="prof-profile-modal__block">
+                    <label class="prof-profile-modal__label" for="profileBio">درباره من</label>
+                    <textarea name="bio" id="profileBio" class="prof-profile-modal__control prof-profile-modal__control--area" rows="4" placeholder="معرفی کوتاه برای مشتریان و همکاران">{{ user.profile.bio|default:'' }}</textarea>
+                </section>
+                <div class="prof-profile-modal__duo">
+                    <section class="prof-profile-modal__block">
+                        <label class="prof-profile-modal__label" for="profileCity">شهر</label>
+                        <input type="text" name="city" id="profileCity" class="prof-profile-modal__control" autocomplete="address-level2" value="{{ user.profile.city|default:'' }}">
+                    </section>
+                    <section class="prof-profile-modal__block">
+                        <label class="prof-profile-modal__label" for="profilePostalCode">کد پستی</label>
+                        <input type="text" name="postal_code" id="profilePostalCode" class="prof-profile-modal__control prof-profile-modal__control--num" inputmode="numeric" autocomplete="postal-code" value="{{ user.profile.postal_code|default:'' }}">
+                    </section>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="profileBio">
-                        <i class="fas fa-info-circle" aria-hidden="true"></i>
-                        درباره من
-                    </label>
-                    <textarea name="bio" id="profileBio" class="form-control modal-input" rows="4">{{ user.profile.bio|default:'' }}</textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="profileAddress">
-                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                        آدرس
-                    </label>
-                    <textarea name="address" id="profileAddress" class="form-control modal-input" rows="3">{{ user.profile.address|default:'' }}</textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="profileCity">
-                        <i class="fas fa-building" aria-hidden="true"></i>
-                        شهر
-                    </label>
-                    <input type="text" name="city" id="profileCity" class="form-control modal-input" autocomplete="address-level2" value="{{ user.profile.city|default:'' }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="profilePostalCode">
-                        <i class="fas fa-mail-bulk" aria-hidden="true"></i>
-                        کد پستی
-                    </label>
-                    <input type="text" name="postal_code" id="profilePostalCode" class="form-control modal-input" inputmode="numeric" autocomplete="postal-code" value="{{ user.profile.postal_code|default:'' }}">
-                </div>
-                <div id="profileError" class="alert alert-danger modal-error" role="alert" aria-live="assertive" style="display: none;"></div>
+                <section class="prof-profile-modal__block">
+                    <label class="prof-profile-modal__label" for="profileAddress">آدرس</label>
+                    <textarea name="address" id="profileAddress" class="prof-profile-modal__control prof-profile-modal__control--area prof-profile-modal__control--short" rows="3" placeholder="آدرس پستی یا محل فعالیت">{{ user.profile.address|default:'' }}</textarea>
+                </section>
+                <div id="profileError" class="prof-profile-modal__error" role="alert" aria-live="assertive" hidden></div>
             </form>
         </div>
-        <div class="modal-footer-professional">
-            <button type="button" class="btn btn-secondary" onclick="closeProfessionalModal(event, 'profileModal')">
-                <i class="fas fa-times" aria-hidden="true"></i> انصراف
+        <footer class="modal-footer-professional prof-profile-modal__foot">
+            <button type="submit" id="profileSubmitBtn" form="profileForm" class="btn btn-primary prof-profile-modal__action prof-profile-modal__action--primary">
+                ذخیره تغییرات
             </button>
-            <button type="submit" id="profileSubmitBtn" form="profileForm" class="btn btn-primary">
-                <i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات
+            <button type="button" class="btn btn-secondary prof-profile-modal__action prof-profile-modal__action--ghost" onclick="closeProfessionalModal(event, 'profileModal')">
+                انصراف
             </button>
-        </div>
+        </footer>
     </div>
 </div>
 
@@ -444,7 +438,7 @@ function submitProfileForm(event) {
     }
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ذخیره...';
+        submitBtn.textContent = 'در حال ذخیره…';
     }
     
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
@@ -478,7 +472,7 @@ function submitProfileForm(event) {
             }
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+                submitBtn.textContent = 'ذخیره تغییرات';
             }
         }
     })
@@ -487,10 +481,11 @@ function submitProfileForm(event) {
         if (errorDiv) {
             errorDiv.textContent = error.message || 'خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.';
             errorDiv.style.display = 'block';
+            errorDiv.hidden = false;
         }
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+            submitBtn.textContent = 'ذخیره تغییرات';
         }
     });
 }
@@ -726,8 +721,10 @@ function previewAvatar(event) {
             const preview = document.getElementById('avatarPreview');
             const placeholder = document.getElementById('avatarPlaceholder');
             preview.src = e.target.result;
+            preview.hidden = false;
             preview.style.display = 'block';
             if (placeholder) {
+                placeholder.hidden = true;
                 placeholder.style.display = 'none';
             }
         };

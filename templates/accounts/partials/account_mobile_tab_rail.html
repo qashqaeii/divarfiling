@@ -44,6 +44,11 @@
                 <i class="fas fa-grip" aria-hidden="true"></i>
                 <span>نمای کلی</span>
             </a>
+            <a href="{{ dashboard_tab_urls.profile }}"
+               class="mk-account-tab-rail__item{% if active_tab == 'profile' %} is-active{% endif %}"{% if active_tab == 'profile' %} aria-current="page"{% endif %}>
+                <i class="fas fa-user-pen" aria-hidden="true"></i>
+                <span>پروفایل</span>
+            </a>
             <a href="{{ dashboard_tab_urls.orders }}"
                class="mk-account-tab-rail__item{% if active_tab == 'orders' %} is-active{% endif %}"{% if active_tab == 'orders' %} aria-current="page"{% endif %}>
                 <i class="fas fa-shopping-bag" aria-hidden="true"></i>
@@ -71,11 +76,6 @@
                 <span>همکاری</span>
             </a>
             {% endif %}
-            <a href="{{ dashboard_tab_urls.profile }}"
-               class="mk-account-tab-rail__item{% if active_tab == 'profile' %} is-active{% endif %}"{% if active_tab == 'profile' %} aria-current="page"{% endif %}>
-                <i class="fas fa-user-pen" aria-hidden="true"></i>
-                <span>پروفایل</span>
-            </a>
         </div>
     </nav>
 </div>

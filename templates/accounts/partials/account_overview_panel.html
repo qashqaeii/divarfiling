@@ -1,6 +1,6 @@
 {% load persian_tags %}
 {% load currency_tags %}
-{% load account_display_tags %}
+{% load account_avatar_tags %}
 <div class="mk-acc-tab-shell mk-overview-tab ov2">
     <div class="mk-acc-tab-body">
         <header class="ov2-intro" lang="fa" dir="rtl" aria-label="پیشخوان حساب کاربری">
@@ -36,12 +36,7 @@
                         <a href="{{ dashboard_tab_urls.downloads }}" class="ov2-intro__cta ov2-intro__cta--ghost">دانلود اپلیکیشن</a>
                     </div>
                 </div>
-                <nav class="ov2-intro__nav ov2-quick" aria-label="میانبرهای حساب">
-                    <a href="{{ dashboard_tab_urls.orders }}">سفارش‌ها</a>
-                    <a href="{{ dashboard_tab_urls.licenses }}">لایسنس‌ها</a>
-                    <a href="{{ dashboard_tab_urls.downloads }}">دانلود اپلیکیشن</a>
-                    <a href="{{ dashboard_tab_urls.profile }}">پروفایل کاربری</a>
-                </nav>
+                {% include 'accounts/partials/account_ov2_quick_nav.html' %}
             </div>
         </header>
 

@@ -2,7 +2,8 @@
 {% load static %}
 {% load account_avatar_tags %}
 
-<div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab tab-content dash-tab-panel prof-tab prof-premium"{% if active_tab != 'profile' %} hidden{% endif %}>
+<div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab ov2 tab-content dash-tab-panel prof-tab prof-premium"{% if active_tab != 'profile' %} hidden{% endif %}>
+    <div class="mk-acc-tab-body">
 
     <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
 
@@ -61,47 +62,60 @@
         </div>
     </div>
 
-    <section class="prof-hero prof-hero--unified mk-acc-desk-only" aria-label="پروفایل کاربر"
+    <section class="prof-hero prof-hero--unified prof-hero--premium mk-acc-desk-only" aria-label="پروفایل کاربر"
              id="accountAvatarSection"
              data-saved-key="{{ account_avatar_saved_key }}"
              data-effective-key="{{ account_avatar_effective_key }}"
              data-has-custom="{% if account_avatar_has_custom %}1{% else %}0{% endif %}">
-        <div class="prof-hero__top">
-            <button type="button" class="prof-hero__avatar prof-hero__avatar-btn" onclick="openAvatarPickerModal()" aria-label="تغییر آواتار">
-                <img id="accountAvatarHeroImg" src="{{ account_avatar_panel_url }}" alt="" width="88" height="88" loading="eager" decoding="async">
-                <span class="prof-hero__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
-            </button>
-            <div class="prof-hero__copy">
-                <span class="prof-premium__eyebrow">هویت شما در فایلینگ دیوار</span>
-                <h1 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h1>
-                <p class="prof-hero__username">@{{ user.username }}</p>
-                <p class="prof-hero__meta">
-                    <i class="fas fa-calendar" aria-hidden="true"></i>
-                    عضو از {{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}
+        <div class="prof-hero__frame">
+            <div class="prof-hero__layout">
+                <div class="prof-hero__identity">
+                    <button type="button" class="prof-hero__avatar prof-hero__avatar-btn" onclick="openAvatarPickerModal()" aria-label="تغییر آواتار">
+                        <span class="prof-hero__avatar-media">
+                            <img id="accountAvatarHeroImg" src="{{ account_avatar_panel_url }}" alt="" width="96" height="96" loading="eager" decoding="async">
+                        </span>
+                        <span class="prof-hero__avatar-edit" aria-hidden="true"><i class="fas fa-camera" aria-hidden="true"></i></span>
+                    </button>
+                    <div class="prof-hero__copy">
+                        <span class="prof-hero__label">پروفایل کاربری</span>
+                        <h1 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h1>
+                        <p class="prof-hero__username" dir="ltr">@{{ user.username }}</p>
+                        <p class="prof-hero__meta">
+                            <span class="prof-hero__meta-chip">
+                                <i class="fas fa-calendar" aria-hidden="true"></i>
+                                عضو از <time class="ov2-fa-num" datetime="{{ user.date_joined|date:'c' }}">{{ user.date_joined|to_jalali_fa:'%Y/%m/%d' }}</time>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="prof-hero__actions" role="group" aria-label="عملیات سریع پروفایل">
+                    <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openProfileModal()">
+                        <i class="fas fa-id-card" aria-hidden="true"></i>
+                        <span>پروفایل تکمیلی</span>
+                    </button>
+                    <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                        <span>ویرایش حساب</span>
+                    </button>
+                </div>
+            </div>
+            <footer class="prof-hero__toolbar">
+                <p class="prof-hero__tools-hint">
+                    <i class="fas fa-circle-info" aria-hidden="true"></i>
+                    آواتار در اپ موبایل و بخش‌های عمومی حساب شما نمایش داده می‌شود.
                 </p>
-            </div>
-            <div class="prof-hero__actions">
-                <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
-                    <i class="fas fa-pen" aria-hidden="true"></i> ویرایش حساب
-                </button>
-                <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openProfileModal()">
-                    <i class="fas fa-user-cog" aria-hidden="true"></i> پروفایل تکمیلی
-                </button>
-            </div>
-        </div>
-        <div class="prof-hero__tools">
-            <p class="prof-hero__tools-hint">آواتار در اپ موبایل و بخش‌های عمومی حساب شما نمایش داده می‌شود.</p>
-            <div class="prof-hero__tools-row">
-                <button type="button" class="prof-save-btn prof-save-btn--sm" onclick="openAvatarPickerModal()">
-                    <i class="fas fa-images" aria-hidden="true"></i> انتخاب آواتار
-                </button>
-                <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="document.getElementById('accountAvatarFileInput').click()">
-                    <i class="fas fa-upload" aria-hidden="true"></i> آپلود عکس
-                </button>
-                {% if account_avatar_has_custom or account_avatar_saved_key %}
-                <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="resetAccountAvatar()">بازنشانی</button>
-                {% endif %}
-            </div>
+                <div class="prof-hero__tools-row">
+                    <button type="button" class="prof-save-btn prof-save-btn--sm" onclick="openAvatarPickerModal()">
+                        <i class="fas fa-images" aria-hidden="true"></i> انتخاب آواتار
+                    </button>
+                    <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="document.getElementById('accountAvatarFileInput').click()">
+                        <i class="fas fa-upload" aria-hidden="true"></i> آپلود عکس
+                    </button>
+                    {% if account_avatar_has_custom or account_avatar_saved_key %}
+                    <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="resetAccountAvatar()">بازنشانی</button>
+                    {% endif %}
+                </div>
+            </footer>
         </div>
     </section>
 
@@ -318,4 +332,5 @@
             </footer>
         </form>
     </section>
+    </div>
 </div>

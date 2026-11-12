@@ -1,32 +1,58 @@
 {% load persian_tags %}
 {% load currency_tags %}
+{% load account_avatar_tags %}
 
-<div id="tab-transactions" class="mk-acc-tab-panel mk-acc-tab-shell mk-transactions-tab tab-content dash-tab-panel"{% if active_tab != 'transactions' %} hidden{% endif %}>
+<div id="tab-transactions" class="mk-acc-tab-panel mk-acc-tab-shell mk-transactions-tab ov2 tab-content dash-tab-panel"{% if active_tab != 'transactions' %} hidden{% endif %}>
+    <div class="mk-acc-tab-body">
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='تراکنش‌ها' ov2_title='تراکنش‌های مالی حساب' ov2_lead='پیگیری پرداخت‌های آنلاین، کدهای پیگیری و وضعیت هر تراکنش.' ov2_primary_href=dashboard_tab_urls.orders ov2_primary_label='سفارش‌ها' ov2_ghost_href=dashboard_tab_urls.licenses ov2_ghost_label='لایسنس‌ها' %}
+
     {% if transactions %}
-    <div class="mk-acc-kpi-grid" aria-label="خلاصه تراکنش‌ها">
-        <article class="mk-acc-kpi-card">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-right-left" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ txn_stats.total }}</span>
-            <span class="mk-acc-kpi-card__lbl">کل تراکنش</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--green">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ txn_stats.paid }}</span>
-            <span class="mk-acc-kpi-card__lbl">موفق</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--amber">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-clock" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ txn_stats.pending }}</span>
-            <span class="mk-acc-kpi-card__lbl">در انتظار</span>
-        </article>
-        <article class="mk-acc-kpi-card mk-acc-kpi-card--red">
-            <span class="mk-acc-kpi-card__icon"><i class="fas fa-circle-xmark" aria-hidden="true"></i></span>
-            <span class="mk-acc-kpi-card__val">{{ txn_stats.failed }}</span>
-            <span class="mk-acc-kpi-card__lbl">ناموفق</span>
-        </article>
-    </div>
+        <section class="ov2-kpi" aria-label="خلاصه تراکنش‌ها">
+            <div class="ov2-kpi__frame">
+            <div class="ov2-metrics">
+                <div class="ov2-metric ov2-metric--money">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-right-left"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">کل تراکنش</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ txn_stats.total|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--success">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">موفق</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ txn_stats.paid|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--pending{% if txn_stats.pending %} is-alert{% endif %}">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-clock"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">در انتظار</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ txn_stats.pending|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--pending">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-circle-xmark"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">ناموفق</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ txn_stats.failed|to_persian_digits }}</strong>
+                    </span>
+                </div>
+            </div>
+            </div>
+        </section>
 
-    <div class="mk-acc-card-list" role="list">
+        <section class="ov2-panel ov2-panel--tab" lang="fa" dir="rtl" aria-labelledby="acc-txn-list-title">
+            <header class="ov2-panel__header">
+                <div class="ov2-panel__heading">
+                    <span class="ov2-panel__icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+                    <div class="ov2-panel__titles">
+                        <h2 id="acc-txn-list-title" class="ov2-panel__title">فهرست تراکنش‌ها</h2>
+                        <p class="ov2-panel__subtitle">جزئیات پرداخت و کد پیگیری</p>
+                    </div>
+                </div>
+            </header>
+    <div class="mk-acc-card-list ov2-panel__content" role="list">
         {% for transaction in transactions %}
         <article class="mk-txn-card" role="listitem">
             <div class="mk-txn-card__head">
@@ -39,14 +65,14 @@
                 </span>
             </div>
             <div class="mk-txn-card__body">
-                <h3 class="mk-txn-card__product">{{ transaction.order.product.title }}</h3>
+                <h3 class="mk-txn-card__product">{{ transaction.order|account_order_product_line }}</h3>
                 {% if transaction.order.plan %}
-                <p class="mk-txn-card__plan">{{ transaction.order.plan.name }}</p>
+                <p class="mk-txn-card__plan">{{ transaction.order.plan|account_plan_label }}</p>
                 {% endif %}
             </div>
             <div class="mk-txn-card__foot">
-                <span class="mk-txn-card__amount">{{ transaction.amount|currency }} <small>تومان</small></span>
-                <time class="mk-txn-card__date">{{ transaction.created_at|to_jalali_date:"%Y/%m/%d" }} · {{ transaction.created_at|to_jalali_date:"%H:%M" }}</time>
+                <span class="mk-txn-card__amount">{{ transaction.amount|currency|to_persian_digits }} <small>تومان</small></span>
+                <time class="mk-txn-card__date">{{ transaction.created_at|to_jalali_fa:"%Y/%m/%d" }} · {{ transaction.created_at|to_jalali_fa:"%H:%M" }}</time>
             </div>
             {% if transaction.zibal_ref_number %}
             <div class="mk-txn-card__meta">
@@ -56,12 +82,14 @@
         </article>
         {% endfor %}
     </div>
+        </section>
     {% else %}
-    <div class="mk-acc-empty-state">
-        <span class="mk-acc-empty-state__icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></span>
-        <p class="mk-acc-empty-state__title">تراکنشی ثبت نشده</p>
-        <p class="mk-acc-empty-state__text">پس از پرداخت موفق، جزئیات تراکنش اینجا نمایش داده می‌شود.</p>
-        <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-btn mk-acc-btn--primary">رفتن به سفارش‌ها</a>
-    </div>
+        <section class="ov2-panel ov2-panel--tab" lang="fa" dir="rtl">
+            <div class="ov2-empty ov2-empty--panel">
+                <p>تراکنشی برای حساب شما ثبت نشده است.</p>
+                <a href="{{ dashboard_tab_urls.orders }}">رفتن به سفارش‌ها</a>
+            </div>
+        </section>
     {% endif %}
+    </div>
 </div>

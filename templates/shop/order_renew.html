@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=23">
 <link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'css/buy-checkout.css' %}?v=15">
-<link rel="stylesheet" href="{% static 'css/order-renew.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/order-renew.css' %}?v=3">
 {% endblock %}
 {% block breadcrumbs %}{% endblock %}
 
@@ -26,10 +26,10 @@
         <div class="ck-layout ck-layout--buy">
             <div class="ck-shell ck-buy-shell ck-renew-shell">
 
-                <header class="ck-page-head ck-page-head--buy">
+                <header class="ck-page-head ck-page-head--buy ck-renew-stepper-head">
                     <div class="ck-page-head-row ck-page-head-row--rail-only ck-checkout-stepper-enter">
-                        <nav class="ck-pay-rail ck-pay-rail--inline ck-pay-rail--premium ck-pay-rail--animated" aria-label="مراحل تمدید">
-                            <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot" aria-hidden="true"></span><span>انتخاب کلیدها</span></div>
+                        <nav class="ck-pay-rail ck-pay-rail--inline ck-pay-rail--premium ck-pay-rail--renew" aria-label="مراحل تمدید">
+                            <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot" aria-hidden="true"></span><span>کلیدها</span></div>
                             <div class="ck-pay-rail-line" aria-hidden="true"></div>
                             <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot" aria-hidden="true"></span><span>پرداخت</span></div>
                             <div class="ck-pay-rail-line" aria-hidden="true"></div>
@@ -40,31 +40,27 @@
 
                 {% if renewable_count == 0 %}
                 <div class="ck-renew-empty">
-                    <i class="fas fa-key" aria-hidden="true"></i>
-                    <p>هیچ لایسنسی در این سفارش برای تمدید آماده نیست.</p>
-                    <a href="{% url 'dashboard_tab' 'orders' %}" class="ck-btn ck-btn--ghost">بازگشت به سفارش‌ها</a>
+                    <p class="ck-renew-empty-title">لایسنسی برای تمدید نیست</p>
+                    <p class="ck-renew-empty-sub">این سفارش کلید قابل تمدیدی ندارد.</p>
+                    <a href="{% url 'dashboard_tab' 'orders' %}" class="ck-btn ck-btn--ghost">بازگشت</a>
                 </div>
                 {% else %}
                 <form method="post" action="{% url 'order_renew_checkout' source_order.id %}"
                       class="ck-form ck-form--checkout ck-renew-form" id="orderRenewForm">
                     {% csrf_token %}
 
-                    <aside class="ck-order ck-buy-order ck-buy-order--sheet" aria-label="خلاصه تمدید">
-                        <header class="ck-buy-order-head ck-page-head-copy ck-page-head-copy--order">
-                            <h1 class="ck-page-title">تمدید لایسنس‌ها</h1>
-                            <p class="ck-page-sub">
-                                سفارش <span class="ov2-fa-num" dir="ltr">{{ source_order.id|slice:":8" }}</span>
-                                — {{ source_order.product.title }}
-                            </p>
-                        </header>
+                    <aside class="ck-order ck-buy-order ck-buy-order--sheet ck-renew-aside" aria-label="خلاصه تمدید">
+                        <div class="ck-order-badge ck-order-badge--sheet ck-renew-aside-kicker">
+                            <span class="ck-order-badge__text">خلاصه تمدید</span>
+                            <span class="ck-order-badge__icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+                        </div>
 
                         <div class="ck-order-inner ck-buy-order-body">
-                            <div class="ck-order-product ck-order-product-card ck-buy-order-product">
-                                <span class="ck-order-product-icon" aria-hidden="true"><i class="fas fa-rotate"></i></span>
-                                <div class="ck-order-product-body">
-                                    <strong>{{ source_order.product.title }}</strong>
-                                    <span class="ck-order-product-meta">{{ source_order.plan.name }}</span>
-                                </div>
+                            <div class="ck-renew-aside-product">
+                                <p class="ck-renew-aside-product__title">{{ source_order.product.title }}</p>
+                                <p class="ck-renew-aside-product__meta">
+                                    سفارش <span dir="ltr" class="ck-renew-mono">{{ source_order.id|slice:":8" }}</span>
+                                </p>
                             </div>
 
                             <div class="ck-renew-plan-field">
@@ -79,65 +75,63 @@
                                 </div>
                             </div>
 
-                            <section class="ck-buy-order-pricing" id="renewSummary" aria-live="polite">
-                                <p class="ck-renew-summary__lead">یک یا چند لایسنس را انتخاب کنید تا قیمت به‌روز شود.</p>
+                            <section class="ck-buy-order-pricing ck-renew-pricing" id="renewSummary" aria-live="polite">
+                                <p class="ck-renew-summary__lead">لایسنس‌ها را انتخاب کنید.</p>
                             </section>
 
                             <input type="hidden" name="discount_code" id="renewDiscountCode" value="">
 
-                            <div class="ck-order-panel ck-buy-order-panel">
+                            <div class="ck-order-panel ck-buy-order-panel ck-renew-cta">
                                 <button type="submit" class="ck-btn ck-btn--primary ck-btn--block ck-renew-submit" id="renewSubmit" disabled>
-                                    <span>پرداخت و تمدید</span>
-                                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                                    پرداخت و تمدید
                                 </button>
-                                <p class="ck-renew-trust"><i class="fas fa-shield-halved" aria-hidden="true"></i> پرداخت امن از درگاه زیبال</p>
+                                <p class="ck-renew-trust">پرداخت امن · درگاه زیبال</p>
                             </div>
                         </div>
                     </aside>
 
                     <main class="ck-buy-main ck-renew-main" aria-label="انتخاب لایسنس">
-                        <div class="ck-renew-main-head">
-                            <div>
-                                <h2 class="ck-renew-main-title">کلیدهای قابل تمدید</h2>
-                                <p class="ck-renew-main-sub">{{ renewable_count|to_persian_digits }} لایسنس — همان کلیدها حفظ می‌شوند؛ فقط تاریخ اعتبار تمدید می‌شود.</p>
+                        <header class="ck-renew-main-head">
+                            <div class="ck-renew-main-copy">
+                                <h1 class="ck-renew-main-title">تمدید لایسنس</h1>
+                                <p class="ck-renew-main-sub">{{ renewable_count|to_persian_digits }} کلید — بدون تغییر شناسه؛ فقط اعتبار تمدید می‌شود.</p>
                             </div>
-                            <a href="{% url 'dashboard_tab' 'orders' %}" class="ck-renew-back"><i class="fas fa-arrow-right" aria-hidden="true"></i> سفارش‌ها</a>
+                            <a href="{% url 'dashboard_tab' 'orders' %}" class="ck-renew-back">سفارش‌ها</a>
+                        </header>
+
+                        <div class="ck-renew-toolbar" role="group" aria-label="انتخاب گروهی">
+                            <button type="button" class="ck-renew-link" data-renew-select-all>انتخاب همه</button>
+                            <span class="ck-renew-toolbar-sep" aria-hidden="true"></span>
+                            <button type="button" class="ck-renew-link ck-renew-link--muted" data-renew-select-none>پاک‌کردن</button>
                         </div>
 
-                        <section class="ck-renew-toolbar">
-                            <button type="button" class="ck-renew-chip" data-renew-select-all>
-                                <i class="fas fa-check-double" aria-hidden="true"></i> انتخاب همه
-                            </button>
-                            <button type="button" class="ck-renew-chip ck-renew-chip--muted" data-renew-select-none>
-                                پاک کردن انتخاب
-                            </button>
-                        </section>
-
-                        <ul class="ck-renew-list" role="list">
-                            {% for row in licenses %}
-                            <li class="ck-renew-row{% if not row.can_renew %} ck-renew-row--disabled{% endif %}{% if row.can_renew %} is-selected{% endif %}">
-                                <label class="ck-renew-row__label">
-                                    <input type="checkbox" name="license_ids" value="{{ row.id }}"
-                                           class="ck-renew-check"{% if not row.can_renew %} disabled{% endif %}{% if row.can_renew %} checked{% endif %}>
-                                    <span class="ck-renew-row__check" aria-hidden="true"></span>
-                                    <span class="ck-renew-row__body">
-                                        <span class="ck-renew-row__top">
-                                            <span class="ck-renew-row__seq">کلید {{ row.sequence|to_persian_digits }}</span>
-                                            <code class="ck-renew-row__key" dir="ltr">{{ row.key_masked }}</code>
+                        <div class="ck-renew-list-wrap">
+                            <ul class="ck-renew-list" role="list">
+                                {% for row in licenses %}
+                                <li class="ck-renew-row{% if not row.can_renew %} ck-renew-row--disabled{% endif %}{% if row.can_renew %} is-selected{% endif %}">
+                                    <label class="ck-renew-row__label">
+                                        <span class="ck-renew-row__body">
+                                            <span class="ck-renew-row__primary">
+                                                <span class="ck-renew-row__seq">کلید {{ row.sequence|to_persian_digits }}</span>
+                                                <code class="ck-renew-row__key" dir="ltr">{{ row.key_masked }}</code>
+                                            </span>
+                                            <span class="ck-renew-row__secondary">
+                                                {% if row.expires_at %}
+                                                <span>انقضا {{ row.expires_at|to_jalali_date:"%Y/%m/%d" }}</span>
+                                                {% endif %}
+                                                {% if row.assigned_name %}
+                                                <span class="ck-renew-row__assign">{{ row.assigned_name }}</span>
+                                                {% endif %}
+                                            </span>
                                         </span>
-                                        <span class="ck-renew-row__meta">
-                                            {% if row.expires_at %}
-                                            <span><i class="far fa-calendar" aria-hidden="true"></i> انقضا {{ row.expires_at|to_jalali_date:"%Y/%m/%d" }}</span>
-                                            {% endif %}
-                                            {% if row.assigned_name %}
-                                            <span><i class="far fa-user" aria-hidden="true"></i> {{ row.assigned_name }}</span>
-                                            {% endif %}
-                                        </span>
-                                    </span>
-                                </label>
-                            </li>
-                            {% endfor %}
-                        </ul>
+                                        <input type="checkbox" name="license_ids" value="{{ row.id }}"
+                                               class="ck-renew-check"{% if not row.can_renew %} disabled{% endif %}{% if row.can_renew %} checked{% endif %}>
+                                        <span class="ck-renew-row__toggle" aria-hidden="true"></span>
+                                    </label>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </main>
                 </form>
                 {% endif %}
@@ -145,5 +139,5 @@
         </div>
     </div>
 </div>
-<script src="{% static 'js/order-renew.js' %}?v=2"></script>
+<script src="{% static 'js/order-renew.js' %}?v=3"></script>
 {% endblock %}

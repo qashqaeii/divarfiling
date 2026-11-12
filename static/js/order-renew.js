@@ -37,9 +37,17 @@
         if (!quote || !quote.pricing) return;
         var p = quote.pricing;
         var items = quote.items || [];
-        var lines = items.map(function (it) {
-            return '<li>کلید ' + it.sequence + ' — انقضای جدید پس از پرداخت ثبت می‌شود</li>';
-        }).join('');
+        var noteBlock = '';
+        if (items.length > 0) {
+            if (items.length <= 2) {
+                noteBlock = items.map(function (it) {
+                    return 'کلید ' + it.sequence;
+                }).join('، ');
+                noteBlock = '<p class="ck-renew-summary__note">' + noteBlock + ' — اعتبار پس از پرداخت به‌روز می‌شود.</p>';
+            } else {
+                noteBlock = '<p class="ck-renew-summary__note">' + quote.quantity + ' کلید — اعتبار هر کدام پس از پرداخت به‌روز می‌شود.</p>';
+            }
+        }
         var discountBlock = '';
         if (p.discount_amount && Number(p.discount_amount) > 0) {
             discountBlock =
@@ -67,14 +75,14 @@
             '<span>قابل پرداخت</span>' +
             '<strong>' + formatMoney(p.final_price) + ' <small>تومان</small></strong>' +
             '</div>' +
-            (lines ? '<ul class="ck-renew-summary__items">' + lines + '</ul>' : '');
+            noteBlock;
         submitBtn.disabled = false;
     }
 
     function refreshQuote() {
         var ids = selectedIds();
         if (!ids.length) {
-            summary.innerHTML = '<p class="ck-renew-summary__lead">حداقل یک لایسنس انتخاب کنید.</p>';
+            summary.innerHTML = '<p class="ck-renew-summary__lead">حداقل یک کلید انتخاب کنید.</p>';
             submitBtn.disabled = true;
             return;
         }

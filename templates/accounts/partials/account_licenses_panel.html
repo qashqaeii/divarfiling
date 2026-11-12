@@ -200,7 +200,7 @@
                 </div>
                 <span class="lic-premium__tile-status lic-premium__tile-status--{{ expiry.tone }}" data-lic-status>
                     <span class="lic-premium__status-dot" aria-hidden="true"></span>
-                    {% if expiry.is_expired %}منقضی{% elif expiry.has_expiry %}معتبر{% else %}نامحدود{% endif %}
+                    {% if expiry.is_expired %}منقضی{% elif expiry.tone == 'warning' or expiry.tone == 'critical' %}نزدیک انقضا{% elif expiry.tone == 'inactive' %}غیرفعال{% elif expiry.has_expiry %}معتبر{% else %}نامحدود{% endif %}
                 </span>
             </header>
 
@@ -305,7 +305,7 @@
                             {% for seat in item.activations %}
                             <tr data-activation-id="{{ seat.id }}">
                                 <td data-label="سیستم">
-                                    <input type="text" class="lic-seat-label-input" value="{{ seat.label }}" placeholder="{{ seat.display_name }}" aria-label="نام دستگاه {{ seat.display_name }}" maxlength="100" data-seat-label>
+                                    <input type="text" class="lic-seat-label-input" value="{{ seat.label }}" placeholder="{{ seat.display_name }}" aria-label="نام دستگاه {{ seat.display_name }}" data-seat-label>
                                 </td>
                                 <td data-label="شناسه" dir="ltr"><code class="lic-hw-code">{{ seat.masked_fingerprint }}</code></td>
                                 <td data-label="وضعیت">

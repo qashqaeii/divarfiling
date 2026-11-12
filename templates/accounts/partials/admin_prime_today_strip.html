@@ -1,0 +1,25 @@
+{% load persian_tags %}
+<div class="adm-prime-today-block" aria-label="امروز">
+    <div class="adm-prime-today__head">
+        <h2><i class="fas fa-sun"></i> امروز</h2>
+        <span class="adm-prime-section-tag"><em>وضعیت لحظه‌ای · بدون بازهٔ گزارش</em></span>
+    </div>
+    <div class="adm-prime-today">
+        <div class="adm-prime-today__item">
+            <em>درآمد</em>
+            <strong data-count-up="{{ today_stats.revenue_today }}" data-format="money">{{ today_stats.revenue_today|default:0 }}</strong>
+        </div>
+        <div class="adm-prime-today__item">
+            <em>سفارش موفق</em>
+            <strong data-count-up="{{ today_stats.orders_paid_today }}">{{ today_stats.orders_paid_today|default:0|to_persian_digits }}</strong>
+        </div>
+        <div class="adm-prime-today__item">
+            <em>ثبت‌نام</em>
+            <strong data-count-up="{{ today_stats.signups_today }}">{{ today_stats.signups_today|default:0|to_persian_digits }}</strong>
+        </div>
+        <div class="adm-prime-today__item">
+            <em>پرداخت ناموفق</em>
+            <strong data-count-up="{{ today_stats.orders_failed_today }}">{{ today_stats.orders_failed_today|default:0|to_persian_digits }}</strong>
+        </div>
+    </div>
+</div>

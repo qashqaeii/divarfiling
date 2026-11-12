@@ -1,0 +1,37 @@
+{% load static %}
+{% load persian_tags %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('ws-theme');
+                if (t === 'light' || t === 'dark') {
+                    document.documentElement.setAttribute('data-theme', t);
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}پنل مدیریت | فایلینگ دیوار{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'logo.ico' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="{% static 'workspace/css/design-system.css' %}?v=1">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="adm-prime-body {% block body_class %}{% endblock %}">
+    <button type="button" class="adm-prime-theme-toggle" data-theme-toggle aria-label="تغییر تم">
+        <i class="fas fa-sun" aria-hidden="true"></i>
+    </button>
+    {% include 'includes/messages.html' with layout='flash' %}
+    {% block content %}{% endblock %}
+    <script src="{% static 'js/mk-notices.js' %}?v=2"></script>
+    <script src="{% static 'js/main.js' %}?v=5"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

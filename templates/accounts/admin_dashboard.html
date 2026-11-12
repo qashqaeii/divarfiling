@@ -6,6 +6,7 @@
 {% block title %}مرکز فرمان | پنل مدیریت{% endblock %}
 
 {% block admin_panel_title %}مرکز فرمان{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">مرکز فرمان</span>{% endblock %}
 
 {% block admin_panel_header_meta %}
 <span class="ecc-status-pill">{{ system_meta.server_label }}</span>
@@ -41,12 +42,38 @@
 
 {% block admin_panel_content %}
 
-<section class="ecc-section ecc-cmd-kpi" aria-label="گزارش بازه">
-    <header class="ecc-cmd-section-label">
-        <span>گزارش بازه</span>
-        <em>{% if admin_panel_range_key == 'all' %}کل بازه{% elif chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
-    </header>
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+{% include 'accounts/partials/admin_prime_today_strip.html' %}
+
+<div class="adm-prime-hero">
+    <div class="adm-prime-hero__chart">
+        <div class="adm-prime-section-tag">
+            <strong>چه چیزی تغییر کرده؟</strong>
+            <em>روند درآمد · {{ admin_panel_range_label_fa|default:"کل بازه" }}</em>
+        </div>
+        <article class="ecc-card ecc-card--chart ecc-cmd-chart-revenue" id="ecc-charts">
+            <div class="ecc-card-head">
+                <span class="ecc-header-title" style="font-size:1rem;font-weight:800;margin:0">روند درآمد</span>
+            </div>
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-revenue-analytics"></canvas>
+            </div>
+        </article>
+    </div>
+    <aside class="adm-prime-hero__rail">
+        <div class="adm-prime-section-tag">
+            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
+            <em>وضعیت فعلی</em>
+        </div>
+        {% include 'accounts/partials/admin_prime_action_queue.html' with items=command_action_items section_id='ecc-glance' %}
+    </aside>
+</div>
+
+<div class="adm-prime-section-tag">
+    <strong>گزارش بازه</strong>
+    <em>{{ admin_panel_range_label_fa|default:"کل بازه" }}</em>
+</div>
+<section class="ecc-section adm-prime-kpi-band ecc-cmd-kpi" aria-label="گزارش بازه">
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd adm-prime-kpi-band">
         {% for card in kpi_cards %}
         {% if card.kpi_tier == 'range' %}
         <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
@@ -76,11 +103,11 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-kpi ecc-cmd-kpi--snapshot" aria-label="وضعیت فعلی">
-    <header class="ecc-cmd-section-label">
-        <span>وضعیت فعلی</span>
-        <em>Snapshot · بدون وابستگی به بازهٔ بالا</em>
-    </header>
+<div class="adm-prime-section-tag">
+    <strong>وضعیت فعلی</strong>
+    <em>Snapshot · مستقل از بازه</em>
+</div>
+<section class="ecc-section ecc-cmd-kpi ecc-cmd-kpi--snapshot adm-prime-kpi-band" aria-label="وضعیت فعلی">
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd ecc-kpi-grid--compact">
         {% for card in kpi_cards %}
         {% if card.kpi_tier == 'snapshot' %}
@@ -97,37 +124,7 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-actions" id="ecc-glance" aria-label="نیازمند اقدام">
-    <header class="ecc-cmd-actions-head">
-        <div>
-            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
-            <p>وضعیت فعلی — شمارش و سن از همان صف مقصد</p>
-        </div>
-        <span class="ecc-cmd-actions-count">{{ command_action_items|length|to_persian_digits }}</span>
-    </header>
-    {% if command_action_items %}
-    <div class="ecc-cmd-actions-list">
-        {% for item in command_action_items %}
-        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
-            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
-            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
-            <span class="ecc-cmd-action-body">
-                <strong>{{ item.title }}</strong>
-                <em>{% firstof item.oldest_label item.detail %}</em>
-            </span>
-            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
-            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="ecc-empty ecc-empty--compact">
-        <i class="fas fa-circle-check"></i>
-        <strong>همه‌چیز تحت کنترل است</strong>
-        <span>مورد فوری برای اقدام وجود ندارد</span>
-    </div>
-    {% endif %}
-</section>
+<div class="adm-prime-fold">
 
 <section class="ecc-section ecc-cmd-assistant" aria-label="دستیار مدیریت">
     <header class="ecc-cmd-actions-head">
@@ -180,23 +177,8 @@
     {% endif %}
 </section>
 
-<section class="ecc-section ecc-cmd-charts" id="ecc-charts" aria-label="نمودارهای مدیریتی">
-    <header class="ecc-cmd-section-label">
-        <span>تحلیل و روند</span>
-        <em>{% if admin_panel_range_key == 'all' %}کل بازه{% elif chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
-    </header>
+<section class="ecc-section ecc-cmd-charts" aria-label="رشد">
     <div class="ecc-cmd-charts-grid">
-        <article class="ecc-card ecc-card--chart ecc-cmd-chart-revenue">
-            <div class="ecc-card-head">
-                <div>
-                    <h3><i class="fas fa-chart-area"></i> روند درآمد</h3>
-                    <p>{% if admin_panel_range_key == 'all' %}کل بازه{% elif chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز اخیر{% endif %}</p>
-                </div>
-            </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-revenue-analytics"></canvas>
-            </div>
-        </article>
         <article class="ecc-card ecc-cmd-growth-panel" id="ecc-growth">
             <div class="ecc-card-head ecc-section-head--slim">
                 <div>
@@ -297,29 +279,7 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-today" id="ecc-today" aria-label="خلاصه امروز">
-    <header class="ecc-cmd-today-head">
-        <h2><i class="fas fa-sun"></i> امروز</h2>
-    </header>
-    <div class="ecc-cmd-today-grid">
-        <div>
-            <em>درآمد</em>
-            <strong data-count-up="{{ today_stats.revenue_today }}" data-format="money">۰</strong>
-        </div>
-        <div>
-            <em>پرداخت</em>
-            <strong data-count-up="{{ today_stats.orders_paid_today }}">۰</strong>
-        </div>
-        <div>
-            <em>ثبت‌نام</em>
-            <strong data-count-up="{{ today_stats.signups_today }}">۰</strong>
-        </div>
-        <div>
-            <em>ناموفق</em>
-            <strong data-count-up="{{ today_stats.orders_failed_today }}">۰</strong>
-        </div>
-    </div>
-</section>
+</div>
 
 {% endblock %}
 

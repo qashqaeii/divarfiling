@@ -1,23 +1,25 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_root.html' %}
 {% load static %}
 {% load persian_tags %}
 
-{% block body_class %}mk-admin-dashboard{% endblock %}
+{% block body_class %}mk-admin-dashboard adm-prime-shell{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-premium.css' %}?v=1">
 {% block admin_panel_extra_css %}{% endblock %}
 {% endblock %}
 
 {% block content %}
-<div class="adm-page ecc-page ecc-page--v2 ecc-page--shell">
+<div class="adm-page ecc-page ecc-page--v2 ecc-page--shell adm-prime-shell">
+    {% include 'accounts/partials/admin_prime_global_bar.html' %}
     <div class="ecc-shell">
         {% include 'accounts/partials/admin_panel_header.html' %}
 
         <div class="ecc-body">
             {% include 'accounts/partials/admin_panel_sidebar.html' %}
-            <main class="ecc-main">
+            <main class="ecc-main adm-prime-main">
                 {% block admin_panel_content %}{% endblock %}
             </main>
         </div>
@@ -28,7 +30,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-admin-panel-shell.js' %}?v=3"></script>
+<script src="{% static 'js/mizkar-admin-panel-shell.js' %}?v=4"></script>
 {% if admin_management_ai_enabled %}
 <script src="{% static 'js/mizkar-admin-management-ai.js' %}?v=3"></script>
 {% endif %}

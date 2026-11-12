@@ -1,0 +1,13 @@
+{% load static %}
+<div class="adm-prime-global-bar" role="navigation" aria-label="دسترسی سراسری">
+    <a href="{% url 'admin_panel' %}" class="adm-prime-global-bar__brand">
+        <img src="{% static 'logo.png' %}" alt="" width="28" height="28">
+        <span>مدیریت فایلینگ دیوار</span>
+    </a>
+    <nav class="adm-prime-global-nav" aria-label="میزکار و حساب">
+        <a href="/workspace/">میزکار</a>
+        <a href="/">سایت</a>
+        <a href="{% url 'profile' %}">حساب</a>
+        <a href="{% url 'admin_panel_assistant' %}{{ admin_panel_query_suffix|default:'?days=all' }}" class="is-accent">دستیار مدیریت</a>
+    </nav>
+</div>

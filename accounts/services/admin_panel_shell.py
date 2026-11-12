@@ -5,7 +5,7 @@ from typing import Any, Dict, Tuple
 
 from django.utils import timezone
 
-from accounts.services.admin_dashboard import ALL_TIME_DAYS, effective_range_days
+from accounts.services.admin_dashboard import ALL_TIME_DAYS, _range_label_fa, effective_range_days
 from accounts.services.admin_management_assistant import build_management_insights
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
 from affiliates.models import Withdrawal
@@ -99,6 +99,8 @@ def resolve_admin_panel_nav_active(path: str) -> str:
         ('/accounts/admin-panel/affiliates/', 'affiliates'),
         ('/accounts/admin-panel/exports/', 'exports'),
         ('/accounts/admin-panel/plan-conversion/', 'plan_conversion'),
+        ('/accounts/admin-panel/forum/', 'forum'),
+        ('/accounts/admin-panel/blog/systematic/', 'blog'),
         ('/accounts/admin-panel/blog/', 'blog'),
         ('/accounts/admin-panel/academy/', 'academy'),
         ('/accounts/admin-panel/', 'command'),
@@ -130,4 +132,5 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
         'admin_panel_nav_badges': badges,
         'admin_panel_alert_count': alert_count,
         'admin_panel_query_suffix': query_suffix,
+        'admin_panel_range_label_fa': _range_label_fa(days),
     }

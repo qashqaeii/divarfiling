@@ -1,0 +1,32 @@
+{% load persian_tags %}
+<section class="ecc-section ecc-cmd-actions adm-prime-action-queue {{ extra_class }}" id="{{ section_id|default:'ecc-glance' }}" aria-label="{{ aria_label|default:'نیازمند اقدام' }}">
+    <header class="ecc-cmd-actions-head">
+        <div>
+            <h2><i class="fas fa-bolt"></i> {{ title|default:'نیازمند اقدام' }}</h2>
+            <p>{{ subtitle|default:'شمارش و سن از همان صف مقصد' }}</p>
+        </div>
+        <span class="ecc-cmd-actions-count">{{ items|length|to_persian_digits }}</span>
+    </header>
+    {% if items %}
+    <div class="ecc-cmd-actions-list">
+        {% for item in items %}
+        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
+            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
+            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
+            <span class="ecc-cmd-action-body">
+                <strong>{{ item.title }}</strong>
+                <em>{% firstof item.oldest_label item.detail %}</em>
+            </span>
+            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
+            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ecc-empty ecc-empty--compact">
+        <i class="fas fa-circle-check"></i>
+        <strong>{{ empty_title|default:'همه‌چیز تحت کنترل است' }}</strong>
+        <span>{{ empty_hint|default:'مورد فوری برای اقدام وجود ندارد' }}</span>
+    </div>
+    {% endif %}
+</section>

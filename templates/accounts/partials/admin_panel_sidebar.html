@@ -56,6 +56,11 @@
                data-nav-id="plan_conversion">
                 <span>تبدیل پلن</span>
             </a>
+            <a href="{% url 'admin_panel_lead_acquisition' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'leads' %} is-active{% endif %}"
+               data-nav-id="leads">
+                <span>جذب سرنخ</span>
+            </a>
         </div>
     </div>
 
@@ -106,6 +111,11 @@
                data-nav-id="activity">
                 <span>فعالیت</span>
             </a>
+            <a href="{% url 'admin_panel_forum' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'forum' %} is-active{% endif %}"
+               data-nav-id="forum">
+                <span>تالار گفتگو</span>
+            </a>
         </div>
     </div>
 
@@ -149,6 +159,11 @@
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'academy' %} is-active{% endif %}"
                data-nav-id="academy">
                 <span>آکادمی</span>
+            </a>
+            <a href="{% url 'admin_panel_blog_systematic' %}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'blog' %} is-active{% endif %}"
+               data-nav-id="blog">
+                <span>انتشار سیستماتیک</span>
             </a>
         </div>
     </div>

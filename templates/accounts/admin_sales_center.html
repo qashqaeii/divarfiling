@@ -6,6 +6,8 @@
 {% block title %}فروش و درآمد | پنل مدیریت{% endblock %}
 
 {% block admin_panel_title %}فروش و درآمد{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">فروش و درآمد</span>{% endblock %}
+{% block admin_panel_header_subtitle %}بازه: {{ range_label|default:admin_panel_range_label_fa }}{% if admin_panel_compare %} · مقایسه{% endif %}{% endblock %}
 
 {% block admin_panel_header_actions %}
 <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--primary" title="خروجی سفارش‌های پرداخت‌شده">
@@ -27,8 +29,35 @@
 
 {% include 'accounts/partials/admin_card_transfer_review.html' %}
 
-<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های فروش">
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+{% include 'accounts/partials/admin_prime_today_strip.html' %}
+
+<div class="adm-prime-hero">
+    <div class="adm-prime-hero__chart">
+        <div class="adm-prime-section-tag">
+            <strong>چه چیزی تغییر کرده؟</strong>
+            <em>روند درآمد · {{ range_label }}</em>
+        </div>
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-revenue"></canvas>
+            </div>
+        </article>
+    </div>
+    <aside class="adm-prime-hero__rail">
+        <div class="adm-prime-section-tag">
+            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
+            <em>وضعیت فعلی</em>
+        </div>
+        {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='sales-actions' title='نیازمند اقدام فروش' subtitle='پرداخت، fulfillment و معلق' empty_title='مورد فوری در فروش نیست' empty_hint='صف خالی است' %}
+    </aside>
+</div>
+
+<div class="adm-prime-section-tag">
+    <strong>وضعیت این بخش</strong>
+    <em>{{ range_label }} · KPI</em>
+</div>
+<section class="ecc-section ecc-cmd-kpi adm-prime-kpi-band" aria-label="شاخص‌های فروش">
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd adm-prime-kpi-band">
         {% for card in kpi_cards %}
         <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
             <div class="ecc-kpi-top">
@@ -56,53 +85,12 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-actions" id="sales-actions" aria-label="نیازمند اقدام">
-    <header class="ecc-cmd-actions-head">
-        <div>
-            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
-            <p>وضعیت فعلی — Snapshot</p>
-        </div>
-        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
-    </header>
-    {% if action_items %}
-    <div class="ecc-cmd-actions-list">
-        {% for item in action_items %}
-        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
-            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
-            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
-            <span class="ecc-cmd-action-body">
-                <strong>{{ item.title }}</strong>
-                <em>{{ item.detail }}</em>
-            </span>
-            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
-            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="ecc-empty ecc-empty--compact">
-        <i class="fas fa-circle-check"></i>
-        <strong>مورد فوری در فروش وجود ندارد</strong>
-        <span>سفارش معلق یا پرداخت ناموفق ثبت نشده است</span>
-    </div>
-    {% endif %}
-</section>
+<div class="adm-prime-fold">
 
 {% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='sales' ai_section_label='فروش' %}
 
 <section class="ecc-section ecc-cmd-charts ecc-sales-charts" aria-label="روند فروش">
     <div class="ecc-cmd-charts-grid ecc-sales-charts-grid">
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-card-head">
-                <div>
-                    <h3><i class="fas fa-chart-area"></i> روند درآمد</h3>
-                    <p>{{ range_label }}</p>
-                </div>
-            </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-revenue"></canvas>
-            </div>
-        </article>
         <article class="ecc-card ecc-card--chart">
             <div class="ecc-card-head">
                 <div>
@@ -346,6 +334,8 @@
         {% endfor %}
     </div>
 </section>
+
+</div>
 
 {% endblock %}
 

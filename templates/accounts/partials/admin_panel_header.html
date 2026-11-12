@@ -9,10 +9,15 @@
                 <h1 class="ecc-header-title">{% block admin_panel_title %}پنل مدیریت{% endblock %}</h1>
                 <p class="ecc-header-subtitle" id="ecc-header-range-label">
                     {% block admin_panel_header_subtitle %}
-                    {% if admin_panel_range_key == 'all' %}گزارش کل بازه{% elif admin_panel_range_key == '1' %}گزارش امروز{% elif admin_panel_range_key == '7' %}۷ روز اخیر{% elif admin_panel_range_key == '90' %}۹۰ روز اخیر{% elif admin_panel_range_key == '365' %}۳۶۵ روز اخیر{% else %}۳۰ روز اخیر{% endif %}
+                    بازه: {{ admin_panel_range_label_fa|default:"کل بازه" }}
                     {% if admin_panel_compare %} · مقایسه با دوره قبل{% endif %}
                     {% endblock %}
                 </p>
+                <nav class="adm-prime-breadcrumb" aria-label="مسیر">
+                    <a href="{% url 'admin_panel' %}{{ admin_panel_query_suffix|default:'?days=all' }}">فرمان</a>
+                    <span aria-hidden="true">/</span>
+                    {% block admin_panel_breadcrumb %}<span aria-current="page">صفحه جاری</span>{% endblock %}
+                </nav>
             </div>
             {% block admin_panel_header_meta %}{% endblock %}
         </div>

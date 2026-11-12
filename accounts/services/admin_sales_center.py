@@ -33,6 +33,7 @@ from accounts.services.admin_dashboard import (
     get_plan_sales_for_date_range,
     get_recent_orders,
     get_revenue_series,
+    get_today_stats,
 )
 from accounts.services.admin_command_queues import (
     count_fulfillment_incomplete,
@@ -440,6 +441,7 @@ def get_sales_center_context(*, days: int = 30, compare: bool = False, focus: st
     return {
         'chart_days': days,
         'range_label': range_label,
+        'today_stats': get_today_stats(),
         'kpi_cards': kpi_cards,
         'charts': _build_sales_charts(days, start, end),
         'product_revenue': product_revenue,

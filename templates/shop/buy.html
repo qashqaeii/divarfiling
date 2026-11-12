@@ -7,13 +7,14 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=23">
-<link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/buy-checkout.css' %}?v=15">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
 
 {% block content %}
-<div class="ck-flow" data-checkout data-apply-discount-url="{% url 'apply_discount' product.slug %}">
+<div class="ck-flow ck-buy-flow ck-buy-flow--premium" data-checkout data-apply-discount-url="{% url 'apply_discount' product.slug %}">
 
     <div class="ck-ambient ck-ambient--subtle" aria-hidden="true">
         <span class="ck-ambient-orb ck-ambient-orb--violet"></span>
@@ -21,28 +22,7 @@
         <span class="ck-ambient-grid"></span>
     </div>
 
-    <div class="ck-page ck-page--full">
-        <header class="ck-page-head">
-            <div class="ck-page-head-row">
-                <a href="{% url 'dashboard_tab' 'licenses' %}#licenses" class="ck-back">
-                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                    <span>میزکار</span>
-                </a>
-                <nav class="ck-pay-rail ck-pay-rail--inline" aria-label="مراحل خرید">
-                    <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot"></span><span>پلن</span></div>
-                    <div class="ck-pay-rail-line"></div>
-                    <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot"></span><span>پرداخت</span></div>
-                    <div class="ck-pay-rail-line"></div>
-                    <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot"></span><span>لایسنس</span></div>
-                </nav>
-                <span class="ck-secure-pill"><i class="fas fa-lock"></i> SSL</span>
-            </div>
-            <div class="ck-page-head-copy">
-                <h1 class="ck-page-title">{% if is_renewal %}تمدید لایسنس{% else %}{{ product.title }}{% endif %}</h1>
-                <p class="ck-page-sub">{% if is_renewal %}همان کلید لایسنس — فقط تاریخ اعتبار تمدید می‌شود{% else %}پلن لایسنس را انتخاب کنید — فعال‌سازی فوری پس از پرداخت{% endif %}</p>
-            </div>
-        </header>
-
+    <div class="ck-page ck-page--full ck-page--buy">
         {% if is_renewal and renewal_preview %}
         <div class="ck-renewal-banner" role="status">
             <div class="ck-renewal-banner-icon" aria-hidden="true"><i class="fas fa-rotate"></i></div>
@@ -59,38 +39,56 @@
         </div>
         {% endif %}
 
-        <div class="ck-layout">
+        <div class="ck-layout ck-layout--buy">
+            <div class="ck-shell ck-buy-shell">
+            <header class="ck-page-head ck-page-head--buy">
+                <div class="ck-page-head-row ck-page-head-row--rail-only ck-checkout-stepper-enter">
+                    <div class="ck-buy-rail-band ck-checkout-stepper">
+                        <nav class="ck-pay-rail ck-pay-rail--inline ck-pay-rail--premium ck-pay-rail--animated" aria-label="مراحل خرید">
+                            <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot" aria-hidden="true"></span><span>پلن</span></div>
+                            <div class="ck-pay-rail-line" aria-hidden="true"></div>
+                            <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot" aria-hidden="true"></span><span>پرداخت</span></div>
+                            <div class="ck-pay-rail-line" aria-hidden="true"></div>
+                            <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot" aria-hidden="true"></span><span>لایسنس</span></div>
+                        </nav>
+                    </div>
+                </div>
+            </header>
             <form method="post" id="buy-form" class="ck-form ck-form--checkout">
                 {% csrf_token %}
                 <button type="submit" id="buy-form-hidden-submit" hidden tabindex="-1" aria-hidden="true">ارسال</button>
                 {% if renewal_license %}<input type="hidden" name="renew" value="{{ renewal_license.id }}">{% endif %}
 
-                <aside class="ck-order" aria-label="خلاصه سفارش">
-                    <div class="ck-order-inner">
-                        <div class="ck-order-badge"><i class="fas fa-receipt"></i><span>خلاصه</span></div>
-
-                        <div class="ck-order-product">
-                            <span class="ck-order-product-icon"><i class="fas fa-robot"></i></span>
-                            <div>
+                <aside class="ck-order ck-buy-order ck-buy-order--sheet" aria-label="خلاصه سفارش">
+                    <header class="ck-buy-order-head ck-page-head-copy ck-page-head-copy--order">
+                        <h1 class="ck-page-title">{% if is_renewal %}تمدید لایسنس{% else %}{{ product.title }}{% endif %}</h1>
+                        <p class="ck-page-sub">{% if is_renewal %}همان کلید لایسنس — فقط تاریخ اعتبار تمدید می‌شود{% else %}پلن را انتخاب کنید؛ مبلغ و تخفیف اینجا به‌روز می‌شود{% endif %}</p>
+                    </header>
+                    <div class="ck-order-inner ck-buy-order-body">
+                        <div class="ck-order-product ck-order-product-card ck-buy-order-product">
+                            <span class="ck-order-product-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                            <div class="ck-order-product-body">
                                 <strong>{{ product.title }}</strong>
-                                <span id="summary-plan-name">—</span>
+                                <span class="ck-order-product-meta" id="summary-plan-name">—</span>
                             </div>
                         </div>
 
-                        <div class="ck-order-lines">
-                            <div class="ck-order-line">
-                                <span>قیمت پلن</span>
-                                <span id="summary-original-price" class="ck-order-val">—</span>
+                        <section class="ck-buy-order-pricing" aria-label="مبلغ">
+                            <div class="ck-order-lines ck-buy-order-lines">
+                                <div class="ck-order-line">
+                                    <span>قیمت پلن</span>
+                                    <span id="summary-original-price" class="ck-order-val">—</span>
+                                </div>
+                                <div id="summary-discount-rows"></div>
                             </div>
-                            <div id="summary-discount-rows"></div>
-                        </div>
 
-                        <div class="ck-order-total">
-                            <span>قابل پرداخت</span>
-                            <strong id="summary-final-price">—</strong>
-                        </div>
+                            <div class="ck-order-total ck-buy-order-total" role="status" aria-live="polite">
+                                <span>قابل پرداخت</span>
+                                <strong id="summary-final-price">—</strong>
+                            </div>
+                        </section>
 
-                        <div class="ck-order-panel">
+                        <div class="ck-order-panel ck-buy-order-panel" aria-label="تخفیف و پرداخت">
                             <div class="ck-order-block">
                                 <span class="ck-order-block-label">کد تخفیف <em>(اختیاری)</em></span>
                                 <div class="ck-promo ck-promo--sidebar">
@@ -130,19 +128,19 @@
                             {% endif %}
                         </div>
 
-                        <button type="button" class="ck-pay-btn ck-pay-btn--sidebar" data-pay-btn>
-                            <span class="ck-pay-btn-main"><i class="fas fa-lock"></i> {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت امن{% endif %}</span>
-                            <span class="ck-pay-btn-sub" id="pay-btn-hint">{% if show_payment_choice %}انتخاب روش پرداخت{% elif 'card_transfer' in payment_methods %}ثبت واریز کارت به کارت{% else %}انتقال به درگاه زیبال{% endif %}</span>
-                        </button>
-
-                        <ul class="ck-order-trust">
-                            <li><i class="fas fa-shield-halved"></i> پرداخت امن</li>
-                            <li><i class="fas fa-key"></i> لایسنس فوری</li>
-                        </ul>
+                        <div class="ck-buy-order-checkout">
+                            <button type="button" class="ck-pay-btn ck-pay-btn--sidebar ck-pay-btn--glow" data-pay-btn>
+                                <span class="ck-pay-btn-main">
+                                    <span class="ck-pay-btn-icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
+                                    {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت امن{% endif %}
+                                </span>
+                                <span class="ck-pay-btn-sub" id="pay-btn-hint">{% if show_payment_choice %}انتخاب روش پرداخت{% elif 'card_transfer' in payment_methods %}ثبت واریز کارت به کارت{% else %}انتقال به درگاه امن زیبال{% endif %}</span>
+                            </button>
+                        </div>
                     </div>
                 </aside>
 
-                <main class="ck-main">
+                <main class="ck-main ck-buy-main">
                     {% if form.non_field_errors %}
                     <div class="ck-alert ck-alert--error" role="alert">
                         <i class="fas fa-circle-exclamation"></i>
@@ -177,8 +175,9 @@
                     </div>
                     {% endif %}
 
-                    <section class="ck-plans-stage" aria-labelledby="plans-heading">
-                        <div class="ck-plan-mode-tabs" role="tablist" aria-label="نوع پلن">
+                    <section class="ck-plans-stage ck-buy-plans-stage" aria-labelledby="plans-heading">
+                        <h2 id="plans-heading" class="ck-pay-sr-title">انتخاب پلن</h2>
+                        <div class="ck-plan-mode-tabs ck-buy-plan-tabs" role="tablist" aria-label="نوع پلن">
                             <button type="button" class="ck-plan-mode-tab is-active" data-plan-mode="personal" role="tab" aria-selected="true">
                                 <i class="fas fa-user" aria-hidden="true"></i>
                                 <span>پلن شخصی</span>
@@ -372,6 +371,7 @@
                     </footer>
                 </main>
             </form>
+            </div>
         </div>
     </div>
 </div>
@@ -385,7 +385,8 @@
             <strong id="mobile-final-price">—</strong>
         </div>
         <button type="button" class="ck-pay-btn ck-pay-btn--compact" data-pay-btn form="buy-form" id="mobile-pay-btn">
-            <i class="fas fa-lock"></i> پرداخت
+            <span class="ck-pay-btn-icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
+            پرداخت
         </button>
     </div>
 </div>

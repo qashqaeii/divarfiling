@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=23">
 <link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/payment-checkout.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'css/payment-checkout.css' %}?v=16">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -26,8 +26,8 @@
         <header class="ck-page-head ck-page-head--pay">
             <h1 class="ck-pay-sr-title">تأیید و پرداخت — {{ order.product.title }}</h1>
             <div class="ck-pay-head-desk ck-pay-desk-only">
-                <div class="ck-page-head-row ck-page-head-row--rail-only">
-                    <nav class="ck-pay-rail ck-pay-rail--inline" aria-label="مراحل پرداخت">
+                <div class="ck-page-head-row ck-page-head-row--rail-only ck-checkout-stepper-enter">
+                    <nav class="ck-pay-rail ck-pay-rail--inline ck-pay-rail--premium ck-pay-rail--animated" aria-label="مراحل پرداخت">
                         <div class="ck-pay-rail-item is-done"><span class="ck-pay-rail-dot" aria-hidden="true"><i class="fas fa-check"></i></span><span>پلن</span></div>
                         <div class="ck-pay-rail-line is-done"></div>
                         <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot"></span><span>پرداخت</span></div>

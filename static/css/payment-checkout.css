@@ -505,22 +505,115 @@ html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-page-head--pay {
     margin-bottom: 0.85rem;
 }
 
+@keyframes ck-stepper-fade-up {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 0.65rem, 0);
+        filter: blur(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        filter: blur(0);
+    }
+}
+
+@keyframes ck-stepper-line-grow {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+@keyframes ck-stepper-dot-pulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 4px rgba(124, 58, 237, 0.12),
+            0 4px 14px -6px rgba(124, 58, 237, 0.45);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 7px rgba(124, 58, 237, 0.08),
+            0 6px 18px -4px rgba(124, 58, 237, 0.55);
+    }
+}
+
+@keyframes ck-stepper-line-shimmer {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .ck-pay-flow--premium .ck-page-head-row--rail-only {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    padding: 0.15rem 0;
+    margin-bottom: clamp(0.65rem, 1.5vw, 0.85rem);
+    background: none;
+    border: none;
+    box-shadow: none;
 }
+
+.ck-pay-flow--premium .ck-page-head-row--rail-only.ck-checkout-stepper-enter {
+    animation: ck-stepper-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ck-pay-flow--premium .ck-pay-rail--animated.ck-pay-rail--inline {
+    width: 100%;
+    max-width: 26rem;
+    margin: 0 auto;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-item {
+    opacity: 0;
+    animation: ck-stepper-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-item:nth-child(1) { animation-delay: 0.06s; }
+.ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-item:nth-child(3) { animation-delay: 0.22s; }
+.ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-item:nth-child(5) { animation-delay: 0.38s; }
+
+.ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-line {
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: center;
+    animation: ck-stepper-line-grow 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    min-width: 1.75rem;
+    max-width: 7rem;
+    height: 2px;
+    overflow: hidden;
+    transition: background 0.4s ease;
+}
+
+.ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-line:nth-child(2) { animation-delay: 0.14s; }
+.ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-line:nth-child(4) { animation-delay: 0.3s; }
 
 @media (min-width: 861px) {
     html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-page-head-row--rail-only {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 0;
+        margin-bottom: 0.35rem;
     }
 
     html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-page-head-row--rail-only .ck-pay-rail--inline {
-        max-width: 20rem;
+        max-width: 28rem;
     }
 }
 
@@ -555,21 +648,52 @@ html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-item.is-ac
     font-weight: 800;
 }
 
+html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-item {
+    transition: color 0.28s ease, transform 0.28s ease;
+}
+
+html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-item.is-active {
+    transform: translateY(-1px);
+}
+
+html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-dot {
+    transition:
+        box-shadow 0.32s ease,
+        border-color 0.32s ease,
+        background 0.32s ease,
+        transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-item.is-active .ck-pay-rail-dot {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 1.02rem;
+    height: 1.02rem;
     border-color: var(--ck-pay-violet);
     background: var(--ck-pay-violet);
-    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.14);
+    animation: ck-stepper-dot-pulse 2.4s ease-in-out infinite;
 }
 
 html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-line {
-    background: rgba(148, 163, 184, 0.2);
+    background: linear-gradient(
+        90deg,
+        rgba(148, 163, 184, 0.12) 0%,
+        rgba(148, 163, 184, 0.35) 50%,
+        rgba(148, 163, 184, 0.12) 100%
+    );
+    background-size: 200% 100%;
     margin-bottom: 1.05rem;
 }
 
 html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-line.is-done {
-    background: linear-gradient(90deg, rgba(16, 185, 129, 0.55), rgba(16, 185, 129, 0.25));
+    background: linear-gradient(
+        90deg,
+        rgba(16, 185, 129, 0.35) 0%,
+        rgba(16, 185, 129, 0.75) 45%,
+        rgba(124, 58, 237, 0.35) 100%
+    );
+    background-size: 220% 100%;
+    animation:
+        ck-stepper-line-grow 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+        ck-stepper-line-shimmer 4.5s ease-in-out infinite;
 }
 
 html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-shell {
@@ -1048,8 +1172,8 @@ html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-footnote a {
     }
 
     html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-main {
-        background: #fff;
-    }
+    background: #fff;
+}
 
     html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-gateway-card {
         border: 1px solid var(--ck-pay-line);
@@ -1256,6 +1380,21 @@ html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-footnote a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .ck-pay-flow--premium .ck-page-head-row--rail-only.ck-checkout-stepper-enter,
+    .ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-item,
+    .ck-pay-flow--premium .ck-pay-rail--animated > .ck-pay-rail-line,
+    .ck-pay-flow--premium .ck-pay-rail-item.is-active .ck-pay-rail-dot,
+    html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-line.is-done {
+        animation: none;
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+
+    html.mk-public[data-theme="light"] .ck-pay-flow--premium .ck-pay-rail-item.is-active {
+        transform: none;
+    }
+
     .ck-pay-flow--premium .ck-order-badge--sheet .ck-order-badge__icon i,
     .ck-pay-flow--premium .ck-order-product-icon i,
     .ck-pay-flow--premium .ck-pay-gateway-logo i,

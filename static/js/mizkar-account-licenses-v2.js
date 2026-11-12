@@ -22,9 +22,11 @@
 
     function matchStatus(tile, mode) {
         var tone = tile.getAttribute('data-lic-tone') || '';
-        var expired = tone === 'expired' || tone === 'inactive';
-        if (mode === 'expired') return expired;
-        if (mode === 'active') return !expired;
+        if (mode === 'expired') return tone === 'expired';
+        if (mode === 'active') return tone !== 'expired' && tone !== 'inactive';
+        if (mode === 'available') {
+            return tile.getAttribute('data-alloc-state') === 'available' && tone !== 'expired';
+        }
         if (mode === 'attention') return tone === 'warning' || tone === 'critical';
         return true;
     }

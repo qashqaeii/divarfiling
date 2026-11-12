@@ -143,6 +143,114 @@ html.mk-public[data-theme="light"] .mk-dl-card {
     margin-bottom: 0.65rem;
 }
 
+.mk-dl-card-head--toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.45rem;
+}
+
+.mk-dl-card-head--toolbar .mk-dl-card-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mk-dl-notes-details--head {
+    flex-shrink: 0;
+    position: relative;
+    margin-top: 0.05rem;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.mk-dl-card-info {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    margin: 0;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(148, 163, 184, 0.08);
+    color: var(--mk-text-muted);
+    cursor: pointer;
+    list-style: none;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.mk-dl-card-info::-webkit-details-marker {
+    display: none;
+}
+
+.mk-dl-card-info::marker {
+    content: '';
+}
+
+.mk-dl-card-info i {
+    font-size: 0.82rem;
+    color: #d97706;
+}
+
+.mk-dl-card-info:hover {
+    border-color: rgba(217, 119, 6, 0.35);
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--mk-text-secondary);
+}
+
+.mk-dl-notes-details--head[open] .mk-dl-card-info {
+    border-color: rgba(217, 119, 6, 0.4);
+    background: rgba(251, 191, 36, 0.16);
+}
+
+.mk-dl-notes-details--head[open] {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem 0.45rem;
+}
+
+.mk-dl-notes-details--head .mk-dl-notes-panel {
+    position: static;
+    z-index: 1;
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    padding: 0.55rem 0.62rem;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: var(--mk-surface-raised, rgba(15, 23, 42, 0.97));
+    box-shadow: 0 16px 40px -18px rgba(15, 23, 42, 0.45);
+}
+
+html.mk-public[data-theme="light"] .mk-dl-notes-details--head .mk-dl-notes-panel {
+    background: #fff;
+    box-shadow: 0 18px 42px -20px rgba(15, 23, 42, 0.18);
+}
+
+.mk-dl-notes-panel__title {
+    margin: 0 0 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1.45;
+    color: var(--mk-text);
+}
+
+.mk-dl-notes-details--head .mk-dl-notes-list {
+    margin: 0;
+    padding: 0;
+}
+
+.mk-dl-card:has(.mk-dl-notes-details--head) {
+    overflow: visible;
+}
+
+.mk-dl-card:has(.mk-dl-notes-details--head[open]) {
+    z-index: 3;
+}
+
 .mk-dl-card-brand {
     display: flex;
     align-items: flex-start;
@@ -545,6 +653,12 @@ html.mk-public[data-theme="light"] .mk-dl-shield-action {
     border: 1px solid rgba(148, 163, 184, 0.14);
     background: rgba(148, 163, 184, 0.06);
     overflow: hidden;
+}
+
+.mk-dl-notes-details.mk-dl-notes-details--head {
+    border: 0;
+    background: transparent;
+    overflow: visible;
 }
 
 .mk-dl-notes-summary {

@@ -571,6 +571,39 @@ def _license_expiry_meta(license_obj: License) -> Dict[str, Any]:
     }
 
 
+def _portfolio_priority_key(item: Dict[str, Any]) -> tuple:
+    """ترتیب نمایش کارت لایسنس: خطر انقضا، سپس نیاز به اقدام، سپس باقی‌مانده روز."""
+    expiry = item.get('expiry') or {}
+    tone = expiry.get('tone') or 'healthy'
+    tone_rank = {
+        'expired': 0,
+        'critical': 1,
+        'warning': 2,
+        'inactive': 3,
+        'stable': 4,
+        'healthy': 5,
+        'unlimited': 6,
+    }.get(tone, 7)
+
+    action_rank = 4
+    if item.get('can_renew'):
+        action_rank = 0
+    elif item.get('allocation_state') == 'available':
+        action_rank = 1
+    elif item.get('allocation_state') == 'owner_active' and not item.get('active_count'):
+        action_rank = 2
+    elif item.get('pending_count', 0) > 0:
+        action_rank = 3
+
+    days = expiry.get('days_remaining')
+    days_key = int(days) if days is not None else 1_000_000
+
+    lic = item.get('license')
+    tie_breaker = -(lic.pk if lic is not None else 0)
+
+    return (tone_rank, action_rank, days_key, tie_breaker)
+
+
 def build_license_dashboard(user) -> Dict[str, Any]:
     """داده‌های کامل تب لایسنس در داشبورد."""
     licenses = list(
@@ -663,6 +696,8 @@ def build_license_dashboard(user) -> Dict[str, Any]:
         portfolio['can_renew'] = can_renew and (
             expiry.get('is_expired') or expiry.get('expiring_soon')
         )
+
+    portfolios.sort(key=_portfolio_priority_key)
 
     return {
         'portfolios': portfolios,

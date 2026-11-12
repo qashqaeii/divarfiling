@@ -612,6 +612,33 @@
         min-height: var(--acc-m-touch);
     }
 
+    /* Orders tab ov2 — preserve premium list layout on mobile */
+    body.mk-account-dashboard .mk-orders-tab.ov2 .mk-orders-toolbar {
+        padding: 0 0 0.65rem;
+        margin-bottom: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+    }
+    body.mk-account-dashboard .mk-orders-tab.ov2 .mk-order-card {
+        display: grid;
+        flex-direction: unset;
+        overflow: visible;
+        padding: 0.62rem 0.65rem;
+        border-radius: 10px;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.92) inset;
+    }
+    body.mk-account-dashboard .mk-orders-tab.ov2 .mk-order-card__stack {
+        padding: 0;
+    }
+    body.mk-account-dashboard .mk-orders-tab.ov2 .mk-order-card__actions {
+        flex-direction: row;
+        width: auto;
+        padding: 0;
+        border-top: 0;
+        background: transparent;
+    }
+
     body.mk-account-dashboard .mk-order-modal {
         align-items: flex-end;
         padding: 0;

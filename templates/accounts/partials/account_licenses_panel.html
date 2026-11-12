@@ -1,14 +1,45 @@
 {% load persian_tags %}
+{% load account_avatar_tags %}
 
 <div id="tab-licenses" class="mk-acc-tab-panel mk-acc-tab-shell mk-licenses-tab ov2 tab-content dash-tab-panel lic-premium"{% if active_tab != 'licenses' %} hidden{% endif %} data-license-mgmt>
     <div class="mk-acc-tab-body">
         {% url 'product_list' as lic_buy_url %}
         {% url 'license_guide' as lic_guide_url %}
-        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='لایسنس‌ها' ov2_title='مرکز مدیریت لایسنس' ov2_lead='اعتبار اشتراک، دستگاه‌های فعال و دسترسی اعضای تیم را در یک صفحه مدیریت کنید.' ov2_primary_href=lic_buy_url ov2_primary_label='خرید لایسنس' ov2_ghost_href=lic_guide_url ov2_ghost_label='راهنمای لایسنس' %}
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_show_quick='0' ov2_label='لایسنس‌ها' ov2_title='مرکز مدیریت لایسنس' ov2_lead='اعتبار اشتراک، دستگاه‌های فعال و دسترسی اعضای تیم را در یک صفحه مدیریت کنید.' ov2_primary_href=lic_buy_url ov2_primary_label='خرید لایسنس' ov2_ghost_href=lic_guide_url ov2_ghost_label='راهنمای لایسنس' %}
 
         <section class="ov2-kpi" aria-label="خلاصه لایسنس">
             <div class="ov2-kpi__frame">
             <div class="ov2-metrics">
+                {% if license_dashboard.pool.total %}
+                <div class="ov2-metric ov2-metric--licenses">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-key"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">کل کلیدها</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.total|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--success">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">فعال برای شما</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.owner_active|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--pending">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-user-tag"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">تخصیص به تیم</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.assigned|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                <div class="ov2-metric ov2-metric--money">
+                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-box-open"></i></span></span>
+                    <span class="ov2-metric__copy">
+                        <span class="ov2-metric__label">آماده تخصیص</span>
+                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.available|to_persian_digits }}</strong>
+                    </span>
+                </div>
+                {% else %}
                 <div class="ov2-metric ov2-metric--licenses">
                     <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-key"></i></span></span>
                     <span class="ov2-metric__copy">
@@ -19,23 +50,8 @@
                 <div class="ov2-metric ov2-metric--success">
                     <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span></span>
                     <span class="ov2-metric__copy">
-                        <span class="ov2-metric__label">فعال</span>
+                        <span class="ov2-metric__label">اعتبار معتبر</span>
                         <strong class="ov2-metric__value ov2-fa-num">{{ active_licenses|to_persian_digits }}</strong>
-                    </span>
-                </div>
-                {% if license_dashboard.pool %}
-                <div class="ov2-metric ov2-metric--money">
-                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-box-open"></i></span></span>
-                    <span class="ov2-metric__copy">
-                        <span class="ov2-metric__label">آماده تخصیص</span>
-                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.available|to_persian_digits }}</strong>
-                    </span>
-                </div>
-                <div class="ov2-metric ov2-metric--pending">
-                    <span class="ov2-metric__head"><span class="ov2-metric__icon" aria-hidden="true"><i class="fas fa-user-tag"></i></span></span>
-                    <span class="ov2-metric__copy">
-                        <span class="ov2-metric__label">تخصیص تیم</span>
-                        <strong class="ov2-metric__value ov2-fa-num">{{ license_dashboard.pool.assigned|to_persian_digits }}</strong>
                     </span>
                 </div>
                 {% endif %}
@@ -43,31 +59,8 @@
             </div>
         </section>
 
-        <section class="ov2-panel ov2-panel--tab ov2-panel--licenses" lang="fa" dir="rtl" aria-labelledby="lic-premium-pool-title">
-    {% if license_dashboard.pool %}
-    <section class="lic-premium__pool" aria-labelledby="lic-premium-pool-title">
-      <div class="lic-premium__section-title">
-        <div><h3 id="lic-premium-pool-title">مدیریت ظرفیت</h3><p>نمای کلی از مالکیت و تخصیص کلیدها</p></div>
-      </div>
-    <div class="lic-pool-strip" aria-label="خلاصه استخر لایسنس">
-        <div class="lic-pool-item">
-            <strong>{{ license_dashboard.pool.total }}</strong>
-            <span>کل کلیدها</span>
-        </div>
-        <div class="lic-pool-item lic-pool-item--owner">
-            <strong>{{ license_dashboard.pool.owner_active }}</strong>
-            <span>فعال برای شما</span>
-        </div>
-        <div class="lic-pool-item lic-pool-item--assigned">
-            <strong>{{ license_dashboard.pool.assigned }}</strong>
-            <span>تخصیص به تیم</span>
-        </div>
-        <div class="lic-pool-item lic-pool-item--free">
-            <strong>{{ license_dashboard.pool.available }}</strong>
-            <span>آماده تخصیص</span>
-        </div>
-    </div>
-    </section>
+        <section class="ov2-panel ov2-panel--tab ov2-panel--licenses" lang="fa" dir="rtl" aria-label="لایسنس‌های من">
+    {% if license_dashboard.pool.total %}
     <details class="lic-premium__legend">
         <summary><i class="fas fa-circle-info" aria-hidden="true"></i> راهنمای رنگ‌های وضعیت اعتبار <i class="fas fa-chevron-down lic-premium__legend-chevron" aria-hidden="true"></i></summary>
     <div class="lic-spectrum-legend" aria-label="راهنمای وضعیت انقضا">
@@ -156,14 +149,7 @@
 
     {% if license_dashboard.portfolios %}
     <section class="lic-premium__collection" aria-labelledby="lic-premium-list-title">
-        <div class="lic-premium__collection-head">
-            <div>
-                <span class="lic-premium__section-kicker">اشتراک‌ها و دستگاه‌ها</span>
-                <h3 id="lic-premium-list-title">لایسنس‌های من</h3>
-                <p>جزئیات هر لایسنس، دستگاه‌ها، تخصیص تیم و تمدید را از کارت مربوطه مدیریت کنید.</p>
-            </div>
-            <span class="lic-premium__collection-count">{{ license_dashboard.portfolios|length }} لایسنس</span>
-        </div>
+        <h3 id="lic-premium-list-title" class="lic-premium__sr-only">لایسنس‌های من</h3>
         <div class="lic-premium__toolbar" data-lic-toolbar hidden>
             <label class="lic-premium__search">
                 <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
@@ -173,26 +159,25 @@
             <div class="lic-premium__filters" role="group" aria-label="فیلتر وضعیت اعتبار">
                 <button type="button" data-lic-filter="all" aria-pressed="true" class="is-active">همه</button>
                 <button type="button" data-lic-filter="active" aria-pressed="false">فعال</button>
+                <button type="button" data-lic-filter="available" aria-pressed="false">آزاد</button>
                 <button type="button" data-lic-filter="attention" aria-pressed="false">نزدیک انقضا</button>
                 <button type="button" data-lic-filter="expired" aria-pressed="false">منقضی</button>
             </div>
         </div>
         <p class="lic-premium__results" data-lic-result-count role="status" aria-live="polite" hidden></p>
-    <div class="lic-grid" role="list">
+    <div class="lic-grid lic-grid--premium" role="list">
         {% for item in license_dashboard.portfolios %}
         {% with lic=item.license expiry=item.expiry %}
-        <article class="lic-tile lic-tile--{{ expiry.tone }}" id="license-{{ lic.id }}" role="listitem" data-license-id="{{ lic.id }}" data-lic-tone="{{ expiry.tone }}"{% if lic.expires_at %} data-lic-expires="{{ lic.expires_at|date:'c' }}"{% endif %} style="--lic-health: {{ expiry.health_pct }}%;">
-            <div class="lic-tile-glow" aria-hidden="true"></div>
-            <div class="lic-tile-life" aria-hidden="true"><span class="lic-tile-life-fill"></span></div>
-
+        <article class="lic-tile lic-tile--premium lic-tile--{{ expiry.tone }}" id="license-{{ lic.id }}" role="listitem" data-license-id="{{ lic.id }}" data-lic-tone="{{ expiry.tone }}" data-alloc-state="{{ item.allocation_state }}"{% if lic.expires_at %} data-lic-expires="{{ lic.expires_at|date:'c' }}"{% endif %}>
+            <span class="lic-tile__rail" aria-hidden="true"></span>
             <header class="lic-tile-head">
                 <div class="lic-tile-identity">
-                    <span class="lic-tile-icon" aria-hidden="true">
-                        <i class="fas {% if item.is_multi %}fa-laptop-house{% else %}fa-key{% endif %}"></i>
+                    <span class="lic-tile-mark" aria-hidden="true">
+                        <i class="fas {% if item.is_multi %}fa-laptop{% else %}fa-key{% endif %}"></i>
                     </span>
                     <div class="lic-tile-names">
-                        <h3 class="lic-tile-title">{{ lic.order.product.title }}</h3>
-                        <p class="lic-tile-plan">{{ lic.plan.name }}</p>
+                        <h3 class="lic-tile-title">{{ lic.order|account_order_product_line }}</h3>
+                        <p class="lic-tile-plan">{{ lic.plan|account_plan_label }}</p>
                     </div>
                 </div>
                 <span class="lic-premium__tile-status lic-premium__tile-status--{{ expiry.tone }}" data-lic-status>
@@ -201,92 +186,88 @@
                 </span>
             </header>
 
-            <div class="lic-tile-expiry">
-                {% if expiry.has_expiry %}
-                <div class="lic-tile-expiry-main">
-                    <span class="lic-tile-expiry-label">انقضا</span>
-                    <time class="lic-tile-date{% if expiry.is_expired %} lic-tile-date--struck{% endif %}" datetime="{{ lic.expires_at|date:'c' }}">{{ lic.expires_at|to_jalali_date:"%Y/%m/%d" }}</time>
+            <div class="lic-tile__body lic-tile__body--minimal">
+            <p class="lic-tile-meta-line ov2-fa-num" aria-label="خلاصه لایسنس">
+                <span class="lic-tile-meta-line__cell">
+                    <span class="lic-tile-meta-line__key">انقضا</span>
+                    {% if expiry.has_expiry %}
+                    <time class="lic-tile-date ov2-fa-num{% if expiry.is_expired %} lic-tile-date--struck{% endif %}" datetime="{{ lic.expires_at|date:'c' }}">{{ lic.expires_at|to_jalali_fa:"%Y/%m/%d" }}</time>
+                    <span class="lic-tile-meta-line__dim lic-tile-remain lic-tile-remain--{{ expiry.tone }}" data-lic-remain>{% if expiry.is_expired %}منقضی{% else %}{{ expiry.remaining_label }}{% endif %}</span>
+                    {% else %}
+                    <span class="lic-tile-date lic-tile-date--unlimited">نامحدود</span>
+                    {% endif %}
+                </span>
+                <span class="lic-tile-meta-line__cell">
+                    <span class="lic-tile-meta-line__key">دستگاه</span>
+                    <span>{{ item.slots_used }}/{{ lic.max_activations }}</span>
+                    {% if item.active_count %}<span class="lic-tile-meta-line__dim lic-tile-meta-line__dim--ok">{{ item.active_count }} فعال</span>{% endif %}
+                </span>
+                <span class="lic-tile-meta-line__cell lic-tile-meta-line__cell--alloc">
+                    {% if item.allocation_state == 'available' %}
+                    <span class="lic-tile-meta-line__alloc lic-tile-meta-line__alloc--pool">آماده تخصیص</span>
+                    {% elif item.allocation_state == 'owner_active' %}
+                    <span class="lic-tile-meta-line__alloc lic-tile-meta-line__alloc--ok">شما</span>
+                    {% elif item.allocation_state == 'assigned' and item.assigned_member %}
+                    <span class="lic-tile-meta-line__alloc lic-tile-meta-line__alloc--team" title="{{ item.assigned_member.name }}">تیم · {{ item.assigned_member.name }}</span>
+                    {% endif %}
+                </span>
+            </p>
+
+            <div class="lic-tile-key lic-tile-key--secure lic-tile-key--minimal" role="group" aria-label="کلید لایسنس">
+                <span class="lic-tile-key__k">کلید</span>
+                <code class="lic-tile-key-code is-masked" id="license-key-{{ lic.id }}" dir="ltr">{{ lic.license_key }}</code>
+                <div class="lic-tile-key__actions">
+                    <button type="button" class="lic-premium__key-toggle" data-lic-toggle-key aria-controls="license-key-{{ lic.id }}" aria-pressed="false" title="نمایش کلید" aria-label="نمایش کلید لایسنس">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="lic-tile-copy" onclick="copyLicenseKey('license-key-{{ lic.id }}')" title="کپی کلید" aria-label="کپی کلید لایسنس">
+                        <i class="fas fa-copy" aria-hidden="true"></i>
+                        <span class="lic-tile-copy__text">کپی</span>
+                    </button>
                 </div>
-                <span class="lic-tile-remain lic-tile-remain--{{ expiry.tone }}" data-lic-remain>{% if expiry.is_expired %}منقضی{% else %}{{ expiry.remaining_label }}{% endif %}</span>
-                {% else %}
-                <div class="lic-tile-expiry-main">
-                    <span class="lic-tile-expiry-label">اعتبار</span>
-                    <span class="lic-tile-date lic-tile-date--unlimited">∞</span>
-                </div>
-                <span class="lic-tile-remain lic-tile-remain--unlimited">نامحدود</span>
-                {% endif %}
+            </div>
             </div>
 
-            <div class="lic-premium__key-label"><i class="fas fa-lock" aria-hidden="true"></i> کلید لایسنس</div>
-            <div class="lic-tile-key">
-                <code class="lic-tile-key-code" id="license-key-{{ lic.id }}" dir="ltr">{{ lic.license_key }}</code>
-                <button type="button" class="lic-premium__key-toggle" data-lic-toggle-key aria-controls="license-key-{{ lic.id }}" aria-pressed="false" title="نمایش یا پنهان کردن کلید" aria-label="نمایش کلید لایسنس">
-                    <i class="fas fa-eye" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="lic-tile-copy" onclick="copyLicenseKey('license-key-{{ lic.id }}')" title="کپی کلید" aria-label="کپی کلید لایسنس">
-                    <i class="fas fa-copy" aria-hidden="true"></i>
-                </button>
-            </div>
-
-            <div class="lic-tile-meta">
-                <span class="lic-tile-chip"><i class="fas fa-microchip" aria-hidden="true"></i> دستگاه‌ها: {{ item.slots_used }} از {{ lic.max_activations }}</span>
-                {% if item.active_count %}<span class="lic-tile-chip lic-tile-chip--ok">{{ item.active_count }} فعال</span>{% endif %}
-                {% if item.pending_count %}<span class="lic-tile-chip lic-tile-chip--wait">{{ item.pending_count }} انتظار</span>{% endif %}
-                {% if item.allocation_state == 'available' %}
-                <span class="lic-tile-chip lic-tile-chip--pool">آماده تخصیص</span>
-                {% elif item.allocation_state == 'owner_active' %}
-                <span class="lic-tile-chip lic-tile-chip--ok">فعال برای شما</span>
-                {% elif item.allocation_state == 'assigned' %}
-                <span class="lic-tile-chip lic-tile-chip--team">تخصیص به {{ item.assigned_member.name }}</span>
-                {% endif %}
-            </div>
-
-            <div class="lic-alloc" data-license-alloc data-license-id="{{ lic.id }}" data-alloc-state="{{ item.allocation_state }}">
+            <div class="lic-alloc lic-tile__zone lic-alloc--minimal" data-license-alloc data-license-id="{{ lic.id }}" data-alloc-state="{{ item.allocation_state }}">
                 {% if item.allocation_state == 'assigned' %}
-                <div class="lic-alloc-row">
-                    <span class="lic-alloc-label"><i class="fas fa-user-tag" aria-hidden="true"></i> تخصیص‌یافته به <strong>{{ item.assigned_member.name }}</strong></span>
+                <div class="lic-alloc-row lic-alloc-row--inline">
+                    <span class="lic-alloc-label">تیم · <strong>{{ item.assigned_member.name }}</strong></span>
                     {% if license_dashboard.can_assign_team or license_dashboard.has_agency %}
-                    <button type="button" class="lic-alloc-btn lic-alloc-btn--ghost" data-license-revoke>لغو تخصیص</button>
+                    <button type="button" class="lic-alloc-btn lic-alloc-btn--ghost" data-license-revoke title="لغو تخصیص">لغو</button>
                     {% endif %}
                 </div>
                 {% elif item.allocation_state == 'owner_active' %}
-                <div class="lic-alloc-row">
-                    <span class="lic-alloc-label"><i class="fas fa-check-circle" aria-hidden="true"></i>
+                <div class="lic-alloc-row lic-alloc-row--inline">
+                    <span class="lic-alloc-label">
                         {% if item.active_count %}
-                        این کلید روی {{ item.active_count }} دستگاه فعال است
+                        <span class="ov2-fa-num">{{ item.active_count }}</span> دستگاه
                         {% else %}
-                        دسترسی این کلید برای شما فعال است — کلید را در ربات یا اپ وارد کنید
+                        در انتظار فعال‌سازی
                         {% endif %}
                     </span>
-                    <button type="button" class="lic-alloc-btn lic-alloc-btn--ghost" data-license-release-pool>
-                        آزادسازی برای تخصیص
-                    </button>
+                    <button type="button" class="lic-alloc-btn lic-alloc-btn--ghost" data-license-release-pool title="آزادسازی برای تخصیص">آزادسازی</button>
                 </div>
                 {% else %}
-                <div class="lic-alloc-row lic-alloc-row--actions">
-                    <button type="button" class="lic-alloc-btn lic-alloc-btn--primary" data-license-activate-owner>
-                        <i class="fas fa-bolt" aria-hidden="true"></i> فعال‌سازی برای خودم
-                    </button>
+                <div class="lic-alloc-row lic-alloc-row--inline">
                     {% if license_dashboard.can_assign_team %}
-                    <div class="lic-alloc-assign">
-                        <select class="lic-alloc-select" data-license-member aria-label="انتخاب عضو تیم برای تخصیص لایسنس">
-                            <option value="">تخصیص به عضو…</option>
-                            {% for member in license_dashboard.assignable_members %}
-                            <option value="{{ member.id }}">{{ member.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="button" class="lic-alloc-btn" data-license-assign disabled>تخصیص</button>
-                    </div>
+                    <select class="lic-alloc-select" data-license-member aria-label="انتخاب عضو تیم برای تخصیص لایسنس">
+                        <option value="">عضو تیم…</option>
+                        {% for member in license_dashboard.assignable_members %}
+                        <option value="{{ member.id }}">{{ member.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="lic-alloc-btn lic-alloc-btn--assign" data-license-assign disabled title="تخصیص به عضو انتخاب‌شده">تخصیص</button>
                     {% elif not license_dashboard.has_agency %}
-                    <a href="{% url 'workspace:agency_hub_advisors' %}" class="lic-alloc-link">ساخت تیم برای تخصیص</a>
+                    <span class="lic-alloc-hint lic-alloc-hint--inline"><a href="{% url 'workspace:agency_hub_advisors' %}" class="lic-alloc-link">تیم</a></span>
                     {% endif %}
+                    <button type="button" class="lic-alloc-btn lic-alloc-btn--outline" data-license-activate-owner title="فعال‌سازی برای خودم">برای خودم</button>
                 </div>
                 {% endif %}
             </div>
 
             {% if item.activations %}
-            <details class="lic-tile-details">
-                <summary><span><i class="fas fa-laptop" aria-hidden="true"></i> دستگاه‌های متصل <small>{{ item.activations|length }}</small></span><i class="fas fa-chevron-down lic-premium__details-chevron" aria-hidden="true"></i></summary>
+            <details class="lic-tile-details lic-tile__zone">
+                <summary><span>دستگاه‌های متصل <small class="ov2-fa-num">{{ item.activations|length }}</small></span><i class="fas fa-chevron-down lic-premium__details-chevron" aria-hidden="true"></i></summary>
                 <div class="lic-seats-table-wrap">
                     <table class="lic-seats-table">
                         <thead>
@@ -337,16 +318,12 @@
                 </div>
             </details>
             {% else %}
-            <p class="lic-tile-empty">ثبت دستگاه در ربات یا اپ — بعد از فعال‌سازی کلید</p>
+            <p class="lic-tile-hint">پس از فعال‌سازی، دستگاه‌های متصل اینجا ظاهر می‌شوند.</p>
             {% endif %}
 
-            <footer class="lic-tile-foot">
-                <a href="{% url 'license_guide' %}" class="lic-tile-link">راهنما</a>
-                <a href="{{ dashboard_tab_urls.downloads }}" class="lic-tile-link">دانلود</a>
-                {% if item.can_renew %}
-                <a href="{% url 'renew_license' lic.id %}" class="lic-tile-link lic-tile-link--renew">تمدید</a>
-                {% endif %}
-            </footer>
+            {% if item.can_renew %}
+            <p class="lic-tile-hint lic-tile-hint--renew"><a href="{% url 'renew_license' lic.id %}" class="lic-alloc-link">تمدید اشتراک</a></p>
+            {% endif %}
         </article>
         {% endwith %}
         {% endfor %}

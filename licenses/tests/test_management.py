@@ -14,6 +14,7 @@ from licenses.services.management import (
     remove_device_slot,
     revoke_license_assignment,
     _allocation_state,
+    _portfolio_priority_key,
 )
 from shop.models import LicensePlan, Order, Product
 from workspace.models import CRMAgency, CRMAgencyMember
@@ -320,3 +321,34 @@ class LicenseKeyAssignmentTests(TestCase):
         self.license_b.refresh_from_db()
         self.assertEqual(_allocation_state(self.license_b), 'available')
         self.assertEqual(self.license_b.status, 'inactive')
+
+
+class PortfolioPrioritySortTests(TestCase):
+    def test_expired_and_critical_sort_before_healthy(self):
+        expired = {
+            'expiry': {'tone': 'expired', 'days_remaining': 0},
+            'can_renew': True,
+            'allocation_state': 'owner_active',
+            'active_count': 1,
+            'pending_count': 0,
+            'license': type('Lic', (), {'pk': 1})(),
+        }
+        critical = {
+            'expiry': {'tone': 'critical', 'days_remaining': 2},
+            'can_renew': False,
+            'allocation_state': 'available',
+            'active_count': 0,
+            'pending_count': 0,
+            'license': type('Lic', (), {'pk': 2})(),
+        }
+        healthy = {
+            'expiry': {'tone': 'healthy', 'days_remaining': 90},
+            'can_renew': False,
+            'allocation_state': 'assigned',
+            'active_count': 1,
+            'pending_count': 0,
+            'license': type('Lic', (), {'pk': 3})(),
+        }
+        items = [healthy, critical, expired]
+        items.sort(key=_portfolio_priority_key)
+        self.assertEqual([i['expiry']['tone'] for i in items], ['expired', 'critical', 'healthy'])

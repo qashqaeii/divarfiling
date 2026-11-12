@@ -45,18 +45,20 @@
     function renderLicenses(licenses) {
         if (!licenses || !licenses.length) return '';
         return (
-            '<div class="mk-order-modal__licenses">' +
-            licenses.map(function (lic, idx) {
+            '<section class="mk-order-modal__licenses" aria-label="کلیدهای لایسنس">' +
+            '<p class="mk-order-modal__licenses-note">برای امنیت، کلید در اینجا نمایش داده نمی‌شود — فقط کپی کنید.</p>' +
+            licenses.map(function (lic) {
+                var planLabel = lic.plan ? escapeHtml(lic.plan) : 'کلید لایسنس';
                 return (
-                    '<div class="mk-order-modal__license">' +
-                        '<code id="mk-order-lic-' + idx + '">' + escapeHtml(lic.key) + '</code>' +
-                        '<button type="button" class="mk-acc-icon-btn" data-copy-license="mk-order-lic-' + idx + '" title="کپی کلید">' +
-                            '<i class="fas fa-copy" aria-hidden="true"></i>' +
+                    '<div class="mk-order-modal__license mk-order-modal__license--secure">' +
+                        '<span class="mk-order-modal__license-label">' + planLabel + '</span>' +
+                        '<button type="button" class="mk-acc-btn mk-acc-btn--ghost mk-acc-btn--sm" data-copy-license-value="' + escapeHtml(lic.key) + '">' +
+                            '<i class="fas fa-copy" aria-hidden="true"></i> کپی کلید' +
                         '</button>' +
                     '</div>'
                 );
             }).join('') +
-            '</div>'
+            '</section>'
         );
     }
 
@@ -143,11 +145,11 @@
         renderActions(order.actions);
         bodyEl.dataset.orderId = order.id;
 
-        bodyEl.querySelectorAll('[data-copy-license]').forEach(function (btn) {
+        bodyEl.querySelectorAll('[data-copy-license-value]').forEach(function (btn) {
             btn.addEventListener('click', function () {
-                var target = document.getElementById(btn.getAttribute('data-copy-license'));
-                if (!target) return;
-                navigator.clipboard.writeText(target.textContent.trim()).then(function () {
+                var key = btn.getAttribute('data-copy-license-value');
+                if (!key) return;
+                navigator.clipboard.writeText(key).then(function () {
                     if (typeof showToast === 'function') showToast('کلید لایسنس کپی شد', 'success');
                 });
             });

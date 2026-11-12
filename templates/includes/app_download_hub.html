@@ -18,7 +18,7 @@
         <div class="mk-dl-grid">
             <article class="mk-dl-card mk-dl-card--windows{% if app_download_hub.windows.recommended %} mk-dl-card--recommended{% endif %}">
                 <div class="mk-dl-card-accent" aria-hidden="true"></div>
-                <header class="mk-dl-card-head">
+                <header class="mk-dl-card-head{% if compact %} mk-dl-card-head--toolbar{% endif %}">
                     <div class="mk-dl-card-brand">
                         <span class="mk-dl-card-brand__icon mk-dl-card-brand__icon--windows" aria-hidden="true">
                             <i class="fab fa-windows"></i>
@@ -37,6 +37,25 @@
                             <p class="mk-dl-card-brand__tagline">{{ app_download_hub.windows.tagline|default:'قدرتمندترین ابزار ساخت بانک فایل' }}</p>
                         </div>
                     </div>
+                    {% if compact %}
+                    <details class="mk-dl-notes-details mk-dl-notes-details--head">
+                        <summary class="mk-dl-card-info">
+                            <i class="fas fa-circle-info" aria-hidden="true"></i>
+                            <span class="visually-hidden">{{ app_download_hub.windows.update_title|default:'قبل از به‌روزرسانی یا حذف' }}</span>
+                        </summary>
+                        <div class="mk-dl-notes-panel" id="mk-dl-windows-notes">
+                            <p class="mk-dl-notes-panel__title">{{ app_download_hub.windows.update_title|default:'قبل از به‌روزرسانی یا حذف' }}</p>
+                            <ul class="mk-dl-notes-list">
+                                {% for note in app_download_hub.windows.update_notes %}
+                                <li>{{ note }}</li>
+                                {% empty %}
+                                <li>از پوشه <code dir="ltr">output</code> کنار ربات قبل از حذف یا نصب مجدد کپی بگیرید.</li>
+                                <li>ربات را کامل ببندید و بعد نصب‌کننده جدید را اجرا کنید.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </details>
+                    {% endif %}
                 </header>
 
                 <p class="mk-dl-card-spec">
@@ -80,23 +99,8 @@
                     {% endif %}
                 </div>
 
-                <div class="mk-dl-card-notes mk-dl-card-notes--windows{% if compact %} mk-dl-card-notes--compact{% endif %}" id="mk-dl-windows-notes">
-                    {% if compact %}
-                    <details class="mk-dl-notes-details">
-                        <summary class="mk-dl-notes-summary">
-                            <i class="fas fa-circle-info" aria-hidden="true"></i>
-                            {{ app_download_hub.windows.update_title|default:'قبل از به‌روزرسانی یا حذف' }}
-                        </summary>
-                        <ul class="mk-dl-notes-list">
-                            {% for note in app_download_hub.windows.update_notes %}
-                            <li>{{ note }}</li>
-                            {% empty %}
-                            <li>از پوشه <code dir="ltr">output</code> کنار ربات قبل از حذف یا نصب مجدد کپی بگیرید.</li>
-                            <li>ربات را کامل ببندید و بعد نصب‌کننده جدید را اجرا کنید.</li>
-                            {% endfor %}
-                        </ul>
-                    </details>
-                    {% else %}
+                {% if not compact %}
+                <div class="mk-dl-card-notes mk-dl-card-notes--windows" id="mk-dl-windows-notes-full">
                     <h4 class="mk-dl-notes-title">
                         <i class="fas fa-circle-info" aria-hidden="true"></i>
                         {{ app_download_hub.windows.update_title|default:'قبل از به‌روزرسانی یا حذف' }}
@@ -109,8 +113,8 @@
                         <li>ربات را کامل ببندید و بعد نصب‌کننده جدید را اجرا کنید.</li>
                         {% endfor %}
                     </ul>
-                    {% endif %}
                 </div>
+                {% endif %}
             </article>
 
             <article class="mk-dl-card mk-dl-card--android">

@@ -155,7 +155,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         )['total'] or 0
         
         # سفارش‌ها
-        orders = Order.objects.filter(user=user).select_related('product', 'plan').order_by('-created_at')
+        orders = Order.objects.filter(user=user).select_related('product', 'plan').prefetch_related('licenses').order_by('-created_at')
         
         # فیلتر سفارش‌ها
         status_filter = self.request.GET.get('order_status', '')

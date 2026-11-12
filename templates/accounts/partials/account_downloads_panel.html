@@ -1,18 +1,10 @@
 <div id="tab-downloads" class="mk-acc-tab-panel mk-acc-tab-shell mk-downloads-tab ov2 tab-content dash-tab-panel dl-tab"{% if active_tab != 'downloads' %} hidden{% endif %}>
     <div class="mk-acc-tab-body">
-        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='دانلود اپ‌ها' ov2_title='ربات ویندوز و اپ اندروید' ov2_lead='دانلود نصب‌کننده‌ها رایگان است؛ برای استخراج و امکانات پیشرفته، لایسنس فعال لازم است.' ov2_primary_href=dashboard_tab_urls.licenses ov2_primary_label='مدیریت لایسنس' ov2_ghost_href=dashboard_tab_urls.orders ov2_ghost_label='سفارش‌های من' %}
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_show_quick='0' ov2_label='دانلود اپ‌ها' ov2_title='ربات ویندوز و اپ اندروید' ov2_lead='دانلود نصب‌کننده‌ها رایگان است؛ برای استخراج و امکانات پیشرفته، لایسنس فعال لازم است.' ov2_primary_href=dashboard_tab_urls.licenses ov2_primary_label='مدیریت لایسنس' ov2_ghost_href=dashboard_tab_urls.orders ov2_ghost_label='سفارش‌های من' %}
 
-        <section class="ov2-panel ov2-panel--tab ov2-panel--downloads" lang="fa" dir="rtl" aria-labelledby="acc-downloads-hub-title">
-            <header class="ov2-panel__header">
-                <div class="ov2-panel__heading">
-                    <span class="ov2-panel__icon" aria-hidden="true"><i class="fas fa-download"></i></span>
-                    <div class="ov2-panel__titles">
-                        <h2 id="acc-downloads-hub-title" class="ov2-panel__title">مرکز دانلود</h2>
-                        <p class="ov2-panel__subtitle">آخرین نسخه‌های رسمی فایلینگ دیوار</p>
-                    </div>
-                </div>
-            </header>
-            <div class="ov2-panel__content dash-downloads-hub">
+        <section class="ov2-panel ov2-panel--tab ov2-panel--downloads ov2-panel--downloads-premium" lang="fa" dir="rtl" aria-labelledby="acc-downloads-hub-title">
+            <h2 id="acc-downloads-hub-title" class="visually-hidden">مرکز دانلود</h2>
+            <div class="ov2-panel__content dash-downloads-hub dash-downloads-hub--premium">
                 {% include 'includes/app_download_hub.html' with compact=1 show_install_guide=1 %}
             </div>
         </section>

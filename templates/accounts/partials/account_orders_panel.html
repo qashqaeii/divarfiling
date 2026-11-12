@@ -4,7 +4,7 @@
 
 <div id="tab-orders" class="mk-acc-tab-panel mk-acc-tab-shell mk-orders-tab ov2 tab-content dash-tab-panel"{% if active_tab != 'orders' %} hidden{% endif %} data-orders-tab>
     <div class="mk-acc-tab-body">
-        {% include 'accounts/partials/account_ov2_intro.html' with ov2_label='سفارش‌ها' ov2_title='مدیریت سفارش‌ها و پرداخت' ov2_lead='پیگیری وضعیت خرید، تکمیل پرداخت و دریافت لایسنس از یکجا.' ov2_primary_href=dashboard_tab_urls.licenses ov2_primary_label='لایسنس‌های من' ov2_ghost_href=dashboard_tab_urls.downloads ov2_ghost_label='دانلود اپلیکیشن' %}
+        {% include 'accounts/partials/account_ov2_intro.html' with ov2_show_quick='0' ov2_label='سفارش‌ها' ov2_title='مدیریت سفارش‌ها و پرداخت' ov2_lead='پیگیری وضعیت خرید، تکمیل پرداخت و دریافت لایسنس از یکجا.' ov2_primary_href=dashboard_tab_urls.licenses ov2_primary_label='لایسنس‌های من' ov2_ghost_href=dashboard_tab_urls.downloads ov2_ghost_label='دانلود اپلیکیشن' %}
 
         <section class="ov2-kpi" aria-label="خلاصه سفارش‌ها">
             <div class="ov2-kpi__frame">
@@ -48,7 +48,7 @@
         </a>
         {% endif %}
 
-        <section class="ov2-panel ov2-panel--tab" lang="fa" dir="rtl" aria-labelledby="acc-orders-list-title">
+        <section class="ov2-panel ov2-panel--tab ov2-panel--orders" lang="fa" dir="rtl" aria-labelledby="acc-orders-list-title">
             <header class="ov2-panel__header">
                 <div class="ov2-panel__heading">
                     <span class="ov2-panel__icon ov2-panel__icon--orders" aria-hidden="true"><i class="fas fa-shopping-bag"></i></span>
@@ -59,10 +59,10 @@
                 </div>
             </header>
 
-    <div class="mk-orders-toolbar ov2-panel__content">
+    <div class="mk-orders-toolbar mk-orders-toolbar--dense ov2-panel__content">
         <form method="get" class="mk-orders-search" role="search">
             <i class="fas fa-search mk-orders-search__icon" aria-hidden="true"></i>
-            <input type="search" name="order_search" value="{{ order_search }}" placeholder="جستجو در شماره سفارش یا محصول..." class="mk-acc-input mk-orders-search__input" autocomplete="off">
+            <input type="search" name="order_search" value="{{ order_search }}" placeholder="جستجو در نام محصول یا پلن…" class="mk-acc-input mk-orders-search__input" autocomplete="off">
             {% if order_status_filter %}<input type="hidden" name="order_status" value="{{ order_status_filter }}">{% endif %}
         </form>
         <nav class="mk-orders-filters" aria-label="فیلتر وضعیت">
@@ -75,57 +75,74 @@
     </div>
 
     {% if orders %}
-    <div class="mk-orders-list" role="list">
-        {% for order in orders %}
-        <article class="mk-order-card mk-order-card--{{ order.status }}" role="listitem" data-order-id="{{ order.id }}">
-            <div class="mk-order-card__main">
-                <div class="mk-order-card__head">
-                    <div class="mk-order-card__product">
-                        <span class="mk-order-card__product-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
-                        <div class="mk-order-card__product-copy">
-                            <h3 class="mk-order-card__title">{{ order|account_order_product_line }}</h3>
-                            <p class="mk-order-card__plan">{% if order.plan %}{{ order.plan|account_plan_label }}{% endif %}{% if order.quantity > 1 %} · {{ order.quantity|to_persian_digits }} لایسنس{% endif %}</p>
+    <div class="mk-orders-list mk-orders-table-shell ov2-panel__content">
+        <table class="mk-orders-table" role="table">
+            <colgroup>
+                <col class="mk-orders-table__col mk-orders-table__col--product">
+                <col class="mk-orders-table__col mk-orders-table__col--plan">
+                <col class="mk-orders-table__col mk-orders-table__col--status">
+                <col class="mk-orders-table__col mk-orders-table__col--when">
+                <col class="mk-orders-table__col mk-orders-table__col--money">
+                <col class="mk-orders-table__col mk-orders-table__col--actions">
+            </colgroup>
+            <thead class="mk-orders-table__head">
+                <tr>
+                    <th scope="col" class="mk-orders-table__th mk-orders-table__th--product">محصول</th>
+                    <th scope="col" class="mk-orders-table__th mk-orders-table__th--plan">پلن</th>
+                    <th scope="col" class="mk-orders-table__th mk-orders-table__th--status">وضعیت</th>
+                    <th scope="col" class="mk-orders-table__th mk-orders-table__th--when">زمان ثبت</th>
+                    <th scope="col" class="mk-orders-table__th mk-orders-table__th--money">مبلغ</th>
+                    <th scope="col" class="mk-orders-table__th mk-orders-table__th--actions">عملیات</th>
+                </tr>
+            </thead>
+            <tbody class="mk-orders-table__body">
+                {% for order in orders %}
+                <tr class="mk-orders-table__row mk-orders-table__row--{{ order.status }}" data-order-id="{{ order.id }}">
+                    <td data-label="محصول" class="mk-orders-table__cell mk-orders-table__product">
+                        <span class="mk-orders-table__status-rail mk-orders-table__status-rail--{{ order.status }}" aria-hidden="true"></span>
+                        <span class="mk-orders-table__product-name">{{ order|account_order_product_line }}</span>
+                        {% if order.quantity > 1 %}
+                        <span class="mk-orders-table__qty ov2-fa-num">×{{ order.quantity|to_persian_digits }}</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="پلن" class="mk-orders-table__cell mk-orders-table__plan">
+                        {% if order.plan %}{{ order.plan|account_plan_label }}{% else %}<span class="mk-orders-table__muted">—</span>{% endif %}
+                    </td>
+                    <td data-label="وضعیت" class="mk-orders-table__cell mk-orders-table__status">
+                        <span class="mk-orders-status mk-orders-status--{{ order.status }}">{{ order.get_status_display }}</span>
+                    </td>
+                    <td data-label="زمان ثبت" class="mk-orders-table__cell mk-orders-table__when ov2-fa-num">
+                        <time datetime="{{ order.created_at|date:'c' }}">{{ order.created_at|to_jalali_fa:"%Y/%m/%d" }}</time>
+                        <span class="mk-orders-table__clock">{{ order.created_at|to_jalali_fa:"%H:%M" }}</span>
+                    </td>
+                    <td data-label="مبلغ" class="mk-orders-table__cell mk-orders-table__money ov2-fa-num">
+                        <strong>{{ order.amount|currency|to_persian_digits }}</strong>
+                        <span class="mk-orders-table__currency">تومان</span>
+                    </td>
+                    <td data-label="عملیات" class="mk-orders-table__cell mk-orders-table__actions">
+                        <div class="mk-orders-table__action-group">
+                        <button type="button" class="mk-order-card__btn mk-order-card__btn--detail" data-order-detail="{{ order.id }}">جزئیات</button>
+                        {% if order.status == 'paid' %}
+                        {% with lic=order.licenses.first %}
+                        <a href="{% if lic %}{{ dashboard_tab_urls.licenses }}#license-{{ lic.id }}{% else %}{{ dashboard_tab_urls.licenses }}{% endif %}" class="mk-order-card__btn mk-order-card__btn--icon mk-order-card__btn--lic" title="لایسنس‌های من" aria-label="رفتن به تب لایسنس‌ها">
+                            <i class="fas fa-key" aria-hidden="true"></i>
+                        </a>
+                        {% endwith %}
+                        {% elif order.status == 'pending' and order.payment_method == 'card_transfer' %}
+                        <a href="{% url 'payment:card_transfer' order.id %}" class="mk-order-card__btn mk-order-card__btn--icon mk-order-card__btn--pay" title="تکمیل پرداخت" aria-label="تکمیل پرداخت">
+                            <i class="fas fa-credit-card" aria-hidden="true"></i>
+                        </a>
+                        {% elif order.status == 'pending' %}
+                        <a href="{% url 'payment:checkout' order.id %}" class="mk-order-card__btn mk-order-card__btn--icon mk-order-card__btn--pay" title="پرداخت" aria-label="پرداخت">
+                            <i class="fas fa-credit-card" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
                         </div>
-                    </div>
-                    <span class="mk-orders-status mk-orders-status--{{ order.status }}">{{ order.get_status_display }}</span>
-                </div>
-                <div class="mk-order-card__meta">
-                    <span class="mk-order-card__meta-item" title="{{ order.id }}">
-                        <i class="fas fa-hashtag" aria-hidden="true"></i>
-                        <code>{{ order.id|slice:":8" }}…</code>
-                    </span>
-                    <span class="mk-order-card__meta-item">
-                        <i class="fas fa-calendar" aria-hidden="true"></i>
-                        {{ order.created_at|to_jalali_fa:"%Y/%m/%d" }}
-                        <span class="mk-order-card__time">{{ order.created_at|to_jalali_fa:"%H:%M" }}</span>
-                    </span>
-                    <span class="mk-order-card__meta-item mk-order-card__amount">
-                        <i class="fas fa-coins" aria-hidden="true"></i>
-                        {{ order.amount|currency|to_persian_digits }} <small>تومان</small>
-                    </span>
-                </div>
-            </div>
-            <div class="mk-order-card__actions">
-                <button type="button" class="mk-acc-btn mk-acc-btn--primary mk-order-card__detail-btn" data-order-detail="{{ order.id }}">
-                    <i class="fas fa-receipt" aria-hidden="true"></i>
-                    جزئیات پرداخت
-                </button>
-                {% if order.status == 'paid' %}
-                <a href="{% url 'payment:success' order.id %}" class="mk-acc-btn mk-acc-btn--ghost" title="لایسنس">
-                    <i class="fas fa-key" aria-hidden="true"></i>
-                </a>
-                {% elif order.status == 'pending' and order.payment_method == 'card_transfer' %}
-                <a href="{% url 'payment:card_transfer' order.id %}" class="mk-acc-btn mk-acc-btn--ghost" title="تکمیل پرداخت">
-                    <i class="fas fa-credit-card" aria-hidden="true"></i>
-                </a>
-                {% elif order.status == 'pending' %}
-                <a href="{% url 'payment:checkout' order.id %}" class="mk-acc-btn mk-acc-btn--ghost" title="پرداخت">
-                    <i class="fas fa-credit-card" aria-hidden="true"></i>
-                </a>
-                {% endif %}
-            </div>
-        </article>
-        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     {% else %}

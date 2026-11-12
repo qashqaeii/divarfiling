@@ -138,7 +138,7 @@ def _fill_daily_series(start, end, rows, value_key='count', money=False, days: i
 
 def _pct_change(current: int | float, previous: int | float) -> float | None:
     if previous in (0, None):
-        return None if not current else 100.0
+        return None
     return round(((current - previous) / previous) * 100, 1)
 
 
@@ -368,32 +368,46 @@ def _plan_short_label(plan: LicensePlan) -> str:
     )
 
 
-def get_plan_sales_breakdown(limit: int | None = None) -> List[Dict[str, Any]]:
-    """فروش هر پلن — همه پلن‌های فعال؛ تجمیع فروش بر اساس نوع پلن (نه فقط plan_id)."""
-    sales_by_type: Dict[tuple, Dict[str, int]] = {}
-    sales_rows = (
-        Order.objects.filter(status='paid', plan_id__isnull=False)
-        .values('plan__product_id', 'plan__plan_type')
+def _sales_totals_by_plan_id(order_qs) -> Dict[int, Dict[str, int]]:
+    """جمع فروش پرداخت‌شده به تفکیک plan_id."""
+    sales_by_plan: Dict[int, Dict[str, int]] = {}
+    for row in (
+        order_qs.filter(status='paid', plan_id__isnull=False)
+        .values('plan_id')
         .annotate(count=Count('id'), total=Sum('amount'))
-    )
-    for row in sales_rows:
-        key = (row['plan__product_id'], row['plan__plan_type'] or '')
-        bucket = sales_by_type.setdefault(key, {'count': 0, 'total': 0})
-        bucket['count'] += int(row['count'] or 0)
-        bucket['total'] += int(row['total'] or 0)
+    ):
+        plan_id = row['plan_id']
+        if not plan_id:
+            continue
+        sales_by_plan[plan_id] = {
+            'count': int(row['count'] or 0),
+            'total': int(row['total'] or 0),
+        }
+    return sales_by_plan
 
-    plans_qs = (
-        LicensePlan.objects.filter(is_active=True)
+
+def _build_plan_sales_rows(
+    sales_by_plan: Dict[int, Dict[str, int]],
+    *,
+    limit: int | None = None,
+    include_zero_active: bool = True,
+) -> List[Dict[str, Any]]:
+    plan_ids = set(sales_by_plan.keys())
+    if include_zero_active:
+        plan_ids |= set(LicensePlan.objects.filter(is_active=True).values_list('id', flat=True))
+    if not plan_ids:
+        return []
+
+    plans = (
+        LicensePlan.objects.filter(id__in=plan_ids)
         .select_related('product')
         .order_by('order', 'price', 'id')
     )
-    if limit:
-        plans_qs = plans_qs[:limit]
-
     result: List[Dict[str, Any]] = []
-    for plan in plans_qs:
-        key = (plan.product_id, plan.plan_type or '')
-        stats = sales_by_type.get(key, {'count': 0, 'total': 0})
+    for plan in plans:
+        stats = sales_by_plan.get(plan.id, {'count': 0, 'total': 0})
+        if not include_zero_active and stats['count'] <= 0 and stats['total'] <= 0:
+            continue
         result.append({
             'plan_id': plan.id,
             'label': plan.name,
@@ -405,7 +419,30 @@ def get_plan_sales_breakdown(limit: int | None = None) -> List[Dict[str, Any]]:
             'count': stats['count'],
             'total': stats['total'],
         })
+    result.sort(key=lambda row: row['total'], reverse=True)
+    if limit:
+        result = result[:limit]
     return result
+
+
+def get_plan_sales_breakdown(limit: int | None = None) -> List[Dict[str, Any]]:
+    """فروش هر پلن — پلن‌های فعال + پلن‌های دارای فروش؛ تجمیع بر اساس plan_id."""
+    sales_by_plan = _sales_totals_by_plan_id(Order.objects.all())
+    return _build_plan_sales_rows(sales_by_plan, limit=limit, include_zero_active=True)
+
+
+def get_plan_sales_for_date_range(
+    start,
+    end,
+    limit: int | None = 6,
+) -> List[Dict[str, Any]]:
+    """فروش پلن در بازه — فقط پلن‌هایی که در بازه فروش داشته‌اند."""
+    qs = Order.objects.filter(
+        paid_at__date__gte=start,
+        paid_at__date__lte=end,
+    )
+    sales_by_plan = _sales_totals_by_plan_id(qs)
+    return _build_plan_sales_rows(sales_by_plan, limit=limit, include_zero_active=False)
 
 
 def build_plan_sales_chart_payload(plan_sales: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -1144,8 +1181,8 @@ def build_command_center_kpi_cards(
         },
         {
             'key': 'users_active',
-            'label': 'کاربران فعال',
-            'sublabel': 'وضعیت فعلی',
+            'label': 'حساب‌های فعال',
+            'sublabel': 'وضعیت فعلی · is_active',
             'value': stats['users_active'],
             'format': 'count',
             'delta': None,
@@ -1197,7 +1234,7 @@ def build_command_action_items(stats: Dict[str, Any], sms_balance: Dict[str, Any
 
     catalog = [
         ('critical', 'orders_failed', 'پرداخت ناموفق', 'fa-circle-xmark', 'rose', 'بررسی', 'page:recovery'),
-        ('critical', 'unread_tickets', 'تیکت باز', 'fa-headset', 'rose', 'پاسخ', 'export:open_tickets'),
+        ('critical', 'unread_tickets', 'تیکت منتظر پاسخ', 'fa-headset', 'rose', 'مشاهده', 'page:support'),
         ('critical', 'sms_low', 'موجودی SMS کم', 'fa-comment-sms', 'amber', 'شارژ', 'page:marketing'),
         ('high', 'licenses_expiring_soon', 'لایسنس در شرف انقضا', 'fa-hourglass-half', 'amber', 'تمدید', 'page:marketing'),
         ('high', 'orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'violet', 'بازیابی', 'page:recovery'),
@@ -1211,6 +1248,8 @@ def build_command_action_items(stats: Dict[str, Any], sms_balance: Dict[str, Any
         'recovery': reverse('admin_panel_recovery_center'),
         'marketing': reverse('admin_panel_marketing'),
         'affiliates': reverse('admin_panel_affiliates'),
+        'support': reverse('admin_panel_support'),
+        'sales': reverse('admin_panel_sales'),
     }
 
     items: List[Dict[str, Any]] = []

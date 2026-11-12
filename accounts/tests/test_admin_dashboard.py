@@ -74,7 +74,7 @@ class AdminDashboardServiceTests(TestCase):
         self.assertEqual(chart['planTotals'], [p['total'] for p in plans])
         self.assertEqual(len(chart['datasets'][0]['backgroundColor']), len(plans))
 
-    def test_plan_sales_aggregates_by_plan_type(self):
+    def test_plan_sales_per_plan_id_not_plan_type(self):
         from shop.bot_catalog import bot_license_plans
         from shop.models import LicensePlan, Order, Product
 
@@ -94,10 +94,12 @@ class AdminDashboardServiceTests(TestCase):
         new_plan = LicensePlan.objects.create(product=product, **plan_data)
 
         plans = get_plan_sales_breakdown()
-        daily = next(p for p in plans if p['plan_type'] == 'daily')
-        self.assertEqual(daily['plan_id'], new_plan.id)
-        self.assertEqual(daily['count'], 1)
-        self.assertEqual(daily['total'], int(old_plan.price))
+        old_row = next(p for p in plans if p['plan_id'] == old_plan.id)
+        new_row = next(p for p in plans if p['plan_id'] == new_plan.id)
+        self.assertEqual(old_row['count'], 1)
+        self.assertEqual(old_row['total'], int(old_plan.price))
+        self.assertEqual(new_row['count'], 0)
+        self.assertEqual(new_row['total'], 0)
 
     def test_affiliate_queries(self):
         partners = get_affiliate_partners(limit=5)

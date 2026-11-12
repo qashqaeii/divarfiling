@@ -142,6 +142,7 @@
     }
 
     function initDashboardNavigation() {
+        if (!document.getElementById('ecc-charts')) return;
         var sections = qsa('.ecc-main .ecc-section[id]').map(function (el) { return el.id; });
         if (!sections.length) return;
 

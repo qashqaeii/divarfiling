@@ -39,7 +39,11 @@
                 </span>
                 {% endif %}
             </div>
+            {% if card.value is None %}
+            <strong class="ecc-kpi-val">—</strong>
+            {% else %}
             <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            {% endif %}
             <span class="ecc-kpi-lbl">{{ card.label }}</span>
             <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
             <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>

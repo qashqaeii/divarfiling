@@ -9,7 +9,6 @@ from django.urls import reverse
 from accounts.services.admin_dashboard import (
     CHART_COLORS,
     PAYMENT_METHOD_LABELS,
-    PLAN_TYPE_ACCENTS,
     TABLE_FETCH_LIMIT,
     TABLE_PREVIEW_ROWS,
     _date_range,
@@ -17,8 +16,8 @@ from accounts.services.admin_dashboard import (
     _orders_paid_between,
     _orders_sparkline,
     _pct_change,
-    _plan_short_label,
     _previous_period_bounds,
+    _range_delta,
     _range_label_fa,
     _revenue_between,
     _revenue_for_period,
@@ -28,11 +27,13 @@ from accounts.services.admin_dashboard import (
     get_order_count_series,
     get_pending_card_transfers,
     get_pending_orders,
+    get_plan_sales_for_date_range,
     get_recent_orders,
     get_revenue_series,
 )
+from accounts.services.admin_panel_shell import format_admin_panel_days_param
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
-from shop.models import CardTransferSubmission, LicensePlan, Order
+from shop.models import CardTransferSubmission, Order
 from shop.services.card_transfer_workflow import serialize_pending_card_transfers
 
 SALES_EXPORT_KEYS = (
@@ -58,6 +59,30 @@ def _unique_buyers_between(start, end) -> int:
     )
 
 
+def _cohort_converted_users_between(start, end) -> int:
+    """کاربران ثبت‌نام‌شده در بازه که در همان بازه خرید کرده‌اند."""
+    return (
+        User.objects.filter(
+            date_joined__date__gte=start,
+            date_joined__date__lte=end,
+            orders__status='paid',
+            orders__paid_at__date__gte=start,
+            orders__paid_at__date__lte=end,
+        )
+        .distinct()
+        .count()
+    )
+
+
+def _conversion_rate_cohort(start, end) -> float:
+    new_users = _new_users_between(start, end)
+    if not new_users:
+        return 0.0
+    converted = _cohort_converted_users_between(start, end)
+    rate = (converted / new_users) * 100
+    return round(min(rate, 100.0), 1)
+
+
 def _product_revenue_for_range(start, end, limit: int = 8) -> List[Dict[str, Any]]:
     rows = (
         Order.objects.filter(
@@ -77,53 +102,6 @@ def _product_revenue_for_range(start, end, limit: int = 8) -> List[Dict[str, Any
         }
         for row in rows
     ]
-
-
-def _plan_sales_for_range(start, end, limit: int | None = 6) -> List[Dict[str, Any]]:
-    sales_by_type: Dict[tuple, Dict[str, int]] = {}
-    sales_rows = (
-        Order.objects.filter(
-            status='paid',
-            plan_id__isnull=False,
-            paid_at__date__gte=start,
-            paid_at__date__lte=end,
-        )
-        .values('plan__product_id', 'plan__plan_type')
-        .annotate(count=Count('id'), total=Sum('amount'))
-    )
-    for row in sales_rows:
-        key = (row['plan__product_id'], row['plan__plan_type'] or '')
-        bucket = sales_by_type.setdefault(key, {'count': 0, 'total': 0})
-        bucket['count'] += int(row['count'] or 0)
-        bucket['total'] += int(row['total'] or 0)
-
-    plans_qs = (
-        LicensePlan.objects.filter(is_active=True)
-        .select_related('product')
-        .order_by('order', 'price', 'id')
-    )
-    if limit:
-        plans_qs = plans_qs[:limit]
-
-    result: List[Dict[str, Any]] = []
-    for plan in plans_qs:
-        key = (plan.product_id, plan.plan_type or '')
-        stats = sales_by_type.get(key, {'count': 0, 'total': 0})
-        if stats['count'] <= 0 and stats['total'] <= 0:
-            continue
-        result.append({
-            'plan_id': plan.id,
-            'label': plan.name,
-            'full_label': f'{plan.product.title} — {plan.name}',
-            'short_label': _plan_short_label(plan),
-            'plan_type': plan.plan_type,
-            'accent': PLAN_TYPE_ACCENTS.get(plan.plan_type, 'violet'),
-            'price': int(plan.price or 0),
-            'count': stats['count'],
-            'total': stats['total'],
-        })
-    result.sort(key=lambda row: row['total'], reverse=True)
-    return result[:limit] if limit else result
 
 
 def _payment_methods_for_range(start, end) -> List[Dict[str, Any]]:
@@ -151,7 +129,7 @@ def _payment_methods_for_range(start, end) -> List[Dict[str, Any]]:
 def _build_sales_charts(days: int, start, end) -> Dict[str, Any]:
     revenue = get_revenue_series(days)
     orders = get_order_count_series(days)
-    plan_sales = _plan_sales_for_range(start, end)
+    plan_sales = get_plan_sales_for_date_range(start, end)
     product_revenue = _product_revenue_for_range(start, end)
     payment_methods = _payment_methods_for_range(start, end)
 
@@ -271,7 +249,7 @@ def _build_sales_kpi_cards(
         {
             'key': 'conversion_rate',
             'label': 'نرخ تبدیل',
-            'sublabel': 'خریدار / کاربر جدید',
+            'sublabel': 'ثبت‌نام هم‌دوره با خرید',
             'value': conversion_rate,
             'format': 'percent',
             'delta': _pct_change(conversion_rate, prev_conversion),
@@ -297,15 +275,19 @@ def _build_sales_kpi_cards(
         {
             'key': 'revenue_delta',
             'label': 'درآمد نسبت به دوره قبل',
-            'sublabel': f'دوره قبل: {prev_revenue:,} تومان',
-            'value': revenue_delta if revenue_delta is not None else 0,
+            'sublabel': (
+                'دوره مقایسه ندارد'
+                if revenue_delta is None and not prev_revenue
+                else f'دوره قبل: {prev_revenue:,} تومان'
+            ),
+            'value': revenue_delta,
             'format': 'percent',
             'delta': None,
             'delta_label': range_label,
             'sparkline': spark_rev,
             'icon': 'fa-chart-line',
             'accent': 'indigo',
-            'status': 'ok' if (revenue_delta or 0) >= 0 else 'warn',
+            'status': 'ok' if revenue_delta is None or revenue_delta >= 0 else 'warn',
         },
     ]
 
@@ -372,7 +354,8 @@ def get_sales_export_links(days: int) -> List[Dict[str, Any]]:
             'accent': meta['accent'],
             'count': get_export_count(key, days=d),
             'supports_days': meta.get('supports_days', False),
-            'url': reverse('admin_panel_export', args=[key]) + f'?format=xlsx&days={days}',
+            'url': reverse('admin_panel_export', args=[key])
+            + f'?format=xlsx&days={format_admin_panel_days_param(days)}',
         })
     return links
 
@@ -398,10 +381,10 @@ def get_sales_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
 
     new_users = _new_users_between(start, end)
     prev_new_users = _new_users_between(prev_start, prev_end)
-    conversion_rate = round((unique_buyers / new_users * 100), 1) if new_users else 0.0
-    prev_conversion = round((prev_unique_buyers / prev_new_users * 100), 1) if prev_new_users else 0.0
+    conversion_rate = _conversion_rate_cohort(start, end)
+    prev_conversion = _conversion_rate_cohort(prev_start, prev_end)
 
-    revenue_delta = _pct_change(revenue_range, prev_revenue)
+    revenue_delta = _range_delta(days, revenue_range, prev_revenue)
 
     kpi_cards = _build_sales_kpi_cards(
         days=days,
@@ -419,7 +402,7 @@ def get_sales_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
     )
 
     product_revenue = _product_revenue_for_range(start, end)
-    plan_sales = _plan_sales_for_range(start, end)
+    plan_sales = get_plan_sales_for_date_range(start, end)
     payment_methods = _payment_methods_for_range(start, end)
 
     return {
@@ -438,7 +421,9 @@ def get_sales_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
         'card_transfer_rows': serialize_pending_card_transfers(limit=TABLE_PREVIEW_ROWS),
         'card_transfer_pending_count': CardTransferSubmission.objects.filter(status='pending').count(),
         'export_links': get_sales_export_links(days),
-        'recovery_center_url': reverse('admin_panel_recovery_center') + f'?days={days}',
+        'recovery_center_url': (
+            reverse('admin_panel_recovery_center') + f'?days={format_admin_panel_days_param(days)}'
+        ),
         'table_fetch_limit': TABLE_FETCH_LIMIT,
         'table_preview_rows': TABLE_PREVIEW_ROWS,
         'snapshot_counts': {

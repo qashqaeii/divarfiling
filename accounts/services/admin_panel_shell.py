@@ -41,6 +41,13 @@ def get_admin_panel_range_key(request) -> str:
     return range_key
 
 
+def format_admin_panel_days_param(days: int) -> str:
+    """مقدار querystring بازه — برای خروجی و لینک‌ها (۰ → all)."""
+    if days == ALL_TIME_DAYS:
+        return ADMIN_PANEL_RANGE_ALL
+    return str(days)
+
+
 def get_admin_panel_nav_badges() -> Dict[str, int]:
     """Badgeهای Sidebar — فقط شمارش سبک."""
     from django.db import DatabaseError, InterfaceError

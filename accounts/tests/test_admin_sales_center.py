@@ -8,11 +8,14 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services.admin_dashboard import (
+    ALL_TIME_DAYS,
     _date_range,
     _orders_paid_between,
+    _pct_change,
     _previous_period_bounds,
     _revenue_between,
 )
+from accounts.services.admin_panel_shell import format_admin_panel_days_param
 from accounts.services.admin_panel_shell import resolve_admin_panel_nav_active
 from accounts.services.admin_sales_center import get_sales_center_context
 from shop.models import LicensePlan, Order, Product
@@ -118,6 +121,38 @@ class SalesCenterServiceTests(TestCase):
         self.assertIn('orders_failed', keys)
         self.assertGreaterEqual(len(ctx['pending_orders']), 1)
         self.assertGreaterEqual(len(ctx['failed_orders']), 1)
+
+    def test_pct_change_no_baseline_is_none_not_100(self):
+        self.assertIsNone(_pct_change(1000, 0))
+
+    def test_conversion_rate_capped_for_cohort(self):
+        buyer_a = User.objects.create_user(username='nc_a', password='x', phone='09120000021')
+        buyer_b = User.objects.create_user(username='nc_b', password='x', phone='09120000022')
+        paid_at = timezone.make_aware(datetime.combine(self.today, time(12, 0)))
+        for user in (buyer_a, buyer_b):
+            Order.objects.create(
+                user=user,
+                product=self.product,
+                plan=self.plan,
+                amount=Decimal(100000),
+                status='paid',
+                paid_at=paid_at,
+            )
+        ctx = get_sales_center_context(days=7)
+        conv = next(c for c in ctx['kpi_cards'] if c['key'] == 'conversion_rate')
+        self.assertLessEqual(conv['value'], 100.0)
+
+    def test_all_time_revenue_delta_not_fake_100(self):
+        self._paid_order(self.today, 200000)
+        ctx = get_sales_center_context(days=ALL_TIME_DAYS)
+        delta_card = next(c for c in ctx['kpi_cards'] if c['key'] == 'revenue_delta')
+        self.assertIsNone(delta_card['value'])
+
+    def test_export_links_use_all_not_zero(self):
+        links = get_sales_center_context(days=ALL_TIME_DAYS)['export_links']
+        paid = next(link for link in links if link['key'] == 'paid_orders')
+        self.assertIn('days=all', paid['url'])
+        self.assertEqual(format_admin_panel_days_param(ALL_TIME_DAYS), 'all')
 
     def test_breakdown_filtered_by_range(self):
         self._paid_order(self.today, 150000)

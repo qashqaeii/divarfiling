@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from django.urls import reverse
 
 from accounts.services.admin_exports import EXPORT_REGISTRY, get_export_catalog
+from accounts.services.admin_panel_shell import format_admin_panel_days_param
 
 EXPORT_CATEGORIES: Dict[str, str] = {
     'orders': 'سفارش‌ها',
@@ -24,12 +25,12 @@ EXPORT_CATEGORY_FILTERS = (('all', 'همه'),) + tuple(EXPORT_CATEGORIES.items()
 def _export_download_url(key: str, *, days: int, supports_days: bool) -> str:
     params = {'format': 'xlsx'}
     if supports_days:
-        params['days'] = str(days)
+        params['days'] = format_admin_panel_days_param(days)
     return reverse('admin_panel_export', args=[key]) + '?' + urlencode(params)
 
 
 def _build_query_suffix(days: int, category: str | None = None, compare: bool = False) -> str:
-    params: Dict[str, str] = {'days': str(days)}
+    params: Dict[str, str] = {'days': format_admin_panel_days_param(days)}
     if category and category != 'all':
         params['category'] = category
     if compare:

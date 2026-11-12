@@ -167,7 +167,7 @@
             </div>
             <span class="lic-premium__collection-count">{{ license_dashboard.portfolios|length }} لایسنس</span>
         </div>
-        <div class="lic-premium__toolbar">
+        <div class="lic-premium__toolbar" data-lic-toolbar hidden>
             <label class="lic-premium__search">
                 <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
                 <span class="lic-premium__sr-only">جست‌وجوی لایسنس بر اساس محصول، پلن یا کلید</span>
@@ -180,7 +180,7 @@
                 <button type="button" data-lic-filter="expired" aria-pressed="false">منقضی</button>
             </div>
         </div>
-        <p class="lic-premium__results" data-lic-result-count role="status" aria-live="polite"></p>
+        <p class="lic-premium__results" data-lic-result-count role="status" aria-live="polite" hidden></p>
     <div class="lic-grid" role="list">
         {% for item in license_dashboard.portfolios %}
         {% with lic=item.license expiry=item.expiry %}

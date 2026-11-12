@@ -10,7 +10,7 @@ Approved reference: right-hand navy sidebar, purple #5B4FCF selection, clean whi
 | Stage | Page | Status | Commit |
 |---|---|---|---|
 | 01 | نمای کلی | In progress — first visual pass committed; browser/Django validation pending | [a2d19bff](https://github.com/qashqaeii/divarfiling/commit/a2d19bff84508f6572164a19b5908b203c4664c3) |
-| 02 | دستیار مدیریت | Not started | — |
+| 02 | دستیار مدیریت | In progress — UI presentation pass committed; runtime/browser QA pending | [pending stage-02 commit](#2026-11-13--stage-02-ui-pass) |
 | 03 | فروش و درآمد | Not started | — |
 | 04 | رشد | Not started | — |
 | 05 | بازاریابی | Not started | — |
@@ -44,3 +44,8 @@ Source-level checks: matching Django block/endblock counts, preservation of char
 
 ### Next step
 Complete stage 01 through visual/runtime QA if an environment becomes available, and inspect missing sections from the mockup (recent orders and plan breakdown require existing view context; do not add backend fields under UI-only scope). Only mark Stage 01 complete after all accessible subparts are addressed; then move to Stage 02.
+
+### 2026-11-13 — Stage 02 UI pass
+- `templates/accounts/admin_management_assistant.html`: added a concise executive heading, accessibility state for the active navigation tab and a scoped V3 stylesheet link. Existing permissions, data bindings, modals, form IDs and JavaScript hooks preserved.
+- `static/css/mizkar-admin-assistant-v3.css`: aligned summary KPI cards, recommendations, automation tables/mobile cards, history, send/automation dialogs, form controls and dark/mobile variants with the approved design language.
+- Source-only structural inspection; no Django runtime or browser QA. Stage 02 remains **in progress** until visual/runtime validation. Stage 01 also remains pending visual/runtime validation and additional widgets needing backend context; no backend changes authorized.

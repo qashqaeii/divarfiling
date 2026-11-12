@@ -1,0 +1,111 @@
+/* Management Assistant V3 — presentation-only, scoped to the assistant page.
+   Loaded after the existing assistant styles; no changes to JS hooks or data. */
+.maa-page {
+  --maa-v3-purple: #5b4fcf;
+  --maa-v3-ink: #20243b;
+  --maa-v3-muted: #6d7289;
+  --maa-v3-line: #e9e7f2;
+  --maa-v3-surface: #fff;
+  --maa-v3-shadow: 0 12px 35px -29px rgba(29,24,76,.32);
+  gap: 20px;
+  overflow: visible;
+}
+.maa-v3-intro {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:7px 2px 2px}
+.maa-v3-eyebrow {display:inline-flex;align-items:center;gap:8px;color:var(--maa-v3-purple);font-size:.75rem;font-weight:750}
+.maa-v3-intro h2 {font-size:clamp(1.18rem,1.8vw,1.65rem);line-height:1.5;font-weight:850;color:var(--maa-v3-ink);margin:8px 0 5px}
+.maa-v3-intro p {font-size:.81rem;color:var(--maa-v3-muted);line-height:1.8;margin:0}
+.maa-v3-intro-note {display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--maa-v3-line);border-radius:12px;color:var(--maa-v3-muted);background:var(--maa-v3-surface);font-size:.74rem}
+.maa-summary {gap:14px}
+.maa-kpi {min-height:132px;align-items:center;gap:13px;padding:19px 20px;border-radius:18px;border:1px solid var(--maa-v3-line);box-shadow:var(--maa-v3-shadow);background:var(--maa-v3-surface);transition:transform .16s ease,box-shadow .16s ease}
+.maa-kpi:hover {transform:translateY(-2px);box-shadow:0 17px 35px -27px rgba(29,24,76,.28)}
+.maa-kpi::before {inset-inline-start:0;inset-inline-end:auto;top:17px;bottom:17px;border-radius:4px;width:3px}
+.maa-kpi-icon {width:43px;height:43px;border-radius:13px;font-size:1rem}
+.maa-kpi-body strong {font-size:clamp(1.5rem,2vw,1.9rem);font-weight:850;color:var(--maa-v3-ink);font-variant-numeric:tabular-nums}
+.maa-kpi-label {font-size:.83rem;color:var(--maa-v3-ink);margin-top:6px}
+.maa-kpi-hint {font-size:.72rem;color:var(--maa-v3-muted);margin-top:5px}
+.maa-tabs-wrap {position:relative;top:auto;margin:0;padding:0;background:transparent;z-index:1}
+.maa-tabs {display:inline-flex;width:100%;max-width:510px;padding:5px;gap:4px;border:1px solid var(--maa-v3-line);border-radius:14px;background:#f0eff8}
+.maa-tab {border-radius:10px;min-height:42px;font-size:.82rem;color:#666982}
+.maa-tab.is-active {color:var(--maa-v3-purple);background:#fff;box-shadow:0 4px 13px -9px rgba(38,32,93,.4)}
+.maa-tab-badge {color:var(--maa-v3-purple);background:#ebe9fb}
+.maa-section {gap:16px}
+.maa-insights {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+.maa-card {padding:20px 21px;border:1px solid var(--maa-v3-line);border-radius:18px;box-shadow:var(--maa-v3-shadow);background:var(--maa-v3-surface)}
+.maa-card-accent {inset-inline-start:0;inset-inline-end:auto;top:20px;bottom:20px;border-radius:4px}
+.maa-card-head {margin-bottom:14px}
+.maa-card-priority {gap:9px;margin-bottom:11px}
+.maa-card-icon {width:35px;height:35px;border-radius:11px;font-size:.9rem}
+.maa-priority-badge {font-size:.72rem;padding:5px 9px}
+.maa-card-title {font-size:1rem;font-weight:800;line-height:1.65;color:var(--maa-v3-ink)}
+.maa-card-lead {font-size:.83rem;line-height:1.85;color:var(--maa-v3-muted);margin-bottom:13px}
+.maa-card-facts {gap:12px}
+.maa-card-fact dt {font-size:.73rem;letter-spacing:0;text-transform:none;color:var(--maa-v3-muted);margin-bottom:5px}
+.maa-card-fact dd {font-size:.83rem;line-height:1.8;color:var(--maa-v3-ink)}
+.maa-card-actions {gap:10px;margin-top:16px;padding-top:15px;border-color:var(--maa-v3-line)}
+.maa-card-actions-secondary {gap:7px}
+.maa-card-details {border-radius:12px;border-color:var(--maa-v3-line);background:#f8f7fd;padding:12px}
+.maa-results {padding:16px 20px;border-radius:16px;border:1px solid var(--maa-v3-line);background:var(--maa-v3-surface)}
+.maa-results-label {font-size:.83rem}
+.maa-auto-group {border-radius:18px;overflow:hidden}
+.maa-auto-group-head {padding:16px 18px}
+.maa-auto-group-head h3 {font-size:1rem}
+.maa-auto-table-wrap {max-width:100%;overflow-x:auto}
+.maa-auto-table {min-width:850px}
+.maa-auto-table th {white-space:nowrap}
+.maa-auto-table td {vertical-align:middle}
+.maa-auto-card {border-radius:16px;border:1px solid var(--maa-v3-line);box-shadow:var(--maa-v3-shadow)}
+.maa-timeline-item {border-radius:14px}
+.maa-empty {border-radius:16px}
+.maa-modal-panel {border-radius:20px;overflow:hidden;box-shadow:0 25px 90px -25px rgba(19,16,55,.3)}
+.maa-modal-head,.maa-modal-foot {background:#faf9ff;border-color:var(--maa-v3-line)}
+.maa-modal-head h3 {color:var(--maa-v3-ink)}
+.maa-modal-head-icon {color:var(--maa-v3-purple);background:#eeeaff}
+.maa-modal-close {min-width:40px;min-height:40px;border-radius:10px}
+.maa-modal-close:focus-visible,.maa-page :is(a,button,input,textarea,select):focus-visible {outline:2px solid var(--maa-v3-purple);outline-offset:3px}
+.maa-auto-section--card {border-radius:15px;border-color:var(--maa-v3-line)}
+.maa-auto-section--message {background:#faf9ff;border-color:#e5e0fc}
+.maa-auto-message {border-inline-end-color:var(--maa-v3-purple)}
+.maa-auto-message-input:focus,.maa-field-textarea:focus,.maa-modal-body textarea:focus {border-color:var(--maa-v3-purple);box-shadow:0 0 0 3px rgba(91,79,207,.12)}
+.maa-auto-var-chip {background:#f5f3ff;border-color:#ddd7fb;color:#5143ba}
+.maa-auto-var-chip:hover {background:#ebe8ff;border-color:#b6abf1}
+.maa-auto-loading-spinner {border-top-color:var(--maa-v3-purple)}
+@media (max-width:1100px) {.maa-insights {grid-template-columns:1fr}}
+@media (max-width:760px) {
+  .maa-page {gap:15px}
+  .maa-v3-intro {padding:2px 0}
+  .maa-v3-intro-note {display:none}
+  .maa-summary {gap:9px}
+  .maa-kpi {min-height:112px;padding:13px;gap:8px;border-radius:14px}
+  .maa-kpi-icon {width:34px;height:34px;font-size:.82rem}
+  .maa-kpi-body strong {font-size:1.45rem}
+  .maa-kpi-label {font-size:.75rem}
+  .maa-kpi-hint {display:none}
+  .maa-tabs {max-width:none}
+  .maa-tab {font-size:.76rem;min-height:42px;padding:7px 4px}
+  .maa-card {padding:16px;border-radius:15px}
+  .maa-results {flex-wrap:wrap}
+  .maa-modal-panel {border-radius:18px 18px 0 0}
+}
+@media (max-width:390px) {
+  .maa-summary {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .maa-kpi {align-items:flex-start;flex-direction:column}
+  .maa-kpi-body strong {font-size:1.32rem}
+  .maa-tabs {gap:2px}
+  .maa-tab-badge {display:none}
+}
+html[data-theme="dark"] .maa-page,
+[data-theme="dark"] .maa-page {
+  --maa-v3-ink:#f1efff;--maa-v3-muted:#b9b7ce;--maa-v3-line:#39354e;--maa-v3-surface:#252237;--maa-v3-shadow:none;
+  --maa-surface:#252237;--maa-border:#39354e;--maa-text:#f1efff;--maa-text-secondary:#cbc9dc;--maa-text-muted:#b9b7ce;
+}
+[data-theme="dark"] .maa-tabs {background:#302c42}
+[data-theme="dark"] .maa-tab.is-active {background:#494167;color:#e5dfff}
+[data-theme="dark"] .maa-v3-intro-note,[data-theme="dark"] .maa-card-details {background:#2c2940}
+[data-theme="dark"] .maa-card-fact dd,[data-theme="dark"] .maa-auto-group-head h3 {color:#f1efff}
+[data-theme="dark"] .maa-modal-panel,[data-theme="dark"] .maa-modal-body,[data-theme="dark"] .maa-auto-section--card {background:#252237;color:#f1efff}
+[data-theme="dark"] .maa-modal-head,[data-theme="dark"] .maa-modal-foot,[data-theme="dark"] .maa-auto-section--message {background:#2d2942;border-color:#39354e}
+[data-theme="dark"] .maa-modal-head h3,[data-theme="dark"] .maa-auto-section h4,[data-theme="dark"] .maa-auto-grid dd {color:#f1efff}
+[data-theme="dark"] .maa-auto-kv,[data-theme="dark"] .maa-auto-stats>div,[data-theme="dark"] .maa-recipient-row,[data-theme="dark"] .maa-recipient-list,[data-theme="dark"] .maa-modal-recipient-list,[data-theme="dark"] .maa-auto-message,[data-theme="dark"] .maa-auto-variables,[data-theme="dark"] .maa-message-preview-wrap {background:#302c42;border-color:#46415d;color:#f1efff}
+[data-theme="dark"] .maa-modal-body :is(textarea,input,select),[data-theme="dark"] .maa-auto-settings-form :is(input,select) {background:#302c42;color:#f1efff;border-color:#514b69}
+[data-theme="dark"] .maa-auto-grid dt,[data-theme="dark"] .maa-field-label,[data-theme="dark"] .maa-auto-section h4 i,[data-theme="dark"] .maa-recipient-detail {color:#b9b7ce}
+@media (prefers-reduced-motion:reduce) {.maa-kpi,.maa-card,.maa-tab {transition:none}.maa-kpi:hover {transform:none}}

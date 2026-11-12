@@ -21,6 +21,7 @@
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-assistant.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-assistant-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
@@ -41,6 +42,14 @@
     </p>
     {% endif %}
 
+    <header class="maa-v3-intro">
+        <div>
+            <span class="maa-v3-eyebrow"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> دستیار تصمیم‌گیری</span>
+            <h2>اولویت‌ها را ببین، با اطمینان اقدام کن</h2>
+            <p>پیشنهادهای امروز، اتوماسیون‌ها و نتیجه اقدامات در یک فضای یکپارچه.</p>
+        </div>
+        <span class="maa-v3-intro-note"><i class="fas fa-shield-halved" aria-hidden="true"></i> اقدام‌ها بر اساس دسترسی شما</span>
+    </header>
     <div class="maa-summary" aria-label="خلاصه اولویت‌ها">
         <div class="maa-kpi" data-severity="critical">
             <span class="maa-kpi-icon" aria-hidden="true"><i class="fas fa-circle-exclamation"></i></span>
@@ -79,19 +88,19 @@
     <div class="maa-tabs-wrap">
         <nav class="maa-tabs" aria-label="بخش‌های دستیار">
             <a href="{{ tab_qs }}&tab=suggestions{% if admin_panel_compare %}&compare=1{% endif %}"
-               class="maa-tab{% if tab == 'suggestions' %} is-active{% endif %}">
+               class="maa-tab{% if tab == 'suggestions' %} is-active{% endif %}"{% if tab == 'suggestions' %} aria-current="page"{% endif %}>
                 پیشنهادها
                 {% if insights_total %}<span class="maa-tab-badge">{{ insights_total|to_persian_digits }}</span>{% endif %}
             </a>
             <a href="{{ tab_qs }}&tab=automations{% if admin_panel_compare %}&compare=1{% endif %}"
-               class="maa-tab{% if tab == 'automations' %} is-active{% endif %}">
+               class="maa-tab{% if tab == 'automations' %} is-active{% endif %}"{% if tab == 'automations' %} aria-current="page"{% endif %}>
                 اتوماسیون‌ها
                 {% if active_automations_count %}
                 <span class="maa-tab-badge maa-tab-badge--green">{{ active_automations_count|to_persian_digits }}</span>
                 {% endif %}
             </a>
             <a href="{{ tab_qs }}&tab=history{% if admin_panel_compare %}&compare=1{% endif %}"
-               class="maa-tab{% if tab == 'history' %} is-active{% endif %}">
+               class="maa-tab{% if tab == 'history' %} is-active{% endif %}"{% if tab == 'history' %} aria-current="page"{% endif %}>
                 تاریخچه
             </a>
         </nav>

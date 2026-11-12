@@ -270,7 +270,7 @@ def _build_range_kpi_cards(
             'key': 'renewal_rate_period',
             'kind': 'range',
             'label': 'نرخ تمدید',
-            'sublabel': 'تمدید / (جدید + تمدید)',
+            'sublabel': f'تمدید÷(جدید+تمدید) · رسمی {formal_renewals} · خرید مجدد {new_key_repurchase}',
             'value': renewal_rate,
             'format': 'percent',
             'delta': _pct_change(renewal_rate, prev_renewal_rate),
@@ -279,6 +279,11 @@ def _build_range_kpi_cards(
             'icon': 'fa-chart-pie',
             'accent': 'cyan',
             'status': 'ok' if renewal_rate >= 15 else 'warn',
+            'coverage_note': (
+                'خرید مجدد بدون renewal_license در شمار رسمی تمدید نیست؛ نرخ ممکن است پوشش ناقص داشته باشد.'
+                if new_key_repurchase
+                else ''
+            ),
         },
     ]
 
@@ -341,6 +346,41 @@ def _build_snapshot_kpi_cards(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
             'icon': 'fa-desktop',
             'accent': 'blue',
             'status': 'ok',
+        },
+    ]
+
+
+def build_licenses_center_pulse(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
+    return [
+        {
+            'label': 'لایسنس فعال',
+            'value': snapshot.get('licenses_active', 0),
+            'format': 'count',
+            'href': '#licenses-kpi',
+        },
+        {
+            'label': 'انقضا ≤۷ روز',
+            'value': snapshot.get('licenses_expiring_7d', 0),
+            'format': 'count',
+            'href': '#licenses-table-expiring',
+        },
+        {
+            'label': 'منقضی',
+            'value': snapshot.get('licenses_expired', 0),
+            'format': 'count',
+            'href': '#licenses-table-expired',
+        },
+        {
+            'label': 'فعال‌سازی دستگاه',
+            'value': snapshot.get('active_devices', 0),
+            'format': 'count',
+            'hint': 'Activation',
+        },
+        {
+            'label': 'کاربر بدون لایسنس',
+            'value': snapshot.get('users_without_license', 0),
+            'format': 'count',
+            'href': reverse('admin_panel_users') + '#users-table-no-license',
         },
     ]
 
@@ -453,6 +493,7 @@ def get_licenses_center_context(*, days: int = 30, compare: bool = False) -> Dic
     return {
         'chart_days': days,
         'range_label': range_label,
+        'center_pulse': build_licenses_center_pulse(snapshot),
         'range_kpi_cards': range_kpis,
         'snapshot_kpi_cards': snapshot_kpis,
         'kpi_cards': range_kpis + snapshot_kpis,
@@ -463,6 +504,7 @@ def get_licenses_center_context(*, days: int = 30, compare: bool = False) -> Dic
         },
         'renewal_breakdown': renewal_breakdown,
         'charts': _build_charts(days),
+        'charts_enabled': True,
         'action_items': build_licenses_action_items(snapshot),
         'expiring_licenses': get_expiring_licenses(limit=TABLE_PREVIEW_ROWS),
         'recent_renewals': recent_renewals,

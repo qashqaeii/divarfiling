@@ -255,8 +255,8 @@ def _build_range_kpi_cards(
         {
             'key': 'retention_d7',
             'kind': 'range',
-            'label': 'Retention D7',
-            'sublabel': range_label,
+            'label': 'بازگشت D7',
+            'sublabel': 'کوهورت بازه · ورود ≥۷ روز پس از ثبت‌نام',
             'value': retention_d7 if retention_d7 is not None else 0,
             'format': 'percent',
             'delta': None,
@@ -270,8 +270,8 @@ def _build_range_kpi_cards(
         {
             'key': 'retention_d30',
             'kind': 'range',
-            'label': 'Retention D30',
-            'sublabel': range_label,
+            'label': 'بازگشت D30',
+            'sublabel': 'کوهورت بازه · ورود ≥۳۰ روز پس از ثبت‌نام',
             'value': retention_d30 if retention_d30 is not None else 0,
             'format': 'percent',
             'delta': None,
@@ -358,6 +358,35 @@ def _build_snapshot_kpi_cards(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
             'icon': 'fa-circle',
             'accent': 'cyan',
             'status': 'ok',
+        },
+    ]
+
+
+def build_users_center_pulse(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
+    return [
+        {
+            'label': 'کاربر فعال',
+            'value': snapshot.get('users_active', 0),
+            'format': 'count',
+            'href': '#ecc-users-mgmt',
+        },
+        {
+            'label': 'آنلاین امروز',
+            'value': snapshot.get('online_today', 0),
+            'format': 'count',
+            'hint': 'وب + اپ',
+        },
+        {
+            'label': 'بدون لایسنس',
+            'value': snapshot.get('users_without_license', 0),
+            'format': 'count',
+            'href': '#users-table-no-license',
+        },
+        {
+            'label': 'خرید معلق',
+            'value': snapshot.get('users_pending_payment', 0),
+            'format': 'count',
+            'href': reverse('admin_panel_sales') + '#sales-table-pending',
         },
     ]
 
@@ -458,10 +487,12 @@ def get_users_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
     return {
         'chart_days': days,
         'range_label': range_label,
+        'center_pulse': build_users_center_pulse(snapshot),
         'range_kpi_cards': range_kpis,
         'snapshot_kpi_cards': snapshot_kpis,
         'kpi_cards': range_kpis + snapshot_kpis,
         'charts': _build_users_charts(days),
+        'charts_enabled': True,
         'action_items': build_users_action_items(snapshot),
         'recent_users': get_recent_users(limit=TABLE_PREVIEW_ROWS),
         'top_users': get_top_users_by_revenue(limit=TABLE_PREVIEW_ROWS),

@@ -6,6 +6,7 @@
 {% block title %}پشتیبانی | پنل مدیریت{% endblock %}
 
 {% block admin_panel_title %}پشتیبانی{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">پشتیبانی</span>{% endblock %}
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-card-transfer.css' %}?v=1">
@@ -22,35 +23,38 @@
 
 {% block admin_panel_content %}
 
-<section class="ecc-section ecc-sup-actions-hero" id="support-actions" aria-label="نیازمند اقدام">
-    <header class="ecc-cmd-actions-head">
-        <div>
-            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
-            <p>اولویت پاسخ و بررسی مالی</p>
-        </div>
-        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
-    </header>
-    {% if action_items %}
-    <div class="ecc-cmd-actions-list ecc-sup-actions-list">
-        {% for item in action_items %}
-        <a href="{{ item.href }}" class="ecc-cmd-action ecc-sup-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
-            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
-            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
-            <span class="ecc-cmd-action-body">
-                <strong>{{ item.title }}</strong>
-                <em>{{ item.detail|to_persian_digits }}</em>
-            </span>
-            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
-            <span class="ecc-cmd-action-cta">{{ item.cta }}</span>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p class="ecc-cmd-actions-empty">صف خالی است — مورد معلقی برای بررسی نیست.</p>
-    {% endif %}
-</section>
+{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='پشتیبانی · الان' pulse_icon='fa-headset' %}
 
-<section class="ecc-section ecc-cmd-kpi" aria-label="وضعیت فعلی">
+<div class="adm-prime-hero">
+    <div class="adm-prime-hero__chart">
+        <div class="adm-prime-section-tag">
+            <strong>چه چیزی تغییر کرده؟</strong>
+            <em>ورودی vs بسته‌شده · {{ range_label }}</em>
+        </div>
+        {% if charts_enabled %}
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-support-tickets-flow"></canvas>
+            </div>
+        </article>
+        {% else %}
+        <p class="ecc-cmd-actions-empty">داده کافی برای نمودار تیکت در این بازه نیست.</p>
+        {% endif %}
+    </div>
+    <aside class="adm-prime-hero__rail">
+        <div class="adm-prime-section-tag">
+            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
+            <em>تیکت · مالی</em>
+        </div>
+        {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='support-actions' title='نیازمند اقدام' subtitle='همان صف مقصد' empty_title='صف پشتیبانی خالی است' %}
+    </aside>
+</div>
+
+<div class="adm-prime-section-tag">
+    <strong>وضعیت فعلی</strong>
+    <em>Snapshot</em>
+</div>
+<section class="ecc-section ecc-cmd-kpi adm-prime-kpi-band" aria-label="وضعیت فعلی">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
             <h2><i class="fas fa-camera"></i> وضعیت فعلی</h2>
@@ -72,13 +76,11 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-kpi" aria-label="KPI بازه‌ای">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-calendar-days"></i> KPI بازه‌ای</h2>
-            <p>{{ range_label }}</p>
-        </div>
-    </header>
+<div class="adm-prime-section-tag">
+    <strong>گزارش بازه</strong>
+    <em>{{ range_label }}</em>
+</div>
+<section class="ecc-section ecc-cmd-kpi adm-prime-kpi-band" aria-label="KPI بازه‌ای">
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
         {% for card in range_kpi_cards %}
         <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
@@ -98,6 +100,8 @@
         {% endfor %}
     </div>
 </section>
+
+<div class="adm-prime-fold">
 
 <section class="ecc-section" id="support-table-tickets" aria-label="تیکت‌های باز">
     <header class="ecc-section-head">
@@ -255,7 +259,7 @@
             <strong>{% if ticket_intelligence.oldest_open_age %}{{ ticket_intelligence.oldest_open_age|to_persian_digits }}{% else %}—{% endif %}</strong>
         </div>
         <div class="ecc-sup-intel-item">
-            <span>منتظر پاسخ staff</span>
+            <span>پیام خوانده‌نشده (نوبت staff)</span>
             <strong>{{ ticket_intelligence.awaiting_staff|to_persian_digits }}</strong>
         </div>
         <div class="ecc-sup-intel-item">
@@ -271,21 +275,7 @@
     </div>
 </section>
 
-{% if charts_enabled %}
-<section class="ecc-section ecc-sup-charts" aria-label="روند تیکت">
-    <article class="ecc-card ecc-card--chart">
-        <div class="ecc-card-head">
-            <div>
-                <h3><i class="fas fa-chart-line"></i> ایجاد vs بسته‌شده</h3>
-                <p>{{ range_label }}</p>
-            </div>
-        </div>
-        <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-            <canvas id="chart-support-tickets-flow"></canvas>
-        </div>
-    </article>
-</section>
-{% endif %}
+</div>
 
 <section id="ecc-support" aria-hidden="true"></section>
 
@@ -294,13 +284,7 @@
 {% endblock %}
 
 {% block admin_panel_extra_js %}
-{% if charts_enabled %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-window.admCharts = {{ charts_json|safe }};
-window.admChartDays = {{ chart_days }};
-</script>
-{% endif %}
+{% include 'accounts/partials/admin_prime_charts_boot.html' %}
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=17"></script>
 <script src="{% static 'js/mizkar-admin-card-transfer.js' %}?v=1"></script>
 {% endblock %}

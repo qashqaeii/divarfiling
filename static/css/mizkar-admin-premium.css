@@ -217,6 +217,52 @@
     color: var(--adm-accent);
 }
 
+.adm-prime-today-block--center {
+    margin-bottom: 14px;
+}
+
+.adm-prime-today--pulse {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.adm-prime-today__item--link {
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.adm-prime-today__item--link:hover {
+    border-color: var(--adm-accent-soft, rgba(124, 58, 237, 0.35));
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.08);
+}
+
+.adm-prime-today__hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.68rem;
+    color: var(--adm-muted);
+    line-height: 1.35;
+}
+
+.adm-prime-users-quick {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.adm-prime-users-quick .ecc-table-search {
+    width: 100%;
+}
+
+.ecc-kpi-coverage {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.68rem;
+    color: var(--adm-muted);
+    line-height: 1.4;
+}
+
 .adm-prime-hero {
     display: grid;
     grid-template-columns: 1fr;

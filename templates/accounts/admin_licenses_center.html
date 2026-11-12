@@ -6,6 +6,7 @@
 {% block title %}لایسنس | پنل مدیریت{% endblock %}
 
 {% block admin_panel_title %}لایسنس{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">لایسنس</span>{% endblock %}
 
 {% block admin_panel_header_subtitle %}
 صدور، تمدید و وضعیت لایسنس‌های فعال
@@ -31,76 +32,34 @@
 {% block admin_panel_content %}
 <div class="cust-page biz-page biz-page--licenses">
 
-<div class="biz-toolbar">
-    <div class="biz-toolbar-meta">
-        <span class="biz-meta-pill"><i class="fas fa-calendar-days" aria-hidden="true"></i> {{ range_label }}</span>
-        <span class="biz-meta-pill"><i class="fas fa-key" aria-hidden="true"></i> {{ status_distribution.active|to_persian_digits }} فعال</span>
-        {% if action_items %}
-        <span class="biz-meta-pill biz-meta-pill--warn">{{ action_items|length|to_persian_digits }} نیازمند اقدام</span>
-        {% endif %}
+{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='لایسنس · الان' pulse_icon='fa-key' %}
+
+<div class="adm-prime-hero">
+    <div class="adm-prime-hero__chart">
+        <div class="adm-prime-section-tag">
+            <strong>چه چیزی تغییر کرده؟</strong>
+            <em>صدور و تمدید · {{ range_label }}</em>
+        </div>
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-licenses-activity"></canvas>
+            </div>
+        </article>
     </div>
-    <div class="biz-toolbar-actions">
-        <a href="{% url 'admin_panel_users' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-users" aria-hidden="true"></i> کاربران</a>
-        <a href="{% url 'admin_panel_assistant' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> دستیار</a>
-    </div>
+    <aside class="adm-prime-hero__rail">
+        <div class="adm-prime-section-tag">
+            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
+            <em>انقضا و تبدیل</em>
+        </div>
+        {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='licenses-actions' title='نیازمند اقدام' empty_title='مورد فوری در لایسنس نیست' %}
+    </aside>
 </div>
 
-<div class="cust-tabs-wrap">
-    <nav class="cust-tabs" aria-label="بخش‌های لایسنس">
-        <a href="#licenses-actions" class="cust-tab">اقدام{% if action_items %}<span class="cust-tab-badge cust-tab-badge--alert">{{ action_items|length|to_persian_digits }}</span>{% endif %}</a>
-        <a href="#licenses-kpi" class="cust-tab">شاخص‌ها</a>
-        <a href="#licenses-charts" class="cust-tab">روند</a>
-        <a href="#licenses-table-expiring" class="cust-tab">جدول‌ها</a>
-    </nav>
+<div class="adm-prime-section-tag">
+    <strong>گزارش بازه</strong>
+    <em>{{ range_label }}</em>
 </div>
-<section class="ecc-section ecc-cmd-actions ecc-lic-actions-top" id="licenses-actions" aria-label="نیازمند اقدام">
-    <header class="ecc-cmd-actions-head">
-        <div>
-            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
-            <p>موارد فوری لایسنس</p>
-        </div>
-        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
-    </header>
-    {% if action_items %}
-    <div class="ecc-cmd-actions-list">
-        {% for item in action_items %}
-        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
-            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
-            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
-            <span class="ecc-cmd-action-body">
-                <strong>{{ item.title }}</strong>
-                <em>{{ item.detail }}</em>
-            </span>
-            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
-            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
-        </a>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="ecc-empty ecc-empty--compact">
-        <i class="fas fa-circle-check"></i>
-        <strong>مورد فوری در لایسنس وجود ندارد</strong>
-    </div>
-    {% endif %}
-</section>
-
-{% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='licenses' ai_section_label='لایسنس' %}
-
-<section class="ecc-section" aria-label="توزیع وضعیت">
-    <div class="ecc-lic-status-row">
-        <div class="ecc-lic-status-pill" data-accent="emerald">
-            <span>فعال</span><strong>{{ status_distribution.active|to_persian_digits }}</strong>
-        </div>
-        <div class="ecc-lic-status-pill" data-accent="amber">
-            <span>در شرف انقضا</span><strong>{{ status_distribution.expiring|to_persian_digits }}</strong>
-        </div>
-        <div class="ecc-lic-status-pill" data-accent="rose">
-            <span>منقضی</span><strong>{{ status_distribution.expired|to_persian_digits }}</strong>
-        </div>
-    </div>
-</section>
-
-<section class="ecc-section ecc-cmd-kpi cust-kpi-block" id="licenses-kpi" aria-label="شاخص‌ها">
+<section class="ecc-section ecc-cmd-kpi cust-kpi-block adm-prime-kpi-band" id="licenses-kpi" aria-label="شاخص‌ها">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
             <h2><i class="fas fa-chart-simple"></i> شاخص‌های کلیدی</h2>
@@ -122,13 +81,17 @@
             <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
             <span class="ecc-kpi-lbl">{{ card.label }}</span>
             <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
+            {% if card.coverage_note %}<span class="ecc-kpi-coverage">{{ card.coverage_note }}</span>{% endif %}
             <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
                 <canvas id="spark-{{ card.key }}"></canvas>
             </div>
         </article>
         {% endfor %}
     </div>
-    <p class="cust-kpi-group-label">وضعیت فعلی</p>
+    <div class="adm-prime-section-tag" style="margin-top:12px">
+        <strong>وضعیت فعلی</strong>
+        <em>Snapshot</em>
+    </div>
     <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
         {% for card in snapshot_kpi_cards %}
         <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
@@ -145,6 +108,10 @@
         {% endfor %}
     </div>
 </section>
+
+<div class="adm-prime-fold">
+
+{% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='licenses' ai_section_label='لایسنس' %}
 
 <section class="ecc-section ecc-cmd-summary" aria-label="تفکیک تمدید">
     <header class="ecc-section-head ecc-section-head--slim">
@@ -173,31 +140,18 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-charts ecc-sales-charts" id="licenses-charts" aria-label="نمودارها">
-    <div class="ecc-cmd-charts-grid ecc-sales-charts-grid">
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-card-head">
-                <div>
-                    <h3><i class="fas fa-chart-column"></i> صدور و تمدید</h3>
-                    <p>{{ range_label }}</p>
-                </div>
+<section class="ecc-section ecc-cmd-charts ecc-sales-charts" id="licenses-charts" aria-label="درآمد تمدید">
+    <article class="ecc-card ecc-card--chart">
+        <div class="ecc-card-head">
+            <div>
+                <h3><i class="fas fa-chart-area"></i> درآمد تمدید</h3>
+                <p>{{ range_label }}</p>
             </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-licenses-activity"></canvas>
-            </div>
-        </article>
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-card-head">
-                <div>
-                    <h3><i class="fas fa-chart-area"></i> درآمد تمدید</h3>
-                    <p>{{ range_label }}</p>
-                </div>
-            </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-renewal-revenue"></canvas>
-            </div>
-        </article>
-    </div>
+        </div>
+        <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+            <canvas id="chart-renewal-revenue"></canvas>
+        </div>
+    </article>
 </section>
 
 <section class="ecc-section" id="licenses-table-expiring" aria-label="در شرف انقضا">
@@ -358,13 +312,10 @@
 </section>
 
 </div>
+</div>
 {% endblock %}
 
 {% block admin_panel_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-window.admCharts = {{ charts_json|safe }};
-window.admChartDays = {{ chart_days }};
-</script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=15"></script>
+{% include 'accounts/partials/admin_prime_charts_boot.html' %}
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=17"></script>
 {% endblock %}

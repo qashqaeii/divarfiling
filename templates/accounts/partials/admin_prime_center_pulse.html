@@ -1,0 +1,30 @@
+{% load persian_tags %}
+{% if center_pulse %}
+<div class="adm-prime-today-block adm-prime-today-block--center" aria-label="وضعیت فعلی این مرکز">
+    <div class="adm-prime-today__head">
+        <h2><i class="fas {{ pulse_icon|default:'fa-gauge-high' }}"></i> {{ pulse_title|default:'وضعیت فعلی' }}</h2>
+        <span class="adm-prime-section-tag"><em>{{ pulse_subtitle|default:'Snapshot · بدون بازهٔ گزارش' }}</em></span>
+    </div>
+    <div class="adm-prime-today adm-prime-today--pulse">
+        {% for chip in center_pulse %}
+        {% if chip.href %}
+        <a href="{{ chip.href }}" class="adm-prime-today__item adm-prime-today__item--link">
+            <em>{{ chip.label }}</em>
+            <strong{% if chip.format %} data-count-up="{{ chip.value }}" data-format="{{ chip.format }}"{% endif %}>
+                {% if chip.format == 'money' %}{{ chip.value|default:0 }}{% else %}{{ chip.value|default:0|to_persian_digits }}{% endif %}
+            </strong>
+            {% if chip.hint %}<span class="adm-prime-today__hint">{{ chip.hint|to_persian_digits }}</span>{% endif %}
+        </a>
+        {% else %}
+        <div class="adm-prime-today__item">
+            <em>{{ chip.label }}</em>
+            <strong{% if chip.format %} data-count-up="{{ chip.value }}" data-format="{{ chip.format }}"{% endif %}>
+                {% if chip.format == 'money' %}{{ chip.value|default:0 }}{% else %}{{ chip.value|default:0|to_persian_digits }}{% endif %}
+            </strong>
+            {% if chip.hint %}<span class="adm-prime-today__hint">{{ chip.hint|to_persian_digits }}</span>{% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

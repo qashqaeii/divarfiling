@@ -6,6 +6,7 @@
 {% block title %}کاربران | پنل مدیریت{% endblock %}
 
 {% block admin_panel_title %}کاربران{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">کاربران</span>{% endblock %}
 
 {% block admin_panel_header_subtitle %}
 مدیریت کاربران، رشد و فعال‌سازی
@@ -31,63 +32,37 @@
 {% block admin_panel_content %}
 <div class="cust-page biz-page biz-page--users">
 
-<div class="biz-toolbar">
-    <div class="biz-toolbar-meta">
-        <span class="biz-meta-pill"><i class="fas fa-calendar-days" aria-hidden="true"></i> {{ range_label }}</span>
-        {% if action_items %}
-        <span class="biz-meta-pill biz-meta-pill--warn">{{ action_items|length|to_persian_digits }} نیازمند اقدام</span>
-        {% endif %}
-    </div>
-    <div class="biz-toolbar-actions">
-        <a href="{% url 'admin_panel_licenses' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-key" aria-hidden="true"></i> لایسنس</a>
-        <a href="{% url 'admin_panel_crm' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-address-book" aria-hidden="true"></i> CRM</a>
-    </div>
-</div>
+{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='کاربران · الان' pulse_icon='fa-users' %}
 
-<div class="cust-tabs-wrap">
-    <nav class="cust-tabs" aria-label="بخش‌های کاربران">
-        <a href="#users-actions" class="cust-tab">اقدام{% if action_items %}<span class="cust-tab-badge cust-tab-badge--alert">{{ action_items|length|to_persian_digits }}</span>{% endif %}</a>
-        <a href="#users-kpi" class="cust-tab">شاخص‌ها</a>
-        <a href="#users-charts" class="cust-tab">روند</a>
-        <a href="#users-recent" class="cust-tab">جدول‌ها</a>
-        <a href="#ecc-users" class="cust-tab">مدیریت</a>
-    </nav>
-</div>
-
-<section class="ecc-section ecc-cmd-actions" id="users-actions" aria-label="نیازمند اقدام">
-    <header class="ecc-cmd-actions-head">
-        <div>
-            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
-            <p>موارد فوری کاربران</p>
+<div class="adm-prime-hero">
+    <div class="adm-prime-hero__chart">
+        <div class="adm-prime-section-tag">
+            <strong>چه چیزی تغییر کرده؟</strong>
+            <em>ثبت‌نام و فعالیت · {{ range_label }}</em>
         </div>
-        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
-    </header>
-    {% if action_items %}
-    <div class="ecc-cmd-actions-list">
-        {% for item in action_items %}
-        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
-            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
-            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
-            <span class="ecc-cmd-action-body">
-                <strong>{{ item.title }}</strong>
-                <em>{{ item.detail }}</em>
-            </span>
-            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
-            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
-        </a>
-        {% endfor %}
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-signups"></canvas>
+            </div>
+        </article>
     </div>
-    {% else %}
-    <div class="ecc-empty ecc-empty--compact">
-        <i class="fas fa-circle-check"></i>
-        <strong>مورد فوری در کاربران وجود ندارد</strong>
-    </div>
-    {% endif %}
-</section>
+    <aside class="adm-prime-hero__rail">
+        <div class="adm-prime-section-tag">
+            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
+            <em>تبدیل و معلق</em>
+        </div>
+        {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='users-actions' title='نیازمند اقدام' empty_title='مورد فوری در کاربران نیست' %}
+        <div class="adm-prime-users-quick">
+            <a href="#ecc-users-mgmt" class="ecc-btn ecc-btn--primary ecc-btn--block">جستجو، فیلتر و پرونده کاربر</a>
+        </div>
+    </aside>
+</div>
 
-{% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='users' ai_section_label='کاربران' %}
-
-<section class="ecc-section ecc-cmd-kpi cust-kpi-block" id="users-kpi" aria-label="شاخص‌ها">
+<div class="adm-prime-section-tag">
+    <strong>گزارش بازه</strong>
+    <em>{{ range_label }}</em>
+</div>
+<section class="ecc-section ecc-cmd-kpi cust-kpi-block adm-prime-kpi-band" id="users-kpi" aria-label="شاخص‌ها">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
             <h2><i class="fas fa-chart-simple"></i> شاخص‌های کلیدی</h2>
@@ -137,31 +112,22 @@
     </div>
 </section>
 
-<section class="ecc-section ecc-cmd-charts ecc-sales-charts" id="users-charts" aria-label="روند کاربران">
-    <div class="ecc-cmd-charts-grid ecc-sales-charts-grid">
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-card-head">
-                <div>
-                    <h3><i class="fas fa-user-plus"></i> روند ثبت‌نام</h3>
-                    <p>{{ range_label }}</p>
-                </div>
+<div class="adm-prime-fold">
+
+{% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='users' ai_section_label='کاربران' %}
+
+<section class="ecc-section ecc-cmd-charts ecc-sales-charts" id="users-charts" aria-label="فعالیت روزانه">
+    <article class="ecc-card ecc-card--chart">
+        <div class="ecc-card-head">
+            <div>
+                <h3><i class="fas fa-signal"></i> کاربران فعال روزانه</h3>
+                <p>{{ range_label }}</p>
             </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-signups"></canvas>
-            </div>
-        </article>
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-card-head">
-                <div>
-                    <h3><i class="fas fa-signal"></i> کاربران فعال روزانه</h3>
-                    <p>{{ range_label }}</p>
-                </div>
-            </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-users-active"></canvas>
-            </div>
-        </article>
-    </div>
+        </div>
+        <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+            <canvas id="chart-users-active"></canvas>
+        </div>
+    </article>
 </section>
 
 <section class="ecc-section" id="users-recent" aria-label="ثبت‌نام‌های اخیر">
@@ -361,6 +327,8 @@
     </div>
 </section>
 
+</div>
+
 <div class="ecc-user-drawer" id="eccUserDrawer" hidden aria-hidden="true">
     <div class="ecc-user-drawer-overlay" data-user-drawer-close tabindex="-1" aria-hidden="true"></div>
     <aside class="ecc-user-drawer-panel" role="dialog" aria-labelledby="eccUserDrawerTitle">
@@ -381,11 +349,7 @@
 {% endblock %}
 
 {% block admin_panel_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-window.admCharts = {{ charts_json|safe }};
-window.admChartDays = {{ chart_days }};
-</script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=14"></script>
+{% include 'accounts/partials/admin_prime_charts_boot.html' %}
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=17"></script>
 <script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=2"></script>
 {% endblock %}

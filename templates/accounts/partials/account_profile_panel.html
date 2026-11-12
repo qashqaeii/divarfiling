@@ -2,16 +2,16 @@
 {% load static %}
 {% load account_avatar_tags %}
 
-<div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab tab-content dash-tab-panel prof-tab"{% if active_tab != 'profile' %} hidden{% endif %}>
+<div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab tab-content dash-tab-panel prof-tab prof-premium"{% if active_tab != 'profile' %} hidden{% endif %}>
 
     <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
 
     <article class="mk-acc-mob-profile-id mk-acc-mob-only" aria-label="پروفایل شما"
-             id="accountAvatarMeta"
              data-saved-key="{{ account_avatar_saved_key }}"
              data-effective-key="{{ account_avatar_effective_key }}"
              data-has-custom="{% if account_avatar_has_custom %}1{% else %}0{% endif %}">
         <div class="mk-acc-mob-profile-id__glow" aria-hidden="true"></div>
+        <p class="prof-premium__mobile-eyebrow"><i class="fas fa-user-circle" aria-hidden="true"></i> حساب کاربری من</p>
         <div class="mk-acc-mob-profile-id__main">
             <button type="button" class="mk-acc-mob-profile-id__avatar" onclick="openAvatarPickerModal()" aria-label="تغییر آواتار">
                 <img id="accountAvatarProfileMobImg" src="{{ account_avatar_panel_url }}" alt="" width="72" height="72" loading="eager" decoding="async">
@@ -37,18 +37,10 @@
             <button type="button" class="mk-acc-mob-profile-id__chip mk-acc-mob-profile-id__chip--muted" onclick="resetAccountAvatar()">بازنشانی</button>
             {% endif %}
         </div>
-        <div class="mk-acc-mob-profile-id__actions">
-            <button type="button" class="mk-acc-mob-profile-id__btn" onclick="openUserInfoModal()">
-                <i class="fas fa-pen" aria-hidden="true"></i> ویرایش حساب
-            </button>
-            <button type="button" class="mk-acc-mob-profile-id__btn mk-acc-mob-profile-id__btn--primary" onclick="openProfileModal()">
-                <i class="fas fa-user-cog" aria-hidden="true"></i> پروفایل تکمیلی
-            </button>
-        </div>
     </article>
 
     <div class="mk-acc-mob-profile-settings mk-acc-mob-only">
-        <p class="mk-acc-mob-section-eyebrow">اطلاعات ذخیره‌شده</p>
+        <p class="mk-acc-mob-section-eyebrow">مدیریت اطلاعات شخصی</p>
         <div class="mk-acc-mob-settings" role="list">
             <button type="button" class="mk-acc-mob-settings__row" role="listitem" onclick="openUserInfoModal()">
                 <span class="mk-acc-mob-settings__icon mk-acc-mob-settings__icon--violet"><i class="fas fa-user" aria-hidden="true"></i></span>
@@ -80,6 +72,7 @@
                 <span class="prof-hero__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
             </button>
             <div class="prof-hero__copy">
+                <span class="prof-premium__eyebrow">هویت شما در فایلینگ دیوار</span>
                 <h1 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h1>
                 <p class="prof-hero__username">@{{ user.username }}</p>
                 <p class="prof-hero__meta">
@@ -115,7 +108,7 @@
     <div class="prof-grid mk-acc-profile-grid mk-acc-desk-only">
         <section class="prof-card mk-acc-panel">
             <header class="prof-card-head">
-                <h2 class="prof-card-title">حساب کاربری</h2>
+                <div class="prof-premium__card-heading"><span class="prof-premium__card-icon"><i class="fas fa-user" aria-hidden="true"></i></span><div><h2 class="prof-card-title">حساب کاربری</h2><p class="prof-card-desc">اطلاعات ورود و ارتباط با شما</p></div></div>
                 <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
                     <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
                 </button>
@@ -138,7 +131,7 @@
 
         <section class="prof-card mk-acc-panel">
             <header class="prof-card-head">
-                <h2 class="prof-card-title">پروفایل تکمیلی</h2>
+                <div class="prof-premium__card-heading"><span class="prof-premium__card-icon"><i class="fas fa-id-card" aria-hidden="true"></i></span><div><h2 class="prof-card-title">پروفایل تکمیلی</h2><p class="prof-card-desc">اطلاعات شخصی و محل فعالیت</p></div></div>
                 <button type="button" class="prof-edit-btn" onclick="openProfileModal()">
                     <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
                 </button>
@@ -169,17 +162,16 @@
     </div>
 
     <section class="prof-card prof-card--public mk-acc-mob-public" id="consultantPublicProfile">
-        <header class="mk-acc-mob-section-head mk-acc-mob-only">
-            <h2>پروفایل عمومی مشاور</h2>
-            <p>برای لینک اشتراک با مشتری</p>
-        </header>
-        <header class="prof-card-head prof-card-head--public mk-acc-desk-only">
-            <div>
-                <h2 class="prof-card-title">پروفایل عمومی مشاور</h2>
-                <p class="prof-card-desc">در لینک اشتراک مشتری و صفحه عمومی نمایش داده می‌شود</p>
+        <header class="prof-card-head prof-card-head--public prof-premium__public-head">
+            <div class="prof-premium__public-head-copy">
+                <span class="prof-premium__public-icon"><i class="fas fa-address-card" aria-hidden="true"></i></span>
+                <div>
+                    <h2 class="prof-card-title">پروفایل عمومی مشاور</h2>
+                    <p class="prof-card-desc">اطلاعاتی که در صفحه معرفی و لینک‌های اشتراک با مشتری نمایش داده می‌شود.</p>
+                </div>
             </div>
             {% if consultant_socials_active %}
-            <span class="prof-live-chip">{{ consultant_socials_active|length }} شبکه فعال</span>
+            <span class="prof-live-chip"><i class="fas fa-link" aria-hidden="true"></i> {{ consultant_socials_active|length }} شبکه فعال</span>
             {% endif %}
         </header>
 
@@ -187,10 +179,11 @@
             {% csrf_token %}
 
             <details class="prof-fold" open>
-                <summary>برند و پیام</summary>
+                <summary><span class="prof-premium__fold-icon"><i class="fas fa-bullhorn" aria-hidden="true"></i></span><span class="prof-premium__fold-copy"><strong>برند و پیام</strong><small>نام برند و متن خوشامدگویی مشتریان</small></span></summary>
                 <div class="prof-fold-body">
+                    <p class="prof-premium__section-hint">نام و پیام برند شما هنگام ارسال فایل به مشتری نمایش داده می‌شود.</p>
                     <label class="prof-label" for="consultantAgencyName">نام آژانس / برند</label>
-                    <input type="text" name="agency_name" id="consultantAgencyName" class="prof-input"
+                    <input type="text" name="agency_name" id="consultantAgencyName" class="prof-input" autocomplete="organization"
                            value="{{ consultant_agency_name }}" placeholder="مثلاً آژانس املاک آسمان">
                     <label class="prof-label" for="consultantWelcome">پیام خوش‌آمد</label>
                     <textarea name="default_welcome_message" id="consultantWelcome" class="prof-input prof-input--area" rows="2"
@@ -199,7 +192,7 @@
             </details>
 
             <details class="prof-fold">
-                <summary>مشاور و شبکه‌های شخصی</summary>
+                <summary><span class="prof-premium__fold-icon"><i class="fas fa-user-tie" aria-hidden="true"></i></span><span class="prof-premium__fold-copy"><strong>مشاور و شبکه‌های شخصی</strong><small>تصویر شما و راه‌های ارتباطی</small></span></summary>
                 <div class="prof-fold-body">
                     <div class="prof-upload-row">
                         <div class="prof-photo">
@@ -238,10 +231,10 @@
             </details>
 
             <details class="prof-fold">
-                <summary>دفتر املاک</summary>
+                <summary><span class="prof-premium__fold-icon"><i class="fas fa-building" aria-hidden="true"></i></span><span class="prof-premium__fold-copy"><strong>دفتر املاک</strong><small>نشانی، تماس، موقعیت و کارت ویزیت</small></span></summary>
                 <div class="prof-fold-body">
                     <label class="prof-label" for="consultantAgencyAddress">آدرس</label>
-                    <textarea name="agency_address" id="consultantAgencyAddress" class="prof-input prof-input--area" rows="2"
+                    <textarea name="agency_address" id="consultantAgencyAddress" class="prof-input prof-input--area" autocomplete="street-address" rows="2"
                               placeholder="خیابان، پلاک…">{{ consultant_agency_address }}</textarea>
                     <div class="prof-field-grid">
                         <div>
@@ -251,18 +244,18 @@
                         </div>
                         <div>
                             <label class="prof-label" for="consultantAgencyWebsite">وبسایت</label>
-                            <input type="url" name="agency_website" id="consultantAgencyWebsite" class="prof-input"
+                            <input type="url" name="agency_website" id="consultantAgencyWebsite" class="prof-input" autocomplete="url"
                                    value="{{ consultant_agency_website }}" placeholder="https://…" dir="ltr">
                         </div>
                         <div>
                             <label class="prof-label" for="consultantAgencyLandline">تلفن ثابت</label>
                             <input type="text" name="agency_landline" id="consultantAgencyLandline" class="prof-input"
-                                   value="{{ consultant_agency_landline }}" placeholder="۰۲۱…" dir="ltr">
+                                   value="{{ consultant_agency_landline }}" placeholder="۰۲۱…" dir="ltr" inputmode="tel">
                         </div>
                         <div>
                             <label class="prof-label" for="consultantAgencyLandlineAlt">تلفن دوم</label>
                             <input type="text" name="agency_landline_alt" id="consultantAgencyLandlineAlt" class="prof-input"
-                                   value="{{ consultant_agency_landline_alt }}" placeholder="اختیاری" dir="ltr">
+                                   value="{{ consultant_agency_landline_alt }}" placeholder="اختیاری" dir="ltr" inputmode="tel">
                         </div>
                         <div>
                             <label class="prof-label" for="consultantAgencyLat">عرض</label>
@@ -316,8 +309,9 @@
                 </div>
             </details>
 
-            <div id="consultantProfileError" class="alert alert-danger modal-error prof-form-error" style="display: none;"></div>
+            <div id="consultantProfileError" class="alert alert-danger modal-error prof-form-error" role="alert" aria-live="assertive" style="display: none;"></div>
             <footer class="prof-form-foot">
+                <p class="prof-premium__save-hint"><i class="fas fa-circle-info" aria-hidden="true"></i> تغییرات بعد از ذخیره در صفحه عمومی شما اعمال می‌شود.</p>
                 <button type="submit" id="consultantProfileSubmitBtn" class="prof-save-btn">
                     <i class="fas fa-check" aria-hidden="true"></i> ذخیره پروفایل عمومی
                 </button>

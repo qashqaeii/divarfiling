@@ -177,6 +177,8 @@ class AdminAndroidCenterViewTests(TestCase):
         self.assertIn('compare=1', resp.content.decode())
 
     def test_sms_preview_json(self):
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         MobileDevice.objects.create(
             user=self.user,
             device_id='preview-device',

@@ -18,7 +18,7 @@
 | ID | Scope | Done when | State |
 |---|---|---|---|
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
-| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | Pending |
+| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A source prepared; reconciliation and runtime tests pending |
 | 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | Pending |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
@@ -58,12 +58,31 @@
 - Assign model-view permissions deliberately to delegated staff; this change intentionally changes access to exports for plain staff.
 - `new_users` and sales KPIs have alignment tests, but the full timezone definition and paid-order/fulfilment reconciliation still require a disposable database integration run.
 
-## Known gaps and next work (01)
+## Phase 01A — financial decisions and outbound-message permission boundaries
 
-- Finalize the role matrix for remaining sensitive endpoints (user JSON, card-transfer approval, marketing/SMS, withdrawals, forum and service rollout).
-- Audit paid-order, licence fulfilment and renewal invariants with representative database fixtures.
+- `can_review_card_transfer`: active staff superuser OR delegated staff holding BOTH `shop.change_cardtransfersubmission` and `shop.change_order`; all other staff are denied before querying the receipt.
+- `can_send_admin_sms`: active staff superuser OR delegated staff holding BOTH `accounts.change_marketingcampaign` and `accounts.add_smsmessagelog`. Applies to Marketing POST, Android update SMS POST/recipient-preview, Phonebook sync, Management Assistant send, automation toggle/manual run/configuration/test SMS. All permissions use Django's existing model permissions; no migration is needed.
+- Action buttons and modals in Sales/Support, send controls on Android/Marketing, and mutation controls on Management Assistant reflect the same restrictions. Read-only managers retain a useful analytics view rather than receiving misleading working buttons.
+- Direct Excel links in Sales, Support, Android and card-transfer review are only shown if the same per-report export role grants access; the endpoint remains the authoritative check.
+- Card-transfer `next` URLs are verified as same-host safe paths to block open external redirects (`//evil.example`).
+- Added negative/positive permission and redirect tests plus updated the previously staff-permissive view test fixtures. Existing service-level card-transfer tests assert atomic payment/fulfilment behavior and retry safety, but are not yet run in this environment.
+- This slice performs no SMS sends, payment approvals, database writes, migrations or production deployments.
+
+### Phase 01A verification contract
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_sensitive_actions accounts.tests.test_admin_management_assistant accounts.tests.test_admin_android_center accounts.tests.test_admin_support_center accounts.tests.test_marketing shop.tests.test_card_transfer_workflow --keepdb
+```
+
+Expected: nonprivileged staff receives HTTP 403 on sensitive POSTs; delegated/owner operators reach handler validation; finance approval remains idempotent; check all read-only screens for hidden actions and consistent RTL layout. **Do not claim this test suite passed until run against an isolated DB.**
+
+## Known gaps and next work (01B)
+
+- Continue with the remaining sensitive endpoints: user-management JSON, withdrawal workflows in Django Admin, lead-acquisition sends, public forum/moderation data, service rollout and stored audit trails.
+- Reconcile actual paid-order, card-transfer, licensing and renewal invariants using representative fixtures and bounded queries; improve report error states.
 - Review redirection and exceptions at moderation and backup operations; audit unauthorized access logs.
-- Complete the route/action inventory and the dependency-based P0 list before redesigning information hierarchy.
+- Complete all 23 screen route/action inventory; document current UX and role permission matrix before shared design-system rollout.
 - Run focused tests with dependencies and a disposable DB; add suitable CI only after understanding the target test settings.
 
 **Execution limitation:** GitHub connector reads and commits source but cannot execute the Django test suite. The available local container cannot access GitHub over the network and has no Django installed. This is explicitly **not** a passing runtime/CI result. Suggested validation:

@@ -13,9 +13,11 @@
 {% endblock %}
 
 {% block admin_panel_header_actions %}
-<a href="{{ export_urls.open_tickets }}" class="ecc-btn ecc-btn--primary" title="خروجی تیکت‌ها">
+{% if 'open_tickets' in admin_export_allowed_keys %}
+        <a href="{{ export_urls.open_tickets }}" class="ecc-btn ecc-btn--primary" title="خروجی تیکت‌ها">
     <i class="fas fa-file-excel"></i>
 </a>
+        {% endif %}
 <a href="{{ admin_list_urls.tickets }}" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin — تیکت">
     <i class="fas fa-cog"></i>
 </a>
@@ -109,9 +111,11 @@
             <h2><i class="fas fa-headset"></i> تیکت‌های باز</h2>
             <p>{{ snapshot_counts.open_tickets|to_persian_digits }} مورد · پیش‌نمایش {{ table_preview_rows|to_persian_digits }}</p>
         </div>
+        {% if 'open_tickets' in admin_export_allowed_keys %}
         <a href="{{ export_urls.open_tickets }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -152,9 +156,11 @@
             <h2><i class="fas fa-money-check"></i> کارت‌به‌کارت معلق</h2>
             <p>{{ snapshot_counts.pending_card_transfers|to_persian_digits }} مورد</p>
         </div>
+        {% if 'card_transfers_pending' in admin_export_allowed_keys %}
         <a href="{{ export_urls.card_transfers }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -181,6 +187,7 @@
                         {% if row.receipt_url %}
                         <a href="{{ row.receipt_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">رسید</a>
                         {% endif %}
+                        {% if admin_can_review_card_transfers %}
                         <button type="button"
                                 class="ecc-btn ecc-btn--primary ecc-btn--sm js-card-approve"
                                 data-action-url="{{ row.approve_url }}"
@@ -196,6 +203,9 @@
                                 data-user="{{ row.user_display }}">
                             رد
                         </button>
+                        {% else %}
+                        <span class="adm-muted">فقط مشاهده</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
@@ -212,9 +222,11 @@
             <h2><i class="fas fa-wallet"></i> برداشت معلق</h2>
             <p>{{ snapshot_counts.pending_withdrawals|to_persian_digits }} مورد</p>
         </div>
+        {% if 'pending_withdrawals' in admin_export_allowed_keys %}
         <a href="{{ export_urls.withdrawals }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -279,7 +291,9 @@
 
 <section id="ecc-support" aria-hidden="true"></section>
 
+{% if admin_can_review_card_transfers %}
 {% include 'accounts/partials/admin_card_transfer_modals.html' %}
+{% endif %}
 
 {% endblock %}
 

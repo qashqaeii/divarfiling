@@ -7,6 +7,9 @@ from django.utils import timezone
 
 from accounts.services.admin_dashboard import ALL_TIME_DAYS, _range_label_fa, effective_range_days
 from accounts.services.admin_management_assistant import build_management_insights
+from accounts.services.admin_action_permissions import can_review_card_transfer, can_send_admin_sms
+from accounts.services.admin_export_permissions import can_export_report
+from accounts.services.admin_exports import EXPORT_REGISTRY
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
 from affiliates.models import Withdrawal
 from shop.models import Order
@@ -122,6 +125,11 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
 
     return {
         'admin_panel_shell': True,
+        'admin_can_review_card_transfers': can_review_card_transfer(request.user),
+        'admin_can_send_sms': can_send_admin_sms(request.user),
+        'admin_export_allowed_keys': tuple(
+            key for key in EXPORT_REGISTRY if can_export_report(request.user, key)
+        ),
         'admin_management_ai_enabled': is_management_ai_enabled(),
         'chart_days': days,
         'chart_days_effective': effective_range_days(days),

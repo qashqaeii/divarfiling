@@ -10,6 +10,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseNotFound, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, TemplateView
@@ -25,6 +26,7 @@ from accounts.services.admin_dashboard import get_command_center_context
 from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_export_permissions import can_export_report
+from accounts.services.admin_action_permissions import can_review_card_transfer, can_send_admin_sms
 from accounts.services.admin_marketing import (
     AUTOMATION_FLOWS,
     MESSAGE_TEMPLATE_CATALOG,
@@ -394,6 +396,8 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
         return ctx
 
     def post(self, request, *args, **kwargs):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال پیامک ندارید.')
         if request.POST.get('confirm_send') != '1':
             messages.error(request, 'برای ارسال، تأیید قطعی را فعال کنید.')
             return redirect('admin_panel_marketing')
@@ -507,6 +511,8 @@ class AdminPhonebookSyncView(StaffRequiredMixin, View):
     """همگام‌سازی یک‌کلیکی کاربران با دفترچه تلفن فراز."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             result = sync_users_to_phonebook()
         except PhonebookSyncError as exc:
@@ -804,7 +810,9 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
 
 def _card_transfer_redirect(request):
     next_url = (request.POST.get('next') or '').strip()
-    if next_url.startswith('/'):
+    if next_url.startswith('/') and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
         return redirect(next_url)
     return redirect(reverse('admin_panel_sales') + '#sales-card-transfers')
 
@@ -815,6 +823,8 @@ class AdminCardTransferApproveView(StaffRequiredMixin, View):
     http_method_names = ['post']
 
     def post(self, request, pk):
+        if not can_review_card_transfer(request.user):
+            raise PermissionDenied('مجوز بررسی پرداخت کارت‌به‌کارت را ندارید.')
         from shop.models import CardTransferSubmission
         from shop.services.card_transfer_workflow import CardTransferWorkflowError
         from shop.services.order_fulfillment import approve_card_transfer
@@ -846,6 +856,8 @@ class AdminCardTransferRejectView(StaffRequiredMixin, View):
     http_method_names = ['post']
 
     def post(self, request, pk):
+        if not can_review_card_transfer(request.user):
+            raise PermissionDenied('مجوز بررسی پرداخت کارت‌به‌کارت را ندارید.')
         from shop.models import CardTransferSubmission
         from shop.services.card_transfer_workflow import CardTransferWorkflowError
         from shop.services.order_fulfillment import reject_card_transfer
@@ -1031,6 +1043,8 @@ class AdminAndroidSmsPreviewView(StaffRequiredMixin, View):
     """پیش‌نمایش گیرندگان نسخه قدیمی اندروید."""
 
     def get(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز مشاهده گیرندگان پیامک ندارید.')
         try:
             data = preview_segment('android_outdated', sample_size=10)
         except ValueError as exc:
@@ -1046,6 +1060,8 @@ class AdminAndroidSmsSendView(StaffRequiredMixin, View):
     """ارسال پیامک Faraz به کاربران با نسخه قدیمی اندروید."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال پیامک ندارید.')
         if request.POST.get('confirm_send') != '1':
             messages.error(request, 'برای ارسال، تأیید قطعی را فعال کنید.')
             return redirect('admin_panel_android')
@@ -1231,6 +1247,8 @@ class AdminManagementAssistantSendView(StaffRequiredMixin, View):
     """ارسال پیام برای یک پیشنهاد مدیریتی."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1262,6 +1280,8 @@ class AdminManagementAssistantAutomationView(StaffRequiredMixin, View):
     """فعال/غیرفعال کردن خودکارسازی."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1298,6 +1318,8 @@ class AdminManagementAssistantAutomationRunView(StaffRequiredMixin, View):
     """اجرای دستی یا Dry Run یک Rule."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1318,6 +1340,8 @@ class AdminManagementAssistantAutomationSettingsView(StaffRequiredMixin, View):
     """ذخیره تنظیمات Safe یک Rule."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1374,6 +1398,8 @@ class AdminManagementAssistantAutomationTestSendView(StaffRequiredMixin, View):
     """ارسال آزمایشی پیام Rule به staff."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:

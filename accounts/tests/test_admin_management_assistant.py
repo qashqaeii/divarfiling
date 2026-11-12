@@ -222,7 +222,7 @@ class ManagementAssistantServiceTests(TestCase):
 class ManagementAssistantViewTests(TestCase):
     def setUp(self):
         self.staff = User.objects.create_user(
-            username='staff2', password='x', phone='09120000103', is_staff=True,
+            username='staff2', password='x', phone='09120000103', is_staff=True, is_superuser=True,
         )
         self.client = Client()
         self.client.force_login(self.staff)

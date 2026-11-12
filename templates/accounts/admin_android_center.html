@@ -15,9 +15,11 @@
 {% endblock %}
 
 {% block admin_panel_header_actions %}
+{% if 'android_devices' in admin_export_allowed_keys %}
 <a href="{{ export_urls.devices }}" class="ecc-btn ecc-btn--primary" title="خروجی دستگاه‌ها">
     <i class="fas fa-file-excel"></i>
 </a>
+{% endif %}
 <a href="{{ admin_list_urls.devices }}" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
     <i class="fas fa-cog"></i>
 </a>
@@ -46,7 +48,9 @@
             </div>
             <div class="aac-hero__actions">
                 <a href="#aac-sms" class="aac-btn aac-btn--primary"><i class="fas fa-comment-sms"></i> پیامک آپدیت</a>
-                <a href="{{ export_urls.devices }}" class="aac-btn aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+                {% if 'android_devices' in admin_export_allowed_keys %}
+<a href="{{ export_urls.devices }}" class="aac-btn aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+{% endif %}
                 <a href="{{ admin_list_urls.devices }}" class="aac-btn aac-btn--ghost" target="_blank" rel="noopener"><i class="fas fa-database"></i> Admin</a>
             </div>
         </div>
@@ -200,6 +204,8 @@
                 <strong>همه روی آخرین نسخه هستند</strong>
                 <span>گیرنده‌ای برای پیامک آپدیت وجود ندارد.</span>
             </div>
+            {% elif not admin_can_send_sms %}
+            <div class="aac-empty"><i class="fas fa-shield-halved"></i><strong>ارسال پیامک نیازمند مجوز است</strong><span>آمار به‌روزرسانی قابل مشاهده است؛ انتخاب گیرنده و ارسال فقط برای مسئول مجاز فعال است.</span></div>
             {% else %}
             <form method="post" action="{{ sms.send_url }}" class="aac-sms-grid">
                 {% csrf_token %}
@@ -365,7 +371,9 @@
             <div class="aac-tab-panel is-active" data-panel="registrations" role="tabpanel">
                 <div class="aac-table-tools">
                     <input type="search" class="aac-table-search" data-aac-search="aac-reg-table" placeholder="جستجو…">
-                    <a href="{{ export_urls.devices }}" class="aac-btn aac-btn--sm aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+                    {% if 'android_devices' in admin_export_allowed_keys %}
+<a href="{{ export_urls.devices }}" class="aac-btn aac-btn--sm aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+{% endif %}
                 </div>
                 <div class="aac-table-wrap">
                     <table class="aac-table" id="aac-reg-table">
@@ -402,7 +410,9 @@
             <div class="aac-tab-panel" data-panel="usage" role="tabpanel">
                 <div class="aac-table-tools">
                     <input type="search" class="aac-table-search" data-aac-search="aac-usage-table" placeholder="جستجو…">
-                    <a href="{{ export_urls.usage }}" class="aac-btn aac-btn--sm aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+                    {% if 'android_active_devices' in admin_export_allowed_keys %}
+<a href="{{ export_urls.usage }}" class="aac-btn aac-btn--sm aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+{% endif %}
                 </div>
                 <div class="aac-table-wrap">
                     <table class="aac-table" id="aac-usage-table">

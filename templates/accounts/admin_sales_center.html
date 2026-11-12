@@ -10,9 +10,11 @@
 {% block admin_panel_header_subtitle %}بازه: {{ range_label|default:admin_panel_range_label_fa }}{% if admin_panel_compare %} · مقایسه{% endif %}{% endblock %}
 
 {% block admin_panel_header_actions %}
+{% if 'paid_orders' in admin_export_allowed_keys %}
 <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--primary" title="خروجی سفارش‌های پرداخت‌شده">
     <i class="fas fa-file-excel"></i>
 </a>
+{% endif %}
 <a href="{% url 'admin_panel_recovery_center' %}?days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--ghost" title="مرکز بازیابی">
     <i class="fas fa-rotate-left"></i>
 </a>
@@ -164,9 +166,11 @@
             <h2><i class="fas fa-list"></i> آخرین سفارش‌ها</h2>
             <p>۵ مورد اخیر</p>
         </div>
-        <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+        {% if 'paid_orders' in admin_export_allowed_keys %}
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             خروجی <i class="fas fa-file-excel"></i>
         </a>
+{% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -240,9 +244,11 @@
             <h2><i class="fas fa-circle-xmark"></i> پرداخت‌های ناموفق امروز</h2>
             <p>{{ snapshot_counts.orders_failed_today|to_persian_digits }} مورد امروز</p>
         </div>
-        <a href="{% url 'admin_panel_export' 'failed_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+        {% if 'failed_orders' in admin_export_allowed_keys %}
+<a href="{% url 'admin_panel_export' 'failed_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             خروجی <i class="fas fa-file-excel"></i>
         </a>
+{% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -282,9 +288,11 @@
             <a href="{{ recovery_center_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
                 بازیابی <i class="fas fa-rotate-left"></i>
             </a>
-            <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            {% if 'pending_orders' in admin_export_allowed_keys %}
+<a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
                 خروجی <i class="fas fa-file-excel"></i>
             </a>
+{% endif %}
         </div>
     </header>
     <div class="adm-table-wrap">

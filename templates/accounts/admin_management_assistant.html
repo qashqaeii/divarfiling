@@ -25,7 +25,7 @@
 
 {% block admin_panel_content %}
 {% with tab_qs='?days='|add:admin_panel_range_key %}
-<div class="maa-page" id="maa-page"
+<div class="maa-page" id="maa-page" data-can-send-sms="{% if admin_can_send_sms %}1{% else %}0{% endif %}"
      data-preview-url="{% url 'admin_panel_assistant_preview' %}"
      data-send-url="{% url 'admin_panel_assistant_send' %}"
      data-automation-url="{% url 'admin_panel_assistant_automation' %}"
@@ -35,6 +35,11 @@
      data-automation-settings-url="{% url 'admin_panel_assistant_automation_settings' %}"
      data-automation-message-preview-url="{% url 'admin_panel_assistant_automation_message_preview' %}"
      data-automation-test-send-url="{% url 'admin_panel_assistant_automation_test_send' %}">
+    {% if not admin_can_send_sms %}
+    <p class="ecc-cmd-actions-empty" role="status">
+        دستیار در حالت فقط مشاهده است؛ ارسال پیام و تغییر اتوماسیون نیازمند مجوز مدیریت پیامک است.
+    </p>
+    {% endif %}
 
     <div class="maa-summary" aria-label="خلاصه اولویت‌ها">
         <div class="maa-kpi" data-severity="critical">
@@ -129,7 +134,7 @@
                     </a>
                     {% elif item.segment_key or item.message_template %}
                         {% if not item.automation_active %}
-                        <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm maa-btn-send maa-action-primary"
+                        <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm maa-btn-send maa-action-primary" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز ارسال پیامک"{% endif %}
                                 data-insight="{{ item.key }}"
                                 data-title="{{ item.title }}"
                                 data-count="{{ item.count }}">
@@ -147,7 +152,7 @@
                         {% if item.view_url %}
                             {% if item.segment_key or item.message_template %}
                                 {% if not item.automation_active %}
-                                <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-send"
+                                <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-send" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز ارسال پیامک"{% endif %}
                                         data-insight="{{ item.key }}"
                                         data-title="{{ item.title }}"
                                         data-count="{{ item.count }}">
@@ -162,7 +167,7 @@
                             {% endif %}
                         {% endif %}
                         {% if item.automation_available and item.automation_key %}
-                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate"
+                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز اتوماسیون"{% endif %}
                                 data-rule="{{ item.automation_key }}">
                             خودکارسازی
                         </button>
@@ -400,7 +405,7 @@
                 <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-preview-recipients">پیش‌نمایش کاربران</button>
             </div>
             <div class="maa-modal-foot-group maa-modal-foot-group--primary">
-                <button type="button" class="ecc-btn ecc-btn--primary" id="maa-confirm-send">ارسال</button>
+                <button type="button" class="ecc-btn ecc-btn--primary" id="maa-confirm-send" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>ارسال</button>
             </div>
         </footer>
     </div>
@@ -431,7 +436,7 @@
                     <section class="maa-auto-section maa-auto-section--card">
                         <div class="maa-auto-section-head">
                             <h4><i class="fas fa-sliders-h" aria-hidden="true"></i> تنظیمات Rule</h4>
-                            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-toggle-settings">ویرایش</button>
+                            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-toggle-settings" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>ویرایش</button>
                         </div>
                         <dl class="maa-auto-grid maa-auto-settings-view" id="maa-auto-settings-view">
                             <div class="maa-auto-kv"><dt>Cadence</dt><dd id="maa-auto-cadence-view">—</dd></div>
@@ -461,7 +466,7 @@
                                 </label>
                             </div>
                             <div class="maa-auto-form-actions">
-                                <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" id="maa-auto-save-settings">ذخیره تنظیمات</button>
+                                <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" id="maa-auto-save-settings" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>ذخیره تنظیمات</button>
                                 <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-cancel-settings">انصراف</button>
                             </div>
                         </form>
@@ -507,11 +512,11 @@
                                 <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-preview-message">
                                     <i class="fas fa-eye" aria-hidden="true"></i> Preview
                                 </button>
-                                <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" id="maa-auto-save-message">
+                                <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" id="maa-auto-save-message" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>
                                     <i class="fas fa-save" aria-hidden="true"></i> ذخیره پیام
                                 </button>
-                                <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-reset-message">بازگشت به پیش‌فرض</button>
-                                <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-test-send">ارسال آزمایشی</button>
+                                <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-reset-message" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>بازگشت به پیش‌فرض</button>
+                                <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-test-send" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>ارسال آزمایشی</button>
                             </div>
                         </div>
                     </section>
@@ -553,12 +558,12 @@
         </div>
         <footer class="maa-modal-foot maa-auto-foot">
             <div class="maa-modal-foot-group maa-modal-foot-group--primary">
-                <button type="button" class="ecc-btn ecc-btn--primary" id="maa-confirm-auto">فعال کردن</button>
+                <button type="button" class="ecc-btn ecc-btn--primary" id="maa-confirm-auto" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>فعال کردن</button>
             </div>
             <div class="maa-modal-foot-group maa-modal-foot-group--secondary">
                 <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-refresh-audience">پیش‌نمایش مخاطبان</button>
-                <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-dry-run">اجرای آزمایشی</button>
-                <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-run-now">اجرای الان</button>
+                <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-dry-run" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>اجرای آزمایشی</button>
+                <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-run-now" {% if not admin_can_send_sms %}disabled title="نیازمند مجوز مدیریت پیامک"{% endif %}>اجرای الان</button>
             </div>
         </footer>
     </div>

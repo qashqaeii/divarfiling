@@ -5,7 +5,7 @@
      data-effective-key="{{ account_avatar_effective_key }}"
      data-has-custom="{% if account_avatar_has_custom %}1{% else %}0{% endif %}"></div>
 
-<div id="avatarPickerModal" class="modal-professional prof-avatar-modal" onclick="closeProfessionalModal(event, 'avatarPickerModal')" role="dialog" aria-modal="true" aria-labelledby="avatarPickerModalTitle">
+<div id="avatarPickerModal" class="modal-professional prof-avatar-modal prof-premium-modal" onclick="closeProfessionalModal(event, 'avatarPickerModal')" role="dialog" aria-modal="true" aria-labelledby="avatarPickerModalTitle" aria-hidden="true">
     <div class="modal-content-professional prof-avatar-modal__dialog" onclick="event.stopPropagation()">
         <div class="modal-header-professional">
             <div>
@@ -38,7 +38,7 @@
                 </button>
                 {% endfor %}
             </div>
-            <p id="avatarPickerError" class="alert alert-danger modal-error" style="display: none;"></p>
+            <p id="avatarPickerError" class="alert alert-danger modal-error" role="alert" aria-live="assertive" style="display: none;"></p>
         </div>
         <div class="modal-footer-professional">
             <button type="button" class="btn btn-secondary" onclick="closeProfessionalModal(event, 'avatarPickerModal')">انصراف</button>

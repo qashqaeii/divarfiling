@@ -35,7 +35,7 @@ from accounts.services.sms import get_sms_balance_snapshot
 
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
 from licenses.models import License, LicenseActivation
-from shop.models import CardTransferSubmission, LicensePlan, Order, Product
+from shop.models import CardTransferSubmission, LicensePlan, Order, OrderRenewalItem, Product
 from mobile_api.models import MobileDevice
 from workspace.models import (
     CRMAgency,
@@ -70,7 +70,8 @@ PAYMENT_METHOD_LABELS = dict(Order.PAYMENT_METHOD_CHOICES)
 
 
 def _today():
-    return timezone.now().date()
+    """Calendar date in the configured/active business timezone, not UTC."""
+    return timezone.localdate()
 
 
 ALL_TIME_DAYS = 0
@@ -170,14 +171,14 @@ def get_system_start_at():
 
 def get_overview_stats() -> Dict[str, Any]:
     now = timezone.now()
-    today = now.date()
+    today = _today()
     week_ago = today - timedelta(days=7)
     month_ago = today - timedelta(days=30)
     system_start_at = get_system_start_at()
     system_uptime_days = None
     if system_start_at:
         start_local = timezone.localtime(system_start_at) if timezone.is_aware(system_start_at) else system_start_at
-        system_uptime_days = max(0, (now.date() - start_local.date()).days)
+        system_uptime_days = max(0, (today - start_local.date()).days)
 
     users_total = User.objects.count()
     users_active = User.objects.filter(is_active=True).count()
@@ -1395,6 +1396,20 @@ def get_repeat_purchase_orders_qs():
     )
 
 
+def get_formal_renewal_orders_qs():
+    """Paid repeat orders renewing an existing key, including multi-license orders.
+
+    OrderRenewalItem is a one-to-many relation; use EXISTS rather than joining
+    so a multi-license renewal contributes exactly one order to all KPIs.
+    """
+    has_renewal_item = OrderRenewalItem.objects.filter(order_id=OuterRef('pk'))
+    return (
+        get_repeat_purchase_orders_qs()
+        .alias(has_renewal_item=Exists(has_renewal_item))
+        .filter(Q(renewal_license__isnull=False) | Q(has_renewal_item=True))
+    )
+
+
 def get_licensing_center_stats() -> Dict[str, Any]:
     """آمار مرکز لایسنس + نرخ تمدید (تمدید رسمی یا خرید مجدد لایسنس)."""
     now = timezone.now()
@@ -1412,8 +1427,8 @@ def get_licensing_center_stats() -> Dict[str, Any]:
         .count()
     )
     renewal_orders = repeat_qs.count()
-    formal_renewal_orders = repeat_qs.filter(renewal_license__isnull=False).count()
-    new_key_repurchase_orders = repeat_qs.filter(renewal_license__isnull=True).count()
+    formal_renewal_orders = get_formal_renewal_orders_qs().count()
+    new_key_repurchase_orders = renewal_orders - formal_renewal_orders
     renewal_rate_pct = round((renewed_users / buyers_unique) * 100, 1) if buyers_unique else 0.0
     renewal_revenue = int(repeat_qs.aggregate(t=Sum('amount'))['t'] or 0)
     renewals_month = repeat_qs.filter(

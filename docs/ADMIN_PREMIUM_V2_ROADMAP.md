@@ -18,7 +18,7 @@
 | ID | Scope | Done when | State |
 |---|---|---|---|
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
-| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A source prepared; reconciliation and runtime tests pending |
+| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A committed; 01B fixes committed pending runtime verification; remaining integrity audit in 01C |
 | 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | Pending |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
@@ -77,10 +77,28 @@ python manage.py test accounts.tests.test_admin_sensitive_actions accounts.tests
 
 Expected: nonprivileged staff receives HTTP 403 on sensitive POSTs; delegated/owner operators reach handler validation; finance approval remains idempotent; check all read-only screens for hidden actions and consistent RTL layout. **Do not claim this test suite passed until run against an isolated DB.**
 
-## Known gaps and next work (01B)
+## Phase 01B — local dates, multi-license renewals, safe payment reconciliation
 
-- Continue with the remaining sensitive endpoints: user-management JSON, withdrawal workflows in Django Admin, lead-acquisition sends, public forum/moderation data, service rollout and stored audit trails.
-- Reconcile actual paid-order, card-transfer, licensing and renewal invariants using representative fixtures and bounded queries; improve report error states.
+- All command-center calendar-day and "today" KPI date ranges use `timezone.localdate()`, not the UTC date from `timezone.now().date()`. The overview's uptime day calculation also uses the business-local day.
+- Formal renewal classification now includes both `Order.renewal_license` (legacy/single-key) and any `OrderRenewalItem` (multi-key). An `Exists` predicate avoids multiplying order counts when one order renews multiple keys. The licensing center and global summary use one helper.
+- Gateway mismatch recovery only attempts Zibal verification for Zibal-method transactions. Legacy `CARD-...` transaction IDs are excluded even if their method was miscoded.
+- The gateway reconciliation queue is processed oldest-first and handles one payment-state update failure without abandoning other transactions. A separate fulfilment error cannot retroactively hide a repaired paid-state mismatch; later reconciliation handles pending fulfilment.
+- Six regression tests cover Tehran midnight across UTC boundaries, paid-order KPI dates, multi- and single-key renewal classification, payment-method filtering, partial failure isolation and fulfillment failure accounting.
+- No production records, SMS, external payment verification, migrations or deployments were run; tests were added but not executed in this connector-only environment.
+
+### Phase 01B test commands (isolated database only)
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_financial_integrity accounts.tests.test_admin_licenses_center accounts.tests.test_admin_panel_phase1 accounts.tests.test_admin_sales_center shop.tests.test_payment shop.tests.test_card_transfer_workflow --keepdb
+```
+
+Treat any passing static source checks as different from Django test execution. Payment reconciliation paths must not be exercised against live gateways in tests; patched gateway calls are used in added tests.
+
+## Known gaps and next work (01C)
+
+- Complete sensitive permissions for user-management JSON, withdrawal workflows in Django Admin, lead-acquisition sends, forum moderation, service rollout and stored audit trails.
+- Add read-only diagnostics for paid orders missing fulfilment evidence, `paid_at` timestamp and gateway transaction mismatches; audit legacy data consistency. Never silently grant licenses from diagnostics.
 - Review redirection and exceptions at moderation and backup operations; audit unauthorized access logs.
 - Complete all 23 screen route/action inventory; document current UX and role permission matrix before shared design-system rollout.
 - Run focused tests with dependencies and a disposable DB; add suitable CI only after understanding the target test settings.

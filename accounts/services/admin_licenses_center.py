@@ -21,6 +21,7 @@ from accounts.services.admin_dashboard import (
     _previous_period_bounds,
     _range_label_fa,
     get_expiring_licenses,
+    get_formal_renewal_orders_qs,
     get_recent_renewal_orders,
     get_repeat_purchase_orders_qs,
     get_users_without_license_preview,
@@ -59,7 +60,9 @@ def _renewal_revenue_between(start, end) -> int:
 
 
 def _formal_renewals_between(start, end) -> int:
-    return _orders_in_range_qs(start, end).filter(renewal_license__isnull=False).count()
+    return get_formal_renewal_orders_qs().filter(
+        paid_at__date__gte=start, paid_at__date__lte=end,
+    ).count()
 
 
 def _renewal_rate_period(start, end) -> float:
@@ -280,7 +283,7 @@ def _build_range_kpi_cards(
             'accent': 'cyan',
             'status': 'ok' if renewal_rate >= 15 else 'warn',
             'coverage_note': (
-                'خرید مجدد بدون renewal_license در شمار رسمی تمدید نیست؛ نرخ ممکن است پوشش ناقص داشته باشد.'
+                'خرید مجدد کلید جدید در دسته تمدید همان کلید قرار نمی‌گیرد؛ این شاخص سهم خرید مجدد را نیز شامل می‌شود.'
                 if new_key_repurchase
                 else ''
             ),

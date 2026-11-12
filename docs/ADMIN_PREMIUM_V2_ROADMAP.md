@@ -20,7 +20,7 @@
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
 | 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A–01C committed; 01D sensitive admin access guarded; runtime validation remains OPEN |
 | 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A–02B committed; 02C functional table/filter fixes prepared; runtime/browser QA remains open |
-| 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | 03A command decision integrity prepared; remaining Command UX and integration QA open |
+| 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | 03A committed; 03B lean chart + accurate export range prepared; runtime/CI QA remains OPEN |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
 | 05 | Licenses, renewals and device seats | Transparent lifecycle and safe entitlement operations | Pending |
 | 06 | Unified user 360° | Journey across orders, devices, usage and support | Pending |
@@ -213,12 +213,30 @@ python manage.py test accounts.tests.test_admin_command_center_decisions account
 
 A browser check must verify responsive Command queue, the no-count SMS alert, RTL focus, authorized download links, drilldowns into the original queues, and light/dark variants. Source-level checks are **not** a green Django/CI result.
 
-## Remaining gates before phase 03B
+## Phase 03B — Command runtime-risk audit and unnecessary query elimination
+
+- Checked the current `main` and GitHub Actions status: **no workflow runs are available**, so there is no evidence of a successful Django/CI run. The connected workspace does not have a network-accessible checkout, and Django is not installed in its Python runtime.
+- Confirmed that Command consumes only `revenue_analytics` but called `build_charts_payload(days)`, which also queries user cohorts, product revenue, license and order statuses, marketing SMS gauges, CRM totals and other unrelated visualizations. The full builder was needlessly executing those expensive queries on each Command page load.
+- Extracted the exact existing revenue chart construction into `_revenue_analytics_from_series`. Both `build_charts_payload` and the new `get_command_revenue_chart` use this **single source**; only the latter runs on Command. Revenue, order count, AOV, LTV, conversion, labels, colors and dataset contract are unchanged.
+- Identified a report-window mismatch: the Command dashboard offers `days=all` or `days=1`, while `AdminSystemSummaryView` only supports trend windows from **7 to 90 days** (and silently defaults invalid values to 30). Command JSON download now passes the supported trend window explicitly (all → 30, today → 7, other supported windows unchanged), with the **actual trend window** disclosed on the control. All-time overview totals in the JSON remain separate from the trend-window semantics.
+- Added four integration regression tests: compare compact and full chart payloads for three periods, block loading of unrelated chart services, assert Command never calls the full builder, and check HTML export-window consistency on all time selectors. These Django tests are source-only additions until run in a disposable database.
+- Confirmed existing queue anchor targets from both main and included Sales/Support/Affiliates templates. No new route, card, period KPI, payment action, license action, data migration, or Production deployment was introduced.
+
+### Phase 03B validation gate (not yet executed)
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_command_center_integration accounts.tests.test_admin_command_center_decisions accounts.tests.test_admin_dashboard accounts.tests.test_admin_panel_phase1 accounts.tests.test_admin_premium_v2_hierarchy accounts.tests.test_admin_system_summary --keepdb
+```
+
+**Next:** run the accumulated 00–03 tests in isolated PostgreSQL staging and review the Command page in a browser at desktop/mobile widths before moving to phase 04 payment and sales workflows. Do not diagnose another speculative UI issue in lieu of this gate.
+
+## Remaining gates before phase 04
 
 - Execute the accumulated phase 00–01 Django suites in isolated staging, with real PostgreSQL test DB. Resolve failures once from evidence; avoid speculative edit/revert cycles.
 - Audit existing affiliate payout concurrency and run proper DB transaction tests before activating concurrent settlement; no new auto-payout feature was added here.
 - Remaining platform privileged operations (forum moderation input limits and service-rollout toggles) should be handled as real, reproducible defects when their module phases arrive.
-- Stage 03B next: prioritize any remaining real Command Center regressions from full Django/browser QA and integrate only if reproducible; then proceed to operations and support workflows.
+- Stage 04 follows validation: sales/order/payment operations, with one reliable lifecycle and clear recovery states. Avoid entering a cosmetic rewrite loop.
 
 
 

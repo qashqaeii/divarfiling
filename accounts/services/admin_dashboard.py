@@ -574,16 +574,11 @@ def get_pending_withdrawals(limit: int = TABLE_FETCH_LIMIT):
     )
 
 
-def build_charts_payload(days: int = 30) -> Dict[str, Any]:
-    revenue = get_revenue_series(days)
-    orders = get_order_count_series(days)
-    signups = get_user_registration_series(days)
-    order_status = get_order_status_breakdown()
-    license_status = get_license_status_breakdown()
-    payment_methods = get_payment_method_breakdown()
-    plan_sales = get_plan_sales_breakdown()
-    product_revenue = get_product_revenue()
+def _revenue_analytics_from_series(revenue: Dict[str, List], orders: Dict[str, List]) -> Dict[str, Any]:
+    """Build the existing three-series revenue chart from only its inputs.
 
+    Keeps its dataset/metric contract identical for Command and full analytics.
+    """
     aov_values = []
     for rev, cnt in zip(revenue['values'], orders['values']):
         aov_values.append(int(rev / cnt) if cnt else 0)
@@ -636,6 +631,28 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
                 'conversion_rate': conversion,
             },
         },
+    }
+
+
+def get_command_revenue_chart(days: int = 30) -> Dict[str, Any]:
+    """Only chart needed by Command; do not trigger unrelated dashboard queries."""
+    return _revenue_analytics_from_series(
+        get_revenue_series(days), get_order_count_series(days),
+    )
+
+
+def build_charts_payload(days: int = 30) -> Dict[str, Any]:
+    revenue = get_revenue_series(days)
+    orders = get_order_count_series(days)
+    signups = get_user_registration_series(days)
+    order_status = get_order_status_breakdown()
+    license_status = get_license_status_breakdown()
+    payment_methods = get_payment_method_breakdown()
+    plan_sales = get_plan_sales_breakdown()
+    product_revenue = get_product_revenue()
+
+    return {
+        **_revenue_analytics_from_series(revenue, orders),
         'revenue_trend': {
             'type': 'line',
             'labels': revenue['labels'],
@@ -1265,7 +1282,7 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
         decision_summary = f'{high_queues} دسته اولویت‌دار برای پیگیری'
     else:
         decision_summary = 'هیچ دسته بحرانی یا با اولویت بالا در صف نیست'
-    charts_full = build_charts_payload(days)
+    charts = get_command_revenue_chart(days)
 
     return {
         'stats': stats,
@@ -1284,7 +1301,7 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
         'licensing_stats': licensing_stats,
         'health_indicators': build_health_indicators(stats, sms_balance),
         'system_meta': get_system_meta(),
-        'charts': {'revenue_analytics': charts_full['revenue_analytics']},
+        'charts': charts,
         'chart_days': days,
     }
 

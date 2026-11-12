@@ -150,6 +150,11 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
                 if item.get('href') != '/admin/'
             ]
         ctx['chart_days'] = days
+        # Aggregate JSON supports trends for 7..90 days, unlike the Command
+        # period selector (1 day or all time). Make the export window explicit.
+        ctx['system_summary_trend_days'] = (
+            30 if range_key == 'all' else max(7, min(days, 90))
+        )
         ctx['admin_panel_range_key'] = range_key
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
         ctx['assistant_preview'] = get_assistant_preview()

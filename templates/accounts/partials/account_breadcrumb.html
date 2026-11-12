@@ -1,16 +1,48 @@
-<nav class="mk-account-breadcrumb" aria-label="مسیر">
-    <a href="{% url 'home' %}"><i class="fas fa-house" aria-hidden="true"></i></a>
-    <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
-    <a href="{{ dashboard_tab_urls.overview }}">حساب کاربری</a>
-    <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
-    <span class="mk-account-breadcrumb__current">
-        {% if active_tab == 'overview' %}نمای کلی
-        {% elif active_tab == 'orders' %}سفارش‌ها
-        {% elif active_tab == 'licenses' %}لایسنس‌ها
-        {% elif active_tab == 'downloads' %}دانلود اپ‌ها
-        {% elif active_tab == 'transactions' %}تراکنش‌ها
-        {% elif active_tab == 'affiliate' %}همکاری در فروش
-        {% elif active_tab == 'profile' %}پروفایل
-        {% else %}حساب کاربری{% endif %}
-    </span>
-</nav>
+<header class="mk-account-page-head mk-account-page-head--premium" aria-label="عنوان بخش حساب">
+    <div class="mk-account-page-head__content">
+        <nav class="mk-account-breadcrumb" aria-label="مسیر صفحه">
+            <a class="mk-account-breadcrumb__home" href="{% url 'home' %}" aria-label="صفحه اصلی"><i class="fas fa-house" aria-hidden="true"></i><span>خانه</span></a>
+            <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
+            <a href="{{ dashboard_tab_urls.overview }}">حساب کاربری</a>
+            <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
+            <span class="mk-account-breadcrumb__current" aria-current="page">
+                {% if active_tab == 'overview' %}نمای کلی
+                {% elif active_tab == 'orders' %}سفارش‌ها
+                {% elif active_tab == 'licenses' %}لایسنس‌ها
+                {% elif active_tab == 'downloads' %}دانلود اپ‌ها
+                {% elif active_tab == 'transactions' %}تراکنش‌ها
+                {% elif active_tab == 'affiliate' %}همکاری در فروش
+                {% elif active_tab == 'profile' %}پروفایل
+                {% else %}حساب کاربری{% endif %}
+            </span>
+        </nav>
+        <span class="mk-account-page-head__eyebrow">مرکز مدیریت حساب شما</span>
+        <h1 class="mk-account-page-head__title">
+            {% if active_tab == 'overview' %}نمای کلی حساب
+            {% elif active_tab == 'orders' %}سفارش‌های من
+            {% elif active_tab == 'licenses' %}مدیریت لایسنس‌ها
+            {% elif active_tab == 'downloads' %}مرکز دانلود
+            {% elif active_tab == 'transactions' %}تراکنش‌های مالی
+            {% elif active_tab == 'affiliate' %}همکاری در فروش
+            {% elif active_tab == 'profile' %}پروفایل و تنظیمات
+            {% else %}حساب کاربری{% endif %}
+        </h1>
+        <p class="mk-account-page-head__sub">
+            {% if active_tab == 'overview' %}وضعیت حساب، اشتراک‌ها و فعالیت‌های اخیر را یک‌جا ببینید.
+            {% elif active_tab == 'orders' %}خریدها، وضعیت پرداخت و جزئیات سفارش‌های خود را پیگیری کنید.
+            {% elif active_tab == 'licenses' %}اعتبار لایسنس‌ها، دستگاه‌ها و دسترسی اعضای تیم را مدیریت کنید.
+            {% elif active_tab == 'downloads' %}آخرین نسخه اپلیکیشن اندروید و ربات ویندوز را دریافت کنید.
+            {% elif active_tab == 'transactions' %}سوابق پرداخت و شناسه‌های پیگیری را مشاهده کنید.
+            {% elif active_tab == 'affiliate' %}فروش‌ها، کمیسیون و درآمد همکاری خود را مدیریت کنید.
+            {% elif active_tab == 'profile' %}اطلاعات شخصی و پروفایل عمومی مشاور را به‌روز نگه دارید.
+            {% endif %}
+        </p>
+    </div>
+    <div class="mk-account-page-head__actions">
+        <a class="mk-account-page-head__cta" href="{% url 'workspace:home' %}">
+            <i class="fas fa-layer-group" aria-hidden="true"></i>
+            <span>ورود به میزکار</span>
+            <i class="fas fa-arrow-up-left" aria-hidden="true"></i>
+        </a>
+    </div>
+</header>

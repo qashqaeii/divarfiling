@@ -30,6 +30,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell-v2.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-overview-v2.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-profile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-licenses-v2.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -1045,6 +1046,7 @@ function copyAffiliateLinkOverview() {
 {% block extra_js %}
 <script src="{% static 'js/mizkar-account-shell.js' %}?v=4"></script>
 <script src="{% static 'js/mk-order-detail-modal.js' %}?v=1"></script>
+<script src="{% static 'js/mizkar-account-licenses-v2.js' %}?v=1"></script>
 <script>
 (function initDashboardFooterAccordion() {
     if (!document.body.classList.contains('mk-account-dashboard')) return;

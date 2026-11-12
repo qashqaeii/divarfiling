@@ -18,7 +18,7 @@
 | ID | Scope | Done when | State |
 |---|---|---|---|
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
-| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A/01B committed; 01C read-only diagnostics and dossier permissions prepared; runtime validation pending |
+| 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A–01C committed; 01D sensitive admin access guarded; runtime validation remains OPEN |
 | 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | Pending |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
@@ -113,7 +113,34 @@ python manage.py test accounts.tests.test_admin_integrity_diagnostics accounts.t
 
 **Expected:** staff without dossier permissions sees KPI-only users center and receives HTTP 403 from both personal JSON endpoints; fully authorized roles see records; integrity previews are bounded and never mutate payment or entitlement state.
 
-## Known gaps and next work (01D)
+## Phase 01D — privileged admin operations (targeted security slice)
+
+- Preserve existing read-only lead-acquisition overview for staff. **All** lead-center POST mutations (imports, edits, campaign sends, scheduling/automation, template changes) now check the existing `can_send_admin_sms` role before the dispatch. The main campaign detail POST is protected too.
+- The async send-start, send-tick and bulk-template endpoints, plus personal Divar session/PhoneDetector line endpoints, use a single `LeadSmsOperatorRequiredMixin`. For the latter sensitive session/line endpoints, GET data is operator-only as well. Public click tracking and aggregate funnel JSON were not changed.
+- The lead pages display a concise read-only notice to staff who lack a delegated SMS operator role. Full disablement/streamlined presentation will be handled in the design-system UX phases, not through a second arbitrary CSS redesign now.
+- Lock financial Django Admin mutation privileges for `AffiliateSale`, `AffiliatePayout`, `Wallet`, `WalletTransaction`, and `Withdrawal` to authenticated active staff superusers; delegated viewers retain Django view permissions. Generic model change permissions **alone** cannot approve payouts.
+- Withdrawal requests cannot be created/deleted by Django Admin. Existing wallet, amount, recipient/bank fields and withdrawal state are immutable via the change form; state transitions must go through the predefined owner-only admin actions, which now log successful changes with `ModelAdmin.log_change`.
+- Added nine focused regression cases for lead operator denies and grants, protected automation/session routes, read-only page, blocked withdrawal action, superuser settle idempotency/audit history, and prevention of forged withdrawal state form changes.
+- Existing lead view tests with intentionally triggered bulk operations were updated to use the superuser fixture; view-only staff can still browse.
+- The existing forum moderation views already use `ForumModerateRequiredMixin` and `user_can_moderate_forum`. They were **not** rewritten in this slice.
+- **Deferred risk:** `Withdrawal.approve()/complete()` and `Wallet.deduct_balance()` still have concurrency/atomicity weaknesses in the model layer. Touching that financial ledger without an executable, isolated PostgreSQL test environment would be unsafe. This must be covered by a dedicated transactional test/migration-safe fix before permitting concurrent payout workers or deploying new automatic settlement operations.
+- Source editing/commit is not proof of a passing Django suite. No production payments, SMS, license grants, migrations or deployments occurred.
+
+### Validation commands (disposable database only)
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_lead_finance_permissions accounts.tests.test_lead_acquisition accounts.tests.test_automation_message_templates accounts.tests.test_admin_affiliates_center affiliates.tests.test_referral_flow --keepdb
+```
+
+## Remaining gates before phase 02
+
+- Execute the accumulated phase 00–01 Django suites in isolated staging, with real PostgreSQL test DB. Resolve failures once from evidence; avoid speculative edit/revert cycles.
+- Audit existing affiliate payout concurrency and run proper DB transaction tests before activating concurrent settlement; no new auto-payout feature was added here.
+- Remaining platform privileged operations (forum moderation input limits and service-rollout toggles) should be handled as real, reproducible defects when their module phases arrive.
+- Stage 02 is next: a shared premium RTL design system and dashboard information hierarchy, implemented with reusable elements on high-traffic screens first.
+
+
 
 - Continue with remaining privileged operations: affiliate withdrawals in Django Admin, lead-acquisition sends, forum moderation, feature rollout, and role-aware audit logs. User 360° JSON authorization was scoped in 01C.
 - Run the new read-only anomaly report against staging fixtures and verified legacy data; compare counts with raw records before treating production data as trustworthy.

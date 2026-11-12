@@ -14,6 +14,12 @@
 {% block admin_panel_content %}
 {% with f=funnel.funnel a=funnel.attribution %}
 <div class="adm-page adm-lac-page">
+{% if not lead_can_manage %}
+<p class="ecc-card-sub" role="status" style="padding:.7rem 1rem;margin:.75rem 0;border:1px solid var(--border-color, #e2e6ef);border-radius:12px;">
+    <i class="fas fa-lock" aria-hidden="true"></i>
+    مشاهده گزارش‌ها مجاز است؛ ثبت، ویرایش، ارسال پیامک و اجرای اتوماسیون نیازمند مجوز مسئول کمپین است.
+</p>
+{% endif %>
 
     <header class="adm-lac-hero" style="margin-bottom:1.1rem">
         <div class="adm-lac-hero-copy">

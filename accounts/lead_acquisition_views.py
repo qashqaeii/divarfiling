@@ -5,6 +5,7 @@ import json
 import logging
 
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -13,6 +14,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from accounts.admin_views import StaffRequiredMixin
+from accounts.services.admin_action_permissions import can_send_admin_sms
 from accounts.models import (
     AcquisitionRun,
     CampaignMessage,
@@ -194,6 +196,16 @@ class LeadClickRedirectView(View):
         return response
 
 
+
+class LeadSmsOperatorRequiredMixin(StaffRequiredMixin):
+    """Protect personal Divar sessions, SMS send and lead campaign mutations."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('دسترسی به عملیات پیامکی و جذب سرنخ نیازمند مجوز اختصاصی است.')
+        return super().dispatch(request, *args, **kwargs)
+
+
 class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
     template_name = 'accounts/admin_lead_acquisition.html'
 
@@ -217,6 +229,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 'variant_b': tpl['B'],
             }
         ctx.update({
+            'lead_can_manage': can_send_admin_sms(self.request.user),
             'overview': overview_stats(),
             'lac_charts_json': json.dumps(
                 acquisition_dashboard_charts(campaigns, funnels),
@@ -287,6 +300,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         return ctx
 
     def post(self, request, *args, **kwargs):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز مدیریت کمپین جذب سرنخ ندارید.')
         action = request.POST.get('action') or ''
         try:
             if action == 'import_preview':
@@ -818,6 +833,7 @@ class AdminLeadCampaignDetailView(StaffRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         campaign = get_object_or_404(LeadCampaign, pk=kwargs['pk'])
         ctx['campaign'] = campaign
+        ctx['lead_can_manage'] = can_send_admin_sms(self.request.user)
         ctx['funnel'] = campaign_funnel(campaign)
         ctx['variant_templates'] = get_step1_variant_templates(campaign)
         ctx['messages_recent'] = (
@@ -828,6 +844,8 @@ class AdminLeadCampaignDetailView(StaffRequiredMixin, TemplateView):
         return ctx
 
     def post(self, request, *args, **kwargs):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز مدیریت کمپین جذب سرنخ ندارید.')
         action = request.POST.get('action') or ''
         try:
             if action == 'update_campaign':
@@ -859,7 +877,7 @@ class AdminLeadFunnelJsonView(StaffRequiredMixin, View):
         return JsonResponse(campaign_funnel(campaign), json_dumps_params={'ensure_ascii': False})
 
 
-class AdminLeadSendProgressStartView(StaffRequiredMixin, View):
+class AdminLeadSendProgressStartView(LeadSmsOperatorRequiredMixin, View):
     """شمارش کل مخاطبان در صف ارسال — قبل از progress bar."""
 
     def post(self, request):
@@ -892,7 +910,7 @@ class AdminLeadSendProgressStartView(StaffRequiredMixin, View):
             return JsonResponse({'ok': False, 'error': exc.message}, status=400)
 
 
-class AdminLeadSendProgressTickView(StaffRequiredMixin, View):
+class AdminLeadSendProgressTickView(LeadSmsOperatorRequiredMixin, View):
     """ارسال یک chunk و برگرداندن پیشرفت — برای polling از UI."""
 
     def post(self, request):
@@ -913,7 +931,7 @@ class AdminLeadSendProgressTickView(StaffRequiredMixin, View):
             return JsonResponse({'ok': False, 'error': str(exc)}, status=500)
 
 
-class AdminLeadBulkTemplatesView(StaffRequiredMixin, View):
+class AdminLeadBulkTemplatesView(LeadSmsOperatorRequiredMixin, View):
     """ذخیره قالب سراسری مراحل ۱–۳ و اعمال روی کمپین‌های انتخاب‌شده یا همه."""
 
     def get(self, request):
@@ -1006,7 +1024,7 @@ class AdminAutomationPlacesJsonView(StaffRequiredMixin, View):
         }, json_dumps_params={'ensure_ascii': False})
 
 
-class AdminDivarSessionsJsonView(StaffRequiredMixin, View):
+class AdminDivarSessionsJsonView(LeadSmsOperatorRequiredMixin, View):
     """نشست‌های دیوار کاربران فایلینگ — مدیریت و افزودن به خطوط Phone Detector."""
 
     def get(self, request):
@@ -1049,7 +1067,7 @@ class AdminDivarSessionsJsonView(StaffRequiredMixin, View):
         return JsonResponse(result, json_dumps_params={'ensure_ascii': False})
 
 
-class AdminAutomationLinesJsonView(StaffRequiredMixin, View):
+class AdminAutomationLinesJsonView(LeadSmsOperatorRequiredMixin, View):
     """مدیریت خطوط phone-detector — لیست سشن‌ها و لاگین OTP."""
 
     def get(self, request):

@@ -228,44 +228,76 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// توابع مودال‌های حرفه‌ای
-function openUserInfoModal() {
-    const modal = document.getElementById('userInfoModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => {
-        modal.classList.add('active');
-    }, 10);
-}
+// Shared account dialogs: accessible focus and scroll management.
+const professionalModalFocusOrigins = new WeakMap();
+const professionalModalClosingTimers = new WeakMap();
+let professionalModalPreviousOverflow = '';
 
-function openProfileModal() {
-    const modal = document.getElementById('profileModal');
+function showProfessionalModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const closingTimer = professionalModalClosingTimers.get(modal);
+    if (closingTimer) clearTimeout(closingTimer);
+    if (!document.querySelector('.modal-professional.active')) {
+        professionalModalPreviousOverflow = document.body.style.overflow;
+    }
+    professionalModalFocusOrigins.set(modal, document.activeElement);
     modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         modal.classList.add('active');
-    }, 10);
+        const target = modal.querySelector('.prof-avatar-modal__cell.is-selected') ||
+            modal.querySelector('input:not([type="hidden"]):not([type="file"]), textarea, button:not([disabled])');
+        if (target) target.focus({ preventScroll: true });
+    });
 }
+function openUserInfoModal() { showProfessionalModal('userInfoModal'); }
+function openProfileModal() { showProfessionalModal('profileModal'); }
 
 function closeProfessionalModal(event, modalId) {
-    if (event) {
-        event.stopPropagation();
-    }
+    if (event) event.stopPropagation();
     const modal = document.getElementById(modalId);
+    if (!modal || !modal.classList.contains('active')) return;
+    const previousTimer = professionalModalClosingTimers.get(modal);
+    if (previousTimer) clearTimeout(previousTimer);
     modal.classList.remove('active');
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+        if (modal.classList.contains('active')) return;
         modal.style.display = 'none';
-        document.body.style.overflow = '';
+        modal.setAttribute('aria-hidden', 'true');
+        if (!document.querySelector('.modal-professional.active')) {
+            document.body.style.overflow = professionalModalPreviousOverflow;
+        }
+        const origin = professionalModalFocusOrigins.get(modal);
+        if (origin && origin.isConnected && typeof origin.focus === 'function') {
+            origin.focus({ preventScroll: true });
+        }
+        professionalModalClosingTimers.delete(modal);
     }, 300);
+    professionalModalClosingTimers.set(modal, timer);
 }
 
-// بستن مودال با کلید ESC
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const modals = document.querySelectorAll('.modal-professional.active');
-        modals.forEach(modal => {
-            closeProfessionalModal(null, modal.id);
-        });
+document.addEventListener('keydown', function(event) {
+    const activeModals = Array.from(document.querySelectorAll('.modal-professional.active'));
+    const modal = activeModals[activeModals.length - 1];
+    if (!modal) return;
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closeProfessionalModal(null, modal.id);
+        return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusables = Array.from(modal.querySelectorAll('a[href], button:not([disabled]), input:not([type="hidden"]), textarea, select'))
+        .filter((el) => el.getClientRects().length && !el.hidden && el.tabIndex !== -1);
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
     }
 });
 
@@ -563,11 +595,7 @@ function openAvatarPickerModal() {
     accountAvatarPendingKey = hasCustom ? null : (saved || effective);
     syncAvatarPickerSelection(accountAvatarPendingKey);
     updateAvatarPickerSaveState();
-    const modal = document.getElementById('avatarPickerModal');
-    if (!modal) return;
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => modal.classList.add('active'), 10);
+    showProfessionalModal('avatarPickerModal');
 }
 
 function selectAccountAvatarKey(key) {

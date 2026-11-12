@@ -28,6 +28,10 @@ class RenewalOrderError(Exception):
         super().__init__(message)
 
 
+class RenewalFulfillmentError(Exception):
+    """هیچ آیتم تمدیدی اعمال نشد — برای بازیابی از retry_renewal_fulfillment استفاده شود."""
+
+
 def order_has_renewal_items(order: Order) -> bool:
     return OrderRenewalItem.objects.filter(order_id=order.pk).exists()
 
@@ -182,6 +186,7 @@ def quote_renewal_order(
             'key_masked': _mask_key(lic.license_key),
             'previous_expires_at': lic.expires_at,
             'new_expires_at': new_expires,
+            'expires_is_estimate': True,
         })
 
     all_renewable = [
@@ -287,6 +292,7 @@ def create_renewal_order(
             unit_discount_amount=disc_parts[idx],
             unit_final_price=final_parts[idx],
             previous_expires_at=lic.expires_at,
+            # تخمین UI — تاریخ قطعی هنگام تأیید پرداخت با قفل لایسنس محاسبه می‌شود.
             new_expires_at=compute_renewed_expires_at(lic, plan),
         )
     return order
@@ -321,45 +327,72 @@ def _apply_renewal_to_license(
     )
 
 
-def sync_agency_subscription_after_renewal(order: Order, items: Iterable[OrderRenewalItem]) -> None:
+def sync_agency_subscription_after_renewal(
+    order: Order,
+    applied_items: Iterable[OrderRenewalItem],
+) -> None:
     """
-    تمدید کامل همه لایسنس‌های مشمول یک سفارش مبدأ → هماهنگ‌سازی اشتراک آژانس.
-    تمدید انتخابی: اشتراک را تغییر نمی‌دهد.
+    پس از اعمال موفق تمدید: اشتراک آژانس = max(انقضای فعلی اشتراک، بیشترین انقضای اعمال‌شده).
+    صندلی‌های تمدیدنشده تغییر نمی‌کنند؛ فقط تاریخ مدیریت برای مالک هم‌راستا می‌شود.
     """
+    from collections import defaultdict
+
     from workspace.models import AgencySubscription
     from workspace.services.agency_entitlement import sync_agency_management_status
 
-    item_list = list(items)
-    if not item_list:
-        return
-    source_order_id = item_list[0].license.order_id
-    if any(i.license.order_id != source_order_id for i in item_list):
-        return
+    by_sub: dict[int, list[OrderRenewalItem]] = defaultdict(list)
+    for item in applied_items:
+        if item.apply_status != OrderRenewalItem.ApplyStatus.APPLIED:
+            continue
+        sub_id = item.license.agency_subscription_id
+        if sub_id and item.new_expires_at:
+            by_sub[sub_id].append(item)
 
-    all_renewable = []
-    for lic in licenses_renewable_qs(item_list[0].license.order):
-        if evaluate_license_renewal(lic)[0]:
-            all_renewable.append(lic.pk)
-    renewed_ids = {i.license_id for i in item_list}
-    if set(all_renewable) != renewed_ids:
-        return
+    now = timezone.now()
+    for sub_id, group in by_sub.items():
+        peak = max(i.new_expires_at for i in group if i.new_expires_at)
+        sub = AgencySubscription.objects.select_for_update().get(pk=sub_id)
+        if sub.owner_id != order.user_id:
+            continue
+        next_expires = peak
+        if sub.expires_at:
+            next_expires = max(sub.expires_at, peak)
+        if next_expires <= sub.expires_at and sub.status == AgencySubscription.STATUS_ACTIVE:
+            continue
+        sub.expires_at = next_expires
+        if next_expires > now:
+            sub.status = AgencySubscription.STATUS_ACTIVE
+        sub.save(update_fields=['expires_at', 'status', 'updated_at'])
+        if sub.agency_id:
+            sync_agency_management_status(sub.agency)
 
-    sub_ids = {i.license.agency_subscription_id for i in item_list if i.license.agency_subscription_id}
-    if len(sub_ids) != 1:
-        return
-    sub = AgencySubscription.objects.select_for_update().get(pk=sub_ids.pop())
-    max_expires = max(
-        (i.new_expires_at or i.license.expires_at for i in item_list if i.new_expires_at),
-        default=None,
-    )
-    if not max_expires:
-        return
-    sub.expires_at = max_expires
-    if sub.status != AgencySubscription.STATUS_ACTIVE:
-        sub.status = AgencySubscription.STATUS_ACTIVE
-    sub.save(update_fields=['expires_at', 'status', 'updated_at'])
-    if sub.agency_id:
-        sync_agency_management_status(sub.agency)
+
+def _apply_single_renewal_item(
+    locked_order: Order,
+    item: OrderRenewalItem,
+) -> License:
+    license_obj = License.objects.select_for_update().get(pk=item.license_id)
+    if locked_order.user_id != license_obj.order.user_id:
+        raise PermissionDenied('سفارش تمدید به کاربر لایسنس تعلق ندارد.')
+
+    if _renewal_already_fulfilled(locked_order, license_obj):
+        if item.apply_status != OrderRenewalItem.ApplyStatus.APPLIED:
+            item.apply_status = OrderRenewalItem.ApplyStatus.APPLIED
+            item.applied_at = item.applied_at or timezone.now()
+            item.apply_error = ''
+            item.save(update_fields=['apply_status', 'applied_at', 'apply_error'])
+        return license_obj
+
+    new_expires = compute_renewed_expires_at(license_obj, locked_order.plan)
+    _apply_renewal_to_license(locked_order, license_obj, new_expires=new_expires)
+    item.apply_status = OrderRenewalItem.ApplyStatus.APPLIED
+    item.applied_at = timezone.now()
+    item.new_expires_at = new_expires
+    item.apply_error = ''
+    item.save(update_fields=[
+        'apply_status', 'applied_at', 'new_expires_at', 'apply_error',
+    ])
+    return license_obj
 
 
 @transaction.atomic
@@ -373,48 +406,55 @@ def fulfill_multi_renewal_for_paid_order(order: Order) -> list[License]:
     items = list(
         OrderRenewalItem.objects.select_for_update()
         .filter(order=locked_order)
-        .select_related('license', 'license__order')
+        .select_related('license', 'license__order', 'license__agency_subscription')
         .order_by('license_id')
     )
     if not items:
         return []
 
     renewed: list[License] = []
+    had_actionable = False
     for item in items:
         if item.apply_status == OrderRenewalItem.ApplyStatus.APPLIED and item.applied_at:
             renewed.append(item.license)
             continue
 
-        license_obj = License.objects.select_for_update().get(pk=item.license_id)
-        if locked_order.user_id != license_obj.order.user_id:
-            item.apply_status = OrderRenewalItem.ApplyStatus.FAILED
-            item.apply_error = 'مالکیت لایسنس نامعتبر است.'
-            item.save(update_fields=['apply_status', 'apply_error'])
-            raise PermissionDenied(item.apply_error)
-
-        if _renewal_already_fulfilled(locked_order, license_obj):
-            item.apply_status = OrderRenewalItem.ApplyStatus.APPLIED
-            item.applied_at = item.applied_at or timezone.now()
-            item.save(update_fields=['apply_status', 'applied_at'])
-            renewed.append(license_obj)
-            continue
-
-        new_expires = item.new_expires_at or compute_renewed_expires_at(license_obj, locked_order.plan)
+        had_actionable = True
+        sp = transaction.savepoint()
         try:
-            _apply_renewal_to_license(locked_order, license_obj, new_expires=new_expires)
-            item.apply_status = OrderRenewalItem.ApplyStatus.APPLIED
-            item.applied_at = timezone.now()
-            item.new_expires_at = new_expires
-            item.apply_error = ''
-            item.save(update_fields=[
-                'apply_status', 'applied_at', 'new_expires_at', 'apply_error',
-            ])
-            renewed.append(license_obj)
+            lic = _apply_single_renewal_item(locked_order, item)
+            transaction.savepoint_commit(sp)
+            renewed.append(lic)
         except Exception as exc:
-            item.apply_status = OrderRenewalItem.ApplyStatus.FAILED
-            item.apply_error = str(exc)[:500]
-            item.save(update_fields=['apply_status', 'apply_error'])
-            raise
+            transaction.savepoint_rollback(sp)
+            OrderRenewalItem.objects.filter(pk=item.pk).update(
+                apply_status=OrderRenewalItem.ApplyStatus.FAILED,
+                apply_error=str(exc)[:500],
+            )
 
-    sync_agency_subscription_after_renewal(locked_order, items)
+    applied_items = list(
+        OrderRenewalItem.objects.filter(
+            order=locked_order,
+            apply_status=OrderRenewalItem.ApplyStatus.APPLIED,
+        ).select_related('license', 'license__agency_subscription')
+    )
+    if applied_items:
+        sync_agency_subscription_after_renewal(locked_order, applied_items)
+
+    if had_actionable and not renewed:
+        raise RenewalFulfillmentError(
+            'هیچ لایسنسی تمدید نشد؛ سفارش برای بازیابی قابل تلاش مجدد است.'
+        )
     return renewed
+
+
+def retry_renewal_fulfillment(order: Order) -> list[License]:
+    """بازیابی امن تمدید — فقط آیتم‌های pending/failed؛ idempotent."""
+    OrderRenewalItem.objects.filter(
+        order=order,
+        apply_status=OrderRenewalItem.ApplyStatus.FAILED,
+    ).update(
+        apply_status=OrderRenewalItem.ApplyStatus.PENDING,
+        apply_error='',
+    )
+    return fulfill_multi_renewal_for_paid_order(order)

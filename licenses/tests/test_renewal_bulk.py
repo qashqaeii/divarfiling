@@ -61,7 +61,10 @@ def _agency_setup(qty=3):
         status='pending',
     )
     fulfill_order_after_payment(order)
-    sub = provision_subscription_from_paid_order(order)
+    sub = AgencySubscription.objects.filter(source_order=order).first()
+    if not sub:
+        sub = provision_subscription_from_paid_order(order)
+    assert sub is not None
     agency = create_or_link_agency(owner, 'Bulk Agency')
     sub.agency = agency
     sub.save(update_fields=['agency'])
@@ -102,7 +105,11 @@ class RenewalBulkTests(TestCase):
         self.assertGreater(licenses[0].expires_at, timezone.now())
         self.assertGreater(licenses[1].expires_at, timezone.now())
         self.assertLess(licenses[2].expires_at, timezone.now())
-        self.assertEqual(sub.status, AgencySubscription.STATUS_EXPIRED)
+        self.assertEqual(sub.status, AgencySubscription.STATUS_ACTIVE)
+        self.assertGreater(sub.expires_at, timezone.now())
+
+        from workspace.services.agency_entitlement import has_active_agency_entitlement
+        self.assertTrue(has_active_agency_entitlement(owner))
 
     def test_full_renewal_syncs_agency_subscription(self):
         owner, _, product, plan, source_order, agency, sub = _agency_setup(qty=2)
@@ -195,3 +202,67 @@ class RenewalBulkTests(TestCase):
         quote = quote_renewal_order(owner, source_order.pk, license_ids=ids, plan_id=plan.pk)
         self.assertEqual(quote['quantity'], 3)
         self.assertGreater(quote['pricing']['discount_amount'], 0)
+
+    def test_fulfillment_recomputes_expiry_not_stale_snapshot(self):
+        owner, _, product, plan, source_order, _, _ = _agency_setup(qty=2)
+        lic = License.objects.filter(order=source_order).first()
+        renewal_order = create_renewal_order(
+            owner, source_order.pk, license_ids=[lic.pk], plan_id=plan.pk,
+        )
+        stale_preview = renewal_order.renewal_items.first().new_expires_at
+        lic.expires_at = timezone.now() + timedelta(days=20)
+        lic.status = 'active'
+        lic.save(update_fields=['expires_at', 'status'])
+
+        renewal_order.status = 'paid'
+        renewal_order.paid_at = timezone.now()
+        renewal_order.save()
+        fulfill_multi_renewal_for_paid_order(renewal_order)
+        lic.refresh_from_db()
+        item = renewal_order.renewal_items.first()
+        self.assertGreater(lic.expires_at, stale_preview)
+        self.assertEqual(item.new_expires_at, lic.expires_at)
+
+    def test_failed_item_status_survives_partial_apply(self):
+        owner, _, product, plan, source_order, _, _ = _agency_setup(qty=2)
+        ids = list(License.objects.filter(order=source_order).values_list('pk', flat=True))
+        renewal_order = create_renewal_order(
+            owner, source_order.pk, license_ids=ids, plan_id=plan.pk,
+        )
+        renewal_order.status = 'paid'
+        renewal_order.paid_at = timezone.now()
+        renewal_order.save()
+
+        from unittest.mock import patch
+
+        original_apply = __import__(
+            'licenses.services.renewal_orders', fromlist=['_apply_renewal_to_license']
+        )._apply_renewal_to_license
+        call_count = {'n': 0}
+
+        def flaky_apply(order, license_obj, *, new_expires):
+            call_count['n'] += 1
+            if call_count['n'] == 1:
+                raise RuntimeError('transient')
+            return original_apply(order, license_obj, new_expires=new_expires)
+
+        with patch(
+            'licenses.services.renewal_orders._apply_renewal_to_license',
+            side_effect=flaky_apply,
+        ):
+            result = fulfill_multi_renewal_for_paid_order(renewal_order)
+            self.assertEqual(len(result), 1)
+
+        failed = OrderRenewalItem.objects.filter(
+            order=renewal_order, apply_status=OrderRenewalItem.ApplyStatus.FAILED,
+        ).count()
+        self.assertEqual(failed, 1)
+
+        from licenses.services.renewal_orders import retry_renewal_fulfillment
+        retry_renewal_fulfillment(renewal_order)
+        self.assertEqual(
+            OrderRenewalItem.objects.filter(
+                order=renewal_order, apply_status=OrderRenewalItem.ApplyStatus.APPLIED,
+            ).count(),
+            2,
+        )

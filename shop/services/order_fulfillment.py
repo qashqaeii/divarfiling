@@ -19,7 +19,13 @@ def fulfill_order_after_payment(
     (یک‌بار به ازای order_id). اگر کل تراکنش بیرونی Rollback شود، Event هم Rollback می‌شود.
     """
     from licenses.services.claim import issue_license_for_paid_order
+    from licenses.services.renewal_orders import order_is_renewal_commerce
+    from workspace.services.agency_entitlement import (
+        is_agency_plan_order,
+        provision_subscription_from_paid_order,
+    )
 
+    license_obj = None
     with transaction.atomic():
         from shop.models import Order
 
@@ -50,11 +56,13 @@ def fulfill_order_after_payment(
             record_affiliate_commission(locked)
             ensure_buyer_affiliate_account(locked.user)
 
-        # داخل همان atomic: اگر fulfill شکست بخورد قبل از اینجا، Event نیست.
-        # اگر بعداً کل تراکنش Rollback شود، Event هم Rollback می‌شود.
         if record_funnel:
             from shop.services.plan_funnel import ensure_payment_success_event
             ensure_payment_success_event(locked)
+
+        license_obj = issue_license_for_paid_order(locked)
+        if is_agency_plan_order(locked) and not order_is_renewal_commerce(locked):
+            provision_subscription_from_paid_order(locked)
 
         order_ref = locked
 
@@ -65,27 +73,12 @@ def fulfill_order_after_payment(
         import logging
         logging.getLogger(__name__).exception('lead acquisition purchase attribution failed')
 
-    license_obj = issue_license_for_paid_order(order_ref)
-
     try:
         from accounts.services.automation_conversion import record_order_conversion
         record_order_conversion(order_ref)
     except Exception:
         import logging
         logging.getLogger(__name__).exception('automation conversion record failed')
-
-    try:
-        from workspace.services.agency_entitlement import (
-            is_agency_plan_order,
-            provision_subscription_from_paid_order,
-        )
-        from licenses.services.renewal_orders import order_is_renewal_commerce
-
-        if is_agency_plan_order(order_ref) and not order_is_renewal_commerce(order_ref):
-            provision_subscription_from_paid_order(order_ref)
-    except Exception:
-        import logging
-        logging.getLogger(__name__).exception('agency subscription provisioning failed')
 
     return license_obj
 

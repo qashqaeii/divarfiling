@@ -395,57 +395,103 @@ def _apply_single_renewal_item(
     return license_obj
 
 
-@transaction.atomic
 def fulfill_multi_renewal_for_paid_order(order: Order) -> list[License]:
     if order.status != 'paid':
         return []
     if not order_has_renewal_items(order):
         return []
 
-    locked_order = Order.objects.select_for_update().get(pk=order.pk)
-    items = list(
-        OrderRenewalItem.objects.select_for_update()
-        .filter(order=locked_order)
-        .select_related('license', 'license__order', 'license__agency_subscription')
-        .order_by('license_id')
-    )
-    if not items:
-        return []
-
-    renewed: list[License] = []
-    had_actionable = False
-    for item in items:
-        if item.apply_status == OrderRenewalItem.ApplyStatus.APPLIED and item.applied_at:
-            renewed.append(item.license)
-            continue
-
-        had_actionable = True
-        sp = transaction.savepoint()
-        try:
-            lic = _apply_single_renewal_item(locked_order, item)
-            transaction.savepoint_commit(sp)
-            renewed.append(lic)
-        except Exception as exc:
-            transaction.savepoint_rollback(sp)
-            OrderRenewalItem.objects.filter(pk=item.pk).update(
-                apply_status=OrderRenewalItem.ApplyStatus.FAILED,
-                apply_error=str(exc)[:500],
-            )
-
-    applied_items = list(
-        OrderRenewalItem.objects.filter(
-            order=locked_order,
-            apply_status=OrderRenewalItem.ApplyStatus.APPLIED,
-        ).select_related('license', 'license__agency_subscription')
-    )
-    if applied_items:
-        sync_agency_subscription_after_renewal(locked_order, applied_items)
-
-    if had_actionable and not renewed:
-        raise RenewalFulfillmentError(
-            'هیچ لایسنسی تمدید نشد؛ سفارش برای بازیابی قابل تلاش مجدد است.'
+    with transaction.atomic():
+        locked_order = Order.objects.select_for_update().get(pk=order.pk)
+        items = list(
+            OrderRenewalItem.objects.select_for_update()
+            .filter(order=locked_order)
+            .select_related('license', 'license__order', 'license__agency_subscription')
+            .order_by('license_id')
         )
+        if not items:
+            return []
+
+        renewed: list[License] = []
+        had_actionable = False
+        for item in items:
+            if item.apply_status == OrderRenewalItem.ApplyStatus.APPLIED and item.applied_at:
+                renewed.append(item.license)
+                continue
+
+            had_actionable = True
+            sp = transaction.savepoint()
+            try:
+                lic = _apply_single_renewal_item(locked_order, item)
+                transaction.savepoint_commit(sp)
+                renewed.append(lic)
+            except Exception as exc:
+                transaction.savepoint_rollback(sp)
+                OrderRenewalItem.objects.filter(pk=item.pk).update(
+                    apply_status=OrderRenewalItem.ApplyStatus.FAILED,
+                    apply_error=str(exc)[:500],
+                )
+
+        applied_items = list(
+            OrderRenewalItem.objects.filter(
+                order=locked_order,
+                apply_status=OrderRenewalItem.ApplyStatus.APPLIED,
+            ).select_related('license', 'license__agency_subscription')
+        )
+        if applied_items:
+            sync_agency_subscription_after_renewal(locked_order, applied_items)
+
+    error_message = ''
+    if had_actionable and not renewed:
+        error_message = 'هیچ لایسنسی تمدید نشد؛ سفارش برای بازیابی قابل تلاش مجدد است.'
+
+    refresh_fulfillment_status(locked_order, error_message=error_message)
+    if error_message:
+        raise RenewalFulfillmentError(error_message)
     return renewed
+
+
+def refresh_fulfillment_status(order: Order, *, error_message: str = '') -> None:
+    """به‌روزرسانی fulfillment_status از روی وضعیت واقعی آیتم‌ها / لایسنس."""
+    from shop.models import Order as ShopOrder
+
+    now = timezone.now()
+    status = ShopOrder.FulfillmentStatus.PENDING
+
+    if order_has_renewal_items(order):
+        items = OrderRenewalItem.objects.filter(order=order)
+        total = items.count()
+        applied = items.filter(apply_status=OrderRenewalItem.ApplyStatus.APPLIED).count()
+        failed = items.filter(apply_status=OrderRenewalItem.ApplyStatus.FAILED).count()
+        if total and applied == total:
+            status = ShopOrder.FulfillmentStatus.COMPLETE
+        elif applied > 0:
+            status = ShopOrder.FulfillmentStatus.PARTIAL
+        elif failed or error_message:
+            status = ShopOrder.FulfillmentStatus.FAILED
+    elif order.renewal_license_id:
+        lic = order.renewal_license
+        if error_message:
+            status = ShopOrder.FulfillmentStatus.FAILED
+        elif lic and _renewal_already_fulfilled(order, lic):
+            status = ShopOrder.FulfillmentStatus.COMPLETE
+        else:
+            status = ShopOrder.FulfillmentStatus.PENDING
+    else:
+        expected = max(1, int(order.quantity or 1))
+        have = License.objects.filter(order=order).count()
+        if error_message:
+            status = ShopOrder.FulfillmentStatus.FAILED
+        elif have >= expected:
+            status = ShopOrder.FulfillmentStatus.COMPLETE
+        else:
+            status = ShopOrder.FulfillmentStatus.PENDING
+
+    ShopOrder.objects.filter(pk=order.pk).update(
+        fulfillment_status=status,
+        fulfillment_error=(error_message or '')[:500],
+        fulfillment_checked_at=now,
+    )
 
 
 def retry_renewal_fulfillment(order: Order) -> list[License]:

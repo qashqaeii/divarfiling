@@ -13,58 +13,16 @@ def fulfill_order_after_payment(
     record_funnel: bool = True,
 ) -> License | None:
     """
-    لایسنس، افیلیت و سایر اقدامات پس از پرداخت موفق — idempotent.
-
-    payment_success فقط بعد از موفقیت atomic وضعیت paid ثبت می‌شود
-    (یک‌بار به ازای order_id). اگر کل تراکنش بیرونی Rollback شود، Event هم Rollback می‌شود.
+    ثبت paid (commit جدا) سپس تکمیل لایسنس/تمدید.
+    شکست تکمیل paid را برنمی‌گرداند — بازیابی: reconcile_order_fulfillments.
     """
-    from licenses.services.claim import issue_license_for_paid_order
-    from licenses.services.renewal_orders import order_is_renewal_commerce
-    from workspace.services.agency_entitlement import (
-        is_agency_plan_order,
-        provision_subscription_from_paid_order,
+    from shop.services.order_fulfillment_recovery import (
+        complete_order_fulfillment,
+        mark_order_paid_after_gateway,
     )
 
-    license_obj = None
-    with transaction.atomic():
-        from shop.models import Order
-
-        locked = Order.objects.select_for_update().get(pk=order.pk)
-        already_paid = locked.status == 'paid'
-
-        if not already_paid:
-            locked.status = 'paid'
-            locked.paid_at = timezone.now()
-            locked.save(update_fields=['status', 'paid_at'])
-
-            if locked.discount_code_id:
-                from shop.services.discount_consumption import (
-                    DiscountCapacityError,
-                    finalize_discount_consumption,
-                )
-
-                try:
-                    finalize_discount_consumption(locked)
-                except DiscountCapacityError:
-                    raise
-
-            from affiliates.services.commission import (
-                ensure_buyer_affiliate_account,
-                record_affiliate_commission,
-            )
-
-            record_affiliate_commission(locked)
-            ensure_buyer_affiliate_account(locked.user)
-
-        if record_funnel:
-            from shop.services.plan_funnel import ensure_payment_success_event
-            ensure_payment_success_event(locked)
-
-        license_obj = issue_license_for_paid_order(locked)
-        if is_agency_plan_order(locked) and not order_is_renewal_commerce(locked):
-            provision_subscription_from_paid_order(locked)
-
-        order_ref = locked
+    order_ref = mark_order_paid_after_gateway(order, record_funnel=record_funnel)
+    license_obj = complete_order_fulfillment(order_ref)
 
     try:
         from accounts.services.lead_attribution import attribute_purchase
@@ -158,10 +116,21 @@ def approve_card_transfer(submission, reviewer) -> License | None:
                 license_obj = License.objects.filter(order=order).first()
 
             if order.status == 'paid' and not license_obj:
-                raise CardTransferFulfillmentError(
-                    'فعال‌سازی انجام نشد؛ تغییری ثبت نشد. دوباره تلاش کنید یا لاگ را بررسی کنید.',
-                    code='fulfillment_failed',
+                from licenses.services.renewal_orders import order_is_renewal_commerce
+                from shop.models import Order as ShopOrder
+
+                renewal_ok = (
+                    order_is_renewal_commerce(order)
+                    and order.fulfillment_status in (
+                        ShopOrder.FulfillmentStatus.COMPLETE,
+                        ShopOrder.FulfillmentStatus.PARTIAL,
+                    )
                 )
+                if not renewal_ok:
+                    raise CardTransferFulfillmentError(
+                        'فعال‌سازی انجام نشد؛ تغییری ثبت نشد. دوباره تلاش کنید یا لاگ را بررسی کنید.',
+                        code='fulfillment_failed',
+                    )
 
             log_card_transfer_event(
                 'card_transfer_approved',

@@ -101,8 +101,7 @@ def _create_or_update_pending_transaction(order: Order, track_id: str, request_r
 
 
 def _finalize_successful_payment(order: Order, transaction: Transaction, verify_result) -> None:
-    # payment_success فقط از مسیر مرکزی fulfill (idempotent) ثبت می‌شود
-    fulfill_order_after_payment(order)
+    # تراکنش paid قبل از fulfillment — برای بازیابی ناهمگامی درگاه
     transaction.status = 'paid'
     transaction.zibal_ref_number = verify_result.ref_number
     transaction.gateway_result_code = verify_result.result_code
@@ -112,6 +111,19 @@ def _finalize_successful_payment(order: Order, transaction: Transaction, verify_
     transaction.card_number_masked = verify_result.card_number
     transaction.verified_at = timezone.now()
     transaction.save()
+    try:
+        fulfill_order_after_payment(order)
+    except Exception:
+        logger.exception('fulfill after gateway paid failed order_id=%s', order.id)
+    else:
+        from shop.services.order_fulfillment_recovery import reconcile_order_fulfillment
+
+        order.refresh_from_db(fields=['status', 'fulfillment_status'])
+        if order.status == 'paid' and order.fulfillment_status != Order.FulfillmentStatus.COMPLETE:
+            try:
+                reconcile_order_fulfillment(order)
+            except Exception:
+                logger.exception('inline fulfillment reconcile failed order_id=%s', order.id)
     # پس از ذخیره Transaction، metadata را با transaction_id به‌روز کن (بدون Event دوم)
     try:
         from shop.services.plan_funnel import ensure_payment_success_event

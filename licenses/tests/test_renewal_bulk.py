@@ -10,13 +10,16 @@ from django.utils import timezone
 from licenses.models import AuditLog, License
 from licenses.services.claim import issue_licenses_for_paid_order
 from licenses.services.renewal_orders import (
+    RenewalFulfillmentError,
     create_renewal_order,
     fulfill_multi_renewal_for_paid_order,
     order_is_renewal_commerce,
     quote_renewal_order,
 )
 from shop.models import LicensePlan, Order, OrderRenewalItem, Product
+from shop.models import Order as ShopOrder
 from shop.services.order_fulfillment import fulfill_order_after_payment
+from shop.services.order_fulfillment_recovery import reconcile_order_fulfillment
 from workspace.models import AgencySubscription, CRMAgency, CRMAgencyMember
 from workspace.services.agency_entitlement import (
     get_subscription_for_agency,
@@ -266,3 +269,37 @@ class RenewalBulkTests(TestCase):
             ).count(),
             2,
         )
+
+    def test_paid_survives_total_renewal_failure_and_reconcile_retries(self):
+        owner, _, product, plan, source_order, _, _ = _agency_setup(qty=2)
+        ids = list(License.objects.filter(order=source_order).values_list('pk', flat=True))
+        renewal_order = create_renewal_order(
+            owner, source_order.pk, license_ids=ids, plan_id=plan.pk,
+        )
+
+        from unittest.mock import patch
+
+        with patch(
+            'licenses.services.renewal_orders._apply_renewal_to_license',
+            side_effect=RuntimeError('total fail'),
+        ):
+            renewal_order.status = 'paid'
+            renewal_order.paid_at = timezone.now()
+            renewal_order.save()
+            with self.assertRaises(RenewalFulfillmentError):
+                fulfill_multi_renewal_for_paid_order(renewal_order)
+
+        renewal_order.refresh_from_db()
+        self.assertEqual(renewal_order.status, 'paid')
+        self.assertEqual(renewal_order.fulfillment_status, ShopOrder.FulfillmentStatus.FAILED)
+
+        with patch(
+            'licenses.services.renewal_orders._apply_renewal_to_license',
+            wraps=__import__(
+                'licenses.services.renewal_orders', fromlist=['_apply_renewal_to_license']
+            )._apply_renewal_to_license,
+        ):
+            reconcile_order_fulfillment(renewal_order)
+
+        renewal_order.refresh_from_db()
+        self.assertEqual(renewal_order.fulfillment_status, ShopOrder.FulfillmentStatus.COMPLETE)

@@ -379,7 +379,7 @@ new_expires = base + plan.duration_days
 | تمدید انتخابی | فقط `expires_at` کلیدهای انتخاب‌شده؛ اشتراک: `max(فعلی، بیشترین انقضای اعمال‌شده)` برای باز کردن مدیریت |
 | تمدید کامل (همه لایسنس‌های مشمول سفارش مبدأ) | همان قانون اشتراک — بدون تمدید خودکار صندلی‌های انتخاب‌نشده |
 | تاریخ قطعی | فقط هنگام apply با `compute_renewed_expires_at` زیر قفل؛ فیلد `new_expires_at` روی آیتم = تخمین تا زمان پرداخت |
-| Fulfillment | صدور/تمدید داخل همان `transaction.atomic` با `paid`؛ savepoint per-item؛ `retry_renewal_fulfillment` |
+| Fulfillment | `mark_order_paid_after_gateway` جدا از `complete_order_fulfillment`؛ savepoint per-item؛ `fulfillment_status`؛ کرون `reconcile_order_fulfillments` — `docs/order-fulfillment-recovery.md` |
 | دسترسی مشاور | `get_member_seat` بر اساس **اعتبار واقعی لایسنس** (حتی اگر اشتراک آژانس منقضی باشد) |
 | دسترسی مدیریت مالک | همچنان `AgencySubscription` فعال |
 | provisioning bulk خرید جدید | فقط سفارش‌های غیرتمدید؛ تمدید از `OrderRenewalItem` بدون `provision_subscription_from_paid_order` |

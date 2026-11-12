@@ -320,6 +320,29 @@ class Order(models.Model):
         related_name='renewal_orders',
         verbose_name='لایسنس در حال تمدید',
     )
+    class FulfillmentStatus(models.TextChoices):
+        COMPLETE = 'complete', 'تکمیل‌شده'
+        PENDING = 'pending', 'در انتظار اعمال'
+        PARTIAL = 'partial', 'ناقص'
+        FAILED = 'failed', 'ناموفق'
+
+    fulfillment_status = models.CharField(
+        max_length=16,
+        choices=FulfillmentStatus.choices,
+        default=FulfillmentStatus.COMPLETE,
+        db_index=True,
+        verbose_name='وضعیت تکمیل لایسنس/تمدید',
+    )
+    fulfillment_error = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name='آخرین خطای تکمیل',
+    )
+    fulfillment_checked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='آخرین بررسی تکمیل',
+    )
 
     class Meta:
         verbose_name = 'سفارش'

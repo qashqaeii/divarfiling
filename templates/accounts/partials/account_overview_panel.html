@@ -1,357 +1,276 @@
 {% load persian_tags %}
 {% load currency_tags %}
-<div class="mk-acc-tab-shell mk-overview-tab">
-{% include 'accounts/partials/account_breadcrumb.html' %}
+<div class="mk-acc-tab-shell mk-overview-tab ov2">
+    {% include 'accounts/partials/account_breadcrumb.html' %}
 
-<div class="mk-acc-tab-body">
-
-<article class="mk-acc-mob-wallet mk-acc-mob-only" aria-label="خلاصه حساب">
-    <div class="mk-acc-mob-wallet__glow" aria-hidden="true"></div>
-    <header class="mk-acc-mob-wallet__head">
-        {% if active_licenses %}
-        <span class="mk-acc-mob-wallet__badge">
-            <span class="mk-acc-mob-wallet__badge-dot" aria-hidden="true"></span>
-            حساب فعال
-        </span>
-        {% else %}
-        <span class="mk-acc-mob-wallet__badge mk-acc-mob-wallet__badge--warn">
-            <span class="mk-acc-mob-wallet__badge-dot" aria-hidden="true"></span>
-            بدون لایسنس فعال
-        </span>
-        {% endif %}
-        <a href="{{ dashboard_tab_urls.profile }}" class="mk-acc-mob-wallet__hint-link">تنظیمات حساب</a>
-    </header>
-    <p class="mk-acc-mob-wallet__lead">
-        سلام {{ user.get_full_name|default:user.username }} — {{ active_licenses }} لایسنس فعال
-        <small>{{ paid_orders }} خرید موفق · {{ total_spent|currency }} تومان مجموع</small>
-    </p>
-    <div class="mk-acc-mob-metric-rail" role="list">
-        <a href="{{ dashboard_tab_urls.licenses }}" class="mk-acc-mob-metric" role="listitem">
-            <span class="mk-acc-mob-metric__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-metric__val">{{ active_licenses }}</span>
-            <span class="mk-acc-mob-metric__lbl">لایسنس فعال</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.orders }}?order_status=paid" class="mk-acc-mob-metric" role="listitem">
-            <span class="mk-acc-mob-metric__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-metric__val">{{ paid_orders }}</span>
-            <span class="mk-acc-mob-metric__lbl">پرداخت‌شده</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-mob-metric" role="listitem">
-            <span class="mk-acc-mob-metric__icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-metric__val">{{ pending_orders_count }}</span>
-            <span class="mk-acc-mob-metric__lbl">در انتظار</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.transactions }}" class="mk-acc-mob-metric" role="listitem">
-            <span class="mk-acc-mob-metric__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-metric__val">{{ total_spent|currency }}</span>
-            <span class="mk-acc-mob-metric__lbl">تومان خرید</span>
-        </a>
-    </div>
-    <div class="mk-acc-mob-wallet__actions">
-        <a href="{% url 'workspace:home' %}" class="mk-acc-mob-wallet__btn mk-acc-mob-wallet__btn--primary">
-            <i class="fas fa-layer-group" aria-hidden="true"></i>
-            میزکار
-        </a>
-        <a href="{{ dashboard_tab_urls.downloads }}" class="mk-acc-mob-wallet__btn mk-acc-mob-wallet__btn--ghost">
-            <i class="fas fa-download" aria-hidden="true"></i>
-            دانلود
-        </a>
-    </div>
-    {% if pending_orders_count %}
-    <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-mob-pending">
-        <i class="fas fa-bolt" aria-hidden="true"></i>
-        <span><strong>{{ pending_orders_count }}</strong> سفارش منتظر پرداخت — همین الان تکمیل کنید</span>
-    </a>
-    {% endif %}
-</article>
-
-<div class="mk-acc-mob-dock-wrap mk-acc-mob-only">
-    <p class="mk-acc-mob-section-eyebrow">میانبرها</p>
-    <nav class="mk-acc-mob-dock" aria-label="دسترسی سریع">
-        <a href="{% url 'workspace:home' %}" class="mk-acc-mob-dock__item mk-acc-mob-dock__item--accent">
-            <span class="mk-acc-mob-dock__icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-dock__label">میزکار</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-mob-dock__item">
-            <span class="mk-acc-mob-dock__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-dock__label">سفارش‌ها</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.licenses }}" class="mk-acc-mob-dock__item">
-            <span class="mk-acc-mob-dock__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-dock__label">لایسنس</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.downloads }}" class="mk-acc-mob-dock__item">
-            <span class="mk-acc-mob-dock__icon"><i class="fas fa-download" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-dock__label">دانلود</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.transactions }}" class="mk-acc-mob-dock__item">
-            <span class="mk-acc-mob-dock__icon"><i class="fas fa-right-left" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-dock__label">تراکنش</span>
-        </a>
-        <a href="{{ dashboard_tab_urls.profile }}" class="mk-acc-mob-dock__item">
-            <span class="mk-acc-mob-dock__icon"><i class="fas fa-user-pen" aria-hidden="true"></i></span>
-            <span class="mk-acc-mob-dock__label">پروفایل</span>
-        </a>
-    </nav>
-</div>
-
-<nav class="mk-acc-quick-grid mk-acc-desk-only" aria-label="دسترسی سریع">
-    <a href="{% url 'workspace:home' %}" class="mk-acc-quick-card">
-        <span class="mk-acc-quick-card__icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
-        <span class="mk-acc-quick-card__body">
-            <span class="mk-acc-quick-card__title">میزکار</span>
-            <span class="mk-acc-quick-card__desc">ورود به CRM، Dataset، تحلیل بازار و مدیریت فایل‌ها</span>
-        </span>
-        <span class="mk-acc-quick-card__chev"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
-    </a>
-    <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-quick-card">
-        <span class="mk-acc-quick-card__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-        <span class="mk-acc-quick-card__body">
-            <span class="mk-acc-quick-card__title">سفارش‌ها</span>
-            <span class="mk-acc-quick-card__desc">مشاهده، پیگیری و پرداخت سفارش‌ها</span>
-        </span>
-        <span class="mk-acc-quick-card__chev"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
-    </a>
-    <a href="{{ dashboard_tab_urls.licenses }}" class="mk-acc-quick-card">
-        <span class="mk-acc-quick-card__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-        <span class="mk-acc-quick-card__body">
-            <span class="mk-acc-quick-card__title">لایسنس‌ها</span>
-            <span class="mk-acc-quick-card__desc">مدیریت لایسنس، تمدید و دانلود ربات استخراج</span>
-        </span>
-        <span class="mk-acc-quick-card__chev"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
-    </a>
-    <a href="{{ dashboard_tab_urls.downloads }}" class="mk-acc-quick-card">
-        <span class="mk-acc-quick-card__icon"><i class="fas fa-download" aria-hidden="true"></i></span>
-        <span class="mk-acc-quick-card__body">
-            <span class="mk-acc-quick-card__title">دانلود اپ‌ها</span>
-            <span class="mk-acc-quick-card__desc">دریافت آخرین نسخه ربات ویندوز و اندروید</span>
-        </span>
-        <span class="mk-acc-quick-card__chev"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
-    </a>
-</nav>
-
-<div class="mk-acc-mob-section-head mk-acc-mob-only">
-    <h2 id="acc-licenses-mob-title">لایسنس‌های من</h2>
-    <a href="{{ dashboard_tab_urls.licenses }}">همه</a>
-</div>
-
-<div class="mk-acc-overview-grid">
-    <section class="mk-acc-panel" aria-labelledby="acc-licenses-title">
-        <div class="mk-acc-panel__head">
-            <h2 class="mk-acc-panel__title" id="acc-licenses-title">لایسنس‌های من</h2>
-            <a href="{{ dashboard_tab_urls.licenses }}" class="mk-acc-panel__link">مشاهده همه</a>
-        </div>
-
-        {% if overview_licenses %}
-        <div class="mk-acc-lic-list">
-            {% for license in overview_licenses %}
-            <article class="mk-acc-lic-card{% if license.overview_is_active %} is-active{% else %} is-expired{% endif %}">
-                {% if license.overview_is_active %}
-                <svg class="mk-acc-lic-card__skyline" viewBox="0 0 120 48" fill="none" aria-hidden="true">
-                    <path d="M6 40 L6 24 L14 24 L14 40 Z" stroke="rgba(255,255,255,0.35)" stroke-width="1"/>
-                    <path d="M18 40 L18 16 L30 16 L30 40 Z" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-                    <path d="M34 40 L34 22 L42 22 L42 40 Z" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
-                    <path d="M46 40 L46 10 L62 10 L62 40 Z" stroke="rgba(255,255,255,0.32)" stroke-width="1"/>
-                    <line x1="2" y1="40" x2="118" y2="40" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                </svg>
-                {% endif %}
-
-                <span class="mk-acc-lic-card__badge">
-                    {% if license.overview_is_active %}
-                    <i class="fas fa-circle-check" aria-hidden="true"></i> فعال
-                    {% else %}
-                    <i class="fas fa-circle-xmark" aria-hidden="true"></i> منقضی شده
-                    {% endif %}
-                </span>
-
-                <div class="mk-acc-lic-card__row">
-                    <span class="mk-acc-lic-card__key"><i class="fas fa-key" aria-hidden="true"></i></span>
-                    <div>
-                        <h3 class="mk-acc-lic-card__name">{{ license.order.product.title }}</h3>
-                        <p class="mk-acc-lic-card__meta">
-                            {% if license.expires_at %}
-                            <i class="fas fa-calendar" aria-hidden="true"></i>
-                            {{ license.expires_at|to_jalali_date:"%Y/%m/%d" }}
-                            {% else %}
-                            <i class="fas fa-infinity" aria-hidden="true"></i> نامحدود
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="mk-acc-lic-card__actions">
-                    <a href="{{ dashboard_tab_urls.licenses }}#license-{{ license.id }}" class="mk-acc-lic-card__btn">
-                        <i class="fas fa-gear" aria-hidden="true"></i>
-                        مدیریت لایسنس
+    <div class="mk-acc-tab-body">
+        <section class="ov2-hero" aria-label="خلاصه وضعیت حساب">
+            <div class="ov2-hero__copy">
+                <p class="ov2-hero__eyebrow">حساب شما در یک نگاه</p>
+                <h2 class="ov2-hero__title">سلام، {{ user.get_full_name|default:user.username }} 👋</h2>
+                <p class="ov2-hero__text">خریدها، اشتراک‌ها و ابزارهای فایلینگ دیوار، همه در یک فضای منظم و در دسترس شما.</p>
+                <div class="ov2-hero__actions">
+                    <a href="{% url 'workspace:home' %}" class="ov2-action ov2-action--primary">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        ورود به میزکار
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    <a href="{{ dashboard_tab_urls.downloads }}" class="ov2-action ov2-action--ghost">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        دانلود اپلیکیشن‌ها
                     </a>
                 </div>
-            </article>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p class="mk-acc-empty">
-            لایسنس فعالی ندارید.
-            <a href="{% url 'product_list' %}">خرید ربات استخراج</a>
-        </p>
-        {% endif %}
-    </section>
+            </div>
+            <div class="ov2-hero__aside">
+                <span class="ov2-hero__aside-label">وضعیت اشتراک‌های من</span>
+                {% if active_licenses %}
+                <span class="ov2-hero__state">لایسنس فعال دارید</span>
+                {% else %}
+                <span class="ov2-hero__state ov2-hero__state--inactive">بدون لایسنس فعال</span>
+                {% endif %}
+                <strong class="ov2-hero__count">{{ active_licenses }}</strong>
+                <span class="ov2-hero__count-label">لایسنس فعال</span>
+                <a href="{{ dashboard_tab_urls.licenses }}" class="ov2-hero__aside-link">
+                    مدیریت لایسنس‌ها <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </a>
+            </div>
+        </section>
 
-    <section class="mk-acc-panel" aria-labelledby="acc-orders-title">
-        <div class="mk-acc-mob-section-head mk-acc-mob-only">
-            <h2 id="acc-orders-mob-title">آخرین خریدها</h2>
-            <a href="{{ dashboard_tab_urls.orders }}">همه</a>
-        </div>
-        <div class="mk-acc-panel__head">
-            <h2 class="mk-acc-panel__title" id="acc-orders-title">آخرین سفارش‌های پرداخت‌شده</h2>
-            <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-panel__link">مشاهده همه</a>
-        </div>
-
-        {% if paid_orders_for_overview %}
-        <div class="mk-acc-mob-order-feed mk-acc-mob-only" role="list">
-            {% for order in paid_orders_for_overview %}
-            <article class="mk-acc-mob-order-mini" role="listitem">
-                <span class="mk-acc-mob-order-mini__icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
-                <div class="mk-acc-mob-order-mini__copy">
-                    <h3 class="mk-acc-mob-order-mini__product">{{ order.product.title }}</h3>
-                    <p class="mk-acc-mob-order-mini__meta">{{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</p>
-                </div>
-                <div class="mk-acc-mob-order-mini__side">
-                    <span class="mk-acc-mob-order-mini__amount">{{ order.amount|currency }}</span>
-                    <span class="mk-acc-status-pill">
-                        <i class="fas fa-check" aria-hidden="true"></i>
-                        {{ order.get_status_display }}
+        <section class="ov2-section" aria-labelledby="ov2-metrics-title">
+            <h2 id="ov2-metrics-title" class="ov2-sr-only">خلاصه آماری حساب</h2>
+            <div class="ov2-metrics">
+                <a href="{{ dashboard_tab_urls.licenses }}" class="ov2-metric" aria-label="{{ active_licenses }} لایسنس فعال، مشاهده لایسنس‌ها">
+                    <span class="ov2-metric__top">
+                        <span class="ov2-metric__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                        <i class="fas fa-arrow-up-left ov2-metric__arrow" aria-hidden="true"></i>
                     </span>
+                    <strong class="ov2-metric__value">{{ active_licenses }}</strong>
+                    <span class="ov2-metric__label">لایسنس فعال</span>
+                    <span class="ov2-metric__note">مشاهده و مدیریت دسترسی‌ها</span>
+                </a>
+                <a href="{{ dashboard_tab_urls.orders }}?order_status=paid" class="ov2-metric ov2-metric--success" aria-label="{{ paid_orders }} سفارش پرداخت‌شده">
+                    <span class="ov2-metric__top">
+                        <span class="ov2-metric__icon"><i class="fas fa-circle-check" aria-hidden="true"></i></span>
+                        <i class="fas fa-arrow-up-left ov2-metric__arrow" aria-hidden="true"></i>
+                    </span>
+                    <strong class="ov2-metric__value">{{ paid_orders }}</strong>
+                    <span class="ov2-metric__label">خرید موفق</span>
+                    <span class="ov2-metric__note">سفارش‌های پرداخت‌شده</span>
+                </a>
+                <a href="{{ dashboard_tab_urls.orders }}" class="ov2-metric{% if pending_orders_count %} ov2-metric--warning{% endif %}" aria-label="{{ pending_orders_count }} سفارش در انتظار">
+                    <span class="ov2-metric__top">
+                        <span class="ov2-metric__icon"><i class="fas fa-clock" aria-hidden="true"></i></span>
+                        <i class="fas fa-arrow-up-left ov2-metric__arrow" aria-hidden="true"></i>
+                    </span>
+                    <strong class="ov2-metric__value">{{ pending_orders_count }}</strong>
+                    <span class="ov2-metric__label">در انتظار</span>
+                    <span class="ov2-metric__note">پرداخت یا بررسی سفارش</span>
+                </a>
+                <a href="{{ dashboard_tab_urls.transactions }}" class="ov2-metric" aria-label="مجموع خریدهای موفق: {{ total_spent|currency }} تومان">
+                    <span class="ov2-metric__top">
+                        <span class="ov2-metric__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
+                        <i class="fas fa-arrow-up-left ov2-metric__arrow" aria-hidden="true"></i>
+                    </span>
+                    <strong class="ov2-metric__value ov2-metric__value--money">{{ total_spent|currency }}</strong>
+                    <span class="ov2-metric__label">مجموع خرید (تومان)</span>
+                    <span class="ov2-metric__note">از سفارش‌های موفق</span>
+                </a>
+            </div>
+        </section>
+
+        {% if pending_orders_count %}
+        <a class="ov2-attention" href="{{ dashboard_tab_urls.orders }}" aria-label="مشاهده {{ pending_orders_count }} سفارش در انتظار پرداخت یا بررسی">
+            <span class="ov2-attention__icon"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i></span>
+            <span class="ov2-attention__text"><strong>{{ pending_orders_count }} سفارش</strong> در انتظار پرداخت یا بررسی است. برای پیگیری، وضعیت آن‌ها را ببینید.</span>
+            <span class="ov2-attention__link">مشاهده سفارش‌ها <i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+        </a>
+        {% endif %}
+
+        <section class="ov2-section" aria-labelledby="ov2-shortcuts-title">
+            <div class="ov2-section__header">
+                <div>
+                    <h2 id="ov2-shortcuts-title">دسترسی سریع</h2>
+                    <p>کارهای مهم، بدون مسیرهای اضافه</p>
                 </div>
-            </article>
-            {% endfor %}
-        </div>
-        <div class="mk-acc-orders-table-wrap mk-acc-desk-only">
-            <table class="mk-acc-orders-table">
-                <thead>
-                    <tr>
-                        <th scope="col">محصول</th>
-                        <th scope="col">تاریخ</th>
-                        <th scope="col">مبلغ</th>
-                        <th scope="col">وضعیت</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in paid_orders_for_overview %}
-                    <tr>
-                        <td class="product-cell" data-label="محصول">{{ order.product.title }}</td>
-                        <td class="date-cell" data-label="تاریخ">{{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</td>
-                        <td class="amount-cell" data-label="مبلغ">{{ order.amount|currency }} تومان</td>
-                        <td data-label="وضعیت">
-                            <span class="mk-acc-status-pill">
-                                <i class="fas fa-check" aria-hidden="true"></i>
-                                {{ order.get_status_display }}
-                            </span>
-                        </td>
-                    </tr>
+            </div>
+            <nav class="ov2-shortcuts" aria-label="میانبرهای حساب">
+                <a href="{% url 'workspace:home' %}" class="ov2-shortcut ov2-shortcut--primary">
+                    <span class="ov2-shortcut__icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
+                    <span class="ov2-shortcut__copy">
+                        <strong class="ov2-shortcut__title">میزکار</strong>
+                        <small class="ov2-shortcut__desc">فایل‌ها، مشتریان و معاملات</small>
+                    </span>
+                    <i class="fas fa-chevron-left ov2-shortcut__chevron" aria-hidden="true"></i>
+                </a>
+                <a href="{{ dashboard_tab_urls.orders }}" class="ov2-shortcut">
+                    <span class="ov2-shortcut__icon"><i class="fas fa-bag-shopping" aria-hidden="true"></i></span>
+                    <span class="ov2-shortcut__copy">
+                        <strong class="ov2-shortcut__title">سفارش‌ها</strong>
+                        <small class="ov2-shortcut__desc">پیگیری خریدها و پرداخت</small>
+                    </span>
+                    <i class="fas fa-chevron-left ov2-shortcut__chevron" aria-hidden="true"></i>
+                </a>
+                <a href="{{ dashboard_tab_urls.licenses }}" class="ov2-shortcut">
+                    <span class="ov2-shortcut__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                    <span class="ov2-shortcut__copy">
+                        <strong class="ov2-shortcut__title">لایسنس‌ها</strong>
+                        <small class="ov2-shortcut__desc">مدیریت دسترسی و تمدید</small>
+                    </span>
+                    <i class="fas fa-chevron-left ov2-shortcut__chevron" aria-hidden="true"></i>
+                </a>
+                <a href="{{ dashboard_tab_urls.downloads }}" class="ov2-shortcut">
+                    <span class="ov2-shortcut__icon"><i class="fas fa-cloud-arrow-down" aria-hidden="true"></i></span>
+                    <span class="ov2-shortcut__copy">
+                        <strong class="ov2-shortcut__title">دانلود اپ‌ها</strong>
+                        <small class="ov2-shortcut__desc">اندروید و ویندوز</small>
+                    </span>
+                    <i class="fas fa-chevron-left ov2-shortcut__chevron" aria-hidden="true"></i>
+                </a>
+            </nav>
+        </section>
+
+        <div class="ov2-content-grid">
+            <section class="ov2-panel" aria-labelledby="acc-licenses-title">
+                <header class="ov2-panel__header">
+                    <div class="ov2-panel__heading">
+                        <h2 id="acc-licenses-title">لایسنس‌های من</h2>
+                        <p>وضعیت و اعتبار دسترسی‌های اخیر</p>
+                    </div>
+                    <a class="ov2-panel__link" href="{{ dashboard_tab_urls.licenses }}">مشاهده همه <i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+                </header>
+
+                {% if overview_licenses %}
+                <div class="ov2-records">
+                    {% for license in overview_licenses %}
+                    <article class="ov2-license" id="overview-license-{{ license.id }}">
+                        <div class="ov2-license__head">
+                            <div class="ov2-license__identity">
+                                <span class="ov2-license__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                                <strong class="ov2-license__name">{{ license.order.product.title }}</strong>
+                            </div>
+                            {% if license.overview_is_active %}
+                            <span class="ov2-license__state"><i class="fas fa-circle-check" aria-hidden="true"></i> فعال</span>
+                            {% else %}
+                            <span class="ov2-license__state ov2-license__state--expired"><i class="fas fa-circle-xmark" aria-hidden="true"></i> غیرفعال</span>
+                            {% endif %}
+                        </div>
+                        <div class="ov2-license__meta">
+                            <span class="ov2-license__meta-label">اعتبار تا</span>
+                            {% if license.expires_at %}
+                            <time class="ov2-license__meta-value" datetime="{{ license.expires_at|date:'c' }}">{{ license.expires_at|to_jalali_date:"%Y/%m/%d" }}</time>
+                            {% else %}
+                            <span class="ov2-license__meta-value">نامحدود</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ dashboard_tab_urls.licenses }}#license-{{ license.id }}" class="ov2-license__manage">
+                            مدیریت لایسنس <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        </a>
+                    </article>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p class="mk-acc-empty">هنوز سفارش پرداخت‌شده‌ای ندارید.</p>
-        {% endif %}
-    </section>
-</div>
+                </div>
+                {% else %}
+                <div class="ov2-empty">
+                    <span class="ov2-empty__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                    <strong>هنوز لایسنسی ثبت نشده است</strong>
+                    <span>برای استفاده از ابزارهای استخراج، پلن مناسب خود را انتخاب کنید.</span>
+                    <a href="{% url 'product_list' %}">مشاهده پلن‌ها <i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+                </div>
+                {% endif %}
+            </section>
 
-{% if has_paid_orders %}
-<section class="mk-acc-mob-aff-teaser mk-acc-mob-only" aria-labelledby="acc-affiliate-mob-title">
-    <div class="mk-acc-mob-aff-teaser__head">
-        <h2 class="mk-acc-mob-aff-teaser__title" id="acc-affiliate-mob-title">همکاری در فروش</h2>
-        <a href="{{ dashboard_tab_urls.affiliate }}" class="mk-acc-panel__link">جزئیات</a>
-    </div>
-    <div class="mk-acc-mob-aff-teaser__stats">
-        <div class="mk-acc-mob-aff-teaser__stat">
-            <span>فروش</span>
-            <strong>{{ affiliate_stats.total_sales_count|default:0 }}</strong>
-        </div>
-        <div class="mk-acc-mob-aff-teaser__stat">
-            <span>موجودی کیف پول</span>
-            <strong>{% if affiliate_wallet %}{{ affiliate_wallet.balance|currency }}{% else %}0{% endif %}</strong>
-        </div>
-    </div>
-    <a href="{{ dashboard_tab_urls.affiliate }}" class="mk-acc-mob-aff-teaser__link">
-        <i class="fas fa-handshake" aria-hidden="true"></i>
-        مدیریت لینک معرف و برداشت
-    </a>
-</section>
+            <section class="ov2-panel" aria-labelledby="acc-orders-title">
+                <header class="ov2-panel__header">
+                    <div class="ov2-panel__heading">
+                        <h2 id="acc-orders-title">آخرین خریدها</h2>
+                        <p>پنج سفارش پرداخت‌شده اخیر</p>
+                    </div>
+                    <a class="ov2-panel__link" href="{{ dashboard_tab_urls.orders }}">مشاهده همه <i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+                </header>
 
-<section class="mk-acc-affiliate mk-acc-desk-only" aria-labelledby="acc-affiliate-title">
-    <div class="mk-acc-affiliate__head">
-        <h2 class="mk-acc-affiliate__title" id="acc-affiliate-title">همکاری در فروش</h2>
+                {% if paid_orders_for_overview %}
+                <div class="ov2-records">
+                    {% for order in paid_orders_for_overview %}
+                    <article class="ov2-order">
+                        <div class="ov2-order__main">
+                            <span class="ov2-order__icon"><i class="fas fa-bag-shopping" aria-hidden="true"></i></span>
+                            <div class="ov2-order__copy">
+                                <strong class="ov2-order__name">{{ order.product.title }}</strong>
+                                <span class="ov2-order__detail">
+                                    {% if order.plan %}{{ order.plan.name }} · {% endif %}
+                                    <time datetime="{{ order.created_at|date:'c' }}">{{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</time>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="ov2-order__side">
+                            <strong class="ov2-order__price">{{ order.amount|currency }} <small>تومان</small></strong>
+                            <span class="ov2-order__state"><i class="fas fa-check" aria-hidden="true"></i> {{ order.get_status_display }}</span>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="ov2-empty">
+                    <span class="ov2-empty__icon"><i class="fas fa-bag-shopping" aria-hidden="true"></i></span>
+                    <strong>هنوز خرید موفقی ثبت نشده است</strong>
+                    <span>پس از پرداخت، خلاصه سفارش‌های شما اینجا نمایش داده می‌شود.</span>
+                    <a href="{% url 'product_list' %}">مشاهده محصولات <i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+                </div>
+                {% endif %}
+            </section>
+        </div>
+
         {% if has_paid_orders %}
-        <a href="{{ dashboard_tab_urls.affiliate }}" class="mk-acc-panel__link">مشاهده جزئیات</a>
+        <section class="ov2-affiliate ov2-section" aria-labelledby="acc-affiliate-title">
+            <header class="ov2-section__header">
+                <div>
+                    <h2 id="acc-affiliate-title">همکاری در فروش</h2>
+                    <p>آمار معرفی کاربران و درآمد همکاری شما</p>
+                </div>
+                <a class="ov2-section__link" href="{{ dashboard_tab_urls.affiliate }}">داشبورد همکاری <i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+            </header>
+            <div class="ov2-affiliate__metrics">
+                <div class="ov2-affiliate__metric">
+                    <span>فروش ثبت‌شده</span>
+                    <strong>{{ affiliate_stats.total_sales_count|default:0 }}</strong>
+                </div>
+                <div class="ov2-affiliate__metric">
+                    <span>کل کمیسیون</span>
+                    <strong>{{ affiliate_stats.total_commission|default:0|currency }}</strong>
+                    <small>تومان</small>
+                </div>
+                <div class="ov2-affiliate__metric">
+                    <span>موجودی کیف پول</span>
+                    <strong>{% if affiliate_wallet %}{{ affiliate_wallet.balance|currency }}{% else %}۰{% endif %}</strong>
+                    <small>تومان</small>
+                </div>
+                <div class="ov2-affiliate__metric">
+                    <span>کاربران معرفی‌شده</span>
+                    <strong>{{ affiliate_stats.referred_users_count|default:0 }}</strong>
+                </div>
+            </div>
+
+            {% if affiliate and affiliate_stats.referral_url %}
+            <div class="ov2-affiliate__invite">
+                <div class="ov2-affiliate__invite-copy">
+                    <label for="affiliateReferralLinkOverview">لینک اختصاصی معرف شما</label>
+                    <p>لینک را کپی و با همکاران خود به اشتراک بگذارید.</p>
+                </div>
+                <p class="ov2-affiliate__code">
+                    کد معرف: <strong dir="ltr">{{ affiliate.code }}</strong>
+                    <button type="button" data-copy-text="{{ affiliate.code }}" aria-label="کپی کد معرف"><i class="fas fa-copy" aria-hidden="true"></i></button>
+                </p>
+            </div>
+            <div class="ov2-affiliate__referral">
+                <input type="text" value="{{ affiliate_stats.referral_url }}" readonly id="affiliateReferralLinkOverview" dir="ltr" aria-label="لینک اختصاصی معرفی">
+                <button type="button" class="ov2-affiliate__copy" data-copy-target="affiliateReferralLinkOverview" aria-label="کپی لینک معرف">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
+                    <span class="mk-acc-affiliate__copy-text">کپی لینک</span>
+                </button>
+            </div>
+            {% else %}
+            <p class="ov2-affiliate__pending">لینک معرفی شما در حال آماده‌سازی است؛ برای مشاهده وضعیت به داشبورد همکاری در فروش بروید.</p>
+            {% endif %}
+        </section>
         {% endif %}
     </div>
-
-    <div class="mk-acc-affiliate__stats">
-        <article class="mk-acc-affiliate-stat">
-            <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-chart-column" aria-hidden="true"></i></span>
-            <div>
-                <span class="mk-acc-affiliate-stat__label">تعداد فروش</span>
-                <span class="mk-acc-affiliate-stat__value">{{ affiliate_stats.total_sales_count|default:0 }}</span>
-            </div>
-        </article>
-        <article class="mk-acc-affiliate-stat">
-            <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-coins" aria-hidden="true"></i></span>
-            <div>
-                <span class="mk-acc-affiliate-stat__label">کل کمیسیون</span>
-                <span class="mk-acc-affiliate-stat__value">{{ affiliate_stats.total_commission|default:0|currency }} <span class="mk-acc-affiliate-stat__sub">تومان</span></span>
-            </div>
-        </article>
-        <article class="mk-acc-affiliate-stat">
-            <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
-            <div>
-                <span class="mk-acc-affiliate-stat__label">موجودی کیف پول</span>
-                <span class="mk-acc-affiliate-stat__value">{% if affiliate_wallet %}{{ affiliate_wallet.balance|currency }}{% else %}0{% endif %} <span class="mk-acc-affiliate-stat__sub">تومان</span></span>
-            </div>
-        </article>
-        <article class="mk-acc-affiliate-stat">
-            <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-            <div>
-                <span class="mk-acc-affiliate-stat__label">زیرمجموعه</span>
-                <span class="mk-acc-affiliate-stat__value">{{ affiliate_stats.referred_users_count|default:0 }}</span>
-                <span class="mk-acc-affiliate-stat__sub">{{ affiliate_stats.referred_users_without_orders|default:0 }} در انتظار خرید</span>
-            </div>
-        </article>
-    </div>
-
-    {% if affiliate and affiliate_stats.referral_url %}
-    <label class="mk-acc-affiliate__link-label" for="affiliateReferralLinkOverview">لینک معرف شما</label>
-    <div class="mk-acc-affiliate__link-row">
-        <input type="text"
-               value="{{ affiliate_stats.referral_url }}"
-               readonly
-               class="mk-acc-affiliate__link-input"
-               id="affiliateReferralLinkOverview"
-               dir="ltr">
-        <button type="button"
-                class="mk-acc-affiliate__copy-btn"
-                data-copy-target="affiliateReferralLinkOverview"
-                aria-label="کپی لینک معرف">
-            <i class="fas fa-copy" aria-hidden="true"></i>
-            <span class="mk-acc-affiliate__copy-text">کپی</span>
-        </button>
-    </div>
-    <p class="mk-acc-affiliate__code">
-        کد معرف:
-        <strong dir="ltr">{{ affiliate.code }}</strong>
-        <button type="button"
-                class="mk-acc-affiliate__copy-code"
-                data-copy-text="{{ affiliate.code }}"
-                aria-label="کپی کد معرف"
-                style="border:0;background:none;color:#7c3aed;cursor:pointer;padding:0 0.25rem;font-size:0.75rem;">
-            <i class="fas fa-copy" aria-hidden="true"></i>
-        </button>
-    </p>
-    {% elif has_paid_orders %}
-    <p class="mk-acc-empty">لینک معرف در حال آماده‌سازی است. لطفاً چند لحظه بعد صفحه را رفرش کنید.</p>
-    {% endif %}
-</section>
-{% endif %}
-</div>
 </div>

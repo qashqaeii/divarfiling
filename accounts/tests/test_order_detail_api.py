@@ -2,6 +2,10 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from django.utils import timezone
+
+from licenses.models import License
+from licenses.utils import generate_license_key
 from shop.models import LicensePlan, Order, Product
 
 User = get_user_model()
@@ -65,6 +69,28 @@ class OrderDetailApiTests(TestCase):
         url = reverse('dashboard_order_detail', kwargs={'order_id': other_order.id})
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 404)
+
+    def test_paid_order_detail_includes_license_stats(self):
+        self.order.status = 'paid'
+        self.order.paid_at = timezone.now()
+        self.order.save()
+        License.objects.create(
+            order=self.order,
+            sequence=1,
+            license_key=generate_license_key(self.order, sequence=1),
+            plan=self.plan,
+            max_activations=self.plan.max_activations,
+            expires_at=timezone.now() + timezone.timedelta(days=30),
+            status='inactive',
+        )
+        url = reverse('dashboard_order_detail', kwargs={'order_id': self.order.id})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200, resp.content[:500])
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        stats = data['order']['license_stats']
+        self.assertEqual(stats['total'], 1)
+        self.assertIsNotNone(stats['nearest_expires_at'])
 
     def test_orders_tab_renders_detail_triggers(self):
         resp = self.client.get(reverse('dashboard_tab', kwargs={'tab': 'orders'}))

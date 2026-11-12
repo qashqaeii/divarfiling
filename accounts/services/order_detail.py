@@ -112,14 +112,26 @@ def _build_actions(order: Order, *, android_available: bool) -> list[dict]:
     return actions
 
 
+def _licenses_queryset_for_order(order: Order):
+    """لایسنس‌های مرتبط با سفارش — شامل سفارش تمدید با OrderRenewalItem."""
+    from licenses.services.renewal_orders import order_has_renewal_items
+
+    base = License.objects.select_related('order__product', 'plan')
+    if order_has_renewal_items(order):
+        return base.filter(renewal_items__order=order).distinct().order_by('sequence', 'pk')
+    if order.renewal_license_id:
+        return base.filter(pk=order.renewal_license_id)
+    return base.filter(order=order).order_by('sequence', 'pk')
+
+
 def _license_stats(order: Order) -> dict:
     now = timezone.now()
-    qs = License.objects.filter(order=order).select_related('order__product', 'plan')
-    total = qs.count()
+    licenses = list(_licenses_queryset_for_order(order))
+    total = len(licenses)
     active = 0
     expired = 0
     nearest = None
-    for lic in qs.only('status', 'expires_at'):
+    for lic in licenses:
         lic.sync_expiration_status(save=False)
         if lic.status == 'expired' or (lic.expires_at and lic.expires_at <= now):
             expired += 1
@@ -127,7 +139,7 @@ def _license_stats(order: Order) -> dict:
             active += 1
         if lic.expires_at and (nearest is None or lic.expires_at < nearest):
             nearest = lic.expires_at
-    renewable = sum(1 for lic in qs if evaluate_license_renewal(lic)[0])
+    renewable = sum(1 for lic in licenses if evaluate_license_renewal(lic)[0])
     return {
         'total': total,
         'active': active,

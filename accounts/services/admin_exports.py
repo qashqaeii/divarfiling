@@ -114,15 +114,11 @@ def _paid_orders_rows(days: int | None = None) -> Tuple[List[str], Iterable[Expo
         'شناسه سفارش', 'نام کاربر', 'موبایل', 'محصول', 'پلن', 'مبلغ (تومان)',
         'تخفیف (تومان)', 'روش پرداخت', 'تاریخ پرداخت', 'تاریخ ایجاد',
     ]
-    qs = Order.objects.filter(status='paid').select_related('user', 'product', 'plan')
-    if days is not None:
-        from accounts.services.admin_dashboard import all_time_start_date, is_all_time_range
+    from accounts.services.admin_dashboard import paid_orders_queryset_for_panel_days
 
-        if is_all_time_range(days):
-            qs = qs.filter(paid_at__date__gte=all_time_start_date())
-        elif days:
-            since = timezone.now() - timedelta(days=days)
-            qs = qs.filter(paid_at__gte=since)
+    qs = Order.objects.filter(status='paid', paid_at__isnull=False).select_related('user', 'product', 'plan')
+    if days is not None:
+        qs = paid_orders_queryset_for_panel_days(days)
     qs = qs.order_by('-paid_at')
     rows = [
         {
@@ -759,10 +755,9 @@ def get_export_count(export_key: str, days: int | None = None) -> int:
     if not meta:
         return 0
     if export_key == 'paid_orders' and days is not None:
-        if is_all_time_range(days):
-            return Order.objects.filter(status='paid', paid_at__date__gte=all_time_start_date()).count()
-        since = timezone.now() - timedelta(days=days)
-        return Order.objects.filter(status='paid', paid_at__gte=since).count()
+        from accounts.services.admin_dashboard import paid_orders_queryset_for_panel_days
+
+        return paid_orders_queryset_for_panel_days(days).count()
     if export_key == 'new_users' and days is not None:
         if is_all_time_range(days):
             since = timezone.make_aware(

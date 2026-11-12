@@ -57,8 +57,9 @@ class AdminDashboardServiceTests(TestCase):
         for data in bot_license_plans():
             LicensePlan.objects.create(product=product, **data)
 
+        expected = len(bot_license_plans())
         plans = get_plan_sales_breakdown()
-        self.assertEqual(len(plans), 4)
+        self.assertEqual(len(plans), expected)
         self.assertEqual(plans[0]['plan_type'], 'daily')
         self.assertIn('short_label', plans[0])
         self.assertIn('total', plans[0])

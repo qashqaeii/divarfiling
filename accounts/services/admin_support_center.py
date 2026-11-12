@@ -8,6 +8,7 @@ from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.services.admin_command_queues import qs_unread_tickets
 from accounts.services.admin_dashboard import (
     TABLE_PREVIEW_ROWS,
     _date_range,
@@ -467,7 +468,12 @@ def _serialize_withdrawals(items) -> List[Dict[str, Any]]:
     return rows
 
 
-def get_support_center_context(*, days: int = 30, compare: bool = False) -> Dict[str, Any]:
+def get_support_center_context(
+    *,
+    days: int = 30,
+    compare: bool = False,
+    focus: str | None = None,
+) -> Dict[str, Any]:
     del compare
 
     start, end = _date_range(days)
@@ -507,7 +513,12 @@ def get_support_center_context(*, days: int = 30, compare: bool = False) -> Dict
         'ticket_intelligence': ticket_intel,
         'charts': charts,
         'charts_enabled': bool(charts),
-        'open_tickets_rows': _serialize_tickets(get_open_tickets(limit=TABLE_PREVIEW_ROWS)),
+        'open_tickets_rows': _serialize_tickets(
+            qs_unread_tickets()[:TABLE_PREVIEW_ROWS]
+            if focus == 'unread_tickets'
+            else get_open_tickets(limit=TABLE_PREVIEW_ROWS)
+        ),
+        'ticket_list_focus': focus or '',
         'card_transfer_rows': _serialize_card_transfers(get_pending_card_transfers(limit=TABLE_PREVIEW_ROWS)),
         'withdrawal_rows': _serialize_withdrawals(get_pending_withdrawals(limit=TABLE_PREVIEW_ROWS)),
         'snapshot_counts': snapshot,

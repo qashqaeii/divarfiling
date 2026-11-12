@@ -118,29 +118,30 @@ class SalesCenterServiceTests(TestCase):
         ctx = get_sales_center_context(days=30)
         keys = {item['key'] for item in ctx['action_items']}
         self.assertIn('orders_pending', keys)
-        self.assertIn('orders_failed', keys)
+        self.assertIn('orders_failed_today', keys)
         self.assertGreaterEqual(len(ctx['pending_orders']), 1)
         self.assertGreaterEqual(len(ctx['failed_orders']), 1)
 
     def test_pct_change_no_baseline_is_none_not_100(self):
         self.assertIsNone(_pct_change(1000, 0))
 
-    def test_conversion_rate_capped_for_cohort(self):
-        buyer_a = User.objects.create_user(username='nc_a', password='x', phone='09120000021')
-        buyer_b = User.objects.create_user(username='nc_b', password='x', phone='09120000022')
+    def test_conversion_ignores_legacy_buyers_without_signup_in_range(self):
         paid_at = timezone.make_aware(datetime.combine(self.today, time(12, 0)))
-        for user in (buyer_a, buyer_b):
-            Order.objects.create(
-                user=user,
-                product=self.product,
-                plan=self.plan,
-                amount=Decimal(100000),
-                status='paid',
-                paid_at=paid_at,
-            )
+        User.objects.create_user(username='nc_new', password='x', phone='09120000021')
+        legacy = User.objects.create_user(username='nc_old', password='x', phone='09120000022')
+        legacy.date_joined = timezone.make_aware(datetime.combine(self.today - timedelta(days=60), time(9, 0)))
+        legacy.save(update_fields=['date_joined'])
+        Order.objects.create(
+            user=legacy,
+            product=self.product,
+            plan=self.plan,
+            amount=Decimal(100000),
+            status='paid',
+            paid_at=paid_at,
+        )
         ctx = get_sales_center_context(days=7)
         conv = next(c for c in ctx['kpi_cards'] if c['key'] == 'conversion_rate')
-        self.assertLessEqual(conv['value'], 100.0)
+        self.assertEqual(conv['value'], 0.0)
 
     def test_all_time_revenue_delta_not_fake_100(self):
         self._paid_order(self.today, 200000)

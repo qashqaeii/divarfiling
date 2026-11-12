@@ -1080,6 +1080,17 @@ def _new_users_between(start, end) -> int:
     ).count()
 
 
+def paid_orders_queryset_for_panel_days(days: int):
+    """سفارش‌های پرداخت‌شده در بازهٔ پنل — هم‌تراز KPI و خروجی Excel."""
+    start, end = _date_range(days)
+    return Order.objects.filter(
+        status='paid',
+        paid_at__isnull=False,
+        paid_at__date__gte=start,
+        paid_at__date__lte=end,
+    )
+
+
 def _revenue_for_period(days: int) -> int:
     start, end = _date_range(days)
     return _revenue_between(start, end)
@@ -1144,6 +1155,7 @@ def build_command_center_kpi_cards(
             'key': 'revenue_period',
             'label': 'درآمد بازه',
             'sublabel': f'{range_label} · تومان',
+            'kpi_tier': 'range',
             'value': period_revenue,
             'format': 'money',
             'delta': _range_delta(chart_days, period_revenue, prev_revenue),
@@ -1157,6 +1169,7 @@ def build_command_center_kpi_cards(
             'key': 'orders_paid_period',
             'label': 'سفارش پرداخت‌شده',
             'sublabel': range_label,
+            'kpi_tier': 'range',
             'value': period_orders,
             'format': 'count',
             'delta': _range_delta(chart_days, period_orders, prev_orders),
@@ -1170,6 +1183,7 @@ def build_command_center_kpi_cards(
             'key': 'users_new_period',
             'label': 'کاربران جدید',
             'sublabel': new_users_sublabel,
+            'kpi_tier': 'range',
             'value': period_users,
             'format': 'count',
             'delta': _range_delta(chart_days, period_users, prev_users),
@@ -1183,11 +1197,15 @@ def build_command_center_kpi_cards(
             'key': 'users_active',
             'label': 'حساب‌های فعال',
             'sublabel': 'وضعیت فعلی · is_active',
+            'kpi_tier': 'snapshot',
             'value': stats['users_active'],
             'format': 'count',
             'delta': None,
-            'delta_label': f"{users_analytics.get('online_today', 0)} آنلاین امروز · {stats['users_total']} کل",
-            'sparkline': spark_signups,
+            'delta_label': (
+                f"{users_analytics.get('online_today', 0)} مشاهده‌شده امروز · "
+                f"{stats['users_total']} کل"
+            ),
+            'sparkline': None,
             'icon': 'fa-users',
             'accent': 'cyan',
             'status': 'ok',
@@ -1196,24 +1214,26 @@ def build_command_center_kpi_cards(
             'key': 'licenses_active',
             'label': 'لایسنس فعال',
             'sublabel': 'وضعیت فعلی',
+            'kpi_tier': 'snapshot',
             'value': stats['licenses_active'],
             'format': 'count',
             'delta': None,
             'delta_label': f"{stats['activations_total']} دستگاه · {stats['licenses_expiring_soon']} در شرف انقضا",
-            'sparkline': spark_lic,
+            'sparkline': None,
             'icon': 'fa-key',
             'accent': 'amber',
             'status': 'warn' if stats['licenses_expiring_soon'] > 3 else 'ok',
         },
         {
             'key': 'retention_30d',
-            'label': 'Retention 30 روزه',
-            'sublabel': 'وضعیت فعلی',
+            'label': 'کاربران قدیمی فعال (۳۰ روز)',
+            'sublabel': 'قدیمی با ورود در ۳۰ روز ÷ حساب فعال',
+            'kpi_tier': 'snapshot',
             'value': users_analytics.get('retention_30d', 0),
             'format': 'percent',
             'delta': None,
-            'delta_label': 'هدف ۷۰٪',
-            'sparkline': spark_signups,
+            'delta_label': 'نه کوهورت D30',
+            'sparkline': None,
             'icon': 'fa-chart-line',
             'accent': 'indigo',
             'status': 'ok' if users_analytics.get('retention_30d', 0) >= 60 else 'warn',
@@ -1222,75 +1242,9 @@ def build_command_center_kpi_cards(
 
 
 def build_command_action_items(stats: Dict[str, Any], sms_balance: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """ادغام هشدارها و صف اقدام — بدون تکرار."""
-    from django.urls import reverse
+    from accounts.services.admin_command_queues import build_command_action_items as build_queues
 
-    failed_orders = Order.objects.filter(status='failed').count()
-    extra_counts = {
-        'orders_failed': failed_orders,
-        'sms_low': 1 if sms_balance.get('is_low') and sms_balance.get('ok') else 0,
-    }
-    priority_rank = {'critical': 0, 'high': 1, 'medium': 2, 'opportunity': 3}
-
-    catalog = [
-        ('critical', 'orders_failed', 'پرداخت ناموفق', 'fa-circle-xmark', 'rose', 'بررسی', 'page:recovery'),
-        ('critical', 'unread_tickets', 'تیکت منتظر پاسخ', 'fa-headset', 'rose', 'مشاهده', 'page:support'),
-        ('critical', 'sms_low', 'موجودی SMS کم', 'fa-comment-sms', 'amber', 'شارژ', 'page:marketing'),
-        ('high', 'licenses_expiring_soon', 'لایسنس در شرف انقضا', 'fa-hourglass-half', 'amber', 'تمدید', 'page:marketing'),
-        ('high', 'orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'violet', 'بازیابی', 'page:recovery'),
-        ('high', 'pending_card_transfers', 'کارت‌به‌کارت معلق', 'fa-money-check', 'cyan', 'بررسی', 'export:card_transfers_pending'),
-        ('medium', 'pending_withdrawals', 'برداشت همکار', 'fa-wallet', 'emerald', 'تأیید', 'page:affiliates'),
-        ('medium', 'users_pending_payment', 'کاربر با سفارش معلق', 'fa-user-clock', 'blue', 'تماس', 'page:recovery'),
-        ('opportunity', 'users_without_license', 'کاربر بدون لایسنس', 'fa-user-slash', 'indigo', 'کمپین فروش', 'page:marketing'),
-    ]
-
-    page_links = {
-        'recovery': reverse('admin_panel_recovery_center'),
-        'marketing': reverse('admin_panel_marketing'),
-        'affiliates': reverse('admin_panel_affiliates'),
-        'support': reverse('admin_panel_support'),
-        'sales': reverse('admin_panel_sales'),
-    }
-
-    items: List[Dict[str, Any]] = []
-    seen_keys = set()
-
-    for priority, key, title, icon, accent, cta, link in catalog:
-        if key in seen_keys:
-            continue
-        count = int(extra_counts.get(key, stats.get(key) or 0))
-        if count <= 0:
-            continue
-        seen_keys.add(key)
-
-        if link.startswith('export:'):
-            export_key = link.split(':', 1)[1]
-            href = reverse('admin_panel_export', args=[export_key]) + '?format=xlsx'
-        else:
-            page_key = link.split(':', 1)[1]
-            href = page_links[page_key]
-
-        detail = f'{count} مورد'
-        if key == 'sms_low':
-            count_display = int(sms_balance.get('credit') or 0)
-            detail = f'{count_display:,} تومان باقی‌مانده'
-        else:
-            count_display = count
-
-        items.append({
-            'key': key,
-            'priority': priority,
-            'title': title,
-            'count': count_display,
-            'detail': detail,
-            'icon': icon,
-            'accent': accent,
-            'cta': cta,
-            'href': href,
-        })
-
-    items.sort(key=lambda row: (priority_rank.get(row['priority'], 9), -int(row['count'] or 0)))
-    return items
+    return build_queues(sms_balance=sms_balance, stats=stats)
 
 
 def get_command_center_context(days: int = 30) -> Dict[str, Any]:

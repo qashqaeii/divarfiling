@@ -46,9 +46,11 @@
             {% endif %}
             <span class="ecc-kpi-lbl">{{ card.label }}</span>
             <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+            {% if card.sparkline_json %}
             <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
                 <canvas id="spark-{{ card.key }}"></canvas>
             </div>
+            {% endif %}
         </article>
         {% endfor %}
     </div>
@@ -206,11 +208,49 @@
     </div>
 </section>
 
-<section class="ecc-section" id="sales-table-failed" aria-label="پرداخت‌های ناموفق">
+<section class="ecc-section" id="sales-queue-fulfillment" aria-label="صدور یا تمدید ناقص">
     <header class="ecc-section-head">
         <div>
-            <h2><i class="fas fa-circle-xmark"></i> پرداخت‌های ناموفق</h2>
-            <p>{{ snapshot_counts.orders_failed|to_persian_digits }} مورد · Snapshot</p>
+            <h2><i class="fas fa-key"></i> پرداخت موفق · صدور/تمدید ناقص</h2>
+            <p>{{ fulfillment_incomplete_count|to_persian_digits }} مورد · وضعیت fulfillment</p>
+        </div>
+        <a href="/admin/shop/order/?status__exact=paid" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
+            Django Admin <i class="fas fa-external-link-alt"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>پلن</th>
+                    <th>مبلغ</th>
+                    <th>وضعیت تکمیل</th>
+                    <th>پرداخت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in fulfillment_incomplete_orders %}
+                <tr>
+                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{{ order.plan.name }}</td>
+                    <td>{{ order.amount|currency }}</td>
+                    <td>{{ order.get_fulfillment_status_display }}{% if order.fulfillment_error %} · {{ order.fulfillment_error|truncatechars:40 }}{% endif %}</td>
+                    <td>{{ order.paid_at|to_jalali_fa }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">همه سفارش‌های paid تکمیل شده‌اند</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="sales-table-failed" aria-label="پرداخت‌های ناموفق امروز">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-circle-xmark"></i> پرداخت‌های ناموفق امروز</h2>
+            <p>{{ snapshot_counts.orders_failed_today|to_persian_digits }} مورد امروز</p>
         </div>
         <a href="{% url 'admin_panel_export' 'failed_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             خروجی <i class="fas fa-file-excel"></i>

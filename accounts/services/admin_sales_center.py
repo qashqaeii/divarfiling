@@ -3,8 +3,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Sum
 from django.urls import reverse
+
+User = get_user_model()
 
 from accounts.services.admin_dashboard import (
     CHART_COLORS,
@@ -30,6 +33,13 @@ from accounts.services.admin_dashboard import (
     get_plan_sales_for_date_range,
     get_recent_orders,
     get_revenue_series,
+)
+from accounts.services.admin_command_queues import (
+    count_fulfillment_incomplete,
+    fulfillment_incomplete_orders,
+    get_command_queue_spec,
+    qs_orders_failed_today,
+    qs_orders_pending,
 )
 from accounts.services.admin_panel_shell import format_admin_panel_days_param
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
@@ -79,8 +89,7 @@ def _conversion_rate_cohort(start, end) -> float:
     if not new_users:
         return 0.0
     converted = _cohort_converted_users_between(start, end)
-    rate = (converted / new_users) * 100
-    return round(min(rate, 100.0), 1)
+    return round((converted / new_users) * 100, 1)
 
 
 def _product_revenue_for_range(start, end, limit: int = 8) -> List[Dict[str, Any]]:
@@ -294,8 +303,9 @@ def _build_sales_kpi_cards(
 
 def build_sales_action_items() -> List[Dict[str, Any]]:
     """اقدامات فوری — Snapshot (وضعیت فعلی)."""
-    pending = Order.objects.filter(status__in=PENDING_ORDER_STATUSES).count()
-    failed = Order.objects.filter(status='failed').count()
+    pending = qs_orders_pending().count()
+    failed_today = qs_orders_failed_today().count()
+    fulfillment = count_fulfillment_incomplete()
     card_pending = CardTransferSubmission.objects.filter(status='pending').count()
 
     items: List[Dict[str, Any]] = []
@@ -311,13 +321,25 @@ def build_sales_action_items() -> List[Dict[str, Any]]:
             'cta': 'مشاهده',
             'href': '#sales-table-pending',
         })
-    if failed:
+    if fulfillment:
         items.append({
-            'key': 'orders_failed',
+            'key': 'fulfillment_incomplete',
             'priority': 'critical',
-            'title': 'پرداخت ناموفق',
-            'count': failed,
-            'detail': f'{failed} سفارش ناموفق',
+            'title': 'صدور/تمدید ناقص',
+            'count': fulfillment,
+            'detail': f'{fulfillment} سفارش paid بدون تکمیل',
+            'icon': 'fa-key',
+            'accent': 'rose',
+            'cta': 'رفع',
+            'href': '#sales-queue-fulfillment',
+        })
+    if failed_today:
+        items.append({
+            'key': 'orders_failed_today',
+            'priority': 'critical',
+            'title': 'پرداخت ناموفق امروز',
+            'count': failed_today,
+            'detail': f'{failed_today} مورد امروز',
             'icon': 'fa-circle-xmark',
             'accent': 'rose',
             'cta': 'بررسی',
@@ -360,7 +382,17 @@ def get_sales_export_links(days: int) -> List[Dict[str, Any]]:
     return links
 
 
-def get_sales_center_context(*, days: int = 30, compare: bool = False) -> Dict[str, Any]:
+def _orders_for_sales_focus(focus: str | None, *, limit: int) -> Dict[str, Any]:
+    if not focus:
+        return {}
+    spec = get_command_queue_spec(focus)
+    if not spec:
+        return {}
+    rows = list(spec['queue']()[:limit])
+    return {'focus': focus, 'focus_title': spec['title'], 'focus_rows': rows}
+
+
+def get_sales_center_context(*, days: int = 30, compare: bool = False, focus: str | None = None) -> Dict[str, Any]:
     """Context مرکز فروش — فقط queryهای مرتبط با این صفحه."""
     del compare  # delta همیشه نسبت دوره هم‌اندازه محاسبه می‌شود
 
@@ -415,8 +447,18 @@ def get_sales_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
         'payment_methods': payment_methods,
         'action_items': build_sales_action_items(),
         'recent_orders': get_recent_orders(limit=TABLE_PREVIEW_ROWS),
-        'failed_orders': get_failed_orders_recent(limit=TABLE_PREVIEW_ROWS),
-        'pending_orders': get_pending_orders(limit=TABLE_PREVIEW_ROWS),
+        'failed_orders': (
+            list(qs_orders_failed_today()[:TABLE_PREVIEW_ROWS])
+            if focus == 'failed_today'
+            else get_failed_orders_recent(limit=TABLE_PREVIEW_ROWS)
+        ),
+        'pending_orders': (
+            list(qs_orders_pending()[:TABLE_PREVIEW_ROWS])
+            if focus == 'pending'
+            else get_pending_orders(limit=TABLE_PREVIEW_ROWS)
+        ),
+        'fulfillment_incomplete_orders': fulfillment_incomplete_orders(limit=TABLE_FETCH_LIMIT),
+        'fulfillment_incomplete_count': count_fulfillment_incomplete(),
         'pending_card_transfers': get_pending_card_transfers(limit=TABLE_PREVIEW_ROWS),
         'card_transfer_rows': serialize_pending_card_transfers(limit=TABLE_PREVIEW_ROWS),
         'card_transfer_pending_count': CardTransferSubmission.objects.filter(status='pending').count(),
@@ -427,8 +469,10 @@ def get_sales_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
         'table_fetch_limit': TABLE_FETCH_LIMIT,
         'table_preview_rows': TABLE_PREVIEW_ROWS,
         'snapshot_counts': {
-            'orders_pending': Order.objects.filter(status__in=PENDING_ORDER_STATUSES).count(),
-            'orders_failed': Order.objects.filter(status='failed').count(),
+            'orders_pending': qs_orders_pending().count(),
+            'orders_failed_today': qs_orders_failed_today().count(),
+            'fulfillment_incomplete': count_fulfillment_incomplete(),
             'pending_card_transfers': CardTransferSubmission.objects.filter(status='pending').count(),
         },
+        **_orders_for_sales_focus(focus, limit=TABLE_FETCH_LIMIT),
     }

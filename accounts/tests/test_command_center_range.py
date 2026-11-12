@@ -155,9 +155,9 @@ class CommandCenterRangeViewTests(TestCase):
         self.assertContains(resp, '?days=all&amp;compare=1')
         self.assertContains(resp, '?days=7&amp;compare=1')
 
-    def test_retention_label_fixed_30d(self):
+    def test_retention_label_reflects_formula(self):
         resp = self.client.get(reverse('admin_panel'), {'days': '1'})
-        self.assertContains(resp, 'Retention 30 روزه')
+        self.assertContains(resp, 'کاربران قدیمی فعال')
 
     def test_new_users_sublabel_for_30_days(self):
         resp = self.client.get(reverse('admin_panel'), {'days': '30'})

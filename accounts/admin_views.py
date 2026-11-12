@@ -129,7 +129,8 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
 
         dashboard = get_command_center_context(days=days)
         for card in dashboard.get('kpi_cards', []):
-            card['sparkline_json'] = json.dumps(card.get('sparkline', []))
+            spark = card.get('sparkline')
+            card['sparkline_json'] = json.dumps(spark) if spark else ''
         ctx.update(dashboard)
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key
@@ -774,9 +775,11 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
-        data = get_sales_center_context(days=days, compare=compare)
+        focus = (self.request.GET.get('focus') or '').strip() or None
+        data = get_sales_center_context(days=days, compare=compare, focus=focus)
         for card in data.get('kpi_cards', []):
-            card['sparkline_json'] = json.dumps(card.get('sparkline', []))
+            spark = card.get('sparkline')
+            card['sparkline_json'] = json.dumps(spark) if spark else ''
         ctx.update(data)
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key
@@ -929,7 +932,8 @@ class AdminSupportCenterView(StaffRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
-        data = get_support_center_context(days=days, compare=compare)
+        focus = (self.request.GET.get('focus') or '').strip() or None
+        data = get_support_center_context(days=days, compare=compare, focus=focus)
         ctx.update(data)
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key

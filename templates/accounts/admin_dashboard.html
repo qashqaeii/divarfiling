@@ -41,13 +41,14 @@
 
 {% block admin_panel_content %}
 
-<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های کلیدی">
+<section class="ecc-section ecc-cmd-kpi" aria-label="گزارش بازه">
     <header class="ecc-cmd-section-label">
-        <span>شاخص‌های کلیدی</span>
+        <span>گزارش بازه</span>
         <em>{% if admin_panel_range_key == 'all' %}کل بازه{% elif chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
     </header>
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
         {% for card in kpi_cards %}
+        {% if card.kpi_tier == 'range' %}
         <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
             <div class="ecc-kpi-top">
                 <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
@@ -57,13 +58,41 @@
                 </span>
                 {% endif %}
             </div>
+            {% if card.value is None %}
+            <strong class="ecc-kpi-val">—</strong>
+            {% else %}
             <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            {% endif %}
             <span class="ecc-kpi-lbl">{{ card.label }}</span>
             <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+            {% if card.sparkline_json %}
             <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
                 <canvas id="spark-{{ card.key }}"></canvas>
             </div>
+            {% endif %}
         </article>
+        {% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-kpi ecc-cmd-kpi--snapshot" aria-label="وضعیت فعلی">
+    <header class="ecc-cmd-section-label">
+        <span>وضعیت فعلی</span>
+        <em>Snapshot · بدون وابستگی به بازهٔ بالا</em>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd ecc-kpi-grid--compact">
+        {% for card in kpi_cards %}
+        {% if card.kpi_tier == 'snapshot' %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+            </div>
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+        </article>
+        {% endif %}
         {% endfor %}
     </div>
 </section>
@@ -72,7 +101,7 @@
     <header class="ecc-cmd-actions-head">
         <div>
             <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
-            <p>موارد اولویت‌دار که امروز نیاز به توجه دارند</p>
+            <p>وضعیت فعلی — شمارش و سن از همان صف مقصد</p>
         </div>
         <span class="ecc-cmd-actions-count">{{ command_action_items|length|to_persian_digits }}</span>
     </header>
@@ -84,7 +113,7 @@
             <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
             <span class="ecc-cmd-action-body">
                 <strong>{{ item.title }}</strong>
-                <em>{{ item.detail }}</em>
+                <em>{% firstof item.oldest_label item.detail %}</em>
             </span>
             <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
             <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>

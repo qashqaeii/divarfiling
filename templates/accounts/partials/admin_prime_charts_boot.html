@@ -1,0 +1,7 @@
+{% if charts_enabled %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+window.admCharts = {{ charts_json|safe }};
+window.admChartDays = {{ chart_days }};
+</script>
+{% endif %}

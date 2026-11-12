@@ -328,6 +328,41 @@ def _build_range_kpi_cards(
     ]
 
 
+def build_support_center_pulse(
+    snapshot: Dict[str, int],
+    ticket_intel: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    focus_href = reverse('admin_panel_support') + '?focus=unread_tickets#support-table-tickets'
+    oldest = ticket_intel.get('oldest_open_age') or ''
+    return [
+        {
+            'label': 'تیکت خوانده‌نشده',
+            'value': snapshot.get('unread_tickets', 0),
+            'format': 'count',
+            'href': focus_href,
+            'hint': f'قدیمی‌ترین باز: {oldest}' if oldest else '',
+        },
+        {
+            'label': 'تیکت باز',
+            'value': snapshot.get('open_tickets', 0),
+            'format': 'count',
+            'href': '#support-table-tickets',
+        },
+        {
+            'label': 'پیام خوانده‌نشده (نوبت staff)',
+            'value': ticket_intel.get('awaiting_staff', 0),
+            'format': 'count',
+            'href': focus_href,
+        },
+        {
+            'label': 'کارت‌به‌کارت معلق',
+            'value': snapshot.get('pending_card_transfers', 0),
+            'format': 'count',
+            'href': '#support-table-card',
+        },
+    ]
+
+
 def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
     items: List[Dict[str, Any]] = []
     open_qs = Ticket.objects.exclude(status='closed')
@@ -350,8 +385,9 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
             'detail': detail,
             'icon': 'fa-headset',
             'accent': 'rose',
-            'cta': 'پاسخ',
-            'href': '#support-table-tickets',
+            'cta': 'مشاهده',
+            'href': reverse('admin_panel_support') + '?focus=unread_tickets#support-table-tickets',
+            'oldest_label': _age_label(dt) if dt else '',
         })
 
     open_count = snapshot.get('open_tickets', 0)
@@ -492,8 +528,10 @@ def get_support_center_context(
 
     charts = _build_charts(days)
     ticket_intel = _ticket_intelligence(days=days, start=start, end=end)
+    center_pulse = build_support_center_pulse(snapshot, ticket_intel)
 
     return {
+        'center_pulse': center_pulse,
         'chart_days': days,
         'range_label': range_label,
         'snapshot_kpi_cards': _build_snapshot_kpi_cards(snapshot),

@@ -1,5 +1,5 @@
 {% load persian_tags %}
-<nav class="ecc-sidebar ecc-sidebar--grouped" id="ecc-sidebar" aria-label="ناوبری پنل مدیریت" aria-hidden="true">
+<nav class="ecc-sidebar ecc-sidebar--grouped" id="ecc-sidebar" aria-label="ناوبری پنل مدیریت">
     <button type="button" class="ecc-sidebar-close" id="ecc-sidebar-close" aria-label="بستن منو">
         <i class="fas fa-times" aria-hidden="true"></i>
     </button>
@@ -8,14 +8,14 @@
 
     <a href="{% url 'admin_panel' %}{{ days_qs }}"
        class="ecc-nav-item{% if active == 'command' %} is-active{% endif %}"
-       data-nav-id="command">
+       data-nav-id="command"{% if active == 'command' %} aria-current="page"{% endif %}>
         <i class="fas fa-gauge-high" aria-hidden="true"></i>
         <span>فرمان</span>
     </a>
 
     <a href="{% url 'admin_panel_assistant' %}{{ days_qs }}"
        class="ecc-nav-item{% if active == 'assistant' %} is-active{% endif %}"
-       data-nav-id="assistant">
+       data-nav-id="assistant"{% if active == 'assistant' %} aria-current="page"{% endif %}>
         <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
         <span>دستیار مدیریت</span>
         {% if admin_panel_nav_badges.assistant_insights %}
@@ -24,120 +24,120 @@
     </a>
 
     <div class="ecc-nav-group{% if active == 'sales' or active == 'growth' or active == 'marketing' or active == 'recovery' or active == 'plan_conversion' or active == 'leads' %} is-open{% endif %}" data-nav-group="business">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'sales' or active == 'growth' or active == 'marketing' or active == 'recovery' or active == 'plan_conversion' or active == 'leads' %}true{% else %}false{% endif %}">
+        <button type="button" class="ecc-nav-group-toggle" aria-controls="ecc-nav-group-items-business" aria-expanded="{% if active == 'sales' or active == 'growth' or active == 'marketing' or active == 'recovery' or active == 'plan_conversion' or active == 'leads' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-briefcase" aria-hidden="true"></i> کسب‌وکار</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
-        <div class="ecc-nav-group-items">
+        <div class="ecc-nav-group-items" id="ecc-nav-group-items-business">
             <a href="{% url 'admin_panel_sales' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'sales' %} is-active{% endif %}"
-               data-nav-id="sales">
+               data-nav-id="sales"{% if active == 'sales' %} aria-current="page"{% endif %}>
                 <span>فروش و درآمد</span>
                 {% firstof admin_panel_nav_badges.orders_pending stats.orders_pending as sales_badge %}
                 {% if sales_badge %}<span class="ecc-nav-badge">{{ sales_badge|to_persian_digits }}</span>{% endif %}
             </a>
             <a href="{% url 'admin_panel_growth_pipeline' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'growth' %} is-active{% endif %}"
-               data-nav-id="growth">
+               data-nav-id="growth"{% if active == 'growth' %} aria-current="page"{% endif %}>
                 <span>رشد</span>
             </a>
             <a href="{% url 'admin_panel_marketing' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'marketing' %} is-active{% endif %}"
-               data-nav-id="marketing">
+               data-nav-id="marketing"{% if active == 'marketing' %} aria-current="page"{% endif %}>
                 <span>بازاریابی</span>
             </a>
             <a href="{% url 'admin_panel_recovery_center' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'recovery' %} is-active{% endif %}"
-               data-nav-id="recovery">
+               data-nav-id="recovery"{% if active == 'recovery' %} aria-current="page"{% endif %}>
                 <span>بازیابی</span>
             </a>
             <a href="{% url 'admin_panel_plan_conversion' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'plan_conversion' %} is-active{% endif %}"
-               data-nav-id="plan_conversion">
+               data-nav-id="plan_conversion"{% if active == 'plan_conversion' %} aria-current="page"{% endif %}>
                 <span>تبدیل پلن</span>
             </a>
             <a href="{% url 'admin_panel_lead_acquisition' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'leads' %} is-active{% endif %}"
-               data-nav-id="leads">
+               data-nav-id="leads"{% if active == 'leads' %} aria-current="page"{% endif %}>
                 <span>جذب سرنخ</span>
             </a>
         </div>
     </div>
 
     <div class="ecc-nav-group{% if active == 'users' or active == 'licenses' or active == 'crm' %} is-open{% endif %}" data-nav-group="customers">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'users' or active == 'licenses' or active == 'crm' %}true{% else %}false{% endif %}">
+        <button type="button" class="ecc-nav-group-toggle" aria-controls="ecc-nav-group-items-customers" aria-expanded="{% if active == 'users' or active == 'licenses' or active == 'crm' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-users" aria-hidden="true"></i> مشتریان</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
-        <div class="ecc-nav-group-items">
+        <div class="ecc-nav-group-items" id="ecc-nav-group-items-customers">
             <a href="{% url 'admin_panel_users' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'users' %} is-active{% endif %}"
-               data-nav-id="users">
+               data-nav-id="users"{% if active == 'users' %} aria-current="page"{% endif %}>
                 <span>کاربران</span>
             </a>
             <a href="{% url 'admin_panel_licenses' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'licenses' %} is-active{% endif %}"
-               data-nav-id="licenses">
+               data-nav-id="licenses"{% if active == 'licenses' %} aria-current="page"{% endif %}>
                 <span>لایسنس</span>
             </a>
             <a href="{% url 'admin_panel_crm' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'crm' %} is-active{% endif %}"
-               data-nav-id="crm">
+               data-nav-id="crm"{% if active == 'crm' %} aria-current="page"{% endif %}>
                 <span>CRM</span>
             </a>
         </div>
     </div>
 
     <div class="ecc-nav-group{% if active == 'operations' or active == 'support' or active == 'activity' or active == 'forum' %} is-open{% endif %}" data-nav-group="operations">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'operations' or active == 'support' or active == 'activity' or active == 'forum' %}true{% else %}false{% endif %}">
+        <button type="button" class="ecc-nav-group-toggle" aria-controls="ecc-nav-group-items-operations" aria-expanded="{% if active == 'operations' or active == 'support' or active == 'activity' or active == 'forum' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-sliders" aria-hidden="true"></i> عملیات</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
-        <div class="ecc-nav-group-items">
+        <div class="ecc-nav-group-items" id="ecc-nav-group-items-operations">
             <a href="{% url 'admin_panel_operations' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'operations' %} is-active{% endif %}"
-               data-nav-id="operations">
+               data-nav-id="operations"{% if active == 'operations' %} aria-current="page"{% endif %}>
                 <span>عملیات</span>
             </a>
             <a href="{% url 'admin_panel_support' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'support' %} is-active{% endif %}"
-               data-nav-id="support">
+               data-nav-id="support"{% if active == 'support' %} aria-current="page"{% endif %}>
                 <span>پشتیبانی</span>
                 {% firstof admin_panel_nav_badges.unread_tickets stats.unread_tickets as ticket_badge %}
                 {% if ticket_badge %}<span class="ecc-nav-badge">{{ ticket_badge|to_persian_digits }}</span>{% endif %}
             </a>
             <a href="{% url 'admin_panel_activity' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'activity' %} is-active{% endif %}"
-               data-nav-id="activity">
+               data-nav-id="activity"{% if active == 'activity' %} aria-current="page"{% endif %}>
                 <span>فعالیت</span>
             </a>
             <a href="{% url 'admin_panel_forum' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'forum' %} is-active{% endif %}"
-               data-nav-id="forum">
+               data-nav-id="forum"{% if active == 'forum' %} aria-current="page"{% endif %}>
                 <span>تالار گفتگو</span>
             </a>
         </div>
     </div>
 
     <div class="ecc-nav-group{% if active == 'windows' or active == 'android' or active == 'ai' %} is-open{% endif %}" data-nav-group="product">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'windows' or active == 'android' or active == 'ai' %}true{% else %}false{% endif %}">
+        <button type="button" class="ecc-nav-group-toggle" aria-controls="ecc-nav-group-items-product" aria-expanded="{% if active == 'windows' or active == 'android' or active == 'ai' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-cube" aria-hidden="true"></i> محصول</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
-        <div class="ecc-nav-group-items">
+        <div class="ecc-nav-group-items" id="ecc-nav-group-items-product">
             <a href="{% url 'admin_panel_windows' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'windows' %} is-active{% endif %}"
-               data-nav-id="windows">
+               data-nav-id="windows"{% if active == 'windows' %} aria-current="page"{% endif %}>
                 <span>ویندوز</span>
             </a>
             <a href="{% url 'admin_panel_android' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'android' %} is-active{% endif %}"
-               data-nav-id="android">
+               data-nav-id="android"{% if active == 'android' %} aria-current="page"{% endif %}>
                 <span>اندروید</span>
             </a>
             <a href="{% url 'admin_panel_ai' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'ai' %} is-active{% endif %}"
-               data-nav-id="ai">
+               data-nav-id="ai"{% if active == 'ai' %} aria-current="page"{% endif %}>
                 <i class="fas fa-brain" aria-hidden="true"></i>
                 <span>هوش مصنوعی</span>
             </a>
@@ -145,45 +145,45 @@
     </div>
 
     <div class="ecc-nav-group{% if active == 'blog' or active == 'academy' or active == 'blog_systematic' %} is-open{% endif %}" data-nav-group="content">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'blog' or active == 'academy' or active == 'blog_systematic' %}true{% else %}false{% endif %}">
+        <button type="button" class="ecc-nav-group-toggle" aria-controls="ecc-nav-group-items-content" aria-expanded="{% if active == 'blog' or active == 'academy' or active == 'blog_systematic' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-pen-nib" aria-hidden="true"></i> محتوا</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
-        <div class="ecc-nav-group-items">
+        <div class="ecc-nav-group-items" id="ecc-nav-group-items-content">
             <a href="{% url 'admin_panel_blog' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'blog' %} is-active{% endif %}"
-               data-nav-id="blog">
+               data-nav-id="blog"{% if active == 'blog' %} aria-current="page"{% endif %}>
                 <span>مقالات</span>
             </a>
             <a href="{% url 'admin_panel_academy' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'academy' %} is-active{% endif %}"
-               data-nav-id="academy">
+               data-nav-id="academy"{% if active == 'academy' %} aria-current="page"{% endif %}>
                 <span>آکادمی</span>
             </a>
             <a href="{% url 'admin_panel_blog_systematic' %}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'blog_systematic' %} is-active{% endif %}"
-               data-nav-id="blog_systematic">
+               data-nav-id="blog_systematic"{% if active == 'blog_systematic' %} aria-current="page"{% endif %}>
                 <span>انتشار سیستماتیک</span>
             </a>
         </div>
     </div>
 
     <div class="ecc-nav-group{% if active == 'affiliates' or active == 'exports' %} is-open{% endif %}" data-nav-group="system">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'affiliates' or active == 'exports' %}true{% else %}false{% endif %}">
+        <button type="button" class="ecc-nav-group-toggle" aria-controls="ecc-nav-group-items-system" aria-expanded="{% if active == 'affiliates' or active == 'exports' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-gear" aria-hidden="true"></i> سیستم</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
-        <div class="ecc-nav-group-items">
+        <div class="ecc-nav-group-items" id="ecc-nav-group-items-system">
             <a href="{% url 'admin_panel_affiliates' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'affiliates' %} is-active{% endif %}"
-               data-nav-id="affiliates">
+               data-nav-id="affiliates"{% if active == 'affiliates' %} aria-current="page"{% endif %}>
                 <span>همکاری</span>
                 {% firstof admin_panel_nav_badges.pending_withdrawals stats.pending_withdrawals as withdrawal_badge %}
                 {% if withdrawal_badge %}<span class="ecc-nav-badge">{{ withdrawal_badge|to_persian_digits }}</span>{% endif %}
             </a>
             <a href="{% url 'admin_panel_exports' %}{{ days_qs }}"
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'exports' %} is-active{% endif %}"
-               data-nav-id="exports">
+               data-nav-id="exports"{% if active == 'exports' %} aria-current="page"{% endif %}>
                 <span>خروجی</span>
             </a>
         </div>

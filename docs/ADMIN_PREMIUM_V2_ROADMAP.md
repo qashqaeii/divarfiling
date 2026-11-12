@@ -19,7 +19,7 @@
 |---|---|---|---|
 | 00 | Baseline map, deterministic bugs, sensitive permissions | Confirmed regressions fixed and tests added | 00A committed; 00B prepared; runtime verification open |
 | 01 | Revenue/licensing data fidelity and access control | Payment, fulfilment and renewals reconcile in test fixtures; access policy audited | 01A–01C committed; 01D sensitive admin access guarded; runtime validation remains OPEN |
-| 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | Pending |
+| 02 | Shared premium RTL design system and navigation architecture | Shared UI primitives; predictable navigation; accessible/responsive | 02A shared shell foundation prepared; per-module components and browser QA remain |
 | 03 | Action-first command center | Reliable KPI hierarchy, prioritized queues, direct drilldowns | Pending |
 | 04 | Sales/orders/payment workflows | Single auditable payment-to-entitlement flow and failure recovery | Pending |
 | 05 | Licenses, renewals and device seats | Transparent lifecycle and safe entitlement operations | Pending |
@@ -133,12 +133,32 @@ python manage.py check
 python manage.py test accounts.tests.test_admin_lead_finance_permissions accounts.tests.test_lead_acquisition accounts.tests.test_automation_message_templates accounts.tests.test_admin_affiliates_center affiliates.tests.test_referral_flow --keepdb
 ```
 
-## Remaining gates before phase 02
+## Phase 02A — one shared premium shell foundation (no page rewrites)
+
+- Add `static/css/mizkar-admin-v2-foundations.css` **after** existing module styles in the common shell. A single scoped token layer aligns the light/dark palette, surface hierarchy, action colors, data density, header, sidebar, KPI cards, data tables, focus states and mobile layout across all 23 management entry pages without individually editing business dashboards.
+- Add a keyboard-accessible skip link and a real focusable `#admin-main` target; keep one semantic `main` per management page.
+- Give all 23 sidebar destinations stable `aria-current="page"` on the actual server-selected link, plus explicit `aria-controls` for each of the six collapsible groups.
+- Fix the global time-window navigation: changing `days` preserves other query arguments such as `audit`, `focus`, search filters and repeated query keys. Switching to `all` drops `compare` by design.
+- Remove the obsolete dashboard scroll handler which incorrectly re-marked *other pages* as active sidebar links; the current destination is now server-authoritative. The mobile drawer handles Tab wrapping, Escape, focus restoration, and `aria-expanded` synchronisation.
+- Provide focus-visible outlines, 44px touch targets for the mobile drawer, color semantics in dark mode, reduced-motion support and forced-colors navigation affordances.
+- Add five focused tests for range-link preservation, sidebar semantics, key pages' shared asset loading and CSS/JS accessibility hooks.
+- No business KPI implementation, payment, license, database, SMS, model migration, or Production deployment changed. Avoid cosmetic churn in dashboard templates until shared components are validated.
+
+### Phase 02A validation
+
+```bash
+python manage.py check
+python manage.py test accounts.tests.test_admin_premium_v2_foundations accounts.tests.test_admin_panel_shell accounts.tests.test_admin_sales_center accounts.tests.test_admin_users_center --keepdb
+```
+
+Browser QA needed at 390px, 768px, 1024px and desktop widths in light/dark themes: open/close the menu by click, Tab, Shift+Tab and Escape; switch date range with `audit`/search filters; verify exactly one active sidebar destination. The GitHub connector cannot execute the Django suite or interact with a browser.
+
+## Remaining gates before phase 02B
 
 - Execute the accumulated phase 00–01 Django suites in isolated staging, with real PostgreSQL test DB. Resolve failures once from evidence; avoid speculative edit/revert cycles.
 - Audit existing affiliate payout concurrency and run proper DB transaction tests before activating concurrent settlement; no new auto-payout feature was added here.
 - Remaining platform privileged operations (forum moderation input limits and service-rollout toggles) should be handled as real, reproducible defects when their module phases arrive.
-- Stage 02 is next: a shared premium RTL design system and dashboard information hierarchy, implemented with reusable elements on high-traffic screens first.
+- Stage 02B next: unify the first-screen information hierarchy and reusable KPI/chart/action/empty-state components on Command, Sales, Users and Licenses, with actual responsive QA rather than arbitrary color changes.
 
 
 

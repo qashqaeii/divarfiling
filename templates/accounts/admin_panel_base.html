@@ -9,9 +9,11 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-premium.css' %}?v=1">
 {% block admin_panel_extra_css %}{% endblock %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-v2-foundations.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
+<a class="adm-v2-skip-link" href="#admin-main">رفتن به محتوای اصلی</a>
 <div class="adm-page ecc-page ecc-page--v2 ecc-page--shell adm-prime-shell">
     {% include 'accounts/partials/admin_prime_global_bar.html' %}
     <div class="ecc-shell">
@@ -19,7 +21,7 @@
 
         <div class="ecc-body">
             {% include 'accounts/partials/admin_panel_sidebar.html' %}
-            <main class="ecc-main adm-prime-main">
+            <main class="ecc-main adm-prime-main" id="admin-main" tabindex="-1">
                 {% block admin_panel_content %}{% endblock %}
             </main>
         </div>
@@ -30,7 +32,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-admin-panel-shell.js' %}?v=4"></script>
+<script src="{% static 'js/mizkar-admin-panel-shell.js' %}?v=5"></script>
 {% if admin_management_ai_enabled %}
 <script src="{% static 'js/mizkar-admin-management-ai.js' %}?v=3"></script>
 {% endif %}

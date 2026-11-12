@@ -121,6 +121,16 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     query_suffix = f'?days={range_key}'
     if request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL:
         query_suffix += '&compare=1'
+
+    # Changing the global date window must not erase local filters, such as
+    # payment audit, search, and focus. Copy QueryDict to preserve repeated keys.
+    range_links = {}
+    for key in ('all', '1', '7', '30', '90'):
+        query = request.GET.copy()
+        query['days'] = key
+        if key == ADMIN_PANEL_RANGE_ALL:
+            query.pop('compare', None)
+        range_links[key] = '?' + query.urlencode()
     from accounts.services.management_ai.service import is_management_ai_enabled
 
     return {
@@ -141,5 +151,6 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
         'admin_panel_nav_badges': badges,
         'admin_panel_alert_count': alert_count,
         'admin_panel_query_suffix': query_suffix,
+        'admin_panel_range_links': range_links,
         'admin_panel_range_label_fa': _range_label_fa(days),
     }

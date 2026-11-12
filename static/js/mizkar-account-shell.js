@@ -2,32 +2,82 @@
     var shell = document.querySelector('[data-account-shell]');
     if (!shell) return;
 
-    var openBtn = shell.querySelector('[data-account-sidebar-open]');
+    // The mobile chrome lives outside the main shell in base.html.
+    var openBtn = document.querySelector('[data-account-sidebar-open]');
     var closeBtn = shell.querySelector('[data-account-sidebar-close]');
     var backdrop = shell.querySelector('[data-account-backdrop]');
+    var sidebar = shell.querySelector('#accountSidebar');
+    var previousFocus = null;
+    var previousOverflow = '';
+    var mobileQuery = window.matchMedia('(max-width: 1024px)');
 
-    function setOpen(isOpen) {
-        shell.classList.toggle('is-sidebar-open', isOpen);
-        if (backdrop) backdrop.hidden = !isOpen;
-        document.body.style.overflow = isOpen ? 'hidden' : '';
+    function setOpen(shouldOpen) {
+        var next = Boolean(shouldOpen && mobileQuery.matches);
+        var wasOpen = shell.classList.contains('is-sidebar-open');
+        if (next === wasOpen) return;
+
+        if (next) {
+            previousFocus = document.activeElement;
+            previousOverflow = document.body.style.overflow;
+        }
+
+        shell.classList.toggle('is-sidebar-open', next);
+        if (backdrop) backdrop.hidden = !next;
+        if (openBtn) {
+            openBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+            openBtn.setAttribute('aria-label', next ? 'بستن منوی بخش‌های حساب' : 'نمایش همه بخش‌های حساب');
+        }
+        document.body.style.overflow = next ? 'hidden' : previousOverflow;
+
+        if (next && closeBtn) {
+            window.requestAnimationFrame(function () { closeBtn.focus(); });
+        } else if (!next && previousFocus && typeof previousFocus.focus === 'function') {
+            previousFocus.focus();
+            previousFocus = null;
+        }
     }
 
     if (openBtn) {
-        openBtn.addEventListener('click', function () { setOpen(true); });
+        openBtn.addEventListener('click', function () {
+            setOpen(!shell.classList.contains('is-sidebar-open'));
+        });
     }
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function () { setOpen(false); });
-    }
-    if (backdrop) {
-        backdrop.addEventListener('click', function () { setOpen(false); });
+    if (closeBtn) closeBtn.addEventListener('click', function () { setOpen(false); });
+    if (backdrop) backdrop.addEventListener('click', function () { setOpen(false); });
+
+    if (sidebar) {
+        sidebar.querySelectorAll('a[href]').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (mobileQuery.matches) setOpen(false);
+            });
+        });
     }
 
-    shell.querySelectorAll('.mk-account-sidebar__link').forEach(function (link) {
-        link.addEventListener('click', function () {
-            if (window.matchMedia('(max-width: 960px)').matches) {
-                setOpen(false);
-            }
-        });
+    document.addEventListener('keydown', function (event) {
+        if (!shell.classList.contains('is-sidebar-open') || !mobileQuery.matches) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            setOpen(false);
+            return;
+        }
+        if (event.key !== 'Tab' || !sidebar) return;
+        var focusables = Array.prototype.slice.call(
+            sidebar.querySelectorAll('a[href], button:not([disabled])')
+        ).filter(function (el) { return el.getClientRects().length > 0; });
+        if (!focusables.length) return;
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !sidebar.contains(document.activeElement))) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !sidebar.contains(document.activeElement))) {
+            event.preventDefault();
+            first.focus();
+        }
+    });
+
+    window.addEventListener('resize', function () {
+        if (!mobileQuery.matches && shell.classList.contains('is-sidebar-open')) setOpen(false);
     });
 
     function copyText(text, button) {
@@ -92,12 +142,20 @@
         });
     });
 
+    // Center the selected tab without scrolling the page vertically.
     var tabTrack = document.querySelector('[data-account-tab-track]');
     if (tabTrack) {
         var activeTab = tabTrack.querySelector('.mk-account-tab-rail__item.is-active');
         if (activeTab) {
             window.requestAnimationFrame(function () {
-                activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+                var railRect = tabTrack.getBoundingClientRect();
+                var tabRect = activeTab.getBoundingClientRect();
+                var delta = (tabRect.left + tabRect.width / 2) -
+                    (railRect.left + railRect.width / 2);
+                if (Math.abs(delta) > 4) {
+                    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    tabTrack.scrollBy({ left: delta, behavior: reduced ? 'auto' : 'smooth' });
+                }
             });
         }
     }

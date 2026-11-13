@@ -1104,12 +1104,16 @@
         const meta = field.meta
             ? '<span class="adm-u360-account-field__meta">' + field.meta + '</span>'
             : '';
+        // Copy only explicitly whitelisted, non-sensitive account values.
+        const copy = field.copyValue
+            ? '<button type="button" class="adm-u360-account-copy" data-u360-account-copy="' + encodeURIComponent(String(field.copyValue)) + '" aria-label="کپی ' + esc(field.label) + '"><i class="fas fa-copy" aria-hidden="true"></i><span>کپی</span></button>'
+            : '';
         return '<div class="adm-u360-account-field' + full + '" role="listitem">'
             + '<span class="adm-u360-account-field__icon" aria-hidden="true"><i class="fas ' + field.icon + '"></i></span>'
             + '<span class="adm-u360-account-field__label">' + esc(field.label) + '</span>'
             + '<div class="adm-u360-account-field__main">'
             + '<span class="adm-u360-account-field__value' + ltr + '">' + field.value + '</span>'
-            + meta
+            + meta + copy
             + '</div></div>';
     }
 
@@ -1192,9 +1196,9 @@
                 icon: 'fa-address-card',
                 fields: [
                     { icon: 'fa-user', label: 'نام و نام خانوادگی', value: esc(fullName || '—') },
-                    { icon: 'fa-phone', label: 'موبایل', value: esc(id.phone || '—'), ltr: true },
-                    { icon: 'fa-envelope', label: 'ایمیل', value: id.email ? esc(id.email) : '—', ltr: true },
-                    { icon: 'fa-at', label: 'نام کاربری', value: esc(id.username || '—'), ltr: true },
+                    { icon: 'fa-phone', label: 'موبایل', value: esc(id.phone || '—'), ltr: true, copyValue: id.phone },
+                    { icon: 'fa-envelope', label: 'ایمیل', value: id.email ? esc(id.email) : '—', ltr: true, copyValue: id.email },
+                    { icon: 'fa-at', label: 'نام کاربری', value: esc(id.username || '—'), ltr: true, copyValue: id.username },
                     {
                         icon: 'fa-fingerprint',
                         label: 'کد ملی',
@@ -1202,7 +1206,7 @@
                         ltr: true,
                     },
                     { icon: 'fa-user-tag', label: 'معرف', value: esc(referral.referred_by || '—') },
-                    { icon: 'fa-hashtag', label: 'شناسه کاربر', value: toFa(id.id) },
+                    { icon: 'fa-hashtag', label: 'شناسه کاربر', value: toFa(id.id), copyValue: id.id == null ? '' : String(id.id) },
                 ],
             },
             {
@@ -1221,6 +1225,7 @@
                         value: profile.postal_code
                             ? '<span class="adm-u360-ltr">' + esc(profile.postal_code) + '</span>'
                             : '—',
+                        copyValue: profile.postal_code,
                     },
                     {
                         icon: 'fa-map-location-dot',
@@ -1256,6 +1261,18 @@
             '<div class="adm-u360-account">' + renderAccountProfile(d, sens, perms) + '</div>',
             'account'
         );
+        const copyButtons = panel.querySelectorAll('[data-u360-account-copy]');
+        copyButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+                const value = decodeURIComponent(button.getAttribute('data-u360-account-copy') || '');
+                navigator.clipboard.writeText(value).then(function () {
+                    const label = button.querySelector('span');
+                    if (label) label.textContent = 'کپی شد';
+                    button.setAttribute('aria-label', 'کپی شد');
+                }).catch(function () {});
+            });
+        });
         const revealBtn = document.getElementById('admU360RevealNational');
         if (revealBtn) {
             revealBtn.addEventListener('click', function () {

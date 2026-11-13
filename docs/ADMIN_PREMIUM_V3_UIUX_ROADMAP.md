@@ -15,7 +15,7 @@ Approved reference: right-hand navy sidebar, purple #5B4FCF selection, clean whi
 | 04 | رشد | In progress — UI presentation pass committed; browser/Django validation pending | [stage 04 UI pass](#2026-11-13--stage-04-ui-pass) |
 | 05 | بازاریابی | In progress — UI presentation pass committed; runtime/browser QA pending | [stage 05 UI pass](#2026-11-13--stage-05-ui-pass) |
 | 06 | بازیابی | In progress — presentation pass committed; runtime/browser QA pending | [stage 06 UI pass](#2026-11-13--stage-06-ui-pass) |
-| 07 | تبدیل پلن | Not started | — |
+| 07 | تبدیل پلن | In progress — UI presentation pass committed; runtime/browser QA pending | [stage 07 UI pass](#2026-11-13--stage-07-ui-pass) |
 | 08 | جذب سرنخ | Not started | — |
 | 09 | کاربران | Not started | — |
 | 10 | لایسنس | Not started | — |
@@ -70,3 +70,8 @@ Complete stage 01 through visual/runtime QA if an environment becomes available,
 - `templates/accounts/admin_recovery_center.html`: added a compact executive intro and a scoped recovery V3 stylesheet; preserved all existing period filters, tabs, JSON/export URLs, strict attribution labels, metrics, table bindings, data script and JS hooks.
 - `static/css/mizkar-admin-recovery-v3.css`: responsive RTL visual polish for KPI grid, range selection, four tab views, recovery funnel, SMS journey table, health cards, data-quality warnings and explorer pagination, with dark-mode, focus and reduced-motion support.
 - Source-only structural inspection; no Django runtime or browser QA performed. Stage 06 remains in progress pending validation; stages 01–05 also await QA. No Python, business logic, API, data, SMS send, JavaScript or new tests changed.
+
+### 2026-11-13 — Stage 07 UI pass
+- `templates/accounts/admin_plan_conversion.html`: added concise executive intro, scoped stylesheet and localized navigation label; preserved existing time-range query links, JSON export, data-quality warnings, funnels, chart IDs, all Django data bindings and existing JavaScript hooks.
+- `static/css/mizkar-admin-plan-conversion-v3.css`: responsive premium RTL styles for conversion summary, tabs, data-quality cards, insights, decisions, funnel charts, plan matrix, cohorts, post-purchase behavior and tables; light/dark, keyboard focus and reduced-motion support.
+- Source-only checks: Django block counts unchanged; chart canvas and form IDs preserved; no backend, JS, tests or data changes. Runtime Django and browser QA not performed. Stage 07 remains in progress; stages 01–06 also await visual/runtime QA.

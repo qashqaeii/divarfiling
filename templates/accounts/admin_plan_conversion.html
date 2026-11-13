@@ -16,10 +16,13 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-plan-conversion.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-plan-conversion-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
-<div class="ab-page apc-page biz-page biz-page--plan">
+<div class="ab-page apc-page biz-page biz-page--plan plan-v3">
+
+    <header class="plan-v3-intro"><span class="plan-v3-eyebrow"><i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل رشد درآمد</span><h2>تبدیل پلن‌ها در یک نگاه</h2><p>از اولین بازدید تا خرید، فعال‌سازی و بازگشت مشتری؛ با داده‌های واقعی و کیفیت سنجی‌شده</p></header>
 
     <div class="biz-toolbar">
         <div class="biz-toolbar-meta">
@@ -79,7 +82,7 @@
     <div class="biz-tabs-wrap">
         <nav class="ab-nav apc-nav" id="apc-nav" aria-label="بخش‌های آنالیز">
             <div class="ab-nav__track">
-                <a href="#apc-insights" class="ab-nav__item is-active"><i class="fas fa-lightbulb" aria-hidden="true"></i><span>Insight</span></a>
+                <a href="#apc-insights" class="ab-nav__item is-active" aria-current="location"><i class="fas fa-lightbulb" aria-hidden="true"></i><span>بینش‌ها</span></a>
                 <a href="#apc-decisions" class="ab-nav__item"><i class="fas fa-chess" aria-hidden="true"></i><span>تصمیم</span></a>
                 <a href="#apc-funnel" class="ab-nav__item"><i class="fas fa-filter" aria-hidden="true"></i><span>قیف</span></a>
                 <a href="#apc-plans" class="ab-nav__item"><i class="fas fa-layer-group" aria-hidden="true"></i><span>پلن‌ها</span></a>

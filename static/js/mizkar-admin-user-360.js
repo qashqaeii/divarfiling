@@ -33,6 +33,9 @@
     ];
     const tabCache = {};
     const chartInstances = {};
+    const tabQueryState = {};
+    let activeRequest = null;
+    let requestVersion = 0;
 
     function panelRangeDaysParam() {
         return new URLSearchParams(window.location.search).get('days') || 'all';
@@ -223,7 +226,7 @@
         const range = days === 'all' ? 'کل دوره' : toFa(days) + ' روز';
         return '<div class="adm-u360-toolbar adm-u360-toolbar--hint">'
             + '<p class="adm-u360-toolbar__note"><i class="fas fa-sliders" aria-hidden="true"></i>'
-            + ' بازه داده‌ها از فیلتر بالای پنل · <strong>' + range + '</strong></p></div>';
+            + ' بازه انتخابی · <strong>' + range + '</strong> · برخی اطلاعات هویتی و وضعیت‌های جاری مستقل از بازه‌اند.</p></div>';
     }
 
     function miniTable(headers, rowsHtml, extraClass) {
@@ -1876,7 +1879,10 @@
     }
 
     function loadTab(tab, query, skipCache) {
-        query = mergePanelRangeQuery(query);
+        // Keep each tab's pagination and support filters when navigating.
+        const saved = tabQueryState[tab] || {};
+        query = mergePanelRangeQuery(Object.assign({}, saved, query || {}));
+        tabQueryState[tab] = Object.assign({}, query);
         activeTab = tab;
         setTabInUrl(tab);
         tabsNav.querySelectorAll('.adm-u360-tab').forEach(function (btn) {
@@ -1885,23 +1891,36 @@
             btn.setAttribute('aria-selected', on ? 'true' : 'false');
         });
         scrollActiveTabIntoView();
-        const cacheKey = tab + JSON.stringify(query || {});
+
+        // An earlier response must never overwrite the currently selected tab.
+        const version = ++requestVersion;
+        if (activeRequest) activeRequest.abort();
+        activeRequest = null;
+        const cacheKey = tab + JSON.stringify(query);
         if (!skipCache && tabCache[cacheKey]) {
             renderTabData(tab, tabCache[cacheKey]);
             return;
         }
         showLoading();
-        fetch(tabUrl(tab, query), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+        const controller = new AbortController();
+        activeRequest = controller;
+        fetch(tabUrl(tab, query), {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+            signal: controller.signal,
+        })
             .then(function (res) {
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 return res.json();
             })
             .then(function (payload) {
+                if (version !== requestVersion) return;
                 if (!payload.ok) throw new Error('bad');
                 tabCache[cacheKey] = payload.data;
                 renderTabData(tab, payload.data);
             })
-            .catch(function () {
+            .catch(function (error) {
+                if (version !== requestVersion || error.name === 'AbortError') return;
                 paintPanel('<p class="adm-u360-empty">بارگذاری ناموفق بود. '
                     + '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="admU360Retry">تلاش مجدد</button></p>');
                 const retry = document.getElementById('admU360Retry');
@@ -1909,6 +1928,9 @@
                     delete tabCache[cacheKey];
                     loadTab(tab, query, true);
                 });
+            })
+            .finally(function () {
+                if (version === requestVersion) activeRequest = null;
             });
     }
 

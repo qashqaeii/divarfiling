@@ -412,12 +412,16 @@ class AdminUser360TabJsonView(StaffRequiredMixin, View):
             request.GET.get('internal') == '1'
             and (request.user.is_superuser or request.user.has_perm('workspace.view_ticketmessage'))
         )
+        # Authorization flags are resolved above, never forwarded from query parameters.
+        query = request.GET.dict()
+        query.pop('reveal_sensitive', None)
+        query.pop('include_internal_notes', None)
         payload = build_user_360_tab(
             int(user_id),
             tab,
             reveal_sensitive=reveal,
             include_internal_notes=include_internal,
-            **request.GET.dict(),
+            **query,
         )
         if not payload:
             return JsonResponse({'ok': False, 'error': 'داده یافت نشد'}, status=404)

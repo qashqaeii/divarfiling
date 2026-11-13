@@ -354,8 +354,17 @@ body.ws-body::before {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: .35rem;
+    width: 100%;
+    min-width: 0;
+}
+
+@media (min-width: 769px) {
+    .ws-sidebar-util {
+        justify-content: space-between;
+        gap: 0;
+    }
 }
 
 .ws-sidebar-util-btn {

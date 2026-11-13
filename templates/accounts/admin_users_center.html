@@ -15,6 +15,7 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-customers.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_header_actions %}
@@ -37,6 +38,10 @@
 
 {% block admin_panel_content %}
 <div class="cust-page biz-page biz-page--users">
+<div class="adm-users-v3-intro" aria-label="راهنمای صفحه کاربران">
+  <div><span class="adm-users-v3-eyebrow">مدیریت کاربران</span><h1>کاربران، در یک نگاه</h1><p>از روند ثبت‌نام تا پرونده و وضعیت استفاده، همه در یک مسیر.</p></div>
+  <nav class="adm-users-v3-jumps" aria-label="دسترسی سریع کاربران"><a href="#users-kpi">شاخص‌ها</a><a href="#users-charts">فعالیت</a>{% if admin_can_view_user_management %}<a href="#ecc-users-mgmt">پرونده کاربران</a>{% endif %}</nav>
+</div>
 
 {% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='کاربران · الان' pulse_icon='fa-users' %}
 

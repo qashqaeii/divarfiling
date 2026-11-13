@@ -353,8 +353,9 @@ body.ws-body::before {
 .ws-sidebar-util {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: .25rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: .35rem;
 }
 
 .ws-sidebar-util-btn {
@@ -371,10 +372,51 @@ body.ws-body::before {
     font-family: inherit;
 }
 .ws-sidebar-util-btn:hover {
-    background: var(--ws-sidebar-hover);
+    background: transparent;
     color: var(--ws-sidebar-util-hover);
 }
+.ws-sidebar-util-btn:active {
+    background: transparent;
+}
+.ws-sidebar-util-btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 55%, transparent);
+    outline-offset: 2px;
+    background: transparent;
+}
 .ws-sidebar-util-btn.active { color: var(--ws-sidebar-text-active); }
+
+.ws-sidebar-util-btn--profile {
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.ws-sidebar-util-avatar {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1.5px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 28%, var(--ws-sidebar-border, #e2e8f0));
+    transition: border-color .12s, box-shadow .12s;
+}
+
+.ws-sidebar-util-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ws-sidebar-util-btn--profile:hover .ws-sidebar-util-avatar {
+    border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 65%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary, #7c3aed) 14%, transparent);
+}
+
+.ws-sidebar-util-btn--profile.active .ws-sidebar-util-avatar {
+    border-color: var(--ws-primary, #7c3aed);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary, #7c3aed) 22%, transparent);
+}
 
 /* ─── Main ─── */
 .ws-main {

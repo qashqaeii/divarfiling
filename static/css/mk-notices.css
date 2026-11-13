@@ -1194,6 +1194,193 @@ button.mk-notice__cta {
     border-color: rgba(167, 139, 250, 0.28);
 }
 
+/* ─── Legacy main.css (announcements-section) reset ─── */
+.mk-notices.announcements-section {
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
+    overflow: visible;
+    max-height: none;
+}
+
+.mk-notices .mk-notice.announcement-bar {
+    border-bottom: none;
+    overflow: visible;
+    max-height: none;
+    background: transparent;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.mk-notices .announcement-title {
+    color: inherit;
+    white-space: normal;
+}
+
+.mk-notices .announcement-desc {
+    color: inherit;
+    white-space: normal;
+    text-overflow: unset;
+    overflow: visible;
+}
+
+.mk-notices .announcement-bar-link {
+    color: inherit;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.mk-notices .announcement-bar-link:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* ─── Workspace home — workspace-top ─── */
+.mk-notices--workspace-top {
+    margin: 0 0 0.6rem;
+    position: relative;
+    z-index: 3;
+    background: transparent;
+    border: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.mk-notices--workspace-top::before {
+    display: none;
+}
+
+.mk-notices--workspace-top .mk-notices__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 0;
+    box-sizing: border-box;
+}
+
+.mk-notices--workspace-top .mk-notice--workspace-top {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "badge body actions close";
+    align-items: center;
+    gap: 0.45rem 0.7rem;
+    padding: 0.62rem 0.75rem;
+    min-height: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 18%, var(--ws-border, rgba(15, 23, 42, 0.1)));
+    background: color-mix(in srgb, var(--ws-surface, #fff) 94%, transparent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    color: var(--ws-text, var(--mk-notice-promo-text));
+}
+
+.mk-notices--workspace-top .mk-notice--workspace-top:not(:has(.mk-notice__actions)) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "badge body close";
+}
+
+.mk-notices--workspace-top .mk-notice--workspace-top::before {
+    content: '';
+    position: absolute;
+    inset-block: 0.45rem;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--ws-primary, #7c3aed);
+    opacity: 0.85;
+}
+
+.mk-notices--workspace-top .mk-notice__badge {
+    grid-area: badge;
+    padding: 0.22rem 0.48rem;
+    font-size: 0.66rem;
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 12%, transparent);
+    border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 22%, transparent);
+    color: var(--ws-primary, #6d28d9);
+}
+
+.mk-notices--workspace-top .mk-notice__body {
+    grid-area: body;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.45rem;
+    min-width: 0;
+}
+
+.mk-notices--workspace-top .mk-notice__title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.mk-notices--workspace-top .mk-notice__title:not(:last-child)::after {
+    display: none;
+}
+
+.mk-notices--workspace-top .mk-notice__text {
+    font-size: 0.76rem;
+    line-height: 1.45;
+    opacity: 0.9;
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 8rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.mk-notices--workspace-top .mk-notice__actions {
+    grid-area: actions;
+    margin: 0;
+    padding: 0;
+    width: auto;
+}
+
+.mk-notices--workspace-top .mk-notice__cta {
+    padding: 0.32rem 0.68rem;
+    font-size: 0.72rem;
+    font-weight: 650;
+    border-radius: 8px;
+    color: #fff;
+    background: var(--ws-primary, #7c3aed);
+    border-color: transparent;
+}
+
+.mk-notices--workspace-top .mk-notice__cta:hover {
+    background: var(--ws-primary-hover, #6d28d9);
+    color: #fff;
+}
+
+.mk-notices--workspace-top .mk-notice__close {
+    grid-area: close;
+    position: static;
+    width: 1.85rem;
+    height: 1.85rem;
+    margin: 0;
+    opacity: 0.5;
+    border-radius: 7px;
+}
+
+.mk-notices--workspace-top .mk-notice__close:hover {
+    opacity: 0.85;
+    background: rgba(15, 23, 42, 0.06);
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
     .ws-main > .mk-notices--inline {
@@ -1326,11 +1513,124 @@ button.mk-notice__cta {
         font-weight: 650;
     }
 
+    /* میزکار — اطلاعیه workspace-top (پریمیوم موبایل، بدون برون‌زدگی) */
+    .mk-notices--workspace-top {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: clip;
+    }
+
+    .mk-notices--workspace-top .mk-notices__inner {
+        padding-inline: 0 !important;
+    }
+
+    .mk-notices--workspace-top .mk-notice--workspace-top {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "badge close"
+            "body body"
+            "actions actions";
+        align-items: start;
+        gap: 0.4rem 0.45rem;
+        padding: 0.72rem 0.8rem 0.78rem;
+        border-radius: var(--mobile-section-radius, 16px);
+        border: 1px solid var(--ws-mob-card-border, rgba(15, 23, 42, 0.08));
+        background: var(--ws-mob-card-bg, #fff);
+        box-shadow: var(--ws-mob-shadow, 0 1px 3px rgba(15, 23, 42, 0.06));
+        align-items: stretch;
+    }
+
+    .mk-notices--workspace-top .mk-notice--workspace-top:not(:has(.mk-notice__actions)) {
+        grid-template-areas:
+            "badge close"
+            "body body";
+    }
+
+    .mk-notices--workspace-top .mk-notice--workspace-top::before {
+        inset-block: 0;
+        border-radius: var(--mobile-section-radius, 16px) 0 0 var(--mobile-section-radius, 16px);
+        background: linear-gradient(180deg, #a78bfa, #7c3aed 55%, #6d28d9);
+    }
+
+    .mk-notices--workspace-top .mk-notice__badge {
+        justify-self: start;
+        max-width: calc(100% - 2.5rem);
+    }
+
+    .mk-notices--workspace-top .mk-notice__body {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.22rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .mk-notices--workspace-top .mk-notice__title {
+        white-space: normal;
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .mk-notices--workspace-top .mk-notice__text {
+        font-size: 0.74rem;
+        line-height: 1.55;
+        opacity: 0.92;
+    }
+
+    .mk-notices--workspace-top .mk-notice__actions {
+        width: 100%;
+        margin: 0.08rem 0 0 !important;
+        padding: 0 !important;
+    }
+
+    .mk-notices--workspace-top .mk-notice__cta {
+        width: 100%;
+        flex: none;
+        justify-content: center;
+        min-height: 2.5rem;
+        padding: 0.42rem 0.85rem;
+        border-radius: 12px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        white-space: normal;
+        text-align: center;
+        color: #fff;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 52%, #6d28d9 100%);
+        border: none;
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.22);
+    }
+
+    .mk-notices--workspace-top .mk-notice__cta:hover {
+        color: #fff;
+        filter: brightness(1.04);
+    }
+
+    .mk-notices--workspace-top .mk-notice__close {
+        position: static !important;
+        inset: auto !important;
+        justify-self: end;
+        width: 2rem;
+        height: 2rem;
+        margin: 0;
+        flex-shrink: 0;
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.04);
+    }
+
+    .mk-notices--workspace-top .mk-notice__close:hover {
+        background: rgba(15, 23, 42, 0.08);
+    }
+
+    [data-theme="dark"] .mk-notices--workspace-top .mk-notice--workspace-top {
+        background: var(--ws-mob-card-bg, var(--ws-surface, #1e293b));
+        border-color: var(--ws-mob-card-border, rgba(255, 255, 255, 0.08));
+    }
+
     .mk-notices--flash {
         top: calc(64px + env(safe-area-inset-top, 0px));
     }
 
-    .mk-notices__inner,
+    .mk-notices:not(.mk-notices--workspace-top):not(.mk-notices--banner) .mk-notices__inner,
     .messages-container .container {
         padding-inline: 0.75rem;
     }
@@ -1373,5 +1673,18 @@ button.mk-notice__cta {
 
     .mk-notices--banner .mk-notice__text {
         font-size: 0.72rem;
+    }
+
+    .mk-notices--workspace-top .mk-notice__title {
+        font-size: 0.76rem;
+    }
+
+    .mk-notices--workspace-top .mk-notice__text {
+        font-size: 0.72rem;
+    }
+
+    .mk-notices--workspace-top .mk-notice__cta {
+        min-height: 2.35rem;
+        font-size: 0.76rem;
     }
 }

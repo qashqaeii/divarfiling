@@ -16,7 +16,7 @@ Approved reference: right-hand navy sidebar, purple #5B4FCF selection, clean whi
 | 05 | بازاریابی | In progress — UI presentation pass committed; runtime/browser QA pending | [stage 05 UI pass](#2026-11-13--stage-05-ui-pass) |
 | 06 | بازیابی | In progress — presentation pass committed; runtime/browser QA pending | [stage 06 UI pass](#2026-11-13--stage-06-ui-pass) |
 | 07 | تبدیل پلن | In progress — UI presentation pass committed; runtime/browser QA pending | [stage 07 UI pass](#2026-11-13--stage-07-ui-pass) |
-| 08 | جذب سرنخ | Not started | — |
+| 08 | جذب سرنخ | In progress — UI presentation pass committed; browser/Django QA pending | [stage 08 UI pass](#2026-11-13--stage-08-ui-pass) |
 | 09 | کاربران | Not started | — |
 | 10 | لایسنس | Not started | — |
 | 11 | CRM | Not started | — |
@@ -75,3 +75,8 @@ Complete stage 01 through visual/runtime QA if an environment becomes available,
 - `templates/accounts/admin_plan_conversion.html`: added concise executive intro, scoped stylesheet and localized navigation label; preserved existing time-range query links, JSON export, data-quality warnings, funnels, chart IDs, all Django data bindings and existing JavaScript hooks.
 - `static/css/mizkar-admin-plan-conversion-v3.css`: responsive premium RTL styles for conversion summary, tabs, data-quality cards, insights, decisions, funnel charts, plan matrix, cohorts, post-purchase behavior and tables; light/dark, keyboard focus and reduced-motion support.
 - Source-only checks: Django block counts unchanged; chart canvas and form IDs preserved; no backend, JS, tests or data changes. Runtime Django and browser QA not performed. Stage 07 remains in progress; stages 01–06 also await visual/runtime QA.
+
+### 2026-11-13 — Stage 08 UI pass
+- `templates/accounts/admin_lead_acquisition.html` and `templates/accounts/admin_lead_campaign_detail.html`: added a shared scoped V3 stylesheet after the existing lead styles; all original permission checks, form actions, CSRF, tabs, anchors, Django bindings, JS hooks, A/B experiment labels and conversion caveats preserved.
+- `static/css/mizkar-admin-lead-v3.css`: aligned hero, navigation tabs, KPI cards, funnel, campaign panels, import forms, tables, buttons and campaign detail with the approved quiet-premium RTL palette; responsive layout, dark mode, focus-visible and reduced-motion support.
+- Source-only validation: original template content unchanged except CSS link; no Python, JavaScript, API, SMS, data, tests or business logic changed. Django runtime and browser QA not executed. Stage 08 remains in progress pending validation, as do stages 01–07.

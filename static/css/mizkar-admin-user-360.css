@@ -45,7 +45,7 @@ body.adm-prime-command .adm-u360-hero__top {
 }
 
 body.adm-prime-command .adm-u360-hero__eyebrow {
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     font-weight: 750;
     letter-spacing: 0.02em;
     color: var(--ecc-text-muted, #94a3b8);
@@ -56,11 +56,13 @@ body.adm-prime-command .adm-u360-hero__back {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0;
+    min-height: 44px;
+    padding: 0.35rem 0.5rem;
     border: none;
+    border-radius: 9px;
     background: transparent;
     color: var(--ecc-text-secondary, #64748b);
-    font-size: 0.68rem;
+    font-size: 0.78rem;
     font-weight: 700;
     text-decoration: none;
     transition: color 0.16s ease;
@@ -197,8 +199,8 @@ body.adm-prime-command .adm-u360-hero__cta {
     justify-content: center;
     gap: 0.38rem;
     flex: 1 1 8.5rem;
-    min-height: 40px;
-    padding: 0.42rem 0.85rem;
+    min-height: 44px;
+    padding: 0.5rem 0.85rem;
     border-radius: 11px;
     border: 1px solid rgba(91, 79, 207, 0.28);
     background: linear-gradient(180deg, rgba(91, 79, 207, 0.95) 0%, rgba(79, 70, 200, 0.92) 100%);
@@ -339,7 +341,7 @@ body.adm-prime-command .adm-u360-kpi {
     font: inherit;
     width: 100%;
     min-width: 0;
-    min-height: 0;
+    min-height: 44px;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
@@ -460,7 +462,7 @@ body.adm-prime-command .adm-u360-kpi__stack {
 
 body.adm-prime-command .adm-u360-kpi__label {
     display: block;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     font-weight: 650;
     letter-spacing: 0.012em;
     color: var(--ecc-text-muted, #64748b);
@@ -480,7 +482,7 @@ body.adm-prime-command .adm-u360-kpi__body {
 
 body.adm-prime-command .adm-u360-kpi__value {
     display: block;
-    font-size: 0.88rem;
+    font-size: 1rem;
     font-weight: 820;
     letter-spacing: -0.02em;
     color: var(--ecc-text, #0f172a);
@@ -635,9 +637,10 @@ body.adm-prime-command .adm-u360-tab {
     border: 1px solid rgba(148, 163, 184, 0.14);
     background: transparent;
     border-radius: 10px;
-    padding: 0.4rem 0.72rem;
+    min-height: 44px;
+    padding: 0.5rem 0.72rem;
     font-family: inherit;
-    font-size: 0.74rem;
+    font-size: 0.78rem;
     font-weight: 700;
     line-height: 1.4;
     letter-spacing: 0;
@@ -3673,6 +3676,27 @@ body.adm-prime-command .adm-u360-copy.is-done {
     color: var(--ecc-accent-emerald, #10b981);
 }
 
+/* Shared dossier interaction and reading rules. */
+body.adm-prime-command .adm-u360-page :is(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--u360-accent);
+    outline-offset: 3px;
+}
+body.adm-prime-command .adm-u360-page :is(button, input, select, textarea) {
+    font-family: inherit;
+}
+body.adm-prime-command .adm-u360-page :is(input, select, textarea) {
+    max-width: 100%;
+    min-width: 0;
+    font-size: max(0.875rem, 14px);
+}
+body.adm-prime-command .adm-u360-page :is(.adm-u360-ltr, [dir="ltr"]) {
+    unicode-bidi: isolate;
+}
+@media (max-width: 639px) {
+    body.adm-prime-command .adm-u360-page :is(input, select, textarea) { font-size: 16px; }
+    body.adm-prime-command .adm-u360-panel .adm-table td::before { min-width: 0; }
+}
+
 /* ——— Desktop ——— */
 @media (min-width: 720px) {
     body.adm-prime-command .adm-u360-stat-strip {
@@ -3737,8 +3761,8 @@ body.adm-prime-command .adm-u360-copy.is-done {
         border: none;
         background: transparent;
         border-radius: 8px;
-        padding: 0.3rem 0.46rem;
-        font-size: 0.68rem;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.78rem;
         font-weight: 600;
         line-height: 1.35;
         letter-spacing: -0.01em;
@@ -3780,8 +3804,8 @@ body.adm-prime-command .adm-u360-copy.is-done {
     }
 
     body.adm-prime-command .adm-u360-tab {
-        font-size: 0.71rem;
-        padding: 0.32rem 0.52rem;
+        font-size: 0.78rem;
+        padding: 0.5rem 0.65rem;
     }
 }
 
@@ -3796,8 +3820,8 @@ body.adm-prime-command .adm-u360-copy.is-done {
         flex: 1 1 0;
         min-width: 0;
         text-align: center;
-        font-size: 0.72rem;
-        padding: 0.34rem 0.38rem;
+        font-size: 0.78rem;
+        padding: 0.5rem 0.38rem;
     }
 }
 
@@ -3838,8 +3862,8 @@ body.adm-prime-command .adm-u360-copy.is-done {
         border: none;
         background: transparent;
         border-radius: 8px;
-        padding: 0.34rem 0.5rem;
-        font-size: 0.68rem;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.78rem;
         font-weight: 600;
         line-height: 1.35;
         box-shadow: none;
@@ -3913,12 +3937,12 @@ body.adm-prime-command .adm-u360-copy.is-done {
     }
 
     body.adm-prime-command .adm-u360-kpi__value {
-        font-size: 0.84rem;
+        font-size: 0.94rem;
     }
 
     body.adm-prime-command .adm-u360-tab {
-        font-size: 0.7rem;
-        padding: 0.36rem 0.55rem;
+        font-size: 0.78rem;
+        padding: 0.5rem 0.65rem;
         border-radius: 9px;
         gap: 0.28rem;
     }
@@ -4009,8 +4033,9 @@ body.adm-prime-command .adm-u360-copy.is-done {
     body.adm-prime-command .adm-u360-panel .adm-table td {
         flex: 1 1 auto;
         min-width: 0;
-        text-align: left;
-        justify-content: flex-end;
+        text-align: start;
+        justify-content: space-between;
+        overflow-wrap: anywhere;
     }
 
     body.adm-prime-command .adm-u360-account-table th[scope="row"] {

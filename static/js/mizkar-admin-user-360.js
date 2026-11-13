@@ -646,7 +646,7 @@
             panels += '<div class="adm-u360-finance-panel adm-u360-finance-panel--revenue">'
                 + '<div class="adm-u360-finance-panel__head">'
                 + '<h3 class="adm-u360-finance-panel__title">درآمد پرداخت‌شده</h3>'
-                + '<span class="adm-u360-finance-panel__meta">۶ ماه اخیر</span>'
+                + '<span class="adm-u360-finance-panel__meta">ماه‌های دارای داده در گزارش</span>'
                 + '</div>'
                 + '<p class="adm-u360-finance-panel__summary">'
                 + '<span>جمع دوره <strong>' + moneyTomans(revenueSum) + '</strong></span>'
@@ -1332,9 +1332,7 @@
         sum = sum || {};
         const orders = charts.orders_by_status || [];
         const revenue = charts.revenue_monthly || [];
-        if (!orders.length && !revenue.length && !sum.total_revenue_paid_only) {
-            return '';
-        }
+        
 
         const orderTotal = chartRowsSum(orders, 'count');
         const revenueSum = chartRowsSum(revenue, 'total');
@@ -1395,7 +1393,7 @@
             + '<h2 class="adm-u360-overview-finance__title">'
             + '<i class="fas fa-chart-line" aria-hidden="true"></i>'
             + '<span>خلاصه مالی</span></h2>'
-            + '<p class="adm-u360-overview-finance__lead">درآمد، ترکیب سفارش و روند شش‌ماهه</p>'
+            + '<p class="adm-u360-overview-finance__lead">فقط پرداخت‌های موفق در درآمد محاسبه شده‌اند؛ هدیه و سفارش در انتظار جدا هستند.</p>'
             + '</header>'
             + '<div class="adm-u360-overview-finance__body">'
             + stats
@@ -1445,9 +1443,8 @@
             'adm-u360-commerce-table'
         );
         const pager = renderPager(pagination, 'commerce');
-        const meta = pagination && pagination.total
-            ? '<p class="adm-u360-commerce-card__meta">' + toFa(pagination.total) + ' سفارش در پرونده</p>'
-            : '';
+        const meta = '<p class="adm-u360-commerce-card__meta">'
+            + toFa((pagination && pagination.total) || 0) + ' سفارش در پرونده؛ مبالغ به تومان</p>';
         return commerceCard('سفارش‌ها', 'fa-receipt', meta + table + pager, 'adm-u360-commerce-card--orders');
     }
 
@@ -1552,28 +1549,28 @@
     }
 
     function renderLicenseListCard(licenses) {
-        const rows = (licenses || []).map(function (l) {
-            const slots = '<span class="adm-u360-license-slots">' + toFa(l.slots_used) + ' / ' + toFa(l.max_activations) + '</span>';
-            const planCell = '<div class="adm-u360-commerce-product">'
-                + '<span class="adm-u360-commerce-product__name">' + esc(l.plan) + '</span>'
-                + '<span class="adm-u360-commerce-tag">' + esc(l.relation) + '</span>'
-                + '</div>';
-            return '<tr>'
-                + td(toFa(l.id), 'شناسه')
-                + td(planCell, 'پلن')
-                + td(licenseStatusChip(l.status, l.status_label, l.entitlement_valid), 'وضعیت')
-                + td(slots, 'اسلات')
-                + td(esc(l.expires_jalali), 'انقضا')
-                + td(esc(l.created_jalali), 'صدور')
-                + '</tr>';
-        }).join('');
-        const body = rows
-            ? miniTable(['شناسه', 'پلن', 'وضعیت', 'اسلات', 'انقضا', 'صدور'], rows, 'adm-u360-commerce-table')
-            : emptyState('لایسنسی ثبت نشده', 'پس از خرید یا تخصیص، لایسنس‌ها اینجا نمایش داده می‌شوند.');
-        const meta = licenses && licenses.length
-            ? '<p class="adm-u360-commerce-card__meta">' + toFa(licenses.length) + ' لایسنس (مالک + اختصاصی)</p>'
-            : '';
-        return commerceCard('لایسنس‌ها', 'fa-key', meta + body, 'adm-u360-license-card--list');
+        const all = licenses || [];
+        const current = all.filter(function (l) { return l.entitlement_valid === true; });
+        const history = all.filter(function (l) { return l.entitlement_valid !== true; });
+        function licenseTable(items) {
+            const selected = items.map(function (l) {
+                const slots = '<span class="adm-u360-license-slots">' + toFa(l.slots_used) + ' / ' + toFa(l.max_activations) + '</span>';
+                const plan = '<div class="adm-u360-commerce-product"><span class="adm-u360-commerce-product__name">'
+                    + esc(l.plan) + '</span><span class="adm-u360-commerce-tag">' + esc(l.relation) + '</span></div>';
+                return '<tr>' + td(toFa(l.id), 'شناسه') + td(plan, 'پلن')
+                    + td(licenseStatusChip(l.status, l.status_label, l.entitlement_valid), 'وضعیت')
+                    + td(slots, 'اسلات') + td(esc(l.expires_jalali), 'انقضا')
+                    + td(esc(l.created_jalali), 'صدور') + '</tr>';
+            }).join('');
+            return miniTable(['شناسه', 'پلن', 'وضعیت', 'اسلات', 'انقضا', 'صدور'], selected, 'adm-u360-commerce-table');
+        }
+        const body = '<h3 class="adm-u360-finance-panel__title">دارای دسترسی معتبر (' + toFa(current.length) + ')</h3>'
+            + (current.length ? licenseTable(current) : emptyState('دسترسی معتبر ثبت نشده', 'وضعیت دسترسی فعلی را در خلاصه بالای صفحه بررسی کنید.'))
+            + '<h3 class="adm-u360-finance-panel__title">سایر سوابق (' + toFa(history.length) + ')</h3>'
+            + (history.length ? licenseTable(history) : emptyState('سابقه دیگری ثبت نشده', ''));
+        const meta = '<p class="adm-u360-commerce-card__meta">' + toFa(all.length)
+            + ' رکورد (مالک و اختصاصی)؛ تفکیک بر اساس اعتبار دسترسی ثبت‌شده</p>';
+        return commerceCard('لایسنس‌ها و سوابق', 'fa-key', meta + body, 'adm-u360-license-card--list');
     }
 
     function renderLicenseActivationsCard(activations) {

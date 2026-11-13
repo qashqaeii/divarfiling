@@ -1,0 +1,39 @@
+{% load persian_tags %}
+<section class="adm-overview-actions" id="ecc-glance" aria-label="اقدام‌های فوری">
+    <header class="adm-overview-actions__head">
+        <h2 class="adm-overview-section-title adm-overview-actions__title">
+            <i class="fas fa-bolt adm-overview-section-title__icon adm-overview-section-title__icon--actions" aria-hidden="true"></i>
+            <span>اقدام‌های فوری</span>
+        </h2>
+        <div class="adm-overview-actions__head-end">
+            {% if items %}
+            <span class="adm-overview-actions__count">{{ items|length|to_persian_digits }} مورد</span>
+            {% endif %}
+            <a href="{% url 'admin_panel_assistant' %}{{ admin_panel_query_suffix|default:'?days=all' }}" class="adm-overview-actions__all-link">
+                همه اقدام‌ها
+            </a>
+        </div>
+    </header>
+    {% if items %}
+    <div class="adm-overview-actions__list">
+        {% for item in items %}
+        <a href="{{ item.href }}" class="adm-overview-actions__row" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}" data-cmd-nav="1">
+            <span class="adm-overview-actions__body">
+                <strong>{{ item.title }}</strong>
+                <em>{% firstof item.detail item.oldest_label %}</em>
+            </span>
+            <span class="adm-overview-actions__badge">{{ item.count|to_persian_digits }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    <footer class="adm-overview-actions__foot">
+        <a href="{% url 'admin_panel_assistant' %}{{ admin_panel_query_suffix|default:'?days=all' %}" class="adm-overview-actions__cta">مشاهده همه اقدام‌ها</a>
+    </footer>
+    {% else %}
+    <div class="ecc-empty ecc-empty--compact adm-overview-actions__empty">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        <strong>همه‌چیز تحت کنترل است</strong>
+        <span>مورد فوری برای اقدام وجود ندارد</span>
+    </div>
+    {% endif %}
+</section>

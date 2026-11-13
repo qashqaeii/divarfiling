@@ -1,0 +1,42 @@
+<div class="adm-ov-health-modal" id="adm-overview-health-modal" hidden aria-hidden="true">
+    <div class="adm-ov-health-modal__backdrop" data-ov-health-close tabindex="-1"></div>
+    <div class="adm-ov-health-modal__dialog"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="adm-ov-health-modal-title">
+        <header class="adm-ov-health-modal__head">
+            <div class="adm-ov-health-modal__title-wrap">
+                <span class="adm-ov-health-modal__badge" id="adm-ov-health-modal-badge" data-status="ok">پایدار</span>
+                <h3 id="adm-ov-health-modal-title">—</h3>
+            </div>
+            <button type="button" class="adm-ov-health-modal__close" data-ov-health-close aria-label="بستن">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="adm-ov-health-modal__body">
+            <section class="adm-ov-health-modal__block">
+                <h4>چرا این وضعیت؟</h4>
+                <p id="adm-ov-health-modal-reason"></p>
+            </section>
+            <section class="adm-ov-health-modal__block">
+                <h4>داده‌های مبنا</h4>
+                <ul class="adm-ov-health-modal__facts" id="adm-ov-health-modal-facts"></ul>
+            </section>
+            <section class="adm-ov-health-modal__block adm-ov-health-modal__block--rule">
+                <h4>معیار ارزیابی</h4>
+                <p id="adm-ov-health-modal-rule"></p>
+            </section>
+        </div>
+        <footer class="adm-ov-health-modal__foot">
+            <div class="adm-ov-health-modal__action">
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                <p id="adm-ov-health-modal-action"></p>
+            </div>
+            <a id="adm-ov-health-modal-link" class="adm-ov-health-modal__link" href="#" hidden>
+                <span id="adm-ov-health-modal-link-text"></span>
+                <i class="fas fa-arrow-left adm-icon-dir" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="adm-ov-health-modal__ok" data-ov-health-close>متوجه شدم</button>
+        </footer>
+    </div>
+</div>

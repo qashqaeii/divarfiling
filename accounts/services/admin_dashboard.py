@@ -1,9 +1,10 @@
 """آمار و داده نمودار برای پنل مدیریت سیستم."""
 from __future__ import annotations
 
+import math
 from datetime import timedelta
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import jdatetime
 from django.contrib.auth import get_user_model
@@ -134,6 +135,119 @@ def _fill_daily_series(start, end, rows, value_key='count', money=False, days: i
         values.append(val)
         current += timedelta(days=1)
     return labels, values
+
+
+def _chart_max_points(span_days: int) -> int:
+    if span_days <= 45:
+        return min(span_days, 45)
+    if span_days <= 120:
+        return 48
+    if span_days <= 400:
+        return 52
+    return 56
+
+
+def _bucket_size_for_span(span_days: int, max_points: int) -> int:
+    if span_days <= max_points:
+        return 1
+    return max(1, math.ceil(span_days / max_points))
+
+
+def _downsample_series(
+    start,
+    end,
+    labels: List[str],
+    values: List[int],
+    *,
+    days: int,
+    money: bool = False,
+) -> Tuple[List[str], List[int], int]:
+    """تجمیع سری روزانه با حفظ جمع مقادیر."""
+    span = (end - start).days + 1
+    max_pts = _chart_max_points(span)
+    bucket = _bucket_size_for_span(span, max_pts)
+    if bucket <= 1 or len(values) <= max_pts:
+        return labels, values, 1
+
+    out_labels: List[str] = []
+    out_values: List[int] = []
+    i = 0
+    current = start
+    while i < len(values):
+        chunk = values[i : i + bucket]
+        if not chunk:
+            break
+        total = sum(int(v or 0) for v in chunk)
+        out_values.append(total)
+        bucket_end = min(current + timedelta(days=bucket - 1), end)
+        if bucket == 1:
+            out_labels.append(_chart_day_label(current, days))
+        else:
+            j_start = jdatetime.date.fromgregorian(date=current)
+            j_end = jdatetime.date.fromgregorian(date=bucket_end)
+            if j_start.month == j_end.month and j_start.year == j_end.year:
+                out_labels.append(
+                    to_persian_digits(f'{j_start.day:02d}–{j_end.day:02d}/{j_start.month:02d}')
+                )
+            else:
+                out_labels.append(
+                    to_persian_digits(f'{j_start.day:02d}/{j_start.month:02d}–{j_end.day:02d}/{j_end.month:02d}')
+                )
+        i += bucket
+        current += timedelta(days=bucket)
+    return out_labels, out_values, bucket
+
+
+def build_command_revenue_chart(days: int = 30) -> Dict[str, Any]:
+    """نمودار مرکز فرمان — یک محور، سوییچ درآمد/سفارش، دانه‌بندی در کل بازه."""
+    start, end = _date_range(days)
+    label_days = effective_range_days(days)
+    rev_rows = (
+        Order.objects.filter(status='paid', paid_at__date__gte=start, paid_at__date__lte=end)
+        .annotate(day=TruncDate('paid_at'))
+        .values('day')
+        .annotate(total=Sum('amount'))
+        .order_by('day')
+    )
+    ord_rows = (
+        Order.objects.filter(status='paid', paid_at__date__gte=start, paid_at__date__lte=end)
+        .annotate(day=TruncDate('paid_at'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    rev_labels, rev_values = _fill_daily_series(start, end, rev_rows, value_key='total', money=True, days=label_days)
+    ord_labels, ord_values = _fill_daily_series(start, end, ord_rows, days=label_days)
+    rev_labels, rev_values, bucket = _downsample_series(
+        start, end, rev_labels, rev_values, days=label_days, money=True,
+    )
+    ord_labels, ord_values, _ = _downsample_series(
+        start, end, ord_labels, ord_values, days=label_days,
+    )
+    n = min(len(rev_labels), len(ord_labels))
+    return {
+        'type': 'command_trend',
+        'labels': rev_labels[:n],
+        'defaultSeries': 'revenue',
+        'bucketDays': bucket,
+        'bucketLabelFa': 'روزانه' if bucket <= 1 else f'هر {to_persian_digits(bucket)} روز',
+        'series': {
+            'revenue': {
+                'label': 'درآمد',
+                'axis': 'money',
+                'data': rev_values[:n],
+                'borderColor': 'rgba(16, 185, 129, 1)',
+                'backgroundColor': 'rgba(16, 185, 129, 0.14)',
+            },
+            'orders': {
+                'label': 'سفارش موفق',
+                'axis': 'count',
+                'data': ord_values[:n],
+                'borderColor': 'rgba(124, 58, 237, 1)',
+                'backgroundColor': 'rgba(124, 58, 237, 0.12)',
+            },
+        },
+    }
 
 
 def _pct_change(current: int | float, previous: int | float) -> float | None:
@@ -1121,6 +1235,49 @@ def _previous_new_users_for_period(days: int) -> int:
     return _new_users_between(start, end)
 
 
+def _users_engaged_between(start, end) -> int:
+    """کاربران فعال با ورود وب یا فعالیت اپ در بازه."""
+    return (
+        User.objects.filter(is_active=True)
+        .filter(
+            Q(last_login__date__gte=start, last_login__date__lte=end)
+            | Q(
+                mobile_devices__last_seen_at__date__gte=start,
+                mobile_devices__last_seen_at__date__lte=end,
+            ),
+        )
+        .distinct()
+        .count()
+    )
+
+
+def _users_engaged_for_period(days: int) -> int:
+    start, end = _date_range(days)
+    return _users_engaged_between(start, end)
+
+
+def _previous_users_engaged_for_period(days: int) -> int:
+    start, end = _previous_period_bounds(days)
+    return _users_engaged_between(start, end)
+
+
+def _licenses_issued_between(start, end) -> int:
+    return License.objects.filter(
+        created_at__date__gte=start,
+        created_at__date__lte=end,
+    ).count()
+
+
+def _licenses_issued_for_period(days: int) -> int:
+    start, end = _date_range(days)
+    return _licenses_issued_between(start, end)
+
+
+def _previous_licenses_issued_for_period(days: int) -> int:
+    start, end = _previous_period_bounds(days)
+    return _licenses_issued_between(start, end)
+
+
 def build_command_center_kpi_cards(
     stats: Dict[str, Any],
     today_stats: Dict[str, Any],
@@ -1143,6 +1300,10 @@ def build_command_center_kpi_cards(
     prev_revenue = _previous_revenue_for_period(chart_days)
     prev_orders = _previous_orders_paid_for_period(chart_days)
     prev_users = _previous_new_users_for_period(chart_days)
+    period_users_engaged = _users_engaged_for_period(chart_days)
+    prev_users_engaged = _previous_users_engaged_for_period(chart_days)
+    period_licenses_issued = _licenses_issued_for_period(chart_days)
+    prev_licenses_issued = _previous_licenses_issued_for_period(chart_days)
 
     new_users_sublabel = (
         'ثبت‌نام امروز'
@@ -1196,15 +1357,12 @@ def build_command_center_kpi_cards(
         {
             'key': 'users_active',
             'label': 'حساب‌های فعال',
-            'sublabel': 'وضعیت فعلی · is_active',
-            'kpi_tier': 'snapshot',
-            'value': stats['users_active'],
+            'sublabel': range_label,
+            'kpi_tier': 'range',
+            'value': period_users_engaged,
             'format': 'count',
-            'delta': None,
-            'delta_label': (
-                f"{users_analytics.get('online_today', 0)} مشاهده‌شده امروز · "
-                f"{stats['users_total']} کل"
-            ),
+            'delta': _range_delta(chart_days, period_users_engaged, prev_users_engaged),
+            'delta_label': 'نسبت دوره قبل',
             'sparkline': None,
             'icon': 'fa-users',
             'accent': 'cyan',
@@ -1213,13 +1371,13 @@ def build_command_center_kpi_cards(
         {
             'key': 'licenses_active',
             'label': 'لایسنس فعال',
-            'sublabel': 'وضعیت فعلی',
-            'kpi_tier': 'snapshot',
-            'value': stats['licenses_active'],
+            'sublabel': range_label,
+            'kpi_tier': 'range',
+            'value': period_licenses_issued,
             'format': 'count',
-            'delta': None,
-            'delta_label': f"{stats['activations_total']} دستگاه · {stats['licenses_expiring_soon']} در شرف انقضا",
-            'sparkline': None,
+            'delta': _range_delta(chart_days, period_licenses_issued, prev_licenses_issued),
+            'delta_label': 'نسبت دوره قبل',
+            'sparkline': spark_lic,
             'icon': 'fa-key',
             'accent': 'amber',
             'status': 'warn' if stats['licenses_expiring_soon'] > 3 else 'ok',
@@ -1256,7 +1414,6 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
     users_analytics = get_users_analytics_stats(stats)
     licensing_stats = get_licensing_center_stats()
     action_items = build_command_action_items(stats, sms_balance)
-    charts_full = build_charts_payload(days)
 
     return {
         'stats': stats,
@@ -1274,7 +1431,7 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
         'licensing_stats': licensing_stats,
         'health_indicators': build_health_indicators(stats, sms_balance),
         'system_meta': get_system_meta(),
-        'charts': {'revenue_analytics': charts_full['revenue_analytics']},
+        'charts': {'revenue_analytics': build_command_revenue_chart(days)},
         'chart_days': days,
     }
 
@@ -1497,6 +1654,105 @@ def get_users_analytics_stats(stats: Dict[str, Any]) -> Dict[str, Any]:
         'online_today': get_users_active_on_date(),
         'retention_30d': retention,
         'pending_payment': stats['users_pending_payment'],
+    }
+
+
+def build_overview_user_breakdown(
+    stats: Dict[str, Any],
+    users_analytics: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """شکست کاربران برای کارت «ترکیب کاربران» در نمای کلی."""
+    users_analytics = users_analytics or {}
+    now = timezone.now()
+    idle_threshold = now - timedelta(days=30)
+    users_idle_30d = User.objects.filter(is_active=True).filter(
+        Q(last_login__isnull=True) | Q(last_login__lt=idle_threshold),
+    ).count()
+
+    users_total = int(stats.get('users_total') or 0)
+    users_active = int(stats.get('users_active') or 0)
+    without_license = int(stats.get('users_without_license') or 0)
+    inactive_account = max(0, users_total - users_active)
+    with_license = max(0, users_active - without_license)
+
+    if users_total:
+        donut = {
+            'with_license': round(with_license / users_total * 100),
+            'without_license': round(without_license / users_total * 100),
+            'inactive_account': round(inactive_account / users_total * 100),
+        }
+    else:
+        donut = {'with_license': 0, 'without_license': 0, 'inactive_account': 0}
+
+    rows = [
+        {
+            'key': 'with_license',
+            'label': 'با لایسنس ربات',
+            'value': with_license,
+            'tone': 'emerald',
+        },
+        {
+            'key': 'without_license',
+            'label': 'بدون لایسنس فعال',
+            'value': without_license,
+            'tone': 'amber',
+        },
+        {
+            'key': 'active',
+            'label': 'حساب فعال',
+            'value': users_active,
+            'tone': 'purple',
+        },
+        {
+            'key': 'inactive_account',
+            'label': 'حساب غیرفعال',
+            'value': inactive_account,
+            'tone': 'gray',
+        },
+        {
+            'key': 'idle_30d',
+            'label': 'بی‌فعالیت ۳۰ روز',
+            'value': users_idle_30d,
+            'tone': 'slate',
+        },
+        {
+            'key': 'online_today',
+            'label': 'آنلاین امروز',
+            'value': int(users_analytics.get('online_today') or 0),
+            'tone': 'teal',
+        },
+        {
+            'key': 'new_week',
+            'label': 'ثبت‌نام ۷ روز',
+            'value': int(stats.get('users_new_week') or 0),
+            'tone': 'indigo',
+        },
+        {
+            'key': 'new_month',
+            'label': 'ثبت‌نام ۳۰ روز',
+            'value': int(stats.get('users_new_month') or 0),
+            'tone': 'violet',
+        },
+        {
+            'key': 'pending_payment',
+            'label': 'در انتظار پرداخت',
+            'value': int(stats.get('users_pending_payment') or 0),
+            'tone': 'blue',
+        },
+        {
+            'key': 'retention_30d',
+            'label': 'بازگشت ۳۰ روزه',
+            'value': users_analytics.get('retention_30d', 0),
+            'tone': 'green',
+            'format': 'pct',
+        },
+    ]
+
+    return {
+        'rows': rows,
+        'donut': donut,
+        'with_license': with_license,
+        'inactive_account': inactive_account,
     }
 
 
@@ -1730,44 +1986,264 @@ def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
     return collect_activity_events(snapshot=True)[:limit]
 
 
+def _health_status_label(status: str) -> str:
+    return {
+        'ok': 'پایدار',
+        'warn': 'نیاز به توجه',
+        'error': 'بحرانی',
+    }.get(status, 'نامشخص')
+
+
+def _health_item(
+    *,
+    key: str,
+    label: str,
+    status: str,
+    detail: str,
+    reason: str,
+    facts: List[str],
+    action: str,
+    rule: str,
+    href: str = '',
+    link_label: str = '',
+) -> Dict[str, Any]:
+    item = {
+        'key': key,
+        'label': label,
+        'status': status,
+        'status_label': _health_status_label(status),
+        'detail': detail,
+        'reason': reason,
+        'facts': facts,
+        'action': action,
+        'rule': rule,
+    }
+    if href:
+        item['href'] = href
+        item['link_label'] = link_label or 'رفتن به بخش مربوطه'
+    return item
+
+
 def build_health_indicators(stats: Dict[str, Any], sms_balance: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """وضعیت سلامت زیرسیستم‌ها."""
-    indicators = [
-        {
-            'key': 'users',
-            'label': 'کاربران',
-            'status': 'ok' if stats.get('users_active', 0) > 0 else 'warn',
-            'detail': f"{stats.get('users_active', 0)} فعال",
-        },
-        {
-            'key': 'licenses',
-            'label': 'لایسنس',
-            'status': 'warn' if stats.get('licenses_expiring_soon', 0) > 5 else 'ok',
-            'detail': f"{stats.get('licenses_active', 0)} فعال",
-        },
-        {
-            'key': 'orders',
-            'label': 'سفارش',
-            'status': 'warn' if stats.get('orders_pending', 0) > 10 else 'ok',
-            'detail': f"{stats.get('conversion_rate', 0)}٪ تبدیل",
-        },
-        {
-            'key': 'sms',
-            'label': 'پیامک',
-            'status': 'error' if sms_balance.get('error') else ('warn' if sms_balance.get('is_low') else 'ok'),
-            'detail': (
-                f"{int(sms_balance.get('credit') or 0):,} ت"
-                if sms_balance.get('ok') else 'خطا'
+    """وضعیت سلامت زیرسیستم‌ها همراه توضیح برای مودال نمای کلی."""
+    from django.conf import settings
+    from django.urls import reverse
+
+    href_users = reverse('admin_panel_users')
+    href_licenses = reverse('admin_panel_licenses')
+    href_licenses_expiring = f'{href_licenses}#licenses-table-expiring'
+    href_sales = reverse('admin_panel_sales')
+    href_sales_pending = f'{href_sales}?focus=pending#sales-table-pending'
+    href_ops_sms = f"{reverse('admin_panel_operations')}#ops-sms"
+    href_marketing = reverse('admin_panel_marketing')
+    href_support = reverse('admin_panel_support')
+    href_support_unread = f'{href_support}?focus=unread_tickets#support-table-tickets'
+
+    users_active = int(stats.get('users_active') or 0)
+    users_total = int(stats.get('users_total') or 0)
+    users_status = 'ok' if users_active > 0 else 'warn'
+    users_reason = (
+        'حداقل یک حساب کاربری فعال در سیستم وجود دارد و جریان ثبت‌نام/ورود از نظر موجودی کاربر قابل اتکا است.'
+        if users_status == 'ok'
+        else 'هیچ حساب کاربری با وضعیت فعال (is_active) وجود ندارد؛ این وضعیت غیرعادی است.'
+    )
+
+    licenses_active = int(stats.get('licenses_active') or 0)
+    licenses_expiring = int(stats.get('licenses_expiring_soon') or 0)
+    licenses_status = 'warn' if licenses_expiring > 5 else 'ok'
+    licenses_reason = (
+        f'تعداد لایسنس‌های فعال در آستانه انقضا ({to_persian_digits(licenses_expiring)}) از آستانه هشدار (بیش از ۵) عبور کرده است.'
+        if licenses_status == 'warn'
+        else 'تعداد لایسنس‌های نزدیک به انقضا در محدوده عادی است.'
+    )
+
+    orders_pending = int(stats.get('orders_pending') or 0)
+    conversion = stats.get('conversion_rate', 0)
+    orders_status = 'warn' if orders_pending > 10 else 'ok'
+    orders_reason = (
+        f'{to_persian_digits(orders_pending)} سفارش در وضعیت پرداخت‌نشده ثبت شده که از آستانه ۱۰ مورد بیشتر است.'
+        if orders_status == 'warn'
+        else 'صف سفارش‌های معلق در حد قابل مدیریت است.'
+    )
+
+    low_threshold = int(getattr(settings, 'FARAZSMS_LOW_BALANCE', 50_000) or 50_000)
+    sms_ok = bool(sms_balance.get('ok'))
+    sms_error = (sms_balance.get('error') or '').strip()
+    sms_credit = int(sms_balance.get('credit') or 0)
+    sms_low = bool(sms_balance.get('is_low'))
+    if sms_error or not sms_ok:
+        sms_status = 'error'
+        sms_reason = sms_error or 'ارتباط با پنل پیامک برقرار نشد یا پاسخ موجودی قابل خواندن نیست.'
+    elif sms_low:
+        sms_status = 'warn'
+        sms_reason = (
+            f'موجودی ریالی پنل ({to_persian_digits(f"{sms_credit:,}")} تومان) '
+            f'از آستانه هشدار ({to_persian_digits(f"{low_threshold:,}")} تومان) کمتر است.'
+        )
+    else:
+        sms_status = 'ok'
+        sms_reason = 'موجودی پنل پیامک و اتصال سرویس در وضعیت کافی است.'
+
+    unread = int(stats.get('unread_tickets') or 0)
+    open_tickets = int(stats.get('open_tickets') or 0)
+    support_status = 'warn' if unread > 0 else 'ok'
+    support_reason = (
+        f'{to_persian_digits(unread)} تیکت باز دارای پیام خوانده‌نشده توسط تیم است.'
+        if support_status == 'warn'
+        else 'تیکت بازِ خوانده‌نشده‌ای گزارش نشده است.'
+    )
+
+    return [
+        _health_item(
+            key='users',
+            label='کاربران',
+            status=users_status,
+            detail=f'{to_persian_digits(users_active)} فعال',
+            reason=users_reason,
+            facts=[
+                f'کاربران فعال: {to_persian_digits(users_active)}',
+                f'کل کاربران: {to_persian_digits(users_total)}',
+            ],
+            action=(
+                'روی ثبت‌نام‌ها و کاربران تازه نظارت کنید.'
+                if users_status != 'ok'
+                else 'نیازی به اقدام فوری نیست؛ روند رشد را در KPIها دنبال کنید.'
             ),
-        },
-        {
-            'key': 'support',
-            'label': 'پشتیبانی',
-            'status': 'warn' if stats.get('unread_tickets', 0) > 0 else 'ok',
-            'detail': f"{stats.get('open_tickets', 0)} تیکت باز",
-        },
+            rule='بحران: هیچ کاربر فعالی نباشد.',
+            href=href_users,
+            link_label='مرکز کاربران',
+        ),
+        _health_item(
+            key='licenses',
+            label='لایسنس',
+            status=licenses_status,
+            detail=f'{to_persian_digits(licenses_active)} فعال',
+            reason=licenses_reason,
+            facts=[
+                f'لایسنس فعال: {to_persian_digits(licenses_active)}',
+                f'انقضا در ۱۴ روز آینده: {to_persian_digits(licenses_expiring)}',
+            ],
+            action=(
+                'مرکز لایسنس → تمدید و یادآوری برای لایسنس‌های نزدیک به انقضا.'
+                if licenses_status == 'warn'
+                else 'وضعیت پایدار؛ تمدید خودکار را در گزارش‌ها چک کنید.'
+            ),
+            rule='هشدار: بیش از ۵ لایسنس فعال در ۱۴ روز آینده منقضی شوند.',
+            href=href_licenses_expiring if licenses_status == 'warn' else href_licenses,
+            link_label='مرکز لایسنس',
+        ),
+        _health_item(
+            key='orders',
+            label='سفارش',
+            status=orders_status,
+            detail=f'{to_persian_digits(conversion)}٪ تبدیل',
+            reason=orders_reason,
+            facts=[
+                f'سفارش‌های معلق: {to_persian_digits(orders_pending)}',
+                f'نرخ تبدیل کل (کاربر→سفارش پرداخت‌شده): {to_persian_digits(conversion)}٪',
+            ],
+            action=(
+                'مرکز فروش / بازیابی → پیگیری پرداخت‌های معلق.'
+                if orders_status == 'warn'
+                else 'صف پرداخت تحت کنترل است.'
+            ),
+            rule='هشدار: بیش از ۱۰ سفارش در وضعیت پرداخت‌نشده.',
+            href=href_sales_pending if orders_status == 'warn' else href_sales,
+            link_label='مرکز فروش',
+        ),
+        _health_item(
+            key='sms',
+            label='پیامک',
+            status=sms_status,
+            detail=f'{to_persian_digits(f"{sms_credit:,}")} ت' if sms_ok else 'خطا',
+            reason=sms_reason,
+            facts=[
+                f'وضعیت API: {"متصل" if sms_ok else "خطا"}',
+                f'موجودی: {to_persian_digits(f"{sms_credit:,}")} تومان' if sms_ok else f'پیام خطا: {sms_error or "—"}',
+                f'آستانه هشدار: {to_persian_digits(f"{low_threshold:,}")} تومان',
+                f'ارسال پیامک: {"فعال" if sms_balance.get("enabled", True) else "غیرفعال"}',
+            ],
+            action=(
+                'مرکز عملیات → شارژ پنل پیامک یا رفع تنظیمات اتصال.'
+                if sms_status == 'error'
+                else (
+                    'شارژ پنل پیامک قبل از کمپین انبوه.'
+                    if sms_status == 'warn'
+                    else 'وضعیت پیامک مناسب است.'
+                )
+            ),
+            rule='بحران: خطای اتصال/خواندن موجودی. هشدار: موجودی زیر آستانه FARAZSMS_LOW_BALANCE.',
+            href=(
+                href_marketing
+                if sms_status == 'warn'
+                else href_ops_sms
+            ),
+            link_label='مرکز بازاریابی' if sms_status == 'warn' else 'مرکز عملیات',
+        ),
+        _health_item(
+            key='support',
+            label='پشتیبانی',
+            status=support_status,
+            detail=f'{to_persian_digits(open_tickets)} تیکت باز',
+            reason=support_reason,
+            facts=[
+                f'تیکت‌های باز: {to_persian_digits(open_tickets)}',
+                f'خوانده‌نشده توسط پشتیبانی: {to_persian_digits(unread)}',
+            ],
+            action=(
+                'مرکز پشتیبانی → اولویت با تیکت‌های خوانده‌نشده.'
+                if support_status == 'warn'
+                else 'صف پشتیبانی در حد انتظار است.'
+            ),
+            rule='هشدار: حداقل یک تیکت باز با پیام خوانده‌نشده.',
+            href=href_support_unread if support_status == 'warn' else href_support,
+            link_label='مرکز پشتیبانی',
+        ),
     ]
-    return indicators
+
+
+def build_overview_health_score_explain(
+    indicators: List[Dict[str, Any]],
+    score: int,
+) -> Dict[str, Any]:
+    """توضیح امتیاز حلقه سلامت در نمای کلی."""
+    total = len(indicators)
+    ok = sum(1 for item in indicators if item.get('status') == 'ok')
+    warn = sum(1 for item in indicators if item.get('status') == 'warn')
+    err = sum(1 for item in indicators if item.get('status') == 'error')
+    if err > 0:
+        aggregate = 'error'
+    elif warn > 0:
+        aggregate = 'warn'
+    else:
+        aggregate = 'ok'
+
+    parts: List[str] = []
+    if err:
+        parts.append(f'{to_persian_digits(err)} حوزه بحرانی')
+    if warn:
+        parts.append(f'{to_persian_digits(warn)} حوزه نیازمند توجه')
+    suffix = '؛ '.join(parts) if parts else 'همه حوزه‌ها پایدار گزارش شده‌اند.'
+
+    return _health_item(
+        key='score',
+        label='سلامت سیستم',
+        status=aggregate,
+        detail=f'{to_persian_digits(score)}٪',
+        reason=(
+            f'امتیاز {to_persian_digits(score)}٪ از نسبت حوزه‌های «پایدار» به کل {to_persian_digits(total)} حوزه پایش '
+            f'محاسبه شده است. {suffix}'
+        ),
+        facts=[
+            f'پایدار: {to_persian_digits(ok)} از {to_persian_digits(total)}',
+            f'نیاز به توجه: {to_persian_digits(warn)}',
+            f'بحرانی: {to_persian_digits(err)}',
+        ],
+        action='روی آیکن «i» کنار هر ردیف بزنید تا علت دقیق و اقدام پیشنهادی را ببینید.',
+        rule='هر حوزه «پایدار» = ۱ امتیاز؛ امتیاز نهایی = درصد حوزه‌های پایدار.',
+        href='#ecc-glance',
+        link_label='اقدام‌های فوری',
+    )
 
 
 def get_affiliate_partners(limit: int = TABLE_FETCH_LIMIT):

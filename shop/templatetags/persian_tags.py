@@ -14,6 +14,15 @@ register = template.Library()
 
 _EN_TO_FA = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
 
+# jdatetime: شنبه=۰ … جمعه=۶
+_JALALI_WEEKDAYS_FA = (
+    'شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه',
+)
+_JALALI_MONTHS_FA = (
+    'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+    'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند',
+)
+
 
 @register.filter
 def to_persian_digits(value):
@@ -43,6 +52,29 @@ def to_jalali_fa(value, format_string="%Y/%m/%d %H:%M"):
         return jdt.strftime(format_string).translate(_EN_TO_FA)
     except Exception:
         return str(value).translate(_EN_TO_FA)
+
+
+@register.filter
+def to_jalali_header_fa(value):
+    """تاریخ شمسی با نام فارسی روز و ماه — مناسب هدر پنل."""
+    if not value:
+        return ''
+    try:
+        if isinstance(value, str):
+            from django.utils.dateparse import parse_datetime
+            parsed = parse_datetime(value.replace('Z', '+00:00'))
+            if parsed is None:
+                from datetime import datetime
+                parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            value = parsed
+        if timezone.is_aware(value):
+            value = timezone.localtime(value)
+        jdt = jdatetime.datetime.fromgregorian(datetime=value)
+        weekday = _JALALI_WEEKDAYS_FA[jdt.weekday()]
+        month = _JALALI_MONTHS_FA[jdt.month - 1]
+        return f'{weekday} {jdt.day} {month} {jdt.year}'.translate(_EN_TO_FA)
+    except Exception:
+        return ''
 
 
 @register.filter

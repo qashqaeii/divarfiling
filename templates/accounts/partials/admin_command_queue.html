@@ -1,0 +1,27 @@
+{% load persian_tags %}
+<section class="adm-cmd-queue ecc-cmd-actions" id="ecc-glance" aria-label="نیازمند اقدام">
+    <header class="adm-cmd-queue__head">
+        <div class="adm-cmd-queue__head-text">
+            <span class="adm-cmd-queue__head-icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <h2>نیازمند اقدام</h2>
+        </div>
+        <span class="adm-cmd-queue__badge ecc-cmd-actions-count">{{ items|length|to_persian_digits }}</span>
+    </header>
+    {% if items %}
+    <div class="adm-cmd-queue__list">
+        {% for item in items %}
+        <a href="{{ item.href }}" class="adm-cmd-queue__row ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}" data-cmd-nav="1">
+            <span class="adm-cmd-queue__title">{{ item.title }}</span>
+            <span class="adm-cmd-queue__count">{{ item.count|to_persian_digits }}</span>
+            <span class="adm-cmd-queue__age">{% firstof item.oldest_label item.detail '' %}</span>
+            <span class="adm-cmd-queue__cta">{{ item.cta }} <i class="fas fa-chevron-left adm-icon-dir" aria-hidden="true"></i></span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ecc-empty ecc-empty--compact">
+        <i class="fas fa-circle-check"></i>
+        <strong>همه‌چیز تحت کنترل است</strong>
+    </div>
+    {% endif %}
+</section>

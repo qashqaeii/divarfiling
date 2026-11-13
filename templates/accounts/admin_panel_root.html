@@ -25,9 +25,11 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="adm-prime-body {% block body_class %}{% endblock %}">
+    {% if not admin_panel_command_layout %}
     <button type="button" class="adm-prime-theme-toggle" data-theme-toggle aria-label="تغییر تم">
         <i class="fas fa-sun" aria-hidden="true"></i>
     </button>
+    {% endif %}
     {% include 'includes/messages.html' with layout='flash' %}
     {% block content %}{% endblock %}
     <script src="{% static 'js/mk-notices.js' %}?v=2"></script>

@@ -3,329 +3,222 @@
 {% load persian_tags %}
 {% load currency_tags %}
 
-{% block title %}مرکز فرمان | پنل مدیریت{% endblock %}
+{% block title %}نمای کلی سیستم | پنل مدیریت{% endblock %}
 
-{% block admin_panel_title %}مرکز فرمان{% endblock %}
-{% block admin_panel_breadcrumb %}<span aria-current="page">مرکز فرمان</span>{% endblock %}
+{% block body_class %}{{ block.super }} adm-overview-active{% endblock %}
 
-{% block admin_panel_header_meta %}
-<span class="ecc-status-pill">{{ system_meta.server_label }}</span>
-<span class="ecc-health" aria-label="سلامت سیستم">
-    {% for h in health_indicators %}
-    <span class="ecc-health-dot ecc-health-dot--{{ h.status }}" title="{{ h.label }}: {{ h.detail }}"></span>
-    {% endfor %}
-</span>
-{% endblock %}
+{% block admin_panel_title %}نمای کلی سیستم{% endblock %}
 
-{% block admin_panel_header_meta_extra %}
-<li>v{{ system_meta.version|to_persian_digits }}</li>
-{% if stats.system_start_at %}
-<li>{{ stats.system_uptime_days|to_persian_digits }} روز آنلاین</li>
-{% endif %}
-<li class="ecc-header-clock">
-    <time id="ecc-live-clock">--:--:--</time>
-    <span id="ecc-live-date"></span>
-</li>
-{% endblock %}
+{% block admin_panel_header_meta %}{% endblock %}
+{% block admin_panel_header_meta_extra %}{% endblock %}
 
 {% block admin_panel_header_actions %}
-<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--primary" title="خروجی اکسل">
-    <i class="fas fa-file-excel"></i>
-</a>
-<a href="{% url 'admin_panel_system_summary' %}?days={{ admin_panel_range_key }}&download=1" class="ecc-btn ecc-btn--ghost" title="JSON">
-    <i class="fas fa-file-code"></i>
-</a>
-<a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
-    <i class="fas fa-cog"></i>
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="adm-ov-header__tool" title="خروجی اکسل">
+    <i class="fas fa-file-excel" aria-hidden="true"></i>
 </a>
 {% endblock %}
 
 {% block admin_panel_content %}
 
-{% include 'accounts/partials/admin_prime_today_strip.html' %}
+<div class="adm-overview-page adm-cmd-page" dir="rtl">
 
-<div class="adm-prime-hero">
-    <div class="adm-prime-hero__chart">
-        <div class="adm-prime-section-tag">
-            <strong>چه چیزی تغییر کرده؟</strong>
-            <em>روند درآمد · {{ admin_panel_range_label_fa|default:"کل بازه" }}</em>
-        </div>
-        <article class="ecc-card ecc-card--chart ecc-cmd-chart-revenue" id="ecc-charts">
-            <div class="ecc-card-head">
-                <span class="ecc-header-title" style="font-size:1rem;font-weight:800;margin:0">روند درآمد</span>
-            </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-revenue-analytics"></canvas>
-            </div>
-        </article>
-    </div>
-    <aside class="adm-prime-hero__rail">
-        <div class="adm-prime-section-tag">
-            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
-            <em>وضعیت فعلی</em>
-        </div>
-        {% include 'accounts/partials/admin_prime_action_queue.html' with items=command_action_items section_id='ecc-glance' %}
-    </aside>
-</div>
-
-<div class="adm-prime-section-tag">
-    <strong>گزارش بازه</strong>
-    <em>{{ admin_panel_range_label_fa|default:"کل بازه" }}</em>
-</div>
-<section class="ecc-section adm-prime-kpi-band ecc-cmd-kpi" aria-label="گزارش بازه">
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd adm-prime-kpi-band">
-        {% for card in kpi_cards %}
-        {% if card.kpi_tier == 'range' %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-                {% if card.delta is not None %}
-                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
-                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
-                </span>
-                {% endif %}
-            </div>
-            {% if card.value is None %}
-            <strong class="ecc-kpi-val">—</strong>
-            {% else %}
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            {% endif %}
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
-            {% if card.sparkline_json %}
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-            {% endif %}
-        </article>
-        {% endif %}
-        {% endfor %}
-    </div>
-</section>
-
-<div class="adm-prime-section-tag">
-    <strong>وضعیت فعلی</strong>
-    <em>Snapshot · مستقل از بازه</em>
-</div>
-<section class="ecc-section ecc-cmd-kpi ecc-cmd-kpi--snapshot adm-prime-kpi-band" aria-label="وضعیت فعلی">
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd ecc-kpi-grid--compact">
-        {% for card in kpi_cards %}
-        {% if card.kpi_tier == 'snapshot' %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-            </div>
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
-        </article>
-        {% endif %}
-        {% endfor %}
-    </div>
-</section>
-
-<div class="adm-prime-fold">
-
-<section class="ecc-section ecc-cmd-assistant" aria-label="دستیار مدیریت">
-    <header class="ecc-cmd-actions-head">
-        <div>
-            <h2><i class="fas fa-wand-magic-sparkles"></i> دستیار مدیریت</h2>
-            <p>
-                {% if assistant_preview.total %}
-                {{ assistant_preview.total|to_persian_digits }} پیشنهاد هوشمند برای اقدام امروز
-                {% else %}
-                پیشنهاد جدیدی برای امروز نیست
-                {% endif %}
-            </p>
-        </div>
-        {% if assistant_preview.total %}
-        <span class="ecc-cmd-actions-count">{{ assistant_preview.total|to_persian_digits }}</span>
-        {% endif %}
-    </header>
-    {% if assistant_preview.top_insights %}
-    <div class="ecc-cmd-assistant-list">
-        {% for item in assistant_preview.top_insights %}
-        <a href="{% url 'admin_panel_assistant' %}#insight-{{ item.key }}"
-           class="ecc-cmd-assistant-card"
-           data-severity="{{ item.severity }}"
-           data-accent="{{ item.accent }}">
-            <span class="ecc-cmd-assistant-severity" aria-hidden="true"></span>
-            <span class="ecc-cmd-assistant-icon"><i class="fas {{ item.icon }}"></i></span>
-            <span class="ecc-cmd-assistant-body">
-                <strong>{{ item.title }}</strong>
-                <em>{{ item.recommendation }}</em>
-            </span>
-            <span class="ecc-cmd-assistant-badge">{{ item.severity_label }}</span>
-            <span class="ecc-cmd-assistant-cta">مشاهده <i class="fas fa-arrow-left"></i></span>
-        </a>
-        {% endfor %}
-    </div>
-    <footer class="ecc-cmd-assistant-foot">
-        <a href="{% url 'admin_panel_assistant' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            مشاهده همه پیشنهادها
-            {% if assistant_preview.total %}
-            <span class="ecc-cmd-assistant-foot-count">{{ assistant_preview.total|to_persian_digits }}</span>
-            {% endif %}
-            <i class="fas fa-arrow-left"></i>
-        </a>
-    </footer>
-    {% else %}
-    <div class="ecc-empty ecc-empty--compact">
-        <i class="fas fa-circle-check"></i>
-        <span>همه‌چیز منظم است — فعلاً پیشنهاد فوری نداریم</span>
-    </div>
+<section class="adm-overview-section adm-overview-kpi-row" aria-label="شاخص‌های کلیدی">
+    <h2 class="adm-overview-section-title adm-overview-kpi-row__title">
+        <i class="fas fa-gauge-high adm-overview-section-title__icon" aria-hidden="true"></i>
+        <span>شاخص‌های کلیدی</span>
+    </h2>
+    {% for card in kpi_cards %}
+    {% if card.key == 'users_active' or card.key == 'licenses_active' or card.key == 'revenue_period' or card.key == 'orders_paid_period' %}
+    {% include 'accounts/partials/admin_overview_kpi_card.html' with card=card %}
     {% endif %}
+    {% endfor %}
 </section>
 
-<section class="ecc-section ecc-cmd-charts" aria-label="رشد">
-    <div class="ecc-cmd-charts-grid">
-        <article class="ecc-card ecc-cmd-growth-panel" id="ecc-growth">
-            <div class="ecc-card-head ecc-section-head--slim">
-                <div>
-                    <h3><i class="fas fa-route"></i> پایپلاین رشد</h3>
-                    <p>سرنخ تا مشتری</p>
-                </div>
-                <a href="{% url 'admin_panel_growth_pipeline' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-                    جزئیات <i class="fas fa-arrow-left"></i>
-                </a>
+<section class="adm-overview-hero" aria-label="بینش‌های اصلی">
+    <div class="adm-overview-hero__insight">
+    <article class="adm-overview-chart adm-overview-chart--dual" id="ecc-charts">
+        <header class="adm-overview-chart__head">
+            <div>
+                <h2 class="adm-overview-section-title">
+                    <i class="fas fa-chart-line adm-overview-section-title__icon" aria-hidden="true"></i>
+                    <span>روند عملکرد سیستم</span>
+                </h2>
+                <p class="adm-overview-chart__grain" id="adm-cmd-chart-grain">{{ admin_panel_range_label_fa|default:"کل بازه" }}</p>
             </div>
-            <div class="ecc-cmd-funnel">
-                <div class="ecc-cmd-funnel-step" data-accent="slate">
-                    <em>کل سفرها</em>
-                    <strong data-count-up="{{ growth_snapshot.total }}">۰</strong>
-                </div>
-                <div class="ecc-cmd-funnel-arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
-                <div class="ecc-cmd-funnel-step" data-accent="cyan">
-                    <em>پیش از ثبت‌نام</em>
-                    <strong data-count-up="{{ growth_snapshot.pre_signup }}">۰</strong>
-                </div>
-                <div class="ecc-cmd-funnel-arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
-                <div class="ecc-cmd-funnel-step" data-accent="violet">
-                    <em>در انتظار خرید</em>
-                    <strong data-count-up="{{ growth_snapshot.waiting_purchase }}">۰</strong>
-                </div>
-                <div class="ecc-cmd-funnel-arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
-                <div class="ecc-cmd-funnel-step" data-accent="amber">
-                    <em>سبد معلق</em>
-                    <strong data-count-up="{{ growth_snapshot.pending_checkout }}">۰</strong>
-                </div>
-                <div class="ecc-cmd-funnel-arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
-                <div class="ecc-cmd-funnel-step" data-accent="emerald">
-                    <em>مشتری</em>
-                    <strong data-count-up="{{ growth_snapshot.customers }}">۰</strong>
-                </div>
+        </header>
+        <div class="adm-overview-chart__legend" aria-hidden="true">
+            <span data-series="revenue"><i></i> درآمد</span>
+            <span data-series="orders"><i></i> سفارش</span>
+        </div>
+        <div class="ecc-chart-wrap adm-cmd-chart__canvas adm-overview-chart__canvas ecc-chart-wrap--tall" dir="ltr" lang="fa" aria-label="نمودار روند عملکرد">
+            <canvas id="chart-revenue-analytics" role="img"></canvas>
+        </div>
+    </article>
+
+    <aside class="adm-overview-status" aria-label="وضعیت کلی">
+        <header class="adm-overview-status__head">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-heart-pulse adm-overview-section-title__icon adm-overview-section-title__icon--health" aria-hidden="true"></i>
+                <span>وضعیت کلی</span>
+            </h2>
+            <button type="button"
+                    class="adm-overview-status__info adm-overview-status__info--head"
+                    data-health-key="score"
+                    aria-label="توضیح امتیاز سلامت سیستم">
+                <i class="fas fa-circle-info" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="adm-overview-status__ring" style="--health: {{ overview_health_score|default:100 }};">
+            <svg viewBox="0 0 120 120" role="img" aria-label="امتیاز سلامت {{ overview_health_score|to_persian_digits }} درصد">
+                <circle class="adm-overview-status__ring-bg" cx="60" cy="60" r="52"></circle>
+                <circle class="adm-overview-status__ring-fg" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <div class="adm-overview-status__ring-label">
+                <strong>{{ overview_health_score|default:100|to_persian_digits }}٪</strong>
+                <span>سلامت سیستم</span>
             </div>
-        </article>
+        </div>
+        <ul class="adm-overview-status__list">
+            {% for item in health_indicators %}
+            <li data-status="{{ item.status }}">
+                <span class="adm-overview-status__row-label">{{ item.label }}</span>
+                <span class="adm-overview-status__row-trail">
+                    <strong>{{ item.status_label }}</strong>
+                    <button type="button"
+                            class="adm-overview-status__info"
+                            data-health-key="{{ item.key }}"
+                            aria-label="چرا {{ item.label }} {{ item.status_label }} است؟">
+                        <i class="fas fa-circle-info" aria-hidden="true"></i>
+                    </button>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% if command_action_items %}
+        <p class="adm-overview-status__note">
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ command_action_items|length|to_persian_digits }} مورد نیازمند رسیدگی در صف اقدام
+        </p>
+        {% endif %}
+    </aside>
     </div>
+
+    {% include 'accounts/partials/admin_overview_action_queue.html' with items=command_action_items %}
 </section>
 
-<section class="ecc-section ecc-cmd-summary" id="ecc-summary" aria-label="خلاصه حوزه‌ها">
-    <header class="ecc-cmd-section-label">
-        <span>خلاصه حوزه‌ها</span>
-    </header>
-    <div class="ecc-cmd-summary-grid">
-        <article class="ecc-cmd-summary-card" data-accent="teal">
-            <header>
-                <h3><i class="fas fa-route"></i> رشد</h3>
-                <a href="{% url 'admin_panel_growth_pipeline' %}">مشاهده</a>
-            </header>
-            <ul>
-                <li><span>کل سفرها</span><strong>{{ growth_snapshot.total|to_persian_digits }}</strong></li>
-                <li><span>سبد معلق</span><strong>{{ growth_snapshot.pending_checkout|to_persian_digits }}</strong></li>
-                <li><span>مشتری</span><strong>{{ growth_snapshot.customers|to_persian_digits }}</strong></li>
+<section class="adm-overview-analytics" aria-label="تحلیل تکمیلی">
+    <article class="adm-overview-card adm-overview-users">
+        <header class="adm-overview-card__head">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-users adm-overview-section-title__icon adm-overview-section-title__icon--users" aria-hidden="true"></i>
+                <span>ترکیب کاربران</span>
+            </h2>
+            <span class="adm-overview-card__meta">{{ stats.users_total|to_persian_digits }} کل</span>
+        </header>
+        <div class="adm-overview-users__body">
+            <div class="adm-overview-users__viz" aria-hidden="true">
+                <div class="adm-overview-donut"
+                     style="--a: {{ overview_user_seg.with_license }}%; --b: {{ overview_user_seg.without_license }}%; --c: {{ overview_user_seg.inactive_account }}%;">
+                    <span class="adm-overview-donut__center">
+                        <strong>{{ stats.users_total|to_persian_digits }}</strong>
+                        <em>کاربر</em>
+                    </span>
+                </div>
+                <ul class="adm-overview-users__donut-keys">
+                    <li data-tone="emerald"><span>با لایسنس</span></li>
+                    <li data-tone="amber"><span>بدون لایسنس</span></li>
+                    <li data-tone="gray"><span>غیرفعال</span></li>
+                </ul>
+            </div>
+            <ul class="adm-overview-users__legend">
+                {% for row in overview_user_breakdown %}
+                <li class="adm-overview-users__metric" data-tone="{{ row.tone }}">
+                    <span class="adm-overview-users__metric-label">{{ row.label }}</span>
+                    {% if row.format == 'pct' %}
+                    <strong class="adm-overview-users__metric-value">{{ row.value|floatformat:1|to_persian_digits }}٪</strong>
+                    {% else %}
+                    <strong class="adm-overview-users__metric-value">{{ row.value|to_persian_digits }}</strong>
+                    {% endif %}
+                </li>
+                {% endfor %}
             </ul>
-        </article>
-        <article class="ecc-cmd-summary-card" data-accent="blue">
-            <header>
-                <h3><i class="fas fa-users"></i> کاربران</h3>
-                <a href="{% url 'admin_panel_export' 'all_users' %}?format=xlsx">خروجی</a>
-            </header>
-            <ul>
-                <li><span>فعال</span><strong>{{ users_analytics.active|to_persian_digits }}</strong></li>
-                <li><span>جدید (ماه)</span><strong>{{ users_analytics.new_month|to_persian_digits }}</strong></li>
-                <li><span>Retention</span><strong>{{ users_analytics.retention_30d|to_persian_digits }}٪</strong></li>
-            </ul>
-        </article>
-        <article class="ecc-cmd-summary-card" data-accent="amber">
-            <header>
-                <h3><i class="fas fa-key"></i> لایسنس</h3>
-                <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx">انقضا</a>
-            </header>
-            <ul>
-                <li><span>فعال</span><strong>{{ licensing_stats.active|to_persian_digits }}</strong></li>
-                <li><span>در شرف انقضا</span><strong>{{ licensing_stats.expiring|to_persian_digits }}</strong></li>
-                <li><span>نرخ تمدید</span><strong>{{ licensing_stats.renewal_rate_pct|to_persian_digits }}٪</strong></li>
-            </ul>
-        </article>
-    </div>
-</section>
+        </div>
+    </article>
 
-<section class="ecc-section ecc-order-modules" aria-label="میانبرهای مدیریت">
-    <div class="ecc-module-dock">
-        {% for mod in command_modules %}
-        <a
-            class="ecc-module"
-            data-accent="{{ mod.accent }}"
-            {% if mod.href %}href="{{ mod.href }}" target="_blank" rel="noopener"{% else %}href="{% url mod.url_name %}"{% endif %}
-        >
-            <span class="ecc-module-icon"><i class="fas {{ mod.icon }}"></i></span>
-            <span class="ecc-module-text">
-                <strong>{{ mod.title }}</strong>
-                <em>{{ mod.desc }}</em>
-            </span>
-            {% if mod.badge %}<span class="ecc-module-badge">{{ mod.badge|to_persian_digits }}</span>{% endif %}
-        </a>
-        {% endfor %}
-    </div>
+    <article class="adm-overview-card adm-overview-plans">
+        <header class="adm-overview-card__head">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-crown adm-overview-section-title__icon adm-overview-section-title__icon--plans" aria-hidden="true"></i>
+                <span>پرفروش‌ترین پلن‌ها</span>
+            </h2>
+        </header>
+        <ul class="adm-overview-plans__list">
+            {% for plan in plan_sales|slice:":4" %}
+            <li>
+                <div class="adm-overview-plans__row">
+                    <span class="adm-overview-plans__name">{{ plan.label }}</span>
+                    <span class="adm-overview-plans__pct">{{ plan.count|to_persian_digits }} سفارش</span>
+                </div>
+                <div class="adm-overview-plans__bar" data-accent="{{ plan.accent }}">
+                    {% if overview_plan_max_total %}
+                    <span style="width: {% widthratio plan.total overview_plan_max_total 100 %}%;"></span>
+                    {% else %}
+                    <span style="width: 0;"></span>
+                    {% endif %}
+                </div>
+            </li>
+            {% empty %}
+            <li class="adm-overview-plans__empty">داده فروش پلن در دسترس نیست</li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <article class="adm-overview-card adm-overview-orders">
+        <header class="adm-overview-card__head">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-receipt adm-overview-section-title__icon adm-overview-section-title__icon--orders" aria-hidden="true"></i>
+                <span>آخرین سفارش‌ها</span>
+            </h2>
+        </header>
+        <div class="adm-overview-table-wrap">
+            <table class="adm-overview-table">
+                <thead>
+                    <tr>
+                        <th>کاربر</th>
+                        <th>مبلغ</th>
+                        <th>وضعیت</th>
+                        <th>زمان</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                        <td>{{ order.amount|currency }}</td>
+                        <td><span class="adm-overview-badge" data-status="{{ order.status }}">{{ order.get_status_display }}</span></td>
+                        <td>{{ order.created_at|to_jalali_fa:"%m/%d %H:%M" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">سفارشی ثبت نشده</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <footer class="adm-overview-card__foot">
+            <a href="{% url 'admin_panel_sales' %}{{ admin_panel_query_suffix|default:'?days=all' }}">مشاهده همه سفارش‌ها <i class="fas fa-arrow-left adm-icon-dir"></i></a>
+        </footer>
+    </article>
 </section>
 
 </div>
+
+{{ overview_health_modal_data|json_script:"adm-overview-health-data" }}
+{% include 'accounts/partials/admin_overview_health_modal.html' %}
 
 {% endblock %}
 
 {% block admin_panel_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-window.admCharts = {{ charts_json|safe }};
-window.admChartDays = {{ chart_days_effective|default:chart_days }};
-</script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=14"></script>
-<script>
-if (location.hash === '#ecc-users') {
-    var q = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_users" %}' + q);
-}
-if (location.hash === '#ecc-licensing') {
-    var q2 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_licenses" %}' + q2);
-}
-if (location.hash === '#ecc-operations') {
-    var q3 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_operations" %}' + q3);
-}
-if (location.hash === '#ecc-support') {
-    var q4 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_support" %}' + q4);
-}
-if (location.hash === '#ecc-activity') {
-    var q5 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_activity" %}' + q5);
-}
-if (location.hash === '#ecc-windows') {
-    var q6 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_windows" %}' + q6);
-}
-if (location.hash === '#ecc-crm') {
-    var q7 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_crm" %}' + q7);
-}
-if (location.hash === '#ecc-affiliates') {
-    var q8 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_affiliates" %}' + q8);
-}
-if (location.hash === '#ecc-exports') {
-    var q9 = location.search || '?days=all';
-    window.location.replace('{% url "admin_panel_exports" %}' + q9);
-}
-</script>
+{% include 'accounts/partials/admin_prime_charts_boot.html' %}
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=18"></script>
+<script src="{% static 'js/mizkar-admin-command.js' %}?v=8"></script>
 {% endblock %}

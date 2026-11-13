@@ -243,6 +243,10 @@
         const canvas = document.getElementById(canvasId);
         if (!canvas || !config || typeof Chart === 'undefined') return null;
 
+        if (config.type === 'command_trend') {
+            return null;
+        }
+
         const chartType = config.type === 'combo' ? 'bar' : (config.type === 'sparkline' ? 'line' : config.type);
 
         return new Chart(canvas, {
@@ -399,17 +403,20 @@
             const format = el.getAttribute('data-format') || 'count';
             const duration = 900;
             const start = performance.now();
+            const suffix = el.getAttribute('data-suffix') || (el.dataset && el.dataset.suffix) || '';
+            const suffixFromParent = el.parentElement && el.parentElement.getAttribute('data-suffix');
 
             function frame(now) {
                 const t = Math.min(1, (now - start) / duration);
                 const eased = 1 - Math.pow(1 - t, 3);
                 const current = Math.round(target * eased);
+                const sfx = suffix || suffixFromParent || '';
                 if (format === 'money') {
-                    el.textContent = formatMoney(current);
+                    el.textContent = formatMoney(current) + sfx;
                 } else if (format === 'percent') {
                     el.textContent = toPersianDigits((target * eased).toFixed(1)) + '٪';
                 } else {
-                    el.textContent = formatMoney(current);
+                    el.textContent = toPersianDigits(current) + sfx;
                 }
                 if (t < 1) requestAnimationFrame(frame);
             }

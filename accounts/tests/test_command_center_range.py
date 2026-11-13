@@ -163,6 +163,30 @@ class CommandCenterRangeViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel'), {'days': '30'})
         self.assertContains(resp, 'ثبت‌نام در 30 روز اخیر')
 
-    def test_snapshot_kpi_labels(self):
+    def test_overview_kpi_period_compare_footer(self):
         resp = self.client.get(reverse('admin_panel'), {'days': '7'})
-        self.assertContains(resp, 'وضعیت فعلی')
+        self.assertContains(resp, 'نسبت به دوره قبل')
+        ctx = get_command_center_context(days=7)
+        for key in ('users_active', 'licenses_active', 'revenue_period', 'orders_paid_period'):
+            card = next(c for c in ctx['kpi_cards'] if c['key'] == key)
+            self.assertEqual(card.get('kpi_tier'), 'range')
+            self.assertEqual(card.get('delta_label'), 'نسبت دوره قبل')
+
+    def test_users_engaged_respects_previous_window(self):
+        user = User.objects.create_user(username='eng1', password='x', phone='09128888001')
+        user.last_login = timezone.make_aware(
+            datetime.combine(self.today, time(10, 0)),
+        )
+        user.save(update_fields=['last_login'])
+        prev_day = self.today - timedelta(days=10)
+        old = User.objects.create_user(username='eng2', password='x', phone='09128888002')
+        old.last_login = timezone.make_aware(datetime.combine(prev_day, time(10, 0)))
+        old.save(update_fields=['last_login'])
+
+        from accounts.services.admin_dashboard import (
+            _users_engaged_for_period,
+            _previous_users_engaged_for_period,
+        )
+
+        self.assertEqual(_users_engaged_for_period(7), 1)
+        self.assertEqual(_previous_users_engaged_for_period(7), 1)

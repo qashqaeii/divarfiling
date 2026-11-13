@@ -1,0 +1,31 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-overview-kpi" data-accent="{{ card.accent|default:'violet' }}">
+    <div class="adm-overview-kpi__head">
+        <span class="adm-overview-kpi__label">{{ card.label }}</span>
+        <div class="adm-overview-kpi__icon" aria-hidden="true">
+            <i class="fas {{ card.icon|default:'fa-chart-line' }}"></i>
+        </div>
+    </div>
+    <div class="adm-overview-kpi__value-row">
+        {% if card.value is None %}
+        <strong class="adm-overview-kpi__value">—</strong>
+        {% elif card.format == 'money' %}
+        <strong class="adm-overview-kpi__value">{{ card.value|currency }}</strong>
+        {% elif card.format == 'percent' %}
+        <strong class="adm-overview-kpi__value">{{ card.value|to_persian_digits }}٪</strong>
+        {% else %}
+        <strong class="adm-overview-kpi__value" data-count-up="{{ card.value }}" data-format="{{ card.format|default:'count' }}">۰</strong>
+        {% endif %}
+    </div>
+    <footer class="adm-overview-kpi__foot">
+        <span class="adm-overview-kpi__foot-label">نسبت به دوره قبل</span>
+        {% if card.delta is not None %}
+        <span class="adm-overview-kpi__delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+            {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+        </span>
+        {% else %}
+        <span class="adm-overview-kpi__foot-empty" aria-hidden="true">—</span>
+        {% endif %}
+    </footer>
+</article>

@@ -1,0 +1,25 @@
+{% load persian_tags %}
+<section class="adm-cmd-section adm-cmd-section--today" aria-label="امروز">
+    <div class="adm-cmd-today">
+        <div class="adm-cmd-today__item" data-metric="revenue">
+            <span class="adm-cmd-today__icon" aria-hidden="true"><i class="fas fa-sack-dollar"></i></span>
+            <em>فروش امروز</em>
+            <strong data-count-up="{{ today_stats.revenue_today }}" data-format="money" data-suffix=" تومان">{{ today_stats.revenue_today|default:0 }}</strong>
+        </div>
+        <div class="adm-cmd-today__item" data-metric="orders">
+            <span class="adm-cmd-today__icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+            <em>سفارش موفق</em>
+            <strong data-count-up="{{ today_stats.orders_paid_today }}">{{ today_stats.orders_paid_today|default:0|to_persian_digits }}</strong>
+        </div>
+        <div class="adm-cmd-today__item" data-metric="signups">
+            <span class="adm-cmd-today__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
+            <em>ثبت‌نام</em>
+            <strong data-count-up="{{ today_stats.signups_today }}">{{ today_stats.signups_today|default:0|to_persian_digits }}</strong>
+        </div>
+        <div class="adm-cmd-today__item" data-metric="failed">
+            <span class="adm-cmd-today__icon" aria-hidden="true"><i class="fas fa-circle-xmark"></i></span>
+            <em>پرداخت ناموفق</em>
+            <strong data-count-up="{{ today_stats.orders_failed_today }}">{{ today_stats.orders_failed_today|default:0|to_persian_digits }}</strong>
+        </div>
+    </div>
+</section>

@@ -20,7 +20,14 @@ from accounts.services.admin_database_backup import (
     get_database_backup_info,
     iter_backup_file_chunks,
 )
-from accounts.services.admin_dashboard import get_command_center_context
+from accounts.services.admin_dashboard import (
+    build_overview_health_score_explain,
+    build_overview_user_breakdown,
+    TABLE_PREVIEW_ROWS,
+    get_command_center_context,
+    get_plan_sales_breakdown,
+    get_recent_orders,
+)
 from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_marketing import (
@@ -132,10 +139,47 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
             spark = card.get('sparkline')
             card['sparkline_json'] = json.dumps(spark) if spark else ''
         ctx.update(dashboard)
+        for card in ctx.get('kpi_cards', []):
+            if card.get('key') == 'revenue_period':
+                card['label'] = 'درآمد'
+            elif card.get('key') == 'orders_paid_period':
+                card['label'] = 'سفارش‌های جدید'
+            elif card.get('key') == 'users_active':
+                card['label'] = 'کاربران فعال'
+            elif card.get('key') == 'licenses_active':
+                card['label'] = 'لایسنس‌های فعال'
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
+        ctx['charts_enabled'] = True
         ctx['assistant_preview'] = get_assistant_preview()
+        ctx['admin_panel_command_layout'] = True
+        ctx['admin_panel_hide_global_bar'] = True
+        ctx['admin_panel_compact_header'] = True
+        ctx['admin_panel_page_title'] = 'نمای کلی سیستم'
+        ctx['admin_panel_page_subtitle'] = (
+            'مرور وضعیت کل سیستم، عملکرد فروش و موارد مهم'
+        )
+        ctx['plan_sales'] = get_plan_sales_breakdown(limit=6)
+        ctx['recent_orders'] = get_recent_orders(limit=TABLE_PREVIEW_ROWS)
+        health = dashboard.get('health_indicators') or []
+        ok_count = sum(1 for item in health if item.get('status') == 'ok')
+        overview_health_score = round((ok_count / len(health)) * 100) if health else 100
+        ctx['overview_health_score'] = overview_health_score
+        score_explain = build_overview_health_score_explain(health, overview_health_score)
+        ctx['overview_health_modal_data'] = {
+            'score': score_explain,
+            'indicators': {item['key']: item for item in health},
+        }
+        stats = dashboard.get('stats') or {}
+        users_breakdown = build_overview_user_breakdown(
+            stats,
+            dashboard.get('users_analytics') or {},
+        )
+        ctx['overview_user_breakdown'] = users_breakdown['rows']
+        ctx['overview_user_seg'] = users_breakdown['donut']
+        plan_rows = ctx['plan_sales']
+        ctx['overview_plan_max_total'] = max((p['total'] for p in plan_rows), default=0)
         return ctx
 
 

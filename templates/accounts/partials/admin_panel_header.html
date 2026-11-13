@@ -1,4 +1,7 @@
 {% load persian_tags %}
+{% if admin_panel_compact_header %}
+{% include 'accounts/partials/admin_panel_header_command.html' %}
+{% else %}
 <header class="ecc-header ecc-header--shell" id="ecc-command">
     <div class="ecc-header-main">
         <div class="ecc-header-title-row">
@@ -6,7 +9,7 @@
                 <i class="fas fa-bars" aria-hidden="true"></i>
             </button>
             <div class="ecc-header-title-block">
-                <h1 class="ecc-header-title">{% block admin_panel_title %}پنل مدیریت{% endblock %}</h1>
+                <h1 class="ecc-header-title">{% if admin_panel_page_title %}{{ admin_panel_page_title }}{% else %}{% block admin_panel_title %}پنل مدیریت{% endblock %}{% endif %}</h1>
                 <p class="ecc-header-subtitle" id="ecc-header-range-label">
                     {% block admin_panel_header_subtitle %}
                     بازه: {{ admin_panel_range_label_fa|default:"کل بازه" }}
@@ -44,16 +47,18 @@
                 <span>مقایسه</span>
             </label>
         </div>
-        <ul class="ecc-header-meta ecc-header-meta--shell">
-            <li class="ecc-header-updated">
-                <i class="fas fa-clock" aria-hidden="true"></i>
-                بروزرسانی:
-                <time id="ecc-updated-at" datetime="{{ admin_panel_updated_at|date:'c' }}">
-                    {{ admin_panel_updated_at|to_jalali_fa:"%H:%M" }}
-                </time>
-            </li>
+        <div class="adm-header-meta-wrap">
+            <ul class="ecc-header-meta ecc-header-meta--shell">
+                <li class="ecc-header-updated">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    بروزرسانی:
+                    <time id="ecc-updated-at" datetime="{{ admin_panel_updated_at|date:'c' }}">
+                        {{ admin_panel_updated_at|to_jalali_fa:"%H:%M" }}
+                    </time>
+                </li>
+            </ul>
             {% block admin_panel_header_meta_extra %}{% endblock %}
-        </ul>
+        </div>
     </div>
     <div class="ecc-header-actions">
         {% with alerts=alert_count|default:admin_panel_alert_count|default:0 %}
@@ -70,3 +75,4 @@
         {% block admin_panel_header_actions %}{% endblock %}
     </div>
 </header>
+{% endif %}

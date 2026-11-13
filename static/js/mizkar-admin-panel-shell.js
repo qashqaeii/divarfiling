@@ -141,6 +141,18 @@
         return hashIndex >= 0 ? href.slice(hashIndex) : '';
     }
 
+    function initCommandQueueLinks() {
+        document.addEventListener('click', function (ev) {
+            var link = ev.target && ev.target.closest ? ev.target.closest('a.adm-cmd-queue__row[data-cmd-nav]') : null;
+            if (!link) return;
+            var href = link.getAttribute('href') || '';
+            if (!href || href.charAt(0) === '#') return;
+            if (href.indexOf('/accounts/admin-panel/') !== 0) return;
+            ev.preventDefault();
+            window.location.href = href;
+        }, false);
+    }
+
     function initDashboardNavigation() {
         if (!document.getElementById('ecc-charts')) return;
         var sections = qsa('.ecc-main .ecc-section[id]').map(function (el) { return el.id; });
@@ -184,6 +196,7 @@
         initMobileSidebar();
         initCompareToggle();
         initRefresh();
+        initCommandQueueLinks();
         initDashboardNavigation();
     }
 

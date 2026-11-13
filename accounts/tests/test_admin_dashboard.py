@@ -6,16 +6,19 @@ from django.urls import reverse
 from accounts.services.admin_dashboard import (
     build_action_queue,
     build_command_action_items,
+    build_overview_user_breakdown,
     get_activity_feed,
     get_admin_dashboard_context,
     get_affiliate_partners,
     get_command_center_context,
     get_licensing_center_stats,
+    get_overview_stats,
     get_plan_sales_breakdown,
     get_recent_affiliate_sales,
     get_recent_renewal_orders,
     get_today_stats,
     get_users_active_on_date,
+    get_users_analytics_stats,
     get_users_online_count,
 )
 
@@ -223,6 +226,9 @@ class AdminDashboardServiceTests(TestCase):
         ctx = get_command_center_context(days=30)
         self.assertIn('command_action_items', ctx)
         self.assertIn('revenue_analytics', ctx['charts'])
+        rev = ctx['charts']['revenue_analytics']
+        self.assertEqual(rev.get('type'), 'command_trend')
+        self.assertIn('series', rev)
         self.assertNotIn('order_status', ctx['charts'])
         self.assertEqual(len(ctx['kpi_cards']), 6)
 
@@ -231,6 +237,31 @@ class AdminDashboardServiceTests(TestCase):
         items = build_command_action_items(stats, {'ok': True, 'is_low': False})
         keys = [i['key'] for i in items]
         self.assertEqual(len(keys), len(set(keys)))
+
+    def test_health_indicators_include_explanations(self):
+        from accounts.services.admin_dashboard import build_health_indicators
+
+        stats = get_command_center_context(days=30)['stats']
+        rows = build_health_indicators(stats, {'ok': True, 'is_low': False, 'credit': 100000, 'error': ''})
+        self.assertEqual(len(rows), 5)
+        for row in rows:
+            self.assertIn('reason', row)
+            self.assertIn('facts', row)
+            self.assertIn('status_label', row)
+            self.assertIn('href', row)
+            self.assertIn('link_label', row)
+
+    def test_overview_user_breakdown_rows(self):
+        stats = get_overview_stats()
+        analytics = get_users_analytics_stats(stats)
+        breakdown = build_overview_user_breakdown(stats, analytics)
+        self.assertIn('rows', breakdown)
+        self.assertGreaterEqual(len(breakdown['rows']), 8)
+        keys = {row['key'] for row in breakdown['rows']}
+        self.assertIn('with_license', keys)
+        self.assertIn('idle_30d', keys)
+        self.assertIn('retention_30d', keys)
+        self.assertIn('with_license', breakdown['donut'])
 
 
 class AdminDashboardViewTests(TestCase):

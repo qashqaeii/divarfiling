@@ -21,6 +21,18 @@ def _paid_license_qs(user):
     ).filter(license_entitlement_valid_q())
 
 
+def _owner_activatable_license_qs(user):
+    """لایسنس مالک — قابل اتصال به دستگاه (active یا inactive، بدون تخصیص به عضو دیگر)."""
+    return (
+        License.objects.filter(
+            order__user=user,
+            status__in=['active', 'inactive'],
+        )
+        .filter(Q(assigned_user__isnull=True) | Q(assigned_user=user))
+        .filter(license_entitlement_valid_q())
+    )
+
+
 def _assigned_license_qs(user):
     """کلیدهای تخصیص‌یافته به عضو تیم — هم‌تراز allocated_licenses داشبورد."""
     return License.objects.filter(

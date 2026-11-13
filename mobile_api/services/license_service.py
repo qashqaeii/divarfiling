@@ -9,6 +9,7 @@ from licenses.models import License
 from shop.services.license_entitlement import LICENSE_ACCESS_ORDER_STATUSES
 from workspace.services.access import (
     _assigned_license_qs,
+    _owner_activatable_license_qs,
     _paid_license_qs,
     _user_bot_license,
     has_active_bot_license,
@@ -20,8 +21,7 @@ def _primary_license(user) -> Optional[License]:
     if lic:
         return lic
     return (
-        _paid_license_qs(user)
-        .filter(status__in=['active', 'inactive'])
+        _owner_activatable_license_qs(user)
         .select_related('plan')
         .order_by('-expires_at')
         .first()
@@ -30,7 +30,10 @@ def _primary_license(user) -> Optional[License]:
 
 def license_payload_for_user(user) -> Dict[str, Any]:
     valid = has_active_bot_license(user)
-    lic = _primary_license(user) if valid else _paid_license_qs(user).first()
+    lic = _primary_license(user) if valid else (
+        _owner_activatable_license_qs(user).select_related('plan').order_by('-expires_at').first()
+        or _assigned_license_qs(user).select_related('plan').first()
+    )
     plan_name = lic.plan.name if lic and lic.plan_id else None
     expires = lic.expires_at.isoformat() if lic and lic.expires_at else None
     if lic:
@@ -66,6 +69,23 @@ def _display_license(user) -> Optional[License]:
     )
 
 
+def _public_license_status(*, valid: bool, lic: Optional[License]) -> str:
+    if valid:
+        return 'active'
+    if not lic:
+        return 'none'
+    lic.sync_expiration_status(save=True)
+    if lic.status == 'suspended':
+        return 'suspended'
+    if lic.status == 'expired':
+        return 'expired'
+    if lic.expires_at and lic.expires_at < timezone.now():
+        return 'expired'
+    if lic.status == 'inactive' and lic.can_be_activated():
+        return 'pending'
+    return 'expired'
+
+
 def license_status_payload(user) -> Dict[str, Any]:
     p = license_payload_for_user(user)
     lic = _display_license(user)
@@ -84,7 +104,7 @@ def license_status_payload(user) -> Dict[str, Any]:
         'days_remaining': days_remaining,
         'expiring_soon': days_remaining is not None and days_remaining <= 7,
         'license_id': lic.pk if lic else None,
-        'status': 'active' if p['valid'] else ('expired' if lic else 'none'),
+        'status': _public_license_status(valid=p['valid'], lic=lic),
         'can_renew': False,
         'started_at': lic.created_at.isoformat() if lic and lic.created_at else None,
         'purchased_at': (

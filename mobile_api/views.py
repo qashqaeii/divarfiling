@@ -66,7 +66,12 @@ from mobile_api.services.properties_service import (
     update_property_location_from_mobile,
     upload_property_image,
 )
-from mobile_api.services.device_service import deactivate_device, register_or_update_device, update_device_fcm
+from mobile_api.services.device_service import (
+    deactivate_device,
+    refresh_device_license_activation,
+    register_or_update_device,
+    update_device_fcm,
+)
 from mobile_api.services.documents_service import (
     delete_contact_document,
     delete_property_document,
@@ -295,19 +300,18 @@ class DevicePatchView(APIView):
         if not device_id:
             return api_error('شناسه دستگاه در هدر الزامی است.', code='VALIDATION_ERROR')
         fcm_token = data.get('fcm_token', '')
+        patch_payload = {
+            'device_id': device_id,
+            'fcm_token': fcm_token,
+            'device_model': request.headers.get('X-Device-Model', ''),
+            'app_version': request.headers.get('X-App-Version', ''),
+        }
         if update_device_fcm(request.user, device_id, fcm_token):
+            refresh_device_license_activation(request.user, device_id, patch_payload)
             return api_ok({})
         # دستگاه هنوز ثبت نشده (مثلاً بعد از به‌روزرسانی اپ) — ثبت سبک
         try:
-            register_or_update_device(
-                request.user,
-                {
-                    'device_id': device_id,
-                    'fcm_token': fcm_token,
-                    'device_model': request.headers.get('X-Device-Model', ''),
-                    'app_version': request.headers.get('X-App-Version', ''),
-                },
-            )
+            register_or_update_device(request.user, patch_payload)
             return api_ok({})
         except ValueError as exc:
             msg = str(exc)

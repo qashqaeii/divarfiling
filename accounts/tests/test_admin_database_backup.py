@@ -39,6 +39,13 @@ class AdminDatabaseBackupViewTests(TestCase):
             phone='09120000001',
             is_staff=True,
         )
+        self.superuser = User.objects.create_user(
+            username='owner_backup',
+            password='secret123',
+            phone='09120000003',
+            is_staff=True,
+            is_superuser=True,
+        )
         self.user = User.objects.create_user(
             username='regular_backup',
             password='secret123',
@@ -46,8 +53,8 @@ class AdminDatabaseBackupViewTests(TestCase):
             is_staff=False,
         )
 
-    def test_staff_can_download_dumpdata(self):
-        self.client.force_login(self.staff)
+    def test_superuser_can_download_dumpdata(self):
+        self.client.force_login(self.superuser)
         resp = self.client.get(
             reverse('admin_panel_database_backup'),
             {'format': 'dumpdata'},
@@ -56,6 +63,15 @@ class AdminDatabaseBackupViewTests(TestCase):
         self.assertIn('attachment', resp.get('Content-Disposition', ''))
         self.assertIn('divarfiling-dumpdata', resp.get('Content-Disposition', ''))
         self.assertEqual(resp['X-Backup-Method'], 'dumpdata')
+
+    def test_staff_cannot_download_full_database(self):
+        from unittest.mock import patch
+
+        self.client.force_login(self.staff)
+        with patch('accounts.admin_views.create_database_backup') as backup:
+            resp = self.client.get(reverse('admin_panel_database_backup'), {'format': 'dumpdata'})
+        self.assertEqual(resp.status_code, 403)
+        backup.assert_not_called()
 
     def test_non_staff_forbidden(self):
         self.client.force_login(self.user)
@@ -67,9 +83,18 @@ class AdminDatabaseBackupViewTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertIn('/login/', resp.url)
 
-    def test_dashboard_includes_backup_info(self):
+    def test_backup_actions_visible_only_to_superuser(self):
+        url = reverse('admin_panel_operations')
+        backup_url = reverse('admin_panel_database_backup')
+
         self.client.force_login(self.staff)
-        resp = self.client.get(reverse('admin_panel'))
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'بک‌آپ دیتابیس')
-        self.assertContains(resp, reverse('admin_panel_database_backup'))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'ops-backup')
+        self.assertContains(response, 'دریافت بک‌آپ کامل فقط برای مدیر ارشد')
+        self.assertNotContains(response, backup_url)
+
+        self.client.force_login(self.superuser)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, backup_url)

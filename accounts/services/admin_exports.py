@@ -196,17 +196,11 @@ def _all_users_rows() -> Tuple[List[str], Iterable[ExportRow]]:
 
 def _new_users_rows(days: int = 30) -> Tuple[List[str], Iterable[ExportRow]]:
     headers = ['نام', 'موبایل', 'ایمیل', 'سفارش پرداخت‌شده', 'تاریخ عضویت']
-    from accounts.services.admin_dashboard import all_time_start_date, is_all_time_range
+    from accounts.services.admin_dashboard import _date_range
 
-    if is_all_time_range(days):
-        since = timezone.make_aware(
-            datetime.combine(all_time_start_date(), datetime.min.time()),
-            timezone.get_current_timezone(),
-        )
-    else:
-        since = timezone.now() - timedelta(days=days)
+    start, end = _date_range(days)
     qs = (
-        User.objects.filter(date_joined__gte=since)
+        User.objects.filter(date_joined__date__gte=start, date_joined__date__lte=end)
         .annotate(paid_orders=Count('orders', filter=Q(orders__status='paid')))
         .order_by('-date_joined')
     )
@@ -749,7 +743,7 @@ EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
 
 def get_export_count(export_key: str, days: int | None = None) -> int:
     """تعداد ردیف هر گزارش برای نمایش در داشبورد."""
-    from accounts.services.admin_dashboard import all_time_start_date, is_all_time_range
+    from accounts.services.admin_dashboard import _date_range
 
     meta = EXPORT_REGISTRY.get(export_key)
     if not meta:
@@ -759,14 +753,10 @@ def get_export_count(export_key: str, days: int | None = None) -> int:
 
         return paid_orders_queryset_for_panel_days(days).count()
     if export_key == 'new_users' and days is not None:
-        if is_all_time_range(days):
-            since = timezone.make_aware(
-                datetime.combine(all_time_start_date(), datetime.min.time()),
-                timezone.get_current_timezone(),
-            )
-        else:
-            since = timezone.now() - timedelta(days=days)
-        return User.objects.filter(date_joined__gte=since).count()
+        start, end = _date_range(days)
+        return User.objects.filter(
+            date_joined__date__gte=start, date_joined__date__lte=end
+        ).count()
     if export_key == 'growth_journeys':
         from accounts.models import GrowthJourney
 
@@ -783,10 +773,12 @@ def get_export_count(export_key: str, days: int | None = None) -> int:
     return len(list(rows))
 
 
-def get_export_catalog(days: int = 30) -> List[Dict[str, Any]]:
+def get_export_catalog(days: int = 30, *, allowed_keys: set[str] | None = None) -> List[Dict[str, Any]]:
     """کاتالوگ گزارش‌ها با تعداد ردیف."""
     catalog = []
     for key, meta in EXPORT_REGISTRY.items():
+        if allowed_keys is not None and key not in allowed_keys:
+            continue
         d = days if meta.get('supports_days') else None
         catalog.append({
             'key': key,
@@ -852,11 +844,21 @@ def build_export(
     return _build_xlsx_response(headers, rows, filename_base, meta['title'])
 
 
+def _safe_spreadsheet_value(value: Any) -> Any:
+    """Keep untrusted text from becoming an Excel/CSV formula."""
+    if isinstance(value, str) and value.lstrip().lstrip(chr(0xfeff)).lstrip().startswith(('=', '+', '-', '@')):
+        return "'" + value
+    return value
+
+
 def _build_csv_response(headers: List[str], rows: List[ExportRow], filename_base: str) -> HttpResponse:
     buffer = io.StringIO()
     writer = csv.DictWriter(buffer, fieldnames=headers, extrasaction='ignore')
     writer.writeheader()
-    writer.writerows(rows)
+    writer.writerows(
+        {key: _safe_spreadsheet_value(value) for key, value in row.items()}
+        for row in rows
+    )
     response = HttpResponse('\ufeff' + buffer.getvalue(), content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{filename_base}.csv"'
     return response
@@ -905,7 +907,7 @@ def _write_xlsx_sheet(ws, headers: List[str], rows: List[ExportRow]) -> None:
             val = row.get(header, '')
             if hasattr(val, 'tzinfo') and val.tzinfo is not None:
                 val = timezone.localtime(val).replace(tzinfo=None)
-            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell = ws.cell(row=row_idx, column=col_idx, value=_safe_spreadsheet_value(val))
             cell.font = body_font
             cell.alignment = Alignment(horizontal='right', vertical='center')
 

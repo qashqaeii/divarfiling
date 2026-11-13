@@ -155,6 +155,8 @@ class CardTransferApprovePersonalTests(TestCase):
 
     @patch('shop.services.card_transfer_workflow.send_customer_approval_sms', return_value=True)
     def test_approve_from_sales_panel_view(self, _mock_sms):
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         self.client.login(username='ctstaff', password='x')
         url = reverse('admin_panel_card_transfer_approve', args=[self.submission.pk])
         resp = self.client.post(url, {'next': reverse('admin_panel_sales')})

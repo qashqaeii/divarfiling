@@ -3,8 +3,11 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional
 
-from django.db.models import QuerySet
+from django.db.models import Count, F, Min, QuerySet
+from django.db.models.functions import Coalesce
 from django.urls import reverse
+
+from accounts.services.admin_presentation import prioritize_management_actions
 from django.utils import timezone
 
 from accounts.services.admin_dashboard import _today
@@ -32,10 +35,15 @@ def _age_label(dt) -> str:
 
 
 def _queue_stats(qs: QuerySet, *, oldest_field: str) -> Dict[str, Any]:
-    count = qs.count()
-    oldest = None
-    if count:
-        oldest = qs.order_by(oldest_field).values_list(oldest_field, flat=True).first()
+    # Aggregate count and age in a single query. For nullable event dates,
+    # the creation timestamp is the fallback, not an unknown/empty SLA.
+    age_field = (
+        Coalesce(F(oldest_field), F('created_at'))
+        if oldest_field != 'created_at' else F('created_at')
+    )
+    result = qs.aggregate(count=Count('pk'), oldest_at=Min(age_field))
+    count = int(result['count'] or 0)
+    oldest = result['oldest_at']
     return {
         'count': count,
         'oldest_at': oldest,
@@ -158,7 +166,7 @@ COMMAND_QUEUE_SPECS: List[Dict[str, Any]] = [
         'title': 'برداشت همکار',
         'icon': 'fa-wallet',
         'accent': 'emerald',
-        'cta': 'تأیید',
+        'cta': 'مشاهده',
         'oldest_field': 'created_at',
         'queue': qs_pending_withdrawals,
         'href': lambda: reverse('admin_panel_affiliates') + '#affiliate-withdrawals',
@@ -180,7 +188,6 @@ def build_command_action_items(
 ) -> List[Dict[str, Any]]:
     """صف فشرده — شمارش و سن از همان queryset لینک مقصد."""
     del stats
-    priority_rank = {'critical': 0, 'high': 1, 'medium': 2, 'opportunity': 3}
     items: List[Dict[str, Any]] = []
 
     if sms_balance.get('is_low') and sms_balance.get('ok'):
@@ -189,11 +196,11 @@ def build_command_action_items(
             'key': 'sms_low',
             'priority': 'critical',
             'title': 'موجودی SMS کم',
-            'count': credit,
-            'oldest_label': f'{credit:,} تومان باقی‌مانده',
+            'count': None,  # Balance is money, not the number of cases.
+            'oldest_label': f'{credit:,} تومان اعتبار باقی‌مانده',
             'icon': 'fa-comment-sms',
             'accent': 'amber',
-            'cta': 'شارژ',
+            'cta': 'بررسی اعتبار',
             'href': reverse('admin_panel_marketing'),
         })
 
@@ -214,8 +221,7 @@ def build_command_action_items(
             'href': spec['href'](),
         })
 
-    items.sort(key=lambda row: (priority_rank.get(row['priority'], 9), -int(row['count'] or 0)))
-    return items
+    return prioritize_management_actions(items)
 
 
 def count_fulfillment_incomplete() -> int:

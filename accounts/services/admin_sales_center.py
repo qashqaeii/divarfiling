@@ -7,6 +7,8 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Sum
 from django.urls import reverse
 
+from accounts.services.admin_presentation import prioritize_management_actions
+
 User = get_user_model()
 
 from accounts.services.admin_dashboard import (
@@ -358,7 +360,7 @@ def build_sales_action_items() -> List[Dict[str, Any]]:
             'cta': 'بررسی پرداخت‌ها',
             'href': '#sales-card-transfers',
         })
-    return items
+    return prioritize_management_actions(items)
 
 
 def get_sales_export_links(days: int) -> List[Dict[str, Any]]:

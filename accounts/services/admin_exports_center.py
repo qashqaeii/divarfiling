@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from django.urls import reverse
 
 from accounts.services.admin_exports import EXPORT_REGISTRY, get_export_catalog
+from accounts.services.admin_export_permissions import can_export_report
 from accounts.services.admin_panel_shell import format_admin_panel_days_param
 
 EXPORT_CATEGORIES: Dict[str, str] = {
@@ -68,8 +69,14 @@ def get_exports_center_context(
     days: int = 30,
     category: str | None = None,
     compare: bool = False,
+    user=None,
 ) -> Dict[str, Any]:
-    catalog = get_export_catalog(days=days)
+    allowed_keys = None
+    if user is not None:
+        allowed_keys = {
+            key for key in EXPORT_REGISTRY if can_export_report(user, key)
+        }
+    catalog = get_export_catalog(days=days, allowed_keys=allowed_keys)
     if category and category != 'all' and category in EXPORT_CATEGORIES:
         catalog = [item for item in catalog if item['category'] == category]
 
@@ -86,5 +93,6 @@ def get_exports_center_context(
         'export_total_count': len(flat_items),
         'export_row_total': sum(item['count'] for item in flat_items),
         'registry_size': len(EXPORT_REGISTRY),
+        'export_permission_limited': user is not None and not allowed_keys,
         'category_labels': EXPORT_CATEGORIES,
     }

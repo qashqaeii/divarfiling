@@ -36,7 +36,7 @@ from accounts.services.sms import get_sms_balance_snapshot
 
 from affiliates.models import Affiliate, AffiliateSale, Withdrawal
 from licenses.models import License, LicenseActivation
-from shop.models import CardTransferSubmission, LicensePlan, Order, Product
+from shop.models import CardTransferSubmission, LicensePlan, Order, OrderRenewalItem, Product
 from mobile_api.models import MobileDevice
 from workspace.models import (
     CRMAgency,
@@ -71,7 +71,8 @@ PAYMENT_METHOD_LABELS = dict(Order.PAYMENT_METHOD_CHOICES)
 
 
 def _today():
-    return timezone.now().date()
+    """Calendar date in the configured/active business timezone, not UTC."""
+    return timezone.localdate()
 
 
 ALL_TIME_DAYS = 0
@@ -284,14 +285,14 @@ def get_system_start_at():
 
 def get_overview_stats() -> Dict[str, Any]:
     now = timezone.now()
-    today = now.date()
+    today = _today()
     week_ago = today - timedelta(days=7)
     month_ago = today - timedelta(days=30)
     system_start_at = get_system_start_at()
     system_uptime_days = None
     if system_start_at:
         start_local = timezone.localtime(system_start_at) if timezone.is_aware(system_start_at) else system_start_at
-        system_uptime_days = max(0, (now.date() - start_local.date()).days)
+        system_uptime_days = max(0, (today - start_local.date()).days)
 
     users_total = User.objects.count()
     users_active = User.objects.filter(is_active=True).count()
@@ -687,16 +688,11 @@ def get_pending_withdrawals(limit: int = TABLE_FETCH_LIMIT):
     )
 
 
-def build_charts_payload(days: int = 30) -> Dict[str, Any]:
-    revenue = get_revenue_series(days)
-    orders = get_order_count_series(days)
-    signups = get_user_registration_series(days)
-    order_status = get_order_status_breakdown()
-    license_status = get_license_status_breakdown()
-    payment_methods = get_payment_method_breakdown()
-    plan_sales = get_plan_sales_breakdown()
-    product_revenue = get_product_revenue()
+def _revenue_analytics_from_series(revenue: Dict[str, List], orders: Dict[str, List]) -> Dict[str, Any]:
+    """Build the existing three-series revenue chart from only its inputs.
 
+    Keeps its dataset/metric contract identical for Command and full analytics.
+    """
     aov_values = []
     for rev, cnt in zip(revenue['values'], orders['values']):
         aov_values.append(int(rev / cnt) if cnt else 0)
@@ -749,6 +745,28 @@ def build_charts_payload(days: int = 30) -> Dict[str, Any]:
                 'conversion_rate': conversion,
             },
         },
+    }
+
+
+def get_command_revenue_chart(days: int = 30) -> Dict[str, Any]:
+    """Only chart needed by Command; do not trigger unrelated dashboard queries."""
+    return _revenue_analytics_from_series(
+        get_revenue_series(days), get_order_count_series(days),
+    )
+
+
+def build_charts_payload(days: int = 30) -> Dict[str, Any]:
+    revenue = get_revenue_series(days)
+    orders = get_order_count_series(days)
+    signups = get_user_registration_series(days)
+    order_status = get_order_status_breakdown()
+    license_status = get_license_status_breakdown()
+    payment_methods = get_payment_method_breakdown()
+    plan_sales = get_plan_sales_breakdown()
+    product_revenue = get_product_revenue()
+
+    return {
+        **_revenue_analytics_from_series(revenue, orders),
         'revenue_trend': {
             'type': 'line',
             'labels': revenue['labels'],
@@ -1414,6 +1432,15 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
     users_analytics = get_users_analytics_stats(stats)
     licensing_stats = get_licensing_center_stats()
     action_items = build_command_action_items(stats, sms_balance)
+    critical_queues = sum(item['priority'] == 'critical' for item in action_items)
+    high_queues = sum(item['priority'] == 'high' for item in action_items)
+    if critical_queues:
+        decision_summary = f'{critical_queues} دسته بحرانی؛ ابتدا این موارد بررسی شوند'
+    elif high_queues:
+        decision_summary = f'{high_queues} دسته اولویت‌دار برای پیگیری'
+    else:
+        decision_summary = 'هیچ دسته بحرانی یا با اولویت بالا در صف نیست'
+    charts = get_command_revenue_chart(days)
 
     return {
         'stats': stats,
@@ -1424,6 +1451,7 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
             stats, today_stats, yesterday_stats, users_analytics, days,
         ),
         'command_action_items': action_items,
+        'command_decision_summary': decision_summary,
         'alert_count': len(action_items),
         'command_modules': build_command_modules(stats, alert_count=len(action_items)),
         'growth_snapshot': get_growth_pipeline_snapshot(),
@@ -1431,7 +1459,7 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
         'licensing_stats': licensing_stats,
         'health_indicators': build_health_indicators(stats, sms_balance),
         'system_meta': get_system_meta(),
-        'charts': {'revenue_analytics': build_command_revenue_chart(days)},
+        'charts': charts,
         'chart_days': days,
     }
 
@@ -1552,6 +1580,20 @@ def get_repeat_purchase_orders_qs():
     )
 
 
+def get_formal_renewal_orders_qs():
+    """Paid repeat orders renewing an existing key, including multi-license orders.
+
+    OrderRenewalItem is a one-to-many relation; use EXISTS rather than joining
+    so a multi-license renewal contributes exactly one order to all KPIs.
+    """
+    has_renewal_item = OrderRenewalItem.objects.filter(order_id=OuterRef('pk'))
+    return (
+        get_repeat_purchase_orders_qs()
+        .alias(has_renewal_item=Exists(has_renewal_item))
+        .filter(Q(renewal_license__isnull=False) | Q(has_renewal_item=True))
+    )
+
+
 def get_licensing_center_stats() -> Dict[str, Any]:
     """آمار مرکز لایسنس + نرخ تمدید (تمدید رسمی یا خرید مجدد لایسنس)."""
     now = timezone.now()
@@ -1569,8 +1611,8 @@ def get_licensing_center_stats() -> Dict[str, Any]:
         .count()
     )
     renewal_orders = repeat_qs.count()
-    formal_renewal_orders = repeat_qs.filter(renewal_license__isnull=False).count()
-    new_key_repurchase_orders = repeat_qs.filter(renewal_license__isnull=True).count()
+    formal_renewal_orders = get_formal_renewal_orders_qs().count()
+    new_key_repurchase_orders = renewal_orders - formal_renewal_orders
     renewal_rate_pct = round((renewed_users / buyers_unique) * 100, 1) if buyers_unique else 0.0
     renewal_revenue = int(repeat_qs.aggregate(t=Sum('amount'))['t'] or 0)
     renewals_month = repeat_qs.filter(
@@ -2373,6 +2415,7 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
 
 def build_command_modules(stats: Dict[str, Any], *, alert_count: int = 0) -> List[Dict[str, Any]]:
     """میانبرهای سطح‌بالا برای مدیر — یک نگاه."""
+    del alert_count  # Queue size must not masquerade as a Django Admin badge.
     return [
         {
             'title': 'پایپلاین رشد',
@@ -2436,7 +2479,7 @@ def build_command_modules(stats: Dict[str, Any], *, alert_count: int = 0) -> Lis
             'icon': 'fa-gears',
             'accent': 'slate',
             'href': '/admin/',
-            'badge': alert_count or None,
+            'badge': None,
         },
     ]
 

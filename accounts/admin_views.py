@@ -5,10 +5,12 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseNotFound, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, TemplateView
@@ -30,6 +32,14 @@ from accounts.services.admin_dashboard import (
 )
 from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
+from accounts.services.admin_export_permissions import can_export_report
+from accounts.services.admin_action_permissions import (
+    can_review_card_transfer,
+    can_send_admin_sms,
+    can_view_financial_integrity,
+    can_view_user_management,
+)
+from accounts.services.admin_integrity_diagnostics import get_financial_integrity_context
 from accounts.services.admin_marketing import (
     AUTOMATION_FLOWS,
     MESSAGE_TEMPLATE_CATALOG,
@@ -148,7 +158,19 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
                 card['label'] = 'کاربران فعال'
             elif card.get('key') == 'licenses_active':
                 card['label'] = 'لایسنس‌های فعال'
+        if not self.request.user.is_superuser:
+            # Delegated staff retain readable queues; hide only the
+            # owner-only shortcut rather than advertising an unusable action.
+            ctx['command_modules'] = [
+                item for item in ctx['command_modules']
+                if item.get('href') != '/admin/'
+            ]
         ctx['chart_days'] = days
+        # Aggregate JSON supports trends for 7..90 days, unlike the Command
+        # period selector (1 day or all time). Make the export window explicit.
+        ctx['system_summary_trend_days'] = (
+            30 if range_key == 'all' else max(7, min(days, 90))
+        )
         ctx['admin_panel_range_key'] = range_key
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
         ctx['charts_enabled'] = True
@@ -183,8 +205,15 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         return ctx
 
 
-class AdminDatabaseBackupView(StaffRequiredMixin, View):
-    """دانلود بک‌آپ دیتابیس — فقط staff."""
+class SuperuserRequiredMixin(StaffRequiredMixin):
+    """Restrict sensitive full-database operations to system owners."""
+
+    def test_func(self):
+        return super().test_func() and self.request.user.is_superuser
+
+
+class AdminDatabaseBackupView(SuperuserRequiredMixin, View):
+    """دانلود بک‌آپ کامل دیتابیس — فقط مدیر ارشد (superuser)."""
 
     def get(self, request):
         fmt = (request.GET.get('format') or 'auto').lower().strip()
@@ -222,6 +251,8 @@ class AdminExportView(StaffRequiredMixin, View):
     def get(self, request, export_key):
         if export_key not in EXPORT_REGISTRY:
             return HttpResponseNotFound('گزارش یافت نشد')
+        if not can_export_report(request.user, export_key):
+            raise PermissionDenied('مجوز دریافت این گزارش را ندارید.')
 
         fmt = request.GET.get('format', 'xlsx').lower()
         if fmt not in ('xlsx', 'csv'):
@@ -252,7 +283,10 @@ class AdminExportView(StaffRequiredMixin, View):
             if stage not in valid_stages:
                 stage = None
 
-        return build_export(export_key, fmt=fmt, days=days_int, stage=stage)
+        response = build_export(export_key, fmt=fmt, days=days_int, stage=stage)
+        response['Cache-Control'] = 'private, no-store'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 class AdminSystemSummaryView(StaffRequiredMixin, View):
@@ -279,6 +313,8 @@ class AdminUsersManagementListView(StaffRequiredMixin, View):
     """JSON لیست مدیریت کاربران — جستجو، فیلتر، صفحه‌بندی."""
 
     def get(self, request):
+        if not can_view_user_management(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
         filters = {
             'license': (request.GET.get('license') or '').strip(),
             'windows': (request.GET.get('windows') or '').strip(),
@@ -294,25 +330,31 @@ class AdminUsersManagementListView(StaffRequiredMixin, View):
             sort=(request.GET.get('sort') or '-date_joined').strip(),
             filters=filters,
         )
-        return JsonResponse(
+        response = JsonResponse(
             payload,
             encoder=DjangoJSONEncoder,
             json_dumps_params={'ensure_ascii': False},
         )
+        response['Cache-Control'] = 'private, no-store'
+        return response
 
 
 class AdminUsersManagementDetailView(StaffRequiredMixin, View):
     """JSON جزئیات یک کاربر برای پنل مدیریت."""
 
     def get(self, request, user_id):
+        if not can_view_user_management(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
         data = get_user_management_detail(user_id)
         if not data:
             return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
-        return JsonResponse(
+        response = JsonResponse(
             {'ok': True, 'user': data},
             encoder=DjangoJSONEncoder,
             json_dumps_params={'ensure_ascii': False},
         )
+        response['Cache-Control'] = 'private, no-store'
+        return response
 
 
 def _parse_int(raw, default=None, *, minimum=None, maximum=None):
@@ -424,6 +466,8 @@ class AdminMarketingView(StaffRequiredMixin, TemplateView):
         return ctx
 
     def post(self, request, *args, **kwargs):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال پیامک ندارید.')
         if request.POST.get('confirm_send') != '1':
             messages.error(request, 'برای ارسال، تأیید قطعی را فعال کنید.')
             return redirect('admin_panel_marketing')
@@ -537,6 +581,8 @@ class AdminPhonebookSyncView(StaffRequiredMixin, View):
     """همگام‌سازی یک‌کلیکی کاربران با دفترچه تلفن فراز."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             result = sync_users_to_phonebook()
         except PhonebookSyncError as exc:
@@ -821,6 +867,12 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
         compare = self.request.GET.get('compare') == '1'
         focus = (self.request.GET.get('focus') or '').strip() or None
         data = get_sales_center_context(days=days, compare=compare, focus=focus)
+        if can_view_financial_integrity(self.request.user):
+            data['financial_integrity'] = get_financial_integrity_context(
+                selected=(self.request.GET.get('audit') or '').strip(),
+                days=days,
+            )
+        data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             spark = card.get('sparkline')
             card['sparkline_json'] = json.dumps(spark) if spark else ''
@@ -833,7 +885,9 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
 
 def _card_transfer_redirect(request):
     next_url = (request.POST.get('next') or '').strip()
-    if next_url.startswith('/'):
+    if next_url.startswith('/') and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
         return redirect(next_url)
     return redirect(reverse('admin_panel_sales') + '#sales-card-transfers')
 
@@ -844,6 +898,8 @@ class AdminCardTransferApproveView(StaffRequiredMixin, View):
     http_method_names = ['post']
 
     def post(self, request, pk):
+        if not can_review_card_transfer(request.user):
+            raise PermissionDenied('مجوز بررسی پرداخت کارت‌به‌کارت را ندارید.')
         from shop.models import CardTransferSubmission
         from shop.services.card_transfer_workflow import CardTransferWorkflowError
         from shop.services.order_fulfillment import approve_card_transfer
@@ -875,6 +931,8 @@ class AdminCardTransferRejectView(StaffRequiredMixin, View):
     http_method_names = ['post']
 
     def post(self, request, pk):
+        if not can_review_card_transfer(request.user):
+            raise PermissionDenied('مجوز بررسی پرداخت کارت‌به‌کارت را ندارید.')
         from shop.models import CardTransferSubmission
         from shop.services.card_transfer_workflow import CardTransferWorkflowError
         from shop.services.order_fulfillment import reject_card_transfer
@@ -905,6 +963,23 @@ class AdminUsersCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         data = get_users_center_context(days=days, compare=compare)
+        if not can_view_user_management(self.request.user):
+            # Preserve aggregate KPIs, but never offer actions leading to
+            # hidden personal tables or an inaccessible user dossier.
+            for field in ('recent_users', 'top_users', 'users_without_license_list'):
+                data.pop(field, None)
+            data['action_items'] = [
+                item for item in data.get('action_items', [])
+                if item.get('href') not in (
+                    '#users-table-no-license', '#ecc-users-mgmt',
+                )
+            ]
+            for chip in data.get('center_pulse', []):
+                if chip.get('href') in (
+                    '#users-table-no-license', '#ecc-users-mgmt',
+                ):
+                    chip.pop('href', None)
+        data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(data)
@@ -924,6 +999,7 @@ class AdminLicensesCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         data = get_licenses_center_context(days=days, compare=compare)
+        data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]
         for card in data.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(data)
@@ -1058,6 +1134,8 @@ class AdminAndroidSmsPreviewView(StaffRequiredMixin, View):
     """پیش‌نمایش گیرندگان نسخه قدیمی اندروید."""
 
     def get(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز مشاهده گیرندگان پیامک ندارید.')
         try:
             data = preview_segment('android_outdated', sample_size=10)
         except ValueError as exc:
@@ -1073,6 +1151,8 @@ class AdminAndroidSmsSendView(StaffRequiredMixin, View):
     """ارسال پیامک Faraz به کاربران با نسخه قدیمی اندروید."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال پیامک ندارید.')
         if request.POST.get('confirm_send') != '1':
             messages.error(request, 'برای ارسال، تأیید قطعی را فعال کنید.')
             return redirect('admin_panel_android')
@@ -1216,7 +1296,7 @@ class AdminExportsCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         category = self.request.GET.get('category', 'all') or 'all'
-        data = get_exports_center_context(days=days, category=category, compare=compare)
+        data = get_exports_center_context(days=days, category=category, compare=compare, user=self.request.user)
         ctx.update(data)
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key
@@ -1258,6 +1338,8 @@ class AdminManagementAssistantSendView(StaffRequiredMixin, View):
     """ارسال پیام برای یک پیشنهاد مدیریتی."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1289,6 +1371,8 @@ class AdminManagementAssistantAutomationView(StaffRequiredMixin, View):
     """فعال/غیرفعال کردن خودکارسازی."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1325,6 +1409,8 @@ class AdminManagementAssistantAutomationRunView(StaffRequiredMixin, View):
     """اجرای دستی یا Dry Run یک Rule."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1345,6 +1431,8 @@ class AdminManagementAssistantAutomationSettingsView(StaffRequiredMixin, View):
     """ذخیره تنظیمات Safe یک Rule."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
@@ -1401,6 +1489,8 @@ class AdminManagementAssistantAutomationTestSendView(StaffRequiredMixin, View):
     """ارسال آزمایشی پیام Rule به staff."""
 
     def post(self, request):
+        if not can_send_admin_sms(request.user):
+            raise PermissionDenied('مجوز ارسال یا مدیریت پیامک ندارید.')
         try:
             body = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:

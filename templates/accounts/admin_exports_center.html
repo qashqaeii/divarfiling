@@ -58,7 +58,11 @@
 </section>
 {% empty %}
 <section class="ecc-section" aria-label="خالی">
+    {% if export_permission_limited %}
+    <p class="ecc-cmd-actions-empty">برای دریافت خروجی باید مجوز دسترسی به گزارش‌های مربوط را داشته باشید.</p>
+    {% else %}
     <p class="ecc-cmd-actions-empty">گزارشی برای این فیلتر یافت نشد.</p>
+    {% endif %}
 </section>
 {% endfor %}
 

@@ -1,14 +1,34 @@
 {% extends 'accounts/admin_panel_base.html' %}
-{% block admin_title %}مدیریت تالار گفتگو{% endblock %}
-{% block admin_content %}
-<section class="adm-section">
-    <h1>تالار گفتگو</h1>
-    <ul class="adm-kpi-list">
-        <li>پیام‌های امروز: {{ forum_stats.messages_today }}</li>
-        <li>پیام‌های ۷ روز اخیر: {{ forum_stats.messages_7d }}</li>
-        <li>گزارش‌های در انتظار: {{ forum_stats.pending_reports }}</li>
-        <li>محدودیت‌های فعال: {{ forum_stats.active_bans }}</li>
+{% load persian_tags %}
+
+{% block title %}تالار گفتگو | پنل مدیریت{% endblock %}
+{% block admin_panel_title %}تالار گفتگو{% endblock %}
+
+{% block admin_panel_content %}
+<section class="ecc-section" id="forum-moderation" aria-label="خلاصه مدیریت تالار">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-comments" aria-hidden="true"></i> وضعیت تالار گفتگو</h2>
+            <p>نمای خلاصه پیام‌ها، گزارش‌های کاربران و محدودیت‌های فعال</p>
+        </div>
+    </header>
+    <ul class="ecc-stat-strip ecc-act-summary">
+        <li data-accent="violet"><span>پیام‌های امروز</span><strong>{{ forum_stats.messages_today|to_persian_digits }}</strong></li>
+        <li data-accent="blue"><span>پیام‌های ۷ روز اخیر</span><strong>{{ forum_stats.messages_7d|to_persian_digits }}</strong></li>
+        <li data-accent="amber"><span>گزارش‌های در انتظار</span><strong>{{ forum_stats.pending_reports|to_persian_digits }}</strong></li>
+        <li data-accent="rose"><span>محدودیت‌های فعال</span><strong>{{ forum_stats.active_bans|to_persian_digits }}</strong></li>
     </ul>
-    <p>جزئیات پیام‌ها و گزارش‌ها از Django Admin و APIهای مدیریتی در دسترس است.</p>
 </section>
+{% if request.user.is_superuser %}
+<section class="ecc-section" aria-label="دسترسی به مدیریت تالار">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-shield-halved" aria-hidden="true"></i> رسیدگی و نظارت</h2>
+            <p>جزئیات گزارش‌ها و محدودیت‌ها در مدیریت داده‌های تالار</p>
+        </div>
+    </header>
+    <a href="{% url 'admin:community_forum_forumreport_changelist' %}" class="ecc-btn ecc-btn--primary ecc-btn--sm">گزارش‌های کاربران</a>
+    <a href="{% url 'admin:community_forum_forumban_changelist' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">محدودیت اعضا</a>
+</section>
+{% endif %}
 {% endblock %}

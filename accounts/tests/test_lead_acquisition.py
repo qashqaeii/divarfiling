@@ -537,7 +537,7 @@ class LeadCampaignTrackingTests(TestCase):
 class LeadAdminViewTests(TestCase):
     def setUp(self):
         self.staff = User.objects.create_user(
-            username='staff1', password='pass1234', phone='09120000001', is_staff=True,
+            username='staff1', password='pass1234', phone='09120000001', is_staff=True, is_superuser=True,
         )
         self.client = Client()
         self.client.login(username='staff1', password='pass1234')
@@ -661,6 +661,7 @@ class LeadCampaignFullSendTests(TestCase):
             username='staff_full',
             password='x',
             is_staff=True,
+            is_superuser=True,
         )
         self.client = Client()
         self.client.force_login(self.staff)

@@ -1,0 +1,32 @@
+{% load persian_tags %}
+{# Shared KPI card for Command, Sales, Users and Licenses. Keep chart IDs stable. #}
+<article class="ecc-kpi adm-v2-kpi-card"
+         data-accent="{{ card.accent }}" data-status="{{ card.status }}"
+         data-kpi-kind="{{ kpi_kind|default:card.kind|default:'range' }}"
+         aria-label="{{ card.label }}">
+    <div class="ecc-kpi-top">
+        <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}" aria-hidden="true"></i></span>
+        {% if card.delta is not None and kpi_kind != 'snapshot' %}
+        <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+            {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+        </span>
+        {% endif %}
+    </div>
+    {% if card.pending or card.value is None %}
+    <strong class="ecc-kpi-val ecc-kpi-val--pending" aria-label="داده کافی نیست">—</strong>
+    {% else %}
+    <strong class="ecc-kpi-val" data-count-up="{{ card.value }}"
+            data-format="{{ card.format }}"
+            aria-label="{{ card.label }}: {{ card.value|to_persian_digits }}">
+        {% if card.format == 'percent' %}{{ card.value|floatformat:1|to_persian_digits }}٪{% else %}{{ card.value|to_persian_digits }}{% endif %}
+    </strong>
+    {% endif %}
+    <span class="ecc-kpi-lbl">{{ card.label }}</span>
+    <span class="ecc-kpi-sub">{% if card.delta_label and kpi_kind != 'snapshot' %}{{ card.delta_label }} · {% endif %}{{ card.sublabel }}</span>
+    {% if card.coverage_note %}<span class="ecc-kpi-coverage">{{ card.coverage_note }}</span>{% endif %}
+    {% if card.sparkline_json %}
+    <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}' aria-hidden="true">
+        <canvas id="spark-{{ card.key }}"></canvas>
+    </div>
+    {% endif %}
+</article>

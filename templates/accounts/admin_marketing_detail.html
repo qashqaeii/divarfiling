@@ -7,8 +7,12 @@
 
 {% block admin_panel_title %}گزارش کمپین{% endblock %}
 
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-marketing-v3.css' %}?v=1">
+{% endblock %}
+
 {% block admin_panel_content %}
-<div class="adm-page adm-mkt-page adm-mkt-detail">
+<div class="adm-page adm-mkt-page adm-mkt-detail marketing-v3-detail">
     <header class="adm-hero adm-mkt-hero">
         <div class="adm-hero-main">
             <p class="adm-hero-kicker">
@@ -23,11 +27,11 @@
             </p>
         </div>
         <div class="adm-hero-actions">
-            <a href="{% url 'admin_panel_marketing' %}#mkt-compose" class="adm-hero-link">
+            <a href="{% url 'admin_panel_marketing' %}#map-compose" class="adm-hero-link">
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 کمپین جدید
             </a>
-            <a href="{% url 'admin_panel_marketing' %}#mkt-history" class="adm-hero-link">
+            <a href="{% url 'admin_panel_marketing' %}#map-history" class="adm-hero-link">
                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 تاریخچه
             </a>

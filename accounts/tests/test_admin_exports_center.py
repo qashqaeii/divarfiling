@@ -37,6 +37,10 @@ class AdminExportsCenterViewTests(TestCase):
             username='expstaff', password='pass1234', phone='09120000401', is_staff=True,
         )
         self.user = User.objects.create_user(username='expnorm', password='x', phone='09120000402')
+        self.owner = User.objects.create_user(
+            username='expowner', password='pass1234', phone='09120000403',
+            is_staff=True, is_superuser=True,
+        )
 
     def test_staff_only(self):
         self.assertEqual(self.client.get(reverse('admin_panel_exports')).status_code, 302)
@@ -44,7 +48,7 @@ class AdminExportsCenterViewTests(TestCase):
         self.assertEqual(self.client.get(reverse('admin_panel_exports')).status_code, 403)
 
     def test_render_catalog_and_filters(self):
-        self.client.force_login(self.staff)
+        self.client.force_login(self.owner)
         for days in ('1', '7', '30', '90'):
             resp = self.client.get(reverse('admin_panel_exports'), {'days': days})
             self.assertEqual(resp.status_code, 200)
@@ -60,6 +64,13 @@ class AdminExportsCenterViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel_exports'), {'days': '30', 'compare': '1'})
         self.assertIn('compare=1', resp.content.decode())
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/exports/'), 'exports')
+
+    def test_staff_without_export_permissions_sees_no_downloads(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse('admin_panel_exports'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'برای دریافت خروجی باید مجوز')
+        self.assertNotContains(response, 'class="ecc-module"')
 
     def test_anchor_fallback_in_dashboard(self):
         self.client.force_login(self.staff)

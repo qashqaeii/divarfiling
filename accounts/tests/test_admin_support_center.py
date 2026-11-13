@@ -120,6 +120,8 @@ class AdminSupportCenterViewTests(TestCase):
             status='pending',
         )
 
+        self.staff.is_superuser = True
+        self.staff.save(update_fields=['is_superuser'])
         self.client.force_login(self.staff)
         for days in ('1', '7', '30', '90'):
             resp = self.client.get(reverse('admin_panel_support'), {'days': days})

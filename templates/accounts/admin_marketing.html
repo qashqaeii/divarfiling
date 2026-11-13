@@ -12,12 +12,15 @@
 {% endblock %}
 
 {% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-marketing-v3.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
-<div class="adm-page adm-mkt-page adm-map-page biz-page biz-page--marketing">
+<div class="adm-page adm-mkt-page adm-map-page biz-page biz-page--marketing marketing-v3">
+
+    <header class="marketing-v3-intro"><div><span class="marketing-v3-eyebrow"><i class="fas fa-bullhorn" aria-hidden="true"></i> بازاریابی و ارتباط با مشتری</span><h2>کمپین‌ها و عملکرد ارسال در یک نگاه</h2><p>از انتخاب مخاطب تا گزارش نتیجه، با همان داده‌ها و کنترل‌های فعلی.</p></div></header>
 
     <div class="biz-toolbar">
         <div class="biz-toolbar-meta">
@@ -644,6 +647,10 @@
                             <button type="button" class="adm-dl-btn adm-dl-btn--primary adm-mkt-submit" disabled>
                                 <i class="fas fa-eye"></i> فقط پیش‌نمایش
                             </button>
+                            {% elif not admin_can_send_sms %}
+                            <button type="button" class="adm-dl-btn adm-dl-btn--primary adm-mkt-submit" disabled title="ارسال پیامک نیازمند مجوز است">
+                                <i class="fas fa-lock"></i> ارسال فقط برای مسئول مجاز
+                            </button>
                             {% else %}
                             <button type="submit" class="adm-dl-btn adm-dl-btn--primary adm-mkt-submit" id="adm-mkt-submit" {% if preview.capped_count == 0 %}disabled{% endif %}>
                                 <i class="fas fa-paper-plane"></i> ارسال نهایی کمپین
@@ -802,7 +809,7 @@
                 </div>
                 <div class="adm-mkt-phonebook-actions">
                     <button type="button" class="adm-dl-btn" id="adm-phonebook-refresh"><i class="fas fa-rotate"></i> بروزرسانی</button>
-                    <button type="button" class="adm-dl-btn adm-dl-btn--primary" id="adm-phonebook-sync"><i class="fas fa-address-book"></i> همگام‌سازی</button>
+                    <button type="button" class="adm-dl-btn adm-dl-btn--primary" id="adm-phonebook-sync" {% if not admin_can_send_sms %}disabled title="همگام‌سازی نیازمند مجوز است"{% endif %}><i class="fas fa-address-book"></i> همگام‌سازی</button>
                 </div>
             </header>
             <div class="adm-mkt-phonebook-stats" id="adm-phonebook-stats">

@@ -15,6 +15,8 @@
     const prevBtn = document.getElementById('eccUsersMgmtPrev');
     const nextBtn = document.getElementById('eccUsersMgmtNext');
     const searchEl = document.getElementById('eccUsersMgmtSearch');
+    const resetBtn = document.getElementById('eccUsersMgmtReset');
+    const statusEl = document.getElementById('eccUsersMgmtStatus');
     const filterIds = {
         license: 'eccUsersMgmtLicense',
         windows: 'eccUsersMgmtWindows',
@@ -36,6 +38,10 @@
     let searchTimer = null;
     let abortList = null;
     let abortDetail = null;
+    let listRequestId = 0;
+    let detailRequestId = 0;
+    let drawerReturnFocus = null;
+    let previousBodyOverflow = '';
 
     function toFa(value) {
         return String(value == null ? '' : value).replace(/\d/g, function (d) {
@@ -84,6 +90,30 @@
         return f;
     }
 
+    function hasFilters() {
+        return !!((searchEl && searchEl.value.trim()) || Object.keys(currentFilters()).length);
+    }
+
+    function updateFilterActions() {
+        if (resetBtn) resetBtn.hidden = !hasFilters();
+    }
+
+    function showListStatus(message) {
+        if (statusEl) statusEl.textContent = message;
+    }
+
+    function resetFilters() {
+        clearTimeout(searchTimer);
+        if (searchEl) searchEl.value = '';
+        Object.keys(filterIds).forEach(function (key) {
+            const el = document.getElementById(filterIds[key]);
+            if (el) el.value = '';
+        });
+        page = 1;
+        updateFilterActions();
+        loadList();
+    }
+
     function buildListQuery() {
         const params = new URLSearchParams();
         params.set('page', String(page));
@@ -100,7 +130,12 @@
 
     function renderRows(results) {
         if (!results.length) {
-            bodyEl.innerHTML = '<tr><td colspan="8" class="adm-empty">کاربری با این فیلتر یافت نشد</td></tr>';
+            const reset = hasFilters()
+                ? '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-reset-users-filter>پاک‌کردن فیلترها</button>'
+                : '';
+            bodyEl.innerHTML = '<tr><td colspan="8" class="adm-empty"> '
+                + (hasFilters() ? 'کاربری با این جستجو یا فیلتر یافت نشد' : 'هنوز کاربری ثبت نشده است')
+                + ' ' + reset + '</td></tr>';
             return;
         }
         bodyEl.innerHTML = results.map(function (u) {
@@ -144,8 +179,7 @@
     function updatePager(data) {
         totalPages = data.total_pages || 1;
         page = data.page || 1;
-        pagerEl.hidden = data.total <= data.page_size && page === 1 && !data.has_next;
-        if (data.total > 0) pagerEl.hidden = false;
+        pagerEl.hidden = totalPages <= 1;
         pageInfoEl.textContent = toFa(page) + ' / ' + toFa(totalPages)
             + ' — ' + toFa(data.total) + ' کاربر';
         prevBtn.disabled = !data.has_prev;
@@ -155,7 +189,11 @@
     function loadList() {
         if (!listUrl || !bodyEl) return;
         if (abortList) abortList.abort();
+        const requestId = ++listRequestId;
         abortList = new AbortController();
+        updateFilterActions();
+        showListStatus('در حال دریافت کاربران…');
+        if (pagerEl) pagerEl.hidden = true;
         bodyEl.innerHTML = '<tr><td colspan="8" class="adm-empty">در حال بارگذاری…</td></tr>';
 
         fetch(listUrl + '?' + buildListQuery(), {
@@ -168,12 +206,26 @@
                 return res.json();
             })
             .then(function (data) {
-                renderRows(data.results || []);
+                if (requestId !== listRequestId) return;
+                if (!data || data.ok !== true || !Array.isArray(data.results)) {
+                    throw new Error('Invalid response');
+                }
                 updatePager(data);
+                renderRows(data.results);
+                showListStatus(
+                    data.total
+                        ? toFa(data.total) + ' کاربر در نتایج ' + (hasFilters() ? 'فیلترشده' : 'فهرست')
+                        : 'نتیجه‌ای یافت نشد'
+                );
             })
             .catch(function (err) {
-                if (err.name === 'AbortError') return;
-                bodyEl.innerHTML = '<tr><td colspan="8" class="adm-empty">خطا در بارگذاری کاربران</td></tr>';
+                if (requestId !== listRequestId || err.name === 'AbortError') return;
+                if (pagerEl) pagerEl.hidden = true;
+                showListStatus('دریافت فهرست کاربران ناموفق بود؛ دوباره تلاش کنید.');
+                bodyEl.innerHTML = '<tr><td colspan="8" class="adm-empty">'
+                    + 'ارتباط با سرور برقرار نشد. '
+                    + '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-retry-users-list>تلاش مجدد</button>'
+                    + '</td></tr>';
             });
     }
 
@@ -268,31 +320,48 @@
 
     function openDrawer() {
         if (!drawer) return;
+        if (drawer.hidden) {
+            previousBodyOverflow = document.body.style.overflow;
+        }
         drawer.hidden = false;
         drawer.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
+        const closeBtn = drawer.querySelector('.ecc-user-drawer-close');
+        if (closeBtn) closeBtn.focus();
     }
 
     function closeDrawer() {
-        if (!drawer) return;
+        if (!drawer || drawer.hidden) return;
+        detailRequestId++;
+        if (abortDetail) abortDetail.abort();
         drawer.hidden = true;
         drawer.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
+        document.body.style.overflow = previousBodyOverflow;
         if (bodyEl) {
             bodyEl.querySelectorAll('tr.is-selected').forEach(function (tr) {
                 tr.classList.remove('is-selected');
             });
         }
+        if (drawerReturnFocus && drawerReturnFocus.isConnected) {
+            drawerReturnFocus.focus();
+        } else if (searchEl) {
+            searchEl.focus();
+        }
+        drawerReturnFocus = null;
     }
 
     function loadDetail(userId) {
         if (!drawerBody) return;
+        if (!drawer || drawer.hidden) {
+            drawerReturnFocus = drawerReturnFocus || document.activeElement;
+        }
         openDrawer();
         drawerTitle.textContent = 'جزئیات کاربر';
         drawerSub.textContent = '';
         drawerBody.innerHTML = '<p class="adm-empty">در حال بارگذاری…</p>';
 
         if (abortDetail) abortDetail.abort();
+        const requestId = ++detailRequestId;
         abortDetail = new AbortController();
 
         fetch(detailUrl(userId), {
@@ -305,22 +374,34 @@
                 return res.json();
             })
             .then(function (data) {
+                if (requestId !== detailRequestId || drawer.hidden) return;
                 if (!data.ok || !data.user) throw new Error('invalid');
                 renderDetail(data.user);
             })
             .catch(function (err) {
-                if (err.name === 'AbortError') return;
-                drawerBody.innerHTML = '<p class="adm-empty">خطا در دریافت جزئیات کاربر</p>';
+                if (requestId !== detailRequestId || err.name === 'AbortError' || drawer.hidden) return;
+                drawerBody.innerHTML = '<p class="adm-empty">دریافت جزئیات انجام نشد. '
+                    + '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-retry-user-detail="' + esc(userId) + '">'
+                    + 'تلاش مجدد</button></p>';
             });
     }
 
     bodyEl.addEventListener('click', function (e) {
+        if (e.target.closest('[data-retry-users-list]')) {
+            loadList();
+            return;
+        }
+        if (e.target.closest('[data-reset-users-filter]')) {
+            resetFilters();
+            return;
+        }
         const tr = e.target.closest('tr[data-user-id]');
         if (!tr) return;
         bodyEl.querySelectorAll('tr.is-selected').forEach(function (r) {
             r.classList.remove('is-selected');
         });
         tr.classList.add('is-selected');
+        drawerReturnFocus = tr;
         loadDetail(tr.getAttribute('data-user-id'));
     });
 
@@ -333,11 +414,38 @@
     });
 
     if (drawer) {
+        if (drawerBody) {
+            drawerBody.addEventListener('click', function (e) {
+                const button = e.target.closest('[data-retry-user-detail]');
+                if (button) loadDetail(button.getAttribute('data-retry-user-detail'));
+            });
+        }
         drawer.querySelectorAll('[data-user-drawer-close]').forEach(function (el) {
             el.addEventListener('click', closeDrawer);
         });
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && drawer && !drawer.hidden) closeDrawer();
+            if (drawer.hidden) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeDrawer();
+                return;
+            }
+            if (e.key !== 'Tab') return;
+            const focusables = Array.from(drawer.querySelectorAll(
+                '.ecc-user-drawer-panel a[href], .ecc-user-drawer-panel button:not([disabled]),'
+                + ' .ecc-user-drawer-panel input:not([disabled]),'
+                + ' .ecc-user-drawer-panel [tabindex="0"]'
+            )).filter(function (el) { return el.getClientRects().length > 0; });
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
         });
     }
 
@@ -358,6 +466,8 @@
         });
     }
 
+    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+
     if (searchEl) {
         searchEl.addEventListener('input', function () {
             clearTimeout(searchTimer);
@@ -372,6 +482,7 @@
         const el = document.getElementById(filterIds[key]);
         if (!el) return;
         el.addEventListener('change', function () {
+            clearTimeout(searchTimer);
             page = 1;
             loadList();
         });
@@ -379,7 +490,7 @@
 
     // Lazy-load when section enters viewport (or immediately if already visible / hash)
     function shouldLoadNow() {
-        if (location.hash === '#ecc-users') return true;
+        if (location.hash === '#ecc-users' || location.hash === '#ecc-users-mgmt') return true;
         const section = document.getElementById('ecc-users');
         if (!section || !('IntersectionObserver' in window)) return true;
         const rect = section.getBoundingClientRect();
@@ -410,6 +521,6 @@
     }
 
     window.addEventListener('hashchange', function () {
-        if (location.hash === '#ecc-users') ensureLoaded();
+        if (location.hash === '#ecc-users' || location.hash === '#ecc-users-mgmt') ensureLoaded();
     });
 })();

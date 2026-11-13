@@ -15,12 +15,15 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-customers.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-licenses-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_header_actions %}
+{% if 'active_licenses' in admin_export_allowed_keys %}
 <a href="{% url 'admin_panel_export' 'active_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--primary" title="لایسنس‌های فعال">
     <i class="fas fa-file-excel"></i>
 </a>
+{% endif %}
 <a href="{% url 'admin_panel_marketing' %}" class="ecc-btn ecc-btn--ghost" title="بازاریابی">
     <i class="fas fa-bullhorn"></i>
 </a>
@@ -31,6 +34,10 @@
 
 {% block admin_panel_content %}
 <div class="cust-page biz-page biz-page--licenses">
+<header class="adm-licenses-v3-intro" aria-label="راهنمای صفحه لایسنس">
+  <div><span class="adm-licenses-v3-eyebrow">مدیریت اشتراک‌ها</span><h1>لایسنس‌ها در یک نگاه</h1><p>وضعیت صدور، تمدید و انقضا بر اساس اطلاعات ثبت‌شده سامانه</p></div>
+  <nav class="adm-licenses-v3-jumps" aria-label="دسترسی سریع"><a href="#licenses-kpi">شاخص‌ها</a><a href="#licenses-actions">اقدامات</a><a href="#licenses-charts">نمودارها</a><a href="#licenses-table-expiring">در شرف انقضا</a><a href="#licenses-table-expired">منقضی‌شده</a></nav>
+</header>
 
 {% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='لایسنس · الان' pulse_icon='fa-key' %}
 
@@ -69,23 +76,7 @@
     <p class="cust-kpi-group-label">بازه زمانی</p>
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
         {% for card in range_kpi_cards %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-                {% if card.delta is not None %}
-                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
-                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
-                </span>
-                {% endif %}
-            </div>
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
-            {% if card.coverage_note %}<span class="ecc-kpi-coverage">{{ card.coverage_note }}</span>{% endif %}
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-        </article>
+        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='range' %}
         {% endfor %}
     </div>
     <div class="adm-prime-section-tag" style="margin-top:12px">
@@ -94,17 +85,7 @@
     </div>
     <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
         {% for card in snapshot_kpi_cards %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-            </div>
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-        </article>
+        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='snapshot' %}
         {% endfor %}
     </div>
 </section>
@@ -160,9 +141,11 @@
             <h2><i class="fas fa-hourglass-half"></i> در شرف انقضا</h2>
             <p>{{ table_preview_rows|to_persian_digits }} مورد · پیش‌نمایش</p>
         </div>
+        {% if 'expiring_licenses' in admin_export_allowed_keys %}
         <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -211,7 +194,7 @@
                 <tr>
                     <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
                     <td>{{ order.product.title }}</td>
-                    <td>{% if order.renewal_license %}تمدید رسمی{% else %}کلید جدید{% endif %}</td>
+                    <td>{% if order.renewal_license or order.renewal_items.exists %}تمدید رسمی{% else %}کلید جدید{% endif %}</td>
                     <td>{{ order.amount|currency }}</td>
                     <td>{{ order.paid_at|to_jalali_fa }}</td>
                 </tr>
@@ -229,9 +212,11 @@
             <h2><i class="fas fa-user-slash"></i> کاربران بدون لایسنس</h2>
             <p>{{ snapshot_counts.users_without_license|to_persian_digits }} کاربر</p>
         </div>
+        {% if admin_can_view_user_management %}
         <a href="{{ users_center_url }}#users-table-no-license" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-arrow-left"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -263,9 +248,11 @@
             <h2><i class="fas fa-ban"></i> منقضی اخیر</h2>
             <p>پیش‌نمایش</p>
         </div>
+        {% if 'expired_licenses' in admin_export_allowed_keys %}
         <a href="{% url 'admin_panel_export' 'expired_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             نمایش بیشتر <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro">
@@ -291,6 +278,7 @@
     </div>
 </section>
 
+{% if export_links %}
 <section class="ecc-section" id="ecc-licensing" aria-label="خروجی‌ها">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
@@ -310,6 +298,7 @@
         {% endfor %}
     </div>
 </section>
+{% endif %}
 
 </div>
 </div>

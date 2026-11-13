@@ -7,6 +7,9 @@ from django.utils import timezone
 
 from accounts.services.admin_dashboard import ALL_TIME_DAYS, _range_label_fa, effective_range_days
 from accounts.services.admin_management_assistant import build_management_insights
+from accounts.services.admin_action_permissions import can_review_card_transfer, can_send_admin_sms, can_view_user_management
+from accounts.services.admin_export_permissions import can_export_report
+from accounts.services.admin_exports import EXPORT_REGISTRY
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
 from affiliates.models import Withdrawal
 from shop.models import Order
@@ -100,7 +103,7 @@ def resolve_admin_panel_nav_active(path: str) -> str:
         ('/accounts/admin-panel/exports/', 'exports'),
         ('/accounts/admin-panel/plan-conversion/', 'plan_conversion'),
         ('/accounts/admin-panel/forum/', 'forum'),
-        ('/accounts/admin-panel/blog/systematic/', 'blog'),
+        ('/accounts/admin-panel/blog/systematic/', 'blog_systematic'),
         ('/accounts/admin-panel/blog/', 'blog'),
         ('/accounts/admin-panel/academy/', 'academy'),
         ('/accounts/admin-panel/', 'command'),
@@ -118,10 +121,26 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     query_suffix = f'?days={range_key}'
     if request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL:
         query_suffix += '&compare=1'
+
+    # Changing the global date window must not erase local filters, such as
+    # payment audit, search, and focus. Copy QueryDict to preserve repeated keys.
+    range_links = {}
+    for key in ('all', '1', '7', '30', '90'):
+        query = request.GET.copy()
+        query['days'] = key
+        if key == ADMIN_PANEL_RANGE_ALL:
+            query.pop('compare', None)
+        range_links[key] = '?' + query.urlencode()
     from accounts.services.management_ai.service import is_management_ai_enabled
 
     return {
         'admin_panel_shell': True,
+        'admin_can_review_card_transfers': can_review_card_transfer(request.user),
+        'admin_can_send_sms': can_send_admin_sms(request.user),
+        'admin_can_view_user_management': can_view_user_management(request.user),
+        'admin_export_allowed_keys': tuple(
+            key for key in EXPORT_REGISTRY if can_export_report(request.user, key)
+        ),
         'admin_management_ai_enabled': is_management_ai_enabled(),
         'chart_days': days,
         'chart_days_effective': effective_range_days(days),
@@ -132,5 +151,6 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
         'admin_panel_nav_badges': badges,
         'admin_panel_alert_count': alert_count,
         'admin_panel_query_suffix': query_suffix,
+        'admin_panel_range_links': range_links,
         'admin_panel_range_label_fa': _range_label_fa(days),
     }

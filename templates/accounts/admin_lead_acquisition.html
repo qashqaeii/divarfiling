@@ -9,10 +9,17 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-lead-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
 <div class="adm-page adm-mkt-page adm-lac-page">
+{% if not lead_can_manage %}
+<p class="ecc-card-sub" role="status" style="padding:.7rem 1rem;margin:.75rem 0;border:1px solid var(--border-color, #e2e6ef);border-radius:12px;">
+    <i class="fas fa-lock" aria-hidden="true"></i>
+    مشاهده گزارش‌ها مجاز است؛ ثبت، ویرایش، ارسال پیامک و اجرای اتوماسیون نیازمند مجوز مسئول کمپین است.
+</p>
+{% endif %>
 
     <header class="adm-lac-hero">
         <div class="adm-lac-hero-copy">

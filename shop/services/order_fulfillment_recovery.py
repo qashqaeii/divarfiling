@@ -153,9 +153,11 @@ def reconcile_gateway_payment_mismatch(*, limit: int = 50) -> int:
     from shop.services import zibal as zibal_service
 
     qs = (
-        Transaction.objects.filter(status='paid')
+        Transaction.objects.filter(status='paid', order__payment_method='zibal')
         .exclude(order__status='paid')
-        .select_related('order')[:limit]
+        .exclude(zibal_track_id__startswith='CARD-')
+        .select_related('order')
+        .order_by('created_at', 'pk')[:limit]
     )
     fixed = 0
     for tx in qs:
@@ -173,11 +175,21 @@ def reconcile_gateway_payment_mismatch(*, limit: int = 50) -> int:
             logger.exception('reconcile verify failed order_id=%s', order.pk)
             continue
 
-        mark_order_paid_after_gateway(order, record_funnel=False)
-        tx.verified_at = tx.verified_at or timezone.now()
-        tx.save(update_fields=['verified_at'])
-        complete_order_fulfillment(order)
+        try:
+            mark_order_paid_after_gateway(order, record_funnel=False)
+            tx.verified_at = tx.verified_at or timezone.now()
+            tx.save(update_fields=['verified_at'])
+        except Exception:
+            logger.exception('reconcile payment update failed order_id=%s', order.pk)
+            continue
+
+        # The payment state is now repaired. A provisioning failure must not
+        # hide that fact or stop reconciliation of other paid transactions.
         fixed += 1
+        try:
+            complete_order_fulfillment(order)
+        except Exception:
+            logger.exception('reconcile fulfillment failed order_id=%s', order.pk)
     return fixed
 
 
@@ -190,9 +202,16 @@ def run_fulfillment_reconcile_batch(*, limit: int = 100) -> dict[str, int]:
     }
     for order in orders_needing_fulfillment_reconcile_qs()[:limit]:
         before = order.fulfillment_status
-        reconcile_order_fulfillment(order)
-        order.refresh_from_db(fields=['fulfillment_status'])
+        # Count attempts even when one order fails; never let a malformed
+        # legacy renewal prevent subsequent paid customers from receiving
+        # their entitlements. Leave failed orders for the next bounded run.
         stats['fulfillment_retried'] += 1
+        try:
+            reconcile_order_fulfillment(order)
+            order.refresh_from_db(fields=['fulfillment_status'])
+        except Exception:
+            logger.exception('fulfillment reconcile failed order_id=%s', order.pk)
+            continue
         if order.fulfillment_status == Order.FulfillmentStatus.COMPLETE and before != Order.FulfillmentStatus.COMPLETE:
             stats['fulfillment_completed'] += 1
     return stats

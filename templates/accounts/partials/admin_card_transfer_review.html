@@ -37,9 +37,11 @@
             <h2><i class="fas fa-money-check"></i> پرداخت‌های کارت‌به‌کارت در انتظار بررسی</h2>
             <p>{{ card_transfer_pending_count|default:0|to_persian_digits }} مورد · Snapshot</p>
         </div>
+        {% if 'card_transfers_pending' in admin_export_allowed_keys %}
         <a href="{% url 'admin_panel_export' 'card_transfers_pending' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             خروجی <i class="fas fa-file-excel"></i>
         </a>
+        {% endif %}
     </header>
     <div class="adm-table-wrap">
         <table class="adm-table adm-table--pro adm-table--card-transfer">
@@ -70,6 +72,7 @@
                         {% if row.receipt_url %}
                         <a href="{{ row.receipt_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener" title="رسید">رسید</a>
                         {% endif %}
+                        {% if admin_can_review_card_transfers %}
                         <button type="button"
                                 class="ecc-btn ecc-btn--primary ecc-btn--sm js-card-approve"
                                 data-action-url="{{ row.approve_url }}"
@@ -85,6 +88,9 @@
                                 data-user="{{ row.user_display }}">
                             رد
                         </button>
+                        {% else %}
+                        <span class="adm-muted">فقط مشاهده · بررسی مالی نیازمند مجوز است</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
@@ -95,4 +101,6 @@
     </div>
 </section>
 
+{% if admin_can_review_card_transfers %}
 {% include 'accounts/partials/admin_card_transfer_modals.html' %}
+{% endif %}

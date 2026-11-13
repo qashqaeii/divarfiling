@@ -362,30 +362,40 @@ def build_licenses_center_pulse(snapshot: Dict[str, int]) -> List[Dict[str, Any]
             'value': snapshot.get('licenses_active', 0),
             'format': 'count',
             'href': '#licenses-kpi',
+            'icon': 'fa-key',
+            'accent': 'violet',
         },
         {
             'label': 'انقضا ≤۷ روز',
             'value': snapshot.get('licenses_expiring_7d', 0),
             'format': 'count',
             'href': '#licenses-table-expiring',
+            'icon': 'fa-clock',
+            'accent': 'amber',
         },
         {
             'label': 'منقضی',
             'value': snapshot.get('licenses_expired', 0),
             'format': 'count',
             'href': '#licenses-table-expired',
+            'icon': 'fa-circle-xmark',
+            'accent': 'amber',
         },
         {
             'label': 'فعال‌سازی دستگاه',
             'value': snapshot.get('active_devices', 0),
             'format': 'count',
             'hint': 'Activation',
+            'icon': 'fa-mobile-screen',
+            'accent': 'blue',
         },
         {
             'label': 'کاربر بدون لایسنس',
             'value': snapshot.get('users_without_license', 0),
             'format': 'count',
             'href': reverse('admin_panel_users') + '#users-table-no-license',
+            'icon': 'fa-user-slash',
+            'accent': 'cyan',
         },
     ]
 
@@ -400,9 +410,10 @@ def build_licenses_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]
             'title': 'در شرف انقضا',
             'count': expiring,
             'detail': f'{expiring} لایسنس تا ۱۴ روز آینده',
+            'reason': 'انقضا در ۱۴ روز آینده؛ پیگیری تمدید قبل از قطع دسترسی مشاور.',
             'icon': 'fa-hourglass-half',
             'accent': 'amber',
-            'cta': 'مشاهده',
+            'cta': 'جدول تمدید',
             'href': '#licenses-table-expiring',
         })
     if snapshot['licenses_expired']:
@@ -412,9 +423,10 @@ def build_licenses_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]
             'title': 'لایسنس منقضی',
             'count': snapshot['licenses_expired'],
             'detail': 'نیاز به پیگیری تمدید',
+            'reason': 'دسترسی میزکار قطع شده؛ تماس برای تمدید یا بازیابی اشتراک.',
             'icon': 'fa-ban',
             'accent': 'rose',
-            'cta': 'مشاهده',
+            'cta': 'لایسنس منقضی',
             'href': '#licenses-table-expired',
         })
     without = snapshot.get('users_without_license', 0)
@@ -425,9 +437,10 @@ def build_licenses_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]
             'title': 'کاربر بدون لایسنس',
             'count': without,
             'detail': 'فرصت تبدیل به مشتری',
+            'reason': 'کاربر فعال بدون لایسنس؛ مناسب کمپین فروش یا پیشنهاد پلن.',
             'icon': 'fa-user-slash',
             'accent': 'indigo',
-            'cta': 'کمپین تمدید',
+            'cta': 'مارکتینگ',
             'href': reverse('admin_panel_marketing'),
         })
     return prioritize_management_actions(items)

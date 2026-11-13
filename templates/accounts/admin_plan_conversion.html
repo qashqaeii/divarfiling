@@ -20,9 +20,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="ab-page apc-page biz-page biz-page--plan plan-v3">
 
-    <header class="plan-v3-intro"><span class="plan-v3-eyebrow"><i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل رشد درآمد</span><h2>تبدیل پلن‌ها در یک نگاه</h2><p>از اولین بازدید تا خرید، فعال‌سازی و بازگشت مشتری؛ با داده‌های واقعی و کیفیت سنجی‌شده</p></header>
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی تبدیل پلن' icon='fa-chart-line' icon_tone='plan' title='تبدیل پلن‌ها در یک نگاه' subtitle='از اولین بازدید تا خرید، فعال‌سازی و بازگشت مشتری؛ با داده‌های واقعی و کیفیت سنجی‌شده' %}
 
     <div class="biz-toolbar">
         <div class="biz-toolbar-meta">
@@ -499,6 +500,7 @@
     </section>
 
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

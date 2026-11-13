@@ -1,0 +1,2008 @@
+/*
+ * پل بصری مراکز پنل مدیریت — زبان طراحی «نمای کلی» (overview).
+ * روی ساختار ecc/prime/v3 موجود سوار می‌شود؛ داده و JS دست‌نخورده می‌ماند.
+ */
+body.adm-prime-command .adm-overview-section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--adm-text, #1f2440);
+}
+
+body.adm-prime-command .adm-overview-section-title__icon {
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--adm-accent, #5b4fcf);
+    opacity: 0.92;
+    flex-shrink: 0;
+}
+
+body.adm-prime-command .adm-overview-section-title__icon--health { color: #16a34a; }
+body.adm-prime-command .adm-overview-section-title__icon--actions { color: #ef4444; }
+body.adm-prime-command .adm-overview-section-title__icon--users { color: #2563eb; }
+body.adm-prime-command .adm-overview-section-title__icon--plans { color: #d97706; }
+body.adm-prime-command .adm-overview-section-title__icon--orders { color: #7c3aed; }
+body.adm-prime-command .adm-overview-section-title__icon--accent { color: #5b4fcf; }
+body.adm-prime-command .adm-overview-section-title__icon--sales { color: #7c3aed; }
+body.adm-prime-command .adm-overview-section-title__icon--growth { color: #0d9488; }
+body.adm-prime-command .adm-overview-section-title__icon--marketing { color: #d97706; }
+body.adm-prime-command .adm-overview-section-title__icon--recovery { color: #2563eb; }
+body.adm-prime-command .adm-overview-section-title__icon--plan { color: #d97706; }
+body.adm-prime-command .adm-overview-section-title__icon--licenses { color: #7c3aed; }
+body.adm-prime-command .adm-overview-section-title__icon--actions { color: #ef4444; }
+
+body.adm-prime-command .adm-cmd-main {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 1.4vw, 20px);
+}
+
+body.adm-prime-command .adm-cmd-main > :first-child {
+    margin-top: 0;
+}
+
+body.adm-prime-command .adm-cmd-page,
+body.adm-prime-command .adm-cmd-main > :is(.sales-v3, .cust-page, .biz-page, [class*="-v3"]) {
+    width: 100%;
+    min-width: 0;
+}
+
+/* ——— سکشن‌ها و کارت‌ها (هم‌تراز adm-overview-card) ——— */
+body.adm-prime-command .ecc-main .ecc-section {
+    padding: 16px;
+    border-radius: var(--adm-radius, 20px);
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(31, 36, 64, 0.04);
+    scroll-margin-top: 5rem;
+}
+
+body.adm-prime-command .ecc-main .ecc-card {
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    border-radius: var(--adm-radius, 20px);
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(31, 36, 64, 0.04);
+}
+
+body.adm-prime-command .ecc-section-head h2,
+body.adm-prime-command .ecc-section-head h3,
+body.adm-prime-command .ecc-card > header h2,
+body.adm-prime-command .ecc-card > header h3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--adm-text, #1f2440);
+}
+
+body.adm-prime-command .ecc-section-head h2 > i,
+body.adm-prime-command .ecc-section-head h3 > i {
+    font-size: 1.05rem;
+    color: var(--adm-accent, #5b4fcf);
+    opacity: 0.92;
+}
+
+body.adm-prime-command .ecc-section-head p,
+body.adm-prime-command .ecc-card-sub,
+body.adm-prime-command .ecc-section-head .ecc-section-meta {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--adm-muted, #6e7891);
+}
+
+/* ——— هیرو دوس‌ستونه (نمودار + صف اقدام) ——— */
+body.adm-prime-command .adm-prime-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(12px, 1.4vw, 16px);
+    align-items: start;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+    box-sizing: border-box;
+    margin-block: 0;
+}
+
+body.adm-prime-command .adm-prime-hero__chart,
+body.adm-prime-command .adm-prime-hero__rail {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* موبایل/تبلت: نمودار بالا، صف اقدام پایین — بدون order معکوس v2 */
+body.adm-prime-command .adm-prime-hero__chart {
+    order: 1;
+}
+
+body.adm-prime-command .adm-prime-hero__rail {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-overview-actions {
+    height: auto;
+    max-height: none;
+    flex: 0 0 auto;
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-prime-hero {
+        grid-template-columns: minmax(0, 1fr) minmax(248px, 292px);
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    body.adm-prime-command .adm-prime-hero__chart {
+        grid-column: 1;
+        order: 0;
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail {
+        grid-column: 2;
+        order: 0;
+        align-self: stretch;
+    }
+}
+
+/* اولویت بر v2-foundations (بعد از unified لود می‌شود) */
+body.adm-prime-command.ecc-page--shell .adm-prime-hero {
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+body.adm-prime-command.ecc-page--shell .adm-prime-hero__chart {
+    order: 1;
+}
+
+body.adm-prime-command.ecc-page--shell .adm-prime-hero__rail {
+    order: 2;
+}
+
+body.adm-prime-command.ecc-page--shell .adm-prime-hero__rail .adm-overview-actions,
+body.adm-prime-command.ecc-page--shell .adm-prime-hero__rail .ecc-cmd-actions {
+    height: auto;
+    max-height: none;
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command.ecc-page--shell .adm-prime-hero__chart,
+    body.adm-prime-command.ecc-page--shell .adm-prime-hero__rail {
+        order: 0;
+    }
+}
+
+@media (max-width: 1099px) {
+    body.adm-prime-command.ecc-page--shell .adm-prime-hero__rail .adm-prime-action-queue .adm-overview-actions__list,
+    body.adm-prime-command.ecc-page--shell .adm-prime-hero__rail .adm-overview-actions.adm-prime-action-queue .adm-overview-actions__list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+        gap: 10px;
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+body.adm-prime-command .adm-prime-section-tag {
+    margin-bottom: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--adm-muted);
+}
+
+body.adm-prime-command .adm-prime-section-tag strong {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: var(--adm-text);
+}
+
+/* ——— نمودار هیرو مرکز (زبان نمای کلی) ——— */
+body.adm-prime-command .adm-prime-hero__chart {
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+    inset-inline: 0;
+}
+
+body.adm-prime-command .adm-prime-hero-chart.adm-overview-chart {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-inline: 0;
+    box-sizing: border-box;
+    padding: 16px 16px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(31, 36, 64, 0.04);
+    display: flex;
+    flex-direction: column;
+    min-height: 288px;
+    transition: box-shadow 0.22s ease;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 14px;
+    margin-bottom: 4px;
+    width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__head .adm-overview-section-title,
+body.adm-prime-command .adm-prime-hero-chart__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+body.adm-prime-command .adm-prime-hero-chart__grain,
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__grain {
+    flex: 0 1 auto;
+    margin: 0;
+    padding-top: 1px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--adm-muted, #6e7891);
+    text-align: end;
+    max-width: min(100%, 22rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 420px) {
+    body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    body.adm-prime-command .adm-prime-hero-chart__grain,
+    body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__grain {
+        text-align: start;
+        max-width: 100%;
+        white-space: normal;
+    }
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__legend {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--adm-muted, #6e7891);
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__legend i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    margin-inline-end: 4px;
+    vertical-align: middle;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__legend span[data-series="signups"] i {
+    width: 10px;
+    height: 6px;
+    border-radius: 2px;
+    background: #3b82f6;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__legend span[data-series="active"] i {
+    background: #10b981;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__legend span[data-series="web"] i {
+    background: #5b4fcf;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__legend span[data-series="app"] i {
+    background: #10b981;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__legend span[data-series="both"] i {
+    width: 12px;
+    height: 0;
+    border-radius: 0;
+    border-top: 2px dashed #d97706;
+    background: transparent;
+    vertical-align: middle;
+}
+
+body.adm-prime-command .adm-prime-hero-chart__subtitle,
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__subtitle {
+    margin: -2px 0 8px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .adm-prime-hero-chart__band {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+body.adm-prime-command .adm-prime-hero-chart__band .adm-prime-hero-chart__insights {
+    margin-bottom: 0;
+}
+
+body.adm-prime-command .adm-center-chart-panel--engagement.adm-overview-chart {
+    min-height: 280px;
+}
+
+body.adm-prime-command .adm-center-chart-panel--engagement .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+    min-height: 200px;
+    height: 220px !important;
+    max-height: 260px;
+}
+
+body.adm-prime-command .adm-center-chart-panel--engagement .adm-prime-hero-chart__insights {
+    margin-bottom: 8px;
+}
+
+@media (max-width: 560px) {
+    body.adm-prime-command .adm-center-chart-panel--engagement .adm-prime-hero-chart__insights {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    body.adm-prime-command .adm-center-chart-panel--engagement .adm-prime-hero-chart__insight {
+        padding: 6px 7px;
+    }
+
+    body.adm-prime-command .adm-center-chart-panel--engagement .adm-prime-hero-chart__insight-label {
+        font-size: 0.58rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
+
+body.adm-prime-command .adm-prime-hero-chart__insights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+}
+
+body.adm-prime-command .adm-prime-hero-chart__insight {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    background: linear-gradient(180deg, #fafbff 0%, #ffffff 100%);
+}
+
+body.adm-prime-command .adm-prime-hero-chart__insight-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .adm-prime-hero-chart__insight-value {
+    font-size: clamp(0.92rem, 2.2vw, 1.06rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--adm-text, #1f2440);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+}
+
+body.adm-prime-command .adm-overview-chart--combo .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+    min-height: 228px;
+    height: 256px !important;
+}
+
+@media (max-width: 560px) {
+    body.adm-prime-command .adm-prime-hero-chart__insights {
+        grid-template-columns: 1fr;
+    }
+
+    body.adm-prime-command .adm-prime-hero-chart__insight {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__canvas {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    min-height: 212px;
+    height: 248px;
+    max-height: 300px;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+    min-height: 212px;
+    height: 248px !important;
+    max-height: 300px;
+}
+
+body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__canvas canvas {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+}
+
+/* فقط نمودار داخل hero — fold همیشه نمایان (جلوگیری از پنل خالی) */
+body.adm-prime-command .adm-prime-hero__chart .adm-prime-hero-chart.adm-overview-chart .adm-overview-chart__canvas {
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+        opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.adm-prime-command .adm-prime-hero__chart .adm-prime-hero-chart.adm-overview-chart.is-chart-ready .adm-overview-chart__canvas {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+body.adm-prime-command .adm-center-chart-panel--fold .adm-overview-chart__canvas {
+    opacity: 1;
+    transform: none;
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-prime-hero-chart.adm-overview-chart {
+        min-height: 340px;
+    }
+
+    body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+        flex: 1 1 auto;
+        height: 100% !important;
+        min-height: 232px;
+        max-height: none;
+    }
+}
+
+@media (max-width: 560px) {
+    body.adm-prime-command .adm-prime-hero-chart.adm-overview-chart {
+        padding: 14px 12px 10px;
+        border-radius: 14px;
+    }
+
+    body.adm-prime-command .adm-prime-hero-chart .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+        height: 216px !important;
+        min-height: 200px;
+        max-height: 240px;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-hero-chart.adm-overview-chart {
+    border-color: rgba(71, 85, 105, 0.42);
+    background: rgba(15, 23, 42, 0.72);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+/* ——— نمودار fold مراکز (همان کارت پریمیوم hero) ——— */
+body.adm-prime-command .adm-center-chart-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 0 clamp(14px, 1.4vw, 18px);
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.adm-prime-command .adm-prime-fold .adm-center-chart-section {
+    margin-top: clamp(6px, 0.8vw, 10px);
+}
+
+body.adm-prime-command .adm-center-chart-panel.adm-overview-chart {
+    width: 100%;
+}
+
+body.adm-prime-command .adm-center-chart-panel--fold.adm-overview-chart {
+    min-height: 296px;
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-center-chart-panel--fold.adm-overview-chart {
+        min-height: 328px;
+    }
+
+    body.adm-prime-command .adm-center-chart-panel--fold .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+        min-height: 256px;
+        height: 276px !important;
+        max-height: none;
+    }
+}
+
+@media (max-width: 560px) {
+    body.adm-prime-command .adm-center-chart-panel--fold.adm-overview-chart {
+        min-height: 0;
+    }
+
+    body.adm-prime-command .adm-center-chart-panel--fold .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+        height: 218px !important;
+        min-height: 200px;
+        max-height: 232px;
+    }
+}
+
+/* ——— KPI ——— */
+body.adm-prime-command .ecc-kpi,
+body.adm-prime-command .ecc-cmd-kpi .ecc-kpi,
+body.adm-prime-command .adm-prime-kpi-band .ecc-kpi {
+    border-radius: 14px;
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(31, 36, 64, 0.04);
+}
+
+/* ——— اینتروهای V3 ——— */
+body.adm-prime-command :is([class*="-v3-intro"], .cmd-v3-intro) {
+    padding: 0 0 6px;
+    margin-bottom: 4px;
+}
+
+body.adm-prime-command :is([class*="-v3-intro"], .cmd-v3-intro) :is(h1, h2) {
+    margin: 0 0 4px;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--adm-text);
+}
+
+body.adm-prime-command :is([class*="-v3-intro"], .cmd-v3-intro) p {
+    margin: 0;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--adm-muted);
+    line-height: 1.5;
+}
+
+body.adm-prime-command :is([class*="-v3-eyebrow"], .cmd-v3-eyebrow) {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--adm-muted);
+}
+
+/* ——— صف اقدام (هم‌خوان overview actions) ——— */
+body.adm-prime-command .ecc-cmd-actions-list,
+body.adm-prime-command .adm-overview-actions__list {
+    border: 1px solid #eef0f6;
+    border-radius: 10px;
+    background: #fafbff;
+    overflow: hidden;
+}
+
+body.adm-prime-command .ecc-cmd-actions-list a,
+body.adm-prime-command .adm-cmd-queue__row {
+    border-bottom: 1px solid #eef0f6;
+}
+
+/* ——— دکمه‌های هدر ——— */
+body.adm-prime-command .adm-ov-header__tool {
+    border-radius: 10px;
+}
+
+/* ——— جداول ——— */
+body.adm-prime-command .ecc-table-wrap {
+    border-radius: 12px;
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    overflow: hidden;
+}
+
+/* ——— معرفی صفحه (جایگزین *-v3-intro) ——— */
+body.adm-prime-command .adm-center-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin-bottom: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(232, 234, 244, 0.9);
+}
+
+body.adm-prime-command .adm-center-intro__subtitle {
+    margin: 6px 0 0;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--adm-muted);
+    max-width: 52ch;
+}
+
+body.adm-prime-command .adm-center-intro__note {
+    margin: 6px 0 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--adm-accent);
+}
+
+body.adm-prime-command .adm-center-intro__jumps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+body.adm-prime-command .adm-center-intro__jump {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    background: #fff;
+    color: var(--adm-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+body.adm-prime-command .adm-center-intro__jump:hover {
+    color: var(--adm-accent);
+    border-color: rgba(91, 79, 207, 0.22);
+    background: rgba(91, 79, 207, 0.06);
+}
+
+body.adm-prime-command .adm-center-page {
+    width: 100%;
+    min-width: 0;
+}
+
+/* ——— صفحه مرکز: عرض و ریتم هم‌تراز نمای کلی ——— */
+body.adm-prime-command .adm-cmd-main > .adm-center-page.adm-cmd-page,
+body.adm-prime-command .adm-cmd-main > .adm-cmd-page.adm-center-page {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 1.6vw, 22px);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: clip;
+}
+
+body.adm-prime-command .adm-center-page > :is(
+    .adm-page,
+    .ab-page,
+    .ab-systematic-page,
+    .cust-page,
+    .biz-page,
+    .sales-v3,
+    .maa-page,
+    .adm-lac-page,
+    .aic-page,
+    .aac-page,
+    .wac-page,
+    .arc-page,
+    .apc-page,
+    .growth-v3,
+    .marketing-v3
+) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-inline: 0;
+    padding-inline: 0;
+    box-sizing: border-box;
+}
+
+/* محتوای تمام عرض داخل main بدون شکستن گرید */
+body.adm-prime-command .adm-center-page :is(
+    .ecc-kpi-grid,
+    .ecc-section,
+    .ecc-card,
+    .adm-prime-hero,
+    .biz-toolbar,
+    .adm-center-pulse,
+    .adm-center-kpi-band,
+    .adm-center-chart-section,
+    .adm-overview-section.adm-overview-kpi-row
+) {
+    max-width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .cust-page > .adm-center-pulse,
+body.adm-prime-command .biz-page > .adm-center-pulse {
+    align-self: stretch;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-center-page .ecc-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+/* وبلاگ/آکادمی — پس‌زمینه داخلی، نه تمام viewport */
+body.adm-prime-command .adm-center-page .ab-ambient {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+body.adm-prime-command .adm-center-page .ab-page {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 0 1.5rem;
+}
+
+body.adm-prime-command .adm-center-page .ab-hero,
+body.adm-prime-command .adm-center-page .ab-hero--compact {
+    border-radius: var(--adm-radius, 20px);
+    border: 1px solid rgba(232, 234, 244, 0.92);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 8px 26px rgba(31, 36, 64, 0.05);
+    backdrop-filter: blur(8px);
+}
+
+/* جذب سرنخ — مودال و دیالوگ داخل عرض main */
+body.adm-prime-command .adm-center-page :is(
+    .adm-lac-modal,
+    .adm-lac-modal__panel,
+    dialog.adm-lac-modal
+) {
+    max-width: min(100%, 1080px);
+    width: min(100%, 1080px);
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-center-page .adm-lac-page,
+body.adm-prime-command .adm-lac-page {
+    overflow-x: clip;
+}
+
+body.adm-prime-command .adm-center-page table {
+    max-width: 100%;
+}
+
+body.adm-prime-command .adm-center-page .ecc-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* هیروهای سنگین — جمع‌وجورتر زیر intro یکپارچه */
+body.adm-prime-command .adm-center-intro + :is(
+    .adm-lac-hero,
+    .aic-hero,
+    .aac-hero,
+    .wac-hero,
+    .ab-hero
+) {
+    margin-top: 4px;
+    padding: 14px 16px;
+    border-radius: var(--adm-radius, 20px);
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 24px rgba(31, 36, 64, 0.04);
+}
+
+body.adm-prime-command .adm-center-intro + .adm-lac-hero .adm-lac-title,
+body.adm-prime-command .adm-center-intro + .adm-lac-hero h1 {
+    font-size: 1rem;
+}
+
+body.adm-prime-command .adm-center-intro + .adm-lac-hero .adm-lac-kicker {
+    display: none;
+}
+
+/* ——— پالس «الان» مراکز — همان زبان KPI نمای کلی ——— */
+body.adm-prime-command .adm-center-pulse.adm-overview-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 0 clamp(14px, 1.4vw, 20px);
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    justify-items: stretch;
+    align-items: stretch;
+}
+
+body.adm-prime-command .adm-center-pulse__header {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px 14px;
+    margin: 0;
+    padding: 0 0 2px;
+}
+
+body.adm-prime-command .adm-center-pulse__grain {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--adm-muted, #6e7891);
+    text-align: end;
+    max-width: 26ch;
+}
+
+body.adm-prime-command .adm-center-pulse .adm-overview-kpi-row__title {
+    margin-bottom: 0;
+}
+
+body.adm-prime-command a.adm-center-pulse__kpi--link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+body.adm-prime-command .adm-center-pulse .adm-center-pulse__kpi,
+body.adm-prime-command .adm-center-pulse .adm-overview-kpi {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-center-pulse__kpi {
+    min-height: 108px;
+}
+
+@media (min-width: 640px) {
+    body.adm-prime-command .adm-center-pulse.adm-overview-kpi-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(10px, 1.2vw, 16px);
+    }
+
+    /* header + سه کارت (برخی مراکز) */
+    body.adm-prime-command .adm-center-pulse.adm-overview-kpi-row:has(> .adm-center-pulse__kpi:nth-child(4):last-child) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-center-pulse.adm-overview-kpi-row {
+        gap: 16px;
+    }
+
+    body.adm-prime-command .adm-center-pulse__header {
+        padding-bottom: 4px;
+    }
+}
+
+body.adm-prime-command .adm-center-pulse__foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 1.15rem;
+    margin-top: auto;
+    padding-top: 6px;
+    border-top: 1px solid rgba(232, 234, 244, 0.88);
+}
+
+body.adm-prime-command .adm-center-pulse__hint {
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--adm-muted, #6b7289);
+}
+
+body.adm-prime-command .adm-center-pulse__hint--link {
+    color: var(--adm-accent, #5b4fcf);
+}
+
+@media (hover: hover) {
+    body.adm-prime-command a.adm-center-pulse__kpi--link:hover {
+        transform: translateY(-1px);
+    }
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .adm-center-pulse__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    body.adm-prime-command .adm-center-pulse__grain {
+        text-align: start;
+        max-width: none;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-center-pulse__foot {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ——— باند KPI مراکز (زبان adm-overview-kpi) ——— */
+body.adm-prime-command .cust-page > .adm-center-kpi-band,
+body.adm-prime-command .biz-page > .adm-center-kpi-band {
+    align-self: stretch;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-center-kpi-band {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.3vw, 18px);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 0 clamp(14px, 1.4vw, 20px);
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.adm-prime-command .adm-center-kpi-band__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px 14px;
+    margin: 0;
+    padding: 0 0 2px;
+}
+
+body.adm-prime-command .adm-center-kpi-band__grain {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--adm-muted, #6e7891);
+    text-align: end;
+    max-width: 28ch;
+}
+
+body.adm-prime-command .adm-center-kpi-band__block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-center-kpi-band__group {
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .adm-center-kpi-band__grid {
+    display: grid;
+    gap: clamp(10px, 1.2vw, 16px);
+    width: 100%;
+    min-width: 0;
+    justify-items: stretch;
+    align-items: stretch;
+}
+
+body.adm-prime-command .adm-center-kpi-band__grid--range,
+body.adm-prime-command .adm-center-kpi-band__grid--snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card {
+    width: 100%;
+    min-width: 0;
+    min-height: 102px;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-center-kpi-band .adm-overview-kpi__foot {
+    flex-wrap: wrap;
+    align-items: flex-end;
+    row-gap: 4px;
+    column-gap: 8px;
+}
+
+body.adm-prime-command .adm-center-kpi-band .adm-overview-kpi__foot-label {
+    white-space: normal;
+    line-height: 1.35;
+    flex: 1 1 40%;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-center-kpi-card__meta {
+    flex: 0 1 auto;
+    max-width: 58%;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+    white-space: nowrap;
+    text-align: end;
+    line-height: 1.35;
+}
+
+body.adm-prime-command .adm-center-kpi-card__meta--hint {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d7"],
+body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d30"] {
+    grid-column: 1 / -1;
+}
+
+body.adm-prime-command .adm-center-kpi-card__foot {
+    margin-top: auto;
+}
+
+body.adm-prime-command .adm-center-kpi-band__block--snapshot {
+    order: 1;
+}
+
+body.adm-prime-command .adm-center-kpi-band__block--range {
+    order: 2;
+}
+
+body.adm-prime-command .adm-center-kpi-card__spark,
+body.adm-prime-command .adm-center-kpi-band .ecc-kpi-spark {
+    display: none !important;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+}
+
+/* تبلت/عرض میانی (~۷۱۷px): ۲×۲ snapshot، بازه ۲ ستون — نه ۳/۴ ستون فشرده */
+@media (min-width: 640px) and (max-width: 899px) {
+    body.adm-prime-command .adm-center-kpi-band__grid--range,
+    body.adm-prime-command .adm-center-kpi-band__grid--snapshot {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d7"],
+    body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d30"] {
+        grid-column: auto;
+    }
+}
+
+@media (min-width: 900px) {
+    body.adm-prime-command .adm-center-kpi-band__grid--range {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    body.adm-prime-command .adm-center-kpi-band__grid--snapshot {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d7"],
+    body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d30"] {
+        grid-column: auto;
+    }
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-center-kpi-band__grid {
+        gap: 16px;
+    }
+
+    body.adm-prime-command .adm-center-kpi-band .adm-center-kpi-card {
+        min-height: 108px;
+    }
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .adm-center-kpi-band__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    body.adm-prime-command .adm-center-kpi-band__grain {
+        text-align: start;
+        max-width: none;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-center-kpi-band__group {
+    color: #9aa3b7;
+}
+
+/* ——— باند KPI پریمیوم (مرکز کاربران و variant لوکس) ——— */
+body.adm-prime-command .adm-prime-kpi-band--premium {
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__head {
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    width: 100%;
+    min-width: 0;
+    padding: 0 2px 4px;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__head-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__kicker {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--adm-accent, #5b4fcf);
+    opacity: 0.88;
+    line-height: 1.35;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__title {
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__grain {
+    flex: 0 1 auto;
+    max-width: 100%;
+    margin: 0;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    background: rgba(250, 251, 255, 0.92);
+    font-size: 0.64rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--adm-muted, #6e7891);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__canvas {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: clamp(12px, 1.5vw, 18px);
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.96);
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 251, 255, 0.96) 48%, rgba(248, 249, 253, 0.98) 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 10px 32px rgba(31, 36, 64, 0.045);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__block {
+    gap: 10px;
+    margin: 0;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__block-label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 12px;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__block-tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #1f243c;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__block-tag--range {
+    color: #3d4260;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__block-hint {
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--adm-muted, #8b93a8);
+    text-align: end;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.adm-prime-command .adm-prime-kpi-band__divider {
+    height: 1px;
+    margin: 0;
+    border: none;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(226, 230, 240, 0.95) 15%,
+        rgba(226, 230, 240, 0.95) 85%,
+        transparent 100%
+    );
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__group {
+    display: none;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux {
+    border-radius: 13px;
+    border-color: rgba(232, 234, 244, 0.9);
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: none;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux::before {
+    height: 2px;
+    opacity: 0.65;
+}
+
+@media (hover: hover) {
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux:hover {
+        border-color: rgba(199, 205, 218, 0.9);
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(31, 36, 64, 0.05);
+    }
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__grid > .adm-center-kpi-card {
+    min-width: 0;
+    max-width: 100%;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux-snapshot {
+    min-height: 84px;
+    padding: 10px 8px 9px;
+    text-align: center;
+    align-items: center;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux-snapshot .adm-overview-kpi__head {
+    justify-content: center;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux-snapshot .adm-overview-kpi__label {
+    display: block;
+    width: 100%;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--adm-muted, #6e7891);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux-snapshot .adm-overview-kpi__value {
+    font-size: clamp(0.98rem, 2.5vw, 1.2rem);
+    max-width: 100%;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux-snapshot .adm-center-kpi-card__foot {
+    justify-content: center;
+    border-top: none;
+    padding-top: 4px;
+    margin-top: 2px;
+}
+
+body.adm-prime-command .adm-center-kpi-card__lux-caption {
+    font-size: 0.6rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--adm-muted, #8b93a8);
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux:not(.adm-center-kpi-card--lux-snapshot) .adm-overview-kpi__foot {
+    border-top-color: rgba(232, 234, 244, 0.85);
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux:not(.adm-center-kpi-card--lux-snapshot) .adm-overview-kpi__delta {
+    font-size: 0.62rem;
+    padding: 2px 8px;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__grid--snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__grid--range {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux:not(.adm-center-kpi-card--lux-snapshot) {
+    min-height: 0;
+    padding: 11px 12px 10px;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux:not(.adm-center-kpi-card--lux-snapshot) .adm-overview-kpi__foot-label {
+    font-size: 0.6rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d7"],
+body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band .adm-center-kpi-card[data-kpi-key="retention_d30"] {
+    grid-column: auto;
+}
+
+/* تا ۱۰۹۹px: تک‌ستون — هم‌عرض main (~۷۱۷px) بدون فشردگی دو ستونه */
+@media (max-width: 1099px) {
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__canvas {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__head {
+        align-items: flex-start;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__grain {
+        align-self: flex-end;
+        max-width: min(100%, 14rem);
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band__block-label {
+        gap: 4px 10px;
+    }
+}
+
+@media (max-width: 479px) {
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__grid--snapshot {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__grain {
+        align-self: stretch;
+        max-width: 100%;
+        white-space: normal;
+        text-align: start;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band__block-hint {
+        display: none;
+    }
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__canvas {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+        grid-template-rows: auto;
+        gap: 0 20px;
+        align-items: stretch;
+        padding: 18px 20px;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__block--snapshot {
+        order: 1;
+        grid-column: 1;
+        min-width: 0;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__divider {
+        order: 2;
+        grid-column: 2;
+        width: 1px;
+        height: auto;
+        align-self: stretch;
+        background: rgba(226, 230, 240, 0.92);
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__block--range {
+        order: 3;
+        grid-column: 3;
+        min-width: 0;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__grid--snapshot {
+        gap: 10px;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-band__grid--range {
+        gap: 10px;
+    }
+
+    @media (hover: hover) {
+        body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux:hover {
+            transform: translateY(-1px);
+        }
+    }
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__grain {
+        align-self: flex-start;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-kpi-band__canvas {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: linear-gradient(165deg, rgba(30, 34, 48, 0.96) 0%, rgba(24, 28, 40, 0.98) 100%);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-kpi-band--premium .adm-prime-kpi-band__grain {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-kpi-band__block-tag {
+    color: #e8eaf4;
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-kpi-band--premium .adm-center-kpi-card--lux {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* ——— صف اقدام hero rail — پریمیوم (کارت‌های مجزا) ——— */
+body.adm-prime-command .adm-prime-hero__rail .adm-overview-actions.adm-prime-action-queue,
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium.adm-overview-actions {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    max-width: 100%;
+    padding: 14px 14px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(31, 36, 64, 0.04);
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue__head {
+    align-items: center;
+    margin-bottom: 0;
+    padding: 0 2px;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue__title {
+    font-size: 0.88rem;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue__count {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    background: #fafbff;
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: var(--adm-muted, #9aa3b7);
+    font-variant-numeric: tabular-nums;
+}
+
+body.adm-prime-command .adm-prime-action-queue__subtitle {
+    margin: -4px 0 4px;
+    padding: 0 2px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--adm-muted, #9aa3b7);
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+    max-height: min(360px, 54vh);
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__empty {
+    margin-top: 4px;
+    border-radius: 12px;
+    border: 1px dashed rgba(232, 234, 244, 0.98);
+    background: #fafbff;
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium.adm-overview-actions {
+    background: rgba(22, 26, 38, 0.92);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue__count {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* هدر قدیمی ecc-cmd-actions در rail */
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-actions-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 0;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-actions-head p {
+    display: none;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-actions-head h2 {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 800;
+    gap: 8px;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-actions-head h2 i {
+    width: auto;
+    height: auto;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #ef4444;
+    font-size: 1.05rem;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-actions-count {
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 234, 244, 0.98);
+    background: #fafbff;
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: var(--adm-muted, #9aa3b7);
+    min-width: auto;
+    height: auto;
+}
+
+/* ردیف‌های اقدام — کارت مینیمال + نوار اولویت */
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 58px;
+    padding: 10px 12px 10px 16px;
+    border: 1px solid rgba(232, 234, 244, 0.96);
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+    box-shadow: 0 2px 12px rgba(31, 36, 64, 0.04);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: #5b4fcf;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row[data-priority="critical"]::before {
+    background: #dc2626;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row[data-priority="high"]::before {
+    background: #d97706;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row[data-priority="medium"]::before {
+    background: #5b4fcf;
+}
+
+@media (hover: hover) {
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row:hover {
+        border-color: rgba(91, 79, 207, 0.22);
+        box-shadow: 0 6px 20px rgba(31, 36, 64, 0.07);
+        transform: translateY(-1px);
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row:hover .adm-prime-action-queue__cta {
+        color: #4f46e5;
+    }
+}
+
+body.adm-prime-command .adm-prime-action-queue__main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-action-queue__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.adm-prime-command .adm-prime-action-queue__title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-action-queue__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    flex-shrink: 0;
+    color: var(--adm-accent, #5b4fcf);
+    opacity: 0.92;
+    line-height: 1;
+}
+
+body.adm-prime-command .adm-prime-action-queue__icon i {
+    font-size: 0.82rem;
+}
+
+body.adm-prime-command .adm-prime-action-queue__body strong {
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: #1f243c;
+}
+
+body.adm-prime-command .adm-prime-action-queue__meta {
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .adm-prime-action-queue__why {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 2px;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-action-queue__why i {
+    margin-top: 2px;
+    font-size: 0.72rem;
+    color: var(--adm-accent, #5b4fcf);
+    opacity: 0.88;
+    flex-shrink: 0;
+}
+
+body.adm-prime-command .adm-prime-action-queue__why em {
+    font-size: 0.64rem;
+    font-weight: 600;
+    font-style: normal;
+    line-height: 1.45;
+    color: var(--adm-muted, #6e7891);
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-prime-action-queue__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    width: 100%;
+    padding-top: 6px;
+    border-top: 1px solid rgba(232, 234, 244, 0.88);
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--adm-accent, #5b4fcf);
+}
+
+body.adm-prime-command .adm-prime-action-queue__cta .adm-icon-dir {
+    font-size: 0.62rem;
+    opacity: 0.85;
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-action-queue__body strong {
+    color: #e8eaf4;
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-action-queue__cta {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* لیست اقدام قدیمی (سازگاری) */
+body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions:not(.adm-prime-action-queue--premium) .adm-overview-actions__list, .ecc-cmd-actions-list) {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    border: 1px solid #eef0f6;
+    border-radius: 10px;
+    background: #fafbff;
+    overflow: hidden;
+}
+
+body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions:not(.adm-prime-action-queue--premium) .adm-overview-actions__row, .ecc-cmd-action) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 12px;
+    min-height: 52px;
+    padding: 11px 13px;
+    border: none;
+    border-bottom: 1px solid #eef0f6;
+    border-radius: 0;
+    background: transparent;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.14s ease;
+}
+
+body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions:not(.adm-prime-action-queue--premium) .adm-overview-actions__row, .ecc-cmd-action):last-child {
+    border-bottom: none;
+}
+
+@media (hover: hover) {
+    body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions:not(.adm-prime-action-queue--premium) .adm-overview-actions__row, .ecc-cmd-action):hover {
+        background: rgba(91, 79, 207, 0.05);
+    }
+}
+
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-action-priority,
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-action-icon,
+body.adm-prime-command .adm-prime-hero__rail .ecc-cmd-action-cta {
+    display: none;
+}
+
+body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions__body, .ecc-cmd-action-body) {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions__body strong, .ecc-cmd-action-body strong) {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #1f2440;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions__body em, .ecc-cmd-action-body em) {
+    font-size: 0.64rem;
+    font-style: normal;
+    font-weight: 500;
+    color: #9aa3b7;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__badge {
+    flex-shrink: 0;
+    min-width: 2.6rem;
+    padding: 5px 9px;
+    border-radius: 9px;
+    background: rgba(31, 36, 64, 0.05);
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #1f2440;
+    text-align: center;
+    line-height: 1.1;
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row[data-priority="critical"] .adm-overview-actions__badge {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.08);
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row[data-priority="high"] .adm-overview-actions__badge {
+    color: #c2410c;
+    background: rgba(217, 119, 6, 0.1);
+}
+
+body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row[data-priority="medium"] .adm-overview-actions__badge {
+    color: #5b4fcf;
+    background: rgba(91, 79, 207, 0.08);
+}
+
+body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions:not(.adm-prime-action-queue--premium) .adm-overview-actions__badge, .ecc-cmd-action-count) {
+    flex-shrink: 0;
+    min-width: 2.25rem;
+    padding: 0;
+    font-size: 0.82rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #1f2440;
+    text-align: end;
+    background: transparent;
+    border-radius: 0;
+}
+
+/* تبلت/موبایل: hero تمام‌عرض — گرید کارت‌های مجزا */
+@media (max-width: 1099px) {
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+        gap: 10px;
+        max-height: none;
+        overflow: visible;
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        min-height: 82px;
+        padding: 12px 14px 12px 17px;
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__badge {
+        align-self: flex-start;
+        margin-top: 6px;
+        font-size: 0.86rem;
+    }
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__list {
+        grid-template-columns: 1fr;
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row {
+        flex-direction: row;
+        align-items: center;
+        min-height: 58px;
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__badge {
+        margin-top: 0;
+    }
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-prime-hero__rail {
+        justify-content: flex-start;
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail .adm-overview-actions.adm-prime-action-queue {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue .adm-overview-actions__list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__row {
+    background: linear-gradient(180deg, rgba(30, 34, 48, 0.98) 0%, rgba(24, 28, 40, 0.98) 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions__body strong, .ecc-cmd-action-body strong) {
+    color: #e8eaf4;
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-prime-hero__rail .adm-prime-action-queue--premium .adm-overview-actions__badge {
+    background: rgba(255, 255, 255, 0.06);
+    color: #e8eaf4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.adm-prime-command .ecc-card,
+    body.adm-prime-command .ecc-section {
+        transition: none;
+    }
+}

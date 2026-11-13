@@ -114,10 +114,38 @@ def resolve_admin_panel_nav_active(path: str) -> str:
     return ''
 
 
+ADMIN_PANEL_NAV_TITLES: Dict[str, str] = {
+    'command': 'نمای کلی سیستم',
+    'assistant': 'دستیار مدیریت',
+    'users': 'کاربران',
+    'licenses': 'لایسنس‌ها',
+    'sales': 'سفارش‌ها و پرداخت‌ها',
+    'leads': 'سرنخ‌ها',
+    'marketing': 'گزارش‌ها و تحلیل',
+    'growth': 'قیف رشد',
+    'recovery': 'بازیابی',
+    'plan_conversion': 'تبدیل پلن',
+    'blog': 'مدیریت محتوا',
+    'blog_systematic': 'انتشار سیستماتیک',
+    'academy': 'آکادمی',
+    'operations': 'تنظیمات سیستم',
+    'support': 'پشتیبانی',
+    'activity': 'فعالیت سیستم',
+    'windows': 'ویندوز',
+    'android': 'اندروید',
+    'ai': 'هوش مصنوعی',
+    'crm': 'CRM',
+    'affiliates': 'همکاری در فروش',
+    'exports': 'خروجی‌ها',
+    'forum': 'تالار گفتگو',
+}
+
+
 def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     badges = get_admin_panel_nav_badges()
     alert_count = sum(1 for key in ('orders_pending', 'unread_tickets') if badges.get(key, 0) > 0)
     days, range_key = parse_admin_panel_range(request)
+    nav_active = resolve_admin_panel_nav_active(request.path)
     query_suffix = f'?days={range_key}'
     if request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL:
         query_suffix += '&compare=1'
@@ -146,7 +174,11 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
         'chart_days_effective': effective_range_days(days),
         'admin_panel_range_key': range_key,
         'admin_panel_compare': request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL,
-        'admin_panel_nav_active': resolve_admin_panel_nav_active(request.path),
+        'admin_panel_nav_active': nav_active,
+        'admin_panel_page_title': ADMIN_PANEL_NAV_TITLES.get(nav_active, 'پنل مدیریت'),
+        'admin_panel_command_layout': True,
+        'admin_panel_compact_header': True,
+        'admin_panel_hide_global_bar': True,
         'admin_panel_updated_at': timezone.now(),
         'admin_panel_nav_badges': badges,
         'admin_panel_alert_count': alert_count,

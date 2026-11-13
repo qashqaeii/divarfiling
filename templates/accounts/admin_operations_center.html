@@ -23,6 +23,8 @@
 
 {% block admin_panel_content %}
 
+{% include 'accounts/partials/admin_center_shell_open.html' %}
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی عملیات' icon='fa-gears' icon_tone='health' title='عملیات' subtitle='سلامت زیرسیستم‌ها، صف کارها و پایش روزانه زیرساخت' %}
 <section class="ecc-section ecc-ops-health" id="ops-health" aria-label="سلامت سیستم">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
@@ -272,7 +274,7 @@
 </section>
 
 <section class="ecc-section" id="ecc-operations" aria-hidden="true"></section>
-
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

@@ -10,14 +10,20 @@
                 <small>پنل مدیریت</small>
             </span>
         </a>
-        <button type="button" class="adm-cmd-sidebar__theme" data-theme-toggle aria-label="تغییر تم">
-            <i class="fas fa-sun" aria-hidden="true"></i>
-        </button>
+        <div class="adm-cmd-sidebar__brand-actions">
+            <button type="button" class="adm-cmd-sidebar__theme" data-theme-toggle aria-label="تغییر تم">
+                <i class="fas fa-sun" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="ecc-sidebar-close adm-cmd-sidebar__close" id="ecc-sidebar-close" aria-label="بستن منو">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
     </div>
-    {% endif %}
+    {% else %}
     <button type="button" class="ecc-sidebar-close" id="ecc-sidebar-close" aria-label="بستن منو">
         <i class="fas fa-times" aria-hidden="true"></i>
     </button>
+    {% endif %}
 
     {% with days_qs=admin_panel_query_suffix|default:'?days=all' active=admin_panel_nav_active|default:'' %}
 

@@ -16,7 +16,7 @@
     --adm-radius-sm: 8px;
     --adm-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     --adm-header-h: 56px;
-    --adm-sidebar-w: 258px;
+    --adm-sidebar-w: 216px;
     --adm-content-max: 1440px;
     --adm-shadow-md: 0 4px 24px rgba(15, 23, 42, 0.06);
     --adm-shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.08);
@@ -453,17 +453,24 @@ body.adm-prime-command .ecc-page--shell .ecc-main.adm-prime-main.adm-cmd-main {
     position: relative;
     align-self: stretch;
     margin: 0;
-    padding: 0 0 16px !important;
-    gap: 2px;
+    padding: 0 !important;
+    gap: 0;
+    display: flex;
+    flex-direction: column;
     border-radius: 0 !important;
     border: none !important;
     border-inline-end: 1px solid var(--adm-border) !important;
     border-inline-start: none !important;
     background: var(--adm-surface) !important;
     box-shadow: none !important;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     z-index: 1;
+}
+
+.adm-cmd-sidebar.ecc-sidebar--grouped::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .adm-cmd-sidebar__brand {
@@ -472,12 +479,35 @@ body.adm-prime-command .ecc-page--shell .ecc-main.adm-prime-main.adm-cmd-main {
     justify-content: space-between;
     gap: 8px;
     padding: 12px 12px 10px;
-    margin-bottom: 2px;
+    margin: 0;
+    flex-shrink: 0;
     border-bottom: 1px solid var(--adm-border);
     background: var(--adm-surface);
-    position: sticky;
-    top: 0;
-    z-index: 2;
+    position: relative;
+    z-index: 3;
+}
+
+.adm-cmd-sidebar__brand-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.adm-prime-command .adm-cmd-sidebar .ecc-sidebar-close.adm-cmd-sidebar__close {
+    position: static;
+    display: none;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 0;
+    border-radius: 9px;
+    border: none;
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--adm-muted);
+    align-items: center;
+    justify-content: center;
 }
 
 .adm-cmd-sidebar__logo {
@@ -518,7 +548,19 @@ body.adm-prime-command .ecc-page--shell .ecc-main.adm-prime-main.adm-cmd-main {
 }
 
 .adm-cmd-sidebar__nav {
-    padding: 4px 0 10px;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 4px 0 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.adm-cmd-sidebar__nav::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .adm-cmd-sidebar__kicker {
@@ -572,10 +614,13 @@ body.adm-prime-command .ecc-page--shell .ecc-main.adm-prime-main.adm-cmd-main {
     min-height: 34px;
 }
 
-.adm-prime-command .adm-cmd-sidebar .ecc-nav-item:not(.ecc-nav-item--sub) > span {
+.adm-prime-command .adm-cmd-sidebar .ecc-nav-item:not(.ecc-nav-item--sub) > span:not(.ecc-nav-badge) {
     flex: 1;
     min-width: 0;
     line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .adm-prime-command .adm-cmd-sidebar .ecc-nav-item:not(.ecc-nav-item--sub) > i {
@@ -708,21 +753,28 @@ body.adm-prime-command .ecc-page--shell .ecc-main.adm-prime-main.adm-cmd-main {
 }
 
 .adm-prime-command .adm-cmd-sidebar .ecc-nav-badge {
+    flex: 0 0 auto;
     margin-inline-start: auto;
-    min-width: 1.2rem;
-    height: 1.2rem;
-    padding: 0 5px;
+    min-width: 1.15rem;
+    max-width: 2.35rem;
+    height: 1.15rem;
+    padding: 0 4px;
     border-radius: 999px;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
     background: rgba(124, 58, 237, 0.1);
     color: var(--adm-accent);
     font-weight: 800;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.adm-prime-command .adm-cmd-sidebar .ecc-sidebar-close {
+.adm-prime-command .adm-cmd-sidebar > .ecc-sidebar-close {
     display: none;
 }
 
@@ -1335,7 +1387,7 @@ body.adm-prime-command .ecc-page--shell .ecc-main.adm-prime-main.adm-cmd-main {
         pointer-events: auto;
     }
 
-    .adm-prime-command .adm-cmd-sidebar .ecc-sidebar-close {
+    .adm-prime-command .adm-cmd-sidebar .ecc-sidebar-close.adm-cmd-sidebar__close {
         display: inline-flex;
     }
 
@@ -1995,8 +2047,13 @@ body.adm-prime-command.mk-admin-dashboard {
 }
 
 .adm-cmd-sidebar__brand {
-    background: transparent;
+    background: #13141f;
     border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.adm-prime-command .adm-cmd-sidebar .ecc-sidebar-close.adm-cmd-sidebar__close {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(230, 234, 255, 0.88);
 }
 
 .adm-cmd-sidebar__logo-text strong {
@@ -2381,19 +2438,22 @@ body.adm-overview-active .ecc-page--v2 .ecc-card {
     grid-column: auto;
 }
 
-body.adm-overview-active .adm-cmd-sidebar.ecc-sidebar--grouped {
+body.adm-overview-active .adm-cmd-sidebar.ecc-sidebar--grouped,
+body.adm-prime-command .adm-cmd-sidebar.ecc-sidebar--grouped {
     display: flex;
     flex-direction: column;
 }
 
-body.adm-overview-active .adm-cmd-sidebar__nav {
+body.adm-overview-active .adm-cmd-sidebar__nav,
+body.adm-prime-command .adm-cmd-sidebar__nav {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
 }
 
-body.adm-overview-active .adm-cmd-sidebar__quick {
+body.adm-overview-active .adm-cmd-sidebar__quick,
+body.adm-prime-command .adm-cmd-sidebar__quick {
     margin-top: auto;
     flex-shrink: 0;
 }
@@ -2404,7 +2464,8 @@ body.adm-overview-active .adm-cmd-sidebar__quick {
     }
 }
 
-body.adm-overview-active.adm-prime-command .adm-cmd-main {
+body.adm-overview-active.adm-prime-command .adm-cmd-main,
+body.adm-prime-command .adm-cmd-main.adm-prime-main {
     padding-block: 18px 32px;
 }
 
@@ -2471,6 +2532,74 @@ body.adm-overview-active.adm-prime-command .adm-cmd-workspace > * {
 @media (max-width: 1024px) {
     [data-theme="dark"] body.adm-overview-active.adm-prime-command .adm-cmd-workspace::before {
         right: 0;
+    }
+}
+
+/* Canvas میزکار — همه مراکز (هم‌تراز نمای کلی) */
+body.adm-prime-command.adm-prime-body:not(.adm-overview-active) {
+    background-color: #f7f9ff;
+}
+
+body.adm-prime-command.adm-prime-body:not(.adm-overview-active) .adm-cmd-workspace {
+    overflow-x: clip;
+    position: relative;
+    isolation: isolate;
+    background-color: #f7f9ff;
+    background-image: url("../images/Mainworkspacebg.webp");
+    background-position: center center;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-origin: border-box;
+    background-clip: border-box;
+}
+
+body.adm-prime-command.adm-prime-body:not(.adm-overview-active) .adm-cmd-workspace > * {
+    position: relative;
+    z-index: 1;
+}
+
+[data-theme="dark"] body.adm-prime-command.adm-prime-body:not(.adm-overview-active) {
+    background-color: #0c1018;
+}
+
+[data-theme="dark"] body.adm-prime-command.adm-prime-body:not(.adm-overview-active) .adm-cmd-workspace {
+    background-color: #0c1018;
+    background-image: none;
+}
+
+[data-theme="dark"] body.adm-prime-command.adm-prime-body:not(.adm-overview-active) .adm-cmd-workspace::before {
+    content: "";
+    position: fixed;
+    z-index: 0;
+    pointer-events: none;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: var(--adm-sidebar-w, 216px);
+    background-color: #0c1018;
+    background-image: linear-gradient(
+        180deg,
+        rgba(8, 12, 22, 0.38) 0%,
+        rgba(8, 12, 22, 0.1) 42%,
+        rgba(8, 12, 22, 0.58) 100%
+    ), url("../images/workspacedarkBackground.webp");
+    background-position: center center, center center;
+    background-size: 100% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    background-origin: border-box;
+    background-clip: border-box;
+    filter: saturate(0.82) brightness(0.76);
+}
+
+@media (max-width: 1024px) {
+    [data-theme="dark"] body.adm-prime-command.adm-prime-body:not(.adm-overview-active) .adm-cmd-workspace::before {
+        right: 0;
+    }
+}
+
+@media (min-width: 1100px) {
+    body.adm-prime-command .adm-ov-header__menu {
+        display: none;
     }
 }
 
@@ -3938,10 +4067,27 @@ body.adm-overview-active .adm-ov-header__tool:hover i {
     color: var(--adm-text);
 }
 
-.adm-overview-plans__pct {
-    font-weight: 700;
+.adm-overview-plans__metric {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    text-align: end;
+    flex-shrink: 0;
+}
+
+.adm-overview-plans__metric strong {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--adm-text);
+    white-space: nowrap;
+}
+
+.adm-overview-plans__metric em {
+    font-style: normal;
+    font-size: 0.65rem;
+    font-weight: 600;
     color: var(--adm-muted);
-    font-size: 0.68rem;
 }
 
 .adm-overview-plans__bar {

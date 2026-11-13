@@ -18,9 +18,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="adm-page adm-mkt-page adm-map-page biz-page biz-page--marketing marketing-v3">
 
-    <header class="marketing-v3-intro"><div><span class="marketing-v3-eyebrow"><i class="fas fa-bullhorn" aria-hidden="true"></i> بازاریابی و ارتباط با مشتری</span><h2>کمپین‌ها و عملکرد ارسال در یک نگاه</h2><p>از انتخاب مخاطب تا گزارش نتیجه، با همان داده‌ها و کنترل‌های فعلی.</p></div></header>
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی بازاریابی' icon='fa-bullhorn' icon_tone='marketing' title='کمپین‌ها و عملکرد ارسال در یک نگاه' subtitle='از انتخاب مخاطب تا گزارش نتیجه، با همان داده‌ها و کنترل‌های فعلی.' %}
 
     <div class="biz-toolbar">
         <div class="biz-toolbar-meta">
@@ -928,6 +929,7 @@
     </div>
 
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

@@ -18,6 +18,8 @@
 
 {% block admin_panel_content %}
 
+{% include 'accounts/partials/admin_center_shell_open.html' %}
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی همکاری در فروش' icon='fa-hand-holding-dollar' icon_tone='plans' title='همکاری در فروش' subtitle='برداشت‌ها، تسویه و عملکرد همکاران فروش' %}
 <section class="ecc-section ecc-sup-actions-hero" id="affiliate-actions" aria-label="نیازمند اقدام">
     <header class="ecc-cmd-actions-head">
         <div>
@@ -210,7 +212,7 @@
         </table>
     </div>
 </section>
-
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

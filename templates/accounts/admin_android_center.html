@@ -26,7 +26,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="aac-page" id="ecc-android">
+
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی اندروید' icon='fa-mobile-screen' icon_tone='users' title='اندروید' subtitle='نسخه اپ، دستگاه‌ها و سلامت انتشار' %}
 
     <header class="aac-hero" aria-label="مرکز آمار اندروید">
         <span class="aac-hero__orb aac-hero__orb--1" aria-hidden="true"></span>
@@ -497,6 +500,7 @@
     </section>
 
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

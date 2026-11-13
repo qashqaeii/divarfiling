@@ -218,9 +218,11 @@ def _build_sales_kpi_cards(
     def delta(current, previous):
         return _pct_change(int(current or 0), int(previous or 0))
 
+    range_kind = 'range'
     return [
         {
             'key': 'revenue_range',
+            'kind': range_kind,
             'label': 'درآمد بازه',
             'sublabel': f'{range_label} · تومان',
             'value': revenue_range,
@@ -234,6 +236,7 @@ def _build_sales_kpi_cards(
         },
         {
             'key': 'paid_orders_range',
+            'kind': range_kind,
             'label': 'سفارش موفق',
             'sublabel': range_label,
             'value': paid_orders_range,
@@ -247,6 +250,7 @@ def _build_sales_kpi_cards(
         },
         {
             'key': 'aov',
+            'kind': range_kind,
             'label': 'میانگین سفارش',
             'sublabel': 'AOV · تومان',
             'value': aov,
@@ -260,6 +264,7 @@ def _build_sales_kpi_cards(
         },
         {
             'key': 'conversion_rate',
+            'kind': range_kind,
             'label': 'نرخ تبدیل',
             'sublabel': 'ثبت‌نام هم‌دوره با خرید',
             'value': conversion_rate,
@@ -273,6 +278,7 @@ def _build_sales_kpi_cards(
         },
         {
             'key': 'unique_buyers',
+            'kind': range_kind,
             'label': 'مشتری خریدار',
             'sublabel': range_label,
             'value': unique_buyers,
@@ -286,6 +292,7 @@ def _build_sales_kpi_cards(
         },
         {
             'key': 'revenue_delta',
+            'kind': range_kind,
             'label': 'درآمد نسبت به دوره قبل',
             'sublabel': (
                 'دوره مقایسه ندارد'
@@ -319,9 +326,10 @@ def build_sales_action_items() -> List[Dict[str, Any]]:
             'title': 'سفارش پرداخت‌نشده',
             'count': pending,
             'detail': f'{pending} سفارش در انتظار تسویه',
+            'reason': 'پرداخت تکمیل نشده؛ پیگیری مشتری یا انقضای سفارش ممکن است.',
             'icon': 'fa-clock',
             'accent': 'violet',
-            'cta': 'مشاهده',
+            'cta': 'جدول معلق',
             'href': '#sales-table-pending',
         })
     if fulfillment:
@@ -331,9 +339,10 @@ def build_sales_action_items() -> List[Dict[str, Any]]:
             'title': 'صدور/تمدید ناقص',
             'count': fulfillment,
             'detail': f'{fulfillment} سفارش paid بدون تکمیل',
+            'reason': 'پول واریز شده ولی لایسنس یا تمدید صادر نشده؛ باید فوراً تکمیل شود.',
             'icon': 'fa-key',
             'accent': 'rose',
-            'cta': 'رفع',
+            'cta': 'صف fulfillment',
             'href': '#sales-queue-fulfillment',
         })
     if failed_today:
@@ -343,9 +352,10 @@ def build_sales_action_items() -> List[Dict[str, Any]]:
             'title': 'پرداخت ناموفق امروز',
             'count': failed_today,
             'detail': f'{failed_today} مورد امروز',
+            'reason': 'خطای درگاه یا انصراف مشتری امروز؛ بررسی دلیل و تماس در صورت نیاز.',
             'icon': 'fa-circle-xmark',
             'accent': 'rose',
-            'cta': 'بررسی',
+            'cta': 'پرداخت ناموفق',
             'href': '#sales-table-failed',
         })
     if card_pending:
@@ -355,9 +365,10 @@ def build_sales_action_items() -> List[Dict[str, Any]]:
             'title': 'کارت‌به‌کارت معلق',
             'count': card_pending,
             'detail': f'{card_pending} واریز در انتظار تأیید',
+            'reason': 'رسید کارت‌به‌کارت بدون تأیید مانده؛ تطبیق با حساب بانکی لازم است.',
             'icon': 'fa-money-check',
             'accent': 'cyan',
-            'cta': 'بررسی پرداخت‌ها',
+            'cta': 'تأیید واریزها',
             'href': '#sales-card-transfers',
         })
     return prioritize_management_actions(items)

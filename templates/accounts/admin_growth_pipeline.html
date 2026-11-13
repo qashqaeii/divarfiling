@@ -20,17 +20,14 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="adm-page adm-mkt-page adm-lac-page adm-gp-page biz-page biz-page--growth growth-v3">
-    <header class="growth-v3-intro">
-        <div>
-            <span class="growth-v3-eyebrow"><i class="fas fa-route" aria-hidden="true"></i> مسیر تبدیل مشتری</span>
-            <h2>رشد را از اولین سرنخ تا خرید دنبال کنید</h2>
-            <p>قیف تبدیل، وضعیت پرونده‌ها و حرکت‌های اخیر در یک نمای منظم.</p>
-        </div>
-        <nav class="growth-v3-shortcuts" aria-label="دسترسی سریع رشد">
-            <a href="#gp-funnel">نمودارها</a>
-            <a href="#gp-stage-board">مراحل</a>
-            <a href="#gp-recent-moves">فعالیت‌ها</a>
+    <header class="adm-center-intro" aria-label="معرفی رشد">
+        {% include 'accounts/partials/admin_center_intro_main.html' with icon='fa-route' icon_tone='growth' title='رشد را از اولین سرنخ تا خرید دنبال کنید' subtitle='قیف تبدیل، وضعیت پرونده‌ها و حرکت‌های اخیر در یک نمای منظم.' %}
+        <nav class="adm-center-intro__jumps" aria-label="دسترسی سریع رشد">
+            <a href="#gp-funnel" class="adm-center-intro__jump">نمودارها</a>
+            <a href="#gp-stage-board" class="adm-center-intro__jump">مراحل</a>
+            <a href="#gp-recent-moves" class="adm-center-intro__jump">فعالیت‌ها</a>
         </nav>
     </header>
 
@@ -372,6 +369,7 @@
         </ol>
     </div>
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

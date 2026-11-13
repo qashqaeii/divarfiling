@@ -14,9 +14,12 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="ab-page" id="aa-page"
      data-analytics-url="{% url 'admin_panel_academy_analytics_json' %}"
      data-initial-days="{{ analytics_days }}">
+
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی آکادمی' icon='fa-graduation-cap' icon_tone='users' title='مدیریت آکادمی' subtitle='دوره‌ها، محتوا و تحلیل یادگیری' %}
 
     <div class="ab-ambient" aria-hidden="true">
         <span class="ab-orb ab-orb--1"></span>
@@ -422,6 +425,7 @@
 </div>
 
 <script type="application/json" id="aa-analytics-data">{{ academy_analytics_json|safe }}</script>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

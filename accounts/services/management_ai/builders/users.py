@@ -36,11 +36,11 @@ def build_users_snapshot(days: int, compare: bool, *, include_facts: bool = True
     )
 
     reg_trend = trend_summary(charts, 'user_signups')
-    active_trend = trend_summary(charts, 'users_active_trend')
+    engagement_trend = trend_summary(charts, 'users_engagement_channels')
     if reg_trend:
         metrics['registration_trend'] = reg_trend
-    if active_trend:
-        metrics['active_trend'] = active_trend
+    if engagement_trend:
+        metrics['engagement_channels_trend'] = engagement_trend
 
     facts = build_facts_for_section('users') if include_facts else []
     period = {

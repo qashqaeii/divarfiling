@@ -25,7 +25,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="cust-page biz-page biz-page--crm">
+
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی CRM' icon='fa-handshake' icon_tone='users' title='CRM' subtitle='پذیرش CRM، pipeline معاملات و فعالیت کاربران' %}
 
 <div class="biz-toolbar">
     <div class="biz-toolbar-meta">
@@ -335,6 +338,7 @@
 </section>
 
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

@@ -29,8 +29,16 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="sales-v3">
-<header class="sales-v3-intro"><div><span class="sales-v3-eyebrow"><i class="fas fa-chart-line" aria-hidden="true"></i> مدیریت فروش</span><h2>درآمد، سفارش‌ها و پیگیری پرداخت‌ها</h2><p>روند فروش و موارد نیازمند رسیدگی را در یک نگاه ببینید.</p></div><nav class="sales-v3-links" aria-label="دسترسی سریع فروش"><a href="#sales-actions">اقدامات</a><a href="#sales-table-recent">سفارش‌ها</a><a href="#sales-card-transfers">کارت‌به‌کارت</a></nav></header>
+<header class="adm-center-intro" aria-label="معرفی فروش">
+    {% include 'accounts/partials/admin_center_intro_main.html' with icon='fa-chart-line' icon_tone='sales' title='درآمد، سفارش‌ها و پیگیری پرداخت‌ها' subtitle='روند فروش و موارد نیازمند رسیدگی را در یک نگاه ببینید.' %}
+    <nav class="adm-center-intro__jumps" aria-label="دسترسی سریع فروش">
+        <a href="#sales-actions" class="adm-center-intro__jump">اقدامات</a>
+        <a href="#sales-table-recent" class="adm-center-intro__jump">سفارش‌ها</a>
+        <a href="#sales-card-transfers" class="adm-center-intro__jump">کارت‌به‌کارت</a>
+    </nav>
+</header>
 
 {% include 'accounts/partials/admin_card_transfer_review.html' %}
 
@@ -400,7 +408,7 @@
 
 </div>
 </div>
-
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

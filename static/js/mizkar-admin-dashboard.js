@@ -57,7 +57,7 @@
             },
             plugins: {
                 legend: {
-                    display: chartConfig.type !== 'sparkline',
+                    display: chartConfig.type !== 'sparkline' && chartConfig.hideLegend !== true,
                     position: chartConfig.legendPosition || 'bottom',
                     rtl: true,
                     labels: {
@@ -249,7 +249,7 @@
 
         const chartType = config.type === 'combo' ? 'bar' : (config.type === 'sparkline' ? 'line' : config.type);
 
-        return new Chart(canvas, {
+        const chart = new Chart(canvas, {
             type: chartType,
             data: {
                 labels: config.labels || [],
@@ -268,6 +268,17 @@
             },
             options: baseOptions(config),
         });
+
+        const chartRoot = canvas.closest(
+            '.adm-prime-hero-chart, .adm-overview-chart--dual, .adm-center-chart-panel'
+        );
+        if (chartRoot) {
+            window.requestAnimationFrame(function () {
+                chartRoot.classList.add('is-chart-ready');
+            });
+        }
+
+        return chart;
     }
 
     const chartInstances = [];
@@ -305,7 +316,8 @@
             ['chart-operations', charts.operations_gauge],
             ['chart-revenue', charts.revenue_trend],
             ['chart-signups', charts.user_signups],
-            ['chart-users-active', charts.users_active_trend],
+            ['chart-users-engagement', charts.users_engagement_channels || charts.users_active_trend],
+            ['chart-users-active', charts.users_engagement_channels || charts.users_active_trend],
             ['chart-licenses-activity', charts.licenses_activity],
             ['chart-renewal-revenue', charts.renewal_revenue_trend],
             ['chart-crm-usage-trend', charts.crm_usage_trend],

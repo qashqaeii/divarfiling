@@ -95,7 +95,7 @@ class AdminUsersCenterViewTests(TestCase):
             self.assertIn('مدیریت کاربران', content)
             self.assertIn('ecc-users-mgmt', content)
             self.assertIn('chart-signups', content)
-            self.assertIn('chart-users-active', content)
+            self.assertIn('chart-users-engagement', content)
             self.assertIn(f'data-range="{days}"', content)
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/users/'), 'users')
 

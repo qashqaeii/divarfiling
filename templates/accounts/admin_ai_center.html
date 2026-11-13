@@ -28,7 +28,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="aic-page" id="ecc-ai">
+
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی هوش مصنوعی' icon='fa-brain' icon_tone='orders' title='مرکز هوش مصنوعی' subtitle='مصرف، عملکرد و وضعیت قابلیت‌های هوشمند فایلینگ دیوار' %}
 
 <header class="aic-hero" aria-label="مرکز هوش مصنوعی">
     <span class="aic-hero__orb aic-hero__orb--1" aria-hidden="true"></span>
@@ -484,6 +487,7 @@
 </section>
 
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

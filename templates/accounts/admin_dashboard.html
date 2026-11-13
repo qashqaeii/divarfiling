@@ -20,7 +20,7 @@
 
 {% block admin_panel_content %}
 
-<div class="adm-overview-page adm-cmd-page" dir="rtl">
+<div class="adm-overview-page adm-cmd-page adm-center-page" dir="rtl">
 
 <section class="adm-overview-section adm-overview-kpi-row" aria-label="شاخص‌های کلیدی">
     <h2 class="adm-overview-section-title adm-overview-kpi-row__title">
@@ -151,13 +151,17 @@
                 <i class="fas fa-crown adm-overview-section-title__icon adm-overview-section-title__icon--plans" aria-hidden="true"></i>
                 <span>پرفروش‌ترین پلن‌ها</span>
             </h2>
+            <span class="adm-overview-card__meta">{{ admin_panel_range_label_fa|default:"کل بازه" }}</span>
         </header>
         <ul class="adm-overview-plans__list">
             {% for plan in plan_sales|slice:":4" %}
             <li>
                 <div class="adm-overview-plans__row">
                     <span class="adm-overview-plans__name">{{ plan.label }}</span>
-                    <span class="adm-overview-plans__pct">{{ plan.count|to_persian_digits }} سفارش</span>
+                    <span class="adm-overview-plans__metric">
+                        <strong>{{ plan.total|currency }}</strong>
+                        <em>{{ plan.count|to_persian_digits }} سفارش</em>
+                    </span>
                 </div>
                 <div class="adm-overview-plans__bar" data-accent="{{ plan.accent }}">
                     {% if overview_plan_max_total %}

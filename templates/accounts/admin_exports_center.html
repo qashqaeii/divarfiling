@@ -8,6 +8,8 @@
 
 {% block admin_panel_content %}
 
+{% include 'accounts/partials/admin_center_shell_open.html' %}
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی خروجی‌ها' icon='fa-file-export' icon_tone='plans' title='خروجی گزارش‌ها' subtitle='دانلود اکسل و JSON بر اساس مجوزهای شما' %}
 <section class="ecc-section" id="ecc-exports" aria-label="خلاصه خروجی">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
@@ -65,5 +67,5 @@
     {% endif %}
 </section>
 {% endfor %}
-
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}

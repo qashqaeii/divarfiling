@@ -1,0 +1,8 @@
+{% comment %}
+معرفی یکپارچه مراکز — زبان بصری نمای کلی.
+icon, icon_tone, title, subtitle, note (optional), note_icon (optional FA class suffix)
+برای پرش درون‌صفحه: include فقط main و nav را داخل <header class="adm-center-intro"> بگذارید.
+{% endcomment %}
+<header class="adm-center-intro" aria-label="{{ aria_label|default:'معرفی صفحه' }}">
+    {% include 'accounts/partials/admin_center_intro_main.html' %}
+</header>

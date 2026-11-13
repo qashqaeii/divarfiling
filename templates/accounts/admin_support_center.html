@@ -25,7 +25,9 @@
 
 {% block admin_panel_content %}
 
-{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='پشتیبانی · الان' pulse_icon='fa-headset' %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی پشتیبانی' icon='fa-headset' icon_tone='users' title='پشتیبانی' subtitle='تیکت‌ها، SLA و رسیدگی به درخواست‌های کاربران' %}
+{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='پشتیبانی · الان' pulse_icon='fa-headset' pulse_icon_tone='orders' %}
 
 <div class="adm-prime-hero">
     <div class="adm-prime-hero__chart">
@@ -294,7 +296,7 @@
 {% if admin_can_review_card_transfers %}
 {% include 'accounts/partials/admin_card_transfer_modals.html' %}
 {% endif %}
-
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

@@ -1,0 +1,73 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-overview-kpi adm-center-kpi-card{% if kpi_lux %} adm-center-kpi-card--lux{% endif %}{% if kpi_lux %}{% if kpi_kind == 'snapshot' or card.kind == 'snapshot' %} adm-center-kpi-card--lux-snapshot{% endif %}{% endif %}"
+         data-accent="{{ card.accent|default:'violet' }}"
+         data-kpi-kind="{% firstof kpi_kind card.kind 'range' %}"
+         {% if card.key %}data-kpi-key="{{ card.key }}"{% endif %}
+         aria-label="{{ card.label }}">
+    <div class="adm-overview-kpi__head">
+        <span class="adm-overview-kpi__label">{{ card.label }}</span>
+        {% if kpi_lux %}
+            {% if kpi_kind != 'snapshot' and card.kind != 'snapshot' %}
+            <div class="adm-overview-kpi__icon" aria-hidden="true">
+                <i class="fas {{ card.icon|default:'fa-chart-line' }}"></i>
+            </div>
+            {% endif %}
+        {% else %}
+        <div class="adm-overview-kpi__icon" aria-hidden="true">
+            <i class="fas {{ card.icon|default:'fa-chart-line' }}"></i>
+        </div>
+        {% endif %}
+    </div>
+    <div class="adm-overview-kpi__value-row">
+        {% if card.pending or card.value is None %}
+        <strong class="adm-overview-kpi__value" aria-label="داده کافی نیست">—</strong>
+        {% elif card.format == 'money' %}
+        <strong class="adm-overview-kpi__value">{{ card.value|currency }}</strong>
+        {% elif card.format == 'percent' %}
+        <strong class="adm-overview-kpi__value" data-count-up="{{ card.value }}" data-format="percent">{{ card.value|floatformat:1|to_persian_digits }}٪</strong>
+        {% else %}
+        <strong class="adm-overview-kpi__value" data-count-up="{{ card.value|default:0 }}" data-format="{{ card.format|default:'count' }}">{{ card.value|default:0|to_persian_digits }}</strong>
+        {% endif %}
+    </div>
+    <footer class="adm-overview-kpi__foot adm-center-kpi-card__foot">
+        {% if kpi_kind == 'snapshot' or card.kind == 'snapshot' %}
+        {% if kpi_lux %}
+        <span class="adm-center-kpi-card__lux-caption">
+            {% if card.sublabel %}{{ card.sublabel }}{% else %}{{ card.delta_label|default:'وضعیت' }}{% endif %}
+        </span>
+        {% else %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'وضعیت' }}</span>
+        {% if card.sublabel %}
+        <span class="adm-center-kpi-card__meta adm-center-kpi-card__meta--hint">{{ card.sublabel }}</span>
+        {% else %}
+        <span class="adm-overview-kpi__foot-empty" aria-hidden="true">—</span>
+        {% endif %}
+        {% endif %}
+        {% else %}
+        {% if card.delta is not None %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'نسبت دوره قبل' }}</span>
+        <span class="adm-overview-kpi__delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+            {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+        </span>
+        {% elif card.format == 'percent' and card.previous_value is not None %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'دوره قبل' }}</span>
+        <span class="adm-center-kpi-card__meta">{{ card.previous_value|floatformat:1|to_persian_digits }}٪</span>
+        {% elif card.previous_value is not None and card.format != 'percent' %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'دوره قبل' }}</span>
+        <span class="adm-center-kpi-card__meta">{{ card.previous_value|to_persian_digits }}</span>
+        {% elif card.sublabel %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'توضیح' }}</span>
+        <span class="adm-center-kpi-card__meta adm-center-kpi-card__meta--hint">{{ card.sublabel }}</span>
+        {% else %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'—' }}</span>
+        <span class="adm-overview-kpi__foot-empty" aria-hidden="true">—</span>
+        {% endif %}
+        {% endif %}
+    </footer>
+    {% if card.sparkline_json %}
+    <div class="ecc-kpi-spark adm-center-kpi-card__spark" data-sparkline="{{ card.sparkline_json|safe }}" aria-hidden="true">
+        <canvas id="spark-{{ card.key }}"></canvas>
+    </div>
+    {% endif %}
+</article>

@@ -2,7 +2,7 @@
 {# Shared KPI card for Command, Sales, Users and Licenses. Keep chart IDs stable. #}
 <article class="ecc-kpi adm-v2-kpi-card"
          data-accent="{{ card.accent }}" data-status="{{ card.status }}"
-         data-kpi-kind="{{ kpi_kind|default:card.kind|default:'range' }}"
+         data-kpi-kind="{% firstof kpi_kind card.kind 'range' %}"
          aria-label="{{ card.label }}">
     <div class="ecc-kpi-top">
         <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}" aria-hidden="true"></i></span>

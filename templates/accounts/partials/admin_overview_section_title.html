@@ -1,0 +1,10 @@
+{% comment %}
+عنوان سکشن — زبان بصری نمای کلی.
+استفاده: {% include 'accounts/partials/admin_overview_section_title.html' with icon='fa-users' icon_tone='users' title='ترکیب کاربران' %}
+{% endcomment %}
+<h2 class="adm-overview-section-title{% if extra_class %} {{ extra_class }}{% endif %}">
+    {% if icon %}
+    <i class="fas {{ icon }} adm-overview-section-title__icon{% if icon_tone %} adm-overview-section-title__icon--{{ icon_tone }}{% endif %}" aria-hidden="true"></i>
+    {% endif %}
+    <span>{{ title }}</span>
+</h2>

@@ -12,7 +12,9 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="ab-page ab-sys-preview">
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='پیش‌نمایش مقاله' icon='fa-eye' icon_tone='plans' title='پیش‌نمایش مقاله سیستماتیک' subtitle='بازبینی قبل از انتشار نهایی' %}
     <header class="ab-hero ab-hero--compact">
         <div class="ab-hero__main">
             <div class="ab-hero__top">
@@ -180,6 +182,7 @@
     </div>
     {% endif %}
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

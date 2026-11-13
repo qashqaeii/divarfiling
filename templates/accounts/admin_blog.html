@@ -14,7 +14,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="ab-page">
+
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی مقالات' icon='fa-newspaper' icon_tone='plans' title='مدیریت مقالات' subtitle='انتشار، ویرایش و عملکرد محتوای وبلاگ' %}
 
     {# ─── Ambient background ─── #}
     <div class="ab-ambient" aria-hidden="true">
@@ -576,6 +579,7 @@
     </section>
 
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

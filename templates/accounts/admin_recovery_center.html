@@ -20,14 +20,9 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="ab-page arc-page biz-page biz-page--recovery recovery-v3">
-    <header class="recovery-v3-intro" aria-label="معرفی مرکز بازیابی">
-        <div>
-            <span class="recovery-v3-eyebrow"><i class="fas fa-rotate" aria-hidden="true"></i> مرکز عملیات بازگشت مشتری</span>
-            <h2>بازیابی مشتریان</h2>
-            <p>قیف بازگشت، پیامک‌های بازیابی و سلامت موتور در یک نگاه</p>
-        </div>
-    </header>
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی مرکز بازیابی' icon='fa-rotate-left' icon_tone='recovery' title='بازیابی مشتریان' subtitle='قیف بازگشت، پیامک‌های بازیابی و سلامت موتور در یک نگاه' %}
 
     <div class="biz-toolbar">
         <div class="biz-toolbar-meta">
@@ -331,4 +326,5 @@
 
 {{ recovery_center_json|json_script:"adm-recovery-center-json" }}
 <script src="{% static 'js/admin-recovery-center.js' %}?v=1"></script>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}

@@ -1,0 +1,48 @@
+{% load persian_tags %}
+<article class="adm-prime-hero-chart adm-center-chart-panel adm-overview-chart adm-overview-chart--center{% if chart_is_combo or show_chart_legend or legend_items %} adm-overview-chart--combo{% endif %} {{ chart_panel_class|default:'' }}" id="{{ section_id|default:'ecc-hero-chart' }}">
+    <header class="adm-prime-hero-chart__head adm-overview-chart__head">
+        <h2 class="adm-overview-section-title adm-prime-hero-chart__title">
+            <i class="fas {{ chart_icon|default:'fa-chart-line' }} adm-overview-section-title__icon adm-overview-section-title__icon--{{ chart_icon_tone|default:'users' }}" aria-hidden="true"></i>
+            <span>{{ chart_title|default:'روند' }}</span>
+        </h2>
+        {% if chart_grain %}
+        <p class="adm-prime-hero-chart__grain adm-overview-chart__grain">{{ chart_grain }}</p>
+        {% endif %}
+    </header>
+    {% if chart_subtitle %}
+    <p class="adm-prime-hero-chart__subtitle adm-overview-chart__subtitle">{{ chart_subtitle }}</p>
+    {% endif %}
+    {% if legend_items or show_chart_legend or show_single_series_legend or chart_summary %}
+    <div class="adm-prime-hero-chart__band{% if chart_stats_band %} adm-prime-hero-chart__band--stats{% endif %}">
+    {% if legend_items %}
+    <div class="adm-overview-chart__legend adm-prime-hero-chart__legend" aria-hidden="true">
+        {% for leg in legend_items %}
+        <span data-series="{{ leg.key }}"><i></i> {{ leg.label }}</span>
+        {% endfor %}
+    </div>
+    {% elif show_chart_legend %}
+    <div class="adm-overview-chart__legend adm-prime-hero-chart__legend" aria-hidden="true">
+        <span data-series="signups"><i></i> ثبت‌نام جدید</span>
+        <span data-series="active"><i></i> فعالیت روزانه</span>
+    </div>
+    {% elif show_single_series_legend %}
+    <div class="adm-overview-chart__legend adm-prime-hero-chart__legend" aria-hidden="true">
+        <span data-series="{{ legend_series_key|default:'active' }}"><i></i> {{ legend_series_label|default:'فعالیت روزانه' }}</span>
+    </div>
+    {% endif %}
+    {% if chart_summary %}
+    <ul class="adm-prime-hero-chart__insights" aria-label="خلاصه بازه نمودار">
+        {% for item in chart_summary %}
+        <li class="adm-prime-hero-chart__insight{% if item.key %} adm-prime-hero-chart__insight--{{ item.key }}{% endif %}"{% if item.key %} data-insight-key="{{ item.key }}"{% endif %}>
+            <span class="adm-prime-hero-chart__insight-label">{{ item.label }}</span>
+            <strong class="adm-prime-hero-chart__insight-value" data-count-up="{{ item.value|default:0 }}" data-format="{{ item.format|default:'count' }}">{{ item.value|default:0|to_persian_digits }}</strong>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    </div>
+    {% endif %}
+    <div class="ecc-chart-wrap adm-prime-hero-chart__canvas adm-overview-chart__canvas ecc-chart-wrap--tall" dir="ltr" lang="fa" aria-label="{{ chart_aria_label|default:chart_title }}">
+        <canvas id="{{ canvas_id }}" role="img"></canvas>
+    </div>
+</article>

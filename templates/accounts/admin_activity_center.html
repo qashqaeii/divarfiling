@@ -9,6 +9,8 @@
 
 {% block admin_panel_content %}
 
+{% include 'accounts/partials/admin_center_shell_open.html' %}
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی فعالیت' icon='fa-stream' icon_tone='orders' title='فعالیت' subtitle='رویدادها و رفتار کاربران در بازه انتخاب‌شده' %}
 <section class="ecc-section" id="ecc-activity" aria-label="خلاصه فعالیت">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
@@ -110,5 +112,5 @@
     </nav>
     {% endif %}
 </section>
-
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}

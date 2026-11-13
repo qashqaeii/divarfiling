@@ -13,13 +13,16 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="adm-page adm-mkt-page adm-lac-page">
 {% if not lead_can_manage %}
 <p class="ecc-card-sub" role="status" style="padding:.7rem 1rem;margin:.75rem 0;border:1px solid var(--border-color, #e2e6ef);border-radius:12px;">
     <i class="fas fa-lock" aria-hidden="true"></i>
     مشاهده گزارش‌ها مجاز است؛ ثبت، ویرایش، ارسال پیامک و اجرای اتوماسیون نیازمند مجوز مسئول کمپین است.
 </p>
-{% endif %>
+{% endif %}
+
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی جذب سرنخ' icon='fa-satellite-dish' icon_tone='orders' title='مرکز جذب سرنخ' subtitle='از آگهی دیوار تا ثبت‌نام و لایسنس — با ردیابی دقیق هر پیام و کمپین.' %}
 
     <header class="adm-lac-hero">
         <div class="adm-lac-hero-copy">
@@ -532,7 +535,7 @@
                     </label>
                 </div>
                 <div style="margin-top:1rem">
-                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary" {% if not lists %}disabled{% endif %}>
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary" {% if not lists %}disabled{% endif %}
                         <i class="fas fa-wand-magic-sparkles"></i> ایجاد کمپین دو نسخه‌ای
                     </button>
                 </div>
@@ -804,7 +807,7 @@
                             <label for="auto_city">شهر</label>
                             <select name="city" id="auto_city" required>
                                 {% for c in automation_cities %}
-                                <option value="{{ c.name }}" {% if c.name == 'تهران' %}selected{% endif %}>{{ c.name }}</option>
+                                <option value="{{ c.name }}" {% if c.name == 'تهران' %}selected{% endif %}{{ c.name }}</option>
                                 {% empty %}
                                 <option value="تهران" selected>تهران</option>
                                 {% endfor %}
@@ -827,7 +830,7 @@
                             <label for="auto_category">نوع آگهی</label>
                             <select name="category" id="auto_category">
                                 {% for val, label in automation_category_choices %}
-                                <option value="{{ val }}" {% if val == 'apartment-sell' %}selected{% endif %}>{{ label }}</option>
+                                <option value="{{ val }}" {% if val == 'apartment-sell' %}selected{% endif %}{{ label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -913,13 +916,13 @@
                 </div>
                 <div class="adm-lac-section-head__actions adm-lac-lines-toolbar">
                     <label class="adm-lac-check adm-lac-lines-rotate">
-                        <input type="checkbox" id="lac-lines-rotate" {% if not automation_lines_ok %}disabled{% endif %}>
+                        <input type="checkbox" id="lac-lines-rotate" {% if not automation_lines_ok %}disabled{% endif %}
                         چرخش ترتیبی خطوط
                     </label>
-                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-lines-refresh" {% if not automation_lines_ok %}disabled{% endif %}>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-lines-refresh" {% if not automation_lines_ok %}disabled{% endif %}
                         <i class="fas fa-rotate"></i> بروزرسانی
                     </button>
-                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" id="lac-lines-add-btn" {% if not automation_lines_ok %}disabled{% endif %}>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" id="lac-lines-add-btn" {% if not automation_lines_ok %}disabled{% endif %}
                         <i class="fas fa-plus"></i> خط جدید
                     </button>
                 </div>
@@ -1025,7 +1028,7 @@
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="queue_automation_run">
                                         <input type="hidden" name="campaign_id" value="{{ c.pk }}">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" {% if not c.is_active %}disabled{% endif %}>
+                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" {% if not c.is_active %}disabled{% endif %}
                                             <i class="fas fa-play"></i> اجرای فوری
                                         </button>
                                     </form>
@@ -1576,6 +1579,7 @@
         </div>
     </dialog>
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

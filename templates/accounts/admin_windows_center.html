@@ -24,7 +24,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="wac-page" id="ecc-windows">
+
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی ویندوز' icon='fa-windows' icon_tone='users' title='اپ ویندوز' subtitle='دانلود، فعال‌سازی و مسیر کاربران در بازه انتخاب‌شده' %}
 
     <header class="wac-hero" aria-label="مرکز آمار ویندوز">
         <span class="wac-hero__orb wac-hero__orb--1" aria-hidden="true"></span>
@@ -370,6 +373,7 @@
     </section>
 
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

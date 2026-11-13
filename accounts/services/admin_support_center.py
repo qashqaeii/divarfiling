@@ -341,24 +341,32 @@ def build_support_center_pulse(
             'format': 'count',
             'href': focus_href,
             'hint': f'قدیمی‌ترین باز: {oldest}' if oldest else '',
+            'icon': 'fa-envelope-open-text',
+            'accent': 'violet',
         },
         {
             'label': 'تیکت باز',
             'value': snapshot.get('open_tickets', 0),
             'format': 'count',
             'href': '#support-table-tickets',
+            'icon': 'fa-inbox',
+            'accent': 'blue',
         },
         {
             'label': 'پیام خوانده‌نشده (نوبت staff)',
             'value': ticket_intel.get('awaiting_staff', 0),
             'format': 'count',
             'href': focus_href,
+            'icon': 'fa-reply',
+            'accent': 'amber',
         },
         {
             'label': 'کارت‌به‌کارت معلق',
             'value': snapshot.get('pending_card_transfers', 0),
             'format': 'count',
             'href': '#support-table-card',
+            'icon': 'fa-credit-card',
+            'accent': 'emerald',
         },
     ]
 
@@ -383,9 +391,10 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
             'title': 'تیکت خوانده‌نشده',
             'count': unread,
             'detail': detail,
+            'reason': 'پیام جدید مشتری بدون پاسخ تیم؛ SLA پشتیبانی در خطر است.',
             'icon': 'fa-headset',
             'accent': 'rose',
-            'cta': 'مشاهده',
+            'cta': 'پاسخ به تیکت',
             'href': reverse('admin_panel_support') + '?focus=unread_tickets#support-table-tickets',
             'oldest_label': _age_label(dt) if dt else '',
         })
@@ -402,9 +411,10 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
             'title': 'تیکت باز',
             'count': open_count,
             'detail': detail,
+            'reason': 'تیکت هنوز بسته نشده؛ بررسی وضعیت یا جمع‌آوری صف.',
             'icon': 'fa-inbox',
             'accent': 'blue',
-            'cta': 'مشاهده',
+            'cta': 'صف تیکت',
             'href': '#support-table-tickets',
         })
     elif open_count and not unread:
@@ -418,9 +428,10 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
             'title': 'تیکت باز',
             'count': open_count,
             'detail': detail,
+            'reason': 'تیکت باز مانده؛ اولویت با موارد قدیمی‌تر یا مشتری در انتظار.',
             'icon': 'fa-inbox',
             'accent': 'blue',
-            'cta': 'مشاهده',
+            'cta': 'صف تیکت',
             'href': '#support-table-tickets',
         })
 
@@ -436,9 +447,10 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
             'title': 'کارت‌به‌کارت در انتظار',
             'count': card_pending,
             'detail': detail,
+            'reason': 'رسید واریز ثبت شده ولی تأیید نشده؛ قبل از انقضای سفارش بررسی شود.',
             'icon': 'fa-money-check',
             'accent': 'amber',
-            'cta': 'بررسی',
+            'cta': 'تأیید واریز',
             'href': reverse('admin_panel_sales') + '#sales-card-transfers',
         })
 
@@ -454,9 +466,10 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
             'title': 'برداشت در انتظار تأیید',
             'count': withdrawals_pending,
             'detail': detail,
+            'reason': 'درخواست برداشت همکار بدون تأیید مالی مانده؛ پرداخت تأخیر می‌خورد.',
             'icon': 'fa-wallet',
             'accent': 'violet',
-            'cta': 'تأیید',
+            'cta': 'بررسی برداشت',
             'href': '#support-table-withdrawals',
         })
 

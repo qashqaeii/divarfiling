@@ -1,0 +1,9 @@
+<div class="adm-center-intro__main">
+    {% include 'accounts/partials/admin_overview_section_title.html' with icon=icon icon_tone=icon_tone title=title extra_class='adm-center-intro__title' %}
+    {% if subtitle %}<p class="adm-center-intro__subtitle">{{ subtitle }}</p>{% endif %}
+    {% if note %}
+    <p class="adm-center-intro__note">
+        {% if note_icon %}<i class="fas {{ note_icon }}" aria-hidden="true"></i> {% endif %}{{ note }}
+    </p>
+    {% endif %}
+</div>

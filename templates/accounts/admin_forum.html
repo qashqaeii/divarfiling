@@ -5,6 +5,8 @@
 {% block admin_panel_title %}تالار گفتگو{% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
+{% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی تالار' icon='fa-comments' icon_tone='users' title='تالار گفتگو' subtitle='نمای خلاصه پیام‌ها، گزارش‌ها و محدودیت‌های فعال' %}
 <section class="ecc-section" id="forum-moderation" aria-label="خلاصه مدیریت تالار">
     <header class="ecc-section-head ecc-section-head--slim">
         <div>
@@ -31,4 +33,5 @@
     <a href="{% url 'admin:community_forum_forumban_changelist' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">محدودیت اعضا</a>
 </section>
 {% endif %}
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}

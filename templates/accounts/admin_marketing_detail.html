@@ -12,7 +12,9 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="adm-page adm-mkt-page adm-mkt-detail marketing-v3-detail">
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='گزارش کمپین' icon='fa-chart-pie' icon_tone='marketing' title=campaign.name subtitle=report.segment_title %}
     <header class="adm-hero adm-mkt-hero">
         <div class="adm-hero-main">
             <p class="adm-hero-kicker">
@@ -174,6 +176,7 @@
         </section>
     </div>
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

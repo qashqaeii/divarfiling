@@ -12,7 +12,10 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="ab-page ab-systematic-page ab-autopublish-page">
+
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی انتشار خودکار' icon='fa-clock' icon_tone='plans' title='انتشار خودکار' subtitle='زمان‌بندی و صف انتشار مقالات سیستماتیک' %}
 
     <div class="ab-ambient" aria-hidden="true">
         <span class="ab-orb ab-orb--1"></span>
@@ -457,4 +460,5 @@
     }
 })();
 </script>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}

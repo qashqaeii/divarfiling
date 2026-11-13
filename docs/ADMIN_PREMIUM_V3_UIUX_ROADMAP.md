@@ -5,6 +5,9 @@ This ledger is separate from the existing V2 backend/security roadmap. No backen
 ## Design direction
 Approved reference: right-hand navy sidebar, purple #5B4FCF selection, clean white header, quiet pastel metric cards, actual-data chart and action queue, accessible RTL desktop/mobile and dark mode. Preserve existing route names, permissions, chart canvas IDs and JavaScript behavior. Do not invent metrics or write new tests.
 
+### Unified shell (2026-11-13)
+All `/accounts/admin-panel/` staff pages now inherit overview shell via `build_admin_panel_shell_context` (`admin_panel_command_layout`, compact overview header, sidebar). Visual bridge: `static/css/mizkar-admin-center-unified.css` (v3 — workspace canvas + main width parity with overview on all centers). Cursor rule: `.cursor/rules/50-admin-overview-design-system.mdc`. Shared partials: `partials/admin_overview_section_title.html`, `partials/admin_center_shell_open.html` / `close.html`, `partials/admin_center_intro.html` + `admin_center_intro_main.html`. All center templates wrapped in `adm-cmd-page adm-center-page`; stages 02–23 use unified intro (legacy `*-v3-intro` / page heroes retained where they carry extra UI). Per-page `*-v3.css` remains until each stage is fully migrated onto shared primitives.
+
 ## Stage status
 
 | Stage | Page | Status | Commit |

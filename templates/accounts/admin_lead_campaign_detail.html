@@ -13,6 +13,7 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 {% with f=funnel.funnel a=funnel.attribution %}
 <div class="adm-page adm-lac-page">
 {% if not lead_can_manage %}
@@ -20,7 +21,9 @@
     <i class="fas fa-lock" aria-hidden="true"></i>
     مشاهده گزارش‌ها مجاز است؛ ثبت، ویرایش، ارسال پیامک و اجرای اتوماسیون نیازمند مجوز مسئول کمپین است.
 </p>
-{% endif %>
+{% endif %}
+
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='گزارش کمپین سرنخ' icon='fa-chart-line' icon_tone='orders' title=campaign.name subtitle='قیف تبدیل و نسبت‌دهی این کمپین' %}
 
     <header class="adm-lac-hero" style="margin-bottom:1.1rem">
         <div class="adm-lac-hero-copy">
@@ -114,7 +117,7 @@
                         <input type="number" name="pilot_per_variant" id="detail-pilot" value="{{ campaign.pilot_per_variant }}" min="1" max="500">
                     </div>
                     <label class="adm-lac-check">
-                        <input type="checkbox" name="is_pilot" value="1" {% if campaign.is_pilot %}checked{% endif %}>
+                        <input type="checkbox" name="is_pilot" value="1" {% if campaign.is_pilot %}checked{% endif %}
                         حالت پایلوت
                     </label>
                 </div>
@@ -289,6 +292,7 @@
     </section>
 </div>
 {% endwith %}
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

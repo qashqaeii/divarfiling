@@ -1,32 +1,67 @@
 {% load persian_tags %}
-<section class="ecc-section ecc-cmd-actions adm-prime-action-queue {{ extra_class }}" id="{{ section_id|default:'ecc-glance' }}" aria-label="{{ aria_label|default:'نیازمند اقدام' }}">
-    <header class="ecc-cmd-actions-head">
-        <div>
-            <h2><i class="fas fa-bolt"></i> {{ title|default:'نیازمند اقدام' }}</h2>
-            <p>{{ subtitle|default:'شمارش و سن از همان صف مقصد' }}</p>
-        </div>
-        <span class="ecc-cmd-actions-count" title="تعداد دسته‌های نیازمند اقدام" aria-label="{{ items|length|to_persian_digits }} دسته نیازمند اقدام">{{ items|length|to_persian_digits }}</span>
+<section class="adm-overview-actions adm-prime-action-queue adm-prime-action-queue--premium {{ extra_class }}" id="{{ section_id|default:'ecc-glance' }}" aria-label="{{ aria_label|default:'نیازمند اقدام' }}">
+    <header class="adm-overview-actions__head adm-prime-action-queue__head">
+        <h2 class="adm-overview-section-title adm-overview-actions__title adm-prime-action-queue__title">
+            <i class="fas {{ title_icon|default:'fa-bolt' }} adm-overview-section-title__icon adm-overview-section-title__icon--actions" aria-hidden="true"></i>
+            <span>{{ title|default:'نیازمند اقدام' }}</span>
+        </h2>
+        {% if items %}
+        <span class="adm-overview-actions__count adm-prime-action-queue__count">{{ items|length|to_persian_digits }} مورد</span>
+        {% endif %}
     </header>
+    {% if subtitle %}
+    <p class="adm-prime-action-queue__subtitle">{{ subtitle }}</p>
+    {% endif %}
     {% if items %}
-    <div class="ecc-cmd-actions-list">
+    <div class="adm-overview-actions__list">
         {% for item in items %}
-        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
-            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
-            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
-            <span class="ecc-cmd-action-body">
-                <strong>{{ item.title }}</strong>
-                <em>{% firstof item.oldest_label item.detail %}</em>
+        <a href="{{ item.href }}"
+           class="adm-overview-actions__row adm-prime-action-queue__row"
+           data-priority="{{ item.priority }}"
+           data-accent="{{ item.accent }}"
+           data-action-key="{{ item.key|default:'' }}"
+           {% if item.href|slice:":4" == "http" or '/admin/' in item.href or '/workspace/' in item.href %}target="_blank" rel="noopener"{% endif %}>
+            <span class="adm-prime-action-queue__main">
+                <span class="adm-overview-actions__body adm-prime-action-queue__body">
+                    <span class="adm-prime-action-queue__title-row">
+                        {% if item.icon %}
+                        <span class="adm-prime-action-queue__icon" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+                        {% endif %}
+                        <strong>{{ item.title }}</strong>
+                    </span>
+                    {% if item.detail %}
+                    <span class="adm-prime-action-queue__meta">{{ item.detail }}</span>
+                    {% elif item.oldest_label %}
+                    <span class="adm-prime-action-queue__meta">{{ item.oldest_label }}</span>
+                    {% endif %}
+                    {% if item.reason %}
+                    <span class="adm-prime-action-queue__why">
+                        <i class="fas fa-circle-info" aria-hidden="true"></i>
+                        <em>{{ item.reason }}</em>
+                    </span>
+                    {% elif not item.detail and not item.oldest_label %}
+                    <span class="adm-prime-action-queue__why">
+                        <i class="fas fa-circle-info" aria-hidden="true"></i>
+                        <em>برای جزئیات و اقدام، این مورد را باز کنید.</em>
+                    </span>
+                    {% endif %}
+                </span>
+                {% if item.count is not None %}
+                <span class="adm-overview-actions__badge">{{ item.count|to_persian_digits }}</span>
+                {% endif %}
             </span>
-            {% if item.count is not None %}
-            <span class="ecc-cmd-action-count" aria-label="{{ item.count|to_persian_digits }} مورد">{{ item.count|to_persian_digits }}</span>
+            {% if item.cta %}
+            <span class="adm-prime-action-queue__cta">
+                <span>{{ item.cta }}</span>
+                <i class="fas fa-chevron-left adm-icon-dir" aria-hidden="true"></i>
+            </span>
             {% endif %}
-            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
         </a>
         {% endfor %}
     </div>
     {% else %}
-    <div class="ecc-empty ecc-empty--compact">
-        <i class="fas fa-circle-check"></i>
+    <div class="ecc-empty ecc-empty--compact adm-overview-actions__empty">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
         <strong>{{ empty_title|default:'همه‌چیز تحت کنترل است' }}</strong>
         <span>{{ empty_hint|default:'مورد فوری برای اقدام وجود ندارد' }}</span>
     </div>

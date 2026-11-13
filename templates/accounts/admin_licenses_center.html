@@ -33,13 +33,20 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="cust-page biz-page biz-page--licenses">
-<header class="adm-licenses-v3-intro" aria-label="راهنمای صفحه لایسنس">
-  <div><span class="adm-licenses-v3-eyebrow">مدیریت اشتراک‌ها</span><h1>لایسنس‌ها در یک نگاه</h1><p>وضعیت صدور، تمدید و انقضا بر اساس اطلاعات ثبت‌شده سامانه</p></div>
-  <nav class="adm-licenses-v3-jumps" aria-label="دسترسی سریع"><a href="#licenses-kpi">شاخص‌ها</a><a href="#licenses-actions">اقدامات</a><a href="#licenses-charts">نمودارها</a><a href="#licenses-table-expiring">در شرف انقضا</a><a href="#licenses-table-expired">منقضی‌شده</a></nav>
+<header class="adm-center-intro" aria-label="راهنمای صفحه لایسنس">
+    {% include 'accounts/partials/admin_center_intro_main.html' with icon='fa-key' icon_tone='licenses' title='لایسنس‌ها در یک نگاه' subtitle='وضعیت صدور، تمدید و انقضا بر اساس اطلاعات ثبت‌شده سامانه' %}
+    <nav class="adm-center-intro__jumps" aria-label="دسترسی سریع">
+        <a href="#licenses-kpi" class="adm-center-intro__jump">شاخص‌ها</a>
+        <a href="#licenses-actions" class="adm-center-intro__jump">اقدامات</a>
+        <a href="#licenses-charts" class="adm-center-intro__jump">نمودارها</a>
+        <a href="#licenses-table-expiring" class="adm-center-intro__jump">در شرف انقضا</a>
+        <a href="#licenses-table-expired" class="adm-center-intro__jump">منقضی‌شده</a>
+    </nav>
 </header>
 
-{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='لایسنس · الان' pulse_icon='fa-key' %}
+{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='لایسنس · الان' pulse_icon='fa-key' pulse_icon_tone='licenses' %}
 
 <div class="adm-prime-hero">
     <div class="adm-prime-hero__chart">
@@ -302,6 +309,7 @@
 
 </div>
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

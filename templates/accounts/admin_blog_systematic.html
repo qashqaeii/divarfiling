@@ -13,7 +13,9 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="ab-page ab-systematic-page">
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی انتشار سیستماتیک' icon='fa-layer-group' icon_tone='plans' title='مقالات سیستماتیک' subtitle='دیتاست‌ها، تولید و زمان‌بندی انتشار خودکار' %}
     {% include 'accounts/partials/admin_blog_systematic_tabs.html' with active_tab='datasets' %}
 
     <header class="ab-hero ab-hero--compact">
@@ -169,4 +171,5 @@
     </nav>
     {% endif %}
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}

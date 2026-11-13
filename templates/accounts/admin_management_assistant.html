@@ -25,6 +25,7 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+{% include 'accounts/partials/admin_center_shell_open.html' %}
 {% with tab_qs='?days='|add:admin_panel_range_key %}
 <div class="maa-page" id="maa-page" data-can-send-sms="{% if admin_can_send_sms %}1{% else %}0{% endif %}"
      data-preview-url="{% url 'admin_panel_assistant_preview' %}"
@@ -42,14 +43,7 @@
     </p>
     {% endif %}
 
-    <header class="maa-v3-intro">
-        <div>
-            <span class="maa-v3-eyebrow"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> دستیار تصمیم‌گیری</span>
-            <h2>اولویت‌ها را ببین، با اطمینان اقدام کن</h2>
-            <p>پیشنهادهای امروز، اتوماسیون‌ها و نتیجه اقدامات در یک فضای یکپارچه.</p>
-        </div>
-        <span class="maa-v3-intro-note"><i class="fas fa-shield-halved" aria-hidden="true"></i> اقدام‌ها بر اساس دسترسی شما</span>
-    </header>
+    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی دستیار' icon='fa-wand-magic-sparkles' icon_tone='accent' title='اولویت‌ها را ببین، با اطمینان اقدام کن' subtitle='پیشنهادهای امروز، اتوماسیون‌ها و نتیجه اقدامات در یک فضای یکپارچه.' note='اقدام‌ها بر اساس دسترسی شما' note_icon='fa-shield-halved' %}
     <div class="maa-summary" aria-label="خلاصه اولویت‌ها">
         <div class="maa-kpi" data-severity="critical">
             <span class="maa-kpi-icon" aria-hidden="true"><i class="fas fa-circle-exclamation"></i></span>
@@ -577,6 +571,7 @@
         </footer>
     </div>
 </div>
+{% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
 
 {% block admin_panel_extra_js %}

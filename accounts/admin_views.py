@@ -23,11 +23,12 @@ from accounts.services.admin_database_backup import (
     iter_backup_file_chunks,
 )
 from accounts.services.admin_dashboard import (
+    _date_range,
     build_overview_health_score_explain,
     build_overview_user_breakdown,
     TABLE_PREVIEW_ROWS,
     get_command_center_context,
-    get_plan_sales_breakdown,
+    get_plan_sales_for_date_range,
     get_recent_orders,
 )
 from accounts.services.admin_panel_shell import parse_admin_panel_range
@@ -175,14 +176,13 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
         ctx['charts_enabled'] = True
         ctx['assistant_preview'] = get_assistant_preview()
-        ctx['admin_panel_command_layout'] = True
-        ctx['admin_panel_hide_global_bar'] = True
-        ctx['admin_panel_compact_header'] = True
-        ctx['admin_panel_page_title'] = 'نمای کلی سیستم'
         ctx['admin_panel_page_subtitle'] = (
             'مرور وضعیت کل سیستم، عملکرد فروش و موارد مهم'
         )
-        ctx['plan_sales'] = get_plan_sales_breakdown(limit=6)
+        period_start, period_end = _date_range(days)
+        ctx['plan_sales'] = get_plan_sales_for_date_range(
+            period_start, period_end, limit=6,
+        )
         ctx['recent_orders'] = get_recent_orders(limit=TABLE_PREVIEW_ROWS)
         health = dashboard.get('health_indicators') or []
         ok_count = sum(1 for item in health if item.get('status') == 'ok')
@@ -976,7 +976,7 @@ class AdminUsersCenterView(StaffRequiredMixin, TemplateView):
             ]
             for chip in data.get('center_pulse', []):
                 if chip.get('href') in (
-                    '#users-table-no-license', '#ecc-users-mgmt',
+                    '#users-table-no-license', '#ecc-users-mgmt', '#users-recent',
                 ):
                     chip.pop('href', None)
         data['export_links'] = [item for item in data.get('export_links', []) if can_export_report(self.request.user, item['key'])]

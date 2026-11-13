@@ -1,0 +1,57 @@
+{% load persian_tags %}
+<section class="adm-center-kpi-band adm-prime-kpi-band{% if band_premium %} adm-prime-kpi-band--premium{% endif %} {{ extra_class }}"
+         id="{{ section_id|default:'center-kpi' }}"
+         aria-label="{{ aria_label|default:'شاخص‌های کلیدی' }}">
+    <header class="adm-center-kpi-band__head adm-prime-kpi-band__head">
+        <div class="adm-prime-kpi-band__head-main">
+            {% if band_kicker %}
+            <span class="adm-prime-kpi-band__kicker">{{ band_kicker }}</span>
+            {% endif %}
+            <h2 class="adm-overview-section-title adm-prime-kpi-band__title">
+                <i class="fas {{ band_icon|default:'fa-chart-simple' }} adm-overview-section-title__icon adm-overview-section-title__icon--{{ band_icon_tone|default:'growth' }}" aria-hidden="true"></i>
+                <span>{{ band_title|default:'شاخص‌های کلیدی' }}</span>
+            </h2>
+        </div>
+        {% if range_label %}
+        <p class="adm-center-kpi-band__grain adm-prime-kpi-band__grain">{{ range_label }}</p>
+        {% endif %}
+    </header>
+
+    <div class="adm-prime-kpi-band__canvas">
+        {% if snapshot_kpi_cards %}
+        <div class="adm-center-kpi-band__block adm-center-kpi-band__block--snapshot">
+            <div class="adm-prime-kpi-band__block-label">
+                <span class="adm-prime-kpi-band__block-tag">{{ snapshot_group_label|default:'لحظه‌ای' }}</span>
+                {% if band_premium %}
+                <span class="adm-prime-kpi-band__block-hint">ثبت کل‌تاریخ</span>
+                {% endif %}
+            </div>
+            <div class="adm-center-kpi-band__grid adm-center-kpi-band__grid--snapshot" role="list">
+                {% for card in snapshot_kpi_cards %}
+                {% include 'accounts/partials/admin_center_kpi_card.html' with card=card kpi_kind='snapshot' kpi_lux=snapshot_lux|default:band_premium %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if snapshot_kpi_cards and range_kpi_cards %}
+        <div class="adm-prime-kpi-band__divider" role="presentation" aria-hidden="true"></div>
+        {% endif %}
+
+        {% if range_kpi_cards %}
+        <div class="adm-center-kpi-band__block adm-center-kpi-band__block--range">
+            <div class="adm-prime-kpi-band__block-label">
+                <span class="adm-prime-kpi-band__block-tag adm-prime-kpi-band__block-tag--range">{{ range_group_label|default:'مکمل بازه' }}</span>
+                {% if band_premium %}
+                <span class="adm-prime-kpi-band__block-hint">مقایسه دوره قبل</span>
+                {% endif %}
+            </div>
+            <div class="adm-center-kpi-band__grid adm-center-kpi-band__grid--range" role="list">
+                {% for card in range_kpi_cards %}
+                {% include 'accounts/partials/admin_center_kpi_card.html' with card=card kpi_kind='range' kpi_lux=band_premium %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>

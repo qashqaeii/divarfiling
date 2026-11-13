@@ -35,25 +35,25 @@
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'command' %} is-active{% endif %}"
            data-nav-id="command">
             <i class="fas fa-house" aria-hidden="true"></i>
-            <span>نمای کلی</span>
+            <span{% if admin_panel_nav_titles.command %} title="{{ admin_panel_nav_titles.command }}"{% endif %}>{{ admin_panel_sidebar_labels.command|default:"نمای کلی" }}</span>
         </a>
         <a href="{% url 'admin_panel_users' %}{{ days_qs }}"
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'users' %} is-active{% endif %}"
            data-nav-id="users">
             <i class="fas fa-user-group" aria-hidden="true"></i>
-            <span>کاربران</span>
+            <span{% if admin_panel_nav_titles.users %} title="{{ admin_panel_nav_titles.users }}"{% endif %}>{{ admin_panel_sidebar_labels.users|default:"کاربران" }}</span>
         </a>
         <a href="{% url 'admin_panel_licenses' %}{{ days_qs }}"
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'licenses' %} is-active{% endif %}"
            data-nav-id="licenses">
             <i class="fas fa-key" aria-hidden="true"></i>
-            <span>لایسنس‌ها</span>
+            <span{% if admin_panel_nav_titles.licenses %} title="{{ admin_panel_nav_titles.licenses }}"{% endif %}>{{ admin_panel_sidebar_labels.licenses|default:"لایسنس" }}</span>
         </a>
         <a href="{% url 'admin_panel_sales' %}{{ days_qs }}"
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'sales' %} is-active{% endif %}"
            data-nav-id="sales">
             <i class="fas fa-cart-shopping" aria-hidden="true"></i>
-            <span>سفارش‌ها و پرداخت‌ها</span>
+            <span{% if admin_panel_nav_titles.sales %} title="{{ admin_panel_nav_titles.sales }}"{% endif %}>{{ admin_panel_sidebar_labels.sales|default:"سفارش‌ها" }}</span>
             {% firstof admin_panel_nav_badges.orders_pending stats.orders_pending as sales_badge %}
             {% if sales_badge %}<span class="ecc-nav-badge">{{ sales_badge|to_persian_digits }}</span>{% endif %}
         </a>
@@ -61,25 +61,25 @@
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'leads' %} is-active{% endif %}"
            data-nav-id="leads">
             <i class="fas fa-fire" aria-hidden="true"></i>
-            <span>سرنخ‌ها</span>
+            <span{% if admin_panel_nav_titles.leads %} title="{{ admin_panel_nav_titles.leads }}"{% endif %}>{{ admin_panel_sidebar_labels.leads|default:"سرنخ‌ها" }}</span>
         </a>
         <a href="{% url 'admin_panel_marketing' %}{{ days_qs }}"
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'marketing' %} is-active{% endif %}"
            data-nav-id="marketing">
             <i class="fas fa-chart-pie" aria-hidden="true"></i>
-            <span>گزارش‌ها و تحلیل</span>
+            <span{% if admin_panel_nav_titles.marketing %} title="{{ admin_panel_nav_titles.marketing }}"{% endif %}>{{ admin_panel_sidebar_labels.marketing|default:"گزارش‌ها" }}</span>
         </a>
         <a href="{% url 'admin_panel_blog' %}{{ days_qs }}"
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'blog' %} is-active{% endif %}"
            data-nav-id="blog">
             <i class="fas fa-pen-nib" aria-hidden="true"></i>
-            <span>مدیریت محتوا</span>
+            <span{% if admin_panel_nav_titles.blog %} title="{{ admin_panel_nav_titles.blog }}"{% endif %}>{{ admin_panel_sidebar_labels.blog|default:"محتوا" }}</span>
         </a>
         <a href="{% url 'admin_panel_operations' %}{{ days_qs }}"
            class="ecc-nav-item adm-cmd-sidebar__primary-item{% if active == 'operations' %} is-active{% endif %}"
            data-nav-id="operations">
             <i class="fas fa-sliders" aria-hidden="true"></i>
-            <span>تنظیمات سیستم</span>
+            <span{% if admin_panel_nav_titles.operations %} title="{{ admin_panel_nav_titles.operations }}"{% endif %}>{{ admin_panel_sidebar_labels.operations|default:"تنظیمات" }}</span>
         </a>
     </div>
     {% endif %}
@@ -89,7 +89,7 @@
        class="ecc-nav-item adm-cmd-sidebar__assistant{% if active == 'assistant' %} is-active{% endif %}"
        data-nav-id="assistant">
         <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-        <span>دستیار مدیریت</span>
+        <span{% if admin_panel_nav_titles.assistant %} title="{{ admin_panel_nav_titles.assistant }}"{% endif %}>{{ admin_panel_sidebar_labels.assistant|default:"دستیار" }}</span>
         {% if admin_panel_nav_badges.assistant_insights %}
         <span class="ecc-nav-badge">{{ admin_panel_nav_badges.assistant_insights|to_persian_digits }}</span>
         {% endif %}
@@ -283,23 +283,23 @@
     {% if admin_panel_command_layout %}
     </div>
     <div class="adm-cmd-sidebar__quick">
-        <p class="adm-cmd-sidebar__quick-title">میانبرها</p>
+        <p class="adm-cmd-sidebar__quick-title">{{ admin_panel_sidebar_quick.section|default:"میانبر" }}</p>
         <div class="adm-cmd-sidebar__quick-grid">
-            <a href="{% url 'admin_panel_licenses' %}{{ days_qs }}" class="adm-cmd-sidebar__quick-btn">
+            <a href="{% url 'admin_panel_licenses' %}{{ days_qs }}" class="adm-cmd-sidebar__quick-btn"{% if admin_panel_sidebar_quick_titles.license_new %} title="{{ admin_panel_sidebar_quick_titles.license_new }}"{% endif %}>
                 <i class="fas fa-key" aria-hidden="true"></i>
-                <span>صدور لایسنس جدید</span>
+                <span>{{ admin_panel_sidebar_quick.license_new|default:"لایسنس جدید" }}</span>
             </a>
-            <a href="{% url 'admin_panel_users' %}{{ days_qs }}" class="adm-cmd-sidebar__quick-btn">
+            <a href="{% url 'admin_panel_users' %}{{ days_qs }}" class="adm-cmd-sidebar__quick-btn"{% if admin_panel_sidebar_quick_titles.user_new %} title="{{ admin_panel_sidebar_quick_titles.user_new }}"{% endif %}>
                 <i class="fas fa-user-plus" aria-hidden="true"></i>
-                <span>افزودن کاربر</span>
+                <span>{{ admin_panel_sidebar_quick.user_new|default:"کاربر جدید" }}</span>
             </a>
-            <a href="{% url 'admin_panel_sales' %}{{ days_qs }}#ecc-sales" class="adm-cmd-sidebar__quick-btn">
+            <a href="{% url 'admin_panel_sales' %}{{ days_qs }}#ecc-sales" class="adm-cmd-sidebar__quick-btn"{% if admin_panel_sidebar_quick_titles.payment %} title="{{ admin_panel_sidebar_quick_titles.payment }}"{% endif %}>
                 <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                <span>ثبت پرداخت</span>
+                <span>{{ admin_panel_sidebar_quick.payment|default:"پرداخت" }}</span>
             </a>
-            <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&amp;days=30" class="adm-cmd-sidebar__quick-btn">
+            <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&amp;days=30" class="adm-cmd-sidebar__quick-btn"{% if admin_panel_sidebar_quick_titles.finance_report %} title="{{ admin_panel_sidebar_quick_titles.finance_report }}"{% endif %}>
                 <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
-                <span>گزارش مالی</span>
+                <span>{{ admin_panel_sidebar_quick.finance_report|default:"گزارش مالی" }}</span>
             </a>
         </div>
     </div>

@@ -47,7 +47,13 @@ class LoginView(LoginView):
 
 
 class LogoutView(LogoutView):
+    """خروج از حساب — POST ترجیحی است؛ GET برای لینک‌های ناوبری/سایدبار."""
+
+    http_method_names = ['get', 'post', 'head', 'options']
     next_page = 'home'
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
 
 
 class RegisterView(CreateView):
@@ -402,13 +408,28 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             avatar_panel_url = self.request.build_absolute_uri(
                 static(avatar_static_relative_path(key)),
             )
+        from accounts.services.advisor_profile import build_advisor_profile_form_context
+
         context.update({
             'account_avatar_catalog': list_avatar_catalog(request=self.request),
             'account_avatar_saved_key': normalize_avatar_key(profile.avatar_key) or '',
             'account_avatar_effective_key': avatar_display.get('effective_key') or DEFAULT_AVATAR_KEY,
             'account_avatar_has_custom': avatar_display.get('has_custom_avatar', False),
             'account_avatar_panel_url': avatar_panel_url,
+            'advisor_profile_form': build_advisor_profile_form_context(profile),
         })
+
+        try:
+            from accounts.services.profile_completion_reward import (
+                build_profile_completion_reward_context,
+                ensure_profile_completion_reward,
+            )
+
+            ensure_profile_completion_reward(user)
+            context['profile_completion_reward'] = build_profile_completion_reward_context(user)
+        except Exception:
+            context['profile_completion_reward'] = {'show': False, 'state': 'hidden'}
+
         return context
 
 
@@ -468,14 +489,29 @@ class UpdateUserInfoView(LoginRequiredMixin, View):
                 user.phone_verified_at = None
 
             user.save()
+
+            from accounts.services.profile_completion_reward import (
+                issue_profile_completion_discount,
+                reward_payload_for_json,
+            )
+
+            response_data = {
+                'username': user.username,
+                'email': user.email,
+                'phone': user.phone or '-',
+            }
+            message = 'اطلاعات کاربری با موفقیت به‌روزرسانی شد.'
+            reward_result = issue_profile_completion_discount(user)
+            if reward_result.ok and not reward_result.reused:
+                message = 'جایزه باز شد — کد تخفیف ۱۰٪ برای یک خرید فعال شد.'
+                response_data['profile_reward'] = reward_payload_for_json(reward_result)
+            elif reward_result.ok and reward_result.reused:
+                response_data['profile_reward'] = reward_payload_for_json(reward_result)
+
             return JsonResponse({
                 'success': True,
-                'message': 'اطلاعات کاربری با موفقیت به‌روزرسانی شد.',
-                'data': {
-                    'username': user.username,
-                    'email': user.email,
-                    'phone': user.phone or '-'
-                }
+                'message': message,
+                'data': response_data,
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
@@ -553,32 +589,43 @@ class UpdateProfileView(LoginRequiredMixin, View):
     
     def post(self, request):
         try:
+            from accounts.services.advisor_profile import apply_advisor_profile_from_post
+
             profile, created = UserProfile.objects.get_or_create(user=request.user)
-            
-            bio = request.POST.get('bio', '').strip()
-            address = request.POST.get('address', '').strip()
-            city = request.POST.get('city', '').strip()
-            postal_code = request.POST.get('postal_code', '').strip()
-            
             if 'avatar' in request.FILES:
                 profile.avatar = request.FILES['avatar']
-            
-            profile.bio = bio
-            profile.address = address
-            profile.city = city
-            profile.postal_code = postal_code
+            apply_advisor_profile_from_post(profile, request.POST)
+            if 'postal_code' in request.POST:
+                profile.postal_code = request.POST.get('postal_code', '').strip()
             profile.save()
-            
+
+            response_data = {
+                'bio': profile.bio or '-',
+                'address': profile.address or '-',
+                'city': profile.activity_city or profile.city or '-',
+                'postal_code': profile.postal_code or '-',
+                'avatar_url': profile.avatar.url if profile.avatar else '',
+            }
+            message = 'تغییرات ذخیره شد.'
+
+            from accounts.services.profile_completion_reward import (
+                issue_profile_completion_discount,
+                reward_payload_for_json,
+            )
+
+            reward_result = issue_profile_completion_discount(request.user)
+            if reward_result.ok and not reward_result.reused:
+                message = (
+                    'پروفایل تکمیل شد. کد تخفیف ۱۰٪ برای یک خرید در حساب شما فعال شد.'
+                )
+                response_data['profile_reward'] = reward_payload_for_json(reward_result)
+            elif reward_result.ok and reward_result.reused:
+                response_data['profile_reward'] = reward_payload_for_json(reward_result)
+
             return JsonResponse({
                 'success': True,
-                'message': 'اطلاعات تکمیلی با موفقیت به‌روزرسانی شد.',
-                'data': {
-                    'bio': profile.bio or '-',
-                    'address': profile.address or '-',
-                    'city': profile.city or '-',
-                    'postal_code': profile.postal_code or '-',
-                    'avatar_url': profile.avatar.url if profile.avatar else ''
-                }
+                'message': message,
+                'data': response_data,
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)

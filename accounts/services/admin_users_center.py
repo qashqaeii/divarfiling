@@ -754,4 +754,5 @@ def get_users_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
         'snapshot_counts': snapshot,
         'users_list_url': reverse('admin_panel_users_json'),
         'users_detail_url_template': reverse('admin_panel_user_detail_json', args=[0]),
+        'users_profile_url_template': reverse('admin_panel_user_360', args=[0]),
     }

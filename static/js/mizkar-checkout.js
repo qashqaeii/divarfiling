@@ -25,6 +25,30 @@
         var csrfInput = form.querySelector('[name=csrfmiddlewaretoken]');
         var csrfToken = csrfInput ? csrfInput.value : '';
 
+        function getDiscountCode() {
+            if (!discountInput) return '';
+            return discountInput.value.trim().toUpperCase();
+        }
+
+        function syncPrefillDiscountFromUrl() {
+            var prefill = (root.dataset.prefillDiscountCode || '').trim().toUpperCase();
+            if (!prefill) {
+                try {
+                    var params = new URLSearchParams(window.location.search);
+                    prefill = (params.get('code') || '').trim().toUpperCase();
+                } catch (e) { /* ignore */ }
+            }
+            if (discountInput && prefill && !discountInput.value.trim()) {
+                discountInput.value = prefill;
+            }
+            var prefillErr = (root.dataset.prefillDiscountError || '').trim();
+            if (prefillErr && discountMsg && !discountMsg.textContent.trim()) {
+                showDiscountMessage(prefillErr, 'error');
+            }
+        }
+
+        syncPrefillDiscountFromUrl();
+
         var pricingState = {
             original: 0,
             final: 0,
@@ -139,11 +163,18 @@
                 }
             }
 
-            if (discountInput) discountInput.value = '';
-            clearDiscountMessage();
+            var code = getDiscountCode();
+            if (!code) {
+                clearDiscountMessage();
+            }
             fallbackPricingFromDataset(selected, qty);
             renderSummary();
-            fetchPlanPricing({ discountCode: '', quantity: qty });
+            fetchPlanPricing({
+                discountCode: code,
+                quantity: qty,
+                showDiscountSuccess: false,
+                showDiscountError: !!code,
+            });
         }
 
         function renderAgencySummary(data) {
@@ -242,7 +273,12 @@
                     firstAgency.dispatchEvent(new Event('change', { bubbles: true }));
                 } else if (checkedAgency) {
                     syncQuantityField();
-                    fetchPlanPricing({ discountCode: '', quantity: syncQuantityField() });
+                    fetchPlanPricing({
+                        discountCode: getDiscountCode(),
+                        quantity: syncQuantityField(),
+                        showDiscountSuccess: !!getDiscountCode(),
+                        showDiscountError: !!getDiscountCode(),
+                    });
                 }
             } else {
                 if (liveTotal) liveTotal.hidden = true;
@@ -258,7 +294,12 @@
                     firstPersonal.dispatchEvent(new Event('change', { bubbles: true }));
                 } else if (checkedPersonal) {
                     syncQuantityField();
-                    fetchPlanPricing({ discountCode: '', quantity: 1 });
+                    fetchPlanPricing({
+                        discountCode: getDiscountCode(),
+                        quantity: 1,
+                        showDiscountSuccess: !!getDiscountCode(),
+                        showDiscountError: !!getDiscountCode(),
+                    });
                 }
             }
         }
@@ -455,7 +496,10 @@
             var code = discountInput.value.trim().toUpperCase();
             if (!code) {
                 clearDiscountMessage();
-                fetchPlanPricing({ discountCode: '', quantity: syncQuantityField() });
+                fetchPlanPricing({
+                    discountCode: '',
+                    quantity: syncQuantityField(),
+                });
                 return;
             }
 
@@ -523,12 +567,19 @@
                     setPlanMode('personal');
                 }
 
-                if (discountInput) discountInput.value = '';
-                clearDiscountMessage();
+                var code = getDiscountCode();
+                if (!code) {
+                    clearDiscountMessage();
+                }
                 var qty = syncQuantityField();
                 fallbackPricingFromDataset(this, qty);
                 renderSummary();
-                fetchPlanPricing({ discountCode: '', quantity: qty });
+                fetchPlanPricing({
+                    discountCode: code,
+                    quantity: qty,
+                    showDiscountSuccess: !!code,
+                    showDiscountError: !!code,
+                });
             });
         });
 
@@ -559,12 +610,19 @@
                     radio.checked = true;
                     if (card) card.classList.add('is-selected');
                     setPlanMode('personal');
-                    if (discountInput) discountInput.value = '';
-                    clearDiscountMessage();
+                    var code = getDiscountCode();
+                    if (!code) {
+                        clearDiscountMessage();
+                    }
                     var qty = syncQuantityField();
                     fallbackPricingFromDataset(radio, qty);
                     renderSummary();
-                    fetchPlanPricing({ discountCode: '', quantity: qty });
+                    fetchPlanPricing({
+                        discountCode: code,
+                        quantity: qty,
+                        showDiscountSuccess: !!code,
+                        showDiscountError: !!code,
+                    });
                 }
 
                 handlePayClick(e);
@@ -593,9 +651,6 @@
                     applyDiscount();
                 }
             });
-            if (discountInput.value.trim()) {
-                applyDiscount();
-            }
         }
 
         function getSelectedPaymentMethod() {
@@ -669,9 +724,15 @@
             var card = initial.closest('.ck-plan, .ck-agency-duration-btn');
             if (card) card.classList.add('is-selected');
             var initialQty = syncQuantityField();
+            var initialCode = getDiscountCode();
             fallbackPricingFromDataset(initial, initialQty);
             renderSummary();
-            fetchPlanPricing({ discountCode: '', quantity: initialQty });
+            fetchPlanPricing({
+                discountCode: initialCode,
+                quantity: initialQty,
+                showDiscountSuccess: !!initialCode,
+                showDiscountError: !!initialCode && !(root.dataset.prefillDiscountError || '').trim(),
+            });
         } else {
             setPlanMode('personal');
         }

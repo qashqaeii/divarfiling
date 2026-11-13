@@ -104,7 +104,7 @@ class UserTableFilterContractTests(TestCase):
     def test_no_results_is_empty_not_unfiltered(self):
         self.assertEqual(self.ids(android='yes', paid='no'), set())
 
-    def test_table_controls_and_accessible_dialog_are_rendered(self):
+    def test_table_controls_and_profile_links_are_rendered(self):
         self.client.force_login(self.owner)
         response = self.client.get(reverse('admin_panel_users'))
         self.assertEqual(response.status_code, 200)
@@ -112,10 +112,14 @@ class UserTableFilterContractTests(TestCase):
             'id="eccUsersMgmtReset"',
             'id="eccUsersMgmtStatus"',
             'aria-live="polite"',
-            'aria-modal="true"',
+            'data-users-profile-url-template',
             'mizkar-admin-users-mgmt.js',
+            'data-u360-href',
+            'adm-user-360-link--profile',
+            'admin-panel/users/',
         ):
             self.assertContains(response, token)
+        self.assertNotContains(response, 'id="eccUserDrawer"')
 
     def test_license_and_sales_links_respect_django_permissions(self):
         staff = User.objects.create_user(

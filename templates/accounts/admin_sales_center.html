@@ -133,7 +133,7 @@
                         <a href="{% url 'admin:shop_order_change' order.pk %}" target="_blank" rel="noopener">{{ order.pk|stringformat:"s"|truncatechars:13 }}</a>
                         {% else %}{{ order.pk|stringformat:"s"|truncatechars:13 }}{% endif %}
                     </td>
-                    <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
                     <td>{{ order.amount|currency }}</td>
                     <td>{{ order.paid_at|default:order.created_at|to_jalali_fa }}</td>
                     <td>{{ order.get_status_display }} · {{ order.get_fulfillment_status_display }}</td>
@@ -245,7 +245,7 @@
             <tbody>
                 {% for order in recent_orders %}
                 <tr>
-                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
                     <td>{{ order.product.title }}{% if order.plan %} · {{ order.plan.name }}{% endif %}</td>
                     <td>{{ order.amount|currency }}</td>
                     <td>{{ order.get_status_display }}</td>
@@ -285,7 +285,7 @@
             <tbody>
                 {% for order in fulfillment_incomplete_orders %}
                 <tr>
-                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
                     <td>{{ order.plan.name }}</td>
                     <td>{{ order.amount|currency }}</td>
                     <td>{{ order.get_fulfillment_status_display }}{% if order.fulfillment_error %} · {{ order.fulfillment_error|truncatechars:40 }}{% endif %}</td>
@@ -325,7 +325,7 @@
             <tbody>
                 {% for order in failed_orders %}
                 <tr>
-                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
                     <td>{{ order.product.title }}</td>
                     <td>{{ order.amount|currency }}</td>
                     <td>{{ order.get_payment_method_display }}</td>
@@ -370,7 +370,7 @@
             <tbody>
                 {% for order in pending_orders %}
                 <tr>
-                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
                     <td>{{ order.product.title }}</td>
                     <td>{{ order.amount|currency }}</td>
                     <td>{{ order.get_status_display }}</td>

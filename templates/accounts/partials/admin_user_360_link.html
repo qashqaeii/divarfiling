@@ -1,0 +1,27 @@
+{% if admin_can_view_user_management and user_obj %}
+{% url 'admin_panel_user_360' user_obj.pk as u360_href %}
+{% if link_phone_only %}
+<a href="{{ u360_href }}?return={{ request.get_full_path|urlencode }}"
+   class="adm-user-360-link adm-users-preview-table__mono ecc-users-mgmt-user-link ecc-users-mgmt-user-link--phone"
+   title="پرونده ۳۶۰ · {{ user_obj.phone|default:'—' }}">{{ user_obj.phone|default:"—" }}</a>
+{% else %}
+<a href="{{ u360_href }}?return={{ request.get_full_path|urlencode }}"
+   class="ecc-users-mgmt-user-link adm-user-360-link adm-user-360-link--profile"
+   title="پرونده ۳۶۰ درجه · {% firstof user_obj.get_full_name user_obj.username %}">
+    <span class="adm-user-360-link__text">
+        <strong>{% firstof label user_obj.get_full_name user_obj.username %}</strong>
+        {% if show_phone and user_obj.phone %}<small>{{ user_obj.phone }}</small>{% endif %}
+    </span>
+    <i class="fas fa-arrow-left adm-user-360-link__goto" aria-hidden="true"></i>
+</a>
+{% endif %}
+{% elif user_obj %}
+<span class="adm-users-cell-plain">
+    {% if link_phone_only %}
+    <span class="adm-users-preview-table__mono">{{ user_obj.phone|default:"—" }}</span>
+    {% else %}
+    <strong>{% firstof label user_obj.get_full_name user_obj.username %}</strong>
+    {% if show_phone and user_obj.phone %}<small class="adm-users-preview-table__mono">{{ user_obj.phone }}</small>{% endif %}
+    {% endif %}
+</span>
+{% endif %}

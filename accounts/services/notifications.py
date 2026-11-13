@@ -12,6 +12,23 @@ from accounts.services.sms import SmsError, send_pattern_sms, send_simple_sms
 logger = logging.getLogger(__name__)
 
 
+def _sms_log_preview_for_send(
+    log: SmsMessageLog,
+    *,
+    text: str = '',
+    attributes: dict | None = None,
+) -> str:
+    from accounts.services.sms.log_preview import build_sms_log_preview
+
+    return build_sms_log_preview(
+        purpose=log.purpose or '',
+        channel=log.channel or '',
+        pattern_code=log.pattern_code or '',
+        text=text,
+        attributes=attributes,
+    )
+
+
 def notify_license_renewal(phone: str, *, days_left: int | str = '', plan_name: str = '') -> bool:
     """اعلان تمدید لایسنس — الگو‌محور در صورت تنظیم، وگرنه متن ساده در حالت console."""
     phone = normalize_phone(phone)
@@ -31,19 +48,23 @@ def notify_license_renewal(phone: str, *, days_left: int | str = '', plan_name: 
         status=SmsMessageLog.Status.PENDING,
     )
     try:
+        simple_text = ''
         if pattern:
             result = send_pattern_sms(phone, purpose='license_renewal', attributes=attrs)
+            preview = _sms_log_preview_for_send(log, attributes=attrs)
         else:
-            text = (
+            simple_text = (
                 f'میزکار: لایسنس شما'
                 + (f' ({plan_name})' if plan_name else '')
                 + (f' تا {days_left} روز دیگر منقضی می‌شود.' if days_left != '' else ' نیاز به تمدید دارد.')
             )
-            result = send_simple_sms(phone, text)
+            result = send_simple_sms(phone, simple_text)
+            preview = _sms_log_preview_for_send(log, text=simple_text)
         log.mark_sent(
             provider=result.provider,
             message_id=result.message_id,
             status=SmsMessageLog.Status.FAKE if result.is_fake else SmsMessageLog.Status.SENT,
+            message_preview=preview,
         )
         return True
     except SmsError as exc:
@@ -65,21 +86,25 @@ def notify_system(phone: str, *, text: str = '', attributes: dict | None = None)
         status=SmsMessageLog.Status.PENDING,
     )
     try:
+        attrs = attributes or ({'message': text} if text else {})
         if pattern:
             result = send_pattern_sms(
                 phone,
                 purpose='system',
-                attributes=attributes or ({'message': text} if text else {}),
+                attributes=attrs,
             )
+            preview = _sms_log_preview_for_send(log, text=text, attributes=attrs)
         else:
             if not text:
                 log.mark_failed('متن پیام خالی است')
                 return False
             result = send_simple_sms(phone, text)
+            preview = _sms_log_preview_for_send(log, text=text)
         log.mark_sent(
             provider=result.provider,
             message_id=result.message_id,
             status=SmsMessageLog.Status.FAKE if result.is_fake else SmsMessageLog.Status.SENT,
+            message_preview=preview,
         )
         return True
     except SmsError as exc:
@@ -114,15 +139,19 @@ def notify_marketing(
             if text and 'message' not in attrs:
                 attrs['message'] = text[:500]
             result = send_pattern_sms(phone, purpose='marketing', attributes=attrs)
+            preview = _sms_log_preview_for_send(log, text=text, attributes=attrs)
         else:
             if not (text or '').strip():
                 log.mark_failed('متن پیام خالی است')
                 return False, log
-            result = send_simple_sms(phone, text.strip())
+            body = text.strip()
+            result = send_simple_sms(phone, body)
+            preview = _sms_log_preview_for_send(log, text=body)
         log.mark_sent(
             provider=result.provider,
             message_id=result.message_id,
             status=SmsMessageLog.Status.FAKE if result.is_fake else SmsMessageLog.Status.SENT,
+            message_preview=preview,
         )
         return True, log
     except SmsError as exc:
@@ -153,13 +182,17 @@ def _send_templated_or_simple_sms(
     )
     try:
         if pattern:
-            result = send_pattern_sms(phone, purpose=purpose, attributes=attributes or {})
+            attrs = attributes or {}
+            result = send_pattern_sms(phone, purpose=purpose, attributes=attrs)
+            preview = _sms_log_preview_for_send(log, text=text, attributes=attrs)
         else:
             result = send_simple_sms(phone, text)
+            preview = _sms_log_preview_for_send(log, text=text)
         log.mark_sent(
             provider=result.provider,
             message_id=result.message_id,
             status=SmsMessageLog.Status.FAKE if result.is_fake else SmsMessageLog.Status.SENT,
+            message_preview=preview,
         )
         return True
     except SmsError as exc:

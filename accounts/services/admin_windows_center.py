@@ -29,7 +29,9 @@ from shop.services.app_downloads import WINDOWS_APP_VERSION
 
 
 def _admin_user_url(pk: int) -> str:
-    return reverse('admin:accounts_user_change', args=[pk])
+    from accounts.services.admin_user_profile_url import admin_user_profile_url
+
+    return admin_user_profile_url(pk) or reverse('admin:accounts_user_change', args=[pk])
 
 
 def _admin_download_url(pk: int) -> str:

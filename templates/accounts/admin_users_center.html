@@ -15,8 +15,8 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-customers.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-v3.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-fold.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-v3.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-fold.css' %}?v=13">
 {% endblock %}
 
 {% block admin_panel_header_actions %}
@@ -97,9 +97,10 @@
             </thead>
             <tbody>
                 {% for u in recent_users %}
-                <tr>
-                    <td class="adm-users-preview-table__user"><strong>{{ u.get_full_name|default:u.username }}</strong></td>
-                    <td class="adm-users-preview-table__mono">{{ u.phone|default:"—" }}</td>
+                {% url 'admin_panel_user_360' u.pk as u360_row_href %}
+                <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}">
+                    <td class="adm-users-preview-table__user ecc-users-mgmt-user">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u only %}</td>
+                    <td class="adm-users-preview-table__mono">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u link_phone_only=1 only %}</td>
                     <td>{% if u.is_active %}<span class="adm-users-status adm-users-status--on">فعال</span>{% else %}<span class="adm-users-status adm-users-status--off">خاموش</span>{% endif %}</td>
                     <td class="adm-users-preview-table__date">{{ u.date_joined|to_jalali_fa }}</td>
                 </tr>
@@ -137,8 +138,9 @@
             </thead>
             <tbody>
                 {% for u in top_users %}
-                <tr>
-                    <td class="adm-users-preview-table__user"><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                {% url 'admin_panel_user_360' u.pk as u360_row_href %}
+                <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}">
+                    <td class="adm-users-preview-table__user ecc-users-mgmt-user">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u only %}</td>
                     <td class="adm-users-preview-table__money">{{ u.total_spent|currency }}</td>
                     <td class="adm-users-preview-table__mono">{{ u.order_count|to_persian_digits }}</td>
                 </tr>
@@ -172,8 +174,8 @@
         {% endif %}
     </header>
     <div class="adm-users-fold-panel__body" id="users-no-license-body" data-users-fold-body hidden>
-    <div class="adm-table-wrap adm-users-fold-panel__table-wrap">
-        <table class="adm-table adm-table--pro">
+    <div class="adm-table-wrap adm-users-preview-table-wrap adm-users-fold-panel__table-wrap">
+        <table class="adm-table adm-table--pro adm-users-preview-table">
             <thead>
                 <tr>
                     <th>کاربر</th>
@@ -184,8 +186,9 @@
             </thead>
             <tbody>
                 {% for u in users_without_license_list %}
-                <tr>
-                    <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                {% url 'admin_panel_user_360' u.pk as u360_row_href %}
+                <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}">
+                    <td class="adm-users-preview-table__user ecc-users-mgmt-user">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u show_phone=1 only %}</td>
                     <td>{{ u.paid_orders|to_persian_digits }}</td>
                     <td>{{ u.pending_orders|to_persian_digits }}</td>
                     <td>{{ u.date_joined|to_jalali_fa }}</td>
@@ -218,6 +221,7 @@
         class="adm-users-mgmt-shell"
         data-users-list-url="{{ users_list_url }}"
         data-users-detail-url-template="{{ users_detail_url_template }}"
+        data-users-profile-url-template="{{ users_profile_url_template }}"
     >
         <div class="ecc-users-mgmt-tools adm-users-mgmt-toolbar">
             <div class="adm-users-mgmt-toolbar__search">
@@ -334,24 +338,6 @@
 
 </div>
 
-{% if admin_can_view_user_management %}
-<div class="ecc-user-drawer" id="eccUserDrawer" hidden aria-hidden="true">
-    <div class="ecc-user-drawer-overlay" data-user-drawer-close tabindex="-1" aria-hidden="true"></div>
-    <aside class="ecc-user-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="eccUserDrawerTitle" tabindex="-1">
-        <header class="ecc-user-drawer-head">
-            <div>
-                <h2 id="eccUserDrawerTitle">جزئیات کاربر</h2>
-                <p class="ecc-user-drawer-sub" id="eccUserDrawerSub"></p>
-            </div>
-            <button type="button" class="ecc-user-drawer-close" data-user-drawer-close aria-label="بستن">
-                <i class="fas fa-times"></i>
-            </button>
-        </header>
-        <div class="ecc-user-drawer-body" id="eccUserDrawerBody"></div>
-    </aside>
-</div>
-{% endif %}
-
 </div>
 {% include 'accounts/partials/admin_center_shell_close.html' %}
 {% endblock %}
@@ -360,7 +346,7 @@
 {% include 'accounts/partials/admin_prime_charts_boot.html' %}
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=20"></script>
 {% if admin_can_view_user_management %}
-<script src="{% static 'js/mizkar-admin-users-fold.js' %}?v=1"></script>
-<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=3"></script>
+<script src="{% static 'js/mizkar-admin-users-fold.js' %}?v=3"></script>
+<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=6"></script>
 {% endif %}
 {% endblock %}

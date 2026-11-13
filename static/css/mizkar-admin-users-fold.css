@@ -793,6 +793,81 @@ body.adm-prime-command .biz-page--users .adm-users-preview-table__user strong {
     letter-spacing: -0.02em;
 }
 
+/* لینک پرونده ۳۶۰ در پیش‌نمایش‌ها و جداول کاربران */
+body.adm-prime-command .biz-page--users a.adm-user-360-link,
+body.adm-prime-command .biz-page--users a.ecc-users-mgmt-user-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+body.adm-prime-command .biz-page--users a.adm-user-360-link:focus-visible,
+body.adm-prime-command .biz-page--users a.ecc-users-mgmt-user-link:focus-visible {
+    outline: 2px solid rgba(91, 79, 207, 0.55);
+    outline-offset: 2px;
+}
+
+body.adm-prime-command .biz-page--users a.adm-user-360-link:hover strong,
+body.adm-prime-command .biz-page--users a.ecc-users-mgmt-user-link:hover strong {
+    color: var(--users-v3-accent, #5b4fcf);
+}
+
+body.adm-prime-command .biz-page--users a.ecc-users-mgmt-user-link--phone {
+    display: inline;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px dashed rgba(91, 79, 207, 0.35);
+}
+
+body.adm-prime-command .biz-page--users a.ecc-users-mgmt-user-link--phone:hover {
+    color: var(--users-v3-accent, #5b4fcf);
+    border-bottom-color: transparent;
+}
+
+body.adm-prime-command .biz-page--users a.adm-user-360-link--profile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--users .adm-user-360-link__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--users .adm-user-360-link__text strong {
+    overflow-wrap: anywhere;
+}
+
+body.adm-prime-command .biz-page--users .adm-user-360-link__goto {
+    flex: 0 0 auto;
+    font-size: 0.68rem;
+    opacity: 0.45;
+    color: var(--users-v3-accent, #5b4fcf);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+body.adm-prime-command .biz-page--users a.adm-user-360-link--profile:hover .adm-user-360-link__goto,
+body.adm-prime-command .biz-page--users tr.adm-users-row--profile:hover .adm-user-360-link__goto {
+    opacity: 1;
+    transform: translateX(-2px);
+}
+
+body.adm-prime-command .biz-page--users tr.adm-users-row--profile {
+    cursor: pointer;
+}
+
+body.adm-prime-command .biz-page--users tr.adm-users-row--profile:hover td {
+    background: rgba(91, 79, 207, 0.055);
+}
+
 body.adm-prime-command .biz-page--users .adm-users-preview-table__mono {
     font-variant-numeric: tabular-nums;
     font-size: 0.72rem;
@@ -835,7 +910,7 @@ body.adm-prime-command .biz-page--users .adm-users-status--off {
     background: rgba(148, 163, 184, 0.14);
 }
 
-@media (max-width: 520px) {
+@media (max-width: 899px) {
     body.adm-prime-command .biz-page--users .adm-users-preview-table thead {
         display: none;
     }
@@ -904,6 +979,43 @@ body.adm-prime-command .biz-page--users .adm-users-status--off {
     body.adm-prime-command .biz-page--users #users-top .adm-users-preview-table tbody td:nth-child(3) {
         grid-column: 1 / -1;
         grid-row: 2;
+    }
+
+    /* بدون لایسنس: نام، سفارش‌ها، تاریخ */
+    body.adm-prime-command .biz-page--users #users-table-no-license .adm-users-preview-table tbody td:nth-child(1) {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    body.adm-prime-command .biz-page--users #users-table-no-license .adm-users-preview-table tbody td:nth-child(2) {
+        grid-column: 1;
+        grid-row: 2;
+        font-size: 0.7rem;
+        color: var(--adm-muted, #6e7891);
+    }
+
+    body.adm-prime-command .biz-page--users #users-table-no-license .adm-users-preview-table tbody td:nth-child(2)::before {
+        content: "پرداخت‌شده · ";
+        font-weight: 700;
+    }
+
+    body.adm-prime-command .biz-page--users #users-table-no-license .adm-users-preview-table tbody td:nth-child(3) {
+        grid-column: 2;
+        grid-row: 2;
+        justify-self: end;
+        font-size: 0.7rem;
+        color: var(--adm-muted, #6e7891);
+    }
+
+    body.adm-prime-command .biz-page--users #users-table-no-license .adm-users-preview-table tbody td:nth-child(3)::before {
+        content: "معلق · ";
+        font-weight: 700;
+    }
+
+    body.adm-prime-command .biz-page--users #users-table-no-license .adm-users-preview-table tbody td:nth-child(4) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.64rem;
     }
 }
 

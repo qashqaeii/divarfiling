@@ -64,10 +64,36 @@
         }
     }
 
+    function profileHrefForRow(row) {
+        var fromData = row.getAttribute('data-u360-href');
+        if (fromData) {
+            return fromData;
+        }
+        var link = row.querySelector('a.adm-user-360-link, a.ecc-users-mgmt-user-link');
+        return link && link.href ? link.href : '';
+    }
+
+    function initProfileRowNav(root) {
+        root.addEventListener('click', function (event) {
+            if (event.target.closest('a, button, input, select, label')) {
+                return;
+            }
+            var row = event.target.closest('tr.adm-users-row--profile[data-user-id]');
+            if (!row) {
+                return;
+            }
+            var href = profileHrefForRow(row);
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var root = document.querySelector('[data-users-fold-accordion]');
         if (root) {
             initAccordion(root);
+            initProfileRowNav(root);
         }
     });
 })();

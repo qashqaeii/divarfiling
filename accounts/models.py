@@ -83,6 +83,20 @@ class UserProfile(models.Model):
     address = models.TextField(blank=True, verbose_name='آدرس')
     city = models.CharField(max_length=100, blank=True, verbose_name='شهر')
     postal_code = models.CharField(max_length=10, blank=True, verbose_name='کد پستی')
+    activity_province = models.CharField(max_length=80, blank=True, verbose_name='استان فعالیت')
+    activity_city = models.CharField(max_length=100, blank=True, verbose_name='شهر فعالیت')
+    activity_districts = models.JSONField(default=list, blank=True, verbose_name='مناطق تخصصی')
+    activity_neighborhoods = models.JSONField(default=list, blank=True, verbose_name='محله‌های تخصصی')
+    years_experience = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name='سال‌های تجربه',
+    )
+    expertise_areas = models.JSONField(default=list, blank=True, verbose_name='حوزه‌های تخصص')
+    property_specialties = models.JSONField(default=list, blank=True, verbose_name='انواع ملک')
+    job_role = models.CharField(max_length=32, blank=True, verbose_name='نقش شغلی')
+    office_agency_name = models.CharField(max_length=200, blank=True, verbose_name='نام بنگاه')
+    office_agency_city = models.CharField(max_length=100, blank=True, verbose_name='شهر دفتر')
+    office_agency_address = models.TextField(blank=True, verbose_name='آدرس دفتر')
+    office_agency_phone = models.CharField(max_length=20, blank=True, verbose_name='تلفن دفتر')
 
     class Meta:
         verbose_name = 'پروفایل کاربر'
@@ -168,6 +182,11 @@ class SmsMessageLog(models.Model):
     )
     provider_message_id = models.CharField(max_length=128, blank=True, verbose_name='شناسه پیامک')
     error_message = models.CharField(max_length=500, blank=True, verbose_name='پیام خطا')
+    message_preview = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name='پیش‌نمایش متن (بدون کد حساس)',
+    )
     otp_request = models.ForeignKey(
         OtpRequest,
         on_delete=models.SET_NULL,
@@ -187,20 +206,30 @@ class SmsMessageLog(models.Model):
     def __str__(self):
         return f'{self.phone} [{self.status}]'
 
-    def mark_sent(self, *, provider: str = '', message_id: str = '', status: str | None = None):
+    def mark_sent(
+        self,
+        *,
+        provider: str = '',
+        message_id: str = '',
+        status: str | None = None,
+        message_preview: str = '',
+    ):
         self.provider = provider or self.provider
         self.provider_message_id = message_id or self.provider_message_id
         self.status = status or self.Status.SENT
         self.error_message = ''
-        self.save(
-            update_fields=[
-                'provider',
-                'provider_message_id',
-                'status',
-                'error_message',
-                'updated_at',
-            ]
-        )
+        update_fields = [
+            'provider',
+            'provider_message_id',
+            'status',
+            'error_message',
+            'updated_at',
+        ]
+        preview = (message_preview or '').strip()
+        if preview:
+            self.message_preview = preview[:500]
+            update_fields.append('message_preview')
+        self.save(update_fields=update_fields)
 
     def mark_failed(self, error: str):
         self.status = self.Status.FAILED
@@ -1759,6 +1788,12 @@ class UserDiscountIssuance(models.Model):
         indexes = [
             models.Index(fields=['user', '-issued_at']),
             models.Index(fields=['policy_key', '-issued_at']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'policy_key'],
+                name='uniq_user_discount_policy',
+            ),
         ]
 
     def __str__(self):

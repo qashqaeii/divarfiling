@@ -1,0 +1,75 @@
+{% load persian_tags %}
+<header class="adm-u360-hero" id="adm-u360-hero">
+    <div class="adm-u360-hero__shell">
+        <div class="adm-u360-hero__top">
+            <span class="adm-u360-hero__eyebrow">پرونده ۳۶۰ مشتری</span>
+            <a href="{{ u360.return_url }}" class="adm-u360-hero__back">
+                <span>بازگشت</span>
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <div class="adm-u360-hero__main">
+            <div class="adm-u360-avatar" aria-hidden="true">
+                {{ u360.header.display_name|slice:":1"|default:"؟" }}
+            </div>
+            <div class="adm-u360-hero__copy">
+                <h1 class="adm-u360-hero__title">{{ u360.header.display_name }}</h1>
+                <div class="adm-u360-hero__identifiers">
+                    {% if u360.header.username and u360.header.username != u360.header.display_name %}
+                    <span class="adm-u360-hero__username adm-u360-ltr">{{ u360.header.username }}</span>
+                    {% endif %}
+                    <a class="adm-u360-hero__phone adm-u360-ltr" href="tel:{{ u360.header.phone }}">
+                        {{ u360.header.phone|default:"—" }}
+                    </a>
+                    {% if u360.header.email %}
+                    <a class="adm-u360-hero__email adm-u360-ltr" href="mailto:{{ u360.header.email }}">
+                        {{ u360.header.email }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <ul class="adm-u360-hero__meta" aria-label="اطلاعات و وضعیت حساب">
+            <li>
+                <span class="adm-u360-hero__meta-key">شناسه</span>
+                <span class="adm-u360-hero__meta-val">{{ u360.user_id|to_persian_digits }}</span>
+            </li>
+            <li>
+                <span class="adm-u360-hero__meta-key">عضویت</span>
+                <span class="adm-u360-hero__meta-val">{{ u360.header.date_joined_jalali }}</span>
+            </li>
+            <li>
+                <span class="adm-u360-hero__meta-key">آخرین ورود</span>
+                <span class="adm-u360-hero__meta-val">{{ u360.header.last_login_jalali|default:"—" }}</span>
+            </li>
+            {% if u360.header.phone_verified %}
+            <li class="adm-u360-hero__meta-item--ok">
+                <span class="adm-u360-hero__meta-val">موبایل تأیید‌شده</span>
+            </li>
+            {% endif %}
+            {% if u360.header.is_active %}
+            <li class="adm-u360-hero__meta-item--ok">
+                <span class="adm-u360-hero__meta-val">حساب فعال</span>
+            </li>
+            {% else %}
+            <li class="adm-u360-hero__meta-item--muted">
+                <span class="adm-u360-hero__meta-val">حساب غیرفعال</span>
+            </li>
+            {% endif %}
+            {% if u360.header.has_active_license %}
+            <li class="adm-u360-hero__meta-item--ok">
+                <span class="adm-u360-hero__meta-val">{{ u360.header.license_access_label }} · {{ u360.header.license_plan }}</span>
+            </li>
+            <li class="adm-u360-hero__meta-item--muted">
+                <span class="adm-u360-hero__meta-val">انقضا {{ u360.header.license_expires_jalali }}</span>
+            </li>
+            {% else %}
+            <li class="adm-u360-hero__meta-item--warn">
+                <span class="adm-u360-hero__meta-val">بدون دسترسی فعال ربات</span>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</header>

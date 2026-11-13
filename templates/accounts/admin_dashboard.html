@@ -197,7 +197,7 @@
                 <tbody>
                     {% for order in recent_orders %}
                     <tr>
-                        <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                        <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
                         <td>{{ order.amount|currency }}</td>
                         <td><span class="adm-overview-badge" data-status="{{ order.status }}">{{ order.get_status_display }}</span></td>
                         <td>{{ order.created_at|to_jalali_fa:"%m/%d %H:%M" }}</td>

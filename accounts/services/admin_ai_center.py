@@ -24,6 +24,7 @@ from django.db.models.functions import Coalesce, TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.services.admin_user_profile_url import admin_user_profile_url
 from accounts.services.admin_dashboard import (
     CHART_COLORS,
     _date_range,
@@ -436,7 +437,7 @@ def get_ai_top_users(days: int, mode: str = 'tokens', limit: int = TOP_USERS_LIM
             'token_share_pct': round((tok / total_tokens_all) * 100, 1),
             'last_used_at': row['last_used_at'],
             'license_label': _license_label(bool(user and user.has_active_license)),
-            'user_admin_url': reverse('admin:accounts_user_change', args=[row['user_id']]),
+            'user_admin_url': admin_user_profile_url(row['user_id']),
         })
     return result
 
@@ -482,7 +483,7 @@ def get_ai_recent_logs(
             'id': log.pk,
             'created_at': log.created_at,
             'user_display': _safe_user_display(log.user),
-            'user_admin_url': reverse('admin:accounts_user_change', args=[log.user_id]),
+            'user_admin_url': admin_user_profile_url(log.user_id),
             'feature_code': log.feature_code,
             'feature_label': FEATURE_LABELS.get(log.feature_code, log.feature_code),
             'provider': log.provider,

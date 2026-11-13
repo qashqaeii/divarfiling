@@ -4,10 +4,13 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from django.conf import settings
+from accounts.services.divar_places import (
+    _load_places_raw,
+    list_districts_for_city,
+    places_config_available,
+)
 from django.core.cache import cache
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
@@ -30,44 +33,11 @@ CATEGORY_CHOICES = (
 )
 
 
-def _places_file_path() -> Optional[Path]:
-    pd = (getattr(settings, 'PHONE_DETECTOR_DIR', None) or '').strip()
-    candidates: list[Path] = []
-    if pd:
-        root = Path(pd).expanduser().resolve().parent
-        candidates.append(root / 'config' / 'places-web.json')
-        candidates.append(Path(pd).expanduser().resolve() / 'config' / 'places-web.json')
-    base = Path(getattr(settings, 'BASE_DIR', Path.cwd()))
-    candidates.extend([
-        base.parent / 'config' / 'places-web.json',
-        Path('/root/config/places-web.json'),
-    ])
-    for path in candidates:
-        if path.is_file():
-            return path
-    return None
-
-
-@lru_cache(maxsize=1)
-def _load_places_raw() -> list[dict]:
-    path = _places_file_path()
-    if not path:
-        return []
-    try:
-        data = json.loads(path.read_text(encoding='utf-8'))
-        return data if isinstance(data, list) else []
-    except (OSError, json.JSONDecodeError):
-        return []
-
-
-def places_config_available() -> bool:
-    return bool(_load_places_raw())
-
-
 def list_automation_cities(*, limit: int = 80) -> list[dict]:
     """شهرهای type=2 برای dropdown."""
+    _id_to_node, raw = _load_places_raw()
     rows = []
-    for item in _load_places_raw():
+    for item in raw:
         if str(item.get('type')) != '2':
             continue
         name = str(item.get('name') or '').strip()
@@ -80,34 +50,6 @@ def list_automation_cities(*, limit: int = 80) -> list[dict]:
         })
     rows.sort(key=lambda r: (r['name'] != 'تهران', r['name']))
     return rows[:limit]
-
-
-def list_districts_for_city(city_name: str, *, limit: int = 400) -> list[str]:
-    """مناطق یک شهر — ترتیب همان فایل places-web (برای چرخش sequential)."""
-    city_name = (city_name or '').strip()
-    if not city_name:
-        return []
-    places = _load_places_raw()
-    city_id = None
-    for item in places:
-        if str(item.get('type')) == '2' and str(item.get('name') or '').strip() == city_name:
-            city_id = item.get('id')
-            break
-    if city_id is None:
-        return []
-    names: list[str] = []
-    for item in places:
-        if item.get('parent') == city_id and str(item.get('type')) == '4':
-            name = str(item.get('name') or '').strip()
-            if name:
-                names.append(name)
-    seen: set[str] = set()
-    ordered: list[str] = []
-    for name in names:
-        if name not in seen:
-            seen.add(name)
-            ordered.append(name)
-    return ordered[:limit]
 
 
 def _form_bool(value) -> bool:

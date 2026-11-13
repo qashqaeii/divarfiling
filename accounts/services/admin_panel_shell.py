@@ -140,6 +140,34 @@ ADMIN_PANEL_NAV_TITLES: Dict[str, str] = {
     'forum': 'تالار گفتگو',
 }
 
+# برچسب‌های کوتاه سایدبار Prime Command (عنوان کامل صفحه در ADMIN_PANEL_NAV_TITLES می‌ماند).
+ADMIN_PANEL_SIDEBAR_LABELS: Dict[str, str] = {
+    'command': 'نمای کلی',
+    'users': 'کاربران',
+    'licenses': 'لایسنس',
+    'sales': 'سفارش‌ها',
+    'leads': 'سرنخ‌ها',
+    'marketing': 'گزارش‌ها',
+    'blog': 'محتوا',
+    'operations': 'تنظیمات',
+    'assistant': 'دستیار',
+}
+
+ADMIN_PANEL_SIDEBAR_QUICK: Dict[str, str] = {
+    'section': 'میانبر',
+    'license_new': 'لایسنس جدید',
+    'user_new': 'کاربر جدید',
+    'payment': 'پرداخت',
+    'finance_report': 'گزارش مالی',
+}
+
+ADMIN_PANEL_SIDEBAR_QUICK_TITLES: Dict[str, str] = {
+    'license_new': 'صدور لایسنس جدید',
+    'user_new': 'افزودن کاربر',
+    'payment': 'ثبت پرداخت',
+    'finance_report': 'خروجی گزارش مالی',
+}
+
 
 def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     badges = get_admin_panel_nav_badges()
@@ -176,6 +204,10 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
         'admin_panel_compare': request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL,
         'admin_panel_nav_active': nav_active,
         'admin_panel_page_title': ADMIN_PANEL_NAV_TITLES.get(nav_active, 'پنل مدیریت'),
+        'admin_panel_nav_titles': ADMIN_PANEL_NAV_TITLES,
+        'admin_panel_sidebar_labels': ADMIN_PANEL_SIDEBAR_LABELS,
+        'admin_panel_sidebar_quick': ADMIN_PANEL_SIDEBAR_QUICK,
+        'admin_panel_sidebar_quick_titles': ADMIN_PANEL_SIDEBAR_QUICK_TITLES,
         'admin_panel_command_layout': True,
         'admin_panel_compact_header': True,
         'admin_panel_hide_global_bar': True,

@@ -29,7 +29,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-account-profile-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell-v2.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-overview-v2.css' %}?v=23">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-profile-v2.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-profile-v2.css' %}?v=27">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-licenses-v2.css' %}?v=10">
 {% endblock %}
 
@@ -105,6 +105,127 @@ function showProfessionalModal(modalId) {
 }
 function openUserInfoModal() { showProfessionalModal('userInfoModal'); }
 function openProfileModal() { showProfessionalModal('profileModal'); }
+
+function openProfileRewardNextStep() {
+    const strip = document.querySelector('.prof-reward-strip--locked, .prof-reward-strip--warming');
+    if (!strip) {
+        openProfileModal();
+        return;
+    }
+    const needUser = strip.querySelector('.prof-reward-strip__step[data-step-action="userInfo"]:not(.is-done)');
+    if (needUser) {
+        openUserInfoModal();
+        return;
+    }
+    const needVerify = strip.querySelector('.prof-reward-strip__step[data-step-action="verifyPhone"]:not(.is-done)');
+    if (needVerify) {
+        const rewardRoot = document.querySelector('.prof-reward');
+        const verifyUrl = rewardRoot && rewardRoot.getAttribute('data-verify-phone-url');
+        if (verifyUrl) {
+            window.location.href = verifyUrl;
+            return;
+        }
+    }
+    openProfileModal();
+}
+
+function initProfRewardUnlockFx() {
+    try {
+        if (sessionStorage.getItem('profRewardUnlock') !== '1') return;
+        sessionStorage.removeItem('profRewardUnlock');
+    } catch (e) { return; }
+    var gift = document.getElementById('profRewardGift');
+    var strip = document.querySelector('.prof-reward-strip--unlocked');
+    if (gift) gift.classList.add('is-celebrating');
+    if (strip) strip.classList.add('is-celebrating');
+}
+function initProfileJobRolePanel() {
+    const role = document.getElementById('profileJobRole');
+    const panel = document.getElementById('profileAgencyPanel');
+    if (!role || !panel) return;
+    const agencyRoles = ['agency_advisor', 'agency_manager', 'team_lead'];
+    const sync = () => {
+        const needsAgency = agencyRoles.includes(role.value);
+        panel.hidden = !needsAgency;
+        panel.querySelectorAll('input, textarea').forEach((el) => {
+            el.required = false;
+        });
+    };
+    role.addEventListener('change', sync);
+    sync();
+}
+function initProfileActivityPlaces() {
+    const provinceEl = document.getElementById('profileActivityProvince');
+    const cityEl = document.getElementById('profileActivityCity');
+    const dataEl = document.getElementById('advisorPlacesCitiesData');
+    if (!provinceEl || !cityEl || cityEl.tagName !== 'SELECT' || !dataEl) return;
+    let citiesByProvince = {};
+    try {
+        citiesByProvince = JSON.parse(dataEl.textContent || '{}');
+    } catch (e) {
+        return;
+    }
+    const initialCity = cityEl.getAttribute('data-initial-city') || '';
+    const fillCities = (provinceSlug, selectedName) => {
+        const list = citiesByProvince[provinceSlug] || [];
+        cityEl.innerHTML = '';
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = 'انتخاب شهر';
+        cityEl.appendChild(blank);
+        list.forEach((item) => {
+            const opt = document.createElement('option');
+            opt.value = item.name;
+            opt.textContent = item.name;
+            if (selectedName && item.name === selectedName) {
+                opt.selected = true;
+            }
+            cityEl.appendChild(opt);
+        });
+        cityEl.disabled = !provinceSlug;
+        if (selectedName && !cityEl.value) {
+            const custom = document.createElement('option');
+            custom.value = selectedName;
+            custom.textContent = selectedName;
+            custom.selected = true;
+            cityEl.insertBefore(custom, blank.nextSibling);
+        }
+    };
+    provinceEl.addEventListener('change', () => fillCities(provinceEl.value, ''));
+    fillCities(provinceEl.value, cityEl.value || initialCity);
+}
+function initProfileDashboardUx() {
+    initProfRewardUnlockFx();
+    initProfileJobRolePanel();
+    initProfileActivityPlaces();
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initProfileDashboardUx);
+} else {
+    initProfileDashboardUx();
+}
+
+function copyProfRewardCode(btn) {
+    const targetId = btn && btn.getAttribute('data-copy-target');
+    const el = targetId ? document.getElementById(targetId) : null;
+    const code = el ? (el.textContent || '').trim() : '';
+    if (!code) return;
+    const done = () => {
+        if (typeof showNotification === 'function') {
+            showNotification('کد تخفیف کپی شد.', 'success');
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done).catch(() => {});
+    } else {
+        const tmp = document.createElement('textarea');
+        tmp.value = code;
+        document.body.appendChild(tmp);
+        tmp.select();
+        try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ }
+        document.body.removeChild(tmp);
+    }
+}
 
 function closeProfessionalModal(event, modalId) {
     if (event) event.stopPropagation();
@@ -227,7 +348,16 @@ function submitUserInfoForm(event) {
     })
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
+            const reward = data.data && data.data.profile_reward;
+            if (reward && reward.code && reward.newly_issued) {
+                try { sessionStorage.setItem('profRewardUnlock', '1'); } catch (e) { /* ignore */ }
+                showNotification(
+                    'جایزه باز شد — کد تخفیف ' + (reward.discount_percent || '10') + '٪: ' + reward.code,
+                    'success'
+                );
+            } else {
+                showNotification(data.message, 'success');
+            }
             closeProfessionalModal(null, 'userInfoModal');
             setTimeout(() => {
                 window.location.reload();
@@ -292,6 +422,7 @@ function submitProfileForm(event) {
     
     if (errorDiv) {
         errorDiv.style.display = 'none';
+        errorDiv.hidden = true;
     }
     if (submitBtn) {
         submitBtn.disabled = true;
@@ -317,7 +448,16 @@ function submitProfileForm(event) {
     })
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
+            const reward = data.data && data.data.profile_reward;
+            if (reward && reward.code && reward.newly_issued) {
+                try { sessionStorage.setItem('profRewardUnlock', '1'); } catch (e) { /* ignore */ }
+                showNotification(
+                    'جایزه باز شد — کد تخفیف ' + (reward.discount_percent || '10') + '٪: ' + reward.code,
+                    'success'
+                );
+            } else {
+                showNotification(data.message, 'success');
+            }
             closeProfessionalModal(null, 'profileModal');
             setTimeout(() => {
                 window.location.reload();
@@ -912,6 +1052,12 @@ function copyAffiliateLinkOverview() {
             </button>
         </div>
         <div class="modal-body-professional">
+            {% if profile_completion_reward.show and profile_completion_reward.state != 'ready' and profile_completion_reward.is_auto_username %}
+            <p class="prof-userinfo-modal__reward-hint">
+                <i class="fas fa-gift" aria-hidden="true"></i>
+                نام فعلی شما خودکار است (<span dir="ltr" class="prof-userinfo-modal__auto-user">{{ user.username }}</span>) — برای باز شدن جایزه یک نام کاربری دلخواه انتخاب کنید.
+            </p>
+            {% endif %}
             <form id="userInfoForm" onsubmit="submitUserInfoForm(event)">
                 {% csrf_token %}
                 <div class="form-group">
@@ -919,7 +1065,9 @@ function copyAffiliateLinkOverview() {
                         <i class="fas fa-user" aria-hidden="true"></i>
                         نام کاربری
                     </label>
-                    <input type="text" name="username" id="userInfoUsername" class="form-control modal-input" value="{{ user.username }}" required>
+                    <input type="text" name="username" id="userInfoUsername" class="form-control modal-input"
+                           value="{{ user.username }}" required autocomplete="username"
+                           {% if profile_completion_reward.is_auto_username %}placeholder="مثلاً ali.moshaver"{% endif %}>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="userInfoEmail">
@@ -950,67 +1098,166 @@ function copyAffiliateLinkOverview() {
 </div>
 
 <!-- Modal برای ویرایش اطلاعات تکمیلی -->
+{% if advisor_profile_form.places_available %}
+{{ advisor_profile_form.places_cities_by_province|json_script:"advisorPlacesCitiesData" }}
+{% endif %}
 <div id="profileModal" class="modal-professional prof-premium-modal prof-profile-modal" onclick="closeProfessionalModal(event, 'profileModal')" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" aria-hidden="true">
     <div class="modal-content-professional prof-profile-modal__sheet" onclick="event.stopPropagation()">
         <div class="prof-profile-modal__accent" aria-hidden="true"></div>
         <header class="modal-header-professional prof-profile-modal__head">
             <div class="prof-profile-modal__head-copy">
                 <p class="prof-profile-modal__eyebrow">حساب کاربری</p>
-                <h2 id="profileModalTitle" class="modal-title-professional prof-profile-modal__title">پروفایل تکمیلی</h2>
+                <h2 id="profileModalTitle" class="modal-title-professional prof-profile-modal__title">پروفایل حرفه‌ای مشاور</h2>
+                <p class="prof-profile-modal__subtitle">دقیق، کوتاه و حرفه‌ای — برای جایزه و اعتماد مشتری</p>
             </div>
             <button type="button" class="modal-close-btn prof-profile-modal__close" onclick="closeProfessionalModal(event, 'profileModal')" aria-label="بستن پنجره">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </header>
         <div class="modal-body-professional prof-profile-modal__body">
-            <form id="profileForm" class="prof-profile-modal__form" onsubmit="submitProfileForm(event)" enctype="multipart/form-data">
+            {% if profile_completion_reward.show and profile_completion_reward.state != 'ready' %}
+            <div class="prof-profile-modal__reward-banner prof-profile-modal__reward-banner--minimal" role="note">
+                <p class="prof-profile-modal__reward-banner-title">مراحل تکمیل برای باز شدن جایزه</p>
+                <ul class="prof-profile-modal__reward-chips" aria-label="مراحل این فرم">
+                    {% for item in profile_completion_reward.checklist %}
+                    {% if item.action == 'profile' %}
+                    <li class="prof-profile-modal__reward-chip{% if item.done %} is-done{% endif %}{% if item.key == 'agency_office' and user.profile.job_role == 'independent' %} is-muted{% endif %}">{{ item.label }}</li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <form id="profileForm" class="prof-profile-modal__form" onsubmit="submitProfileForm(event)" novalidate>
                 {% csrf_token %}
-                <section class="prof-profile-modal__block" aria-labelledby="profileModalAvatarLegend">
-                    <h3 id="profileModalAvatarLegend" class="prof-profile-modal__legend">تصویر پروفایل</h3>
-                    <div class="prof-profile-modal__avatar">
-                        <div class="prof-profile-modal__avatar-preview avatar-preview-container">
-                            {% if user.profile.avatar %}
-                                <img id="avatarPreview" src="{{ user.profile.avatar.url }}" alt="" class="avatar-preview prof-profile-modal__avatar-img">
-                            {% else %}
-                                <img id="avatarPreview" src="" alt="" class="avatar-preview prof-profile-modal__avatar-img" hidden>
-                            {% endif %}
-                            <div id="avatarPlaceholder" class="avatar-placeholder prof-profile-modal__avatar-ph" {% if user.profile.avatar %}hidden{% endif %}>
-                                <i class="fas fa-user" aria-hidden="true"></i>
-                            </div>
+
+                <section class="prof-profile-modal__panel" aria-labelledby="profileModalScopeLegend">
+                    <h3 id="profileModalScopeLegend" class="prof-profile-modal__section-title">
+                        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                        محدوده فعالیت
+                    </h3>
+                    <div class="prof-profile-modal__fields prof-profile-modal__fields--duo">
+                        <div class="prof-profile-modal__field">
+                            <label class="prof-profile-modal__label" for="profileActivityProvince">استان</label>
+                            <select name="activity_province" id="profileActivityProvince" class="prof-profile-modal__control">
+                                <option value="">انتخاب کنید</option>
+                                {% for value, label in advisor_profile_form.province_choices %}
+                                <option value="{{ value }}"{% if advisor_profile_form.activity_province_slug == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <div class="prof-profile-modal__avatar-copy">
-                            <p class="prof-profile-modal__avatar-hint">اختیاری — در بخش‌های عمومی حساب شما نمایش داده می‌شود.</p>
-                            <button type="button" class="prof-profile-modal__avatar-btn" onclick="document.getElementById('profileAvatar').click()">
-                                <i class="fas fa-image" aria-hidden="true"></i>
-                                انتخاب تصویر
-                            </button>
-                            <input type="file" name="avatar" id="profileAvatar" class="prof-profile-modal__file" accept="image/*" onchange="previewAvatar(event)" hidden>
+                        <div class="prof-profile-modal__field">
+                            <label class="prof-profile-modal__label" for="profileActivityCity">شهر</label>
+                            {% if advisor_profile_form.places_available %}
+                            <select name="activity_city" id="profileActivityCity" class="prof-profile-modal__control"
+                                    data-initial-city="{{ user.profile.activity_city|default:user.profile.city|default:''|escape }}">
+                                <option value="">انتخاب شهر</option>
+                                {% for value, label in advisor_profile_form.city_choices %}
+                                <option value="{{ value }}"{% if user.profile.activity_city == value or user.profile.city == value and not user.profile.activity_city %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <input type="text" name="activity_city" id="profileActivityCity" class="prof-profile-modal__control" autocomplete="address-level2" placeholder="مثلاً تهران" value="{{ user.profile.activity_city|default:user.profile.city|default:'' }}">
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="prof-profile-modal__field">
+                        <label class="prof-profile-modal__label" for="profileActivityDistricts">مناطق تخصصی</label>
+                        <textarea name="activity_districts" id="profileActivityDistricts" class="prof-profile-modal__control prof-profile-modal__control--short" rows="2" placeholder="منطقه ۳، منطقه ۵ — با ویرگول جدا کنید">{{ advisor_profile_form.activity_districts_text }}</textarea>
+                    </div>
+                    <div class="prof-profile-modal__field">
+                        <label class="prof-profile-modal__label" for="profileActivityNeighborhoods">محله‌های تخصصی</label>
+                        <textarea name="activity_neighborhoods" id="profileActivityNeighborhoods" class="prof-profile-modal__control prof-profile-modal__control--short" rows="2" placeholder="جردن، ونک — با ویرگول جدا کنید">{{ advisor_profile_form.activity_neighborhoods_text }}</textarea>
+                        <p class="prof-profile-modal__field-hint">برای تکمیل جایزه، حداقل یک منطقه یا محله لازم است.</p>
+                    </div>
+                </section>
+
+                <section class="prof-profile-modal__panel" aria-labelledby="profileModalExpLegend">
+                    <h3 id="profileModalExpLegend" class="prof-profile-modal__section-title">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
+                        سابقه و تخصص
+                    </h3>
+                    <div class="prof-profile-modal__field">
+                        <label class="prof-profile-modal__label" for="profileYearsExperience">سابقه فعالیت (سال)</label>
+                        <input type="number" name="years_experience" id="profileYearsExperience" class="prof-profile-modal__control prof-profile-modal__control--num" min="0" max="60" inputmode="numeric" placeholder="مثلاً ۵" value="{{ user.profile.years_experience|default:'' }}">
+                    </div>
+                    <div class="prof-profile-modal__field">
+                        <span class="prof-profile-modal__label" id="profileExpertiseLegend">حوزه تخصص</span>
+                        <div class="prof-profile-modal__chips" role="group" aria-labelledby="profileExpertiseLegend">
+                            {% for value, label in advisor_profile_form.expertise_choices %}
+                            <label class="prof-profile-modal__chip">
+                                <input type="checkbox" name="expertise_areas" value="{{ value }}"{% if value in advisor_profile_form.selected_expertise %} checked{% endif %}>
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="prof-profile-modal__field">
+                        <span class="prof-profile-modal__label" id="profilePropertyLegend">نوع ملک تخصصی</span>
+                        <div class="prof-profile-modal__chips" role="group" aria-labelledby="profilePropertyLegend">
+                            {% for value, label in advisor_profile_form.property_choices %}
+                            <label class="prof-profile-modal__chip">
+                                <input type="checkbox" name="property_specialties" value="{{ value }}"{% if value in advisor_profile_form.selected_properties %} checked{% endif %}>
+                                <span>{{ label }}</span>
+                            </label>
+                            {% endfor %}
                         </div>
                     </div>
                 </section>
-                <section class="prof-profile-modal__block">
-                    <label class="prof-profile-modal__label" for="profileBio">درباره من</label>
-                    <textarea name="bio" id="profileBio" class="prof-profile-modal__control prof-profile-modal__control--area" rows="4" placeholder="معرفی کوتاه برای مشتریان و همکاران">{{ user.profile.bio|default:'' }}</textarea>
+
+                <section class="prof-profile-modal__panel" aria-labelledby="profileModalRoleLegend">
+                    <h3 id="profileModalRoleLegend" class="prof-profile-modal__section-title">
+                        <i class="fas fa-briefcase" aria-hidden="true"></i>
+                        نقش و محل کار
+                    </h3>
+                    <div class="prof-profile-modal__field">
+                        <label class="prof-profile-modal__label" for="profileJobRole">نوع فعالیت شغلی</label>
+                        <select name="job_role" id="profileJobRole" class="prof-profile-modal__control">
+                            <option value="">انتخاب کنید</option>
+                            {% for value, label in advisor_profile_form.job_role_choices %}
+                            <option value="{{ value }}"{% if user.profile.job_role == value %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="profileAgencyPanel" class="prof-profile-modal__agency"{% if not advisor_profile_form.job_role_requires_agency %} hidden{% endif %}>
+                        <p class="prof-profile-modal__field-hint">مشخصات دفتر برای تکمیل جایزه (نقش آژانس) لازم است — می‌توانید بعداً پر کنید.</p>
+                        <div class="prof-profile-modal__field">
+                            <label class="prof-profile-modal__label" for="profileAgencyName">نام بنگاه</label>
+                            <input type="text" name="office_agency_name" id="profileAgencyName" class="prof-profile-modal__control" value="{{ user.profile.office_agency_name|default:'' }}">
+                        </div>
+                        <div class="prof-profile-modal__fields prof-profile-modal__fields--duo">
+                            <div class="prof-profile-modal__field">
+                                <label class="prof-profile-modal__label" for="profileAgencyCity">شهر دفتر</label>
+                                <input type="text" name="office_agency_city" id="profileAgencyCity" class="prof-profile-modal__control" value="{{ user.profile.office_agency_city|default:'' }}">
+                            </div>
+                            <div class="prof-profile-modal__field">
+                                <label class="prof-profile-modal__label" for="profileAgencyPhone">تلفن دفتر</label>
+                                <input type="text" name="office_agency_phone" id="profileAgencyPhone" class="prof-profile-modal__control" dir="ltr" inputmode="tel" value="{{ user.profile.office_agency_phone|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="prof-profile-modal__field">
+                            <label class="prof-profile-modal__label" for="profileAgencyAddress">آدرس دفتر</label>
+                            <textarea name="office_agency_address" id="profileAgencyAddress" class="prof-profile-modal__control prof-profile-modal__control--short" rows="2">{{ user.profile.office_agency_address|default:'' }}</textarea>
+                        </div>
+                    </div>
                 </section>
-                <div class="prof-profile-modal__duo">
-                    <section class="prof-profile-modal__block">
-                        <label class="prof-profile-modal__label" for="profileCity">شهر</label>
-                        <input type="text" name="city" id="profileCity" class="prof-profile-modal__control" autocomplete="address-level2" value="{{ user.profile.city|default:'' }}">
-                    </section>
-                    <section class="prof-profile-modal__block">
-                        <label class="prof-profile-modal__label" for="profilePostalCode">کد پستی</label>
-                        <input type="text" name="postal_code" id="profilePostalCode" class="prof-profile-modal__control prof-profile-modal__control--num" inputmode="numeric" autocomplete="postal-code" value="{{ user.profile.postal_code|default:'' }}">
-                    </section>
-                </div>
-                <section class="prof-profile-modal__block">
-                    <label class="prof-profile-modal__label" for="profileAddress">آدرس</label>
-                    <textarea name="address" id="profileAddress" class="prof-profile-modal__control prof-profile-modal__control--area prof-profile-modal__control--short" rows="3" placeholder="آدرس پستی یا محل فعالیت">{{ user.profile.address|default:'' }}</textarea>
+
+                <section class="prof-profile-modal__panel prof-profile-modal__panel--soft" aria-labelledby="profileModalBioLegend">
+                    <h3 id="profileModalBioLegend" class="prof-profile-modal__section-title">
+                        <i class="fas fa-align-right" aria-hidden="true"></i>
+                        درباره من
+                        <span class="prof-profile-modal__optional">اختیاری</span>
+                    </h3>
+                    <div class="prof-profile-modal__field">
+                        <textarea name="bio" id="profileBio" class="prof-profile-modal__control prof-profile-modal__control--area prof-profile-modal__control--bio" rows="3" aria-labelledby="profileModalBioLegend" placeholder="معرفی کوتاه برای مشتریان و همکاران">{{ user.profile.bio|default:'' }}</textarea>
+                    </div>
                 </section>
+
                 <div id="profileError" class="prof-profile-modal__error" role="alert" aria-live="assertive" hidden></div>
             </form>
         </div>
         <footer class="modal-footer-professional prof-profile-modal__foot">
             <button type="submit" id="profileSubmitBtn" form="profileForm" class="btn btn-primary prof-profile-modal__action prof-profile-modal__action--primary">
+                <i class="fas fa-check" aria-hidden="true"></i>
                 ذخیره تغییرات
             </button>
             <button type="button" class="btn btn-secondary prof-profile-modal__action prof-profile-modal__action--ghost" onclick="closeProfessionalModal(event, 'profileModal')">

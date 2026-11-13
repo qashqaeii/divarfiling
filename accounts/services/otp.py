@@ -185,15 +185,25 @@ def request_otp(
 
     attr_name = getattr(settings, 'FARAZSMS_OTP_ATTR', 'code') or 'code'
     try:
+        from accounts.services.sms.log_preview import build_sms_log_preview
+
+        attrs = {attr_name: code}
+        preview = build_sms_log_preview(
+            purpose=purpose,
+            channel=SmsMessageLog.Channel.PATTERN,
+            pattern_code=sms_log.pattern_code,
+            attributes=attrs,
+        )
         result: SmsResult = send_pattern_sms(
             normalized,
             purpose=purpose,
-            attributes={attr_name: code},
+            attributes=attrs,
         )
         sms_log.mark_sent(
             provider=result.provider,
             message_id=result.message_id,
             status=SmsMessageLog.Status.FAKE if result.is_fake else SmsMessageLog.Status.SENT,
+            message_preview=preview,
         )
     except SmsError as exc:
         sms_log.mark_failed(str(exc))

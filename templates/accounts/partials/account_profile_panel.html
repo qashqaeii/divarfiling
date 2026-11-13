@@ -2,7 +2,7 @@
 {% load static %}
 {% load account_avatar_tags %}
 
-<div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab ov2 tab-content dash-tab-panel prof-tab prof-premium"{% if active_tab != 'profile' %} hidden{% endif %}>
+<div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab ov2 tab-content dash-tab-panel prof-tab prof-premium prof-tab--polished"{% if active_tab != 'profile' %} hidden{% endif %}>
     <div class="mk-acc-tab-body">
 
     <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
@@ -54,8 +54,8 @@
             <button type="button" class="mk-acc-mob-settings__row" role="listitem" onclick="openProfileModal()">
                 <span class="mk-acc-mob-settings__icon mk-acc-mob-settings__icon--sky"><i class="fas fa-id-card" aria-hidden="true"></i></span>
                 <span class="mk-acc-mob-settings__body">
-                    <strong>پروفایل تکمیلی</strong>
-                    <span>{% if user.profile and user.profile.city %}{{ user.profile.city }}{% elif user.profile and user.profile.bio %}{{ user.profile.bio|truncatewords:8 }}{% else %}برای مشتریان و اشتراک‌ها تکمیل کنید{% endif %}</span>
+                    <strong>پروفایل حرفه‌ای</strong>
+                    <span>{% if profile_completion_reward.show and profile_completion_reward.state != 'ready' %}<span class="ov2-fa-num">{{ profile_completion_reward.progress.percent|to_persian_digits }}٪</span> تکمیل — ادامه دهید{% elif user.profile.activity_city %}{{ user.profile.activity_city }}{% elif user.profile.city %}{{ user.profile.city }}{% else %}محدوده، تخصص و نقش شغلی{% endif %}</span>
                 </span>
                 <i class="fas fa-chevron-left mk-acc-mob-settings__chev" aria-hidden="true"></i>
             </button>
@@ -91,7 +91,7 @@
                 <div class="prof-hero__actions" role="group" aria-label="عملیات سریع پروفایل">
                     <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openProfileModal()">
                         <i class="fas fa-id-card" aria-hidden="true"></i>
-                        <span>پروفایل تکمیلی</span>
+                        <span>پروفایل حرفه‌ای</span>
                     </button>
                     <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
                         <i class="fas fa-pen" aria-hidden="true"></i>
@@ -119,6 +119,109 @@
         </div>
     </section>
 
+    {% if profile_completion_reward.show %}
+    {% with pr=profile_completion_reward %}
+    <section class="prof-reward prof-reward--polished" data-prof-reward-state="{{ pr.state }}"
+             data-verify-phone-url="{{ pr.verify_phone_url }}">
+        <article class="prof-reward-strip prof-reward-strip--polished{% if pr.state == 'ready' %} prof-reward-strip--unlocked{% else %} prof-reward-strip--locked{% endif %}{% if pr.state != 'ready' and pr.progress.percent > 0 and pr.progress.percent < 100 %} prof-reward-strip--charging{% endif %}"
+                 style="--prof-reward-progress: {{ pr.progress.percent }};"
+                 aria-label="{% if pr.state == 'ready' %}جایزه فعال{% else %}پیشرفت تکمیل پروفایل{% endif %}">
+            {% if pr.state == 'ready' %}
+            <div class="prof-reward-gift prof-reward-gift--ready" id="profRewardGift" role="img"
+                 aria-label="جایزه باز شده — تخفیف {{ pr.percent_off|to_persian_digits }} درصد">
+                <i class="fas fa-gift prof-reward-gift__icon" aria-hidden="true"></i>
+            </div>
+            {% else %}
+            <div class="prof-reward-gift" id="profRewardGift"
+                 role="img"
+                 aria-label="پیشرفت {{ pr.progress.percent|to_persian_digits }} درصد از {{ pr.progress.total|to_persian_digits }} مرحله">
+                <span class="prof-reward-gift__chart" aria-hidden="true"></span>
+                <span class="prof-reward-gift__shimmer" aria-hidden="true"></span>
+                <span class="prof-reward-gift__ring" aria-hidden="true"></span>
+                <span class="prof-reward-gift__box" aria-hidden="true">
+                    <i class="fas fa-gift prof-reward-gift__icon" aria-hidden="true"></i>
+                    <span class="prof-reward-gift__meter ov2-fa-num">{{ pr.progress.percent|to_persian_digits }}٪</span>
+                </span>
+                <span class="prof-reward-gift__lock" aria-hidden="true" title="قفل">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                </span>
+            </div>
+            {% endif %}
+            <div class="prof-reward-strip__main{% if pr.state == 'ready' %} prof-reward-strip__main--unlocked{% endif %}">
+                {% if pr.state == 'ready' %}
+                <p class="prof-reward-strip__lead prof-reward-strip__lead--unlocked">
+                    جایزه فعال است
+                    <span class="prof-reward-strip__lead-sep" aria-hidden="true">·</span>
+                    <span class="prof-reward-strip__lead-off ov2-fa-num">تخفیف {{ pr.percent_off|to_persian_digits }}٪</span>
+                </p>
+                <p class="prof-reward-strip__sub prof-reward-strip__sub--unlocked">کد یک‌بار مصرف — در پرداخت وارد کنید</p>
+                <div class="prof-reward-strip__code-actions">
+                    <div class="prof-reward-strip__code-row" dir="ltr">
+                        <code id="profRewardCode" class="prof-reward-strip__code-val">{{ pr.code }}</code>
+                        <button type="button" class="prof-reward-strip__code-copy" data-copy-target="profRewardCode" onclick="copyProfRewardCode(this)" aria-label="کپی کد تخفیف">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                            <span class="prof-reward-strip__code-copy-label">کپی</span>
+                        </button>
+                    </div>
+                    <a class="prof-reward-strip__shop-link" href="{{ pr.checkout_url }}">
+                        <span>رفتن به خرید</span>
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    </a>
+                </div>
+                {% else %}
+                <div class="prof-reward-strip__top">
+                    <p class="prof-reward-strip__lead">پیشرفت جایزه</p>
+                    <span class="prof-reward-strip__count"
+                          aria-label="{{ pr.progress.done_count|to_persian_digits }} از {{ pr.progress.total|to_persian_digits }} مرحله تکمیل شده">
+                        <span class="prof-reward-strip__frac ov2-fa-num">{{ pr.progress.done_count|to_persian_digits }}/{{ pr.progress.total|to_persian_digits }}</span>
+                    </span>
+                </div>
+                <p class="prof-reward-strip__sub">
+                    {% if pr.is_auto_username %}
+                    نام کاربری خودکار است — یک نام دلخواه انتخاب کنید
+                    {% elif pr.needs_phone_verify %}
+                    موبایل خود را تأیید کنید
+                    {% else %}
+                    پروفایل حرفه‌ای را تکمیل کنید تا جایزه باز شود
+                    {% endif %}
+                </p>
+                <div class="prof-reward-strip__bar" role="progressbar"
+                     style="--prof-reward-progress: {{ pr.progress.percent }};"
+                     aria-valuenow="{{ pr.progress.percent }}"
+                     aria-valuemin="0" aria-valuemax="100"
+                     aria-valuetext="{{ pr.progress.percent|to_persian_digits }} درصد"
+                     aria-label="پیشرفت تکمیل پروفایل">
+                    <span class="prof-reward-strip__bar-fill" aria-hidden="true"></span>
+                </div>
+                <div class="prof-reward-strip__steps-wrap" tabindex="0" aria-label="مراحل باقی‌مانده">
+                    <ul class="prof-reward-strip__steps">
+                        {% for item in pr.checklist %}
+                        <li class="prof-reward-strip__step{% if item.done %} is-done{% endif %}"
+                            {% if not item.done and item.action %}data-step-action="{{ item.action }}"{% endif %}>{{ item.label }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <button type="button"
+                        class="prof-reward-strip__cta prof-reward-strip__cta--next prof-reward-strip__cta--in-main prof-reward-strip__cta--desk-min"
+                        onclick="openProfileRewardNextStep()"
+                        aria-label="{% if pr.is_auto_username %}انتخاب نام کاربری دلخواه برای باز کردن جایزه{% elif pr.needs_phone_verify %}تأیید شماره موبایل برای باز کردن جایزه{% else %}تکمیل پروفایل برای باز کردن جایزه{% endif %}">
+                    <span class="prof-reward-strip__cta-icon" aria-hidden="true">
+                        <i class="fas {% if pr.is_auto_username %}fa-pen{% elif pr.needs_phone_verify %}fa-mobile-screen{% else %}fa-list-check{% endif %}"></i>
+                    </span>
+                    <span class="prof-reward-strip__cta-text">
+                        <span class="prof-reward-strip__cta-label">
+                            {% if pr.is_auto_username %}انتخاب نام کاربری{% elif pr.needs_phone_verify %}تأیید موبایل{% else %}تکمیل پروفایل حرفه‌ای{% endif %}
+                        </span>
+                    </span>
+                    <span class="prof-reward-strip__cta-arr" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+                </button>
+                {% endif %}
+            </div>
+        </article>
+    </section>
+    {% endwith %}
+    {% endif %}
+
     <div class="prof-grid mk-acc-profile-grid mk-acc-desk-only">
         <section class="prof-card mk-acc-panel">
             <header class="prof-card-head">
@@ -127,7 +230,7 @@
                     <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
                 </button>
             </header>
-            <dl class="prof-fields">
+            <dl class="prof-fields prof-fields--advisor-minimal">
                 <div class="prof-field">
                     <dt>نام کاربری</dt>
                     <dd>{{ user.username }}</dd>
@@ -145,32 +248,55 @@
 
         <section class="prof-card mk-acc-panel">
             <header class="prof-card-head">
-                <div class="prof-premium__card-heading"><span class="prof-premium__card-icon"><i class="fas fa-id-card" aria-hidden="true"></i></span><div><h2 class="prof-card-title">پروفایل تکمیلی</h2><p class="prof-card-desc">اطلاعات شخصی و محل فعالیت</p></div></div>
+                <div class="prof-premium__card-heading"><span class="prof-premium__card-icon"><i class="fas fa-id-card" aria-hidden="true"></i></span><div><h2 class="prof-card-title">پروفایل حرفه‌ای مشاور</h2><p class="prof-card-desc">محدوده فعالیت، تخصص و مشخصات شغلی</p></div></div>
                 <button type="button" class="prof-edit-btn" onclick="openProfileModal()">
                     <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
                 </button>
             </header>
             {% if user.profile %}
-            <dl class="prof-fields">
+            <dl class="prof-fields prof-fields--advisor-minimal">
+                <div class="prof-field">
+                    <dt>محدوده فعالیت</dt>
+                    <dd>{{ advisor_profile_form.display_province }} · {{ user.profile.activity_city|default:user.profile.city|default:"—" }}</dd>
+                </div>
+                <div class="prof-field prof-field--full">
+                    <dt>مناطق / محله‌ها</dt>
+                    <dd>{{ advisor_profile_form.display_districts }}{% if advisor_profile_form.display_neighborhoods != "—" %} · {{ advisor_profile_form.display_neighborhoods }}{% endif %}</dd>
+                </div>
+                <div class="prof-field">
+                    <dt>سابقه</dt>
+                    <dd>{% if user.profile.years_experience %}<span class="ov2-fa-num">{{ user.profile.years_experience|to_persian_digits }}</span> سال{% else %}—{% endif %}</dd>
+                </div>
+                <div class="prof-field">
+                    <dt>نقش شغلی</dt>
+                    <dd>{{ advisor_profile_form.display_job_role }}</dd>
+                </div>
+                <div class="prof-field prof-field--full">
+                    <dt>حوزه تخصص</dt>
+                    <dd>{{ advisor_profile_form.display_expertise }}</dd>
+                </div>
+                <div class="prof-field prof-field--full">
+                    <dt>نوع ملک</dt>
+                    <dd>{{ advisor_profile_form.display_properties }}</dd>
+                </div>
+                {% if advisor_profile_form.job_role_requires_agency %}
+                <div class="prof-field prof-field--full">
+                    <dt>آژانس / دفتر</dt>
+                    <dd>{{ user.profile.office_agency_name|default:"—" }} · {{ user.profile.office_agency_city|default:"—" }}{% if user.profile.office_agency_phone %} · <span dir="ltr">{{ user.profile.office_agency_phone }}</span>{% endif %}</dd>
+                </div>
+                {% endif %}
+                {% if user.profile.bio %}
                 <div class="prof-field prof-field--full">
                     <dt>درباره من</dt>
-                    <dd>{{ user.profile.bio|default:"—" }}</dd>
+                    <dd>{{ user.profile.bio }}</dd>
                 </div>
-                <div class="prof-field">
-                    <dt>شهر</dt>
-                    <dd>{{ user.profile.city|default:"—" }}</dd>
-                </div>
-                <div class="prof-field">
-                    <dt>کد پستی</dt>
-                    <dd>{{ user.profile.postal_code|default:"—" }}</dd>
-                </div>
-                <div class="prof-field prof-field--full">
-                    <dt>آدرس</dt>
-                    <dd>{{ user.profile.address|default:"—" }}</dd>
-                </div>
+                {% endif %}
             </dl>
             {% else %}
-            <p class="prof-empty">اطلاعات تکمیلی ثبت نشده — از «پروفایل تکمیلی» در بالا شروع کنید.</p>
+            <p class="prof-empty prof-empty--action">
+                هنوز پروفایل حرفه‌ای ثبت نشده.
+                <button type="button" class="prof-edit-btn prof-edit-btn--primary prof-empty__btn" onclick="openProfileModal()">شروع تکمیل</button>
+            </p>
             {% endif %}
         </section>
     </div>
@@ -195,7 +321,6 @@
             <details class="prof-fold" open>
                 <summary><span class="prof-premium__fold-icon"><i class="fas fa-bullhorn" aria-hidden="true"></i></span><span class="prof-premium__fold-copy"><strong>برند و پیام</strong><small>نام برند و متن خوشامدگویی مشتریان</small></span></summary>
                 <div class="prof-fold-body">
-                    <p class="prof-premium__section-hint">نام و پیام برند شما هنگام ارسال فایل به مشتری نمایش داده می‌شود.</p>
                     <label class="prof-label" for="consultantAgencyName">نام آژانس / برند</label>
                     <input type="text" name="agency_name" id="consultantAgencyName" class="prof-input" autocomplete="organization"
                            value="{{ consultant_agency_name }}" placeholder="مثلاً آژانس املاک آسمان">
@@ -206,41 +331,30 @@
             </details>
 
             <details class="prof-fold">
-                <summary><span class="prof-premium__fold-icon"><i class="fas fa-user-tie" aria-hidden="true"></i></span><span class="prof-premium__fold-copy"><strong>مشاور و شبکه‌های شخصی</strong><small>تصویر شما و راه‌های ارتباطی</small></span></summary>
-                <div class="prof-fold-body">
-                    <div class="prof-upload-row">
-                        <div class="prof-photo">
-                            <img src="{{ consultant_photo_url }}" alt="" id="consultantPhotoPreview" width="64" height="64">
-                        </div>
-                        <div class="prof-upload-field">
-                            <label class="prof-label" for="consultantPhotoInput">عکس مشاور</label>
-                            <p class="prof-card-desc">بدون آپلود جداگانه، آواتار حساب کاربری در اشتراک‌ها نمایش داده می‌شود.</p>
-                            <input type="file" name="consultant_photo" id="consultantPhotoInput" class="prof-input prof-input--file"
-                                   accept="image/*" onchange="previewConsultantImage(event, 'consultantPhotoPreview', 'consultantPhotoPlaceholder')">
-                            {% if ws_settings and ws_settings.consultant_photo %}
-                            <label class="prof-check"><input type="checkbox" name="clear_consultant_photo" value="1"> حذف عکس</label>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="prof-social-list">
+                <summary><span class="prof-premium__fold-icon"><i class="fas fa-user-tie" aria-hidden="true"></i></span><span class="prof-premium__fold-copy"><strong>شبکه‌های شخصی</strong><small>لینک یا آیدی — در صفحه اشتراک نمایش داده می‌شود</small></span></summary>
+                <div class="prof-fold-body prof-fold-body--social">
+                    <ul class="prof-social-list prof-social-list--minimal" role="list">
                         {% for net in consultant_social_networks %}
-                        <div class="prof-social-row" style="--prof-social: {{ net.color }}">
-                            <label class="prof-social-label" for="dash-social-{{ net.key }}">
-                                {% if net.icon_file %}
-                                <img src="{% static net.icon_file %}?v=2" alt="" width="20" height="20">
-                                {% else %}
-                                <i class="fas fa-link" aria-hidden="true"></i>
-                                {% endif %}
-                                <span>{{ net.label }}</span>
+                        <li class="prof-social-item" style="--prof-social: {{ net.color }}">
+                            <label class="prof-social-item__brand" for="dash-social-{{ net.key }}">
+                                <span class="prof-social-item__icon" aria-hidden="true">
+                                    {% if net.icon_file %}
+                                    <img src="{% static net.icon_file %}?v=2" alt="" width="18" height="18">
+                                    {% else %}
+                                    <i class="fas fa-link"></i>
+                                    {% endif %}
+                                </span>
+                                <span class="prof-social-item__name">{{ net.label }}</span>
                             </label>
-                            <input type="text" class="prof-input prof-input--social" id="dash-social-{{ net.key }}"
+                            <input type="text" class="prof-social-item__input" id="dash-social-{{ net.key }}"
                                    name="social_{{ net.key }}" value="{{ net.url }}" placeholder="{{ net.placeholder }}"
-                                   dir="ltr" autocomplete="off">
-                        </div>
+                                   dir="ltr" autocomplete="off" inputmode="url" spellcheck="false"
+                                   aria-label="{{ net.label }}">
+                        </li>
                         {% empty %}
-                        <p class="prof-empty">شبکه‌ای تعریف نشده.</p>
+                        <li class="prof-empty">شبکه‌ای تعریف نشده.</li>
                         {% endfor %}
-                    </div>
+                    </ul>
                 </div>
             </details>
 

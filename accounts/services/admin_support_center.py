@@ -20,6 +20,7 @@ from accounts.services.admin_dashboard import (
     get_pending_card_transfers,
     get_pending_withdrawals,
 )
+from accounts.services.admin_user_profile_url import admin_user_profile_url
 from affiliates.models import Withdrawal
 from shop.models import CardTransferSubmission
 from workspace.models import Ticket, TicketMessage
@@ -485,6 +486,8 @@ def _serialize_tickets(tickets) -> List[Dict[str, Any]]:
             'id': t.pk,
             'ticket_number': t.ticket_number,
             'subject': t.subject,
+            'user_id': t.user_id,
+            'user_profile_url': admin_user_profile_url(t.user_id),
             'user_display': t.user.get_full_name() or t.user.username,
             'status': t.status,
             'status_label': t.get_status_display_fa(),

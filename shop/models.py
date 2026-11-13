@@ -572,7 +572,13 @@ class DiscountCode(models.Model):
         
         if self.valid_until and now > self.valid_until:
             return False, 'کد تخفیف منقضی شده است.'
-        
+
+        from shop.services.discount_personal_code import validate_personal_discount_owner
+
+        owner_ok, owner_msg = validate_personal_discount_owner(self, user)
+        if not owner_ok:
+            return False, owner_msg
+
         # بررسی اینکه آیا کاربر قبلاً از این کد استفاده کرده است (فقط سفارش‌های پرداخت شده)
         if user and user.is_authenticated:
             from .models import Order

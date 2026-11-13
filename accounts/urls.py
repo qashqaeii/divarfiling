@@ -60,6 +60,8 @@ from .admin_views import (
     AdminSalesCenterView,
     AdminSystemSummaryView,
     AdminUsersCenterView,
+    AdminUser360TabJsonView,
+    AdminUser360View,
     AdminUsersManagementDetailView,
     AdminUsersManagementListView,
 )
@@ -196,6 +198,16 @@ urlpatterns = [
         'admin-panel/users/<int:user_id>.json',
         AdminUsersManagementDetailView.as_view(),
         name='admin_panel_user_detail_json',
+    ),
+    path(
+        'admin-panel/users/<int:user_id>/',
+        AdminUser360View.as_view(),
+        name='admin_panel_user_360',
+    ),
+    path(
+        'admin-panel/users/<int:user_id>/<slug:tab>.json',
+        AdminUser360TabJsonView.as_view(),
+        name='admin_panel_user_360_tab_json',
     ),
     path('admin-panel/marketing/', AdminMarketingView.as_view(), name='admin_panel_marketing'),
     path('admin-panel/marketing/preview.json', AdminMarketingPreviewView.as_view(), name='admin_panel_marketing_preview'),

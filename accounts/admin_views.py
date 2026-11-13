@@ -121,6 +121,8 @@ from accounts.services.admin_users_management import (
     get_user_management_detail,
     list_users_management,
 )
+from accounts.services.admin_user_360 import TAB_KEYS, build_user_360_shell, build_user_360_tab
+from accounts.services.admin_user_360.common import get_user_360_user
 from accounts.services.sms import get_sms_balance_snapshot
 from blog.services.article_import import (
     ArticleImportError,
@@ -353,6 +355,73 @@ class AdminUsersManagementDetailView(StaffRequiredMixin, View):
             encoder=DjangoJSONEncoder,
             json_dumps_params={'ensure_ascii': False},
         )
+        response['Cache-Control'] = 'private, no-store'
+        return response
+
+
+class AdminUser360View(StaffRequiredMixin, TemplateView):
+    """صفحه پرونده ۳۶۰ درجه مشتری."""
+
+    template_name = 'accounts/admin_user_360.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not can_view_user_management(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user = get_user_360_user(int(kwargs['user_id']))
+        shell = build_user_360_shell(user, request=self.request)
+        ctx['u360'] = shell
+        ctx['u360_json'] = json.dumps(shell, ensure_ascii=False, cls=DjangoJSONEncoder)
+        active_tab = (self.request.GET.get('tab') or 'overview').strip()
+        if active_tab not in TAB_KEYS:
+            active_tab = 'overview'
+        ctx['u360_active_tab'] = active_tab
+        ctx['admin_panel_page_subtitle'] = shell['header'].get('phone') or ''
+        ctx['admin_panel_title'] = 'پرونده مشتری'
+        ctx['charts_enabled'] = True
+        ctx['charts_json'] = '{}'
+        return ctx
+
+    def get(self, request, *args, **kwargs):
+        user_id = kwargs.get('user_id')
+        if not get_user_360_user(int(user_id)):
+            return HttpResponseNotFound('کاربر یافت نشد')
+        return super().get(request, *args, **kwargs)
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super().render_to_response(context, **response_kwargs)
+        response['Cache-Control'] = 'private, no-store'
+        return response
+
+
+class AdminUser360TabJsonView(StaffRequiredMixin, View):
+    """بارگذاری تب پرونده ۳۶۰ — JSON با صفحه‌بندی."""
+
+    def get(self, request, user_id, tab):
+        if not can_view_user_management(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
+        if tab not in TAB_KEYS:
+            return JsonResponse({'ok': False, 'error': 'تب نامعتبر'}, status=400)
+        if not get_user_360_user(int(user_id)):
+            return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
+        reveal = request.GET.get('reveal_sensitive') == '1' and request.user.is_superuser
+        include_internal = (
+            request.GET.get('internal') == '1'
+            and (request.user.is_superuser or request.user.has_perm('workspace.view_ticketmessage'))
+        )
+        payload = build_user_360_tab(
+            int(user_id),
+            tab,
+            reveal_sensitive=reveal,
+            include_internal_notes=include_internal,
+            **request.GET.dict(),
+        )
+        if not payload:
+            return JsonResponse({'ok': False, 'error': 'داده یافت نشد'}, status=404)
+        response = JsonResponse(payload, encoder=DjangoJSONEncoder, json_dumps_params={'ensure_ascii': False})
         response['Cache-Control'] = 'private, no-store'
         return response
 

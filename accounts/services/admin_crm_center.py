@@ -11,6 +11,7 @@ from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
+from accounts.services.admin_user_profile_url import admin_user_profile_url
 from accounts.services.admin_dashboard import (
     TABLE_PREVIEW_ROWS,
     _date_range,
@@ -430,7 +431,7 @@ def _serialize_open_deals(deals) -> List[Dict[str, Any]]:
     for deal in deals:
         rows.append({
             'user_display': _safe_user_display(deal.user),
-            'user_admin_url': reverse('admin:accounts_user_change', args=[deal.user_id]),
+            'user_admin_url': admin_user_profile_url(deal.user_id),
             'title': deal.title[:60],
             'customer_label': deal.customer.name[:40] if deal.customer_id else '—',
             'customer_admin_url': (
@@ -449,7 +450,7 @@ def _serialize_overdue_reminders(items, now) -> List[Dict[str, Any]]:
     for reminder in items:
         rows.append({
             'user_display': _safe_user_display(reminder.user),
-            'user_admin_url': reverse('admin:accounts_user_change', args=[reminder.user_id]),
+            'user_admin_url': admin_user_profile_url(reminder.user_id),
             'title': reminder.title[:60],
             'due_at': reminder.due_at,
             'delay_label': _overdue_delay_label(reminder.due_at, now),
@@ -465,7 +466,7 @@ def _serialize_active_users(users_qs) -> List[Dict[str, Any]]:
         last_at = row.get('last_activity_at')
         rows.append({
             'user_display': _safe_user_display(user),
-            'user_admin_url': reverse('admin:accounts_user_change', args=[user.pk]),
+            'user_admin_url': admin_user_profile_url(user.pk),
             'customers_count': row.get('customers_count', 0),
             'properties_count': row.get('properties_count', 0),
             'deals_count': row.get('deals_count', 0),

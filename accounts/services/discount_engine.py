@@ -23,6 +23,7 @@ POLICY_EXPIRED_RENEWAL = 'expired_renewal'
 POLICY_RETURNING_CUSTOMER = 'returning_customer'
 POLICY_DIRECT_REQUEST = 'direct_request'
 POLICY_ONBOARDING = 'onboarding'
+POLICY_PROFILE_COMPLETE = 'profile_complete'
 
 DEFAULT_POLICIES: Dict[str, Dict[str, Any]] = {
     POLICY_ABANDONED_CHECKOUT: {
@@ -54,6 +55,12 @@ DEFAULT_POLICIES: Dict[str, Dict[str, Any]] = {
         'percent': 10,
         'valid_hours': 48,
         'enabled': False,
+    },
+    POLICY_PROFILE_COMPLETE: {
+        'label': 'تکمیل پروفایل',
+        'percent': 10,
+        'valid_hours': 0,
+        'enabled': True,
     },
 }
 

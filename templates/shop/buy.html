@@ -14,7 +14,9 @@
 {% block breadcrumbs %}{% endblock %}
 
 {% block content %}
-<div class="ck-flow ck-buy-flow ck-buy-flow--premium" data-checkout data-apply-discount-url="{% url 'apply_discount' product.slug %}">
+<div class="ck-flow ck-buy-flow ck-buy-flow--premium" data-checkout data-apply-discount-url="{% url 'apply_discount' product.slug %}"
+     data-prefill-discount-code="{{ prefilled_discount_code|default:'' }}"
+     data-prefill-discount-error="{{ prefilled_discount_error|default:'' }}">
 
     <div class="ck-ambient ck-ambient--subtle" aria-hidden="true">
         <span class="ck-ambient-orb ck-ambient-orb--violet"></span>
@@ -93,10 +95,10 @@
                                 <span class="ck-order-block-label">کد تخفیف <em>(اختیاری)</em></span>
                                 <div class="ck-promo ck-promo--sidebar">
                                     <div class="ck-promo-row ck-promo-row--sidebar">
-                                        <input type="text" name="discount_code" id="id_discount_code" class="ck-promo-input" placeholder="SUMMER1404" autocomplete="off" aria-describedby="discount-message">
+                                        <input type="text" name="discount_code" id="id_discount_code" class="ck-promo-input" placeholder="SUMMER1404" autocomplete="off" aria-describedby="discount-message" value="{{ form.discount_code.value|default:prefilled_discount_code|default:'' }}">
                                         <button type="button" id="apply-discount-btn" class="ck-promo-btn">اعمال</button>
                                     </div>
-                                    <div id="discount-message" class="ck-promo-msg" role="status" aria-live="polite"></div>
+                                    <div id="discount-message" class="ck-promo-msg{% if prefilled_discount_error %} is-error{% endif %}" role="status" aria-live="polite">{% if prefilled_discount_error %}{{ prefilled_discount_error }}{% endif %}</div>
                                     {% if form.discount_code.errors %}
                                     <div class="ck-promo-msg is-error" role="alert">{{ form.discount_code.errors.0 }}</div>
                                     {% endif %}
@@ -393,5 +395,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=15" defer></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=16" defer></script>
 {% endblock %}

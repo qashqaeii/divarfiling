@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from accounts.context_processors import admin_panel_shell
 from accounts.services.admin_panel_shell import (
+    ADMIN_PANEL_SIDEBAR_LABELS,
     build_admin_panel_shell_context,
     resolve_admin_panel_nav_active,
 )
@@ -52,6 +53,17 @@ class AdminPanelShellServiceTests(TestCase):
             'admin_panel_query_suffix': '?days=7',
         })
         self.assertIn('ecc-nav-group is-open" data-nav-group="operations"', html)
+
+    def test_shell_exposes_short_sidebar_labels(self):
+        factory = RequestFactory()
+        request = factory.get('/accounts/admin-panel/')
+        request.user = User.objects.create_user(
+            username='adm', password='pass1234', phone='09123333333', is_staff=True,
+        )
+        ctx = build_admin_panel_shell_context(request)
+        self.assertEqual(ctx['admin_panel_sidebar_labels'], ADMIN_PANEL_SIDEBAR_LABELS)
+        self.assertEqual(ctx['admin_panel_sidebar_labels']['sales'], 'سفارش‌ها')
+        self.assertEqual(ctx['admin_panel_sidebar_labels']['assistant'], 'دستیار')
 
     def test_context_processor_staff_only(self):
         factory = RequestFactory()

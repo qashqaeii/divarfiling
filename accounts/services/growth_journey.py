@@ -42,6 +42,35 @@ FORCE_EVENTS = frozenset({
     'manual_set',
 })
 
+GROWTH_JOURNEY_EVENT_LABELS = {
+    'lead_imported': 'ورود سرنخ',
+    'click_landing': 'کلیک لندینگ',
+    'signup': 'ثبت‌نام',
+    'signup_complete': 'تکمیل ثبت‌نام',
+    'signup_start': 'شروع ثبت‌نام',
+    'workspace_login': 'ورود به میزکار',
+    'checkout_start': 'شروع خرید',
+    'no_purchase_window': 'پیگیری بدون خرید',
+    'paid_licensed': 'پرداخت و فعال‌سازی لایسنس',
+    'license_expiring': 'نزدیک به انقضای لایسنس',
+    'repurchase': 'خرید یا تمدید مجدد',
+    'expired_no_renew': 'انقضا بدون تمدید',
+    'opt_out': 'انصراف از پیامک',
+    'suppressed': 'مسدود در پیگیری',
+    'manual_set': 'تنظیم دستی مرحله',
+    'pause_nurture': 'توقف پیگیری خودکار',
+    'resume_nurture': 'ازسرگیری پیگیری خودکار',
+}
+
+
+def growth_journey_event_label(event_type: str) -> str:
+    key = (event_type or '').strip().lower()
+    if not key:
+        return '—'
+    if key in GROWTH_JOURNEY_EVENT_LABELS:
+        return GROWTH_JOURNEY_EVENT_LABELS[key]
+    return key.replace('_', ' ')
+
 
 def _resolve_phone(*, phone: str = '', user=None, lead: Optional[MarketingLead] = None) -> str:
     if phone:
@@ -578,21 +607,8 @@ def build_pipeline_charts(*, counts: dict, summary: dict) -> dict[str, Any]:
         .annotate(c=Count('id'))
         .order_by('-c')[:8]
     )
-    event_label_map = {
-        'lead_imported': 'ورود سرنخ',
-        'click_landing': 'کلیک',
-        'signup': 'ثبت‌نام',
-        'workspace_login': 'ورود میزکار',
-        'checkout_start': 'سبد',
-        'no_purchase_window': 'پیگیری خرید',
-        'paid_licensed': 'خرید',
-        'license_expiring': 'نزدیک انقضا',
-        'expired_no_renew': 'ریسک ریزش',
-        'manual_set': 'همگام‌سازی',
-        'opt_out': 'لغو',
-    }
     event_labels = [
-        event_label_map.get(r['event_type'], r['event_type']) for r in event_type_rows
+        growth_journey_event_label(r['event_type']) for r in event_type_rows
     ]
     event_values = [int(r['c'] or 0) for r in event_type_rows]
 

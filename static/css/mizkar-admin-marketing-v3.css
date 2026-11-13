@@ -1,0 +1,46 @@
+/* Marketing V3: scoped presentation only; existing forms, JS hooks and permission gates are unchanged. */
+.marketing-v3,.marketing-v3-detail{--mv-accent:#5b4fcf;--mv-line:var(--adm-v2-border,#e4e7ef);--mv-surface:var(--adm-v2-surface,#fff);--mv-text:var(--adm-v2-text,#22283b);--mv-muted:var(--adm-v2-muted,#667085);--mv-shadow:0 12px 32px -28px rgba(26,31,65,.32);min-width:0}
+.marketing-v3 :is(.adm-cell,.adm-map-section,.adm-map-wizard-main,.adm-map-preview-sidebar,.adm-map-chart-card,.adm-map-history-layout),.marketing-v3-detail :is(.adm-cell,.adm-mkt-detail-grid){min-width:0}
+.marketing-v3-intro{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:12px 3px 8px}
+.marketing-v3-eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--mv-accent);font-size:.76rem;font-weight:750}
+.marketing-v3-intro h2{margin:6px 0 4px;color:var(--mv-text);font-size:clamp(1.15rem,1.65vw,1.55rem);font-weight:850;line-height:1.5}
+.marketing-v3-intro p{margin:0;color:var(--mv-muted);font-size:.79rem;line-height:1.8}
+.marketing-v3 .biz-toolbar{border-color:var(--mv-line);background:var(--mv-surface);padding:12px 14px;border-radius:14px}
+.marketing-v3 :is(.biz-btn--primary,.adm-dl-btn--primary){background:var(--mv-accent);border-color:var(--mv-accent);color:#fff}
+.marketing-v3 :is(.biz-btn,.adm-dl-btn,.adm-map-tab){border-radius:10px;min-height:38px}
+.marketing-v3 :is(.biz-btn,.adm-dl-btn,.adm-map-tab,.adm-mkt-input,.adm-mkt-textarea){font-family:inherit}
+.marketing-v3 .biz-tabs-wrap{min-width:0}
+.marketing-v3 .adm-map-tabs{border:1px solid var(--mv-line);border-radius:14px;background:var(--mv-surface);padding:5px;box-shadow:var(--mv-shadow)}
+.marketing-v3 .adm-map-tabs__inner{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;max-width:100%;padding:2px}
+.marketing-v3 .adm-map-tab{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;padding:8px 13px;color:var(--mv-muted);font-size:.78rem;text-decoration:none}
+.marketing-v3 .adm-map-tab:is(.is-active,[aria-current="location"]){background:rgba(91,79,207,.1);color:var(--mv-accent);font-weight:800}
+.marketing-v3 :is(#map-overview,#map-compose,#map-templates,#map-automation,#map-phonebook,#map-history,#map-analytics){scroll-margin-top:110px}
+.marketing-v3 .adm-map-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.marketing-v3 .adm-map-kpi{border:1px solid var(--mv-line);border-radius:16px;background:var(--mv-surface);box-shadow:var(--mv-shadow);padding:16px;min-height:104px;min-width:0}
+.marketing-v3 .adm-map-kpi-val{color:var(--mv-text);font-size:clamp(1.05rem,1.6vw,1.5rem);font-weight:850;line-height:1.5;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.marketing-v3 .adm-map-kpi-lbl{color:var(--mv-muted);font-size:.74rem;line-height:1.6}
+.marketing-v3 :is(.adm-cell,.adm-map-ai-card,.adm-map-segment-pro,.adm-map-template-card,.adm-map-automation-flow,.adm-map-chart-card,.adm-map-timeline,.adm-map-phone-pro,.adm-map-preview-sidebar){border:1px solid var(--mv-line);border-radius:17px;background:var(--mv-surface);box-shadow:var(--mv-shadow)}
+.marketing-v3 :is(.adm-cell-head h2,.adm-map-ai-head h2,.adm-map-chart-card h3){font-size:clamp(.9rem,1.15vw,1.05rem);font-weight:800;color:var(--mv-text)}
+.marketing-v3 :is(.adm-cell-head p,.adm-map-segment-pro-meta,.adm-mkt-hint){color:var(--mv-muted);font-size:.76rem;line-height:1.8}
+.marketing-v3 :is(.adm-map-segment-grid,.adm-map-template-grid,.adm-map-analytics-grid){gap:14px}
+.marketing-v3 .adm-map-segment-pro.is-active{border-color:rgba(91,79,207,.48);box-shadow:0 0 0 2px rgba(91,79,207,.08)}
+.marketing-v3 :is(.adm-map-wizard-step.is-active,.adm-map-device-tab.is-active,.adm-map-audience-opt.is-selected,.adm-mkt-radio-card.is-selected){border-color:var(--mv-accent);color:var(--mv-accent)}
+.marketing-v3 :is(.adm-mkt-input,.adm-mkt-textarea){max-width:100%;border-radius:10px;min-height:40px}
+.marketing-v3 :is(.adm-mkt-input,.adm-mkt-textarea,.adm-map-tab,.biz-btn,.adm-dl-btn):focus-visible,.marketing-v3-detail :is(a,button):focus-visible{outline:3px solid rgba(91,79,207,.38);outline-offset:2px}
+.marketing-v3 :is(.adm-map-history-table-wrap,.adm-mkt-abandon-table-wrap,.adm-table-wrap){max-width:100%;overflow-x:auto}
+.marketing-v3 :is(.adm-map-history-table,.adm-mkt-abandon-table){width:100%;min-width:630px}
+.marketing-v3 .adm-map-analytics-pill{min-width:0;border:1px solid var(--mv-line);border-radius:12px;background:var(--mv-surface)}
+.marketing-v3 .adm-map-chart-wrap{min-height:210px}
+.marketing-v3-detail .adm-mkt-hero{border:1px solid var(--mv-line);border-radius:18px;background:var(--mv-surface);box-shadow:var(--mv-shadow)}
+.marketing-v3-detail :is(.adm-kpi,.adm-cell){border:1px solid var(--mv-line);border-radius:16px;background:var(--mv-surface);box-shadow:var(--mv-shadow)}
+.marketing-v3-detail .adm-kpi-val{color:var(--mv-text);font-weight:850}
+.marketing-v3-detail .adm-table-wrap{max-width:100%;overflow-x:auto}
+.marketing-v3-detail .adm-mkt-recipient-table{min-width:650px}
+.marketing-v3-detail .adm-mkt-recipient-filters{display:flex;gap:6px;flex-wrap:wrap}
+.marketing-v3-detail .adm-mkt-recipient-filters .is-active{border-color:var(--mv-accent);color:var(--mv-accent);background:rgba(91,79,207,.09)}
+html[data-theme="dark"] .marketing-v3,html[data-theme="dark"] .marketing-v3-detail,html.mk-public:not([data-theme="light"]) .marketing-v3,html.mk-public:not([data-theme="light"]) .marketing-v3-detail{--mv-line:rgba(176,185,218,.2);--mv-surface:#20273a;--mv-text:#f0f2fc;--mv-muted:#b3bed3;--mv-shadow:none}
+html[data-theme="dark"] .marketing-v3 .adm-map-tab.is-active,html.mk-public:not([data-theme="light"]) .marketing-v3 .adm-map-tab.is-active{background:rgba(145,132,255,.19);color:#d1c9ff}
+@media(max-width:1100px){.marketing-v3 .adm-map-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.marketing-v3-intro{padding-top:6px}.marketing-v3 .adm-map-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.marketing-v3 .adm-map-kpi{padding:12px;min-height:94px}.marketing-v3 .adm-map-tab{padding:8px 11px}.marketing-v3 .adm-map-wizard{display:block}.marketing-v3 .adm-map-wizard-main,.marketing-v3 .adm-map-preview-sidebar{width:100%;max-width:100%}.marketing-v3 .adm-map-history-layout{display:block}.marketing-v3-detail .adm-mkt-detail-grid{display:grid;grid-template-columns:minmax(0,1fr)}.marketing-v3-detail .adm-mkt-hero{padding:16px}}
+@media(max-width:390px){.marketing-v3 .adm-map-kpis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.marketing-v3 .adm-map-kpi-val{font-size:1.05rem}}
+@media(prefers-reduced-motion:reduce){.marketing-v3 *,.marketing-v3-detail *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}

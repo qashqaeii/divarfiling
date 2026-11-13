@@ -13,7 +13,7 @@ Approved reference: right-hand navy sidebar, purple #5B4FCF selection, clean whi
 | 02 | دستیار مدیریت | In progress — UI presentation pass committed; runtime/browser QA pending | [pending stage-02 commit](#2026-11-13--stage-02-ui-pass) |
 | 03 | فروش و درآمد | In progress — UI pass committed; browser/Django validation pending | [stage 03 UI pass](#2026-11-13--stage-03-ui-pass) |
 | 04 | رشد | In progress — UI presentation pass committed; browser/Django validation pending | [stage 04 UI pass](#2026-11-13--stage-04-ui-pass) |
-| 05 | بازاریابی | Not started | — |
+| 05 | بازاریابی | In progress — UI presentation pass committed; runtime/browser QA pending | [stage 05 UI pass](#2026-11-13--stage-05-ui-pass) |
 | 06 | بازیابی | Not started | — |
 | 07 | تبدیل پلن | Not started | — |
 | 08 | جذب سرنخ | Not started | — |
@@ -59,3 +59,9 @@ Complete stage 01 through visual/runtime QA if an environment becomes available,
 - `templates/accounts/admin_growth_pipeline.html`: concise growth introduction and same-page shortcuts, accessible selected-stage state and growth breadcrumb; preserved all existing forms, POST actions, CSRF, export URLs, event-table data, chart canvas IDs and guide-modal JS hooks.
 - `static/css/mizkar-admin-growth-v3.css`: growth-scoped visual system for six KPI cards, five charts, stage board, recent events, detail table, action toolbar, guide modal, responsive mobile and dark theme; uses real context data only.
 - Source-only structural review. No Python, API, business logic, JS or database changed. No new tests. Django runtime/browser QA not executed; stage remains in progress pending visual and functional verification.
+
+### 2026-11-13 — Stage 05 UI pass
+- `templates/accounts/admin_marketing.html`: compact executive introduction and scoped V3 stylesheet; all original campaign wizard steps, form methods, CSRF, chart IDs, tabs, segment controls, SMS permissions, data bindings and JS hooks remain in place.
+- `templates/accounts/admin_marketing_detail.html`: reuse marketing V3 styles and correct two existing navigation anchor destinations (`#map-compose`, `#map-history`) to match the actual section IDs. Recipient filtering behavior remains unchanged.
+- `static/css/mizkar-admin-marketing-v3.css`: responsive premium RTL presentation for KPI grid, segment cards, campaign wizard, templates, automations, phonebook, history, charts, recipient table and dark theme; reduced-motion and focus-visible affordances.
+- Source-only inspection; Django runtime and browser QA not executed. Stage 05 remains in progress pending verification. No Python, business logic, API, data, SMS send, JS or new tests.

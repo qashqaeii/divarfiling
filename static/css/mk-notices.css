@@ -163,15 +163,10 @@ html.mk-public[data-theme="light"] {
 .mk-notices--banner {
     position: relative;
     z-index: 900;
-    border-bottom: 1px solid var(--mk-notice-promo-border);
-    background: linear-gradient(
-        90deg,
-        rgba(124, 58, 237, 0.05) 0%,
-        rgba(99, 102, 241, 0.03) 50%,
-        rgba(6, 182, 212, 0.03) 100%
-    );
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .mk-notices--banner::before {
@@ -179,13 +174,19 @@ html.mk-public[data-theme="light"] {
     position: absolute;
     inset-inline: 0;
     top: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #7c3aed, #2563eb, #06b6d4);
-    opacity: 0.7;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(124, 58, 237, 0.45) 35%,
+        rgba(124, 58, 237, 0.45) 65%,
+        transparent 100%
+    );
+    opacity: 0.85;
 }
 
 .mk-notices--banner .mk-notices__inner {
-    padding-inline: 1.15rem;
+    padding-inline: clamp(1rem, 2.5vw, 1.35rem);
 }
 
 .mk-notices--banner .mk-notice + .mk-notice {
@@ -238,8 +239,9 @@ html.mk-public[data-theme="light"] {
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
-    min-height: 2.65rem;
-    padding-block: 0.58rem;
+    min-height: 2.5rem;
+    padding-block: 0.48rem;
+    padding-inline: 0.1rem;
 }
 
 .mk-notice--toast {
@@ -316,15 +318,15 @@ html.mk-public[data-theme="light"] {
     align-items: center;
     gap: 0.3rem;
     flex-shrink: 0;
-    padding: 0.2rem 0.55rem;
+    padding: 0.18rem 0.5rem;
     border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 600;
+    font-size: 0.66rem;
+    font-weight: 650;
     letter-spacing: 0.01em;
     line-height: 1.2;
-    background: rgba(124, 58, 237, 0.1);
-    border: 1px solid rgba(124, 58, 237, 0.14);
-    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    color: #6d28d9;
 }
 
 .mk-notice__badge i {
@@ -359,10 +361,25 @@ html.mk-public[data-theme="light"] {
                 border-color var(--mk-notice-duration) var(--mk-notice-ease);
 }
 
+.mk-notices--banner .mk-notice__cta {
+    padding: 0.3rem 0.72rem;
+    font-size: 0.73rem;
+    font-weight: 650;
+    color: #5b21b6;
+    background: transparent;
+    border-color: rgba(124, 58, 237, 0.22);
+}
+
 .mk-notice__cta:hover {
     background: rgba(124, 58, 237, 0.16);
     border-color: rgba(124, 58, 237, 0.24);
     color: inherit;
+}
+
+.mk-notices--banner .mk-notice__cta:hover {
+    background: rgba(124, 58, 237, 0.07);
+    border-color: rgba(124, 58, 237, 0.32);
+    color: #4c1d95;
 }
 
 .mk-notice__cta i {
@@ -1094,6 +1111,89 @@ button.mk-notice__cta {
     cursor: pointer;
 }
 
+/* ─── Desktop: بنر اطلاعیه مینیمال ─── */
+@media (min-width: 769px) {
+    .mk-notices--banner .mk-notice--banner {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        grid-template-areas: "badge body actions close";
+        align-items: center;
+        column-gap: 0.85rem;
+        row-gap: 0.35rem;
+        min-height: 2.55rem;
+        padding-block: 0.52rem;
+    }
+
+    .mk-notices--banner .mk-notice__badge {
+        grid-area: badge;
+    }
+
+    .mk-notices--banner .mk-notice__body {
+        grid-area: body;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.5rem;
+        min-width: 0;
+    }
+
+    .mk-notices--banner .mk-notice__title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        white-space: nowrap;
+        max-width: none;
+    }
+
+    .mk-notices--banner .mk-notice__title:not(:last-child)::after {
+        display: none;
+    }
+
+    .mk-notices--banner .mk-notice__text {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        opacity: 0.86;
+        min-width: 0;
+        flex: 1 1 12rem;
+    }
+
+    .mk-notices--banner .mk-notice__actions {
+        grid-area: actions;
+        margin: 0;
+        width: auto;
+        padding: 0;
+    }
+
+    .mk-notices--banner .mk-notice__close {
+        grid-area: close;
+        position: static;
+        width: 1.85rem;
+        height: 1.85rem;
+        margin: 0;
+        opacity: 0.4;
+        border-radius: 7px;
+    }
+
+    .mk-notices--banner .mk-notice__close:hover {
+        opacity: 0.78;
+        background: rgba(15, 23, 42, 0.05);
+    }
+
+    .mk-notices--banner .mk-notice--banner:not(:has(.mk-notice__actions)) {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "badge body close";
+    }
+}
+
+[data-theme="dark"] .mk-notices--banner {
+    background: rgba(15, 23, 42, 0.92);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .mk-notices--banner .mk-notice__cta {
+    color: #c4b5fd;
+    border-color: rgba(167, 139, 250, 0.28);
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
     .ws-main > .mk-notices--inline {
@@ -1137,6 +1237,95 @@ button.mk-notice__cta {
         padding-inline-end: 2rem;
     }
 
+    /* بنر اطلاعیه عمومی — کارت فشرده موبایل */
+    .mk-notices--banner {
+        background: linear-gradient(
+            180deg,
+            rgba(124, 58, 237, 0.09) 0%,
+            rgba(255, 255, 255, 0.96) 42%
+        );
+        border-bottom-color: rgba(124, 58, 237, 0.12);
+    }
+
+    .mk-notices--banner .mk-notices__inner {
+        padding-inline: max(0.75rem, env(safe-area-inset-left, 0px)) max(0.75rem, env(safe-area-inset-right, 0px));
+    }
+
+    .mk-notices--banner .mk-notice--banner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "badge close"
+            "body body"
+            "actions actions";
+        gap: 0.4rem 0.35rem;
+        align-items: center;
+        padding: 0.62rem 0.15rem 0.68rem;
+        padding-inline-end: 0;
+    }
+
+    .mk-notices--banner .mk-notice__badge {
+        grid-area: badge;
+        justify-self: start;
+        font-size: 0.66rem;
+        padding: 0.22rem 0.52rem;
+    }
+
+    .mk-notices--banner .mk-notice__close {
+        position: static;
+        grid-area: close;
+        justify-self: end;
+        align-self: start;
+        width: 2.1rem;
+        height: 2.1rem;
+        margin: 0;
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.04);
+        opacity: 0.65;
+    }
+
+    .mk-notices--banner .mk-notice__body {
+        grid-area: body;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.28rem;
+        width: 100%;
+        padding-inline-start: 0;
+    }
+
+    .mk-notices--banner .mk-notice__title {
+        white-space: normal;
+        font-size: 0.8rem;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    .mk-notices--banner .mk-notice__text {
+        font-size: 0.74rem;
+        line-height: 1.58;
+        opacity: 0.92;
+    }
+
+    .mk-notices--banner .mk-notice__actions {
+        grid-area: actions;
+        width: 100%;
+        margin: 0.1rem 0 0;
+        padding: 0;
+    }
+
+    .mk-notices--banner .mk-notice__cta {
+        width: 100%;
+        flex: none;
+        justify-content: center;
+        min-height: 2.4rem;
+        padding: 0.4rem 0.85rem;
+        border-radius: 9px;
+        background: rgba(124, 58, 237, 0.11);
+        border-color: rgba(124, 58, 237, 0.2);
+        font-size: 0.78rem;
+        font-weight: 650;
+    }
+
     .mk-notices--flash {
         top: calc(64px + env(safe-area-inset-top, 0px));
     }
@@ -1172,5 +1361,17 @@ button.mk-notice__cta {
 
     .mk-notice__badge-label {
         display: none;
+    }
+
+    .mk-notices--banner .mk-notice__badge-label {
+        display: inline;
+    }
+
+    .mk-notices--banner .mk-notice__title {
+        font-size: 0.76rem;
+    }
+
+    .mk-notices--banner .mk-notice__text {
+        font-size: 0.72rem;
     }
 }

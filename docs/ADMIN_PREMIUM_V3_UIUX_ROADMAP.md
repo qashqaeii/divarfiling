@@ -18,7 +18,7 @@ Approved reference: right-hand navy sidebar, purple #5B4FCF selection, clean whi
 | 07 | تبدیل پلن | In progress — UI presentation pass committed; runtime/browser QA pending | [stage 07 UI pass](#2026-11-13--stage-07-ui-pass) |
 | 08 | جذب سرنخ | In progress — UI presentation pass committed; browser/Django QA pending | [stage 08 UI pass](#2026-11-13--stage-08-ui-pass) |
 | 09 | کاربران | In progress — UI pass committed; browser/Django QA pending | [stage 09 UI pass](#2026-11-13--stage-09-ui-pass) |
-| 10 | لایسنس | Not started | — |
+| 10 | لایسنس | In progress — UI presentation pass; runtime/browser QA pending | [stage 10 UI pass](#2026-11-13--stage-10-ui-pass) |
 | 11 | CRM | Not started | — |
 | 12 | عملیات | Not started | — |
 | 13 | پشتیبانی | Not started | — |
@@ -85,3 +85,8 @@ Complete stage 01 through visual/runtime QA if an environment becomes available,
 - `templates/accounts/admin_users_center.html`: concise executive introduction, accessible in-page shortcuts and scoped V3 stylesheet; existing KPI, chart, exports, management search/filter IDs, AJAX data URLs, permissions and user drawer hooks preserved.
 - `static/css/mizkar-admin-users-v3.css`: premium RTL presentation for KPI, charts, user lists, filters, pagination and user detail drawer; responsive layout, dark-mode preference, keyboard focus and reduced motion.
 - Source-only review: no Python, API, data, JavaScript or new tests. Django runtime/browser QA not executed. Stage 09 and stages 01–08 remain in progress pending validation.
+
+### 2026-11-13 — Stage 10 UI pass
+- `templates/accounts/admin_licenses_center.html`: executive intro, in-page anchors, scoped V3 stylesheet and export-button visibility aligned with existing `admin_export_allowed_keys`; all original KPIs, chart IDs, tables, export URLs, permission checks and JavaScript hooks preserved.
+- `static/css/mizkar-admin-licenses-v3.css`: license-scoped RTL responsive styles for KPIs, renewal breakdown, activity and revenue charts, action queue, expiring/expired license tables and export modules; keyboard focus, reduced-motion and dark-mode preferences.
+- Source-only structural checks; no Python, backend, API, data, JavaScript or new tests. Django runtime/browser QA not executed. Stage 10 remains in progress pending validation, as do stages 01–09.

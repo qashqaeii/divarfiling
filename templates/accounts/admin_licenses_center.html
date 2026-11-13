@@ -15,12 +15,15 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-customers.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-licenses-v3.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_header_actions %}
+{% if 'active_licenses' in admin_export_allowed_keys %}
 <a href="{% url 'admin_panel_export' 'active_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--primary" title="لایسنس‌های فعال">
     <i class="fas fa-file-excel"></i>
 </a>
+{% endif %}
 <a href="{% url 'admin_panel_marketing' %}" class="ecc-btn ecc-btn--ghost" title="بازاریابی">
     <i class="fas fa-bullhorn"></i>
 </a>
@@ -31,6 +34,10 @@
 
 {% block admin_panel_content %}
 <div class="cust-page biz-page biz-page--licenses">
+<header class="adm-licenses-v3-intro" aria-label="راهنمای صفحه لایسنس">
+  <div><span class="adm-licenses-v3-eyebrow">مدیریت اشتراک‌ها</span><h1>لایسنس‌ها در یک نگاه</h1><p>وضعیت صدور، تمدید و انقضا بر اساس اطلاعات ثبت‌شده سامانه</p></div>
+  <nav class="adm-licenses-v3-jumps" aria-label="دسترسی سریع"><a href="#licenses-kpi">شاخص‌ها</a><a href="#licenses-actions">اقدامات</a><a href="#licenses-charts">نمودارها</a><a href="#licenses-table-expiring">در شرف انقضا</a><a href="#licenses-table-expired">منقضی‌شده</a></nav>
+</header>
 
 {% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='لایسنس · الان' pulse_icon='fa-key' %}
 

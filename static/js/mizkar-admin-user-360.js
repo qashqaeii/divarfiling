@@ -831,7 +831,8 @@
     function renderInsightsPanel(items) {
         const list = (items || []).slice().sort(function (a, b) {
             const order = { warn: 0, info: 1, ok: 2 };
-            return (order[a.severity] || 9) - (order[b.severity] || 9);
+            return (Object.prototype.hasOwnProperty.call(order, a.severity) ? order[a.severity] : 9)
+                - (Object.prototype.hasOwnProperty.call(order, b.severity) ? order[b.severity] : 9);
         });
         if (!list.length) {
             return '<div class="adm-u360-insights adm-u360-insights--empty">'
@@ -919,8 +920,10 @@
             icon = 'fa-circle-check';
         }
         const leadText = warnCount
-            ? toFa(warnCount) + ' هشدار فعال — ابتدا بینش‌های زرد را بررسی کنید.'
-            : 'خلاصه مالی، دسترسی، CRM و پشتیبانی در یک نگاه.';
+            ? toFa(warnCount) + ' مورد هشدار در بینش‌های موجود؛ برای جزئیات بخش اولویت‌ها را بررسی کنید.'
+            : (pay.pending_orders
+                ? toFa(pay.pending_orders) + ' سفارش در انتظار بررسی است.'
+                : 'نمای کلی بر اساس اطلاعات ثبت‌شده؛ نبود هشدار به معنی تأیید قطعی سلامت حساب نیست.');
         return '<header class="adm-u360-overview-hero adm-u360-overview-hero--' + tone + '">'
             + '<span class="adm-u360-overview-hero__badge">'
             + '<i class="fas ' + icon + '" aria-hidden="true"></i> ' + esc(badge) + '</span>'
@@ -1043,7 +1046,25 @@
         const signalsHtml = renderOverviewSignals(h);
         const financeCardHtml = renderOverviewFinanceCard(charts, pay);
 
+        // The overview's primary KPIs use the same server-provided highlights as its detail panels.
+        // Do not infer account health from missing telemetry or treat pending orders as revenue.
+        const kpis = [
+            { label: 'دسترسی اشتراک', value: esc(sub.access_label || (sub.has_access ? 'فعال' : 'بدون دسترسی فعال')), meta: esc(sub.plan || 'وضعیت فعلی'), tab: 'licenses', tone: sub.has_access ? 'ok' : 'neutral' },
+            { label: 'درآمد پرداخت‌شده', value: moneyTomans(pay.total_paid || 0), meta: 'فقط سفارش‌های موفق', tab: 'commerce', tone: 'neutral' },
+            { label: 'سفارش در انتظار', value: toFa(pay.pending_orders || 0), meta: 'نیازمند بررسی پرداخت', tab: 'commerce', tone: pay.pending_orders ? 'warn' : 'neutral' },
+            { label: 'موارد هشدار', value: toFa(warnCount), meta: 'از بینش‌های ثبت‌شده', tab: 'overview', tone: warnCount ? 'warn' : 'ok' },
+        ];
+        const kpiHtml = '<section class="adm-u360-overview-kpis" aria-label="شاخص‌های اصلی پرونده">'
+            + kpis.map(function (k) {
+                return '<article class="adm-u360-overview-kpi adm-u360-overview-kpi--' + k.tone + '">'
+                    + '<span class="adm-u360-overview-kpi__label">' + k.label + '</span>'
+                    + '<strong class="adm-u360-overview-kpi__value">' + k.value + '</strong>'
+                    + '<span class="adm-u360-overview-kpi__meta">' + k.meta + '</span>'
+                    + (k.tab === 'overview' ? '' : overviewJumpChip('مشاهده', k.tab, 'fa-arrow-left'))
+                    + '</article>';
+            }).join('') + '</section>';
         const overviewMain = '<div class="adm-u360-overview-main">'
+            + kpiHtml
             + renderOverviewPulseCard(insightsHtml, signalsHtml)
             + '</div>';
 

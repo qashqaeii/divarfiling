@@ -1440,7 +1440,7 @@ def get_command_center_context(days: int = 30) -> Dict[str, Any]:
         decision_summary = f'{high_queues} دسته اولویت‌دار برای پیگیری'
     else:
         decision_summary = 'هیچ دسته بحرانی یا با اولویت بالا در صف نیست'
-    charts = get_command_revenue_chart(days)
+    charts = {'revenue_analytics': build_command_revenue_chart(days)}
 
     return {
         'stats': stats,

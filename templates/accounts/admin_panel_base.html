@@ -25,20 +25,22 @@
             {% include 'accounts/partials/admin_panel_sidebar.html' %}
             <div class="adm-cmd-workspace">
                 {% include 'accounts/partials/admin_panel_header.html' %}
-                <main class="ecc-main adm-prime-main adm-cmd-main" id="admin-main" tabindex="-1">
-                    {% block admin_panel_content %}{% endblock %}
-                </main>
-            </div>
-        </div>
-    </div>
     {% else %}
     <div class="ecc-shell">
         {% include 'accounts/partials/admin_panel_header.html' %}
         <div class="ecc-body">
             {% include 'accounts/partials/admin_panel_sidebar.html' %}
-            <main class="ecc-main adm-prime-main" id="admin-main" tabindex="-1">
-                {% block admin_panel_content %}{% endblock %}
-            </main>
+    {% endif %}
+
+                <main class="ecc-main adm-prime-main{% if admin_panel_command_layout %} adm-cmd-main{% endif %}" id="admin-main" tabindex="-1">
+                    {% block admin_panel_content %}{% endblock %}
+                </main>
+
+    {% if admin_panel_command_layout %}
+            </div>
+        </div>
+    </div>
+    {% else %}
         </div>
     </div>
     {% endif %}

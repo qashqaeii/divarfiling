@@ -1,9 +1,12 @@
 """همگام‌سازی idempotent نشست فایلینگ ↔ خطوط استخراج ↔ فایل‌های phone-detector."""
 from __future__ import annotations
 
+import json
 import logging
+import threading
 from typing import Any
 
+from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
@@ -30,7 +33,9 @@ logger = logging.getLogger(__name__)
 OPS = PhoneDetectorExtractionLine.OperationalStatus
 SRC = PhoneDetectorExtractionLine.LineSource
 
-_RECONCILE_STATS: dict[str, int] = {}
+RECONCILE_CACHE_LOCK = 'lac:extraction_lines_reconcile'
+RECONCILE_LOCK_TTL = 90
+_process_lock = threading.Lock()
 
 
 def _eligible_filing_session(session: DivarAccountSession) -> bool:
@@ -55,6 +60,14 @@ def _session_requires_eviction(session: DivarAccountSession) -> bool:
     )
 
 
+def _status_allows_auto_recovery(status: str) -> bool:
+    """بازیابی خودکار فقط برای خارج‌شده‌های غیرکپچا — نه BLOCKED_CAPTCHA/ERROR."""
+    return status in (
+        OPS.EVICTED,
+        OPS.PAUSED,
+    )
+
+
 def _line_should_leave_active_index(line: PhoneDetectorExtractionLine) -> bool:
     if line.admin_hold:
         return True
@@ -66,9 +79,36 @@ def _line_should_leave_active_index(line: PhoneDetectorExtractionLine) -> bool:
         return True
     if line.line_source == SRC.FILING and line.divar_account_session_id:
         session = line.divar_account_session
-        if _session_requires_eviction(session):
+        if session and _session_requires_eviction(session):
             return True
     return False
+
+
+def _preflight_provision_checks(
+    phone: str,
+    *,
+    existing: PhoneDetectorExtractionLine | None,
+) -> PhoneDetectorExtractionLine | None:
+    """قبل از نوشتن فایل سشن — جلوگیری از بازنویسی خط دستی یا کپچا."""
+    if existing and existing.admin_hold:
+        return existing
+    if existing and existing.operational_status == OPS.BLOCKED_CAPTCHA:
+        return existing
+    if existing and existing.line_source == SRC.MANUAL and not existing.divar_account_session_id:
+        raise PhoneDetectorLineError(
+            'این شماره قبلاً به‌صورت خط دستی OTP ثبت شده است.',
+            code='phone_duplicate',
+        )
+    dup_qs = PhoneDetectorExtractionLine.objects.filter(phone=phone)
+    if existing:
+        dup_qs = dup_qs.exclude(pk=existing.pk)
+    other = dup_qs.first()
+    if other and other.line_source == SRC.MANUAL and not other.divar_account_session_id:
+        raise PhoneDetectorLineError(
+            'شماره با خط دستی OTP تداخل دارد.',
+            code='phone_duplicate',
+        )
+    return existing
 
 
 def _ensure_consent_for_connected() -> int:
@@ -84,23 +124,35 @@ def _ensure_consent_for_connected() -> int:
     return updated
 
 
+@transaction.atomic
 def _provision_filing_session(session: DivarAccountSession) -> PhoneDetectorExtractionLine:
     from workspace.services.divar_session.phone_detector_bridge import (
         _write_refreshed_session_file,
     )
 
     phone = normalize_line_phone(session.divar_phone)
+    line = (
+        PhoneDetectorExtractionLine.objects.select_for_update()
+        .filter(phone=phone)
+        .first()
+    )
+    if line is None:
+        line = (
+            PhoneDetectorExtractionLine.objects.select_for_update()
+            .filter(divar_account_session=session)
+            .first()
+        )
+
+    preflight = _preflight_provision_checks(phone, existing=line)
+    if preflight is not None and (
+        preflight.admin_hold or preflight.operational_status == OPS.BLOCKED_CAPTCHA
+    ):
+        return preflight
+
     clear_phone_detector_file_sync_block(phone)
     _write_refreshed_session_file(session)
 
-    line = PhoneDetectorExtractionLine.objects.filter(phone=phone).first()
-    if line and line.admin_hold:
-        return line
-    if line and line.line_source == SRC.MANUAL and not line.divar_account_session_id:
-        raise PhoneDetectorLineError(
-            'این شماره قبلاً به‌صورت خط دستی OTP ثبت شده است.',
-            code='phone_duplicate',
-        )
+    line = PhoneDetectorExtractionLine.objects.select_for_update().filter(phone=phone).first()
 
     created = False
     if not line:
@@ -120,39 +172,88 @@ def _provision_filing_session(session: DivarAccountSession) -> PhoneDetectorExtr
         if line.line_source != SRC.FILING:
             line.line_source = SRC.FILING
             updates.append('line_source')
-        if line.admin_hold:
+        if line.admin_hold or line.operational_status == OPS.BLOCKED_CAPTCHA:
             pass
-        elif line.operational_status in (OPS.EVICTED, OPS.PAUSED) and not _line_should_leave_active_index(line):
+        elif _status_allows_auto_recovery(line.operational_status):
             line.operational_status = OPS.ACTIVE
             line.status_detail = 'بازیابی خودکار — نشست فایلینگ سالم شد'
             updates.extend(['operational_status', 'status_detail'])
-        elif (
-            line.operational_status not in (OPS.BLOCKED_CAPTCHA, OPS.RUNNING)
-            and not line.admin_hold
-        ):
-            if line.operational_status != OPS.ACTIVE:
-                line.operational_status = OPS.ACTIVE
-                line.status_detail = 'فعال — همگام‌سازی خودکار'
-                updates.extend(['operational_status', 'status_detail'])
+        elif line.operational_status == OPS.RUNNING:
+            pass
+        elif line.operational_status != OPS.ACTIVE:
+            line.operational_status = OPS.ACTIVE
+            line.status_detail = 'فعال — همگام‌سازی خودکار'
+            updates.extend(['operational_status', 'status_detail'])
         if updates:
             line.updated_at = timezone.now()
             updates.append('updated_at')
             line.save(update_fields=list(dict.fromkeys(updates)))
 
-    _ensure_phone_in_pd_index(phone)
-    return line if created else line
+    if not _register_phone_in_pd_index(phone):
+        raise PhoneDetectorLineError(
+            f'ثبت {phone} در index.json ناموفق بود.',
+            code='index_register_failed',
+        )
+    return line
 
 
-def _ensure_phone_in_pd_index(phone: str) -> None:
-    if not resolve_phone_detector_dir():
-        return
+def _pd_sessions_root():
+    pd = resolve_phone_detector_dir()
+    if not pd:
+        return None
+    return pd / 'sessions'
+
+
+def _register_phone_in_pd_index(phone: str) -> bool:
+    """پس از وجود فایل سشن، index را بازنویسی و عضویت شماره را تأیید کن."""
+    root = _pd_sessions_root()
+    if not root:
+        return False
+    phone = normalize_line_phone(phone)
+    session_path = root / f'{phone}.json'
+    if not session_path.is_file():
+        logger.warning('register index: session file missing %s', phone)
+        return False
     try:
         from accounts.services.phone_detector_lines import _get_engine
 
-        engine = _get_engine()
-        engine.registry.save_index()
+        registry = _get_engine().registry
+        registry.save_index()
+        phones = {normalize_line_phone(p) for p in registry.list_phones()}
+        if phone in phones:
+            return True
     except Exception:
-        logger.debug('index refresh for %s skipped', phone, exc_info=True)
+        logger.warning('engine index register failed for %s', phone, exc_info=True)
+    return _register_phone_in_pd_index_explicit(phone)
+
+
+def _register_phone_in_pd_index_explicit(phone: str) -> bool:
+    """Fallback: شماره را صریح به index اضافه کن اگر فایل روی دیسک هست."""
+    root = _pd_sessions_root()
+    if not root:
+        return False
+    phone = normalize_line_phone(phone)
+    if not (root / f'{phone}.json').is_file():
+        return False
+    index_path = root / 'index.json'
+    data: dict[str, Any] = {'active_phone': None, 'rotate': True, 'phones': []}
+    if index_path.is_file():
+        try:
+            loaded = json.loads(index_path.read_text(encoding='utf-8'))
+            if isinstance(loaded, dict):
+                data = loaded
+        except (OSError, json.JSONDecodeError):
+            pass
+    phones = [normalize_line_phone(p) for p in data.get('phones') or []]
+    if phone not in phones:
+        phones.append(phone)
+    data['phones'] = phones
+    if not data.get('active_phone'):
+        data['active_phone'] = phone
+    tmp = index_path.with_suffix('.tmp')
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+    tmp.replace(index_path)
+    return phone in phones
 
 
 def _evict_phone_from_pd_index(
@@ -168,110 +269,161 @@ def _evict_phone_from_pd_index(
             from accounts.services.phone_detector_lines import _get_engine
 
             engine = _get_engine()
-            if phone in (engine.registry.list_phones() if hasattr(engine, 'registry') else []):
+            registry = engine.registry
+            on_disk = phone in {normalize_line_phone(p) for p in registry.list_phones()}
+            session_file = registry.path_for(phone)
+            if on_disk or session_file.is_file():
                 engine.remove_account(phone)
-            else:
-                path = engine.registry.path_for(phone)
-                if path.is_file():
-                    engine.remove_account(phone)
-        else:
-            _remove_phone_from_index_only(phone)
+                return True
+            return False
+        _remove_phone_from_index_only(phone)
         return True
     except Exception:
         logger.warning('evict %s from pd index failed', phone, exc_info=True)
         return False
 
 
-def _remove_phone_from_index_only(phone: str) -> None:
+def _remove_phone_from_index_only(phone: str) -> bool:
     """حذف از چرخش بدون پاک‌کردن فایل سشن (خطوط دستی با کپچا)."""
     pd = resolve_phone_detector_dir()
     if not pd:
-        return
+        return False
     root = pd / 'sessions'
     index_path = root / 'index.json'
+    phone = normalize_line_phone(phone)
     if not index_path.is_file():
-        return
-    import json
-
+        return False
     try:
         data = json.loads(index_path.read_text(encoding='utf-8'))
     except (OSError, json.JSONDecodeError):
-        return
+        return False
     if not isinstance(data, dict):
-        return
-    phones = [normalize_line_phone(p) for p in data.get('phones') or []]
-    phones = [p for p in phones if p and p != phone]
+        return False
+    before = [normalize_line_phone(p) for p in data.get('phones') or []]
+    if phone not in before:
+        return False
+    phones = [p for p in before if p and p != phone]
     if data.get('active_phone') and normalize_line_phone(data['active_phone']) == phone:
         data['active_phone'] = phones[0] if phones else None
     data['phones'] = phones
     tmp = index_path.with_suffix('.tmp')
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
     tmp.replace(index_path)
+    return True
 
 
-@transaction.atomic
+def _acquire_reconcile_lock(*, force: bool) -> tuple[bool, str]:
+    if not _process_lock.acquire(blocking=force):
+        return False, 'process_busy'
+    try:
+        if cache.add(RECONCILE_CACHE_LOCK, '1', timeout=RECONCILE_LOCK_TTL):
+            return True, ''
+    except Exception:
+        return True, 'cache_unavailable'
+    if force:
+        return True, 'forced_shared'
+    _process_lock.release()
+    return False, 'cache_busy'
+
+
+def _release_reconcile_lock() -> None:
+    try:
+        cache.delete(RECONCILE_CACHE_LOCK)
+    except Exception:
+        pass
+    try:
+        _process_lock.release()
+    except RuntimeError:
+        pass
+
+
 def reconcile_extraction_lines(*, force: bool = False) -> dict[str, Any]:
     """ورود، خروج و بازیابی خطوط — idempotent."""
-    stats = {
+    stats: dict[str, Any] = {
         'consent_granted': 0,
         'provisioned': 0,
         'evicted': 0,
         'recovered': 0,
         'index_adjusted': 0,
         'skipped_opt_out': 0,
+        'skipped_provision': 0,
     }
     if not resolve_phone_detector_dir():
         return {**stats, 'ok': False, 'reason': 'phone_detector_not_configured'}
 
-    stats['consent_granted'] = _ensure_consent_for_connected()
+    acquired, lock_note = _acquire_reconcile_lock(force=force)
+    if not acquired:
+        return {**stats, 'ok': True, 'skipped_concurrent': True, 'lock': lock_note}
 
-    for session in DivarAccountSession.objects.select_related('user').iterator():
-        phone = normalize_line_phone(session.divar_phone)
-        if not phone:
-            continue
-        if session.extraction_auto_opt_out:
-            stats['skipped_opt_out'] += 1
-            continue
+    try:
+        stats['consent_granted'] = _ensure_consent_for_connected()
 
-        line = PhoneDetectorExtractionLine.objects.filter(
-            divar_account_session=session,
-        ).first()
-        if not line:
-            line = PhoneDetectorExtractionLine.objects.filter(phone=phone, line_source=SRC.FILING).first()
-
-        if _eligible_filing_session(session):
-            if line and line.admin_hold:
+        for session in DivarAccountSession.objects.select_related('user').iterator():
+            phone = normalize_line_phone(session.divar_phone)
+            if not phone:
                 continue
-            try:
-                before_status = line.operational_status if line else None
-                line = _provision_filing_session(session)
-                stats['provisioned'] += 1
-                if before_status in (OPS.EVICTED, OPS.PAUSED, None) and line.operational_status == OPS.ACTIVE:
-                    stats['recovered'] += 1
-            except PhoneDetectorLineError as exc:
-                logger.info('provision skip %s: %s', phone, exc.message)
-            except Exception:
-                logger.exception('provision failed %s', phone)
-            continue
+            if session.extraction_auto_opt_out:
+                stats['skipped_opt_out'] += 1
+                continue
 
-        if line and line.line_source == SRC.FILING:
-            _evict_filing_line(line, session=session)
-            stats['evicted'] += 1
+            line = PhoneDetectorExtractionLine.objects.filter(
+                divar_account_session=session,
+            ).first()
+            if not line:
+                line = PhoneDetectorExtractionLine.objects.filter(
+                    phone=phone,
+                    line_source=SRC.FILING,
+                ).first()
 
-    for line in PhoneDetectorExtractionLine.objects.select_related('divar_account_session').all():
-        if _line_should_leave_active_index(line):
-            if _evict_line_from_active_rotation(line):
-                stats['index_adjusted'] += 1
+            if _eligible_filing_session(session):
+                if line and (line.admin_hold or line.operational_status == OPS.BLOCKED_CAPTCHA):
+                    stats['skipped_provision'] += 1
+                    continue
+                try:
+                    before_status = line.operational_status if line else None
+                    line = _provision_filing_session(session)
+                    stats['provisioned'] += 1
+                    if (
+                        before_status is not None
+                        and _status_allows_auto_recovery(before_status)
+                        and line.operational_status == OPS.ACTIVE
+                    ):
+                        stats['recovered'] += 1
+                except PhoneDetectorLineError as exc:
+                    stats['skipped_provision'] += 1
+                    logger.info('provision skip %s: %s', phone, exc.message)
+                except Exception:
+                    stats['skipped_provision'] += 1
+                    logger.exception('provision failed %s', phone)
+                continue
 
-    sync_lines_from_sessions()
-    return {**stats, 'ok': True}
+            if line and line.line_source == SRC.FILING:
+                _evict_filing_line(line, session=session)
+                stats['evicted'] += 1
+
+        for line in PhoneDetectorExtractionLine.objects.select_related(
+            'divar_account_session',
+        ).all():
+            if _line_should_leave_active_index(line):
+                if _evict_line_from_active_rotation(line):
+                    stats['index_adjusted'] += 1
+
+        sync_lines_from_sessions()
+        stats['ok'] = True
+        if lock_note:
+            stats['lock'] = lock_note
+        return stats
+    finally:
+        _release_reconcile_lock()
 
 
+@transaction.atomic
 def _evict_filing_line(
     line: PhoneDetectorExtractionLine,
     *,
     session: DivarAccountSession | None,
 ) -> None:
+    line = PhoneDetectorExtractionLine.objects.select_for_update().get(pk=line.pk)
     detail = 'خارج از چرخه — نشست فایلینگ نامعتبر یا غیرفعال'
     if session:
         detail = f'خارج از چرخه — {session.get_auth_status_display()}'
@@ -283,23 +435,25 @@ def _evict_filing_line(
 
 
 def _evict_line_from_active_rotation(line: PhoneDetectorExtractionLine) -> bool:
-    delete_file = line.line_source == SRC.FILING
-    if line.operational_status == OPS.BLOCKED_CAPTCHA and line.line_source == SRC.MANUAL:
-        delete_file = False
     if line.operational_status == OPS.PAUSED and line.admin_hold:
-        return _remove_phone_from_index_only(line.phone) or True
+        return _remove_phone_from_index_only(line.phone)
 
-    if line.operational_status in (OPS.BLOCKED_CAPTCHA, OPS.ERROR):
-        if not delete_file:
-            removed = _remove_phone_from_index_only(line.phone)
-        else:
+    if line.operational_status == OPS.BLOCKED_CAPTCHA:
+        delete_file = line.line_source == SRC.FILING
+        if delete_file:
+            return _evict_phone_from_pd_index(line.phone, delete_session_file=True)
+        return _remove_phone_from_index_only(line.phone)
+
+    if line.operational_status == OPS.ERROR:
+        delete_file = line.line_source == SRC.FILING
+        if delete_file:
             removed = _evict_phone_from_pd_index(line.phone, delete_session_file=True)
-        if line.operational_status != OPS.EVICTED and line.line_source == SRC.FILING:
-            line.operational_status = OPS.EVICTED
-            line.status_detail = line.status_detail or 'خارج از چرخه — غیرقابل استخراج'
-            line.updated_at = timezone.now()
-            line.save(update_fields=['operational_status', 'status_detail', 'updated_at'])
+        else:
+            removed = _remove_phone_from_index_only(line.phone)
         return removed
+
+    if line.operational_status == OPS.EVICTED:
+        return _remove_phone_from_index_only(line.phone)
 
     if line.line_source == SRC.FILING and line.divar_account_session_id:
         central = line.divar_account_session

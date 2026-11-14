@@ -2,82 +2,73 @@
 {% load static %}
 {% load persian_tags %}
 
-{% block title %}مرکز جذب سرنخ | پنل مدیریت{% endblock %}
+{% block title %}سرنخ‌ها | پنل مدیریت{% endblock %}
 
-{% block admin_panel_title %}مرکز جذب سرنخ{% endblock %}
+{% block body_class %}{{ block.super }} adm-leads-center-active{% endblock %}
+
+{% block admin_panel_title %}سرنخ‌ها{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">سرنخ‌ها</span>{% endblock %}
+
+{% block admin_panel_header_subtitle %}
+جذب، کمپین پایلوت و تبدیل تا خرید
+{% endblock %}
+
+{% block admin_panel_header_actions %}
+<a href="{% url 'admin_panel_growth_pipeline' %}" class="adm-cmd-bar__tool" title="پایپلاین رشد">
+    <i class="fas fa-route" aria-hidden="true"></i>
+</a>
+<a href="{% url 'admin_panel_export' 'growth_journeys' %}?format=xlsx" class="adm-cmd-bar__tool" title="خروجی پرونده رشد">
+    <i class="fas fa-file-excel" aria-hidden="true"></i>
+</a>
+{% endblock %}
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-lead-v3.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-lead-v3.css' %}?v=43">
 {% endblock %}
 
 {% block admin_panel_content %}
 {% include 'accounts/partials/admin_center_shell_open.html' %}
-<div class="adm-page adm-mkt-page adm-lac-page">
+<div class="biz-page biz-page--leads adm-page adm-mkt-page adm-lac-page leads-v3">
 {% if not lead_can_manage %}
-<p class="ecc-card-sub" role="status" style="padding:.7rem 1rem;margin:.75rem 0;border:1px solid var(--border-color, #e2e6ef);border-radius:12px;">
+<p class="adm-leads-permission-note" role="status">
     <i class="fas fa-lock" aria-hidden="true"></i>
     مشاهده گزارش‌ها مجاز است؛ ثبت، ویرایش، ارسال پیامک و اجرای اتوماسیون نیازمند مجوز مسئول کمپین است.
 </p>
 {% endif %}
 
-    {% include 'accounts/partials/admin_center_intro.html' with aria_label='معرفی جذب سرنخ' icon='fa-satellite-dish' icon_tone='orders' title='مرکز جذب سرنخ' subtitle='از آگهی دیوار تا ثبت‌نام و لایسنس — با ردیابی دقیق هر پیام و کمپین.' %}
-
-    <header class="adm-lac-hero">
-        <div class="adm-lac-hero-copy">
-            <p class="adm-lac-kicker">
-                <i class="fas fa-satellite-dish" aria-hidden="true"></i>
-                جذب سرنخ · فایلینگ دیوار
-            </p>
-            <h1 class="adm-lac-title">مرکز جذب سرنخ</h1>
-            <p class="adm-lac-tagline">از آگهی دیوار تا ثبت‌نام و لایسنس — با ردیابی دقیق هر پیام.</p>
-            <p class="adm-lac-desc">
-                سرنخ‌های استخراج‌شده را دسته‌بندی کنید، کمپین پایلوت دو نسخه‌ای بسازید،
-                و قیف «پذیرفته‌شده ← کلیک ← ثبت‌نام ← خرید» را با نسبت‌دهی مستقیم و تطبیق شماره ببینید.
-            </p>
-            <div class="adm-lac-hero-actions">
-                <a class="adm-lac-btn adm-lac-btn--primary" href="#lac-import"><i class="fas fa-file-import"></i> ورود فایل</a>
-                <a class="adm-lac-btn adm-lac-btn--cyan" href="#lac-automation"><i class="fas fa-robot"></i> جمع‌آوری خودکار</a>
-                <a class="adm-lac-btn adm-lac-btn--amber" href="#lac-campaigns"><i class="fas fa-flask"></i> کمپین‌های پایلوت</a>
-                <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_growth_pipeline' %}"><i class="fas fa-route"></i> پایپلاین رشد</a>
-                <a class="adm-lac-btn adm-lac-btn--ghost" href="{% url 'admin_panel_marketing' %}"><i class="fas fa-arrow-right"></i> مارکتینگ کاربران</a>
+    <nav class="adm-lac-tabs adm-lac-tabs--pro" aria-label="بخش‌های جذب سرنخ">
+        <div class="adm-lac-tabs__shell">
+            <div class="adm-lac-tabs__track">
+                <div class="adm-lac-tabs__inner" role="tablist">
+                    <a href="#lac-overview" class="adm-lac-tab is-active" data-lac-tab role="tab" aria-selected="true">
+                        <i class="fas fa-chart-pie adm-lac-tab__icon" aria-hidden="true"></i>
+                        <span class="adm-lac-tab__text">نمای کلی</span>
+                    </a>
+                    <a href="#lac-import" class="adm-lac-tab" data-lac-tab role="tab" aria-selected="false">
+                        <i class="fas fa-file-import adm-lac-tab__icon" aria-hidden="true"></i>
+                        <span class="adm-lac-tab__text">ورود فایل</span>
+                    </a>
+                    <a href="#lac-compose" class="adm-lac-tab" data-lac-tab role="tab" aria-selected="false">
+                        <i class="fas fa-wand-magic-sparkles adm-lac-tab__icon" aria-hidden="true"></i>
+                        <span class="adm-lac-tab__text">ساخت کمپین</span>
+                    </a>
+                    <a href="#lac-campaigns" class="adm-lac-tab" data-lac-tab role="tab" aria-selected="false">
+                        <i class="fas fa-bullhorn adm-lac-tab__icon" aria-hidden="true"></i>
+                        <span class="adm-lac-tab__text">کمپین‌ها</span>
+                    </a>
+                    <a href="#lac-automation" class="adm-lac-tab" data-lac-tab role="tab" aria-selected="false">
+                        <i class="fas fa-robot adm-lac-tab__icon" aria-hidden="true"></i>
+                        <span class="adm-lac-tab__text adm-lac-tab__text--long">جمع‌آوری خودکار</span>
+                        <span class="adm-lac-tab__text adm-lac-tab__text--short">خودکار</span>
+                    </a>
+                    <a href="#lac-leads" class="adm-lac-tab" data-lac-tab role="tab" aria-selected="false">
+                        <i class="fas fa-address-book adm-lac-tab__icon" aria-hidden="true"></i>
+                        <span class="adm-lac-tab__text">سرنخ‌ها</span>
+                    </a>
+                </div>
             </div>
-            <div class="adm-lac-meta">
-                <span class="adm-lac-chip adm-lac-chip--live"><i class="fas fa-circle" style="font-size:.45rem"></i> توکن ردیابی برای هر پیام</span>
-                <span class="adm-lac-chip adm-lac-chip--pilot"><i class="fas fa-vial"></i> نتیجه پایلوت — نه برنده آماری</span>
-                <span class="adm-lac-chip">نمایش زمان به شمسی (تهران)</span>
-            </div>
-        </div>
-        <aside class="adm-lac-journey" aria-label="مسیر تبدیل">
-            <p class="adm-lac-journey-title">مسیر تبدیل سرنخ سرد</p>
-            <div class="adm-lac-pipeline">
-                <span class="adm-lac-pipe"><i class="fas fa-database"></i> ورود</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe"><i class="fas fa-list"></i> لیست</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe"><i class="fas fa-paper-plane"></i> پیامک</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe"><i class="fas fa-mouse-pointer"></i> کلیک</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe"><i class="fas fa-user-check"></i> ثبت‌نام</span>
-                <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-left"></i></span>
-                <span class="adm-lac-pipe"><i class="fas fa-key"></i> لایسنس</span>
-            </div>
-            <p class="adm-lac-kpi-sub" style="margin-top:.35rem">
-                بعد از ثبت‌نام ← خروج از جذب و ورود به فعال‌سازی کاربر
-            </p>
-        </aside>
-    </header>
-
-    <nav class="adm-lac-tabs" aria-label="بخش‌های جذب سرنخ">
-        <div class="adm-lac-tabs__inner">
-            <a href="#lac-overview" class="adm-lac-tab is-active" data-lac-tab>نمای کلی</a>
-            <a href="#lac-import" class="adm-lac-tab" data-lac-tab>ورود فایل</a>
-            <a href="#lac-compose" class="adm-lac-tab" data-lac-tab>ساخت کمپین</a>
-            <a href="#lac-campaigns" class="adm-lac-tab" data-lac-tab>کمپین‌ها</a>
-            <a href="#lac-automation" class="adm-lac-tab" data-lac-tab>جمع‌آوری خودکار</a>
-            <a href="#lac-leads" class="adm-lac-tab" data-lac-tab>سرنخ‌ها</a>
         </div>
     </nav>
 
@@ -92,93 +83,42 @@
     </section>
     {% endif %}
 
-    <section id="lac-overview" class="adm-lac-section">
-        <div class="adm-lac-section-head">
-            <div>
-                <h2>وضعیت سیستم جذب</h2>
-                <p>شاخص‌های زنده بانک سرنخ و کمپین‌های فعال</p>
-            </div>
-        </div>
-        <div class="adm-lac-kpis">
-            <article class="adm-lac-kpi" data-accent="teal">
-                <span class="adm-lac-kpi-val">{{ overview.leads_total|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">کل سرنخ‌ها</span>
-                <p class="adm-lac-kpi-sub">سرد {{ overview.leads_cold|to_persian_digits }} · تعامل {{ overview.leads_engaged|to_persian_digits }}</p>
-            </article>
-            <article class="adm-lac-kpi" data-accent="cyan">
-                <span class="adm-lac-kpi-val">{{ overview.leads_registered|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">ثبت‌نام‌شده</span>
-                <p class="adm-lac-kpi-sub">مشتری {{ overview.leads_customer|to_persian_digits }}</p>
-            </article>
-            <article class="adm-lac-kpi" data-accent="amber">
-                <span class="adm-lac-kpi-val">{{ overview.batches|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">فایل‌های ثبت‌شده</span>
-                <p class="adm-lac-kpi-sub">استخراج از دیوار</p>
-            </article>
-            <article class="adm-lac-kpi" data-accent="slate">
-                <span class="adm-lac-kpi-val">{{ overview.campaigns_active|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">کمپین فعال / پایلوت</span>
-                <p class="adm-lac-kpi-sub">جذب + فعال‌سازی</p>
-            </article>
-            <article class="adm-lac-kpi" data-accent="violet">
-                <span class="adm-lac-kpi-val">{{ overview.total_clicks|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">کلیک لندینگ</span>
-                <p class="adm-lac-kpi-sub">
-                    {% if overview.ctr_pct is not None %}نرخ کلیک {{ overview.ctr_pct|to_persian_digits }}٪{% else %}سرنخ یکتا{% endif %}
-                </p>
-            </article>
-            <article class="adm-lac-kpi" data-accent="rose">
-                <span class="adm-lac-kpi-val">{{ overview.total_purchases|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">خرید / لایسنس</span>
-                <p class="adm-lac-kpi-sub">
-                    {% if overview.purchase_revenue %}درآمد {{ overview.purchase_revenue|to_persian_digits }} ریال{% else %}تبدیل نهایی{% endif %}
-                </p>
-            </article>
-        </div>
+    <section id="lac-overview" class="adm-lac-section adm-lac-section--pro">
+        {% include 'accounts/partials/admin_leads_overview_kpi.html' %}
 
-        <div class="adm-lac-analytics">
-            <div class="adm-lac-analytics__head">
+        <div class="adm-lac-analytics adm-lac-analytics--pro">
+            <header class="adm-lac-analytics__head">
                 <div>
-                    <h3>قیف و عملکرد کمپین‌ها</h3>
-                    <p id="lac-analytics-meta">بارگذاری گزارش...</p>
+                    <h3 class="adm-lac-analytics__title">گزارش عملکرد کمپین‌ها</h3>
+                    <p class="adm-lac-analytics__meta" id="lac-analytics-meta">بارگذاری گزارش...</p>
                 </div>
-            </div>
+            </header>
 
-            <div class="adm-lac-summary-strip" id="lac-summary-strip" aria-label="خلاصه مالی و عملکرد"></div>
+            <div class="adm-lac-summary-strip adm-lac-summary-strip--pro" id="lac-summary-strip" aria-label="خلاصه مالی و عملکرد"></div>
 
-            <div class="adm-lac-funnel-cascade" id="lac-funnel-cascade" aria-label="قیف تجمیعی"></div>
+            <div class="adm-lac-funnel-cascade adm-lac-funnel-cascade--pro" id="lac-funnel-cascade" aria-label="قیف تجمیعی کمپین‌ها"></div>
 
             <div class="adm-lac-charts-grid adm-lac-charts-grid--pro">
-                <article class="adm-lac-chart-card">
+                <article class="adm-lac-chart-card adm-lac-chart-card--conversion-pro">
                     <header class="adm-lac-chart-card__head">
                         <div>
-                            <strong>نرخ تبدیل مرحله‌ای</strong>
-                            <span>درصد باقی‌مانده نسبت به مرحله قبل</span>
+                            <strong>تحلیل تبدیل مرحله‌ای</strong>
+                            <span id="lac-conversion-sub">نرخ‌های کلیدی و افت بین مراحل قیف</span>
                         </div>
                     </header>
-                    <div class="adm-lac-chart-wrap adm-lac-chart-wrap--md">
-                        <canvas id="lac-chart-conversion" aria-label="نرخ تبدیل"></canvas>
+                    <div class="adm-lac-conversion-pro__body">
+                        <div class="adm-lac-conversion-pro__metrics" id="lac-conversion-insights" role="group" aria-label="نرخ‌های کلیدی قیف"></div>
+                        <div class="adm-lac-conversion-pro__chart adm-lac-chart-wrap adm-lac-chart-wrap--conversion">
+                            <canvas id="lac-chart-conversion" aria-label="نمودار تبدیل مرحله‌ای"></canvas>
+                        </div>
                     </div>
                 </article>
 
-                <article class="adm-lac-chart-card">
-                    <header class="adm-lac-chart-card__head">
-                        <div>
-                            <strong>وضعیت کمپین‌ها</strong>
-                            <span id="lac-status-sub">توزیع وضعیت</span>
-                        </div>
-                    </header>
-                    <div class="adm-lac-chart-wrap adm-lac-chart-wrap--donut adm-lac-chart-wrap--center">
-                        <canvas id="lac-chart-status" aria-label="وضعیت کمپین‌ها"></canvas>
-                        <div class="adm-lac-donut-center" id="lac-donut-center" aria-hidden="true"></div>
-                    </div>
-                </article>
-
-                <article class="adm-lac-chart-card adm-lac-chart-card--wide">
+                <article class="adm-lac-chart-card adm-lac-chart-card--campaigns">
                     <header class="adm-lac-chart-card__head">
                         <div>
                             <strong>عملکرد کمپین‌ها</strong>
-                            <span>نرخ تبدیل نهایی (خرید ÷ ارسال)</span>
+                            <span id="lac-campaigns-sub">نرخ تبدیل نهایی (خرید ÷ ارسال)</span>
                         </div>
                     </header>
                     <div class="adm-lac-chart-wrap adm-lac-chart-wrap--lg">
@@ -186,12 +126,18 @@
                     </div>
                 </article>
 
-                <article class="adm-lac-chart-card">
-                    <header class="adm-lac-chart-card__head">
+                <article class="adm-lac-chart-card adm-lac-chart-card--variants">
+                    <header class="adm-lac-chart-card__head adm-lac-chart-card__head--variants">
                         <div>
                             <strong>مقایسه A / B</strong>
                             <span id="lac-variant-sub">پایلوت دو نسخه‌ای</span>
                         </div>
+                        <button type="button" class="adm-lac-chart-info-btn" id="lac-variant-insight-open"
+                                aria-haspopup="dialog" aria-controls="lac-variant-insight-modal"
+                                title="چرا این نسخه پیشنهاد می‌شود؟" hidden>
+                            <i class="fas fa-circle-info" aria-hidden="true"></i>
+                            <span class="adm-v2-sr-only">توضیح پیشنهاد A/B</span>
+                        </button>
                     </header>
                     <div class="adm-lac-chart-wrap adm-lac-chart-wrap--md">
                         <canvas id="lac-chart-variants" aria-label="مقایسه A و B"></canvas>
@@ -199,95 +145,98 @@
                 </article>
             </div>
 
-            <div class="adm-lac-data-table-wrap">
+            <section class="adm-lac-table-panel" aria-label="جدول دقیق کمپین‌ها">
                 <header class="adm-lac-data-table-head">
                     <div>
                         <strong>جدول دقیق کمپین‌ها</strong>
-                        <span>تمام اعداد قیف · نرخ‌ها · درآمد و هزینه پیامک</span>
+                        <span>قیف · نرخ‌ها · درآمد و هزینه — جدیدترین در بالا</span>
                     </div>
                 </header>
-                <div class="adm-lac-table-scroll">
-                    <table class="adm-lac-data-table" id="lac-campaign-table">
-                        <thead>
-                            <tr id="lac-campaign-table-totals" class="adm-lac-table-totals-row">
-                                <td colspan="12" class="adm-lac-table-empty">در حال بارگذاری جمع کل...</td>
-                            </tr>
-                            <tr class="adm-lac-table-head-row">
-                                <th>کمپین</th>
-                                <th>وضعیت</th>
-                                <th>واجد</th>
-                                <th>ثبت</th>
-                                <th>ارسال</th>
-                                <th>کلیک</th>
-                                <th>ثبت‌نام</th>
-                                <th>خرید</th>
-                                <th>CTR</th>
-                                <th>CVR</th>
-                                <th>درآمد</th>
-                                <th>هزینه SMS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lac-campaign-table-body">
-                            <tr><td colspan="12" class="adm-lac-table-empty">در حال بارگذاری...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="adm-lac-table-toolbar">
+                    <label class="adm-lac-table-search" for="lac-campaign-table-search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" id="lac-campaign-table-search" name="lac_campaign_search"
+                               placeholder="جستجو: نام یا #شناسه" autocomplete="off" enterkeyhint="search">
+                    </label>
+                    <label class="adm-lac-table-sort" for="lac-campaign-table-sort">
+                        <span class="adm-lac-table-sort__label">مرتب‌سازی</span>
+                        <select id="lac-campaign-table-sort" name="lac_campaign_sort">
+                            <option value="newest" selected>جدیدترین</option>
+                            <option value="paid">بیشترین خرید</option>
+                            <option value="accepted">بیشترین ارسال</option>
+                            <option value="cvr">بیشترین CVR</option>
+                            <option value="name">نام کمپین</option>
+                        </select>
+                    </label>
+                    <p class="adm-lac-table-count" id="lac-campaign-table-count" aria-live="polite"></p>
                 </div>
-            </div>
-        </div>
-
-        <div class="adm-lac-panel">
-            <div class="adm-lac-section-head" style="margin-bottom:.65rem">
-                <div>
-                    <h2 style="font-size:.95rem">توالی پیام سرد</h2>
-                    <p>پیام ۲ یادآوری برای همه ثبت‌نام‌نشده‌هاست؛ پیام ۳ فقط سرنخ گرم</p>
+                <div class="adm-lac-data-table-wrap adm-lac-data-table-wrap--pro">
+                    <div class="adm-lac-table-scroll adm-lac-table-scroll--pro">
+                        <table class="adm-lac-data-table adm-lac-data-table--pro" id="lac-campaign-table">
+                            <thead>
+                                <tr class="adm-lac-table-head-row">
+                                    <th scope="col">کمپین</th>
+                                    <th scope="col">وضعیت</th>
+                                    <th scope="col">واجد</th>
+                                    <th scope="col">ثبت</th>
+                                    <th scope="col">ارسال</th>
+                                    <th scope="col">کلیک</th>
+                                    <th scope="col">ثبت‌نام</th>
+                                    <th scope="col">خرید</th>
+                                    <th scope="col">CTR</th>
+                                    <th scope="col">CVR</th>
+                                    <th scope="col">درآمد</th>
+                                    <th scope="col">SMS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lac-campaign-table-body">
+                                <tr><td colspan="12" class="adm-lac-table-empty">در حال بارگذاری...</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr id="lac-campaign-table-totals" class="adm-lac-table-totals-row">
+                                    <td colspan="12" class="adm-lac-table-empty">در حال بارگذاری جمع کل...</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <footer class="adm-lac-table-more">
+                        <button type="button" class="adm-lac-table-more__btn" id="lac-campaign-table-more" hidden>
+                            نمایش کمپین‌های بیشتر
+                        </button>
+                    </footer>
                 </div>
-            </div>
-            <div class="adm-lac-steps-hint">
-                <div class="adm-lac-step-card">
-                    <b>مرحله ۱ · روز ۰</b>
-                    <span>همه سرنخ‌های واجد شرایط — معرفی و صفحه فرود</span>
-                </div>
-                <div class="adm-lac-step-card">
-                    <b>مرحله ۲ · روز ۲ تا ۳</b>
-                    <span>بدون ثبت‌نام و بدون لغو دریافت — حتی بدون کلیک (یادآوری)</span>
-                </div>
-                <div class="adm-lac-step-card">
-                    <b>مرحله ۳ · روز ۶ تا ۷</b>
-                    <span>فقط کسانی که کلیک یا مشاهده صفحه داشته‌اند و هنوز ثبت‌نام نکرده‌اند</span>
-                </div>
-            </div>
+            </section>
         </div>
     </section>
 
-    <section id="lac-import" class="adm-lac-section">
-        <div class="adm-lac-section-head">
-            <div>
-                <h2>ورود حرفه‌ای فایل</h2>
-                <p>آپلود تکی یا دسته‌ای · پس از ثبت، کمپین A/B به‌صورت خودکار ساخته می‌شود</p>
+    <section id="lac-import" class="adm-lac-section adm-lac-section--pro adm-lac-import-section">
+        <div class="adm-lac-section-head adm-lac-section-head--tight adm-lac-import-section__head">
+            <div class="adm-lac-import-section__intro">
+                <h2>ورود فایل</h2>
+                <p class="adm-lac-import-section__micro">JSON استخراجگر · تکی یا دسته‌ای · کمپین A/B پس از ثبت</p>
             </div>
             {% if bulk_previews %}
-            <span class="adm-lac-chip adm-lac-chip--live">{{ bulk_previews|length|to_persian_digits }} فایل در صف</span>
+            <span class="adm-lac-import-section__badge">{{ bulk_previews|length|to_persian_digits }} در صف</span>
             {% endif %}
         </div>
 
         {% if batches_pending_campaign %}
-        <div class="adm-lac-pending-campaigns">
+        <div class="adm-lac-pending-campaigns adm-lac-import-alert">
             <div class="adm-lac-pending-campaigns__copy">
-                <i class="fas fa-circle-exclamation"></i>
                 <div>
-                    <strong>{{ batches_pending_campaign|length|to_persian_digits }} فایل ثبت‌شده بدون کمپین</strong>
-                    <p class="adm-lac-kpi-sub">فایل‌هایی که قبلاً وارد شده‌اند commit مجدد نمی‌شوند — کمپین را از همینجا بسازید.</p>
+                    <strong>{{ batches_pending_campaign|length|to_persian_digits }} فایل بدون کمپین</strong>
+                    <p class="adm-lac-kpi-sub">commit مجدد نمی‌شود — از همین بخش کمپین بسازید.</p>
                 </div>
             </div>
             <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create_campaigns_pending">
-                <button type="submit" class="adm-lac-btn adm-lac-btn--amber">
-                    <i class="fas fa-wand-magic-sparkles"></i> ساخت کمپین برای همه
+                <button type="submit" class="adm-lac-btn adm-lac-btn--amber adm-lac-btn--sm">
+                    ساخت برای همه
                 </button>
             </form>
         </div>
-        <details class="adm-lac-accordion adm-lac-accordion--inline">
+        <details class="adm-lac-accordion adm-lac-accordion--inline adm-lac-import-accordion--inline">
             <summary class="adm-lac-accordion__head">
                 <span class="adm-lac-accordion__icon"><i class="fas fa-file-circle-plus"></i></span>
                 <span class="adm-lac-accordion__title">
@@ -321,32 +270,28 @@
         </details>
         {% endif %}
 
-        <div class="adm-lac-upload-workspace">
-            <div class="adm-lac-panel adm-lac-panel--upload">
-                <form method="post" enctype="multipart/form-data" id="lac-import-form">
+        <div class="adm-lac-upload-workspace adm-lac-import-workspace">
+            <div class="adm-lac-panel adm-lac-panel--pro adm-lac-panel--upload adm-lac-import-upload">
+                <form method="post" enctype="multipart/form-data" id="lac-import-form" class="adm-lac-import-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="import_preview">
-                    <div class="adm-lac-drop adm-lac-drop--bulk" id="lac-dropzone">
-                        <div class="adm-lac-drop-icon"><i class="fas fa-layer-group"></i></div>
-                        <strong>فایل‌های JSON استخراجگر را اینجا رها کنید</strong>
-                        <span>تکی یا چندتایی · حداکثر ۲۰ فایل · فقط JSON</span>
+                    <div class="adm-lac-drop adm-lac-drop--bulk adm-lac-drop--minimal" id="lac-dropzone">
+                        <div class="adm-lac-drop-icon" aria-hidden="true"><i class="fas fa-file-arrow-up"></i></div>
+                        <p class="adm-lac-import-drop__copy">
+                            <strong>رها کنید یا انتخاب کنید</strong>
+                            <span>حداکثر ۲۰ فایل JSON</span>
+                        </p>
                         <input type="file" name="files" id="lac-file" accept=".json,application/json" multiple>
                     </div>
-                    <div class="adm-lac-upload-meta">
+                    <div class="adm-lac-upload-meta adm-lac-import-meta">
                         <p class="adm-lac-kpi-sub" id="lac-file-name">فایلی انتخاب نشده</p>
-                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
-                            <i class="fas fa-eye"></i> پیش‌نمایش
-                        </button>
+                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">پیش‌نمایش</button>
                     </div>
                 </form>
-                <div class="adm-lac-upload-hints">
-                    <span><i class="fas fa-fingerprint"></i> اثرانگشت فایل</span>
-                    <span><i class="fas fa-filter"></i> حذف تکراری</span>
-                    <span><i class="fas fa-wand-magic-sparkles"></i> کمپین خودکار A/B</span>
-                </div>
+                <p class="adm-lac-import-hints">اثرانگشت · حذف تکراری · کمپین A/B خودکار</p>
             </div>
 
-            <div class="adm-lac-panel adm-lac-panel--preview">
+            <div class="adm-lac-panel adm-lac-panel--pro adm-lac-panel--preview adm-lac-import-preview">
                 {% if preview %}
                 <div class="adm-lac-preview-active">
                     <div class="adm-lac-preview-head">
@@ -384,9 +329,8 @@
                     </div>
                 </div>
                 {% else %}
-                <div class="adm-lac-empty adm-lac-empty--compact">
-                    <i class="fas fa-clipboard-list"></i>
-                    پیش‌نمایش اینجا نمایش داده می‌شود
+                <div class="adm-lac-empty adm-lac-empty--compact adm-lac-import-empty">
+                    <span>پیش‌نمایش پس از انتخاب فایل</span>
                 </div>
                 {% endif %}
 
@@ -415,9 +359,9 @@
             </div>
         </div>
 
-        <div class="adm-lac-accordions">
+        <div class="adm-lac-accordions adm-lac-import-accordions">
             {% if region_lists %}
-            <details class="adm-lac-accordion">
+            <details class="adm-lac-accordion adm-lac-import-accordion">
                 <summary class="adm-lac-accordion__head">
                     <span class="adm-lac-accordion__icon"><i class="fas fa-map-location-dot"></i></span>
                     <span class="adm-lac-accordion__title">
@@ -433,7 +377,7 @@
                             <header class="adm-lac-region-card__head">
                                 <div>
                                     <strong>{{ row.list.city }}{% if row.list.district %} / {{ row.list.district }}{% endif %}</strong>
-                                    <span class="adm-lac-kpi-sub">لیست {{ row.list.id|to_persian_digits }} · {{ row.list.listing_category|default:"—" }}</span>
+                                    <span class="adm-lac-kpi-sub">لیست {{ row.list.id|to_persian_digits }} · {{ row.category_label|default:"—" }}</span>
                                 </div>
                                 <div class="adm-lac-region-card__stats">
                                     <span class="adm-lac-chip adm-lac-chip--live">{{ row.member_count|to_persian_digits }} سرنخ</span>
@@ -462,7 +406,7 @@
             {% endif %}
 
             {% if batches %}
-            <details class="adm-lac-accordion">
+            <details class="adm-lac-accordion adm-lac-import-accordion">
                 <summary class="adm-lac-accordion__head">
                     <span class="adm-lac-accordion__icon"><i class="fas fa-clock-rotate-left"></i></span>
                     <span class="adm-lac-accordion__title">
@@ -495,55 +439,107 @@
         </div>
     </section>
 
-    <section id="lac-compose" class="adm-lac-section">
-        <div class="adm-lac-section-head">
+    <section id="lac-compose" class="adm-lac-section adm-lac-section--pro adm-lac-compose-section">
+        <div class="adm-lac-section-head adm-lac-compose-section__head">
             <div>
                 <h2>ساخت کمپین جذب</h2>
                 <p>پایلوت ۱۵+۱۵ برای صحت ردیابی — نه ادعای برنده آماری خرید</p>
             </div>
+            {% if compose_lists %}
+            <span class="adm-lac-compose-section__badge">{{ compose_lists|length|to_persian_digits }} لیست آماده</span>
+            {% endif %}
         </div>
-        <div class="adm-lac-panel">
-            <form method="post">
+        <div class="adm-lac-panel adm-lac-panel--pro adm-lac-compose--minimal">
+            <form method="post" class="adm-lac-compose__form" id="lac-compose-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create_campaign">
-                <div class="adm-lac-form-row">
-                    <div class="adm-lac-field">
-                        <label for="list_id">لیست سرنخ</label>
-                        <select name="list_id" id="list_id" required>
-                            {% for lst in lists %}
-                            <option value="{{ lst.id }}">{{ lst.id|to_persian_digits }} — {{ lst.name }}</option>
+                <input type="hidden" name="list_id" id="list_id" value="{% if compose_lists %}{{ compose_lists.0.list.id }}{% endif %}" required>
+
+                <div class="adm-lac-compose__layout">
+                    <div class="adm-lac-compose__picker-block">
+                        <div class="adm-lac-compose__block-head">
+                            <div class="adm-lac-compose__block-intro">
+                                <span class="adm-lac-compose__block-label">لیست سرنخ</span>
+                                <p class="adm-lac-compose__micro" id="lac-compose-selected-label">
+                                    {% if compose_lists %}#{{ compose_lists.0.list.id|to_persian_digits }} · {{ compose_lists.0.location_label }}{% else %}ابتدا یک فایل را در تب ورود ثبت کنید{% endif %}
+                                </p>
+                            </div>
+                            {% if compose_lists %}
+                            <label class="adm-lac-compose__search">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                <input type="search" id="lac-compose-list-search" placeholder="شهر، منطقه، دسته…" autocomplete="off" enterkeyhint="search" aria-controls="lac-compose-list-picker">
+                            </label>
+                            {% endif %}
+                        </div>
+                        <div class="adm-lac-compose__picker" id="lac-compose-list-picker" role="listbox" aria-label="انتخاب لیست سرنخ">
+                            {% for row in compose_lists %}
+                            <button type="button" class="adm-lac-compose-list{% if forloop.first %} is-selected{% endif %}"
+                                    role="option" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                                    data-compose-list-id="{{ row.list.id }}"
+                                    data-compose-search="{{ row.location_label }} {{ row.category_label }} {{ row.list.name }} #{{ row.list.id }}"
+                                    data-compose-name-suggest="جذب {{ row.location_label }} — پایلوت"
+                                    data-compose-summary="#{{ row.list.id|to_persian_digits }} · {{ row.location_label }}">
+                                <span class="adm-lac-compose-list__mark" aria-hidden="true"></span>
+                                <span class="adm-lac-compose-list__body">
+                                    <span class="adm-lac-compose-list__loc" title="{{ row.location_label }}">{{ row.location_label }}</span>
+                                    <span class="adm-lac-compose-list__meta">
+                                        <span class="adm-lac-compose-list__cat" title="{{ row.category_label }}">{{ row.category_label }}</span>
+                                    </span>
+                                </span>
+                                <span class="adm-lac-compose-list__aside">
+                                    <span class="adm-lac-compose-list__count">{{ row.member_count|to_persian_digits }} سرنخ</span>
+                                    <span class="adm-lac-compose-list__id">#{{ row.list.id|to_persian_digits }}</span>
+                                </span>
+                            </button>
                             {% empty %}
-                            <option value="">ابتدا یک فایل را ثبت کنید</option>
+                            <div class="adm-lac-compose__empty">
+                                <i class="fas fa-inbox" aria-hidden="true"></i>
+                                <p>لیستی برای کمپین نیست — از تب <strong>ورود</strong> فایل را commit کنید.</p>
+                            </div>
                             {% endfor %}
-                        </select>
+                        </div>
                     </div>
-                    <div class="adm-lac-field">
-                        <label for="name">نام کمپین</label>
-                        <input name="name" id="name" placeholder="مثلاً جذب آجودانیه — پایلوت">
+
+                    <div class="adm-lac-compose__config">
+                        <div class="adm-lac-compose__config-head">
+                            <span class="adm-lac-compose__block-label">تنظیم کمپین</span>
+                            <p class="adm-lac-compose__micro">دو نسخه A/B با لینک ردیابی یکتا</p>
+                        </div>
+                        <div class="adm-lac-compose__fields">
+                            <div class="adm-lac-field adm-lac-field--grow">
+                                <label for="name">نام کمپین</label>
+                                <input name="name" id="name" placeholder="جذب منطقه — پایلوت A/B" maxlength="120">
+                            </div>
+                            <div class="adm-lac-field adm-lac-field--pilot">
+                                <label for="pilot_per_variant">ظرفیت هر نسخه</label>
+                                <input type="number" name="pilot_per_variant" id="pilot_per_variant" value="15" min="1" max="100" inputmode="numeric">
+                            </div>
+                            <div class="adm-lac-field adm-lac-field--full">
+                                <label for="landing_url">فرود پس از کلیک</label>
+                                <input name="landing_url" id="landing_url" type="url" dir="ltr" class="adm-lac-input--ltr" value="https://divarfiling.ir/" autocomplete="url" spellcheck="false">
+                            </div>
+                        </div>
+                        <label class="adm-lac-compose__switch">
+                            <input type="checkbox" name="is_pilot" value="1" checked>
+                            <span>حالت پایلوت (۱۵+۱۵)</span>
+                        </label>
                     </div>
-                    <div class="adm-lac-field">
-                        <label for="landing_url">صفحه فرود پس از کلیک</label>
-                        <input name="landing_url" id="landing_url" value="https://divarfiling.ir/">
-                    </div>
-                    <div class="adm-lac-field">
-                        <label for="pilot_per_variant">ظرفیت هر نسخه</label>
-                        <input type="number" name="pilot_per_variant" id="pilot_per_variant" value="15" min="1" max="100">
-                    </div>
-                    <label class="adm-lac-check">
-                        <input type="checkbox" name="is_pilot" value="1" checked>
-                        حالت نتیجه پایلوت
-                    </label>
                 </div>
-                <div style="margin-top:1rem">
-                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary" {% if not lists %}disabled{% endif %}
-                        <i class="fas fa-wand-magic-sparkles"></i> ایجاد کمپین دو نسخه‌ای
+
+                <footer class="adm-lac-compose__foot">
+                    <p class="adm-lac-compose__foot-hint" id="lac-compose-foot-hint">
+                        {% if compose_lists %}پس از ایجاد، پیام‌های A/B از تب کمپین‌ها قابل ویرایش‌اند.{% else %}بدون لیست commit‌شده امکان ایجاد نیست.{% endif %}
+                    </p>
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-compose__submit"{% if not compose_lists %} disabled{% endif %}>
+                        <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                        ایجاد کمپین دو نسخه‌ای
                     </button>
-                </div>
+                </footer>
             </form>
         </div>
     </section>
 
-    <section id="lac-campaigns" class="adm-lac-section">
+    <section id="lac-campaigns" class="adm-lac-section adm-lac-section--pro">
         <div class="adm-lac-section-head">
             <div>
                 <h2>کمپین‌ها و قیف</h2>
@@ -597,9 +593,9 @@
                 </div>
             </div>
 
-        <div class="adm-lac-panel" style="padding:0;overflow:hidden">
-            <div class="adm-lac-table-wrap" style="border:none">
-                <table class="adm-lac-table adm-lac-table--selectable">
+        <div class="adm-lac-panel adm-lac-panel--pro adm-lac-panel--table">
+            <div class="adm-lac-table-wrap adm-lac-table-wrap--pro">
+                <table class="adm-lac-table adm-lac-table--pro adm-lac-table--selectable">
                     <thead>
                         <tr>
                             <th class="adm-lac-check-col">
@@ -747,14 +743,14 @@
         </div>
     </section>
 
-    <section id="lac-automation" class="adm-lac-section">
-        <div class="adm-lac-section-head">
+    <section id="lac-automation" class="adm-lac-section adm-lac-section--pro adm-lac-automation">
+        <div class="adm-lac-section-head adm-lac-automation__head">
             <div>
                 <h2>جمع‌آوری خودکار از دیوار</h2>
                 <p>phone-detector → مرکز جذب → کمپین پایلوت — بدون آپلود دستی JSON</p>
             </div>
             <div class="adm-lac-section-head__actions">
-                <form method="post" style="display:inline">
+                <form method="post" class="adm-lac-automation__scheduler-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="run_automation_scheduler">
                     <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" title="همان cron هر ۱۵ دقیقه">
@@ -764,295 +760,424 @@
             </div>
         </div>
 
-        <div class="adm-lac-kpis adm-lac-kpis--compact">
-            <article class="adm-lac-kpi" data-accent="teal">
-                <span class="adm-lac-kpi-val">{{ automation_stats.campaigns_active|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">کمپین فعال</span>
-                <p class="adm-lac-kpi-sub">از {{ automation_stats.campaigns_total|to_persian_digits }} کل</p>
+        <div class="adm-lac-auto-kpis adm-lac-auto-kpis--pro adm-lac-auto-kpis--dense" role="list" aria-label="وضعیت اتوماسیون">
+            <article class="adm-lac-auto-stat adm-lac-auto-stat--pro" data-tone="violet" role="listitem">
+                <span class="adm-lac-auto-stat__label"><i class="fas fa-robot" aria-hidden="true"></i> کمپین خودکار</span>
+                <p class="adm-lac-auto-stat__pair" aria-label="فعال از کل">
+                    <strong>{{ automation_stats.campaigns_active|default:0|to_persian_digits }}</strong>
+                    <span class="adm-lac-auto-stat__pair-sep">/</span>
+                    <span class="adm-lac-auto-stat__pair-muted">{{ automation_stats.campaigns_total|default:0|to_persian_digits }}</span>
+                </p>
+                <span class="adm-lac-auto-stat__hint">
+                    {{ automation_stats.campaigns_due|default:0|to_persian_digits }} سررسید
+                    {% if automation_stats.next_run_at %}
+                    · بعدی {{ automation_stats.next_run_at|to_jalali_fa:"%m/%d %H:%M" }}
+                    {% elif automation_stats.campaigns_due %}
+                    · آماده صف scheduler
+                    {% else %}
+                    · برنامه بعدی ثبت نشده
+                    {% endif %}
+                </span>
             </article>
-            <article class="adm-lac-kpi" data-accent="cyan">
-                <span class="adm-lac-kpi-val">{{ automation_stats.runs_queued|add:automation_stats.runs_running|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">در صف / در حال اجرا</span>
-                <p class="adm-lac-kpi-sub">worker {% if automation_stats.worker_lock %}<span class="adm-lac-chip adm-lac-chip--live">قفل فعال</span>{% else %}آماده{% endif %}</p>
+            <article class="adm-lac-auto-stat adm-lac-auto-stat--pro" data-tone="cyan" role="listitem">
+                <span class="adm-lac-auto-stat__label"><i class="fas fa-layer-group" aria-hidden="true"></i> صف worker</span>
+                <p class="adm-lac-auto-stat__pair">
+                    <span class="adm-lac-auto-stat__pair-item">
+                        <strong>{{ automation_stats.runs_queued|default:0|to_persian_digits }}</strong>
+                        <small>صف</small>
+                    </span>
+                    <span class="adm-lac-auto-stat__pair-sep" aria-hidden="true">·</span>
+                    <span class="adm-lac-auto-stat__pair-item">
+                        <strong>{{ automation_stats.runs_running|default:0|to_persian_digits }}</strong>
+                        <small>اجرا</small>
+                    </span>
+                </p>
+                <span class="adm-lac-auto-stat__hint">
+                    {% if automation_stats.worker_lock %}
+                    <span class="adm-lac-auto-stat__tag">قفل cache worker</span>
+                    {% elif automation_stats.runs_running %}
+                    worker در حال استخراج
+                    {% elif automation_stats.runs_queued %}
+                    منتظر شروع worker
+                    {% else %}
+                    صف خالی
+                    {% endif %}
+                </span>
             </article>
-            <article class="adm-lac-kpi" data-accent="amber">
-                <span class="adm-lac-kpi-val">{{ automation_stats.runs_ingested_24h|default:0|to_persian_digits }}</span>
-                <span class="adm-lac-kpi-lbl">واردشده ۲۴س</span>
-                <p class="adm-lac-kpi-sub">{{ automation_stats.phones_24h|default:0|to_persian_digits }} شماره</p>
+            <article class="adm-lac-auto-stat adm-lac-auto-stat--pro" data-tone="indigo" role="listitem">
+                <span class="adm-lac-auto-stat__label"><i class="fas fa-crosshairs" aria-hidden="true"></i> اجرای جاری</span>
+                {% if automation_stats.focus_run %}
+                <strong class="adm-lac-auto-stat__value adm-lac-auto-stat__value--truncate" title="{{ automation_stats.focus_run.campaign_name }} · {{ automation_stats.focus_run.district }}">
+                    {{ automation_stats.focus_run.district }}
+                </strong>
+                <span class="adm-lac-auto-stat__hint adm-lac-kpi-sub--truncate" title="{{ automation_stats.focus_run.campaign_name }}">
+                    {{ automation_stats.focus_run.status_label }}
+                    · #{{ automation_stats.focus_run.id|to_persian_digits }}
+                    · {{ automation_stats.focus_run.phones_extracted|to_persian_digits }} شماره
+                </span>
+                {% else %}
+                <strong class="adm-lac-auto-stat__value adm-lac-auto-stat__value--muted">—</strong>
+                <span class="adm-lac-auto-stat__hint">اجرای فعالی در صف نیست</span>
+                {% endif %}
             </article>
-            <article class="adm-lac-kpi" data-accent="slate">
-                <span class="adm-lac-kpi-val">{% if automation_places_ok %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-triangle-exclamation"></i>{% endif %}</span>
-                <span class="adm-lac-kpi-lbl">places-web</span>
-                <p class="adm-lac-kpi-sub adm-lac-kpi-sub--truncate" title="{{ automation_stats.places_path_hint }}">{% if automation_places_ok %}متصل{% else %}فایل مناطق یافت نشد{% endif %}</p>
+            <article class="adm-lac-auto-stat adm-lac-auto-stat--pro" data-tone="amber" role="listitem">
+                <span class="adm-lac-auto-stat__label"><i class="fas fa-file-import" aria-hidden="true"></i> ورود مرکز ۲۴س</span>
+                <strong class="adm-lac-auto-stat__value">{{ automation_stats.runs_ingested_24h|default:0|to_persian_digits }}</strong>
+                <span class="adm-lac-auto-stat__hint">
+                    {{ automation_stats.phones_ingested_24h|default:0|to_persian_digits }} شماره واردشده
+                    · {{ automation_stats.import_batches_24h|default:0|to_persian_digits }} batch
+                    {% if automation_stats.runs_failed_24h %}
+                    · <span class="adm-lac-auto-stat__warn">{{ automation_stats.runs_failed_24h|to_persian_digits }} خطا</span>
+                    {% endif %}
+                </span>
+            </article>
+            <article class="adm-lac-auto-stat adm-lac-auto-stat--pro" data-tone="{% if automation_stats.lines_total and automation_stats.lines_ready %}emerald{% elif automation_stats.lines_total %}amber{% else %}slate{% endif %}" role="listitem">
+                <span class="adm-lac-auto-stat__label"><i class="fas fa-sim-card" aria-hidden="true"></i> خطوط استخراج</span>
+                {% if automation_stats.lines_total %}
+                <p class="adm-lac-auto-stat__pair">
+                    <strong>{{ automation_stats.lines_ready|to_persian_digits }}</strong>
+                    <span class="adm-lac-auto-stat__pair-sep">/</span>
+                    <span class="adm-lac-auto-stat__pair-muted">{{ automation_stats.lines_total|to_persian_digits }}</span>
+                    <small class="adm-lac-auto-stat__pair-cap">آماده</small>
+                </p>
+                <span class="adm-lac-auto-stat__hint">
+                    {% if automation_stats.lines_running %}{{ automation_stats.lines_running|to_persian_digits }} در استخراج{% endif %}
+                    {% if automation_stats.lines_blocked %} · {{ automation_stats.lines_blocked|to_persian_digits }} محدود/توقف{% endif %}
+                    {% if not automation_stats.lines_running and not automation_stats.lines_blocked %}همه خطوط آماده rotation{% endif %}
+                </span>
+                {% else %}
+                <strong class="adm-lac-auto-stat__value adm-lac-auto-stat__value--muted">۰</strong>
+                <span class="adm-lac-auto-stat__hint">خط ثبت نشده — از پنل پایین اضافه کنید</span>
+                {% endif %}
+            </article>
+            <article class="adm-lac-auto-stat adm-lac-auto-stat--pro" data-tone="{% if automation_places_ok %}emerald{% else %}rose{% endif %}" role="listitem">
+                <span class="adm-lac-auto-stat__label">
+                    {% if automation_places_ok %}<i class="fas fa-map-location-dot" aria-hidden="true"></i>{% else %}<i class="fas fa-triangle-exclamation" aria-hidden="true"></i>{% endif %}
+                    places-web
+                </span>
+                {% if automation_places_ok %}
+                <strong class="adm-lac-auto-stat__value">{{ automation_stats.places_districts_tehran|default:0|to_persian_digits }}</strong>
+                <span class="adm-lac-auto-stat__hint adm-lac-kpi-sub--truncate" title="{{ automation_stats.places_path_hint }}">
+                    منطقه تهران · فایل مناطق
+                </span>
+                {% else %}
+                <strong class="adm-lac-auto-stat__value adm-lac-auto-stat__value--text">قطع</strong>
+                <span class="adm-lac-auto-stat__hint adm-lac-kpi-sub--truncate" title="{{ automation_stats.places_path_hint }}">فایل یافت نشد</span>
+                {% endif %}
             </article>
         </div>
 
-        <div class="adm-lac-automation-grid">
-            <div class="adm-lac-panel adm-lac-panel--automation-form">
-                <div class="adm-lac-section-head" style="margin-bottom:.75rem">
-                    <div>
-                        <h3 style="margin:0;font-size:1.05rem">کمپین جمع‌آوری جدید</h3>
-                        <p class="adm-lac-kpi-sub">هر اجرا یک منطقه به ترتیب لیست — ونک → آشتیانی → … → دوباره از اول</p>
+        <div class="adm-lac-auto-workspace adm-lac-auto-workspace--solo">
+            <div class="adm-lac-panel adm-lac-panel--pro adm-lac-panel--automation-form adm-lac-auto-form adm-lac-auto-form--minimal">
+                <header class="adm-lac-auto-form__head">
+                    <div class="adm-lac-auto-form__title">
+                        <h3 class="adm-lac-subhead">کمپین جمع‌آوری جدید</h3>
+                        <span class="adm-lac-auto-form__badge">چرخش منطقه‌ای</span>
                     </div>
-                </div>
-                <form method="post" id="lac-automation-create-form">
+                </header>
+                <form method="post" id="lac-automation-create-form" class="adm-lac-auto-form__form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="create_automation_campaign">
-                    <div class="adm-lac-form-row adm-lac-form-row--2col">
-                        <div class="adm-lac-field">
-                            <label for="auto_name">نام کمپین</label>
-                            <input name="name" id="auto_name" required placeholder="مثلاً تهران · ونک · فروش">
+
+                    <div class="adm-lac-auto-form__block adm-lac-auto-form__block--identity">
+                        <div class="adm-lac-auto-form__identity-strip">
+                            <label class="adm-lac-auto-form__identity-field adm-lac-auto-form__identity-field--name" for="auto_name">
+                                <span>نام کمپین</span>
+                                <input name="name" id="auto_name" required placeholder="تهران · فروش · پایلوت" autocomplete="off">
+                            </label>
+                            <label class="adm-lac-auto-form__identity-field adm-lac-auto-form__identity-field--city" for="auto_city">
+                                <span>شهر</span>
+                                <input name="city" id="auto_city" class="adm-lac-auto-form__city-input"
+                                       list="lac-auto-city-list" value="تهران" required
+                                       placeholder="جستجو یا انتخاب" autocomplete="off" spellcheck="false">
+                                <datalist id="lac-auto-city-list">
+                                    {% for c in automation_cities %}
+                                    <option value="{{ c.name }}"></option>
+                                    {% empty %}
+                                    <option value="تهران"></option>
+                                    {% endfor %}
+                                </datalist>
+                            </label>
                         </div>
-                        <div class="adm-lac-field">
-                            <label for="auto_city">شهر</label>
-                            <select name="city" id="auto_city" required>
-                                {% for c in automation_cities %}
-                                <option value="{{ c.name }}" {% if c.name == 'تهران' %}selected{% endif %}{{ c.name }}</option>
-                                {% empty %}
-                                <option value="تهران" selected>تهران</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="adm-lac-field adm-lac-field--full">
-                            <label for="auto_districts">منطقه‌ها <span class="adm-lac-kpi-sub">(هر خط یک منطقه — ترتیب = ترتیب اجرا)</span></label>
-                            <div class="adm-lac-field-actions" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.35rem">
-                                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-load-all-districts">
-                                    <i class="fas fa-list"></i> بارگذاری همه مناطق شهر
+                    </div>
+
+                    <div class="adm-lac-auto-form__block adm-lac-auto-form__block--districts">
+                        <div class="adm-lac-auto-form__districts-head">
+                            <div>
+                                <div class="adm-lac-auto-form__block-label">مسیر مناطق</div>
+                                <p class="adm-lac-auto-form__micro" id="lac-district-count-hint">هر خط یک منطقه</p>
+                            </div>
+                            <div class="adm-lac-auto-form__districts-actions">
+                                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--xs adm-lac-auto-form__picker-toggle" id="lac-district-picker-toggle" aria-expanded="false" aria-controls="lac-district-picker">
+                                    <i class="fas fa-list-ul" aria-hidden="true"></i>
+                                    افزودن از لیست
+                                </button>
+                                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--xs adm-lac-auto-form__load-btn" id="lac-load-all-districts">
+                                    <i class="fas fa-map" aria-hidden="true"></i>
+                                    همه شهر
                                 </button>
                             </div>
-                            <textarea name="districts" id="auto_districts" rows="6" required placeholder="ونک&#10;آشتیانی&#10;امانیه&#10;…"></textarea>
-                            <div class="adm-lac-district-picker" id="lac-district-picker" hidden>
-                                <p class="adm-lac-kpi-sub">کلیک برای افزودن به لیست:</p>
-                                <div class="adm-lac-district-chips" id="lac-district-chips"></div>
+                        </div>
+                        <textarea name="districts" id="auto_districts" class="adm-lac-auto-form__districts-input" rows="3" required placeholder="ونک&#10;آشتیانی&#10;امانیه" spellcheck="false"></textarea>
+                        <div class="adm-lac-district-picker adm-lac-auto-form__picker" id="lac-district-picker" hidden>
+                            <div class="adm-lac-auto-form__picker-head">
+                                <label class="adm-lac-auto-form__picker-search">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <input type="search" id="lac-district-chip-search" placeholder="جستجوی منطقه…" autocomplete="off" enterkeyhint="search">
+                                </label>
+                                <span class="adm-lac-auto-form__picker-meta" id="lac-district-chip-meta">—</span>
                             </div>
-                        </div>
-                        <div class="adm-lac-field">
-                            <label for="auto_category">نوع آگهی</label>
-                            <select name="category" id="auto_category">
-                                {% for val, label in automation_category_choices %}
-                                <option value="{{ val }}" {% if val == 'apartment-sell' %}selected{% endif %}{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="adm-lac-field">
-                            <label for="auto_limit">سقف هر اجرا</label>
-                            <input type="number" name="limit_per_run" id="auto_limit" value="20" min="5" max="40" title="حداکثر ۴۰ — batch کوچک‌تر = کمتر کپچا">
-                        </div>
-                        <div class="adm-lac-field">
-                            <label for="auto_interval">فاصله اجرا (ساعت)</label>
-                            <input type="number" name="interval_hours" id="auto_interval" value="6" min="1" max="168">
-                        </div>
-                        <div class="adm-lac-field">
-                            <label for="auto_landing">صفحه فرود SMS</label>
-                            <input name="landing_url" id="auto_landing" value="https://divarfiling.ir/">
+                            <div class="adm-lac-auto-form__picker-chips">
+                                <div class="adm-lac-district-chips" id="lac-district-chips" role="list"></div>
+                            </div>
+                            <p class="adm-lac-auto-form__picker-tip">کلیک = افزودن · کلیک دوباره = حذف از مسیر</p>
                         </div>
                     </div>
-                    <div class="adm-lac-form-checks">
-                        <label class="adm-lac-check"><input type="checkbox" name="is_active" value="1" checked> فعال</label>
-                        <label class="adm-lac-check"><input type="checkbox" name="auto_create_campaign" value="1" checked> ساخت LeadCampaign پس از import</label>
-                        <label class="adm-lac-check"><input type="checkbox" name="auto_enroll_pilot" value="1" checked> enroll پایلوت A/B</label>
+
+                    <div class="adm-lac-auto-form__block adm-lac-auto-form__block--run">
+                        <div class="adm-lac-auto-form__run-grid">
+                            <label class="adm-lac-auto-form__identity-field adm-lac-auto-form__identity-field--category" for="auto_category">
+                                <span>نوع آگهی</span>
+                                <select name="category" id="auto_category" class="adm-lac-auto-form__select">
+                                    {% for val, label in automation_category_choices %}
+                                    <option value="{{ val }}" {% if val == 'apartment-sell' %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label class="adm-lac-auto-form__identity-field adm-lac-auto-form__identity-field--compact" for="auto_limit">
+                                <span>سقف</span>
+                                <input type="number" name="limit_per_run" id="auto_limit" value="20" min="5" max="40" inputmode="numeric" title="۵–۴۰ آگهی در هر اجرا">
+                            </label>
+                            <label class="adm-lac-auto-form__identity-field adm-lac-auto-form__identity-field--compact" for="auto_interval">
+                                <span>فاصله (س)</span>
+                                <input type="number" name="interval_hours" id="auto_interval" value="6" min="1" max="168" inputmode="numeric" title="ساعت بین دو اجرا">
+                            </label>
+                            <label class="adm-lac-auto-form__identity-field adm-lac-auto-form__identity-field--landing" for="auto_landing">
+                                <span>فرود SMS</span>
+                                <input name="landing_url" id="auto_landing" type="url" dir="ltr" class="adm-lac-input--ltr" value="https://divarfiling.ir/" autocomplete="url">
+                            </label>
+                        </div>
                     </div>
-                    <div style="margin-top:1rem">
-                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
-                            <i class="fas fa-plus"></i> ایجاد کمپین خودکار
+
+                    <div class="adm-lac-auto-form__actions">
+                        <div class="adm-lac-auto-form__switches" role="group" aria-label="تنظیمات پس از import">
+                            <label class="adm-lac-auto-form__switch"><input type="checkbox" name="is_active" value="1" checked><span>فعال</span></label>
+                            <label class="adm-lac-auto-form__switch"><input type="checkbox" name="auto_create_campaign" value="1" checked><span>کمپین خودکار</span></label>
+                            <label class="adm-lac-auto-form__switch"><input type="checkbox" name="auto_enroll_pilot" value="1" checked><span>پایلوت A/B</span></label>
+                        </div>
+                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-auto-form__submit">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                            ایجاد کمپین
                         </button>
                     </div>
                 </form>
             </div>
-
-            <aside class="adm-lac-panel adm-lac-panel--automation-flow">
-                <p class="adm-lac-journey-title">مسیر اتوماسیون</p>
-                <div class="adm-lac-pipeline adm-lac-pipeline--stack">
-                    <span class="adm-lac-pipe"><i class="fas fa-robot"></i> Scheduler</span>
-                    <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-down"></i></span>
-                    <span class="adm-lac-pipe"><i class="fas fa-mobile-screen"></i> phone-detector</span>
-                    <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-down"></i></span>
-                    <span class="adm-lac-pipe"><i class="fas fa-file-import"></i> import</span>
-                    <span class="adm-lac-pipe-arrow"><i class="fas fa-chevron-down"></i></span>
-                    <span class="adm-lac-pipe"><i class="fas fa-flask"></i> پایلوت SMS</span>
-                </div>
-                <p class="adm-lac-kpi-sub" style="margin-top:.75rem">
-                    worker systemd: <code>divar-acquisition-worker</code><br>
-                    cron: هر ۱۵ دقیقه <code>run_acquisition_automation</code><br>
-                    <strong>بدون Playwright</strong> — در صورت کپچا روی یک خط، همان خط از چرخه خارج می‌شود و خطوط سالم ادامه می‌دهند.
-                </p>
-            </aside>
         </div>
 
-        <div class="adm-lac-panel" id="divar-sessions" style="margin-top:1rem">
-            <div class="adm-lac-section-head">
-                <div>
-                    <h3 style="margin:0;font-size:1.05rem">حساب‌های دیوار متصل (فایلینگ)</h3>
-                    <p class="adm-lac-kpi-sub">نشست‌های کاربران — افزودن به خطوط بدون OTP مجدد (با مجوز)</p>
+        <div class="adm-lac-auto-ops adm-lac-auto-ops--stack adm-lac-auto-ops--pro">
+        <div class="adm-lac-panel adm-lac-panel--pro adm-lac-auto-ops-card adm-lac-auto-ops-card--sessions adm-lac-ops-card--minimal" id="divar-sessions">
+            <header class="adm-lac-ops-card__head adm-lac-ops-card__head--minimal">
+                <div class="adm-lac-ops-card__title-block">
+                    <h3 class="adm-lac-ops-card__title">نشست‌های فایلینگ</h3>
+                    <p class="adm-lac-ops-card__meta" id="lac-sessions-meta">افزودن به خط · بدون OTP</p>
                 </div>
-                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-divar-sessions-refresh">
-                    <i class="fas fa-rotate"></i> بروزرسانی
+                <button type="button" class="adm-lac-ops-text-btn adm-lac-ops-refresh" id="lac-divar-sessions-refresh">
+                    بروزرسانی
                 </button>
-            </div>
-            <div class="adm-lac-table-wrap">
-                <table class="adm-lac-table">
+            </header>
+            <div class="adm-lac-ops-table-wrap adm-lac-ops-table-wrap--flush">
+                <table class="adm-lac-table adm-lac-table--pro adm-lac-ops-table">
                     <thead>
                         <tr>
-                            <th>شماره دیوار</th>
+                            <th>شماره</th>
                             <th>کاربر</th>
-                            <th>وضعیت</th>
-                            <th>مجوز PD</th>
+                            <th>احراز</th>
+                            <th>مجوز</th>
                             <th>خط</th>
-                            <th>عملیات</th>
+                            <th class="adm-lac-ops-th-actions">عملیات</th>
                         </tr>
                     </thead>
                     <tbody id="lac-divar-sessions-tbody">
-                        <tr><td colspan="6"><div class="adm-lac-empty"><i class="fas fa-spinner fa-spin"></i> بارگذاری...</div></td></tr>
+                        <tr><td colspan="6"><div class="adm-lac-empty adm-lac-empty--sm"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> بارگذاری…</div></td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="adm-lac-panel adm-lac-panel--lines" style="margin-top:1rem">
-            <div class="adm-lac-section-head">
-                <div>
-                    <h3 style="margin:0;font-size:1.05rem">مدیریت خطوط استخراج</h3>
-                    <p class="adm-lac-kpi-sub">سشن‌های دیوار در phone-detector — افزودن، لاگین OTP، حذف و وضعیت هر خط</p>
+        <div class="adm-lac-panel adm-lac-panel--pro adm-lac-auto-ops-card adm-lac-auto-ops-card--lines adm-lac-lines-panel adm-lac-ops-card--minimal" id="lac-lines-panel">
+            <header class="adm-lac-ops-card__head adm-lac-ops-card__head--minimal adm-lac-ops-card__head--lines">
+                <div class="adm-lac-ops-card__title-block">
+                    <h3 class="adm-lac-ops-card__title">خطوط استخراج</h3>
+                    <p class="adm-lac-ops-card__meta" id="lac-lines-hint">{% if automation_lines_ok %}OTP · چرخش · وضعیت{% else %}شماره‌یاب تنظیم نشده{% endif %}</p>
                 </div>
-                <div class="adm-lac-section-head__actions adm-lac-lines-toolbar">
-                    <label class="adm-lac-check adm-lac-lines-rotate">
-                        <input type="checkbox" id="lac-lines-rotate" {% if not automation_lines_ok %}disabled{% endif %}
-                        چرخش ترتیبی خطوط
+                <div class="adm-lac-ops-card__toolbar adm-lac-ops-toolbar--minimal">
+                    <label class="adm-lac-ops-switch adm-lac-ops-switch--flat" title="چرخش ترتیبی خطوط">
+                        <input type="checkbox" id="lac-lines-rotate" {% if not automation_lines_ok %}disabled{% endif %}>
+                        <span>چرخش</span>
                     </label>
-                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-lines-refresh" {% if not automation_lines_ok %}disabled{% endif %}
-                        <i class="fas fa-rotate"></i> بروزرسانی
+                    <button type="button" class="adm-lac-ops-text-btn adm-lac-ops-refresh" id="lac-lines-refresh" {% if not automation_lines_ok %}disabled{% endif %}>
+                        بروزرسانی
                     </button>
-                    <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" id="lac-lines-add-btn" {% if not automation_lines_ok %}disabled{% endif %}
-                        <i class="fas fa-plus"></i> خط جدید
+                    <button type="button" class="adm-lac-ops-primary-btn" id="lac-lines-add-btn" {% if not automation_lines_ok %}disabled{% endif %}>
+                        خط جدید
                     </button>
                 </div>
-            </div>
+            </header>
 
             {% if not automation_lines_ok %}
-            <div class="adm-lac-lines-alert">
-                <i class="fas fa-triangle-exclamation"></i>
-                <p>phone-detector یافت نشد — روی سرور <code>PHONE_DETECTOR_DIR=/root/phone-detector</code> را در .env تنظیم کنید.</p>
+            <div class="adm-lac-lines-alert adm-lac-ops-alert">
+                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                <p><code>PHONE_DETECTOR_DIR</code> در .env تنظیم نشود — خطوط در دسترس نیست.</p>
             </div>
             {% else %}
-            <div class="adm-lac-lines-summary" id="lac-lines-summary" hidden>
-                <span><strong id="lac-lines-total">۰</strong> خط</span>
-                <span><strong id="lac-lines-healthy">۰</strong> سالم</span>
-                <span>فعال: <strong id="lac-lines-active-phone">—</strong></span>
+            <div class="adm-lac-lines-metrics" id="lac-lines-summary" role="status">
+                <div class="adm-lac-lines-metrics__row">
+                    <div class="adm-lac-lines-metrics__cell">
+                        <span class="adm-lac-lines-metrics__label">خط</span>
+                        <strong id="lac-lines-total">—</strong>
+                    </div>
+                    <div class="adm-lac-lines-metrics__cell">
+                        <span class="adm-lac-lines-metrics__label">آماده</span>
+                        <strong id="lac-lines-healthy">—</strong>
+                    </div>
+                    <div class="adm-lac-lines-metrics__cell adm-lac-lines-metrics__cell--accent">
+                        <span class="adm-lac-lines-metrics__label">فعال</span>
+                        <strong id="lac-lines-active-phone" dir="ltr">—</strong>
+                    </div>
+                </div>
+                <span class="adm-lac-lines-metrics__status" id="lac-lines-load-status" hidden>در حال بروزرسانی…</span>
             </div>
-            <div class="adm-lac-table-wrap adm-lac-lines-table-wrap">
-                <table class="adm-lac-table adm-lac-lines-table">
+            <p class="adm-lac-ops-runtime-hint adm-lac-lines-runtime" id="lac-lines-runtime-hint" hidden></p>
+            <div class="adm-lac-ops-table-wrap adm-lac-ops-table-wrap--flush adm-lac-lines-table-wrap">
+                <table class="adm-lac-table adm-lac-table--pro adm-lac-ops-table adm-lac-lines-table">
+                    <colgroup>
+                        <col class="adm-lac-lines-col-line">
+                        <col class="adm-lac-lines-col-status">
+                        <col class="adm-lac-lines-col-perf">
+                        <col class="adm-lac-lines-col-session">
+                        <col class="adm-lac-lines-col-actions">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>خط</th>
-                            <th>وضعیت عملیاتی</th>
-                            <th>آخرین موفق / خطا</th>
+                            <th>وضعیت</th>
+                            <th>عملکرد</th>
                             <th>سشن</th>
-                            <th>عملیات</th>
+                            <th class="adm-lac-ops-th-actions adm-lac-lines-th-actions">عملیات</th>
                         </tr>
                     </thead>
-                    <tbody id="lac-lines-tbody">
-                        <tr>
-                            <td colspan="5">
-                                <div class="adm-lac-empty"><i class="fas fa-spinner fa-spin"></i> در حال بارگذاری خطوط...</div>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="lac-lines-tbody" data-lines-boot="idle"></tbody>
                 </table>
             </div>
-            <p class="adm-lac-kpi-sub adm-lac-lines-hint" id="lac-lines-hint"></p>
             {% endif %}
         </div>
+        </div>
 
-        <div class="adm-lac-panel" style="padding:0;overflow:hidden;margin-top:1rem">
-            <div class="adm-lac-section-head" style="padding:1rem 1rem 0">
-                <div>
-                    <h3 style="margin:0;font-size:1.05rem">کمپین‌های جمع‌آوری</h3>
+        <div class="adm-lac-auto-monitor">
+        <div class="adm-lac-panel adm-lac-panel--pro adm-lac-auto-monitor-card" id="lac-auto-campaigns-panel">
+            <header class="adm-lac-ops-card__head">
+                <div class="adm-lac-ops-card__title-block">
+                    <h3 class="adm-lac-ops-card__title"><i class="fas fa-route" aria-hidden="true"></i> کمپین‌های جمع‌آوری</h3>
+                    <p class="adm-lac-ops-card__meta">{{ automation_campaigns|length|to_persian_digits }} کمپین · چرخش منطقه‌ای و زمان‌بندی</p>
                 </div>
-            </div>
-            <div class="adm-lac-table-wrap" style="border:none">
-                <table class="adm-lac-table">
+            </header>
+            <div class="adm-lac-ops-table-wrap adm-lac-auto-campaigns-wrap">
+                <table class="adm-lac-table adm-lac-table--pro adm-lac-ops-table adm-lac-auto-campaigns-table">
                     <thead>
                         <tr>
                             <th>کمپین</th>
-                            <th>چرخش مناطق</th>
+                            <th>منطقه جاری</th>
                             <th>تنظیمات</th>
-                            <th>زمان‌بندی</th>
-                            <th>آخرین اجرا</th>
-                            <th>عملیات</th>
+                            <th>برنامه و آخرین اجرا</th>
+                            <th class="adm-lac-ops-th-actions">عملیات</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for row in automation_campaigns %}
                         {% with c=row.campaign %}
-                        <tr>
+                        <tr class="{% if not c.is_active %}is-muted{% endif %}">
                             <td>
-                                <strong>{{ c.name }}</strong>
-                                <p class="adm-lac-kpi-sub">#{{ c.pk|to_persian_digits }} · {{ c.city }}</p>
-                                {% if not c.is_active %}
-                                <span class="adm-lac-chip">غیرفعال</span>
-                                {% else %}
-                                <span class="adm-lac-chip adm-lac-chip--live">فعال</span>
-                                {% endif %}
+                                <div class="adm-lac-auto-campaign-cell">
+                                    <span class="adm-lac-auto-campaign-name">{{ c.name|truncatechars:42 }}</span>
+                                    {% if c.is_active %}
+                                    <span class="adm-lac-ops-tag adm-lac-ops-tag--ok">فعال</span>
+                                    {% else %}
+                                    <span class="adm-lac-ops-tag">متوقف</span>
+                                    {% endif %}
+                                    <span class="adm-lac-ops-cell-sub">#{{ c.pk|to_persian_digits }} · {{ c.city }} · {{ row.ingested_count|to_persian_digits }} ورود</span>
+                                </div>
                             </td>
                             <td>
                                 {% if row.rotation.total %}
-                                <strong>{{ row.rotation.current }}</strong>
-                                <p class="adm-lac-kpi-sub">منطقه {{ row.rotation.progress_label|to_persian_digits }} از {{ row.districts_count|to_persian_digits }}</p>
-                                <p class="adm-lac-kpi-sub">بعدی: {{ row.rotation.next }}</p>
+                                <div class="adm-lac-auto-rotation-cell">
+                                    <strong>{{ row.rotation.current }}</strong>
+                                    <span class="adm-lac-ops-cell-sub">{{ row.rotation.progress_label|to_persian_digits }}/{{ row.districts_count|to_persian_digits }} · بعدی {{ row.rotation.next }}</span>
+                                </div>
                                 {% else %}
-                                {{ row.districts_display }}
+                                <span class="adm-lac-ops-cell-line">{{ row.districts_display }}</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="adm-lac-kpi-sub">{{ c.category }}</span><br>
-                                <span class="adm-lac-kpi-sub">هدف {{ c.min_phones_per_district|to_persian_digits }} شماره · سقف {{ c.limit_per_run|to_persian_digits }} · هر {{ c.interval_hours|to_persian_digits }}س</span>
+                                <span class="adm-lac-ops-cell-line">{{ row.category_label }}</span>
+                                <span class="adm-lac-ops-cell-sub">سقف {{ c.limit_per_run|to_persian_digits }} · هر {{ c.interval_hours|to_persian_digits }}س · هدف {{ c.min_phones_per_district|to_persian_digits }}</span>
                             </td>
                             <td>
-                                {% if c.next_run_at %}
-                                <time>{{ c.next_run_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</time>
-                                {% else %}
-                                <span class="adm-lac-chip adm-lac-chip--amber">آماده queue</span>
-                                {% endif %}
-                            </td>
-                            <td>
+                                <span class="adm-lac-ops-cell-line">
+                                    {% if c.next_run_at %}
+                                    بعدی <time>{{ c.next_run_at|to_jalali_fa:"%m/%d %H:%M" }}</time>
+                                    {% else %}
+                                    <span class="adm-lac-ops-tag adm-lac-ops-tag--ok">آماده صف</span>
+                                    {% endif %}
+                                </span>
                                 {% if row.last_run %}
-                                <span class="adm-lac-status adm-lac-run--{{ row.last_run.status }}">{{ row.last_run.get_status_display }}</span>
-                                <p class="adm-lac-kpi-sub">{{ row.last_run.phones_extracted|to_persian_digits }} شماره</p>
+                                <span class="adm-lac-ops-cell-sub">
+                                    آخرین: <span class="adm-lac-status adm-lac-run--{{ row.last_run.status }}">{{ row.last_run.get_status_display }}</span>
+                                    · {{ row.last_run.phones_extracted|to_persian_digits }} شماره
+                                </span>
                                 {% else %}
-                                —
+                                <span class="adm-lac-ops-cell-sub">هنوز اجرایی ثبت نشده</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <div class="adm-lac-action-stack">
-                                    <form method="post">
+                                <div class="adm-lac-ops-actions adm-lac-auto-campaign-actions">
+                                    <form method="post" class="adm-lac-inline-form">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="queue_automation_run">
                                         <input type="hidden" name="campaign_id" value="{{ c.pk }}">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" {% if not c.is_active %}disabled{% endif %}
-                                            <i class="fas fa-play"></i> اجرای فوری
+                                        <button type="submit" class="adm-lac-ops-icon-btn adm-lac-ops-icon-btn--accent" title="اجرای فوری" aria-label="اجرای فوری"{% if not c.is_active %} disabled{% endif %}>
+                                            <i class="fas fa-play" aria-hidden="true"></i>
                                         </button>
                                     </form>
-                                    <form method="post">
+                                    <form method="post" class="adm-lac-inline-form">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="toggle_automation_campaign">
                                         <input type="hidden" name="campaign_id" value="{{ c.pk }}">
-                                        <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm">
-                                            {% if c.is_active %}<i class="fas fa-pause"></i> توقف{% else %}<i class="fas fa-play"></i> فعال{% endif %}
+                                        <button type="submit" class="adm-lac-ops-icon-btn" title="{% if c.is_active %}توقف{% else %}فعال‌سازی{% endif %}" aria-label="{% if c.is_active %}توقف{% else %}فعال‌سازی{% endif %}">
+                                            <i class="fas {% if c.is_active %}fa-pause{% else %}fa-play{% endif %}" aria-hidden="true"></i>
                                         </button>
                                     </form>
-                                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-lac-auto-edit="{{ c.pk }}">
-                                        <i class="fas fa-pen"></i> ویرایش
+                                    <button type="button" class="adm-lac-ops-icon-btn" data-lac-auto-edit="{{ c.pk }}" title="ویرایش" aria-label="ویرایش">
+                                        <i class="fas fa-pen" aria-hidden="true"></i>
                                     </button>
+                                    <form method="post" class="adm-lac-inline-form" onsubmit="return window.confirm('کمپین «{{ c.name|escapejs }}» از لیست جمع‌آوری حذف شود؟\nاجراهای ثبت‌شده پاک می‌شوند؛ کمپین SMS و سرنخ‌ها باقی می‌مانند.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_automation_campaign">
+                                        <input type="hidden" name="campaign_id" value="{{ c.pk }}">
+                                        <input type="hidden" name="confirm_delete" value="1">
+                                        <button type="submit" class="adm-lac-ops-icon-btn adm-lac-ops-icon-btn--danger" title="حذف از لیست" aria-label="حذف از لیست">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
                         {% endwith %}
                     {% empty %}
                         <tr>
-                            <td colspan="6">
-                                <div class="adm-lac-empty">
-                                    <i class="fas fa-robot"></i>
-                                    هنوز کمپین خودکاری ندارید — فرم بالا را پر کنید.
+                            <td colspan="5">
+                                <div class="adm-lac-empty adm-lac-empty--sm">
+                                    <i class="fas fa-robot" aria-hidden="true"></i>
+                                    کمپین خودکاری نیست — فرم بالا را پر کنید.
                                 </div>
                             </td>
                         </tr>
@@ -1062,56 +1187,62 @@
             </div>
         </div>
 
-        <div class="adm-lac-panel" style="padding:0;overflow:hidden;margin-top:1rem">
-            <div class="adm-lac-section-head" style="padding:1rem 1rem 0">
-                <div>
-                    <h3 style="margin:0;font-size:1.05rem">اجراهای اخیر</h3>
-                    <p class="adm-lac-kpi-sub">phone-detector worker · وضعیت ingest</p>
+        <div class="adm-lac-panel adm-lac-panel--pro adm-lac-auto-monitor-card" id="lac-auto-runs-panel">
+            <header class="adm-lac-ops-card__head">
+                <div class="adm-lac-ops-card__title-block">
+                    <h3 class="adm-lac-ops-card__title"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> اجراهای اخیر</h3>
+                    <p class="adm-lac-ops-card__meta">{{ automation_runs|length|to_persian_digits }} اجرا · worker و ورود به مرکز جذب</p>
                 </div>
-            </div>
-            <div class="adm-lac-table-wrap" style="border:none">
-                <table class="adm-lac-table">
+            </header>
+            <div class="adm-lac-ops-table-wrap adm-lac-auto-runs-wrap">
+                <table class="adm-lac-table adm-lac-table--pro adm-lac-ops-table adm-lac-auto-runs-table">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th>اجرا</th>
                             <th>کمپین</th>
-                            <th>منطقه</th>
                             <th>وضعیت</th>
-                            <th>نتیجه</th>
-                            <th>زمان</th>
+                            <th>خروجی</th>
                             <th>پیوند</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for run in automation_runs %}
-                        <tr>
-                            <td>{{ run.pk|to_persian_digits }}</td>
-                            <td>{{ run.campaign.name|truncatechars:28 }}</td>
-                            <td>{{ run.district|default:"—" }}</td>
-                            <td><span class="adm-lac-status adm-lac-run--{{ run.status }}">{{ run.get_status_display }}</span></td>
+                        <tr class="adm-lac-auto-run-row adm-lac-auto-run-row--{{ run.status }}">
                             <td>
-                                {{ run.phones_extracted|to_persian_digits }} شماره
-                                <p class="adm-lac-kpi-sub">{{ run.consultants_found|to_persian_digits }} مشاور</p>
+                                <span class="adm-lac-ops-mono">#{{ run.pk|to_persian_digits }}</span>
+                                <span class="adm-lac-ops-cell-sub">
+                                    {% if run.started_at %}<time datetime="{{ run.started_at|date:'c' }}">{{ run.started_at|to_jalali_fa:"%m/%d %H:%M" }}</time>{% else %}—{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="adm-lac-auto-campaign-name">{{ run.campaign.name|truncatechars:34 }}</span>
+                                <span class="adm-lac-ops-cell-sub">{{ run.district|default:"—" }}</span>
+                            </td>
+                            <td>
+                                <span class="adm-lac-status adm-lac-run--{{ run.status }}">{{ run.get_status_display }}</span>
+                            </td>
+                            <td>
+                                <span class="adm-lac-ops-cell-line">{{ run.phones_extracted|to_persian_digits }} شماره · {{ run.consultants_found|to_persian_digits }} مشاور</span>
                                 {% if run.error_message %}
-                                <p class="adm-lac-kpi-sub adm-lac-kpi-sub--error">{{ run.error_message|truncatechars:80 }}</p>
+                                <span class="adm-lac-ops-cell-error" title="{{ run.error_message }}">{{ run.error_message|truncatechars:56 }}</span>
                                 {% endif %}
                             </td>
-                            <td>
-                                {% if run.started_at %}<time>{{ run.started_at|to_jalali_fa:"%m/%d %H:%M" }}</time>{% else %}—{% endif %}
-                            </td>
-                            <td>
+                            <td class="adm-lac-auto-run-link">
                                 {% if run.lead_campaign_id %}
-                                <a href="{% url 'admin_panel_lead_campaign_detail' run.lead_campaign_id %}">SMS #{{ run.lead_campaign_id|to_persian_digits }}</a>
+                                <a class="adm-lac-ops-link" href="{% url 'admin_panel_lead_campaign_detail' run.lead_campaign_id %}">SMS #{{ run.lead_campaign_id|to_persian_digits }}</a>
                                 {% elif run.import_batch_id %}
-                                <span class="adm-lac-kpi-sub">batch {{ run.import_batch_id|to_persian_digits }}</span>
-                                {% else %}—{% endif %}
+                                <span class="adm-lac-ops-cell-sub">ورود #{{ run.import_batch_id|to_persian_digits }}</span>
+                                {% else %}
+                                <span class="adm-lac-ops-cell-sub">—</span>
+                                {% endif %}
                             </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7">
-                                <div class="adm-lac-empty adm-lac-empty--compact">
-                                    <i class="fas fa-clock"></i> هنوز اجرایی ثبت نشده.
+                            <td colspan="5">
+                                <div class="adm-lac-empty adm-lac-empty--sm">
+                                    <i class="fas fa-clock" aria-hidden="true"></i>
+                                    هنوز اجرایی ثبت نشده
                                 </div>
                             </td>
                         </tr>
@@ -1120,54 +1251,99 @@
                 </table>
             </div>
         </div>
+        </div>
     </section>
 
-    <section id="lac-leads" class="adm-lac-section">
-        <div class="adm-lac-section-head">
-            <div>
-                <h2>سرنخ‌های اخیر</h2>
-                <p>طبقه‌بندی نام با میزان اطمینان — بدون قطعیت قطعی آژانس</p>
-            </div>
+    <section id="lac-leads" class="adm-lac-section adm-lac-section--pro">
+        <div class="adm-lac-section-head adm-lac-leads-section__head">
+            <h2 class="adm-lac-leads-section__title">سرنخ‌های اخیر</h2>
+            <p class="adm-lac-leads-section__sub">طبقه‌بندی آژانس/مشاور با امتیاز اطمینان — برای تصمیم پایلوت، نه برچسب قطعی</p>
         </div>
-        <div class="adm-lac-panel" style="padding:0;overflow:hidden">
-            <div class="adm-lac-table-wrap" style="border:none">
-                <table class="adm-lac-table">
+        <div class="adm-lac-panel adm-lac-panel--pro adm-lac-leads-panel" id="lac-leads-panel">
+            <header class="adm-lac-ops-card__head adm-lac-leads-panel__head">
+                <div class="adm-lac-ops-card__title-block">
+                    <h3 class="adm-lac-ops-card__title"><i class="fas fa-user-tag" aria-hidden="true"></i> مخاطبین واردشده</h3>
+                    <p class="adm-lac-ops-card__meta">{{ leads_recent_panel.shown|default:0|to_persian_digits }} نمایش · {{ leads_recent_panel.range_label|default:admin_panel_range_label_fa }}</p>
+                </div>
+                <label class="adm-lac-compose__search adm-lac-leads-search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" id="lac-leads-search" placeholder="شماره، نام، شهر…" autocomplete="off" enterkeyhint="search">
+                </label>
+            </header>
+            {% with st=leads_recent_panel.stats %}
+            <div class="adm-lac-ops-kpi-strip adm-lac-leads-kpi-strip">
+                <span class="adm-lac-ops-kpi"><strong>{{ st.agency|default:0|to_persian_digits }}</strong> آژانس</span>
+                <span class="adm-lac-ops-kpi"><strong>{{ st.consultant|default:0|to_persian_digits }}</strong> مشاور</span>
+                <span class="adm-lac-ops-kpi"><strong>{{ st.engaged|default:0|to_persian_digits }}</strong> تعامل‌دار</span>
+                <span class="adm-lac-ops-kpi adm-lac-ops-kpi--active"><strong>{{ st.filing_user|default:0|to_persian_digits }}</strong> کاربر فایلینگ</span>
+            </div>
+            {% endwith %}
+            <div class="adm-lac-ops-table-wrap adm-lac-leads-table-wrap">
+                <table class="adm-lac-table adm-lac-table--pro adm-lac-ops-table adm-lac-leads-table">
                     <thead>
                         <tr>
-                            <th>موبایل</th>
-                            <th>نام</th>
-                            <th>نوع</th>
+                            <th>مخاطب</th>
+                            <th>طبقه‌بندی</th>
                             <th>وضعیت</th>
-                            <th>جغرافیا</th>
-                            <th>تاریخ</th>
+                            <th>بازار</th>
+                            <th>فعالیت</th>
                         </tr>
                     </thead>
-                    <tbody>
-                    {% for lead in leads_sample %}
-                        <tr>
-                            <td><code>{{ lead.phone_normalized }}</code></td>
-                            <td>{{ lead.display_name|default:"—" }}</td>
+                    <tbody id="lac-leads-tbody">
+                    {% for row in leads_recent_panel.rows %}
+                        {% with lead=row.lead %}
+                        <tr data-lead-search="{{ row.search_blob }}">
                             <td>
-                                {{ lead.get_lead_type_display }}
-                                <small class="adm-lac-kpi-sub">اطمینان {{ lead.classification_confidence|to_persian_digits }}</small>
+                                <div class="adm-lac-leads-contact">
+                                    <span dir="ltr" class="adm-lac-ops-mono">{{ lead.phone_normalized }}</span>
+                                    <span class="adm-lac-leads-name">{{ lead.display_name|default:"—"|truncatechars:40 }}</span>
+                                    {% if row.has_filing_user %}<span class="adm-lac-ops-tag adm-lac-ops-tag--ok">فایلینگ</span>{% endif %}
+                                </div>
                             </td>
-                            <td><span class="adm-lac-status adm-lac-status--{{ lead.status }}">{{ lead.get_status_display }}</span></td>
-                            <td>{{ lead.city }}{% with d=lead|lead_district_fa %}{% if d %} / {{ d }}{% endif %}{% endwith %}</td>
                             <td>
-                                <time>{{ lead.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</time>
-                                {% if lead.last_seen_at %}
-                                <p class="adm-lac-kpi-sub">آخرین مشاهده {{ lead.last_seen_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</p>
-                                {% elif lead.updated_at and lead.updated_at != lead.created_at %}
-                                <p class="adm-lac-kpi-sub">بروز {{ lead.updated_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</p>
+                                <div class="adm-lac-leads-conf" data-tier="{{ row.confidence_tier }}">
+                                    <span class="adm-lac-leads-type">{{ lead.get_lead_type_display }}</span>
+                                    <span class="adm-lac-leads-conf__pct">{{ row.confidence_pct|to_persian_digits }}٪</span>
+                                </div>
+                                <div class="adm-lac-leads-conf-bar" data-tier="{{ row.confidence_tier }}" aria-hidden="true">
+                                    <span style="width: {{ row.confidence_pct }}%"></span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="adm-lac-status adm-lac-status--{{ lead.status }}">{{ lead.get_status_display }}</span>
+                                {% if lead.status == 'suppressed' %}
+                                <span class="adm-lac-ops-cell-sub">ارسال مسدود</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                <span class="adm-lac-ops-cell-line">{{ row.location_label }}</span>
+                                <span class="adm-lac-ops-cell-sub">
+                                    {{ row.category_label }}
+                                    {% if row.extra_districts %} · +{{ row.extra_districts|to_persian_digits }} منطقه{% endif %}
+                                    · {{ lead.sighting_count|to_persian_digits }} بار دیده‌شده
+                                </span>
+                                {% if lead.first_batch_id %}
+                                <span class="adm-lac-ops-cell-sub">منبع بچ #{{ lead.first_batch_id|to_persian_digits }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="adm-lac-ops-cell-line">
+                                    {% if lead.last_seen_at %}
+                                    آخرین مشاهده <time>{{ lead.last_seen_at|to_jalali_fa:"%m/%d %H:%M" }}</time>
+                                    {% else %}
+                                    ایجاد <time>{{ lead.created_at|to_jalali_fa:"%m/%d %H:%M" }}</time>
+                                    {% endif %}
+                                </span>
+                                <span class="adm-lac-ops-cell-sub">بروز {{ row.activity_at|to_jalali_fa:"%m/%d %H:%M" }}</span>
+                            </td>
                         </tr>
+                        {% endwith %}
                     {% empty %}
                         <tr>
-                            <td colspan="6">
-                                <div class="adm-lac-empty">
-                                    <i class="fas fa-users"></i>
-                                    بانکی خالی است — فایل را وارد کنید.
+                            <td colspan="5">
+                                <div class="adm-lac-empty adm-lac-empty--sm">
+                                    <i class="fas fa-users" aria-hidden="true"></i>
+                                    بانک سرنخ خالی است — از تب ورود فایل را commit کنید.
                                 </div>
                             </td>
                         </tr>
@@ -1237,14 +1413,14 @@
         </form>
     </dialog>
 
-    <dialog class="adm-lac-modal adm-lac-modal--tpl" id="lac-bulk-templates-modal">
+    <dialog class="adm-lac-modal adm-lac-modal--tpl adm-lac-modal--studio" id="lac-bulk-templates-modal">
         <form method="post" class="adm-lac-modal__inner" id="lac-bulk-templates-form">
             {% csrf_token %}
-            <header class="adm-lac-modal__head adm-lac-tpl-head">
-                <div>
-                    <p class="adm-lac-tpl-kicker"><i class="fas fa-message" aria-hidden="true"></i> استودیو پیام جذب</p>
-                    <h3 id="lac-bulk-templates-title">قالب سراسری پیام‌ها (مراحل ۱–۳)</h3>
-                    <p class="adm-lac-kpi-sub" id="lac-bulk-templates-sub">ذخیره می‌شود و برای همه کمپین‌های فعلی + کمپین‌های جدید اعمال می‌گردد</p>
+            <header class="adm-lac-modal__head adm-lac-modal__head--compact adm-lac-tpl-head">
+                <div class="adm-lac-tpl-head__text">
+                    <p class="adm-lac-tpl-eyebrow">استودیو پیام جذب</p>
+                    <h3 id="lac-bulk-templates-title">قالب سراسری · مراحل ۱–۳</h3>
+                    <p class="adm-lac-tpl-sub" id="lac-bulk-templates-sub">ذخیره برای همهٔ کمپین‌های فعلی ({{ campaigns|length|to_persian_digits }}) و کمپین‌های جدید</p>
                 </div>
                 <button type="button" class="adm-lac-modal__close" data-lac-bulk-templates-close aria-label="بستن">&times;</button>
             </header>
@@ -1393,25 +1569,17 @@
                                 <span id="lac-tpl-preview-cost">۰ ریال</span>
                             </div>
                         </div>
-                        <ul class="adm-lac-tpl-tips">
-                            <li><i class="fas fa-link"></i> <code>{link}</code> الزامی است و در ارسال به لینک کوتاه تبدیل می‌شود</li>
-                            <li><i class="fas fa-map-marker-alt"></i> <code>{district}</code> با منطقه سرنخ پر می‌شود</li>
-                            <li><i class="fas fa-layer-group"></i> پیامک فارسی: تا ۷۰ کاراکتر ۱ بخش؛ بعد هر ۶۷ کاراکتر یک بخش بیشتر</li>
-                        </ul>
+                        <p class="adm-lac-tpl-note"><code>{link}</code> الزامی · <code>{district}</code> و <code>{name}</code> پرشونده · فارسی: ۷۰ کاراکتر = ۱ بخش، سپس هر ۶۷ کاراکتر</p>
                     </aside>
                 </div>
 
                 <p class="adm-lac-tpl-status" id="lac-bulk-templates-status" hidden></p>
             </div>
             <footer class="adm-lac-modal__foot adm-lac-tpl-foot">
-                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-tpl-restore-all">
-                    <i class="fas fa-rotate-left"></i> همه به پیش‌فرض
-                </button>
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-tpl-restore-all">بازنشانی همه</button>
                 <div class="adm-lac-tpl-foot__actions">
-                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost" data-lac-bulk-templates-close>انصراف</button>
-                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary" id="lac-bulk-templates-save">
-                        <i class="fas fa-save"></i> ذخیره و اعمال برای همه
-                    </button>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-lac-bulk-templates-close>انصراف</button>
+                    <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" id="lac-bulk-templates-save">ذخیره و اعمال</button>
                 </div>
             </footer>
         </form>
@@ -1545,6 +1713,23 @@
         </div>
     </dialog>
 
+    <dialog class="adm-lac-modal adm-lac-modal--variant-insight" id="lac-variant-insight-modal"
+            aria-labelledby="lac-variant-insight-title">
+        <div class="adm-lac-modal__inner">
+            <header class="adm-lac-modal__head adm-lac-modal__head--compact">
+                <div class="adm-lac-modal__head-text">
+                    <h3 id="lac-variant-insight-title">پیشنهاد نسخه A/B</h3>
+                    <p class="adm-lac-variant-insight__sub" id="lac-variant-insight-sub">مقایسه تجمیعی پایلوت</p>
+                </div>
+                <button type="button" class="adm-lac-modal__close" data-lac-variant-insight-close aria-label="بستن">&times;</button>
+            </header>
+            <div class="adm-lac-modal__body" id="lac-variant-insight-body"></div>
+            <footer class="adm-lac-modal__foot adm-lac-modal__foot--center">
+                <button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-lac-variant-insight-close>متوجه شدم</button>
+            </footer>
+        </div>
+    </dialog>
+
     <dialog class="adm-lac-modal adm-lac-send-modal" id="lac-send-progress-modal">
         <div class="adm-lac-modal__inner">
             <header class="adm-lac-modal__head">
@@ -1586,15 +1771,22 @@
 <script type="application/json" id="lac-charts-data">{{ lac_charts_json|safe }}</script>
 <script type="application/json" id="lac-auto-campaign-edit-data">{{ automation_campaign_edit_json|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="{% static 'js/admin-lead-acquisition-charts.js' %}?v=3"></script>
+<script src="{% static 'js/admin-lead-acquisition-charts.js' %}?v=15"></script>
 <script>
 (function () {
   const tabs = document.querySelectorAll('[data-lac-tab]');
   function activate(hash) {
     const id = (hash || '#lac-overview').replace('#', '');
+    var activeTab = null;
     tabs.forEach(function (t) {
-      t.classList.toggle('is-active', t.getAttribute('href') === '#' + id);
+      const on = t.getAttribute('href') === '#' + id;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (on) activeTab = t;
     });
+    if (activeTab && activeTab.scrollIntoView) {
+      activeTab.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+    }
   }
   tabs.forEach(function (t) {
     t.addEventListener('click', function () {
@@ -1607,11 +1799,143 @@
   }
   window.addEventListener('hashchange', function () { activate(location.hash); });
 
+  (function lacComposeListPicker() {
+    const root = document.getElementById('lac-compose');
+    if (!root) return;
+    const hidden = document.getElementById('list_id');
+    const search = document.getElementById('lac-compose-list-search');
+    const selectedLabel = document.getElementById('lac-compose-selected-label');
+    const items = root.querySelectorAll('.adm-lac-compose-list[data-compose-list-id]');
+    const submitBtn = root.querySelector('.adm-lac-compose__submit');
+    const nameInput = document.getElementById('name');
+
+    function selectList(id, el) {
+      if (!id || !hidden) return;
+      hidden.value = id;
+      items.forEach(function (btn) {
+        const on = btn === el;
+        btn.classList.toggle('is-selected', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      if (selectedLabel && el) {
+        selectedLabel.textContent = el.getAttribute('data-compose-summary') || '';
+      }
+      if (submitBtn) submitBtn.disabled = false;
+      if (nameInput && el && !nameInput.value.trim()) {
+        const sug = el.getAttribute('data-compose-name-suggest');
+        if (sug) nameInput.value = sug;
+      }
+    }
+
+    items.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        selectList(btn.getAttribute('data-compose-list-id'), btn);
+      });
+    });
+
+    if (search) {
+      search.addEventListener('input', function () {
+        const q = search.value.trim().toLowerCase();
+        let visible = 0;
+        items.forEach(function (btn) {
+          const hay = (btn.getAttribute('data-compose-search') || '').toLowerCase();
+          const show = !q || hay.indexOf(q) !== -1;
+          btn.hidden = !show;
+          if (show) visible += 1;
+        });
+        if (q && visible === 1) {
+          items.forEach(function (btn) {
+            if (!btn.hidden) selectList(btn.getAttribute('data-compose-list-id'), btn);
+          });
+        }
+      });
+    }
+  })();
+
   const autoCity = document.getElementById('auto_city');
   const autoDistricts = document.getElementById('auto_districts');
   const districtPicker = document.getElementById('lac-district-picker');
   const districtChips = document.getElementById('lac-district-chips');
+  const districtPickerToggle = document.getElementById('lac-district-picker-toggle');
+  const districtChipSearch = document.getElementById('lac-district-chip-search');
+  const districtChipMeta = document.getElementById('lac-district-chip-meta');
+  let districtCatalogCount = 0;
   const placesUrl = '{{ automation_places_url|escapejs }}';
+  const loadAllBtn = document.getElementById('lac-load-all-districts');
+  const autoName = document.getElementById('auto_name');
+  const districtCountHint = document.getElementById('lac-district-count-hint');
+
+  function refreshDistrictCountHint() {
+    if (!autoDistricts || !districtCountHint) return;
+    const n = autoDistricts.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean).length;
+    districtCountHint.textContent = n ? (n + ' منطقه در مسیر') : 'هر خط یک منطقه';
+    syncDistrictChipStates();
+  }
+
+  function currentDistrictSet() {
+    if (!autoDistricts) return new Set();
+    return new Set(
+      autoDistricts.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean),
+    );
+  }
+
+  function setDistrictPickerOpen(open) {
+    if (!districtPicker) return;
+    districtPicker.hidden = !open;
+    if (districtPickerToggle) {
+      districtPickerToggle.classList.toggle('is-active', open);
+      districtPickerToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    if (open && districtChipSearch) {
+      window.requestAnimationFrame(function () { districtChipSearch.focus(); });
+    }
+  }
+
+  function updateDistrictChipMeta(filteredVisible) {
+    if (!districtChipMeta) return;
+    const selected = currentDistrictSet().size;
+    if (typeof filteredVisible === 'number' && districtChipSearch && districtChipSearch.value.trim()) {
+      districtChipMeta.textContent = filteredVisible + ' نتیجه · ' + selected + ' انتخاب‌شده';
+      return;
+    }
+    if (districtCatalogCount) {
+      districtChipMeta.textContent = districtCatalogCount + ' منطقه · ' + selected + ' در مسیر';
+      return;
+    }
+    districtChipMeta.textContent = '—';
+  }
+
+  function filterDistrictChips() {
+    if (!districtChips) return;
+    const q = (districtChipSearch && districtChipSearch.value || '').trim().toLowerCase();
+    let visible = 0;
+    districtChips.querySelectorAll('.adm-lac-district-chip').forEach(function (btn) {
+      const show = !q || (btn.textContent || '').toLowerCase().indexOf(q) !== -1;
+      btn.hidden = !show;
+      if (show) visible += 1;
+    });
+    updateDistrictChipMeta(q ? visible : undefined);
+  }
+
+  function syncDistrictChipStates() {
+    if (!districtChips) return;
+    const set = currentDistrictSet();
+    districtChips.querySelectorAll('.adm-lac-district-chip').forEach(function (btn) {
+      const name = (btn.getAttribute('data-district') || btn.textContent || '').trim();
+      const on = set.has(name);
+      btn.classList.toggle('is-added', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    updateDistrictChipMeta();
+  }
+
+  function removeDistrict(name) {
+    if (!autoDistricts || !name) return;
+    const lines = autoDistricts.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    const next = lines.filter(function (line) { return line !== name; });
+    autoDistricts.value = next.join('\n');
+    refreshDistrictCountHint();
+  }
 
   function loadAllDistricts(city) {
     if (!autoDistricts || !placesUrl) return;
@@ -1620,6 +1944,8 @@
       .then(function (data) {
         if (data.ok && data.districts && data.districts.length) {
           autoDistricts.value = data.districts.join('\n');
+          refreshDistrictCountHint();
+          setDistrictPickerOpen(false);
           if (autoName && !autoName.value.trim()) {
             autoName.value = (city || 'تهران') + ' · همه مناطق · فروش';
           }
@@ -1628,10 +1954,12 @@
       .catch(function () {});
   }
 
-  const loadAllBtn = document.getElementById('lac-load-all-districts');
-  const autoName = document.getElementById('auto_name');
   if (loadAllBtn && autoCity) {
     loadAllBtn.addEventListener('click', function () { loadAllDistricts(autoCity.value); });
+  }
+  if (autoDistricts) {
+    autoDistricts.addEventListener('input', refreshDistrictCountHint);
+    refreshDistrictCountHint();
   }
 
   function appendDistrict(name) {
@@ -1640,36 +1968,85 @@
     if (lines.indexOf(name) !== -1) return;
     lines.push(name);
     autoDistricts.value = lines.join('\n');
+    refreshDistrictCountHint();
+  }
+
+  function toggleDistrictChip(name) {
+    if (!name) return;
+    if (currentDistrictSet().has(name)) removeDistrict(name);
+    else appendDistrict(name);
   }
 
   function loadDistricts(city) {
     if (!districtChips || !placesUrl) return;
+    districtCatalogCount = 0;
     districtChips.innerHTML = '';
+    if (districtChipSearch) districtChipSearch.value = '';
     fetch(placesUrl + '?city=' + encodeURIComponent(city || 'تهران'), { credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.ok || !data.districts || !data.districts.length) {
-          if (districtPicker) districtPicker.hidden = true;
+          setDistrictPickerOpen(false);
+          if (districtPickerToggle) districtPickerToggle.disabled = true;
+          updateDistrictChipMeta();
           return;
         }
-        if (districtPicker) districtPicker.hidden = false;
+        if (districtPickerToggle) districtPickerToggle.disabled = false;
+        districtCatalogCount = data.districts.length;
         data.districts.forEach(function (d) {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'adm-lac-district-chip';
+          btn.setAttribute('data-district', d);
+          btn.setAttribute('role', 'listitem');
           btn.textContent = d;
-          btn.addEventListener('click', function () { appendDistrict(d); });
+          btn.addEventListener('click', function () { toggleDistrictChip(d); });
           districtChips.appendChild(btn);
         });
+        syncDistrictChipStates();
+        filterDistrictChips();
       })
       .catch(function () {
-        if (districtPicker) districtPicker.hidden = true;
+        setDistrictPickerOpen(false);
+        if (districtPickerToggle) districtPickerToggle.disabled = true;
       });
   }
 
+  if (districtPickerToggle) {
+    districtPickerToggle.addEventListener('click', function () {
+      const open = districtPicker && districtPicker.hidden;
+      setDistrictPickerOpen(!!open);
+    });
+  }
+  if (districtChipSearch) {
+    districtChipSearch.addEventListener('input', filterDistrictChips);
+  }
+
+  function knownAutoCities() {
+    const list = document.getElementById('lac-auto-city-list');
+    if (!list) return [];
+    return Array.prototype.map.call(list.options || [], function (o) { return (o.value || '').trim(); }).filter(Boolean);
+  }
+
+  function applyAutoCityIfValid() {
+    if (!autoCity) return;
+    const val = (autoCity.value || '').trim();
+    if (!val || knownAutoCities().indexOf(val) === -1) return;
+    setDistrictPickerOpen(false);
+    loadDistricts(val);
+  }
+
   if (autoCity) {
-    autoCity.addEventListener('change', function () { loadDistricts(autoCity.value); });
-    loadDistricts(autoCity.value);
+    autoCity.addEventListener('change', applyAutoCityIfValid);
+    autoCity.addEventListener('blur', function () {
+      const val = (autoCity.value || '').trim();
+      const cities = knownAutoCities();
+      if (val && cities.indexOf(val) === -1 && cities.length) {
+        autoCity.value = cities.indexOf('تهران') !== -1 ? 'تهران' : cities[0];
+      }
+      applyAutoCityIfValid();
+    });
+    applyAutoCityIfValid();
   }
 
   (function initAutoCampaignEditModal() {
@@ -2037,13 +2414,19 @@
     var sub = document.getElementById('lac-bulk-templates-sub');
     var saveBtn = document.getElementById('lac-bulk-templates-save');
     if (applyAll) {
-      if (title) title.textContent = 'قالب سراسری پیام‌ها (مراحل ۱–۳)';
-      if (sub) sub.textContent = 'ذخیره برای همه کمپین‌های فعلی (' + persianDigits(allCampaignIds.length) + ') و کمپین‌های جدید';
-      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> ذخیره و اعمال برای همه';
+      if (title) title.textContent = 'قالب سراسری · مراحل ۱–۳';
+      if (sub) {
+        sub.textContent =
+          'ذخیره برای همهٔ کمپین‌های فعلی (' + persianDigits(allCampaignIds.length) + ') و کمپین‌های جدید';
+      }
+      if (saveBtn) saveBtn.textContent = 'ذخیره و اعمال';
     } else {
-      if (title) title.textContent = 'قالب سراسری + اعمال روی انتخاب‌شده‌ها';
-      if (sub) sub.textContent = persianDigits(bulkTemplatesTargetIds.length) + ' کمپین · قالب سراسری هم به‌روز می‌شود';
-      if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> ذخیره و اعمال روی انتخاب‌شده‌ها';
+      if (title) title.textContent = 'قالب سراسری · انتخاب‌شده‌ها';
+      if (sub) {
+        sub.textContent =
+          persianDigits(bulkTemplatesTargetIds.length) + ' کمپین · به‌روزرسانی قالب سراسری';
+      }
+      if (saveBtn) saveBtn.textContent = 'ذخیره و اعمال';
     }
     if (bulkTemplatesStatus) {
       bulkTemplatesStatus.hidden = true;
@@ -2494,7 +2877,6 @@
     var totalEl = document.getElementById('lac-lines-total');
     var healthyEl = document.getElementById('lac-lines-healthy');
     var activePhoneEl = document.getElementById('lac-lines-active-phone');
-    var hintEl = document.getElementById('lac-lines-hint');
     var rotateChk = document.getElementById('lac-lines-rotate');
     var modal = document.getElementById('lac-lines-modal');
     var stepPhone = document.getElementById('lac-lines-step-phone');
@@ -2541,22 +2923,94 @@
       }
     }
 
+    var runtimeHintEl = document.getElementById('lac-lines-runtime-hint');
+    var linesPanel = document.getElementById('lac-lines-panel');
+    var loadStatusEl = document.getElementById('lac-lines-load-status');
+    var linesProbeQueued = false;
+    var linesFetchGen = 0;
+    var refreshBtn = document.getElementById('lac-lines-refresh');
+
+    function automationLinesActive() {
+      var hash = location.hash || '#lac-overview';
+      return hash === '#lac-automation' || location.pathname.indexOf('/automation') !== -1;
+    }
+
+    function linesSkeletonRows() {
+      return [0, 1, 2].map(function () {
+        return (
+          '<tr class="adm-lac-lines-sk-row" aria-hidden="true">' +
+          '<td><span class="adm-lac-lines-sk"></span></td>' +
+          '<td><span class="adm-lac-lines-sk adm-lac-lines-sk--sm"></span></td>' +
+          '<td><span class="adm-lac-lines-sk adm-lac-lines-sk--md"></span></td>' +
+          '<td><span class="adm-lac-lines-sk adm-lac-lines-sk--md"></span></td>' +
+          '<td><span class="adm-lac-lines-sk adm-lac-lines-sk--xs"></span></td>' +
+          '</tr>'
+        );
+      }).join('');
+    }
+
+    function setLinesLoading(on, opts) {
+      opts = opts || {};
+      if (linesPanel) linesPanel.classList.toggle('is-loading', !!on);
+      if (refreshBtn) refreshBtn.classList.toggle('is-busy', !!on);
+      if (loadStatusEl) {
+        if (on && opts.background) {
+          loadStatusEl.hidden = false;
+          loadStatusEl.textContent = 'بررسی عمیق خطوط…';
+        } else if (on) {
+          loadStatusEl.hidden = false;
+          loadStatusEl.textContent = 'بارگذاری…';
+        } else {
+          loadStatusEl.hidden = true;
+          loadStatusEl.textContent = '';
+        }
+      }
+      if (on && !opts.keepTable) {
+        tbody.setAttribute('data-lines-boot', 'loading');
+        tbody.innerHTML = linesSkeletonRows();
+      }
+    }
+
+    function scheduleLinesDeepProbe() {
+      if (linesProbeQueued) return;
+      linesProbeQueued = true;
+      var run = function () {
+        if (!automationLinesActive()) return;
+        loadLines({ quick: false, probe: true, background: true });
+      };
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(run, { timeout: 3500 });
+      } else {
+        window.setTimeout(run, 900);
+      }
+    }
+
+    function opsIconBtn(klass, icon, label, attrs) {
+      return '<button type="button" class="adm-lac-ops-icon-btn ' + (klass || '') + '" title="' + label + '" aria-label="' + label + '" ' + (attrs || '') + '>' +
+        '<i class="' + icon + '" aria-hidden="true"></i></button>';
+    }
+
     function renderLines(data) {
       var lines = data.lines || [];
-      if (summaryEl) summaryEl.hidden = false;
       if (totalEl) totalEl.textContent = pdDigits(data.total || lines.length);
       if (healthyEl) healthyEl.textContent = pdDigits(data.healthy_count || 0);
       if (activePhoneEl) activePhoneEl.textContent = data.active_phone || '—';
       if (rotateChk) rotateChk.checked = !!data.rotate;
-      if (hintEl) {
+      if (runtimeHintEl) {
         var parts = [];
-        if (data.sessions_dir) parts.push('مسیر: ' + data.sessions_dir);
-        if (data.probe_error) parts.push('probe: ' + data.probe_error);
-        hintEl.textContent = parts.join(' · ');
+        if (data.probe_error) parts.push(data.probe_error);
+        if (data.sessions_dir) parts.push(data.sessions_dir);
+        if (parts.length) {
+          runtimeHintEl.hidden = false;
+          runtimeHintEl.textContent = parts.join(' · ');
+        } else {
+          runtimeHintEl.hidden = true;
+          runtimeHintEl.textContent = '';
+        }
       }
 
       if (!lines.length) {
-        tbody.innerHTML = '<tr><td colspan="5"><div class="adm-lac-empty"><i class="fas fa-mobile-screen"></i> هنوز خطی ثبت نشده — «خط جدید» را بزنید.</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="adm-lac-lines-empty">هنوز خطی ثبت نشده — «خط جدید»</td></tr>';
         return;
       }
 
@@ -2566,45 +3020,45 @@
         var lineTitle = row.line_index
           ? 'خط ' + pdDigits(row.line_index)
           : 'خط';
-        var primary = row.is_active ? '<span class="adm-lac-line-primary">انتخاب‌شده</span>' : '';
-        var sessionMeta = formatSavedAt(row.saved_at);
-        if (row.expires_at) sessionMeta += '<br><span class="adm-lac-kpi-sub">انقضا: ' + formatSavedAt(row.expires_at) + '</span>';
+        var primary = row.is_active ? '<span class="adm-lac-ops-tag adm-lac-ops-tag--active">فعال</span>' : '';
+        var sessionMeta = row.saved_at ? formatSavedAt(row.saved_at) : '—';
+        if (row.expires_at) sessionMeta += ' · انقضا ' + formatSavedAt(row.expires_at);
         var successMeta = row.success_extract_count
-          ? pdDigits(row.success_extract_count) + ' استخراج موفق'
+          ? pdDigits(row.success_extract_count) + ' موفق'
           : '—';
-        if (row.last_success_at) {
-          successMeta += '<br><span class="adm-lac-kpi-sub">آخرین موفق: ' + formatSavedAt(row.last_success_at) + '</span>';
-        }
-        var errMeta = '';
+        if (row.last_success_at) successMeta += ' · ' + formatSavedAt(row.last_success_at);
+        var perfCell = '<span class="adm-lac-ops-cell-line">' + successMeta + '</span>';
         if (row.last_error_at || row.last_error_reason) {
-          errMeta = '<span class="adm-lac-kpi-sub adm-lac-kpi-sub--error">' +
-            (row.last_error_reason || 'خطا') +
-            (row.last_error_at ? ' · ' + formatSavedAt(row.last_error_at) : '') +
-            '</span>';
+          perfCell += '<span class="adm-lac-ops-cell-error">' + (row.last_error_reason || 'خطا') + '</span>';
         }
         var reloginBtn = row.needs_relogin
-          ? '<button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm lac-line-relogin" data-phone="' + row.phone + '"><i class="fas fa-key"></i> ورود مجدد</button>'
+          ? opsIconBtn('lac-line-relogin adm-lac-ops-icon-btn--accent', 'fas fa-key', 'ورود مجدد', 'data-phone="' + row.phone + '"')
           : '';
         var pauseBtn = row.admin_paused || opStatus === 'paused'
-          ? '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-unpause" data-phone="' + row.phone + '"><i class="fas fa-play"></i> فعال‌سازی</button>'
-          : '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-pause" data-phone="' + row.phone + '"><i class="fas fa-pause"></i> توقف</button>';
+          ? opsIconBtn('lac-line-unpause', 'fas fa-play', 'فعال‌سازی', 'data-phone="' + row.phone + '"')
+          : opsIconBtn('lac-line-pause', 'fas fa-pause', 'توقف', 'data-phone="' + row.phone + '"');
         var reactivateBtn = (opStatus === 'blocked_captcha' || row.captcha_blocked)
-          ? '<button type="button" class="adm-lac-btn adm-lac-btn--cyan adm-lac-btn--sm lac-line-reactivate" data-phone="' + row.phone + '"><i class="fas fa-shield-check"></i> بررسی و فعال‌سازی</button>'
+          ? opsIconBtn('lac-line-reactivate adm-lac-ops-icon-btn--warn', 'fas fa-shield-check', 'بررسی کپچا', 'data-phone="' + row.phone + '"')
           : '';
         var detailHint = row.status_detail
-          ? '<p class="adm-lac-kpi-sub">' + row.status_detail + '</p>'
+          ? '<span class="adm-lac-ops-cell-sub">' + row.status_detail + '</span>'
           : '';
-        return '<tr>' +
-          '<td><strong>' + lineTitle + '</strong><br><span dir="ltr" class="adm-lac-kpi-sub">' + row.phone + '</span>' + primary + detailHint + '</td>' +
+        return '<tr' + (row.is_active ? ' class="is-active-line"' : '') + '>' +
+          '<td><div class="adm-lac-ops-line-cell">' +
+            '<span class="adm-lac-ops-line-idx">' + lineTitle + '</span>' +
+            primary +
+            '<span dir="ltr" class="adm-lac-ops-mono">' + row.phone + '</span>' +
+            detailHint +
+          '</div></td>' +
           '<td><span class="adm-lac-line-status adm-lac-line-status--' + opStatus + '">' + opLabel + '</span></td>' +
-          '<td><span class="adm-lac-kpi-sub">' + successMeta + '</span>' + errMeta + '</td>' +
-          '<td><span class="adm-lac-kpi-sub">' + sessionMeta + '</span></td>' +
-          '<td><div class="adm-lac-lines-actions">' +
+          '<td class="adm-lac-lines-td-perf">' + perfCell + '</td>' +
+          '<td><span class="adm-lac-ops-cell-line adm-lac-lines-cell-session">' + sessionMeta + '</span></td>' +
+          '<td class="adm-lac-td-actions"><div class="adm-lac-ops-actions adm-lac-lines-actions">' +
             reactivateBtn +
             reloginBtn +
             pauseBtn +
-            '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-switch" data-phone="' + row.phone + '"><i class="fas fa-check"></i> انتخاب</button>' +
-            '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-remove" data-phone="' + row.phone + '"><i class="fas fa-trash"></i> حذف</button>' +
+            opsIconBtn('lac-line-switch', 'fas fa-check', 'انتخاب خط', 'data-phone="' + row.phone + '"') +
+            opsIconBtn('lac-line-remove adm-lac-ops-icon-btn--danger', 'fas fa-trash', 'حذف خط', 'data-phone="' + row.phone + '"') +
           '</div></td>' +
         '</tr>';
       }).join('');
@@ -2679,20 +3133,59 @@
       });
     }
 
-    function loadLines(probe) {
-      var url = linesUrl + (probe ? '?probe=1' : '');
+    function loadLines(opts) {
+      opts = opts || {};
+      var probe = !!opts.probe;
+      var quick = Object.prototype.hasOwnProperty.call(opts, 'quick') ? !!opts.quick : !probe;
+      var background = !!opts.background;
+      var gen = ++linesFetchGen;
+      var params = [];
+      if (quick) params.push('quick=1');
+      else if (probe) params.push('probe=1');
+      else params.push('sync=1');
+      var url = linesUrl + (params.length ? '?' + params.join('&') : '');
+      setLinesLoading(true, { keepTable: background, background: background });
       return fetch(url, { credentials: 'same-origin' })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+          var ct = (r.headers.get('content-type') || '').toLowerCase();
+          if (!r.ok) {
+            if (ct.indexOf('application/json') >= 0) {
+              return r.json().then(function (data) {
+                throw new Error((data && data.error) || ('خطای سرور (' + r.status + ')'));
+              });
+            }
+            throw new Error('خطای سرور (' + r.status + ') — اگر تازه deploy کردید یک بار سرور Django را ری‌استارت کنید.');
+          }
+          if (ct.indexOf('application/json') < 0) {
+            throw new Error('پاسخ نامعتبر از سرور — انتظار JSON بود.');
+          }
+          return r.json();
+        })
         .then(function (data) {
+          if (gen !== linesFetchGen) return;
           if (!data.ok && data.configured === false) {
             tbody.innerHTML = '<tr><td colspan="5"><div class="adm-lac-empty">phone-detector پیکربندی نشده</div></td></tr>';
             return;
           }
+          tbody.setAttribute('data-lines-boot', 'ready');
           renderLines(data);
         })
         .catch(function (err) {
+          if (gen !== linesFetchGen) return;
+          tbody.setAttribute('data-lines-boot', 'error');
           tbody.innerHTML = '<tr><td colspan="5"><div class="adm-lac-empty adm-lac-kpi-sub--error">' + (err.message || 'خطا') + '</div></td></tr>';
+        })
+        .finally(function () {
+          if (gen === linesFetchGen) setLinesLoading(false);
         });
+    }
+
+    function bootLinesPanel() {
+      if (!automationLinesActive()) return;
+      linesProbeQueued = false;
+      loadLines({ quick: true }).then(function () {
+        scheduleLinesDeepProbe();
+      });
     }
 
     function showModalError(msg) {
@@ -2724,9 +3217,11 @@
       pendingPhone = '';
     }
 
-    var refreshBtn = document.getElementById('lac-lines-refresh');
     if (refreshBtn) {
-      refreshBtn.addEventListener('click', function () { loadLines(true); });
+      refreshBtn.addEventListener('click', function () {
+        linesProbeQueued = true;
+        loadLines({ probe: true });
+      });
     }
 
     var addBtn = document.getElementById('lac-lines-add-btn');
@@ -2818,13 +3313,10 @@
       });
     }
 
-    if (location.hash === '#lac-automation' || location.pathname.indexOf('/automation') !== -1) {
-      loadLines(true);
-    } else {
-      window.addEventListener('hashchange', function () {
-        if (location.hash === '#lac-automation') loadLines(false);
-      });
-    }
+    window.addEventListener('hashchange', function () {
+      bootLinesPanel();
+    });
+    bootLinesPanel();
   })();
 
   (function () {
@@ -2845,24 +3337,41 @@
       }).then(function (r) { return r.json(); });
     }
 
+    var sessionsMeta = document.getElementById('lac-sessions-meta');
+
+    function dsTag(text, ok) {
+      var cls = ok ? 'adm-lac-ops-tag adm-lac-ops-tag--ok' : 'adm-lac-ops-tag';
+      return '<span class="' + cls + '">' + text + '</span>';
+    }
+
     function renderSessions(rows) {
+      if (sessionsMeta) {
+        sessionsMeta.textContent = rows && rows.length
+          ? (rows.length + ' نشست')
+          : 'نشست کاربران · افزودن به خط بدون OTP';
+      }
       if (!rows || !rows.length) {
-        tbody.innerHTML = '<tr><td colspan="6"><div class="adm-lac-empty">نشستی ثبت نشده است.</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6"><div class="adm-lac-empty adm-lac-empty--sm">نشستی ثبت نشده</div></td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(function (row) {
-        var ops = '';
+        var ops = '<div class="adm-lac-ops-actions">';
         if (!row.phone_detector_consent) {
-          ops += '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-ds-action="grant_consent" data-id="' + row.id + '">ثبت مجوز PD</button> ';
+          ops += '<button type="button" class="adm-lac-ops-btn" data-ds-action="grant_consent" data-id="' + row.id + '">مجوز</button>';
         }
         if (row.can_add_to_line) {
-          ops += '<button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-ds-action="add_to_line" data-id="' + row.id + '">افزودن به خطوط فون‌دتکتور</button>';
+          ops += '<button type="button" class="adm-lac-ops-btn adm-lac-ops-btn--primary" data-ds-action="add_to_line" data-id="' + row.id + '">افزودن خط</button>';
         } else if (row.on_line) {
-          ops += '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-ds-action="unlink_line" data-id="' + row.id + '">حذف ارتباط خط</button>';
+          ops += '<button type="button" class="adm-lac-ops-btn" data-ds-action="unlink_line" data-id="' + row.id + '">قطع خط</button>';
         }
-        return '<tr><td dir="ltr">' + row.divar_phone + '</td><td>' + row.user_label + '</td><td>' +
-          row.auth_status_label + '</td><td>' + (row.phone_detector_consent ? 'دارد' : 'ندارد') + '</td><td>' +
-          (row.on_line ? row.line_phone : '—') + '</td><td>' + ops + '</td></tr>';
+        ops += '</div>';
+        return '<tr>' +
+          '<td><span dir="ltr" class="adm-lac-ops-mono">' + row.divar_phone + '</span></td>' +
+          '<td><span class="adm-lac-ops-user">' + row.user_label + '</span></td>' +
+          '<td>' + dsTag(row.auth_status_label, row.auth_status_label && row.auth_status_label.indexOf('کپچا') === -1) + '</td>' +
+          '<td>' + dsTag(row.phone_detector_consent ? 'دارد' : 'ندارد', !!row.phone_detector_consent) + '</td>' +
+          '<td>' + (row.on_line ? '<span dir="ltr" class="adm-lac-ops-mono">' + row.line_phone + '</span>' : '—') + '</td>' +
+          '<td>' + ops + '</td></tr>';
       }).join('');
       tbody.querySelectorAll('[data-ds-action]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -2884,10 +3393,34 @@
     }
 
     if (refreshBtn) refreshBtn.addEventListener('click', loadSessions);
-    if (location.hash === '#divar-sessions') loadSessions();
+
+    function automationSessionsActive() {
+      var hash = location.hash || '#lac-overview';
+      return hash === '#lac-automation' || hash === '#divar-sessions';
+    }
+
+    if (automationSessionsActive()) loadSessions();
     window.addEventListener('hashchange', function () {
-      if (location.hash === '#divar-sessions') loadSessions();
+      if (automationSessionsActive()) loadSessions();
     });
+  })();
+
+  (function lacLeadsSearch() {
+    var root = document.getElementById('lac-leads');
+    var input = document.getElementById('lac-leads-search');
+    var tbody = document.getElementById('lac-leads-tbody');
+    if (!root || !input || !tbody) return;
+
+    function filterLeads() {
+      var q = input.value.trim().toLowerCase();
+      var rows = tbody.querySelectorAll('tr[data-lead-search]');
+      rows.forEach(function (tr) {
+        var hay = (tr.getAttribute('data-lead-search') || '').toLowerCase();
+        tr.hidden = !!(q && hay.indexOf(q) === -1);
+      });
+    }
+
+    input.addEventListener('input', filterLeads);
   })();
 })();
 </script>

@@ -1,0 +1,32 @@
+{% load persian_tags %}
+<section class="adm-overview-card adm-sales-exports adm-center-fold-section--exports" id="sales-exports" aria-label="خروجی سفارش">
+    <header class="adm-overview-card__head adm-sales-exports__head">
+        <div class="adm-sales-exports__titles">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-file-export adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+                <span>خروجی‌ها</span>
+            </h2>
+            <p class="adm-sales-exports__hint">اکسل · گزارش‌های آماده · هم‌تراز با بازه بالای صفحه</p>
+        </div>
+        <span class="adm-overview-card__meta adm-sales-exports__meta">{{ export_links|length|to_persian_digits }} فایل</span>
+    </header>
+    <div class="adm-sales-export-dock" role="list">
+        {% for exp in export_links %}
+        <a class="adm-sales-export-card" role="listitem" data-accent="{{ exp.accent|default:'violet' }}" href="{{ exp.url }}" title="دانلود {{ exp.title }}">
+            <span class="adm-sales-export-card__icon" aria-hidden="true">
+                <i class="fas {{ exp.icon }}"></i>
+            </span>
+            <span class="adm-sales-export-card__text">
+                <span class="adm-sales-export-card__title">{{ exp.title }}</span>
+                <span class="adm-sales-export-card__meta">{{ exp.scope_label }} · {{ exp.subtitle }}</span>
+            </span>
+            {% if exp.count is not None %}
+            <span class="adm-sales-export-card__count">{{ exp.count|to_persian_digits }}</span>
+            {% endif %}
+            <span class="adm-sales-export-card__action" aria-hidden="true">
+                <i class="fas fa-download"></i>
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+</section>

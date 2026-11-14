@@ -1,0 +1,125 @@
+{% load persian_tags %}
+{% load currency_tags %}
+{% with st=sales_hero_status %}
+<aside class="adm-overview-status adm-sales-hero-status{% if st.urgency %} adm-sales-hero-status--{{ st.urgency }}{% endif %}" aria-label="وضعیت صف سفارش">
+    <header class="adm-overview-status__head adm-sales-hero-status__head">
+        <div>
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-layer-group adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+                <span>صف عملیاتی</span>
+            </h2>
+            <p class="adm-sales-hero-status__grain">لحظه‌ای · سفارش و پرداخت</p>
+        </div>
+        {% if st.healthy_queue %}
+        <p class="adm-sales-hero-status__score" title="صف عملیاتی خالی است">
+            <strong>{{ st.vitality_pct|floatformat:0|to_persian_digits }}٪</strong>
+            <span>آرام</span>
+        </p>
+        {% elif st.queue_total %}
+        <p class="adm-sales-hero-status__score" title="فشار صف عملیاتی">
+            <strong>{{ st.queue_total|to_persian_digits }}</strong>
+            <span>نیاز رسیدگی</span>
+        </p>
+        {% endif %}
+    </header>
+
+    {% if st.queue_total %}
+    <div class="adm-sales-hero-status__viz" aria-hidden="true">
+        <div class="adm-overview-donut adm-sales-hero-status__donut"
+             style="--a: {{ st.pct_fulfillment|default:0 }}%; --b: {{ st.pct_pending|default:0 }}%; --c: {{ st.pct_critical|default:0 }}%;">
+            <span class="adm-overview-donut__center">
+                <strong>{{ st.queue_total|to_persian_digits }}</strong>
+                <em>مورد</em>
+            </span>
+        </div>
+        <ul class="adm-overview-users__donut-keys adm-sales-hero-status__keys">
+            <li data-tone="rose"><span>صدور ناقص</span></li>
+            <li data-tone="amber"><span>پرداخت‌نشده</span></li>
+            <li data-tone="violet"><span>ناموفق / کارت</span></li>
+        </ul>
+    </div>
+
+    <ul class="adm-sales-hero-status__bars" role="list">
+        <li data-tone="rose">
+            <div class="adm-sales-hero-status__bar-head">
+                <a class="adm-sales-hero-status__bar-link" href="#sales-queue-fulfillment">صدور / تمدید ناقص</a>
+                <span class="adm-sales-hero-status__bar-val">
+                    <strong>{{ st.fulfillment|to_persian_digits }}</strong>
+                    <em>{{ st.pct_fulfillment|floatformat:1|to_persian_digits }}٪</em>
+                </span>
+            </div>
+            <div class="adm-sales-hero-status__bar-track" style="--fill: {{ st.pct_fulfillment|default:0 }}%;" aria-hidden="true">
+                <span class="adm-sales-hero-status__bar-fill"></span>
+            </div>
+        </li>
+        <li data-tone="amber">
+            <div class="adm-sales-hero-status__bar-head">
+                <a class="adm-sales-hero-status__bar-link" href="#sales-table-pending">پرداخت‌نشده</a>
+                <span class="adm-sales-hero-status__bar-val">
+                    <strong>{{ st.pending|to_persian_digits }}</strong>
+                    <em>{{ st.pct_pending|floatformat:1|to_persian_digits }}٪</em>
+                </span>
+            </div>
+            <div class="adm-sales-hero-status__bar-track" style="--fill: {{ st.pct_pending|default:0 }}%;" aria-hidden="true">
+                <span class="adm-sales-hero-status__bar-fill"></span>
+            </div>
+        </li>
+        <li data-tone="violet">
+            <div class="adm-sales-hero-status__bar-head">
+                <a class="adm-sales-hero-status__bar-link" href="#sales-table-failed">ناموفق امروز · کارت معلق</a>
+                <span class="adm-sales-hero-status__bar-val">
+                    <strong>{{ st.critical_queue|to_persian_digits }}</strong>
+                    <em>{{ st.pct_critical|floatformat:1|to_persian_digits }}٪</em>
+                </span>
+            </div>
+            <div class="adm-sales-hero-status__bar-track" style="--fill: {{ st.pct_critical|default:0 }}%;" aria-hidden="true">
+                <span class="adm-sales-hero-status__bar-fill"></span>
+            </div>
+        </li>
+    </ul>
+    {% else %}
+    <p class="adm-sales-hero-status__empty">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        صف عملیاتی سفارش خالی است
+    </p>
+    {% endif %}
+
+    <div class="adm-sales-hero-status__ops" role="list" aria-label="شاخص‌های امروز">
+        <a href="#sales-kpi" class="adm-sales-hero-status__ops-card" role="listitem" data-tone="emerald">
+            <span class="adm-sales-hero-status__ops-label">درآمد امروز</span>
+            <strong class="adm-sales-hero-status__ops-value">{{ st.revenue_today|currency }}</strong>
+        </a>
+        <a href="#sales-table-recent" class="adm-sales-hero-status__ops-card" role="listitem" data-tone="violet">
+            <span class="adm-sales-hero-status__ops-label">سفارش امروز</span>
+            <strong class="adm-sales-hero-status__ops-value">{{ st.orders_paid_today|to_persian_digits }}</strong>
+        </a>
+        <a href="#sales-kpi" class="adm-sales-hero-status__ops-card" role="listitem" data-tone="cyan">
+            <span class="adm-sales-hero-status__ops-label">خرید پس از عضویت</span>
+            <strong class="adm-sales-hero-status__ops-value">{{ st.conversion_rate|floatformat:1|to_persian_digits }}٪</strong>
+        </a>
+    </div>
+
+    <footer class="adm-sales-hero-status__range">
+        <div class="adm-sales-hero-status__range-head">
+            <span class="adm-sales-hero-status__range-label">بازه · {{ range_label|default:admin_panel_range_label_fa }}</span>
+            <a class="adm-sales-hero-status__range-link" href="#sales-kpi">جزئیات</a>
+        </div>
+        <div class="adm-sales-hero-status__range-body">
+            <div class="adm-sales-hero-status__range-metric">
+                <span>سفارش موفق</span>
+                <strong>{{ st.paid_orders_range|to_persian_digits }}</strong>
+            </div>
+            <p class="adm-sales-hero-status__range-hint">
+                درآمد امروز {{ st.revenue_today|currency }}
+            </p>
+        </div>
+    </footer>
+
+    {% if action_items %}
+    <p class="adm-overview-status__note adm-sales-hero-status__alert">
+        <i class="fas fa-bolt" aria-hidden="true"></i>
+        {{ action_items|length|to_persian_digits }} مورد در صف اقدام
+    </p>
+    {% endif %}
+</aside>
+{% endwith %}

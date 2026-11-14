@@ -134,15 +134,41 @@
             <tbody>
                 {% for row in open_tickets_rows %}
                 <tr{% if row.staff_unread %} class="is-unread"{% endif %}>
-                    <td><strong>{{ row.ticket_number|to_persian_digits }}</strong></td>
-                    <td>{{ row.subject|truncatechars:40 }}</td>
-                    <td>{% if admin_can_view_user_management and row.user_profile_url %}<a href="{{ row.user_profile_url }}" class="adm-user-360-link">{{ row.user_display }}</a>{% else %}{{ row.user_display }}{% endif %}</td>
+                    <td>
+                        {% if admin_can_show_u360_link and row.u360_support_url %}
+                        <a href="{{ row.u360_support_url }}" class="adm-user-360-link"><strong>{{ row.ticket_number|to_persian_digits }}</strong></a>
+                        {% else %}
+                        <strong>{{ row.ticket_number|to_persian_digits }}</strong>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if admin_can_show_u360_link and row.u360_support_url %}
+                        <a href="{{ row.u360_support_url }}" class="adm-user-360-link">{{ row.subject|truncatechars:40 }}</a>
+                        {% else %}
+                        {{ row.subject|truncatechars:40 }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if admin_can_show_u360_link and row.u360_support_url %}
+                        <a href="{{ row.u360_support_url }}" class="adm-user-360-link">{{ row.user_display }}</a>
+                        {% elif admin_can_view_user_management and row.user_profile_url %}
+                        <a href="{{ row.user_profile_url }}" class="adm-user-360-link">{{ row.user_display }}</a>
+                        {% else %}
+                        {{ row.user_display }}
+                        {% endif %}
+                    </td>
                     <td>
                         <span class="ecc-sup-status">{{ row.status_label }}</span>
                         {% if row.staff_unread %}<span class="ecc-sup-unread-badge">جدید</span>{% endif %}
                     </td>
                     <td>{{ row.created_at|to_jalali_fa }}</td>
-                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">بررسی</a></td>
+                    <td>
+                        {% if admin_can_show_u360_link and row.u360_support_url %}
+                        <a href="{{ row.u360_support_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">بررسی</a>
+                        {% else %}
+                        <a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">بررسی</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="6">تیکت بازی نیست</td></tr>

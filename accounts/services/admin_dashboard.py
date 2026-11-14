@@ -1653,6 +1653,7 @@ def get_recent_renewal_orders(limit: int = TABLE_FETCH_LIMIT):
     return (
         get_repeat_purchase_orders_qs()
         .select_related('user', 'product', 'plan', 'renewal_license')
+        .prefetch_related('renewal_items')
         .order_by('-paid_at', '-created_at')[:limit]
     )
 
@@ -1801,7 +1802,7 @@ def build_overview_user_breakdown(
 def get_failed_orders_recent(limit: int = TABLE_FETCH_LIMIT):
     return (
         Order.objects.filter(status='failed')
-        .select_related('user', 'product', 'plan')
+        .select_related('user', 'product', 'plan', 'transaction', 'card_transfer')
         .order_by('-created_at')[:limit]
     )
 

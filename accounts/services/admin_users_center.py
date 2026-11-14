@@ -16,6 +16,8 @@ from workspace.services.bot_license_query import (
     annotate_user_bot_license_access,
     users_without_bot_license_qs,
 )
+from workspace.services.jalali_input import to_persian_digits
+
 from accounts.services.admin_dashboard import (
     TABLE_PREVIEW_ROWS,
     _chart_day_label,
@@ -55,6 +57,26 @@ USERS_PULSE_RANGE_KEYS = (
     'retention_d7',
 )
 
+USERS_RANGE_BAND_KEYS = (
+    'retention_d7',
+    'retention_d30',
+    'returning_users',
+)
+
+
+def _license_coverage_percent(snapshot: Dict[str, int]) -> float | None:
+    total = int(snapshot.get('users_total') or 0)
+    if total <= 0:
+        return None
+    licensed = int(snapshot.get('users_licensed') or 0)
+    return round((licensed / total) * 100, 1)
+
+
+def _signups_day_delta(snapshot: Dict[str, int]) -> float | None:
+    today = int(snapshot.get('signups_today') or 0)
+    yesterday = int(snapshot.get('signups_yesterday') or 0)
+    return _pct_change(today, yesterday)
+
 
 def _users_active_between(start, end) -> int:
     return (
@@ -81,7 +103,7 @@ def _returning_users_between(start, end) -> int:
 
 
 def _retention_dx_in_range(start, end, window_days: int) -> float | None:
-    """نرخ بازگشت D7/D30 برای کوهورت ثبت‌نام‌شده در بازه."""
+    """نرخ نگهداشت: سهم ثبت‌نام‌شده‌های بازه که پس از ۷ یا ۳۰ روز دوباره وارد شده‌اند."""
     cohort_end = end - timedelta(days=window_days)
     if cohort_end < start:
         return None
@@ -192,6 +214,52 @@ def _users_engagement_channel_series(days: int) -> Dict[str, List]:
     }
 
 
+def _users_engagement_channel_highlights(channels: Dict[str, List]) -> List[Dict[str, Any]]:
+    web = channels.get('web') or []
+    app = channels.get('app') or []
+    both = channels.get('both') or []
+    span = len(web) or 1
+
+    def avg(vals: List[int]) -> int:
+        return round(sum(vals) / span) if vals else 0
+
+    return [
+        {
+            'key': 'web',
+            'title': 'پنل وب',
+            'hint': 'کاربر یکتا با ورود وب',
+            'avg_label': 'میانگین روزانه',
+            'peak_label': 'بیشترین در یک روز',
+            'avg': avg(web),
+            'peak': max(web) if web else 0,
+            'accent': 'violet',
+            'icon': 'fa-globe',
+        },
+        {
+            'key': 'app',
+            'title': 'اپلیکیشن',
+            'hint': 'کاربر یکتا با فعالیت اپ',
+            'avg_label': 'میانگین روزانه',
+            'peak_label': 'بیشترین در یک روز',
+            'avg': avg(app),
+            'peak': max(app) if app else 0,
+            'accent': 'emerald',
+            'icon': 'fa-mobile-screen',
+        },
+        {
+            'key': 'both',
+            'title': 'هر دو کانال',
+            'hint': 'همان روز در وب و اپ فعال بوده',
+            'avg_label': 'میانگین روزانه',
+            'peak_label': 'بیشترین در یک روز',
+            'avg': avg(both),
+            'peak': max(both) if both else 0,
+            'accent': 'amber',
+            'icon': 'fa-arrows-to-dot',
+        },
+    ]
+
+
 def _users_engagement_chart_summary(channels: Dict[str, List]) -> List[Dict[str, Any]]:
     web = channels.get('web') or []
     app = channels.get('app') or []
@@ -235,9 +303,9 @@ def _users_engagement_chart_summary(channels: Dict[str, List]) -> List[Dict[str,
 
 
 USERS_ENGAGEMENT_CHART_LEGEND = (
-    {'key': 'web', 'label': 'ورود وب'},
-    {'key': 'app', 'label': 'فعالیت اپ'},
-    {'key': 'both', 'label': 'هر دو کانال'},
+    {'key': 'web', 'label': 'پنل وب'},
+    {'key': 'app', 'label': 'اپلیکیشن'},
+    {'key': 'both', 'label': 'هر دو با هم'},
 )
 
 
@@ -281,18 +349,21 @@ def _users_hero_chart_summary(signups: Dict[str, List], active: Dict[str, List])
             'label': 'ثبت‌نام در بازه',
             'value': sum(signup_vals),
             'format': 'count',
+            'icon': 'fa-user-plus',
         },
         {
             'key': 'active_avg',
             'label': 'میانگین فعال روزانه',
             'value': round(sum(active_vals) / active_len) if active_vals else 0,
             'format': 'count',
+            'icon': 'fa-chart-line',
         },
         {
             'key': 'active_peak',
             'label': 'بیشترین فعالیت',
             'value': max(active_vals) if active_vals else 0,
             'format': 'count',
+            'icon': 'fa-arrow-trend-up',
         },
     ]
 
@@ -442,8 +513,8 @@ def _build_range_kpi_cards(
         {
             'key': 'users_active_period',
             'kind': 'range',
-            'label': 'فعال در بازه',
-            'sublabel': range_label,
+            'label': 'کاربران فعال',
+            'sublabel': f'ورود یا فعالیت در {range_label}',
             'value': active_period,
             'format': 'count',
             'delta': delta(active_period, prev_active),
@@ -461,24 +532,25 @@ def _build_range_kpi_cards(
             'sublabel': range_label,
             'value': growth if growth is not None else 0,
             'format': 'percent',
-            'delta': delta_percent(growth, prev_growth) if growth is not None and prev_growth is not None else None,
-            'delta_label': 'نسبت دوره قبل',
+            'delta': None,
+            'delta_label': 'دوره قبل',
             'previous_value': prev_growth,
             'sparkline': spark,
             'icon': 'fa-chart-line',
             'accent': 'violet',
             'status': 'ok' if (growth or 0) >= 0 else 'warn',
             'pending': growth is None,
+            'hide_in_users_band': True,
         },
         {
             'key': 'retention_d7',
             'kind': 'range',
-            'label': 'بازگشت D7',
-            'sublabel': 'ورود ۷+ روز پس از ثبت‌نام',
+            'label': 'نگهداشت یک‌هفته‌ای',
+            'sublabel': 'ثبت‌نام این بازه که حداقل یک‌بار بعد از ۷ روز وارد شده',
             'value': retention_d7 if retention_d7 is not None else 0,
             'format': 'percent',
             'delta': delta_percent(retention_d7, retention_d7_prev),
-            'delta_label': 'نسبت دوره قبل' if retention_d7 is not None and retention_d7_prev is not None else 'کوهورت بازه',
+            'delta_label': 'نسبت دوره قبل' if retention_d7 is not None and retention_d7_prev is not None else '',
             'previous_value': retention_d7_prev,
             'sparkline': spark,
             'icon': 'fa-user-clock',
@@ -489,12 +561,12 @@ def _build_range_kpi_cards(
         {
             'key': 'retention_d30',
             'kind': 'range',
-            'label': 'بازگشت D30',
-            'sublabel': 'ورود ۳۰+ روز پس از ثبت‌نام',
+            'label': 'نگهداشت یک‌ماهه',
+            'sublabel': 'ثبت‌نام این بازه که حداقل یک‌بار بعد از ۳۰ روز وارد شده',
             'value': retention_d30 if retention_d30 is not None else 0,
             'format': 'percent',
             'delta': delta_percent(retention_d30, retention_d30_prev),
-            'delta_label': 'نسبت دوره قبل' if retention_d30 is not None and retention_d30_prev is not None else 'کوهورت بازه',
+            'delta_label': 'نسبت دوره قبل' if retention_d30 is not None and retention_d30_prev is not None else '',
             'previous_value': retention_d30_prev,
             'sparkline': spark,
             'icon': 'fa-user-clock',
@@ -505,8 +577,8 @@ def _build_range_kpi_cards(
         {
             'key': 'returning_users',
             'kind': 'range',
-            'label': 'کاربران برگشتی',
-            'sublabel': 'فعال · عضو قبلی',
+            'label': 'کاربران بازگشتی',
+            'sublabel': 'عضو قدیمی که در این بازه دوباره فعال بوده',
             'value': returning_users,
             'format': 'count',
             'delta': delta(returning_users, prev_returning),
@@ -562,32 +634,38 @@ def _split_range_kpi_cards(
 
 def _build_snapshot_kpi_cards(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
     spark = _signups_sparkline(7)
+    coverage = _license_coverage_percent(snapshot)
+    signups_delta = _signups_day_delta(snapshot)
+    if coverage is not None:
+        coverage_label = f'پوشش لایسنس {to_persian_digits(f"{coverage:.1f}")}٪'
+    else:
+        coverage_label = 'پوشش لایسنس'
     return [
         {
             'key': 'users_total',
             'kind': 'snapshot',
             'label': 'کل کاربران',
-            'sublabel': 'همه ثبت‌نام‌ها',
+            'sublabel': 'ثبت‌نام کل‌تاریخ',
             'value': snapshot['users_total'],
             'format': 'count',
             'delta': None,
-            'delta_label': 'همه زمان',
+            'delta_label': '',
             'sparkline': spark,
             'icon': 'fa-users',
             'accent': 'indigo',
             'status': 'ok',
         },
         {
-            'key': 'users_active_current',
+            'key': 'users_licensed',
             'kind': 'snapshot',
-            'label': 'کاربران فعال',
-            'sublabel': 'حساب روشن',
-            'value': snapshot['users_active'],
+            'label': 'با لایسنس',
+            'sublabel': coverage_label,
+            'value': snapshot['users_licensed'],
             'format': 'count',
             'delta': None,
-            'delta_label': 'اکنون',
+            'delta_label': '',
             'sparkline': spark,
-            'icon': 'fa-user-check',
+            'icon': 'fa-key',
             'accent': 'emerald',
             'status': 'ok',
         },
@@ -595,31 +673,65 @@ def _build_snapshot_kpi_cards(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
             'key': 'users_without_license',
             'kind': 'snapshot',
             'label': 'بدون لایسنس',
-            'sublabel': 'فعال، بدون میزکار',
+            'sublabel': 'فرصت تبدیل',
             'value': snapshot['users_without_license'],
             'format': 'count',
             'delta': None,
-            'delta_label': 'تبدیل',
+            'delta_label': '',
             'sparkline': spark,
             'icon': 'fa-user-slash',
             'accent': 'rose',
             'status': 'warn' if snapshot['users_without_license'] else 'ok',
         },
         {
+            'key': 'signups_today',
+            'kind': 'snapshot',
+            'label': 'ثبت‌نام امروز',
+            'sublabel': 'نسبت دیروز',
+            'value': snapshot.get('signups_today', 0),
+            'format': 'count',
+            'delta': signups_delta,
+            'delta_label': 'نسبت دیروز',
+            'previous_value': snapshot.get('signups_yesterday', 0),
+            'sparkline': spark,
+            'icon': 'fa-user-plus',
+            'accent': 'violet',
+            'status': 'ok',
+        },
+        {
             'key': 'online_today',
             'kind': 'snapshot',
             'label': 'آنلاین امروز',
-            'sublabel': 'وب + اپ',
+            'sublabel': 'ورود وب + فعالیت اپ',
             'value': snapshot.get('online_today', 0),
             'format': 'count',
             'delta': None,
-            'delta_label': 'ورود امروز',
+            'delta_label': '',
             'sparkline': spark,
             'icon': 'fa-bolt',
             'accent': 'cyan',
             'status': 'ok' if snapshot.get('online_today') else 'warn',
         },
+        {
+            'key': 'users_inactive',
+            'kind': 'snapshot',
+            'label': 'بدون ورود ۳۰+ روز',
+            'sublabel': 'ریسک ریزش',
+            'value': snapshot.get('users_inactive', 0),
+            'format': 'count',
+            'delta': None,
+            'delta_label': '',
+            'sparkline': spark,
+            'icon': 'fa-user-clock',
+            'accent': 'amber',
+            'status': 'warn' if snapshot.get('users_inactive') else 'ok',
+        },
     ]
+
+
+def _build_users_range_band_cards(range_kpi_cards: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    by_key = {card['key']: card for card in range_kpi_cards if not card.get('hide_in_users_band')}
+    return [by_key[key] for key in USERS_RANGE_BAND_KEYS if key in by_key]
 
 
 def build_users_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
@@ -727,6 +839,7 @@ def get_users_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
     )
     _, range_kpi_secondary = _split_range_kpi_cards(range_kpis)
     snapshot_kpis = _build_snapshot_kpi_cards(snapshot)
+    range_band_kpis = _build_users_range_band_cards(range_kpis)
     signups_series = get_user_registration_series(days)
     active_series = _users_active_daily_series(days)
     engagement_series = _users_engagement_channel_series(days)
@@ -738,11 +851,13 @@ def get_users_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
         'center_pulse': build_users_center_pulse_from_range(range_kpis),
         'range_kpi_cards': range_kpi_secondary,
         'range_kpi_secondary': range_kpi_secondary,
+        'range_kpi_band_cards': range_band_kpis,
         'snapshot_kpi_cards': snapshot_kpis,
         'kpi_cards': range_kpis + snapshot_kpis,
         'charts': charts,
         'users_hero_chart_summary': _users_hero_chart_summary(signups_series, active_series),
         'users_engagement_chart_summary': _users_engagement_chart_summary(engagement_series),
+        'users_engagement_highlights': _users_engagement_channel_highlights(engagement_series),
         'users_engagement_legend': list(USERS_ENGAGEMENT_CHART_LEGEND),
         'charts_enabled': True,
         'action_items': build_users_action_items(snapshot),

@@ -1,0 +1,63 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-licenses-kpi-card{% if kpi_kind == 'snapshot' or card.kind == 'snapshot' %} adm-licenses-kpi-card--snapshot{% endif %}"
+         data-accent="{{ card.accent|default:'violet' }}"
+         {% if card.key %}data-kpi-key="{{ card.key }}"{% endif %}
+         aria-label="{{ card.label }}">
+    <header class="adm-licenses-kpi-card__head">
+        <span class="adm-licenses-kpi-card__label">{{ card.label }}</span>
+        {% if kpi_kind != 'snapshot' and card.kind != 'snapshot' %}
+        <span class="adm-licenses-kpi-card__glyph" aria-hidden="true">
+            <i class="fas {{ card.icon|default:'fa-chart-line' }}"></i>
+        </span>
+        {% endif %}
+    </header>
+
+    <div class="adm-licenses-kpi-card__main">
+        {% if card.pending or card.value is None %}
+        <strong class="adm-licenses-kpi-card__value" aria-label="داده کافی نیست">—</strong>
+        {% elif card.format == 'money' %}
+        <strong class="adm-licenses-kpi-card__value">{{ card.value|currency }}</strong>
+        {% elif card.format == 'percent' %}
+        <strong class="adm-licenses-kpi-card__value" data-count-up="{{ card.value }}" data-format="percent">{{ card.value|floatformat:1|to_persian_digits }}٪</strong>
+        {% else %}
+        <strong class="adm-licenses-kpi-card__value" data-count-up="{{ card.value|default:0 }}" data-format="{{ card.format|default:'count' }}">{{ card.value|default:0|to_persian_digits }}</strong>
+        {% endif %}
+
+        {% if kpi_kind != 'snapshot' and card.kind != 'snapshot' %}
+            {% if card.delta is not None %}
+            <span class="adm-overview-kpi__delta adm-licenses-kpi-card__delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+            </span>
+            {% elif card.previous_value is not None and card.previous_value == 0 and card.value %}
+            <span class="adm-licenses-kpi-card__tag">جدید</span>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if kpi_kind == 'snapshot' or card.kind == 'snapshot' %}
+    <footer class="adm-licenses-kpi-card__foot adm-licenses-kpi-card__foot--snapshot">
+        <span class="adm-licenses-kpi-card__caption">{{ card.sublabel|default:card.delta_label|default:'وضعیت فعلی' }}</span>
+    </footer>
+    {% else %}
+    <footer class="adm-licenses-kpi-card__foot">
+        {% if card.previous_value is not None %}
+        <span class="adm-licenses-kpi-card__prev-label">دوره قبل</span>
+        <span class="adm-licenses-kpi-card__prev-value">
+            {% if card.format == 'money' %}
+            {{ card.previous_value|currency }}
+            {% elif card.format == 'percent' %}
+            {{ card.previous_value|floatformat:1|to_persian_digits }}٪
+            {% else %}
+            {{ card.previous_value|to_persian_digits }}
+            {% endif %}
+        </span>
+        {% endif %}
+    </footer>
+    {% if card.key == 'renewals_period' or card.key == 'renewal_rate_period' %}
+        {% if card.sublabel %}
+        <p class="adm-licenses-kpi-card__hint">{{ card.sublabel|to_persian_digits }}</p>
+        {% endif %}
+    {% endif %}
+    {% endif %}
+</article>

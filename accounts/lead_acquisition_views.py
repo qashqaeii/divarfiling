@@ -1,6 +1,7 @@
 """ویوهای عمومی و ادمین مرکز جذب سرنخ."""
 from __future__ import annotations
 
+import inspect
 import json
 import logging
 
@@ -32,6 +33,7 @@ from accounts.services.acquisition_automation_ui import (
     automation_overview_stats,
     automation_runs_for_ui,
     create_automation_campaign_from_form,
+    delete_automation_campaign,
     list_automation_cities,
     list_districts_for_city,
     places_config_available,
@@ -75,9 +77,12 @@ from accounts.services.lead_campaign_send import (
     sms_cost_per_part_rial,
     update_acquisition_campaign,
 )
+from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.lead_funnel import (
+    acquisition_campaigns_for_dashboard,
     acquisition_dashboard_charts,
     campaign_funnel,
+    leads_recent_for_ui,
     overview_stats,
 )
 from accounts.services.lead_import import (
@@ -85,6 +90,7 @@ from accounts.services.lead_import import (
     commit_import_batch,
     create_preview_batch,
     preview_phone_detector_json,
+    compose_lists_for_campaign,
     region_lists_with_batches,
 )
 from accounts.services.lead_tokens import COOKIE_NAME, cookie_secure_kwargs, hash_ip, truncate_user_agent
@@ -120,8 +126,11 @@ def _preview_item_from_session(item: dict) -> dict:
     }
 
 
-def _lac_redirect(fragment: str = ''):
+def _lac_redirect(request, fragment: str = ''):
     url = reverse('admin_panel_lead_acquisition')
+    qs = request.META.get('QUERY_STRING') or ''
+    if qs:
+        url = f'{url}?{qs}'
     if fragment:
         url = f'{url}#{fragment.lstrip("#")}'
     return HttpResponseRedirect(url)
@@ -211,12 +220,9 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        campaigns = list(
-            LeadCampaign.objects.filter(kind=LeadCampaign.Kind.ACQUISITION)
-            .select_related('lead_list', 'created_by')
-            .order_by('-created_at')[:50]
-        )
-        funnels = [campaign_funnel(c) for c in campaigns]
+        days, _range_key = parse_admin_panel_range(self.request)
+        campaigns = acquisition_campaigns_for_dashboard(days=days, limit=50)
+        funnels = [campaign_funnel(c, days=days) for c in campaigns]
         campaign_edit = {}
         for c in campaigns:
             tpl = get_step1_variant_templates(c)
@@ -230,14 +236,15 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             }
         ctx.update({
             'lead_can_manage': can_send_admin_sms(self.request.user),
-            'overview': overview_stats(),
+            'overview': overview_stats(days=days),
+            'lac_report_days': days,
             'lac_charts_json': json.dumps(
-                acquisition_dashboard_charts(campaigns, funnels),
+                acquisition_dashboard_charts(campaigns, funnels, days=days),
                 ensure_ascii=False,
             ),
             'batches': LeadImportBatch.objects.order_by('-created_at')[:30],
             'region_lists': region_lists_with_batches(limit=40),
-            'lists': LeadList.objects.order_by('city', 'district', '-created_at')[:40],
+            'compose_lists': compose_lists_for_campaign(limit=60),
             'campaigns': campaigns,
             'funnels': funnels,
             'preview': self.request.session.get(SESSION_PREVIEW_KEY),
@@ -245,7 +252,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 _preview_item_from_session(i)
                 for i in (self.request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
             ],
-            'leads_sample': MarketingLead.objects.select_related('first_batch').order_by('-updated_at')[:25],
+            'leads_recent_panel': leads_recent_for_ui(limit=40, days=days),
             'default_variant_a': get_global_message_templates()['A'],
             'default_variant_b': get_global_message_templates()['B'],
             'default_step_2': get_global_message_templates()['step_2'],
@@ -338,6 +345,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 return self._update_automation_campaign(request)
             if action == 'toggle_automation_campaign':
                 return self._toggle_automation_campaign(request)
+            if action == 'delete_automation_campaign':
+                return self._delete_automation_campaign(request)
             if action == 'queue_automation_run':
                 return self._queue_automation_run(request)
             if action == 'reset_automation_schedule':
@@ -351,10 +360,20 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         except Exception as exc:  # noqa: BLE001
             logger.exception('lead acquisition admin error')
             messages.error(request, f'خطا: {exc}')
-        fragment = 'lac-automation' if (request.POST.get('action') or '').startswith(('create_automation', 'update_automation', 'toggle_automation', 'queue_automation', 'reset_automation', 'run_automation')) else ''
+        fragment = 'lac-automation' if (request.POST.get('action') or '').startswith(
+            (
+                'create_automation',
+                'update_automation',
+                'toggle_automation',
+                'delete_automation',
+                'queue_automation',
+                'reset_automation',
+                'run_automation',
+            )
+        ) else ''
         if fragment:
-            return _lac_redirect(fragment)
-        return redirect('admin_panel_lead_acquisition')
+            return _lac_redirect(request, fragment)
+        return _lac_redirect(request)
 
     def _import_preview(self, request):
         uploads = request.FILES.getlist('files') or []
@@ -422,7 +441,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             )
         if duplicate_batches and added == 0:
             request.session['lead_import_duplicate_batches'] = duplicate_batches
-        return _lac_redirect('lac-import')
+        return _lac_redirect(request,'lac-import')
 
     def _commit_single_preview(self, request, payload: dict, *, auto_campaign: bool = True) -> dict:
         from decimal import Decimal
@@ -488,7 +507,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         elif result.get('eligible_for_campaign', 0) <= 0:
             msg += ' · کمپین ساخته نشد (سرنخ سرد/تعامل‌دار در لیست نیست)'
         messages.success(request, msg)
-        return _lac_redirect('lac-campaigns')
+        return _lac_redirect(request,'lac-campaigns')
 
     def _create_campaign_from_batch(self, request):
         batch_id = int(request.POST.get('batch_id') or 0)
@@ -503,13 +522,13 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 request,
                 f'کمپین برای فایل #{batch_id} ساخته نشد — سرنخ واجد شرایطی در لیست نیست.',
             )
-        return _lac_redirect('lac-campaigns')
+        return _lac_redirect(request,'lac-campaigns')
 
     def _create_campaigns_pending(self, request):
         pending = batches_pending_campaign(limit=50)
         if not pending:
             messages.info(request, 'همه فایل‌های ثبت‌شده کمپین دارند.')
-            return _lac_redirect('lac-import')
+            return _lac_redirect(request,'lac-import')
         created = []
         skipped = 0
         for row in pending:
@@ -535,7 +554,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         else:
             messages.warning(request, 'هیچ کمپین جدیدی ساخته نشد.')
         request.session.pop('lead_import_duplicate_batches', None)
-        return _lac_redirect('lac-campaigns')
+        return _lac_redirect(request,'lac-campaigns')
 
     def _import_commit_bulk(self, request):
         bulk = list(request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
@@ -567,7 +586,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         elif total_members == 0 and not campaigns_created:
             msg += ' · کمپین خودکار ساخته نشد (فایل تکراری یا بدون سرنخ جدید — از «ساخت کمپین» استفاده کنید)'
         messages.success(request, msg)
-        return _lac_redirect('lac-campaigns')
+        return _lac_redirect(request,'lac-campaigns')
 
     def _import_discard(self, request):
         batch_id = request.POST.get('batch_id')
@@ -583,7 +602,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             request.session.pop(SESSION_BULK_PREVIEW_KEY, None)
             request.session.pop(SESSION_PREVIEW_KEY, None)
         messages.info(request, 'پیش‌نمایش پاک شد.')
-        return _lac_redirect('lac-import')
+        return _lac_redirect(request,'lac-import')
 
     def _create_campaign(self, request):
         list_id = int(request.POST.get('list_id') or 0)
@@ -598,7 +617,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             pilot_per_variant=int(request.POST.get('pilot_per_variant') or 15),
         )
         messages.success(request, f'کمپین #{campaign.pk} ساخته شد.')
-        return _lac_redirect('lac-campaigns')
+        return _lac_redirect(request,'lac-campaigns')
 
     def _update_campaign(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)
@@ -625,7 +644,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             f'ریست کمپین — {reset["failed_freed"]} پیام ناموفق آزاد شد، '
             f'{reset["enrollments_reset"]} مخاطب برای ارسال مجدد آماده شد.',
         )
-        return _lac_redirect('lac-campaigns')
+        return _lac_redirect(request,'lac-campaigns')
 
     def _enroll_pilot(self, request):
         campaign = get_object_or_404(LeadCampaign, pk=int(request.POST.get('campaign_id') or 0))
@@ -685,7 +704,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         ids = self._parse_campaign_ids(request)
         if not ids:
             messages.error(request, 'حداقل یک کمپین را انتخاب کنید.')
-            return _lac_redirect('lac-campaigns')
+            return _lac_redirect(request,'lac-campaigns')
 
         ok_count = 0
         err_lines: list[str] = []
@@ -727,7 +746,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                     ok_count += 1
                 else:
                     messages.error(request, 'عملیات گروهی نامعتبر است.')
-                    return _lac_redirect('lac-campaigns')
+                    return _lac_redirect(request,'lac-campaigns')
             except LeadCampaignError as exc:
                 err_lines.append(f'#{cid}: {exc.message}')
             except Exception as exc:  # noqa: BLE001
@@ -751,7 +770,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             messages.warning(request, 'خطا: ' + ' · '.join(err_lines[:8]))
         if not ok_count and not err_lines:
             messages.info(request, 'عملیاتی انجام نشد.')
-        return _lac_redirect('lac-campaigns')
+        return _lac_redirect(request,'lac-campaigns')
 
     def _delete_campaign(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)
@@ -774,20 +793,34 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             f'کمپین جمع‌آوری خودکار «{campaign.name}» ساخته شد — '
             f'اجرای بعدی با cron یا دکمه «اجرای فوری».',
         )
-        return _lac_redirect('lac-automation')
+        return _lac_redirect(request,'lac-automation')
 
     def _update_automation_campaign(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)
         campaign = update_automation_campaign_from_form(campaign_id, request.POST)
         messages.success(request, f'کمپین «{campaign.name}» به‌روزرسانی شد.')
-        return _lac_redirect('lac-automation')
+        return _lac_redirect(request,'lac-automation')
 
     def _toggle_automation_campaign(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)
         campaign = toggle_automation_campaign(campaign_id)
         state = 'فعال' if campaign.is_active else 'غیرفعال'
         messages.success(request, f'کمپین «{campaign.name}» {state} شد.')
-        return _lac_redirect('lac-automation')
+        return _lac_redirect(request,'lac-automation')
+
+    def _delete_automation_campaign(self, request):
+        if not (request.POST.get('confirm_delete') == '1'):
+            messages.error(request, 'برای حذف کمپین تأیید لازم است.')
+            return _lac_redirect(request,'lac-automation')
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        result = delete_automation_campaign(campaign_id)
+        messages.success(
+            request,
+            f'کمپین جمع‌آوری «{result["name"]}» حذف شد '
+            f'({result["runs_removed"]} اجرای ثبت‌شده). '
+            f'کمپین‌های SMS و لیست سرنخ‌ها دست‌نخورده می‌مانند.',
+        )
+        return _lac_redirect(request,'lac-automation')
 
     def _queue_automation_run(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)
@@ -796,7 +829,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             request,
             f'اجرای #{run.pk} برای «{run.district}» در صف worker قرار گرفت.',
         )
-        return _lac_redirect('lac-automation')
+        return _lac_redirect(request,'lac-automation')
 
     def _reset_automation_schedule(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)
@@ -805,7 +838,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             request,
             f'زمان‌بندی «{campaign.name}» ریست شد — cron در اولین فرصت queue می‌کند.',
         )
-        return _lac_redirect('lac-automation')
+        return _lac_redirect(request,'lac-automation')
 
     def _reset_automation_district_rotation(self, request):
         campaign_id = int(request.POST.get('campaign_id') or 0)
@@ -814,7 +847,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             request,
             f'چرخش مناطق «{campaign.name}» از اولین منطقه شروع می‌شود.',
         )
-        return _lac_redirect('lac-automation')
+        return _lac_redirect(request,'lac-automation')
 
     def _run_automation_scheduler(self, request):
         created = schedule_due_campaigns(max_jobs=1)
@@ -823,7 +856,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             messages.success(request, f'scheduler — {len(created)} اجرا در صف: {ids}')
         else:
             messages.info(request, 'scheduler — کمپین سررسیدی برای queue نبود.')
-        return _lac_redirect('lac-automation')
+        return _lac_redirect(request,'lac-automation')
 
 
 class AdminLeadCampaignDetailView(StaffRequiredMixin, TemplateView):
@@ -1071,8 +1104,15 @@ class AdminAutomationLinesJsonView(LeadSmsOperatorRequiredMixin, View):
     """مدیریت خطوط phone-detector — لیست سشن‌ها و لاگین OTP."""
 
     def get(self, request):
+        quick = (request.GET.get('quick') or '').lower() in ('1', 'true', 'yes')
         probe = (request.GET.get('probe') or '').lower() in ('1', 'true', 'yes')
-        payload = list_lines(probe=probe)
+        if quick:
+            probe = False
+        sync = not quick and (request.GET.get('sync') or '1').lower() not in ('0', 'false', 'no')
+        line_kwargs: dict = {'probe': probe}
+        if 'sync' in inspect.signature(list_lines).parameters:
+            line_kwargs['sync'] = sync
+        payload = list_lines(**line_kwargs)
         status = 200 if payload.get('ok') or not payload.get('configured') else 503
         return JsonResponse(payload, status=status, json_dumps_params={'ensure_ascii': False})
 

@@ -34,6 +34,9 @@ body.adm-prime-command .adm-overview-section-title__icon--marketing { color: #d9
 body.adm-prime-command .adm-overview-section-title__icon--recovery { color: #2563eb; }
 body.adm-prime-command .adm-overview-section-title__icon--plan { color: #d97706; }
 body.adm-prime-command .adm-overview-section-title__icon--licenses { color: #7c3aed; }
+body.adm-prime-command .adm-users-center-active .adm-cmd-main {
+    background: var(--adm-workspace-bg, #f4f5fa);
+}
 body.adm-prime-command .adm-overview-section-title__icon--actions { color: #ef4444; }
 
 body.adm-prime-command .adm-cmd-main {
@@ -411,6 +414,14 @@ body.adm-prime-command .adm-prime-hero-chart__insight {
     border-radius: 10px;
     border: 1px solid rgba(232, 234, 244, 0.95);
     background: linear-gradient(180deg, #fafbff 0%, #ffffff 100%);
+}
+
+body.adm-prime-command .adm-prime-hero-chart__insight-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 body.adm-prime-command .adm-prime-hero-chart__insight-label {
@@ -935,6 +946,121 @@ body.adm-prime-command .adm-center-pulse__foot {
     border-top: 1px solid rgba(232, 234, 244, 0.88);
 }
 
+body.adm-prime-command .adm-center-pulse__foot--compare {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 4px;
+    padding-top: 8px;
+}
+
+/* ——— مقایسه دوره قبل (KPI lux + pulse) ——— */
+body.adm-prime-command .adm-center-kpi-compare {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-center-kpi-compare__delta-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+body.adm-prime-command .adm-center-kpi-compare__delta-caption {
+    font-size: 0.56rem;
+    font-weight: 650;
+    line-height: 1.35;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .adm-center-kpi-compare__prev {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin: 0;
+    padding: 3px 8px;
+    border-radius: 8px;
+    background: rgba(232, 234, 244, 0.45);
+    font-size: 0.58rem;
+    line-height: 1.35;
+}
+
+body.adm-prime-command .adm-center-kpi-compare__prev-label {
+    font-weight: 650;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .adm-center-kpi-compare__prev-value {
+    font-weight: 800;
+    color: var(--adm-text, #2a3148);
+    font-variant-numeric: tabular-nums;
+}
+
+body.adm-prime-command .adm-center-kpi-compare__hint {
+    margin: 0;
+    max-width: 100%;
+    font-size: 0.56rem;
+    font-weight: 650;
+    line-height: 1.45;
+    color: var(--adm-muted, #9aa3b8);
+    text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+body.adm-prime-command .adm-center-kpi-compare__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 750;
+    line-height: 1.3;
+}
+
+body.adm-prime-command .adm-center-kpi-compare__badge--new {
+    color: #5b4fcf;
+    background: rgba(91, 79, 207, 0.1);
+}
+
+body.adm-prime-command .adm-center-kpi-compare__badge--flat {
+    color: var(--adm-muted, #8b93a8);
+    background: rgba(232, 234, 244, 0.65);
+}
+
+body.adm-prime-command .adm-center-kpi-compare__badge--muted {
+    color: #c4c9d6;
+    background: transparent;
+}
+
+body.adm-prime-command .adm-center-kpi-compare--compact .adm-center-kpi-compare__delta-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 8px;
+    width: 100%;
+}
+
+body.adm-prime-command .adm-center-kpi-compare--compact .adm-center-kpi-compare__prev {
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-center-kpi-card--lux .adm-center-kpi-card__foot .adm-center-kpi-compare {
+    margin-top: 2px;
+}
+
 body.adm-prime-command .adm-center-pulse__hint {
     font-size: 0.65rem;
     font-weight: 700;
@@ -962,6 +1088,18 @@ body.adm-prime-command .adm-center-pulse__hint--link {
         text-align: start;
         max-width: none;
     }
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-center-kpi-compare__prev {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-center-kpi-compare__prev-value {
+    color: rgba(245, 247, 255, 0.92);
+}
+
+[data-theme="dark"] body.adm-prime-command .adm-center-kpi-compare__badge--flat {
+    background: rgba(255, 255, 255, 0.06);
 }
 
 [data-theme="dark"] body.adm-prime-command .adm-center-pulse__foot {

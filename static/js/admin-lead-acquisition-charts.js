@@ -5,6 +5,7 @@
     teal: '#0d9488',
     cyan: '#0891b2',
     indigo: '#6366f1',
+    violet: '#5b4fcf',
     rose: '#e11d48',
     slate: '#64748b',
   };
@@ -59,7 +60,15 @@
   }
 
   function chartFont() {
-    return { family: 'inherit', size: 11, weight: '600' };
+    var family = 'Vazirmatn, Tahoma, sans-serif';
+    try {
+      var root = document.querySelector('.biz-page--leads.leads-v3');
+      if (root) {
+        var computed = window.getComputedStyle(root).fontFamily;
+        if (computed) family = computed;
+      }
+    } catch (e) { /* noop */ }
+    return { family: family, size: 12, weight: '600' };
   }
 
   function destroyChart(id) {
@@ -73,7 +82,9 @@
   function renderMeta(data) {
     var metaEl = document.getElementById('lac-analytics-meta');
     if (!metaEl || !data.meta) return;
+    var range = data.meta.range_label ? data.meta.range_label + ' · ' : '';
     metaEl.textContent =
+      range +
       formatNum(data.meta.reported_campaigns) + ' کمپین گزارش‌شده · ' +
       formatNum(data.meta.campaign_count) + ' کمپین در لیست';
   }
@@ -91,7 +102,7 @@
     ];
     strip.innerHTML = items.map(function (item) {
       return (
-        '<article class="adm-lac-summary-pill">' +
+        '<article class="adm-lac-summary-pill adm-lac-summary-pill--pro">' +
         '<span class="adm-lac-summary-pill__label">' + item.label + '</span>' +
         '<strong class="adm-lac-summary-pill__value">' + item.value + '</strong>' +
         '<small class="adm-lac-summary-pill__sub">' + item.sub + '</small>' +
@@ -100,30 +111,331 @@
     }).join('');
   }
 
+  function stepMetaLine(step, idx) {
+    if (idx === 0) return 'نقطه شروع قیف';
+    var conv = step.step_conversion;
+    if (conv == null || conv === '') return '—';
+    if (Number(conv) > 100.5) {
+      return 'بیش از مرحله قبل · ' + formatPct(conv, 1);
+    }
+    if (Number(conv) >= 99.95) {
+      return 'تبدیل از قبل · ' + formatPct(conv, 1);
+    }
+    return 'مانده از قبل · ' + formatPct(conv, 1);
+  }
+
+  function renderConversionInsights(rates, summary, funnelSteps) {
+    var el = document.getElementById('lac-conversion-insights');
+    if (!el) return;
+    rates = rates || {};
+    summary = summary || {};
+    var items = [
+      {
+        key: 'ctr',
+        label: 'کلیک از پیامک',
+        value: rates.click_rate,
+        foot: summary.accepted ? formatNum(summary.accepted) + ' پیامک پذیرفته' : '—',
+        accent: 'cyan',
+      },
+      {
+        key: 'reg',
+        label: 'ثبت‌نام از کلیک',
+        value: rates.register_rate,
+        foot: summary.clicked ? formatNum(summary.clicked) + ' کلیک یکتا' : '—',
+        accent: 'violet',
+      },
+      {
+        key: 'paid',
+        label: 'خرید از ثبت‌نام',
+        value: rates.purchase_rate,
+        foot: summary.registered ? formatNum(summary.registered) + ' ثبت‌نام' : '—',
+        accent: 'indigo',
+      },
+      {
+        key: 'cvr',
+        label: 'CVR کل قیف',
+        value: rates.overall_conversion,
+        foot: summary.paid != null ? formatNum(summary.paid) + ' خرید نهایی' : '—',
+        accent: 'teal',
+      },
+    ];
+    var weakest = null;
+    if (funnelSteps && funnelSteps.length > 1) {
+      funnelSteps.slice(1).forEach(function (step) {
+        var v = Number(step.step_conversion);
+        if (Number.isNaN(v) || v <= 0) return;
+        if (v > 100) return;
+        if (!weakest || v < weakest.rate) {
+          weakest = { label: step.label, rate: v };
+        }
+      });
+    }
+    var sub = document.getElementById('lac-conversion-sub');
+    if (sub) {
+      sub.textContent = weakest
+        ? 'ضعیف‌ترین پیوند: ' + weakest.label + ' · ' + formatPct(weakest.rate, 1)
+        : 'نرخ‌های کلیدی و افت بین مراحل قیف';
+    }
+    el.innerHTML = items.map(function (item) {
+      var pct = item.value != null ? formatPct(item.value, 1) : '—';
+      return (
+        '<div class="adm-lac-conversion-metric" data-accent="' + item.accent + '">' +
+        '<div class="adm-lac-conversion-metric__row">' +
+        '<span class="adm-lac-conversion-metric__label">' + item.label + '</span>' +
+        '<strong class="adm-lac-conversion-metric__value">' + pct + '</strong>' +
+        '</div>' +
+        '<span class="adm-lac-conversion-metric__ctx">' + item.foot + '</span>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
   function renderFunnelCascade(steps) {
     var wrap = document.getElementById('lac-funnel-cascade');
     if (!wrap || !steps || !steps.length) return;
     var max = Math.max.apply(null, steps.map(function (s) { return s.value; })) || 1;
-    wrap.innerHTML = steps.map(function (step, idx) {
-      var width = Math.max(18, Math.round((step.value / max) * 100));
-      var drop = idx > 0 && step.drop_from_prev > 0
-        ? '<span class="adm-lac-cascade__drop">↓ ' + formatPct(step.drop_from_prev, 1) + '</span>'
-        : '';
-      return (
-        '<div class="adm-lac-cascade__row" style="--step-color:' + step.color + '">' +
-        '<div class="adm-lac-cascade__label">' +
-        '<span>' + step.label + '</span>' + drop +
+    var overflow = steps.some(function (s, i) { return i > 0 && Number(s.share_of_top) > 100.5; });
+    var parts = [
+      '<header class="adm-lac-cascade-pro__head">',
+      '<p class="adm-lac-cascade-pro__title">قیف تجمیعی</p>',
+      overflow
+        ? '<span class="adm-lac-cascade-pro__note" title="برخی مراحل به‌خاطر هم‌پوشانی ثبت کمپین می‌توانند از «واجد شرایط» بیشتر شوند">هم‌پوشانی ثبت</span>'
+        : '',
+      '</header>',
+      '<div class="adm-lac-cascade-pro__track" role="list" style="--cascade-cols:' + steps.length + '">',
+    ];
+    steps.forEach(function (step, idx) {
+      var width = Math.max(12, Math.round((step.value / max) * 100));
+      var meta = stepMetaLine(step, idx);
+      var stepOverflow = idx > 0 && Number(step.step_conversion) > 100.5;
+      parts.push(
+        '<article class="adm-lac-cascade-pro__step' +
+        (stepOverflow ? ' is-overflow' : '') +
+        '" role="listitem" style="--step-accent:' +
+        (step.color || '#5b4fcf') +
+        '" title="' +
+        (step.label + ' · ' + meta).replace(/"/g, '&quot;') +
+        '">' +
+        '<div class="adm-lac-cascade-pro__step-top">' +
+        '<span class="adm-lac-cascade-pro__step-ix" aria-hidden="true">' +
+        persianDigits(String(idx + 1)) +
+        '</span>' +
+        '<span class="adm-lac-cascade-pro__step-label">' +
+        step.label +
+        '</span>' +
+        '<strong class="adm-lac-cascade-pro__step-value">' +
+        formatNum(step.value) +
+        '</strong>' +
         '</div>' +
-        '<div class="adm-lac-cascade__bar">' +
-        '<div class="adm-lac-cascade__fill" style="width:' + width + '%"></div>' +
+        '<div class="adm-lac-cascade-pro__step-bar" aria-hidden="true">' +
+        '<i style="width:' +
+        width +
+        '%"></i>' +
         '</div>' +
-        '<div class="adm-lac-cascade__nums">' +
-        '<strong>' + formatNum(step.value) + '</strong>' +
-        '<small>' + formatPct(step.share_of_top) + ' از کل</small>' +
-        '</div>' +
-        '</div>'
+        '<span class="adm-lac-cascade-pro__step-meta">' +
+        meta +
+        '</span>' +
+        '</article>'
       );
-    }).join('');
+    });
+    parts.push('</div>');
+    wrap.innerHTML = parts.join('');
+    wrap.classList.add('is-ready');
+  }
+
+  var CAMPAIGN_TABLE_PAGE = 8;
+  var campaignTableState = {
+    allRows: [],
+    totals: null,
+    query: '',
+    sort: 'newest',
+    visibleLimit: CAMPAIGN_TABLE_PAGE,
+    bound: false,
+  };
+
+  function normalizeSearchQuery(q) {
+    return String(q || '')
+      .trim()
+      .toLowerCase()
+      .replace(/^#/, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  function rowMatchesSearch(row, query) {
+    if (!query) return true;
+    var idStr = String(row.id || '');
+    var haystack = [
+      idStr,
+      row.name || '',
+      row.label || '',
+      row.status_display || '',
+      row.status || '',
+    ]
+      .join(' ')
+      .toLowerCase();
+    if (haystack.indexOf(query) !== -1) return true;
+    if (/^\d+$/.test(query) && idStr === query) return true;
+    return false;
+  }
+
+  function sortCampaignRows(rows, sortKey) {
+    var list = rows.slice();
+    var cmpName = function (a, b) {
+      var an = (a.name || a.label || '').trim();
+      var bn = (b.name || b.label || '').trim();
+      try {
+        return an.localeCompare(bn, 'fa', { sensitivity: 'base', numeric: true });
+      } catch (e) {
+        return an < bn ? -1 : an > bn ? 1 : 0;
+      }
+    };
+    list.sort(function (a, b) {
+      var aid = Number(a.id) || 0;
+      var bid = Number(b.id) || 0;
+      switch (sortKey) {
+        case 'paid': {
+          var dp = (Number(b.paid) || 0) - (Number(a.paid) || 0);
+          return dp !== 0 ? dp : bid - aid;
+        }
+        case 'accepted': {
+          var da = (Number(b.accepted) || 0) - (Number(a.accepted) || 0);
+          return da !== 0 ? da : bid - aid;
+        }
+        case 'cvr': {
+          var dc = (Number(b.overall_cvr) || 0) - (Number(a.overall_cvr) || 0);
+          return dc !== 0 ? dc : bid - aid;
+        }
+        case 'name': {
+          var cn = cmpName(a, b);
+          return cn !== 0 ? cn : bid - aid;
+        }
+        case 'newest':
+        default: {
+          if (a.created_at && b.created_at && a.created_at !== b.created_at) {
+            return a.created_at < b.created_at ? 1 : -1;
+          }
+          return bid - aid;
+        }
+      }
+    });
+    return list;
+  }
+
+  function buildCampaignRowHtml(row) {
+    var pilot = row.is_pilot ? ' <span class="adm-lac-table-tag">پایلوت</span>' : '';
+    return (
+      '<tr>' +
+      '<td class="adm-lac-table-name" title="' + (row.name || '') + '">' +
+      '<a href="/accounts/admin-panel/marketing/lead-campaigns/' + row.id + '/">' +
+      formatNum(row.id) + ' · ' + row.label + '</a>' + pilot +
+      '</td>' +
+      '<td><span class="adm-lac-table-status adm-lac-table-status--' + row.status + '">' +
+      (row.status_display || row.status) + '</span></td>' +
+      '<td>' + formatNum(row.eligible) + '</td>' +
+      '<td>' + formatNum(row.enrolled) + '</td>' +
+      '<td>' + formatNum(row.accepted) + '</td>' +
+      '<td>' + formatNum(row.clicked) + '</td>' +
+      '<td>' + formatNum(row.registered) + '</td>' +
+      '<td><strong>' + formatNum(row.paid) + '</strong></td>' +
+      '<td>' + formatPct(row.ctr) + '</td>' +
+      '<td>' + formatPct(row.overall_cvr) + '</td>' +
+      '<td>' + formatMoney(row.revenue) + '</td>' +
+      '<td>' + formatMoney(row.sms_cost) + '</td>' +
+      '</tr>'
+    );
+  }
+
+  function updateCampaignTableChrome(filteredCount, visibleCount) {
+    var countEl = document.getElementById('lac-campaign-table-count');
+    if (countEl) {
+      if (!filteredCount) {
+        countEl.textContent = '';
+      } else if (visibleCount >= filteredCount) {
+        countEl.textContent =
+          persianDigits(String(filteredCount)) + ' کمپین' +
+          (campaignTableState.query ? ' (فیلترشده)' : '');
+      } else {
+        countEl.textContent =
+          'نمایش ' + formatNum(visibleCount) + ' از ' + formatNum(filteredCount) + ' کمپین';
+      }
+    }
+    var moreBtn = document.getElementById('lac-campaign-table-more');
+    var scrollEl = document.querySelector('.adm-lac-table-scroll--pro');
+    var remaining = filteredCount - visibleCount;
+    if (moreBtn) {
+      if (remaining > 0) {
+        moreBtn.hidden = false;
+        moreBtn.textContent =
+          'نمایش ' + formatNum(Math.min(CAMPAIGN_TABLE_PAGE, remaining)) + ' کمپین دیگر';
+      } else {
+        moreBtn.hidden = true;
+      }
+    }
+    if (scrollEl) {
+      scrollEl.classList.toggle('is-truncated', remaining > 0);
+    }
+  }
+
+  function refreshCampaignTableView() {
+    var body = document.getElementById('lac-campaign-table-body');
+    if (!body) return;
+    var rows = campaignTableState.allRows || [];
+    var query = normalizeSearchQuery(campaignTableState.query);
+    var filtered = rows.filter(function (row) {
+      return rowMatchesSearch(row, query);
+    });
+    var sorted = sortCampaignRows(filtered, campaignTableState.sort);
+    var slice = sorted.slice(0, campaignTableState.visibleLimit);
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="12" class="adm-lac-table-empty">هنوز کمپینی ثبت نشده</td></tr>';
+      updateCampaignTableChrome(0, 0);
+      return;
+    }
+    if (!filtered.length) {
+      body.innerHTML =
+        '<tr><td colspan="12" class="adm-lac-table-empty">نتیجه‌ای برای جستجو یافت نشد</td></tr>';
+      updateCampaignTableChrome(0, 0);
+      return;
+    }
+    body.innerHTML = slice.map(buildCampaignRowHtml).join('');
+    updateCampaignTableChrome(filtered.length, slice.length);
+  }
+
+  function setCampaignTableData(rows, totals) {
+    campaignTableState.allRows = rows || [];
+    campaignTableState.totals = totals || null;
+    campaignTableState.visibleLimit = CAMPAIGN_TABLE_PAGE;
+    renderTableTotals(totals);
+    refreshCampaignTableView();
+  }
+
+  function setupCampaignTable() {
+    if (campaignTableState.bound) return;
+    var searchEl = document.getElementById('lac-campaign-table-search');
+    var sortEl = document.getElementById('lac-campaign-table-sort');
+    var moreBtn = document.getElementById('lac-campaign-table-more');
+    if (!searchEl && !sortEl && !moreBtn) return;
+    campaignTableState.bound = true;
+    if (searchEl) {
+      searchEl.addEventListener('input', function () {
+        campaignTableState.query = searchEl.value;
+        campaignTableState.visibleLimit = CAMPAIGN_TABLE_PAGE;
+        refreshCampaignTableView();
+      });
+    }
+    if (sortEl) {
+      sortEl.addEventListener('change', function () {
+        campaignTableState.sort = sortEl.value || 'newest';
+        campaignTableState.visibleLimit = CAMPAIGN_TABLE_PAGE;
+        refreshCampaignTableView();
+      });
+    }
+    if (moreBtn) {
+      moreBtn.addEventListener('click', function () {
+        campaignTableState.visibleLimit += CAMPAIGN_TABLE_PAGE;
+        refreshCampaignTableView();
+      });
+    }
   }
 
   function renderTableTotals(totals) {
@@ -152,36 +464,225 @@
   }
 
   function renderCampaignTable(rows, totals) {
-    renderTableTotals(totals);
-    var body = document.getElementById('lac-campaign-table-body');
+    setCampaignTableData(rows, totals);
+    setupCampaignTable();
+  }
+
+  function chartPercentAxisMax(rows, keys, floorMax) {
+    var max = 0;
+    (rows || []).forEach(function (row) {
+      (keys || []).forEach(function (key) {
+        var v = Number(row[key]);
+        if (!Number.isNaN(v)) max = Math.max(max, v);
+      });
+    });
+    if (max <= 0) return 100;
+    var padded = Math.ceil((max + 2) / 5) * 5;
+    return Math.min(100, Math.max(floorMax || 15, padded));
+  }
+
+  function campaignCvrBarColor(cvr) {
+    var v = Number(cvr) || 0;
+    if (v >= 8) return 'rgba(91, 79, 207, 0.95)';
+    if (v >= 3) return 'rgba(91, 79, 207, 0.78)';
+    if (v > 0) return 'rgba(91, 79, 207, 0.52)';
+    return 'rgba(148, 163, 184, 0.35)';
+  }
+
+  var variantInsightBound = false;
+
+  function escapeHtml(text) {
+    return String(text == null ? '' : text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function variantDecisionTrace(items) {
+    var metrics = [
+      { key: 'paid', label: 'خرید نهایی' },
+      { key: 'registered', label: 'ثبت‌نام' },
+      { key: 'clicked', label: 'کلیک' },
+    ];
+    var trace = [];
+    var decided = false;
+    metrics.forEach(function (m) {
+      var vals = (items || []).map(function (v) {
+        return { key: v.key, val: Number(v[m.key]) || 0, name: v.name || '' };
+      });
+      var max = Math.max.apply(null, vals.map(function (x) { return x.val; }).concat([0]));
+      var leaders = vals.filter(function (x) { return x.val === max; });
+      var row = {
+        label: m.label,
+        values: vals,
+        tied: leaders.length !== 1,
+        leader: leaders.length === 1 ? leaders[0].key : null,
+        decisive: false,
+      };
+      if (!decided && leaders.length === 1) {
+        row.decisive = true;
+        decided = true;
+      }
+      trace.push(row);
+    });
+    return { trace: trace, allTied: !decided };
+  }
+
+  function renderVariantInsightModal(variants) {
+    var body = document.getElementById('lac-variant-insight-body');
+    var sub = document.getElementById('lac-variant-insight-sub');
+    var openBtn = document.getElementById('lac-variant-insight-open');
     if (!body) return;
-    if (!rows || !rows.length) {
-      body.innerHTML = '<tr><td colspan="12" class="adm-lac-table-empty">هنوز کمپینی ثبت نشده</td></tr>';
+    var items = (variants && variants.items) || [];
+    if (items.length < 2) {
+      if (openBtn) openBtn.hidden = true;
+      body.innerHTML = '<p class="adm-lac-variant-insight__empty">برای مقایسه حداقل دو نسخه فعال لازم است.</p>';
       return;
     }
-    body.innerHTML = rows.map(function (row) {
-      var pilot = row.is_pilot ? ' <span class="adm-lac-table-tag">پایلوت</span>' : '';
+    if (openBtn) openBtn.hidden = false;
+    var winner = variants.winner;
+    var analysis = variantDecisionTrace(items);
+    var winnerRow = items.filter(function (v) { return v.key === winner; })[0];
+    var winnerName = winnerRow ? (winnerRow.name || ('نسخه ' + winner)) : ('نسخه ' + winner);
+
+    if (sub) {
+      sub.textContent = winner
+        ? 'پیشنهاد فعلی: نسخه ' + winner + ' · ' + winnerName
+        : 'مقایسه تجمیعی پایلوت A/B';
+    }
+
+    var lead;
+    if (!winner) {
+      lead = 'هنوز برنده قطعی انتخاب نشده است.';
+    } else if (analysis.allTied) {
+      lead =
+        'نسخه ' + winner + ' به‌صورت پیش‌فرض پیشنهاد شده است؛ در هر سه معیار (خرید، ثبت‌نام، کلیک) برابری دیده می‌شود.';
+    } else {
+      var decisive = analysis.trace.filter(function (t) { return t.decisive; })[0];
+      lead = decisive
+        ? 'نسخه ' + winner + ' چون در معیار «' + decisive.label + '» از نسخه دیگر جلوتر است.'
+        : 'نسخه ' + winner + ' بر اساس خرید، سپس ثبت‌نام و در نهایت کلیک انتخاب شده است.';
+    }
+
+    var stepsHtml = analysis.trace.map(function (step) {
+      var status = step.tied
+        ? 'مساوی'
+        : 'برنده: نسخه ' + step.leader;
+      var badge = step.decisive
+        ? ' <span class="adm-lac-variant-insight__badge">معیار تعیین‌کننده</span>'
+        : '';
+      var valsHtml = step.values.map(function (v) {
+        var winClass = !step.tied && v.key === step.leader ? ' is-winner' : '';
+        return (
+          '<li class="adm-lac-variant-insight__metric' + winClass + '">' +
+          '<span class="adm-lac-variant-insight__key">' + escapeHtml(v.key) + '</span>' +
+          '<strong>' + formatNum(v.val) + '</strong>' +
+          '</li>'
+        );
+      }).join('');
       return (
-        '<tr>' +
-        '<td class="adm-lac-table-name" title="' + (row.name || '') + '">' +
-        '<a href="/accounts/admin-panel/marketing/lead-campaigns/' + row.id + '/">' +
-        formatNum(row.id) + ' · ' + row.label + '</a>' + pilot +
-        '</td>' +
-        '<td><span class="adm-lac-table-status adm-lac-table-status--' + row.status + '">' +
-        (row.status_display || row.status) + '</span></td>' +
-        '<td>' + formatNum(row.eligible) + '</td>' +
-        '<td>' + formatNum(row.enrolled) + '</td>' +
-        '<td>' + formatNum(row.accepted) + '</td>' +
-        '<td>' + formatNum(row.clicked) + '</td>' +
-        '<td>' + formatNum(row.registered) + '</td>' +
-        '<td><strong>' + formatNum(row.paid) + '</strong></td>' +
-        '<td>' + formatPct(row.ctr) + '</td>' +
-        '<td>' + formatPct(row.overall_cvr) + '</td>' +
-        '<td>' + formatMoney(row.revenue) + '</td>' +
-        '<td>' + formatMoney(row.sms_cost) + '</td>' +
+        '<li class="adm-lac-variant-insight__step">' +
+        '<div class="adm-lac-variant-insight__step-head">' +
+        '<strong>' + escapeHtml(step.label) + '</strong>' +
+        '<span>' + escapeHtml(status) + badge + '</span>' +
+        '</div>' +
+        '<ul class="adm-lac-variant-insight__metrics">' + valsHtml + '</ul>' +
+        '</li>'
+      );
+    }).join('');
+
+    var tableRows = items.map(function (v) {
+      var isWinner = winner && v.key === winner;
+      return (
+        '<tr class="' + (isWinner ? 'is-winner' : '') + '">' +
+        '<td><span class="adm-lac-variant-key">' + escapeHtml(v.key) + '</span></td>' +
+        '<td>' + formatNum(v.accepted) + '</td>' +
+        '<td>' + formatPct(v.ctr, 1) + '</td>' +
+        '<td>' + formatNum(v.registered) + '</td>' +
+        '<td>' + formatNum(v.paid) + '</td>' +
+        '<td>' + formatPct(v.overall_cvr, 1) + '</td>' +
         '</tr>'
       );
     }).join('');
+
+    body.innerHTML =
+      '<div class="adm-lac-variant-insight">' +
+      '<p class="adm-lac-variant-insight__lead">' + escapeHtml(lead) + '</p>' +
+      '<p class="adm-lac-variant-insight__criteria-line">ترتیب: خرید، ثبت‌نام، کلیک — اولین اختلاف، برنده را مشخص می‌کند.</p>' +
+      '<ol class="adm-lac-variant-insight__steps adm-lac-variant-insight__steps--compact">' + stepsHtml + '</ol>' +
+      '<div class="adm-lac-variant-insight__table-wrap">' +
+      '<table class="adm-lac-variant-insight__table">' +
+      '<thead><tr>' +
+      '<th scope="col">نسخه</th>' +
+      '<th scope="col">ارسال</th>' +
+      '<th scope="col">CTR</th>' +
+      '<th scope="col">ثبت‌نام</th>' +
+      '<th scope="col">خرید</th>' +
+      '<th scope="col">CVR</th>' +
+      '</tr></thead>' +
+      '<tbody>' + tableRows + '</tbody>' +
+      '</table></div>' +
+      '<p class="adm-lac-variant-insight__note">اعداد تجمیع همه کمپین‌های گزارش‌شده در این نما است.</p>' +
+      '</div>';
+  }
+
+  function setupVariantInsightModal(variants) {
+    renderVariantInsightModal(variants || {});
+    if (variantInsightBound) return;
+    var modal = document.getElementById('lac-variant-insight-modal');
+    var openBtn = document.getElementById('lac-variant-insight-open');
+    if (!modal) return;
+    variantInsightBound = true;
+    var closeModal = function () {
+      if (modal.open) modal.close();
+    };
+    modal.querySelectorAll('[data-lac-variant-insight-close]').forEach(function (btn) {
+      btn.addEventListener('click', closeModal);
+    });
+    modal.addEventListener('cancel', function (e) {
+      e.preventDefault();
+      closeModal();
+    });
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal();
+    });
+    if (openBtn) {
+      openBtn.addEventListener('click', function () {
+        if (typeof modal.showModal === 'function') modal.showModal();
+      });
+    }
+  }
+
+  function campaignChartTooltipTheme(theme) {
+    return {
+      enabled: true,
+      rtl: true,
+      position: 'nearest',
+      mode: 'index',
+      intersect: false,
+      backgroundColor: theme.tooltipBg,
+      titleColor: theme.tooltipText,
+      bodyColor: theme.tooltipText,
+      footerColor: theme.tooltipText,
+      borderColor: theme.border,
+      borderWidth: 1,
+      padding: 14,
+      boxPadding: 7,
+      titleFont: { weight: '900', size: 12 },
+      bodyFont: (function () {
+        var f = chartFont();
+        f.size = 11;
+        return f;
+      })(),
+      footerFont: { weight: '700', size: 10 },
+      titleMarginBottom: 8,
+      bodySpacing: 6,
+      footerMarginTop: 10,
+      usePointStyle: true,
+      cornerRadius: 10,
+      displayColors: true,
+    };
   }
 
   function tooltipCallbacks(theme, summary) {
@@ -215,13 +716,8 @@
     renderMeta(data);
     renderSummary(data.summary);
     renderFunnelCascade(data.funnel_steps);
+    renderConversionInsights(data.rates, data.summary, data.funnel_steps);
     renderCampaignTable(data.campaign_table, data.table_totals);
-
-    var statusSub = document.getElementById('lac-status-sub');
-    if (statusSub && data.status) {
-      statusSub.textContent = formatNum(data.status.total) + ' کمپین · ' +
-        formatNum(data.status.values.length) + ' وضعیت فعال';
-    }
 
     var variantSub = document.getElementById('lac-variant-sub');
     if (variantSub && data.variants) {
@@ -229,137 +725,55 @@
         ? 'پیشنهاد: نسخه ' + data.variants.winner + ' (بر اساس خرید و ثبت‌نام)'
         : 'پایلوت دو نسخه‌ای';
     }
+    setupVariantInsightModal(data.variants);
 
     destroyChart('lac-chart-conversion');
-    destroyChart('lac-chart-status');
     destroyChart('lac-chart-campaigns');
     destroyChart('lac-chart-variants');
 
     var convEl = document.getElementById('lac-chart-conversion');
-    if (convEl && data.conversion_series) {
-      new Chart(convEl, {
-        type: 'line',
-        data: {
-          labels: data.conversion_series.labels,
-          datasets: [{
-            label: 'تبدیل مرحله‌ای',
-            data: data.conversion_series.step_rates,
-            borderColor: PALETTE.teal,
-            backgroundColor: 'rgba(13,148,136,0.08)',
-            borderWidth: 2.5,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            pointBackgroundColor: '#fff',
-            pointBorderColor: PALETTE.teal,
-            pointBorderWidth: 2,
-            tension: 0.35,
-            fill: true,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: tooltipCallbacks(theme),
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: theme.text, font: { weight: '700', size: 10 } },
-            },
-            y: {
-              beginAtZero: true,
-              max: 100,
-              grid: { color: theme.grid },
-              ticks: {
-                color: theme.text,
-                callback: function (v) { return formatPct(v, 0); },
-              },
-            },
-          },
-        },
+    if (convEl && data.conversion_series && data.conversion_series.labels.length) {
+      var stepRates = data.conversion_series.step_rates || [];
+      var stepLabels = data.conversion_series.labels || [];
+      var stepColors = (data.funnel_steps || []).slice(1).map(function (s) {
+        return s.color || PALETTE.violet;
       });
-    }
-
-    var statusEl = document.getElementById('lac-chart-status');
-    var donutCenter = document.getElementById('lac-donut-center');
-    if (statusEl && data.status && data.status.values && data.status.values.length) {
-      if (donutCenter) {
-        donutCenter.innerHTML =
-          '<strong>' + formatNum(data.status.total) + '</strong>' +
-          '<small>کمپین</small>';
+      while (stepColors.length < stepLabels.length) {
+        stepColors.push(PALETTE.violet);
       }
-      new Chart(statusEl, {
-        type: 'doughnut',
-        data: {
-          labels: data.status.labels,
-          datasets: [{
-            data: data.status.values,
-            backgroundColor: data.status.colors || [],
-            borderWidth: 0,
-            hoverOffset: 4,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '72%',
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                color: theme.text,
-                boxWidth: 10,
-                boxHeight: 10,
-                padding: 12,
-                font: chartFont(),
-              },
-            },
-            tooltip: tooltipCallbacks(theme),
-          },
-        },
-      });
-    } else if (donutCenter) {
-      donutCenter.innerHTML = '<strong>۰</strong><small>کمپین</small>';
-    }
-
-    var campaignsEl = document.getElementById('lac-chart-campaigns');
-    if (campaignsEl && data.campaigns && data.campaigns.length) {
-      var sorted = data.campaigns.slice().sort(function (a, b) {
-        return (b.overall_cvr || 0) - (a.overall_cvr || 0);
-      });
-      new Chart(campaignsEl, {
+      var maxRate = Math.max.apply(null, stepRates.concat([100]));
+      var axisMax = Math.min(Math.max(100, Math.ceil(maxRate / 10) * 10), 160);
+      var convWrap = convEl.parentElement;
+      if (convWrap) {
+        var rowCount = Math.max(stepLabels.length, 1);
+        var chartH = Math.min(Math.max(rowCount * 28 + 32, 112), 168);
+        convWrap.style.setProperty('--conv-chart-h', chartH + 'px');
+      }
+      new Chart(convEl, {
         type: 'bar',
         data: {
-          labels: sorted.map(function (c) { return c.label; }),
-          datasets: [
-            {
-              label: 'CVR کل',
-              data: sorted.map(function (c) { return c.overall_cvr; }),
-              backgroundColor: 'rgba(13,148,136,0.88)',
-              borderRadius: 6,
-              barThickness: 14,
-            },
-            {
-              label: 'CTR',
-              data: sorted.map(function (c) { return c.ctr; }),
-              backgroundColor: 'rgba(8,145,178,0.55)',
-              borderRadius: 6,
-              barThickness: 14,
-            },
-          ],
+          labels: stepLabels,
+          datasets: [{
+            label: 'مانده از مرحله قبل',
+            data: stepRates,
+            backgroundColor: stepColors.map(function (c) {
+              return c.indexOf('rgba') === 0 ? c : c + 'cc';
+            }),
+            borderColor: stepColors,
+            borderWidth: 0,
+            borderRadius: 6,
+            borderSkipped: false,
+            barThickness: 13,
+            maxBarThickness: 15,
+          }],
         },
         options: {
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { top: 0, right: 6, bottom: 0, left: 0 } },
           plugins: {
-            legend: {
-              position: 'top',
-              align: 'end',
-              labels: { color: theme.text, font: chartFont(), boxWidth: 10 },
-            },
+            legend: { display: false },
             tooltip: {
               backgroundColor: theme.tooltipBg,
               titleColor: theme.tooltipText,
@@ -367,20 +781,21 @@
               borderColor: theme.border,
               borderWidth: 1,
               padding: 12,
+              titleFont: { weight: '800', size: 12 },
               callbacks: {
-                afterBody: function (items) {
-                  if (!items.length) return [];
-                  var idx = items[0].dataIndex;
-                  var row = sorted[idx];
-                  return [
-                    'ارسال: ' + formatNum(row.accepted),
-                    'کلیک: ' + formatNum(row.clicked),
-                    'ثبت‌نام: ' + formatNum(row.registered),
-                    'خرید: ' + formatNum(row.paid),
-                  ];
-                },
                 label: function (ctx) {
-                  return ctx.dataset.label + ': ' + formatPct(ctx.parsed.x);
+                  var raw = stepRates[ctx.dataIndex];
+                  var line = 'تبدیل: ' + formatPct(raw, 1);
+                  if (Number(raw) > 100) {
+                    line += ' (بیش از مرحله قبل)';
+                  }
+                  return line;
+                },
+                afterLabel: function (ctx) {
+                  var steps = data.funnel_steps || [];
+                  var idx = ctx.dataIndex + 1;
+                  if (!steps[idx]) return '';
+                  return 'حجم: ' + formatNum(steps[idx].value);
                 },
               },
             },
@@ -388,20 +803,178 @@
           scales: {
             x: {
               beginAtZero: true,
-              max: 100,
-              grid: { color: theme.grid },
+              max: axisMax,
+              grid: { color: theme.grid, drawBorder: false },
               ticks: {
                 color: theme.text,
+                maxTicksLimit: 6,
                 callback: function (v) { return formatPct(v, 0); },
               },
             },
             y: {
               grid: { display: false },
-              ticks: { color: theme.textStrong, font: { weight: '700', size: 10 } },
+              ticks: {
+                color: theme.textStrong,
+                font: chartFont(),
+                padding: 2,
+                autoSkip: false,
+              },
             },
           },
         },
       });
+    }
+
+    var campaignsEl = document.getElementById('lac-chart-campaigns');
+    var campaignsSub = document.getElementById('lac-campaigns-sub');
+    if (campaignsEl && data.campaigns && data.campaigns.length) {
+      var sorted = data.campaigns.slice().sort(function (a, b) {
+        var dc = (Number(b.overall_cvr) || 0) - (Number(a.overall_cvr) || 0);
+        if (dc !== 0) return dc;
+        return (Number(b.accepted) || 0) - (Number(a.accepted) || 0);
+      });
+      var best = sorted[0];
+      if (campaignsSub && best) {
+        campaignsSub.textContent =
+          'برترین CVR: ' + (best.label || '') + ' · ' + formatPct(best.overall_cvr, 1);
+      }
+      var axisMax = chartPercentAxisMax(sorted, ['overall_cvr', 'ctr'], 18);
+      var tooltipBase = campaignChartTooltipTheme(theme);
+      new Chart(campaignsEl, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(function (c) {
+            return formatNum(c.id) + ' · ' + c.label;
+          }),
+          datasets: [
+            {
+              label: 'نرخ خرید (CVR)',
+              data: sorted.map(function (c) { return c.overall_cvr; }),
+              backgroundColor: sorted.map(function (c) { return campaignCvrBarColor(c.overall_cvr); }),
+              hoverBackgroundColor: sorted.map(function () { return 'rgba(91, 79, 207, 1)'; }),
+              borderRadius: 8,
+              borderSkipped: false,
+              maxBarThickness: 16,
+              categoryPercentage: 0.72,
+              barPercentage: 0.88,
+            },
+            {
+              label: 'نرخ کلیک (CTR)',
+              data: sorted.map(function (c) { return c.ctr; }),
+              backgroundColor: 'rgba(6, 182, 212, 0.42)',
+              hoverBackgroundColor: 'rgba(6, 182, 212, 0.72)',
+              borderRadius: 8,
+              borderSkipped: false,
+              maxBarThickness: 16,
+              categoryPercentage: 0.72,
+              barPercentage: 0.88,
+            },
+          ],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 720,
+            easing: 'easeOutQuart',
+          },
+          interaction: {
+            mode: 'index',
+            axis: 'y',
+            intersect: false,
+          },
+          layout: { padding: { top: 2, right: 6, bottom: 2, left: 2 } },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: {
+                color: theme.text,
+                font: chartFont(),
+                usePointStyle: true,
+                pointStyle: 'rectRounded',
+                boxWidth: 8,
+                boxHeight: 8,
+                padding: 14,
+              },
+            },
+            tooltip: Object.assign({}, tooltipBase, {
+              callbacks: {
+                title: function (items) {
+                  if (!items.length) return '';
+                  var row = sorted[items[0].dataIndex];
+                  var title = (row.name || row.label || '').trim();
+                  return formatNum(row.id) + ' · ' + (title || 'کمپین');
+                },
+                label: function (ctx) {
+                  var val = ctx.parsed.x;
+                  var key = ctx.datasetIndex === 0 ? 'overall_cvr' : 'ctr';
+                  var row = sorted[ctx.dataIndex];
+                  var line = ctx.dataset.label + ': ' + formatPct(val, 1);
+                  if (key === 'overall_cvr' && row.accepted) {
+                    line += '  (' + formatNum(row.paid) + ' خرید از ' + formatNum(row.accepted) + ' ارسال)';
+                  } else if (key === 'ctr' && row.accepted) {
+                    line += '  (' + formatNum(row.clicked) + ' کلیک از ' + formatNum(row.accepted) + ' ارسال)';
+                  }
+                  return line;
+                },
+                afterBody: function (items) {
+                  if (!items.length) return [];
+                  var row = sorted[items[0].dataIndex];
+                  return [
+                    '────────────────',
+                    'قیف: ' + formatNum(row.accepted) + ' ارسال → ' +
+                      formatNum(row.clicked) + ' کلیک → ' +
+                      formatNum(row.registered) + ' ثبت‌نام → ' +
+                      formatNum(row.paid) + ' خرید',
+                    row.reg_to_paid != null
+                      ? 'ثبت‌نام به خرید: ' + formatPct(row.reg_to_paid, 1)
+                      : '',
+                  ].filter(Boolean);
+                },
+                footer: function (items) {
+                  if (!items.length) return [];
+                  var row = sorted[items[0].dataIndex];
+                  var lines = [];
+                  if (row.revenue) lines.push('درآمد: ' + formatMoney(row.revenue));
+                  if (row.sms_cost) lines.push('هزینه پیامک: ' + formatMoney(row.sms_cost));
+                  if (row.roas != null) {
+                    lines.push('ROAS ×' + persianDigits(String(row.roas)));
+                  }
+                  if (row.cac != null) lines.push('CAC: ' + formatMoney(row.cac));
+                  return lines;
+                },
+              },
+            }),
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: axisMax,
+              grid: { color: theme.grid, drawBorder: false },
+              border: { display: false },
+              ticks: {
+                color: theme.text,
+                maxTicksLimit: 6,
+                callback: function (v) { return formatPct(v, 0); },
+              },
+            },
+            y: {
+              grid: { display: false },
+              border: { display: false },
+              ticks: {
+                color: theme.textStrong,
+                font: { weight: '750', size: 10 },
+                autoSkip: false,
+                padding: 6,
+              },
+            },
+          },
+        },
+      });
+    } else if (campaignsSub) {
+      campaignsSub.textContent = 'هنوز دادهٔ کافی برای مقایسهٔ کمپین‌ها نیست';
     }
 
     var variantsEl = document.getElementById('lac-chart-variants');
@@ -511,7 +1084,7 @@
 
   window.addEventListener('resize', function () {
     if (!window.Chart) return;
-    ['lac-chart-conversion', 'lac-chart-status', 'lac-chart-campaigns', 'lac-chart-variants'].forEach(function (id) {
+    ['lac-chart-conversion', 'lac-chart-campaigns', 'lac-chart-variants'].forEach(function (id) {
       var canvas = document.getElementById(id);
       if (!canvas) return;
       var inst = Chart.getChart(canvas);

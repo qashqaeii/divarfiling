@@ -1,0 +1,68 @@
+{% load persian_tags %}
+<article class="adm-overview-card adm-licenses-table-card" id="licenses-table-expiring" aria-label="در شرف انقضا">
+    <header class="adm-overview-card__head adm-licenses-table-card__head">
+        <div class="adm-licenses-table-card__titles">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-hourglass-half adm-overview-section-title__icon adm-overview-section-title__icon--licenses" aria-hidden="true"></i>
+                <span>در شرف انقضا</span>
+            </h2>
+            <p class="adm-licenses-table-card__hint">۱۴ روز آینده · پیگیری تمدید</p>
+        </div>
+        <span class="adm-overview-card__meta adm-licenses-table-card__count">
+            {{ expiring_license_rows|length|default:0|to_persian_digits }} / {{ table_preview_rows|to_persian_digits }}
+        </span>
+    </header>
+
+    {% if expiring_license_rows %}
+    <div class="adm-overview-table-wrap adm-licenses-table-card__wrap">
+        <table class="adm-overview-table adm-licenses-preview-table">
+            <thead>
+                <tr>
+                    <th scope="col">کاربر</th>
+                    <th scope="col">پلن</th>
+                    <th scope="col">مانده</th>
+                    <th scope="col">انقضا</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in expiring_license_rows %}
+                <tr data-urgency="{{ row.urgency|default:'ok' }}">
+                    <td class="adm-licenses-preview-table__user">
+                        {% if row.user %}
+                        {% include 'accounts/partials/admin_user_360_link.html' with user_obj=row.user u360_tab='licenses' %}
+                        {% else %}
+                        <span class="adm-licenses-preview-table__muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="adm-licenses-preview-table__plan">{{ row.plan_name|default:'—' }}</td>
+                    <td class="adm-licenses-preview-table__remain">
+                        {% if row.days_left is not None %}
+                        <span class="adm-overview-badge adm-licenses-urgency-badge" data-status="{{ row.urgency|default:'ok' }}">
+                            {{ row.days_left|to_persian_digits }} روز
+                        </span>
+                        {% else %}
+                        <span class="adm-licenses-preview-table__muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="adm-licenses-preview-table__date">{{ row.license.expires_at|to_jalali_fa }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="adm-licenses-table-card__empty" role="status">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        <p>لایسنس در شرف انقضا نیست</p>
+    </div>
+    {% endif %}
+
+    {% if 'expiring_licenses' in admin_export_allowed_keys %}
+    <footer class="adm-overview-card__foot adm-licenses-table-card__foot">
+        <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx">
+            خروجی کامل لایسنس‌های در شرف انقضا
+            <i class="fas fa-file-excel adm-icon-dir" aria-hidden="true"></i>
+        </a>
+    </footer>
+    {% endif %}
+</article>

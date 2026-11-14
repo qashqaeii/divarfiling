@@ -141,6 +141,37 @@
             return opts;
         }
 
+        if (chartConfig.chartKind === 'sales_orders_trend') {
+            opts.plugins.legend.display = false;
+            opts.layout.padding = { left: 2, right: 10, top: 6, bottom: 4 };
+            opts.scales = {
+                x: {
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: {
+                        color: theme.text,
+                        font: { size: 10, weight: '600' },
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 8,
+                    },
+                },
+                y: {
+                    grid: { color: 'rgba(148, 163, 184, 0.14)', drawBorder: false },
+                    border: { display: false },
+                    ticks: {
+                        color: theme.text,
+                        font: { size: 10 },
+                        callback: tickCallback,
+                        maxTicksLimit: 5,
+                        padding: 6,
+                    },
+                    beginAtZero: true,
+                },
+            };
+            return opts;
+        }
+
         if (chartConfig.chartKind === 'plan_sales') {
             opts.plugins.legend.display = false;
             opts.layout.padding = { left: 4, right: 16, top: 6, bottom: 6 };

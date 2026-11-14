@@ -15,7 +15,7 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-customers.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-licenses-v3.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-licenses-v3.css' %}?v=16">
 {% endblock %}
 
 {% block admin_panel_header_actions %}
@@ -35,276 +35,40 @@
 {% block admin_panel_content %}
 {% include 'accounts/partials/admin_center_shell_open.html' %}
 <div class="cust-page biz-page biz-page--licenses">
-<header class="adm-center-intro" aria-label="راهنمای صفحه لایسنس">
-    {% include 'accounts/partials/admin_center_intro_main.html' with icon='fa-key' icon_tone='licenses' title='لایسنس‌ها در یک نگاه' subtitle='وضعیت صدور، تمدید و انقضا بر اساس اطلاعات ثبت‌شده سامانه' %}
-    <nav class="adm-center-intro__jumps" aria-label="دسترسی سریع">
-        <a href="#licenses-kpi" class="adm-center-intro__jump">شاخص‌ها</a>
-        <a href="#licenses-actions" class="adm-center-intro__jump">اقدامات</a>
-        <a href="#licenses-charts" class="adm-center-intro__jump">نمودارها</a>
-        <a href="#licenses-table-expiring" class="adm-center-intro__jump">در شرف انقضا</a>
-        <a href="#licenses-table-expired" class="adm-center-intro__jump">منقضی‌شده</a>
-    </nav>
-</header>
+{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='در یک نگاه' pulse_append_range=1 pulse_subtitle='رشد بازه · وضعیت فوری' pulse_icon='fa-key' pulse_icon_tone='licenses' pulse_modifier='adm-center-pulse--licenses-quad' %}
 
-{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='لایسنس · الان' pulse_icon='fa-key' pulse_icon_tone='licenses' %}
-
-<div class="adm-prime-hero">
-    <div class="adm-prime-hero__chart">
-        <div class="adm-prime-section-tag">
-            <strong>چه چیزی تغییر کرده؟</strong>
-            <em>صدور و تمدید · {{ range_label }}</em>
+<section class="adm-overview-hero adm-licenses-hero" aria-label="بینش لایسنس">
+    <div class="adm-overview-hero__insight">
+        <div class="adm-licenses-hero__chart" id="licenses-hero-chart">
+            {% include 'accounts/partials/admin_prime_hero_chart.html' with section_id='licenses-hero-chart-panel' chart_panel_class='adm-licenses-hero-chart-panel' chart_title='صدور و تمدید' canvas_id='chart-licenses-activity' chart_icon='fa-chart-column' chart_icon_tone='licenses' chart_aria_label='نمودار صدور و تمدید لایسنس' chart_is_combo=True legend_items=licenses_chart_legend chart_summary=licenses_hero_chart_summary %}
         </div>
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-licenses-activity"></canvas>
-            </div>
-        </article>
+        {% include 'accounts/partials/admin_licenses_hero_status.html' %}
     </div>
-    <aside class="adm-prime-hero__rail">
-        <div class="adm-prime-section-tag">
-            <strong>کدام مورد نیاز به اقدام دارد؟</strong>
-            <em>انقضا و تبدیل</em>
-        </div>
-        {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='licenses-actions' title='نیازمند اقدام' empty_title='مورد فوری در لایسنس نیست' %}
-    </aside>
-</div>
-
-<div class="adm-prime-section-tag">
-    <strong>گزارش بازه</strong>
-    <em>{{ range_label }}</em>
-</div>
-<section class="ecc-section ecc-cmd-kpi cust-kpi-block adm-prime-kpi-band" id="licenses-kpi" aria-label="شاخص‌ها">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-chart-simple"></i> شاخص‌های کلیدی</h2>
-            <p>{{ range_label }}</p>
-        </div>
-    </header>
-    <p class="cust-kpi-group-label">بازه زمانی</p>
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
-        {% for card in range_kpi_cards %}
-        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='range' %}
-        {% endfor %}
-    </div>
-    <div class="adm-prime-section-tag" style="margin-top:12px">
-        <strong>وضعیت فعلی</strong>
-        <em>Snapshot</em>
-    </div>
-    <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
-        {% for card in snapshot_kpi_cards %}
-        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='snapshot' %}
-        {% endfor %}
-    </div>
+    {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='licenses-actions' title='نیازمند اقدام' title_icon='fa-bolt' extra_class='adm-licenses-action-queue' empty_title='مورد فوری در لایسنس نیست' empty_hint='همه چیز تحت کنترل است' %}
 </section>
+
+{% include 'accounts/partials/admin_licenses_kpi_section.html' %}
 
 <div class="adm-prime-fold">
 
 {% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='licenses' ai_section_label='لایسنس' %}
 
-<section class="ecc-section ecc-cmd-summary" aria-label="تفکیک تمدید">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-rotate"></i> تمدید در بازه</h2>
-            <p>{{ range_label }}</p>
-        </div>
-    </header>
-    <div class="ecc-cmd-summary-grid ecc-lic-renewal-grid">
-        <article class="ecc-cmd-summary-card" data-accent="emerald">
-            <header><h3>تمدید رسمی</h3></header>
-            <ul><li><span>سفارش</span><strong>{{ renewal_breakdown.formal_renewals_range|to_persian_digits }}</strong></li></ul>
-        </article>
-        <article class="ecc-cmd-summary-card" data-accent="violet">
-            <header><h3>کلید جدید</h3></header>
-            <ul><li><span>خرید مجدد</span><strong>{{ renewal_breakdown.new_key_repurchase_range|to_persian_digits }}</strong></li></ul>
-        </article>
-        <article class="ecc-cmd-summary-card" data-accent="amber">
-            <header><h3>درآمد تمدید</h3></header>
-            <ul><li><span>تومان</span><strong>{{ renewal_breakdown.renewal_revenue_range|currency }}</strong></li></ul>
-        </article>
-        <article class="ecc-cmd-summary-card" data-accent="cyan">
-            <header><h3>نرخ تمدید</h3></header>
-            <ul><li><span>بازه</span><strong>{{ renewal_breakdown.renewal_rate_range|to_persian_digits }}٪</strong></li></ul>
-        </article>
-    </div>
+{% include 'accounts/partials/admin_licenses_renewal_breakdown.html' %}
+
+<section class="adm-licenses-charts" id="licenses-charts" aria-label="درآمد تمدید">
+    {% include 'accounts/partials/admin_prime_hero_chart.html' with section_id='licenses-revenue-chart-panel' chart_panel_class='adm-licenses-revenue-chart adm-center-chart-panel--fold' chart_title='درآمد تمدید' chart_grain=range_label canvas_id='chart-renewal-revenue' chart_icon='fa-chart-area' chart_icon_tone='licenses' chart_aria_label='نمودار روند درآمد تمدید' legend_items=licenses_revenue_chart_legend chart_summary=licenses_revenue_chart_summary %}
 </section>
 
-<section class="ecc-section ecc-cmd-charts ecc-sales-charts" id="licenses-charts" aria-label="درآمد تمدید">
-    <article class="ecc-card ecc-card--chart">
-        <div class="ecc-card-head">
-            <div>
-                <h3><i class="fas fa-chart-area"></i> درآمد تمدید</h3>
-                <p>{{ range_label }}</p>
-            </div>
-        </div>
-        <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-            <canvas id="chart-renewal-revenue"></canvas>
-        </div>
-    </article>
-</section>
+{% include 'accounts/partials/admin_licenses_expiring_table.html' %}
 
-<section class="ecc-section" id="licenses-table-expiring" aria-label="در شرف انقضا">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-hourglass-half"></i> در شرف انقضا</h2>
-            <p>{{ table_preview_rows|to_persian_digits }} مورد · پیش‌نمایش</p>
-        </div>
-        {% if 'expiring_licenses' in admin_export_allowed_keys %}
-        <a href="{% url 'admin_panel_export' 'expiring_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            نمایش بیشتر <i class="fas fa-file-excel"></i>
-        </a>
-        {% endif %}
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>پلن</th>
-                    <th>انقضا</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for lic in expiring_licenses %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=lic.order.user only %}</td>
-                    <td>{% if lic.plan %}{{ lic.plan.name }}{% else %}—{% endif %}</td>
-                    <td>{{ lic.expires_at|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="3">لایسنس در شرف انقضا نیست</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+{% include 'accounts/partials/admin_licenses_recent_renewals_table.html' %}
 
-<section class="ecc-section" aria-label="تمدیدهای اخیر">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-rotate"></i> تمدیدهای اخیر</h2>
-            <p>تمدید رسمی + خرید مجدد</p>
-        </div>
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>محصول</th>
-                    <th>نوع</th>
-                    <th>مبلغ</th>
-                    <th>تاریخ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in recent_renewals %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
-                    <td>{{ order.product.title }}</td>
-                    <td>{% if order.renewal_license or order.renewal_items.exists %}تمدید رسمی{% else %}کلید جدید{% endif %}</td>
-                    <td>{{ order.amount|currency }}</td>
-                    <td>{{ order.paid_at|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">تمدیدی ثبت نشده</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+{% include 'accounts/partials/admin_licenses_no_license_table.html' %}
 
-<section class="ecc-section" id="licenses-table-no-license" aria-label="بدون لایسنس">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-user-slash"></i> کاربران بدون لایسنس</h2>
-            <p>{{ snapshot_counts.users_without_license|to_persian_digits }} کاربر</p>
-        </div>
-        {% if admin_can_view_user_management %}
-        <a href="{{ users_center_url }}#users-table-no-license" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            نمایش بیشتر <i class="fas fa-arrow-left"></i>
-        </a>
-        {% endif %}
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>سفارش پرداخت‌شده</th>
-                    <th>عضویت</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in users_without_license_list %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u only %}</td>
-                    <td>{{ u.paid_orders|to_persian_digits }}</td>
-                    <td>{{ u.date_joined|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="3">همه کاربران فعال لایسنس دارند</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section" id="licenses-table-expired" aria-label="منقضی اخیر">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-ban"></i> منقضی اخیر</h2>
-            <p>پیش‌نمایش</p>
-        </div>
-        {% if 'expired_licenses' in admin_export_allowed_keys %}
-        <a href="{% url 'admin_panel_export' 'expired_licenses' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            نمایش بیشتر <i class="fas fa-file-excel"></i>
-        </a>
-        {% endif %}
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>پلن</th>
-                    <th>انقضا</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for lic in recent_expired %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=lic.order.user only %}</td>
-                    <td>{% if lic.plan %}{{ lic.plan.name }}{% else %}—{% endif %}</td>
-                    <td>{{ lic.expires_at|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="3">موردی نیست</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+{% include 'accounts/partials/admin_licenses_expired_table.html' %}
 
 {% if export_links %}
-<section class="ecc-section" id="ecc-licensing" aria-label="خروجی‌ها">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-file-export"></i> خروجی لایسنس</h2>
-        </div>
-    </header>
-    <div class="ecc-module-dock">
-        {% for exp in export_links %}
-        <a class="ecc-module" data-accent="{{ exp.accent }}" href="{{ exp.url }}">
-            <span class="ecc-module-icon"><i class="fas {{ exp.icon }}"></i></span>
-            <span class="ecc-module-text">
-                <strong>{{ exp.title }}</strong>
-                <em>{% if exp.count %}{{ exp.count|to_persian_digits }} ردیف{% else %}خروجی{% endif %}</em>
-            </span>
-            {% if exp.count %}<span class="ecc-module-badge">{{ exp.count|to_persian_digits }}</span>{% endif %}
-        </a>
-        {% endfor %}
-    </div>
-</section>
+{% include 'accounts/partials/admin_licenses_exports.html' %}
 {% endif %}
 
 </div>

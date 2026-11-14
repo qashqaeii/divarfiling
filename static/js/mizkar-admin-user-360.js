@@ -776,7 +776,7 @@
                 + '</div>';
         }
         if (hasChartData) {
-            panels += '</div>';
+        panels += '</div>';
         }
 
         const stats = '<dl class="adm-u360-finance-stats">'
@@ -1369,11 +1369,11 @@
                 + '<div class="adm-u360-support-workspace__ctrl">'
                 + '<label>وضعیت</label>'
                 + renderSupportSelect('status', form.status, ticket.status_key, 'data-u360-support-field="status"')
-                + '</div>'
+            + '</div>'
                 + '<div class="adm-u360-support-workspace__ctrl">'
                 + '<label>اولویت</label>'
                 + renderSupportSelect('priority', form.priority, ticket.priority_key, 'data-u360-support-field="priority"')
-                + '</div>'
+            + '</div>'
                 + '<div class="adm-u360-support-workspace__ctrl-actions">'
                 + '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-u360-support-save-meta>ذخیره</button>'
                 + (ticket.is_closed
@@ -4014,6 +4014,17 @@
             }).catch(function (err) { showFeedback(err.message, false); });
         }
     });
+
+    (function initSupportFromQuery() {
+        const params = new URLSearchParams(window.location.search);
+        const ticket = (params.get('ticket') || '').trim();
+        if (!ticket) return;
+        tabQueryState.support = Object.assign({}, tabQueryState.support || {}, {
+            ticket: ticket,
+            page: tabQueryState.support && tabQueryState.support.page ? tabQueryState.support.page : '1',
+        });
+        supportDeskSelectedId = ticket;
+    })();
 
     loadTab(activeTab);
 })();

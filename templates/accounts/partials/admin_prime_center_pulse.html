@@ -1,11 +1,11 @@
 {% load persian_tags %}
 {% load currency_tags %}
 {% if center_pulse %}
-<section class="adm-overview-section adm-overview-kpi-row adm-center-pulse" aria-label="شاخص‌های کلیدی بازه">
+<section class="adm-overview-section adm-overview-kpi-row adm-center-pulse{% if pulse_modifier %} {{ pulse_modifier }}{% endif %}" aria-label="شاخص‌های کلیدی بازه">
     <header class="adm-center-pulse__header">
         <h2 class="adm-overview-section-title adm-overview-kpi-row__title">
             <i class="fas {{ pulse_icon|default:'fa-gauge-high' }} adm-overview-section-title__icon adm-overview-section-title__icon--{{ pulse_icon_tone|default:'users' }}" aria-hidden="true"></i>
-            <span>{{ pulse_title|default:'الان' }}</span>
+            <span>{{ pulse_title|default:'شاخص‌های کلیدی' }}{% if pulse_append_range %} · {{ range_label|default:admin_panel_range_label_fa }}{% endif %}</span>
         </h2>
         <p class="adm-center-pulse__grain">{{ pulse_subtitle|default:'نسبت دوره قبل · همان طول بازه' }}</p>
     </header>
@@ -34,17 +34,9 @@
             <strong class="adm-overview-kpi__value" data-count-up="{{ chip.value|default:0 }}" data-format="{{ chip.format|default:'count' }}">{{ chip.value|default:0|to_persian_digits }}</strong>
             {% endif %}
         </div>
-        <footer class="adm-center-pulse__foot adm-overview-kpi__foot">
-            {% if chip.delta is not None %}
-            <span class="adm-overview-kpi__foot-label">{{ chip.delta_label|default:'نسبت دوره قبل' }}</span>
-            <span class="adm-overview-kpi__delta{% if chip.delta >= 0 %} is-up{% else %} is-down{% endif %}">
-                {% if chip.delta >= 0 %}+{% endif %}{{ chip.delta|to_persian_digits }}٪
-            </span>
-            {% elif chip.previous_value is not None %}
-            <span class="adm-overview-kpi__foot-label">دوره قبل</span>
-            <span class="adm-center-kpi-card__meta">
-                {% if chip.format == 'percent' %}{{ chip.previous_value|floatformat:1|to_persian_digits }}٪{% else %}{{ chip.previous_value|to_persian_digits }}{% endif %}
-            </span>
+        <footer class="adm-center-pulse__foot adm-overview-kpi__foot adm-center-pulse__foot--compare">
+            {% if chip.delta is not None or chip.previous_value is not None %}
+            {% include 'accounts/partials/admin_center_kpi_compare.html' with compare_item=chip compare_compact=1 %}
             {% elif chip.hint %}
             <span class="adm-center-pulse__hint">{{ chip.hint|to_persian_digits }}</span>
             {% elif chip.href %}

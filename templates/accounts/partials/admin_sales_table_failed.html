@@ -1,0 +1,101 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-overview-card adm-sales-table-card adm-sales-table-card--failed" id="sales-table-failed" aria-label="پرداخت‌های ناموفق">
+    <header class="adm-overview-card__head adm-sales-table-card__head">
+        <div class="adm-sales-table-card__titles">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-circle-xmark adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+                <span>پرداخت‌های ناموفق</span>
+            </h2>
+            <p class="adm-sales-table-card__hint">
+                {{ failed_orders_scope_label|default:'پیش‌نمایش' }}
+                · {{ snapshot_counts.orders_failed_today|to_persian_digits }} مورد امروز
+                · {{ table_preview_rows|default:5|to_persian_digits }} ردیف آخر
+            </p>
+        </div>
+        {% if failed_order_rows %}
+        <span class="adm-overview-card__meta adm-sales-table-card__count adm-sales-table-card__count--failed">
+            {{ failed_order_rows|length|to_persian_digits }} نمایش
+        </span>
+        {% endif %}
+    </header>
+    {% if failed_order_rows %}
+    <div class="adm-overview-table-wrap adm-sales-table-card__wrap">
+        <table class="adm-overview-table adm-sales-preview-table adm-sales-preview-table--failed">
+            <thead>
+                <tr>
+                    <th scope="col">کاربر</th>
+                    <th scope="col">محصول</th>
+                    <th scope="col">مبلغ</th>
+                    <th scope="col">علت</th>
+                    <th scope="col"><span class="adm-v2-sr-only">جزئیات</span></th>
+                    <th scope="col">زمان</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in failed_order_rows %}
+                {% with order=row.order failure=row.failure %}
+                <tr>
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user u360_tab='commerce' link_plain=1 %}</td>
+                    <td>
+                        <span class="adm-sales-preview-table__product-title">{{ order.product.title }}</span>
+                        {% if order.plan %}
+                        <span class="adm-sales-preview-table__sub">{{ order.plan.name }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="adm-sales-preview-table__amount">{{ order.amount|currency }}</td>
+                    <td>
+                        <div class="adm-sales-failed-reason">
+                            <span class="adm-sales-failed-reason__badge" data-category="{{ failure.category }}">{{ failure.category_label }}</span>
+                            <span class="adm-sales-failed-reason__text" title="{{ failure.reason_full }}">{{ failure.reason_short }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <button
+                            type="button"
+                            class="adm-sales-failed-detail-btn js-sales-failed-detail"
+                            aria-haspopup="dialog"
+                            data-order-label="{{ order.pk|stringformat:'s'|truncatechars:8 }}"
+                            data-user-label="{% firstof order.user.get_full_name order.user.username %}"
+                            data-product="{{ order.product.title }}{% if order.plan %} · {{ order.plan.name }}{% endif %}"
+                            data-amount="{{ order.amount|currency }}"
+                            data-method="{{ order.get_payment_method_display }}"
+                            data-when="{{ order.created_at|to_jalali_fa }}"
+                            data-category="{{ failure.category_label }}"
+                            data-category-key="{{ failure.category }}"
+                            data-reason="{{ failure.reason_full }}"
+                            data-source="{{ failure.source_label }}"
+                            data-track="{{ failure.track_id|default:'—' }}"
+                            data-tx-status="{{ failure.transaction_status_label }}"
+                            {% if failure.gateway_code is not None %}data-gateway-code="{{ failure.gateway_code|to_persian_digits }}"{% endif %}
+                            data-u360="{% url 'admin_panel_user_360' order.user.pk %}?tab=commerce&amp;return={{ request.get_full_path|urlencode }}"
+                            {% if perms.shop.view_order %}data-admin-order="{% url 'admin:shop_order_change' order.pk %}"{% endif %}
+                        >
+                            <span class="adm-v2-sr-only">علت ناموفق</span>
+                            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                            جزئیات
+                        </button>
+                    </td>
+                    <td class="adm-sales-preview-table__when">{{ order.created_at|to_jalali_fa }}</td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'accounts/partials/admin_sales_failed_order_modal.html' %}
+    {% else %}
+    <div class="adm-sales-table-card__empty" role="status">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        <p>سفارش ناموفقی در این نما نیست</p>
+    </div>
+    {% endif %}
+    {% if 'failed_orders' in admin_export_allowed_keys %}
+    <footer class="adm-overview-card__foot adm-sales-table-card__foot">
+        <a href="{% url 'admin_panel_export' 'failed_orders' %}?format=xlsx">
+            خروجی ناموفق‌ها
+            <i class="fas fa-file-excel adm-icon-dir" aria-hidden="true"></i>
+        </a>
+    </footer>
+    {% endif %}
+</article>

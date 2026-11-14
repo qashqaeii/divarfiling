@@ -197,7 +197,19 @@
                 <tbody>
                     {% for order in recent_orders %}
                     <tr>
-                        <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
+                        <td>
+                            {% if order.user and order.u360_commerce_href and admin_can_show_u360_link %}
+                            <a href="{{ order.u360_commerce_href }}"
+                               class="ecc-users-mgmt-user-link adm-user-360-link adm-user-360-link--plain"
+                               title="پرونده ۳۶۰ · مالی · {% firstof order.user.get_full_name order.user.username %}">
+                                <strong>{% firstof order.user.get_full_name order.user.username %}</strong>
+                            </a>
+                            {% elif order.user %}
+                            <span class="adm-users-cell-plain">
+                                <strong>{% firstof order.user.get_full_name order.user.username %}</strong>
+                            </span>
+                            {% else %}—{% endif %}
+                        </td>
                         <td>{{ order.amount|currency }}</td>
                         <td><span class="adm-overview-badge" data-status="{{ order.status }}">{{ order.get_status_display }}</span></td>
                         <td>{{ order.created_at|to_jalali_fa:"%m/%d %H:%M" }}</td>

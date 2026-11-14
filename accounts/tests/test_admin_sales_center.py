@@ -121,9 +121,38 @@ class SalesCenterServiceTests(TestCase):
         self.assertIn('orders_failed_today', keys)
         self.assertGreaterEqual(len(ctx['pending_orders']), 1)
         self.assertGreaterEqual(len(ctx['failed_orders']), 1)
+        self.assertGreaterEqual(len(ctx['failed_order_rows']), 1)
+        self.assertIn('failure', ctx['failed_order_rows'][0])
 
     def test_pct_change_no_baseline_is_none_not_100(self):
         self.assertIsNone(_pct_change(1000, 0))
+
+    def test_conversion_delta_uses_percent_points_not_relative(self):
+        start, end = _date_range(30)
+        prev_start, prev_end = _previous_period_bounds(30)
+        paid_at = timezone.make_aware(datetime.combine(self.today, time(12, 0)))
+        for i in range(8):
+            u = User.objects.create_user(
+                username=f'convpt{i}', password='x', phone=f'091210000{i:02d}',
+            )
+            u.date_joined = timezone.make_aware(
+                datetime.combine(self.today - timedelta(days=5), time(10, 0)),
+            )
+            u.save(update_fields=['date_joined'])
+            if i < 2:
+                Order.objects.create(
+                    user=u,
+                    product=self.product,
+                    plan=self.plan,
+                    amount=Decimal(100000),
+                    status='paid',
+                    paid_at=paid_at,
+                )
+        ctx = get_sales_center_context(days=30)
+        conv = next(c for c in ctx['range_kpi_cards'] if c['key'] == 'conversion_rate')
+        self.assertEqual(conv['delta_format'], 'points')
+        self.assertIsNotNone(conv['delta'])
+        self.assertLessEqual(abs(conv['delta']), 100)
 
     def test_conversion_ignores_legacy_buyers_without_signup_in_range(self):
         paid_at = timezone.make_aware(datetime.combine(self.today, time(12, 0)))
@@ -154,6 +183,25 @@ class SalesCenterServiceTests(TestCase):
         paid = next(link for link in links if link['key'] == 'paid_orders')
         self.assertIn('days=all', paid['url'])
         self.assertEqual(format_admin_panel_days_param(ALL_TIME_DAYS), 'all')
+
+    def test_range_kpi_has_repeat_and_order(self):
+        ctx = get_sales_center_context(days=30)
+        keys = [c['key'] for c in ctx['range_kpi_cards']]
+        self.assertEqual(
+            keys[:4],
+            ['revenue_range', 'paid_orders_range', 'aov', 'repeat_revenue_range'],
+        )
+        self.assertIn('repeat_orders_range', keys)
+        self.assertIn('pending_revenue', [c['key'] for c in ctx['snapshot_kpi_cards']])
+        self.assertIn('orders_failed_today', [c['key'] for c in ctx['snapshot_kpi_cards']])
+
+    def test_center_pulse_quad(self):
+        ctx = get_sales_center_context(days=30)
+        pulse = ctx.get('center_pulse') or []
+        self.assertEqual(len(pulse), 4)
+        keys = {c['key'] for c in pulse}
+        self.assertIn('revenue_range', keys)
+        self.assertIn('orders_pending', keys)
 
     def test_breakdown_filtered_by_range(self):
         self._paid_order(self.today, 150000)
@@ -199,8 +247,8 @@ class AdminSalesCenterViewTests(TestCase):
             resp = self.client.get(reverse('admin_panel_sales'), {'days': days})
             self.assertEqual(resp.status_code, 200)
             content = resp.content.decode()
-            self.assertIn('فروش و درآمد', content)
             self.assertIn('chart-revenue', content)
+            self.assertIn('adm-sales-hero', content)
             self.assertIn('chart-sales-trend', content)
             self.assertIn(f'data-range="{days}"', content)
 

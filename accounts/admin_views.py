@@ -35,6 +35,9 @@ from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_export_permissions import can_export_report
 from accounts.services.admin_action_permissions import (
+    can_access_user_360,
+    can_access_user_360_tab,
+    can_show_u360_link_in_admin_panel,
     can_manage_support_tickets,
     can_manage_user_licenses,
     can_review_card_transfer,
@@ -193,7 +196,21 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         ctx['plan_sales'] = get_plan_sales_for_date_range(
             period_start, period_end, limit=6,
         )
-        ctx['recent_orders'] = get_recent_orders(limit=TABLE_PREVIEW_ROWS)
+        recent_orders = list(get_recent_orders(limit=TABLE_PREVIEW_ROWS))
+        return_path = self.request.get_full_path()
+        from accounts.services.admin_user_profile_url import admin_user_profile_url
+
+        for order in recent_orders:
+            uid = getattr(order, 'user_id', None)
+            order.u360_commerce_href = (
+                admin_user_profile_url(uid, tab='commerce', return_path=return_path) if uid else ''
+            )
+        ctx['recent_orders'] = recent_orders
+        ctx['admin_can_show_u360_link'] = can_show_u360_link_in_admin_panel(self.request.user)
+        ctx['admin_can_open_u360_commerce'] = can_access_user_360_tab(
+            self.request.user, 'commerce',
+        )
+        ctx['admin_can_view_user_management'] = can_view_user_management(self.request.user)
         health = dashboard.get('health_indicators') or []
         ok_count = sum(1 for item in health if item.get('status') == 'ok')
         overview_health_score = round((ok_count / len(health)) * 100) if health else 100
@@ -373,8 +390,8 @@ class AdminUser360View(StaffRequiredMixin, TemplateView):
     template_name = 'accounts/admin_user_360.html'
 
     def dispatch(self, request, *args, **kwargs):
-        if not can_view_user_management(request.user):
-            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
+        if not can_access_user_360(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده مشتری را ندارید.')
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -386,6 +403,15 @@ class AdminUser360View(StaffRequiredMixin, TemplateView):
         active_tab = (self.request.GET.get('tab') or 'overview').strip()
         if active_tab not in TAB_KEYS:
             active_tab = 'overview'
+        if not can_access_user_360_tab(self.request.user, active_tab):
+            if can_access_user_360_tab(self.request.user, 'support'):
+                active_tab = 'support'
+            elif can_access_user_360_tab(self.request.user, 'commerce'):
+                active_tab = 'commerce'
+            elif can_view_user_management(self.request.user):
+                active_tab = 'overview'
+            else:
+                active_tab = shell['tabs'][0]['key'] if shell.get('tabs') else 'overview'
         ctx['u360_active_tab'] = active_tab
         ctx['admin_panel_page_subtitle'] = shell['header'].get('phone') or ''
         ctx['admin_panel_title'] = 'پرونده مشتری'
@@ -421,8 +447,8 @@ class AdminUser360TabJsonView(StaffRequiredMixin, View):
     """بارگذاری تب پرونده ۳۶۰ — JSON با صفحه‌بندی."""
 
     def get(self, request, user_id, tab):
-        if not can_view_user_management(request.user):
-            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
+        if not can_access_user_360_tab(request.user, tab):
+            raise PermissionDenied('مجوز مشاهده این بخش پرونده را ندارید.')
         if tab not in TAB_KEYS:
             return JsonResponse({'ok': False, 'error': 'تب نامعتبر'}, status=400)
         if not get_user_360_user(int(user_id)):
@@ -456,8 +482,8 @@ class AdminUser360TicketDetailView(StaffRequiredMixin, View):
     """جزئیات کامل یک تیکت مشتری — برای میزکار پشتیبانی در پرونده ۳۶۰."""
 
     def get(self, request, user_id, ticket_id):
-        if not can_view_user_management(request.user):
-            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
+        if not can_access_user_360(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده مشتری را ندارید.')
         if not get_user_360_user(int(user_id)):
             return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
         ticket = get_user_ticket_or_404(user_id=int(user_id), ticket_id=int(ticket_id))

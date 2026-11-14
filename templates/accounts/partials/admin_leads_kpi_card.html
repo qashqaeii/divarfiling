@@ -1,0 +1,42 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-leads-kpi-card{% if snapshot %} adm-leads-kpi-card--snapshot{% endif %}{% if warn %} adm-leads-kpi-card--warn{% endif %}"
+         data-accent="{{ accent|default:'violet' }}"
+         aria-label="{{ label }}">
+    <header class="adm-leads-kpi-card__head">
+        <span class="adm-leads-kpi-card__label">{{ label }}</span>
+        {% if not snapshot and icon %}
+        <span class="adm-leads-kpi-card__glyph" aria-hidden="true">
+            <i class="fas {{ icon }}"></i>
+        </span>
+        {% endif %}
+    </header>
+    <div class="adm-leads-kpi-card__main">
+        <strong class="adm-leads-kpi-card__value">{{ value }}{% if value_suffix %}<span class="adm-leads-kpi-card__value-suffix">{{ value_suffix }}</span>{% endif %}</strong>
+    </div>
+    {% if snapshot %}
+    <footer class="adm-leads-kpi-card__foot adm-leads-kpi-card__foot--snapshot">
+        <span class="adm-leads-kpi-card__caption">{{ hint }}</span>
+    </footer>
+    {% else %}
+    <div class="adm-leads-kpi-card__foot-stack">
+        {% if hint %}
+        <p class="adm-leads-kpi-card__hint">{{ hint }}</p>
+        {% elif hint_cold is not None %}
+        <p class="adm-leads-kpi-card__hint">سرد {{ hint_cold|to_persian_digits }} · در تعامل {{ hint_engaged|to_persian_digits }}{% if hint_reg_rate is not None %} · نرخ ثبت‌نام {{ hint_reg_rate|to_persian_digits }}٪{% endif %}</p>
+        {% elif hint_sms_requested is not None %}
+        <p class="adm-leads-kpi-card__hint">{{ hint_sms_requested|to_persian_digits }} درخواست · تحویل {{ hint_sms_delivered|to_persian_digits }} · ناموفق {{ hint_sms_failed|to_persian_digits }}{% if hint_sms_accept_rate is not None %} · پذیرش {{ hint_sms_accept_rate|to_persian_digits }}٪{% endif %}</p>
+        {% elif hint_customers is not None %}
+        <p class="adm-leads-kpi-card__hint">{{ hint_customers|to_persian_digits }} نفر مشتری{% if hint_engaged_to_reg is not None %} · از تعامل به ثبت‌نام {{ hint_engaged_to_reg|to_persian_digits }}٪{% endif %}</p>
+        {% elif hint_ctr is not None %}
+        <p class="adm-leads-kpi-card__hint">نرخ کلیک {{ hint_ctr|to_persian_digits }}٪ از پیامک پذیرفته‌شده</p>
+        {% elif hint_revenue_toman is not None %}
+        <p class="adm-leads-kpi-card__hint">درآمد {{ hint_revenue_toman|currency }} تومان{% if hint_purchase_rate is not None %} · نرخ خرید {{ hint_purchase_rate|to_persian_digits }}٪ از ثبت‌نام{% endif %}</p>
+        {% elif hint_purchase_rate is not None %}
+        <p class="adm-leads-kpi-card__hint">نرخ خرید {{ hint_purchase_rate|to_persian_digits }}٪ از ثبت‌نام‌شده‌ها</p>
+        {% elif hint_campaign_total is not None %}
+        <p class="adm-leads-kpi-card__hint">{{ hint_campaign_active|to_persian_digits }} فعال از {{ hint_campaign_total|to_persian_digits }} کمپین جذب</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</article>

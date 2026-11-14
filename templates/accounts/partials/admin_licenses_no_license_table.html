@@ -1,0 +1,107 @@
+{% load persian_tags %}
+<article class="adm-overview-card adm-licenses-table-card adm-licenses-table-card--no-license" id="licenses-table-no-license" aria-label="بدون لایسنس">
+    <header class="adm-overview-card__head adm-licenses-table-card__head">
+        <div class="adm-licenses-table-card__titles">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-user-slash adm-overview-section-title__icon adm-overview-section-title__icon--licenses" aria-hidden="true"></i>
+                <span>کاربران بدون لایسنس</span>
+            </h2>
+            <p class="adm-licenses-table-card__hint">بدون دسترسی فعال ربات · اولویت پیگیری فروش</p>
+            {% if users_without_license_summary.total %}
+            <div class="adm-licenses-table-card__legend" aria-hidden="true">
+                <span class="adm-licenses-table-card__chip" data-tier="paid">
+                    <i class="fas fa-circle" aria-hidden="true"></i>
+                    خریدار · {{ users_without_license_summary.paid_buyers|default:0|to_persian_digits }}
+                </span>
+                <span class="adm-licenses-table-card__chip" data-tier="pending">
+                    <i class="fas fa-circle" aria-hidden="true"></i>
+                    معلق · {{ users_without_license_summary.pending_checkout|default:0|to_persian_digits }}
+                </span>
+                <span class="adm-licenses-table-card__chip" data-tier="signup">
+                    <i class="fas fa-circle" aria-hidden="true"></i>
+                    بدون خرید · {{ users_without_license_summary.organic|default:0|to_persian_digits }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        <span class="adm-overview-card__meta adm-licenses-table-card__count adm-licenses-table-card__count--no-license" title="کل سیستم">
+            {{ snapshot_counts.users_without_license|default:0|to_persian_digits }}
+        </span>
+    </header>
+
+    {% if users_without_license_rows %}
+    <div class="adm-overview-table-wrap adm-licenses-table-card__wrap adm-licenses-table-card__wrap--no-license">
+        <table class="adm-overview-table adm-licenses-preview-table adm-licenses-preview-table--no-license">
+            <thead>
+                <tr>
+                    <th scope="col">کاربر</th>
+                    <th scope="col">وضعیت</th>
+                    <th scope="col">پرداخت‌شده</th>
+                    <th scope="col">معلق</th>
+                    <th scope="col">عضویت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in users_without_license_rows %}
+                <tr data-tier="{{ row.tier|default:'signup' }}">
+                    <td class="adm-licenses-preview-table__user">
+                        {% include 'accounts/partials/admin_user_360_link.html' with user_obj=row.user u360_tab='licenses' show_phone=1 %}
+                    </td>
+                    <td class="adm-licenses-preview-table__tier">
+                        <span class="adm-overview-badge adm-licenses-no-license-tier-badge" data-tier="{{ row.tier|default:'signup' }}">
+                            {{ row.tier_label|default:'—' }}
+                        </span>
+                    </td>
+                    <td class="adm-licenses-preview-table__paid">
+                        {% if row.paid_orders %}
+                        <span class="adm-licenses-no-license-metric adm-licenses-no-license-metric--paid">{{ row.paid_orders|to_persian_digits }}</span>
+                        {% else %}
+                        <span class="adm-licenses-preview-table__muted">۰</span>
+                        {% endif %}
+                    </td>
+                    <td class="adm-licenses-preview-table__pending">
+                        {% if row.pending_orders %}
+                        <span class="adm-overview-badge adm-licenses-no-license-pending-badge">{{ row.pending_orders|to_persian_digits }}</span>
+                        {% else %}
+                        <span class="adm-licenses-preview-table__muted">۰</span>
+                        {% endif %}
+                    </td>
+                    <td class="adm-licenses-preview-table__when">
+                        {% if row.date_joined %}
+                        <span class="adm-licenses-preview-table__date">{{ row.date_joined|to_jalali_fa }}</span>
+                        {% if row.member_days is not None %}
+                        <span class="adm-licenses-preview-table__recency">
+                            {% if row.member_days == 0 %}امروز{% elif row.member_days == 1 %}دیروز{% else %}{{ row.member_days|to_persian_digits }} روز عضویت{% endif %}
+                        </span>
+                        {% endif %}
+                        {% else %}
+                        <span class="adm-licenses-preview-table__muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="adm-licenses-table-card__empty adm-licenses-table-card__empty--no-license" role="status">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        <p>همه کاربران فعال لایسنس دارند</p>
+    </div>
+    {% endif %}
+
+    <footer class="adm-overview-card__foot adm-licenses-table-card__foot adm-licenses-table-card__foot--split">
+        {% if 'users_without_license' in admin_export_allowed_keys %}
+        <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx">
+            خروجی بدون لایسنس
+            <i class="fas fa-file-excel adm-icon-dir" aria-hidden="true"></i>
+        </a>
+        {% endif %}
+        {% if admin_can_view_user_management %}
+        <a href="{{ users_center_url }}#users-table-no-license" class="adm-licenses-table-card__more-link">
+            لیست کامل در کاربران
+            <i class="fas fa-arrow-left adm-icon-dir" aria-hidden="true"></i>
+        </a>
+        {% endif %}
+    </footer>
+</article>

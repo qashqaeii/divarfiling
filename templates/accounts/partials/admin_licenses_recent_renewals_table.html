@@ -1,0 +1,90 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-overview-card adm-licenses-table-card adm-licenses-table-card--renewals" id="licenses-table-recent-renewals" aria-label="تمدیدهای اخیر">
+    <header class="adm-overview-card__head adm-licenses-table-card__head">
+        <div class="adm-licenses-table-card__titles">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-rotate adm-overview-section-title__icon adm-overview-section-title__icon--licenses" aria-hidden="true"></i>
+                <span>تمدیدهای اخیر</span>
+            </h2>
+            <p class="adm-licenses-table-card__hint">تمدید رسمی + خرید مجدد کلید</p>
+            {% if recent_renewal_summary.total %}
+            <div class="adm-licenses-table-card__legend" aria-hidden="true">
+                <span class="adm-licenses-table-card__chip" data-kind="formal">
+                    <i class="fas fa-circle" aria-hidden="true"></i>
+                    رسمی · {{ recent_renewal_summary.formal|default:0|to_persian_digits }}
+                </span>
+                <span class="adm-licenses-table-card__chip" data-kind="repurchase">
+                    <i class="fas fa-circle" aria-hidden="true"></i>
+                    کلید جدید · {{ recent_renewal_summary.new_key|default:0|to_persian_digits }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        <span class="adm-overview-card__meta adm-licenses-table-card__count adm-licenses-table-card__count--renewals">
+            {{ recent_renewal_summary.total|default:0|to_persian_digits }} / {{ table_preview_rows|to_persian_digits }}
+        </span>
+    </header>
+
+    {% if recent_renewal_rows %}
+    <div class="adm-overview-table-wrap adm-licenses-table-card__wrap adm-licenses-table-card__wrap--renewals">
+        <table class="adm-overview-table adm-licenses-preview-table adm-licenses-preview-table--renewals">
+            <thead>
+                <tr>
+                    <th scope="col">کاربر</th>
+                    <th scope="col">محصول</th>
+                    <th scope="col">نوع</th>
+                    <th scope="col">مبلغ</th>
+                    <th scope="col">تاریخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in recent_renewal_rows %}
+                <tr data-kind="{{ row.kind|default:'repurchase' }}">
+                    <td class="adm-licenses-preview-table__user">
+                        {% if row.user %}
+                        {% include 'accounts/partials/admin_user_360_link.html' with user_obj=row.user u360_tab='licenses' %}
+                        {% else %}
+                        <span class="adm-licenses-preview-table__muted">—</span>
+                        {% endif %}
+                        {% if row.product_title %}
+                        <span class="adm-licenses-preview-table__sub adm-licenses-preview-table__sub--mobile">{{ row.product_title }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="adm-licenses-preview-table__product">
+                        <span class="adm-licenses-preview-table__product-title">{{ row.product_title|default:'—' }}</span>
+                        {% if row.plan_name %}
+                        <span class="adm-licenses-preview-table__sub">{{ row.plan_name }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="adm-licenses-preview-table__kind">
+                        <span class="adm-overview-badge adm-licenses-renewal-kind-badge" data-kind="{{ row.kind|default:'repurchase' }}">
+                            {{ row.kind_label|default:'—' }}
+                        </span>
+                    </td>
+                    <td class="adm-licenses-preview-table__amount">{{ row.amount|currency }}</td>
+                    <td class="adm-licenses-preview-table__when">
+                        {% if row.paid_at %}
+                        <span class="adm-licenses-preview-table__date">{{ row.paid_at|to_jalali_fa }}</span>
+                        {% if row.recency_days is not None %}
+                        <span class="adm-licenses-preview-table__recency">
+                            {% if row.recency_days == 0 %}امروز{% elif row.recency_days == 1 %}دیروز{% else %}{{ row.recency_days|to_persian_digits }} روز پیش{% endif %}
+                        </span>
+                        {% endif %}
+                        {% else %}
+                        <span class="adm-licenses-preview-table__muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="adm-licenses-table-card__empty adm-licenses-table-card__empty--renewals" role="status">
+        <i class="fas fa-receipt" aria-hidden="true"></i>
+        <p>تمدیدی در پیش‌نمایش نیست</p>
+        <span class="adm-licenses-table-card__empty-hint">سفارش‌های پرداخت‌شده تمدید اینجا نمایش داده می‌شوند</span>
+    </div>
+    {% endif %}
+</article>

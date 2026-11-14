@@ -3,407 +3,78 @@
 {% load persian_tags %}
 {% load currency_tags %}
 
-{% block title %}فروش و درآمد | پنل مدیریت{% endblock %}
+{% block title %}سفارش‌ها | پنل مدیریت{% endblock %}
 
-{% block admin_panel_title %}فروش و درآمد{% endblock %}
-{% block admin_panel_breadcrumb %}<span aria-current="page">فروش و درآمد</span>{% endblock %}
-{% block admin_panel_header_subtitle %}بازه: {{ range_label|default:admin_panel_range_label_fa }}{% if admin_panel_compare %} · مقایسه{% endif %}{% endblock %}
+{% block body_class %}{{ block.super }} adm-sales-center-active{% endblock %}
+
+{% block admin_panel_title %}سفارش‌ها{% endblock %}
+{% block admin_panel_breadcrumb %}<span aria-current="page">سفارش‌ها</span>{% endblock %}
+
+{% block admin_panel_header_subtitle %}
+درآمد، پرداخت و پیگیری سفارش · {{ range_label|default:admin_panel_range_label_fa }}
+{% endblock %}
 
 {% block admin_panel_header_actions %}
 {% if 'paid_orders' in admin_export_allowed_keys %}
-<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--primary" title="خروجی سفارش‌های پرداخت‌شده">
-    <i class="fas fa-file-excel"></i>
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="adm-cmd-bar__tool" title="خروجی سفارش‌های پرداخت‌شده">
+    <i class="fas fa-file-excel" aria-hidden="true"></i>
 </a>
 {% endif %}
-<a href="{% url 'admin_panel_recovery_center' %}?days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--ghost" title="مرکز بازیابی">
-    <i class="fas fa-rotate-left"></i>
+<a href="{% url 'admin_panel_recovery_center' %}?days={{ admin_panel_range_key }}" class="adm-cmd-bar__tool" title="مرکز بازیابی">
+    <i class="fas fa-rotate-left" aria-hidden="true"></i>
 </a>
-<a href="/admin/shop/order/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
-    <i class="fas fa-cog"></i>
+<a href="/admin/shop/order/" class="adm-cmd-bar__tool" target="_blank" rel="noopener" title="Django Admin">
+    <i class="fas fa-cog" aria-hidden="true"></i>
 </a>
 {% endblock %}
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-card-transfer.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-sales-v3.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-sales-v3.css' %}?v=6">
 {% endblock %}
 
 {% block admin_panel_content %}
 {% include 'accounts/partials/admin_center_shell_open.html' %}
-<div class="sales-v3">
-<header class="adm-center-intro" aria-label="معرفی فروش">
-    {% include 'accounts/partials/admin_center_intro_main.html' with icon='fa-chart-line' icon_tone='sales' title='درآمد، سفارش‌ها و پیگیری پرداخت‌ها' subtitle='روند فروش و موارد نیازمند رسیدگی را در یک نگاه ببینید.' %}
-    <nav class="adm-center-intro__jumps" aria-label="دسترسی سریع فروش">
-        <a href="#sales-actions" class="adm-center-intro__jump">اقدامات</a>
-        <a href="#sales-table-recent" class="adm-center-intro__jump">سفارش‌ها</a>
-        <a href="#sales-card-transfers" class="adm-center-intro__jump">کارت‌به‌کارت</a>
-    </nav>
-</header>
+<div class="biz-page biz-page--sales">
+
+{% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='در یک نگاه' pulse_append_range=1 pulse_subtitle='رشد بازه · صف عملیاتی' pulse_icon='fa-cart-shopping' pulse_icon_tone='sales' pulse_modifier='adm-center-pulse--sales-quad' %}
+
+<section class="adm-overview-hero adm-sales-hero" aria-label="بینش سفارش">
+    <div class="adm-overview-hero__insight">
+        <div class="adm-sales-hero__chart" id="sales-hero-chart">
+            {% include 'accounts/partials/admin_prime_hero_chart.html' with section_id='sales-hero-chart-panel' chart_panel_class='adm-sales-hero-chart-panel' chart_title='درآمد و سفارش' canvas_id='chart-revenue' chart_icon='fa-chart-line' chart_icon_tone='sales' chart_aria_label='نمودار درآمد و سفارش پرداخت‌شده' chart_is_combo=True legend_items=sales_chart_legend chart_summary=sales_hero_chart_summary chart_grain=range_label %}
+        </div>
+        {% include 'accounts/partials/admin_sales_hero_status.html' %}
+    </div>
+    {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='sales-actions' title='نیازمند اقدام' title_icon='fa-bolt' extra_class='adm-sales-action-queue' empty_title='مورد فوری در سفارش نیست' empty_hint='صف خالی است' %}
+</section>
+
+{% include 'accounts/partials/admin_sales_kpi_section.html' %}
+
+<div class="adm-prime-fold adm-sales-fold">
 
 {% include 'accounts/partials/admin_card_transfer_review.html' %}
 
+{% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='sales' ai_section_label='سفارش' %}
 
+{% include 'accounts/partials/admin_sales_integrity_fold.html' %}
 
-{% include 'accounts/partials/admin_prime_today_strip.html' %}
+{% include 'accounts/partials/admin_sales_composition.html' %}
 
-<div class="adm-prime-hero sales-v3-hero">
-    <div class="adm-prime-hero__chart">
-        <div class="adm-prime-section-tag">
-            <strong>روند درآمد</strong>
-            <em>روند درآمد · {{ range_label }}</em>
-        </div>
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-revenue" role="img" aria-label="نمودار روند درآمد"></canvas>
-            </div>
-        </article>
-    </div>
-    <aside class="adm-prime-hero__rail">
-        <div class="adm-prime-section-tag">
-            <strong>اقدامات اولویت‌دار</strong>
-            <em>وضعیت فعلی</em>
-        </div>
-        {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='sales-actions' title='نیازمند اقدام فروش' subtitle='پرداخت، fulfillment و معلق' empty_title='مورد فوری در فروش نیست' empty_hint='صف خالی است' %}
-        {% if financial_integrity.total_flags %}
-        <a class="adm-v2-integrity-link" href="#sales-integrity">
-            <i class="fas fa-shield-halved" aria-hidden="true"></i>
-            <span>بررسی سلامت پرداخت و لایسنس</span>
-            <i class="fas fa-arrow-left" aria-hidden="true"></i>
-        </a>
-        {% endif %}
-    </aside>
-</div>
-
-<div class="adm-prime-section-tag">
-    <strong>وضعیت این بخش</strong>
-    <em>{{ range_label }} · KPI</em>
-</div>
-<section class="ecc-section ecc-cmd-kpi adm-prime-kpi-band" aria-label="شاخص‌های فروش">
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd adm-prime-kpi-band">
-        {% for card in kpi_cards %}
-        {% include 'accounts/partials/admin_prime_kpi_card.html' with card=card kpi_kind='range' %}
-        {% endfor %}
-    </div>
+<section class="adm-sales-charts adm-center-chart-section" id="sales-charts" aria-label="روند سفارش">
+    {% include 'accounts/partials/admin_prime_hero_chart.html' with section_id='sales-orders-chart-panel' chart_panel_class='adm-sales-orders-chart adm-center-chart-panel--fold' chart_title='روند سفارش' chart_grain=range_label canvas_id='chart-sales-trend' chart_icon='fa-chart-column' chart_icon_tone='sales' chart_aria_label='نمودار تعداد سفارش‌های موفق روزانه' chart_stats_band=1 legend_items=sales_orders_chart_legend chart_summary=sales_orders_chart_summary %}
 </section>
 
-<div class="adm-prime-fold sales-v3-fold">
+{% include 'accounts/partials/admin_sales_table_recent.html' %}
 
-{% if financial_integrity %}
-<details class="ecc-section adm-v2-audit" id="sales-integrity" {% if financial_integrity.selected %}open{% endif %}>
-    <summary class="adm-v2-audit__summary">
-        <span><i class="fas fa-shield-halved" aria-hidden="true"></i> سلامت پرداخت و تحویل</span>
-        <span class="adm-v2-audit__meta">{{ financial_integrity.total_flags|to_persian_digits }} هشدار بالقوه · کل داده‌ها · ممکن است هم‌پوشانی داشته باشند</span>
-        <i class="fas fa-chevron-down adm-v2-audit__chevron" aria-hidden="true"></i>
-    </summary>
-    <div class="adm-v2-audit__body">
-    <header class="ecc-section-head">
-        <div>
-            <h2 id="sales-integrity-title"><i class="fas fa-shield-halved" aria-hidden="true"></i> سلامت پرداخت و تحویل</h2>
-            <p>ممیزی صرفاً خواندنی از کل داده‌ها؛ مستقل از بازه فروش. یک سفارش ممکن است چند هشدار داشته باشد.</p>
-        </div>
-        <span class="ecc-kpi-sub">بدون تغییر خودکار سفارش یا لایسنس</span>
-    </header>
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
-        {% for issue in financial_integrity.cards %}
-        <article class="ecc-kpi" data-accent="{% if issue.severity == 'critical' %}rose{% else %}amber{% endif %}"
-                 data-status="{% if issue.count %}warn{% else %}ok{% endif %}">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {% if issue.count %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}" aria-hidden="true"></i></span>
-            </div>
-            <strong class="ecc-kpi-val">{{ issue.count|to_persian_digits }}</strong>
-            <span class="ecc-kpi-lbl">{{ issue.title }}</span>
-            <span class="ecc-kpi-sub">{{ issue.hint }}</span>
-            {% if issue.count %}
-            <a class="ecc-btn ecc-btn--ghost ecc-btn--sm" href="{{ issue.href }}"
-               {% if issue.active %}aria-current="true"{% endif %}>بررسی موارد</a>
-            {% endif %}
-        </article>
-        {% endfor %}
-    </div>
-    {% if financial_integrity.active_issue and financial_integrity.selected != 'fulfillment_incomplete' %}
-    <div class="adm-table-wrap" id="sales-integrity-results">
-        <table class="adm-table adm-table--pro">
-            <caption>{{ financial_integrity.active_issue.title }} · حداکثر ۵ ردیف اول؛ برای بررسی کامل از پنل سفارش‌ها استفاده کنید.</caption>
-            <thead><tr><th>سفارش</th><th>کاربر</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th></tr></thead>
-            <tbody>
-                {% for order in financial_integrity.rows %}
-                <tr>
-                    <td>
-                        {% if perms.shop.view_order %}
-                        <a href="{% url 'admin:shop_order_change' order.pk %}" target="_blank" rel="noopener">{{ order.pk|stringformat:"s"|truncatechars:13 }}</a>
-                        {% else %}{{ order.pk|stringformat:"s"|truncatechars:13 }}{% endif %}
-                    </td>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
-                    <td>{{ order.amount|currency }}</td>
-                    <td>{{ order.paid_at|default:order.created_at|to_jalali_fa }}</td>
-                    <td>{{ order.get_status_display }} · {{ order.get_fulfillment_status_display }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">موردی برای این هشدار وجود ندارد.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
-    </div>
-</details>
-{% endif %}
-{% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='sales' ai_section_label='فروش' %}
+{% include 'accounts/partials/admin_sales_table_fulfillment.html' %}
 
-<section class="ecc-section ecc-cmd-charts ecc-sales-charts" aria-label="روند فروش">
-    <div class="ecc-cmd-charts-grid ecc-sales-charts-grid">
-        <article class="ecc-card ecc-card--chart">
-            <div class="ecc-card-head">
-                <div>
-                    <h3><i class="fas fa-chart-column"></i> روند سفارش</h3>
-                    <p>{{ range_label }}</p>
-                </div>
-            </div>
-            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
-                <canvas id="chart-sales-trend" role="img" aria-label="نمودار روند سفارش‌ها"></canvas>
-            </div>
-        </article>
-    </div>
-</section>
+{% include 'accounts/partials/admin_sales_table_failed.html' %}
 
-<section class="ecc-section ecc-cmd-summary sales-v3-composition" aria-label="ترکیب فروش">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-layer-group"></i> ترکیب فروش</h2>
-            <p>{{ range_label }}</p>
-        </div>
-    </header>
-    <div class="ecc-cmd-summary-grid">
-        <article class="ecc-cmd-summary-card" data-accent="emerald">
-            <header>
-                <h3><i class="fas fa-box"></i> محصول</h3>
-            </header>
-            {% if product_revenue %}
-            <ul>
-                {% for row in product_revenue %}
-                <li><span>{{ row.label }}</span><strong>{{ row.total|currency }} <small>({{ row.count|to_persian_digits }})</small></strong></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="ecc-card-sub">فروشی در این بازه ثبت نشده</p>
-            {% endif %}
-        </article>
-        <article class="ecc-cmd-summary-card" data-accent="violet">
-            <header>
-                <h3><i class="fas fa-tags"></i> پلن</h3>
-            </header>
-            {% if plan_sales %}
-            <ul>
-                {% for row in plan_sales %}
-                <li><span>{{ row.short_label }}</span><strong>{{ row.total|currency }} <small>({{ row.count|to_persian_digits }})</small></strong></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="ecc-card-sub">فروش پلن در این بازه ثبت نشده</p>
-            {% endif %}
-        </article>
-        <article class="ecc-cmd-summary-card" data-accent="cyan">
-            <header>
-                <h3><i class="fas fa-credit-card"></i> روش پرداخت</h3>
-            </header>
-            {% if payment_methods %}
-            <ul>
-                {% for row in payment_methods %}
-                <li><span>{{ row.label }}</span><strong>{{ row.total|currency }} <small>({{ row.count|to_persian_digits }})</small></strong></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="ecc-card-sub">پرداخت موفقی در این بازه نیست</p>
-            {% endif %}
-        </article>
-    </div>
-</section>
-
-<section class="ecc-section" id="sales-table-recent" aria-label="آخرین سفارش‌ها">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-list"></i> آخرین سفارش‌ها</h2>
-            <p>۵ مورد اخیر</p>
-        </div>
-        {% if 'paid_orders' in admin_export_allowed_keys %}
-<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            خروجی <i class="fas fa-file-excel"></i>
-        </a>
-{% endif %}
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>محصول</th>
-                    <th>مبلغ</th>
-                    <th>وضعیت</th>
-                    <th>تاریخ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in recent_orders %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
-                    <td>{{ order.product.title }}{% if order.plan %} · {{ order.plan.name }}{% endif %}</td>
-                    <td>{{ order.amount|currency }}</td>
-                    <td>{{ order.get_status_display }}</td>
-                    <td>{{ order.created_at|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">سفارشی ثبت نشده</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section" id="sales-queue-fulfillment" aria-label="صدور یا تمدید ناقص">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-key"></i> پرداخت موفق · صدور/تمدید ناقص</h2>
-            <p>{{ fulfillment_incomplete_count|to_persian_digits }} مورد · وضعیت fulfillment</p>
-        </div>
-        {% if perms.shop.view_order %}
-        <a href="{% url 'admin:shop_order_changelist' %}?status__exact=paid" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
-            مشاهده سفارش‌ها <i class="fas fa-external-link-alt"></i>
-        </a>
-        {% endif %}
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>پلن</th>
-                    <th>مبلغ</th>
-                    <th>وضعیت تکمیل</th>
-                    <th>پرداخت</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in fulfillment_incomplete_orders %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
-                    <td>{{ order.plan.name }}</td>
-                    <td>{{ order.amount|currency }}</td>
-                    <td>{{ order.get_fulfillment_status_display }}{% if order.fulfillment_error %} · {{ order.fulfillment_error|truncatechars:40 }}{% endif %}</td>
-                    <td>{{ order.paid_at|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">همه سفارش‌های paid تکمیل شده‌اند</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section" id="sales-table-failed" aria-label="پرداخت‌های ناموفق امروز">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-circle-xmark"></i> پرداخت‌های ناموفق امروز</h2>
-            <p>{{ snapshot_counts.orders_failed_today|to_persian_digits }} مورد امروز</p>
-        </div>
-        {% if 'failed_orders' in admin_export_allowed_keys %}
-<a href="{% url 'admin_panel_export' 'failed_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            خروجی <i class="fas fa-file-excel"></i>
-        </a>
-{% endif %}
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>محصول</th>
-                    <th>مبلغ</th>
-                    <th>روش</th>
-                    <th>تاریخ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in failed_orders %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
-                    <td>{{ order.product.title }}</td>
-                    <td>{{ order.amount|currency }}</td>
-                    <td>{{ order.get_payment_method_display }}</td>
-                    <td>{{ order.created_at|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">سفارش ناموفقی وجود ندارد</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section" id="sales-table-pending" aria-label="سفارش‌های پرداخت‌نشده">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-clock"></i> سفارش‌های پرداخت‌نشده</h2>
-            <p>{{ snapshot_counts.orders_pending|to_persian_digits }} مورد · Snapshot</p>
-        </div>
-        <div class="ecc-section-head-actions">
-            <a href="{{ recovery_center_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-                بازیابی <i class="fas fa-rotate-left"></i>
-            </a>
-            {% if 'pending_orders' in admin_export_allowed_keys %}
-<a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-                خروجی <i class="fas fa-file-excel"></i>
-            </a>
-{% endif %}
-        </div>
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>محصول</th>
-                    <th>مبلغ</th>
-                    <th>وضعیت</th>
-                    <th>تاریخ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in pending_orders %}
-                <tr>
-                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user only %}</td>
-                    <td>{{ order.product.title }}</td>
-                    <td>{{ order.amount|currency }}</td>
-                    <td>{{ order.get_status_display }}</td>
-                    <td>{{ order.created_at|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">سفارش معلقی وجود ندارد</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+{% include 'accounts/partials/admin_sales_table_pending.html' %}
 
 {% if export_links %}
-<section class="ecc-section" aria-label="خروجی‌های فروش">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-file-export"></i> خروجی‌های فروش</h2>
-        </div>
-    </header>
-    <div class="ecc-module-dock">
-        {% for exp in export_links %}
-        <a class="ecc-module" data-accent="{{ exp.accent }}" href="{{ exp.url }}">
-            <span class="ecc-module-icon"><i class="fas {{ exp.icon }}"></i></span>
-            <span class="ecc-module-text">
-                <strong>{{ exp.title }}</strong>
-                <em>{% if exp.supports_days %}{% if admin_panel_range_key == 'all' %}کل بازه{% else %}بازه {{ chart_days|to_persian_digits }} روز{% endif %}{% else %}کل{% endif %}</em>
-            </span>
-            {% if exp.count %}<span class="ecc-module-badge">{{ exp.count|to_persian_digits }}</span>{% endif %}
-        </a>
-        {% endfor %}
-    </div>
-</section>
+{% include 'accounts/partials/admin_sales_exports.html' %}
 {% endif %}
 
 </div>
@@ -412,11 +83,8 @@
 {% endblock %}
 
 {% block admin_panel_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-window.admCharts = {{ charts_json|safe }};
-window.admChartDays = {{ chart_days }};
-</script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=13"></script>
+{% include 'accounts/partials/admin_prime_charts_boot.html' %}
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=18"></script>
 <script src="{% static 'js/mizkar-admin-card-transfer.js' %}?v=1"></script>
+<script src="{% static 'js/mizkar-admin-sales-failed.js' %}?v=1"></script>
 {% endblock %}

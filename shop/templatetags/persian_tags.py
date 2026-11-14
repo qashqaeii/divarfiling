@@ -178,6 +178,14 @@ def transaction_status_tone(value):
 
 
 @register.filter
+def listing_category_fa(value):
+    """برچسب فارسی دسته آگهی (فروش آپارتمان و …)."""
+    from accounts.services.lead_import import listing_category_display_fa
+
+    return listing_category_display_fa(value)
+
+
+@register.filter
 def lead_district_fa(lead):
     """نام فارسی منطقه سرنخ — slug انگلیسی (vanak) به فارسی (ونک) تبدیل می‌شود."""
     if lead is None:

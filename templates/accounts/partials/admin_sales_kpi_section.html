@@ -1,0 +1,33 @@
+{% load persian_tags %}
+<section class="adm-sales-kpi-lux adm-sales-kpi-lux--pro" id="sales-kpi" aria-label="شاخص‌های کلیدی سفارش">
+    <header class="adm-sales-kpi-lux__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-chart-simple adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+            <span>شاخص‌های کلیدی</span>
+        </h2>
+        <div class="adm-sales-kpi-lux__meta">
+            <span class="adm-sales-kpi-lux__pill">{{ range_label|default:admin_panel_range_label_fa }}</span>
+            <span class="adm-sales-kpi-lux__compare">مقایسه با بازهٔ مشابه هم‌طول</span>
+        </div>
+    </header>
+    <div class="adm-sales-kpi-lux__range" role="region" aria-label="عملکرد فروش در بازه">
+        <p class="adm-sales-kpi-lux__band-label">عملکرد بازه — درآمد، حجم و تمدید</p>
+        <div class="adm-sales-kpi-lux__grid adm-sales-kpi-lux__grid--range" role="list">
+            {% for card in range_kpi_cards %}
+            {% include 'accounts/partials/admin_sales_kpi_card.html' with card=card kpi_kind='range' %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="adm-sales-kpi-lux__split" aria-hidden="true"></div>
+    <div class="adm-sales-kpi-lux__snapshot" role="region" aria-label="صف پرداخت و عملیات">
+        <header class="adm-sales-kpi-lux__snapshot-head">
+            <span class="adm-sales-kpi-lux__snapshot-title">وضعیت لحظه‌ای</span>
+            <span class="adm-sales-kpi-lux__snapshot-hint">امروز · معلق · ناقص</span>
+        </header>
+        <div class="adm-sales-kpi-lux__grid adm-sales-kpi-lux__grid--snapshot" role="list">
+            {% for card in snapshot_kpi_cards %}
+            {% include 'accounts/partials/admin_sales_kpi_card.html' with card=card kpi_kind='snapshot' %}
+            {% endfor %}
+        </div>
+    </div>
+</section>

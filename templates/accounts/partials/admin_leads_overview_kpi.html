@@ -1,0 +1,68 @@
+{% load persian_tags %}
+<section class="adm-leads-kpi-lux adm-leads-kpi-lux--pro" id="lac-kpi" aria-label="شاخص‌های کلیدی جذب سرنخ">
+    <header class="adm-leads-kpi-lux__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-chart-simple adm-overview-section-title__icon adm-overview-section-title__icon--leads" aria-hidden="true"></i>
+            <span>شاخص‌های کلیدی</span>
+        </h2>
+        <div class="adm-leads-kpi-lux__meta">
+            <span class="adm-leads-kpi-lux__pill">{{ overview.range_label|default:admin_panel_range_label_fa }}</span>
+            <span class="adm-leads-kpi-lux__compare">رویدادها و نتایج در بازهٔ انتخاب‌شده · KPI لحظه‌ای عملیات در پایین</span>
+        </div>
+    </header>
+
+    <div class="adm-leads-kpi-lux__range" role="region" aria-label="حجم قیف جذب">
+        <p class="adm-leads-kpi-lux__band-label">حجم مسیر تبدیل — سرنخ، پیامک، کلیک و خرید</p>
+        <div class="adm-leads-kpi-lux__grid adm-leads-kpi-lux__grid--range" role="list">
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='violet' icon='fa-address-book' label='بانک سرنخ' value=overview.leads_total|default:0|to_persian_digits hint_cold=overview.leads_cold hint_engaged=overview.leads_engaged hint_reg_rate=overview.registration_rate_pct %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='amber' icon='fa-paper-plane' label='پیامک پذیرفته‌شده' value=overview.accepted_sms|default:0|to_persian_digits hint_sms_requested=overview.sms_requested hint_sms_delivered=overview.sms_delivered hint_sms_failed=overview.sms_failed hint_sms_accept_rate=overview.sms_accept_rate_pct %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='cyan' icon='fa-user-check' label='ثبت‌نام در سامانه' value=overview.leads_registered|default:0|to_persian_digits hint_customers=overview.leads_customer hint_engaged_to_reg=overview.engaged_to_reg_pct %}
+            {% if overview.ctr_pct is not None %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='blue' icon='fa-arrow-pointer' label='کلیک یکتای لندینگ' value=overview.total_clicks|default:0|to_persian_digits hint_ctr=overview.ctr_pct %}
+            {% else %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='blue' icon='fa-arrow-pointer' label='کلیک یکتای لندینگ' value=overview.total_clicks|default:0|to_persian_digits hint='هر سرنخ حداکثر یک‌بار شمرده می‌شود' %}
+            {% endif %}
+            {% if overview.purchase_revenue_toman %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='emerald' icon='fa-key' label='خرید نهایی' value=overview.total_purchases|default:0|to_persian_digits hint_revenue_toman=overview.purchase_revenue_toman hint_purchase_rate=overview.purchase_rate_pct %}
+            {% else %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='emerald' icon='fa-key' label='خرید نهایی' value=overview.total_purchases|default:0|to_persian_digits hint_purchase_rate=overview.purchase_rate_pct %}
+            {% endif %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with accent='rose' icon='fa-bullhorn' label='کمپین جذب' value=overview.campaigns_active|default:0|to_persian_digits hint_campaign_active=overview.campaigns_active hint_campaign_total=overview.campaigns_total %}
+        </div>
+    </div>
+
+    <div class="adm-leads-kpi-lux__split" aria-hidden="true"></div>
+
+    <div class="adm-leads-kpi-lux__rates" role="region" aria-label="نرخ‌های تبدیل">
+        <p class="adm-leads-kpi-lux__band-label">نرخ‌های تبدیل — برای تصمیم سریع مدیر</p>
+        <div class="adm-leads-kpi-lux__grid adm-leads-kpi-lux__grid--rates" role="list">
+            {% if overview.registration_rate_pct is not None %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='violet' label='ثبت‌نام از کل سرنخ' value=overview.registration_rate_pct|floatformat:1|to_persian_digits value_suffix='٪' hint='سرنخ ثبت‌نام‌شده ÷ کل بانک' %}
+            {% endif %}
+            {% if overview.sms_accept_rate_pct is not None %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='amber' label='پذیرش پیامک' value=overview.sms_accept_rate_pct|floatformat:1|to_persian_digits value_suffix='٪' hint='پذیرفته ÷ درخواست ارسال' %}
+            {% endif %}
+            {% if overview.ctr_pct is not None %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='blue' label='کلیک از پیامک' value=overview.ctr_pct|floatformat:1|to_persian_digits value_suffix='٪' hint='کلیک یکتا ÷ پیامک پذیرفته' %}
+            {% endif %}
+            {% if overview.purchase_rate_pct is not None %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='emerald' label='خرید از ثبت‌نام' value=overview.purchase_rate_pct|floatformat:1|to_persian_digits value_suffix='٪' hint='خرید نهایی ÷ ثبت‌نام‌شده' %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="adm-leads-kpi-lux__split" aria-hidden="true"></div>
+
+    <div class="adm-leads-kpi-lux__snapshot" role="region" aria-label="وضعیت عملیات">
+        <header class="adm-leads-kpi-lux__snapshot-head">
+            <span class="adm-leads-kpi-lux__snapshot-title">وضعیت لحظه‌ای عملیات</span>
+            <span class="adm-leads-kpi-lux__snapshot-hint">ورود داده · صف پیامک · خطا</span>
+        </header>
+        <div class="adm-leads-kpi-lux__grid adm-leads-kpi-lux__grid--snapshot" role="list">
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='cyan' label='فایل واردشده' value=overview.batches|default:0|to_persian_digits hint='خروجی commit‌شده از دیوار' %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='violet' label='کل کمپین‌ها' value=overview.campaigns_total|default:0|to_persian_digits hint='همهٔ کمپین‌های جذب ثبت‌شده' %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='blue' label='پیامک در صف' value=overview.sms_pending|default:0|to_persian_digits hint='درخواست هنوز نهایی نشده' %}
+            {% include 'accounts/partials/admin_leads_kpi_card.html' with snapshot=1 accent='rose' label='پیامک ناموفق' value=overview.sms_failed|default:0|to_persian_digits hint='نیازمند بررسی ارسال و تکرار' warn=overview.sms_failed %}
+        </div>
+    </div>
+</section>

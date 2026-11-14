@@ -1,0 +1,30 @@
+{% load persian_tags %}
+<section class="adm-users-kpi-lux" id="users-kpi" aria-label="پایگاه و روند کاربران">
+    <header class="adm-users-kpi-lux__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-layer-group adm-overview-section-title__icon adm-overview-section-title__icon--users" aria-hidden="true"></i>
+            <span>پایگاه و روند</span>
+        </h2>
+        <p class="adm-users-kpi-lux__grain">{{ range_label|default:admin_panel_range_label_fa }}</p>
+    </header>
+
+    <div class="adm-users-kpi-lux__group">
+        <p class="adm-users-kpi-lux__group-label">الان</p>
+        <div class="adm-users-kpi-lux__grid adm-users-kpi-lux__grid--snapshot" role="list">
+            {% for card in snapshot_kpi_cards %}
+            {% include 'accounts/partials/admin_center_kpi_card.html' with card=card kpi_kind='snapshot' kpi_lux=1 %}
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if range_kpi_band_cards %}
+    <div class="adm-users-kpi-lux__group adm-users-kpi-lux__group--range">
+        <p class="adm-users-kpi-lux__group-label">شاخص‌های {{ range_label|default:'بازه انتخاب‌شده' }}</p>
+        <div class="adm-users-kpi-lux__grid adm-users-kpi-lux__grid--range" role="list">
+            {% for card in range_kpi_band_cards %}
+            {% include 'accounts/partials/admin_center_kpi_card.html' with card=card kpi_kind='range' kpi_lux=1 %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</section>

@@ -57,7 +57,11 @@ def qs_fulfillment_incomplete() -> QuerySet:
 
 def qs_orders_failed_today() -> QuerySet:
     today = _today()
-    return Order.objects.filter(status='failed', created_at__date=today).order_by('-created_at')
+    return (
+        Order.objects.filter(status='failed', created_at__date=today)
+        .select_related('user', 'product', 'plan', 'transaction', 'card_transfer')
+        .order_by('-created_at')
+    )
 
 
 def qs_orders_pending() -> QuerySet:

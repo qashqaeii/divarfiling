@@ -1,0 +1,49 @@
+{% load persian_tags %}
+<article
+    class="adm-users-engagement adm-prime-hero-chart adm-center-chart-panel adm-overview-chart adm-overview-chart--combo adm-center-chart-panel--engagement"
+    id="users-charts-panel"
+    aria-labelledby="users-engagement-title"
+>
+    <header class="adm-users-engagement__head">
+        <div class="adm-users-engagement__head-text">
+            <h2 class="adm-overview-section-title" id="users-engagement-title">
+                <i class="fas fa-chart-area adm-overview-section-title__icon adm-overview-section-title__icon--users" aria-hidden="true"></i>
+                <span>فعالیت در وب و اپلیکیشن</span>
+            </h2>
+            <p class="adm-users-engagement__lede">مقایسهٔ روزانهٔ کاربران یکتا — ورود به پنل وب در برابر فعالیت اپ</p>
+        </div>
+        {% if range_label %}
+        <span class="adm-users-engagement__range">{{ range_label }}</span>
+        {% endif %}
+    </header>
+
+    <div class="adm-users-engagement__body">
+        <aside class="adm-users-engagement__channels" aria-label="خلاصه کانال‌ها">
+            {% for ch in users_engagement_highlights %}
+            <div class="adm-users-engagement-channel" data-channel="{{ ch.key }}" data-accent="{{ ch.accent }}">
+                <div class="adm-users-engagement-channel__top">
+                    <span class="adm-users-engagement-channel__icon" aria-hidden="true"><i class="fas {{ ch.icon }}"></i></span>
+                    <h3 class="adm-users-engagement-channel__title">{{ ch.title }}</h3>
+                </div>
+                <p class="adm-users-engagement-channel__hint">{{ ch.hint }}</p>
+                <dl class="adm-users-engagement-channel__metrics">
+                    <div>
+                        <dt>{{ ch.avg_label }}</dt>
+                        <dd><strong data-count-up="{{ ch.avg }}" data-format="count">{{ ch.avg|to_persian_digits }}</strong></dd>
+                    </div>
+                    <div>
+                        <dt>{{ ch.peak_label }}</dt>
+                        <dd><strong data-count-up="{{ ch.peak }}" data-format="count">{{ ch.peak|to_persian_digits }}</strong></dd>
+                    </div>
+                </dl>
+            </div>
+            {% endfor %}
+        </aside>
+
+        <div class="adm-users-engagement__chart-col">
+            <div class="ecc-chart-wrap adm-users-engagement__canvas adm-overview-chart__canvas ecc-chart-wrap--tall" dir="ltr" lang="fa" aria-label="نمودار تفکیک ورود وب و فعالیت اپ">
+                <canvas id="chart-users-engagement" role="img"></canvas>
+            </div>
+        </div>
+    </div>
+</article>

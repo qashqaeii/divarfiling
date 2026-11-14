@@ -4133,6 +4133,42 @@ body.adm-overview-active .adm-ov-header__tool:hover i {
     white-space: nowrap;
 }
 
+/* لینک پرونده در جدول نمای کلی — ظاهر مثل متن، بدون رنگ/زیرخط لینک */
+body.adm-prime-command .adm-overview-table a.adm-user-360-link--plain,
+body.adm-prime-command .adm-overview-table a.adm-user-360-link--plain.ecc-users-mgmt-user-link {
+    display: inline;
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: none;
+    border: 0;
+    border-bottom: none;
+    padding: 0;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+body.adm-prime-command .adm-overview-table a.adm-user-360-link--plain:visited {
+    color: inherit;
+}
+
+body.adm-prime-command .adm-overview-table a.adm-user-360-link--plain strong {
+    font-weight: 800;
+    color: inherit;
+}
+
+body.adm-prime-command .adm-overview-table a.adm-user-360-link--plain:hover,
+body.adm-prime-command .adm-overview-table a.adm-user-360-link--plain:hover strong {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: none;
+}
+
+body.adm-prime-command .adm-overview-table a.adm-user-360-link--plain:focus-visible {
+    outline: 2px solid rgba(91, 79, 207, 0.45);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 .adm-overview-badge {
     display: inline-flex;
     padding: 3px 8px;

@@ -117,7 +117,7 @@ def preview_phone_detector_json(
     meta = data.get('metadata') or {}
     city = str(meta.get('city') or '')
     district = str(meta.get('district') or '')
-    category = str(meta.get('category') or '')
+    category = resolve_listing_category_key(str(meta.get('category') or '')) or str(meta.get('category') or '')
 
     stats = {
         'read': 0,
@@ -258,7 +258,9 @@ def create_preview_batch(
             'city_id': (preview.metadata or {}).get('city_id') or '',
             'district': normalize_region_label((preview.metadata or {}).get('district') or ''),
             'district_id': (preview.metadata or {}).get('district_id') or '',
-            'listing_category': normalize_region_label((preview.metadata or {}).get('listing_category') or ''),
+            'listing_category': resolve_listing_category_key(
+                (preview.metadata or {}).get('listing_category') or ''
+            ),
             'scraped_at': scraped_at,
             'metadata': {
                 **(preview.metadata or {}),
@@ -281,6 +283,58 @@ def normalize_region_label(text: str) -> str:
     t = t.replace('ك', 'ک').replace('ي', 'ی').replace('ة', 'ه')
     t = re.sub(r'\s+', ' ', t).strip()
     return t
+
+
+_LISTING_CATEGORY_LEGACY_KEYS: dict[str, str] = {
+    'آپارتمان سل': 'apartment-sell',
+    'آپارتمان-سل': 'apartment-sell',
+    'آپارتمان رنت': 'apartment-rent',
+    'آپارتمان-رنت': 'apartment-rent',
+    'ویلا سل': 'villa-sell',
+    'ویلا-سل': 'villa-sell',
+    'ویلا رنت': 'villa-rent',
+    'ویلا-رنت': 'villa-rent',
+}
+
+
+def resolve_listing_category_key(value: str) -> str:
+    """کلید استاندارد دسته دیوار — برای DB و ادغام لیست."""
+    from accounts.services.acquisition_automation_ui import CATEGORY_CHOICES
+
+    known = {k for k, _ in CATEGORY_CHOICES}
+    raw = (value or '').strip()
+    if not raw:
+        return ''
+    if raw in known:
+        return raw
+    norm = re.sub(r'[\s_]+', '-', raw.casefold())
+    if norm in known:
+        return norm
+    legacy = _LISTING_CATEGORY_LEGACY_KEYS.get(raw) or _LISTING_CATEGORY_LEGACY_KEYS.get(
+        normalize_region_label(raw)
+    )
+    if legacy:
+        return legacy
+    for key, label in CATEGORY_CHOICES:
+        if raw == label:
+            return key
+    return raw
+
+
+def listing_category_display_fa(value: str) -> str:
+    """برچسب فارسی دسته آگهی — فروش آپارتمان نه apartment-sell یا آپارتمان سل."""
+    from accounts.services.acquisition_automation_ui import CATEGORY_CHOICES
+
+    labels = dict(CATEGORY_CHOICES)
+    raw = (value or '').strip()
+    if not raw:
+        return '—'
+    key = resolve_listing_category_key(raw)
+    if key in labels:
+        return labels[key]
+    if raw in labels.values():
+        return raw
+    return raw
 
 
 _PERSIAN_CHAR_RE = re.compile(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]')
@@ -421,12 +475,13 @@ def get_or_create_region_list(
     batch: Optional[LeadImportBatch] = None,
 ) -> tuple[LeadList, bool]:
     """یک LeadList برای هر ترکیب شهر/منطقه/دسته."""
-    slug = _list_slug(city, district, listing_category)
     city_n = normalize_region_label(city)
     district_n = normalize_region_label(district)
-    cat_n = normalize_region_label(listing_category)
+    cat_key = resolve_listing_category_key(listing_category) or normalize_region_label(listing_category)
+    slug = _list_slug(city, district, cat_key)
+    cat_label = listing_category_display_fa(cat_key)
     list_name = ' · '.join(
-        p for p in ('phone-detector', city_n or None, district_n or None, cat_n or None) if p
+        p for p in ('phone-detector', city_n or None, district_n or None, cat_label or None) if p
     )
     lead_list, created = LeadList.objects.get_or_create(
         slug=slug,
@@ -435,7 +490,7 @@ def get_or_create_region_list(
             'source': 'phone_detector',
             'city': city_n,
             'district': district_n,
-            'listing_category': cat_n,
+            'listing_category': cat_key,
             'tags': ['phone-detector', 'cold', city_n, district_n, 'region-merged'],
             'batch': batch,
         },
@@ -570,9 +625,32 @@ def region_lists_with_batches(limit: int = 50) -> list[dict]:
             'batch_count': len(batches),
             'batches': batches,
             'latest_batch': batches[0] if batches else None,
+            'category_label': listing_category_display_fa(lst.listing_category),
         })
     # مرتب‌سازی: بیشتر عضو / جدیدتر
     rows.sort(key=lambda r: (-r['member_count'], -(r['latest_batch'].pk if r['latest_batch'] else 0)))
+    return rows
+
+
+def compose_lists_for_campaign(*, limit: int = 60) -> list[dict]:
+    """لیست‌های قابل انتخاب در تب «ساخت کمپین» — با شمار عضو برای picker مینیمال."""
+    from django.db.models import Count
+
+    qs = (
+        LeadList.objects.annotate(member_count=Count('members', distinct=True))
+        .order_by('-updated_at', '-id')[:limit]
+    )
+    rows: list[dict] = []
+    for lst in qs:
+        loc_parts = [p.strip() for p in (lst.city or '', lst.district or '') if (p or '').strip()]
+        category = (lst.listing_category or '').strip()
+        rows.append({
+            'list': lst,
+            'member_count': int(lst.member_count or 0),
+            'category_label': listing_category_display_fa(category),
+            'location_label': ' · '.join(loc_parts) if loc_parts else '—',
+            'source_label': (lst.source or 'import').replace('_', ' '),
+        })
     return rows
 
 

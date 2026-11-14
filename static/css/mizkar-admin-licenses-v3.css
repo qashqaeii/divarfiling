@@ -27,3 +27,1822 @@
 @media(max-width:600px){.biz-page--licenses .adm-licenses-v3-intro{padding:1.1rem;border-radius:17px}.biz-page--licenses .adm-licenses-v3-jumps{flex-wrap:nowrap;overflow-x:auto;padding-bottom:.25rem}.biz-page--licenses .adm-licenses-v3-jumps a{white-space:nowrap;flex-shrink:0}.biz-page--licenses .ecc-kpi-grid{gap:.55rem}.biz-page--licenses .adm-table th,.biz-page--licenses .adm-table td{padding:.7rem .8rem}}
 @media(prefers-color-scheme:dark){.biz-page--licenses{--lic-border:rgba(185,182,235,.18);--lic-shadow:none}.biz-page--licenses .adm-licenses-v3-intro,.biz-page--licenses .ecc-cmd-summary-card,.biz-page--licenses .adm-table-wrap,.biz-page--licenses .adm-licenses-v3-jumps a{background-color:var(--adm-card-bg,#24263b)}.biz-page--licenses .adm-table th{background:rgba(156,146,245,.09)}.biz-page--licenses .adm-table tbody tr:hover{background:rgba(156,146,245,.07)}}
 @media(prefers-reduced-motion:reduce){.biz-page--licenses *{transition:none!important;animation:none!important}}
+
+/* پالس ۴ شاخص — یک سطر (دسکتاپ) */
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad.adm-overview-kpi-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad .adm-center-pulse__header {
+    grid-column: 1 / -1;
+    align-items: center;
+    padding-bottom: 0;
+    margin-bottom: 2px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad .adm-center-pulse__grain {
+    font-size: 0.64rem;
+    max-width: none;
+    text-align: start;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad .adm-center-pulse__kpi {
+    min-height: 108px;
+    padding: 12px 12px 10px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad .adm-center-pulse__foot--compare {
+    border-top-color: rgba(232, 234, 244, 0.75);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad .adm-overview-kpi__value {
+    font-size: clamp(1.05rem, 2vw, 1.22rem);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad .adm-center-pulse__foot {
+    min-height: 1.25rem;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad .adm-center-pulse__hint--link {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+    opacity: 0.85;
+}
+
+@media (max-width: 719px) {
+    body.adm-prime-command .biz-page--licenses .adm-center-pulse--licenses-quad.adm-overview-kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+}
+
+/* ——— هیرو overview: نمودار + وضعیت ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero {
+    margin-bottom: clamp(14px, 1.4vw, 18px);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero__chart {
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel.adm-prime-hero-chart {
+    height: 100%;
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    background: #fff;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.92) inset,
+        0 12px 32px rgba(31, 36, 64, 0.05);
+    padding: 14px 14px 12px;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__band {
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__insights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 14px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__insight {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__insight-icon {
+    display: block;
+    margin-top: 1px;
+    font-size: 0.78rem;
+    opacity: 0.88;
+    background: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__insight--issued_sum .adm-prime-hero-chart__insight-icon {
+    color: #7c3aed;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__insight--renew_sum .adm-prime-hero-chart__insight-icon {
+    color: #10b981;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__insight--renewal_revenue .adm-prime-hero-chart__insight-icon {
+    color: #d97706;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-overview-chart__legend span[data-series="issued"] i {
+    width: 10px;
+    height: 6px;
+    border-radius: 2px;
+    background: rgba(124, 58, 237, 0.85);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-overview-chart__legend span[data-series="renewals"] i {
+    background: #10b981;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status {
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    background: linear-gradient(180deg, #ffffff 0%, #fbfbfe 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 10px 28px rgba(31, 36, 64, 0.045);
+    padding: 14px 14px 12px;
+    gap: 10px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status--warn {
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status--high {
+    border-color: rgba(244, 63, 94, 0.22);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__head {
+    align-items: flex-start;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__grain {
+    margin: 3px 0 0;
+    font-size: 0.62rem;
+    font-weight: 650;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__score {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    padding: 6px 9px;
+    border-radius: 10px;
+    background: rgba(91, 79, 207, 0.07);
+    line-height: 1.2;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__score strong {
+    font-size: 0.92rem;
+    font-weight: 900;
+    color: #5b4fcf;
+    font-variant-numeric: tabular-nums;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__score span {
+    font-size: 0.56rem;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__viz {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 4px 0 6px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__donut {
+    width: 92px;
+    height: 92px;
+    background: conic-gradient(
+        #10b981 0 var(--a),
+        #f59e0b var(--a) calc(var(--a) + var(--b)),
+        #f43f5e calc(var(--a) + var(--b)) calc(var(--a) + var(--b) + var(--c)),
+        #e8eaf4 calc(var(--a) + var(--b) + var(--c)) 100%
+    );
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__keys {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 8px;
+    font-size: 0.58rem;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__keys li[data-tone="rose"] span::before {
+    background: #f43f5e;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-link {
+    font-size: 0.68rem;
+    font-weight: 750;
+    color: var(--adm-text, #2f3550);
+    text-decoration: none;
+    line-height: 1.35;
+}
+
+@media (hover: hover) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-link:hover {
+        color: #5b4fcf;
+    }
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-val {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-val strong {
+    font-size: 0.78rem;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-val em {
+    font-size: 0.58rem;
+    font-style: normal;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-track {
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(232, 234, 244, 0.85);
+    overflow: hidden;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bar-fill {
+    display: block;
+    height: 100%;
+    width: var(--fill, 0%);
+    max-width: 100%;
+    border-radius: inherit;
+    background: #10b981;
+    transition: width 0.35s ease;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bars li[data-tone="amber"] .adm-licenses-hero-status__bar-fill {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__bars li[data-tone="rose"] .adm-licenses-hero-status__bar-fill {
+    background: linear-gradient(90deg, #f43f5e, #fb7185);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__ops {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 2px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__ops-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    min-width: 0;
+    padding: 8px 8px 7px;
+    border-radius: 10px;
+    border: 1px solid rgba(232, 234, 244, 0.92);
+    background: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+@media (hover: hover) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__ops-card:hover {
+        border-color: rgba(91, 79, 207, 0.25);
+        transform: translateY(-1px);
+    }
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__ops-label {
+    font-size: 0.56rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__ops-value {
+    font-size: 0.84rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--adm-text, #1f2440);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__ops-card[data-tone="amber"] .adm-licenses-hero-status__ops-value {
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range {
+    margin-top: auto;
+    padding: 9px 10px;
+    border-radius: 11px;
+    border: 1px solid rgba(232, 234, 244, 0.92);
+    background: rgba(250, 251, 255, 0.88);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-label {
+    font-size: 0.58rem;
+    font-weight: 750;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-link {
+    font-size: 0.58rem;
+    font-weight: 750;
+    color: #5b4fcf;
+    text-decoration: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-metric {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-metric span {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--adm-text, #2f3550);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-metric strong {
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: #5b4fcf;
+    font-variant-numeric: tabular-nums;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__range-hint {
+    margin: 0;
+    font-size: 0.56rem;
+    font-weight: 650;
+    line-height: 1.45;
+    color: var(--adm-muted, #9aa3b8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__alert {
+    margin-top: 4px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__empty {
+    margin: 0;
+    padding: 12px 0;
+    font-size: 0.68rem;
+    font-weight: 650;
+    color: var(--adm-muted, #8b93a8);
+    text-align: center;
+}
+
+@media (max-width: 719px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-hero-status__ops {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 719px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-hero-chart-panel .adm-prime-hero-chart__insights {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+/* ——— صف اقدام (overview hero) — مینیمال پریمیوم ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-hero > .adm-licenses-action-queue {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 12px 14px 11px;
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.96);
+    background: #fff;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.92) inset,
+        0 10px 28px rgba(31, 36, 64, 0.045);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__head {
+    margin-bottom: 8px;
+    padding: 0 2px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__subtitle,
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__why {
+    display: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__count {
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    background: rgba(250, 251, 255, 0.95);
+    font-size: 0.64rem;
+    font-weight: 800;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    max-height: none;
+    overflow: visible;
+}
+
+@media (min-width: 640px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__row {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 0;
+    padding: 10px 10px 10px 14px;
+    border: 1px solid rgba(232, 234, 244, 0.92);
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+    box-shadow: 0 1px 8px rgba(31, 36, 64, 0.035);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__row::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: #5b4fcf;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__row[data-priority="critical"]::before {
+    background: #dc2626;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__row[data-priority="high"]::before {
+    background: #d97706;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__row[data-priority="medium"]::before {
+    background: #7c3aed;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__main {
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__body {
+    gap: 2px;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__icon {
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    color: #7c3aed;
+    opacity: 0.9;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__icon i {
+    font-size: 0.78rem;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__body strong {
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__meta {
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--adm-muted, #9aa3b8);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__badge {
+    flex-shrink: 0;
+    min-width: 2.1rem;
+    padding: 4px 7px;
+    border-radius: 8px;
+    background: rgba(91, 79, 207, 0.1);
+    color: #5b4fcf;
+    font-size: 0.72rem;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__cta {
+    flex-shrink: 0;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    gap: 4px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #5b4fcf;
+    white-space: nowrap;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__cta .adm-icon-dir {
+    font-size: 0.58rem;
+    opacity: 0.75;
+}
+
+@media (hover: hover) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__row:hover {
+        border-color: rgba(91, 79, 207, 0.22);
+        box-shadow: 0 6px 18px rgba(31, 36, 64, 0.07);
+    }
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-prime-action-queue__cta span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__empty {
+    border-radius: 12px;
+    border: 1px dashed rgba(232, 234, 244, 0.95);
+    background: rgba(250, 251, 255, 0.85);
+    padding: 14px 12px;
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-hero > .adm-licenses-action-queue {
+    background: rgba(22, 26, 38, 0.92);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-action-queue .adm-overview-actions__row {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ——— KPI پریمیوم (#licenses-kpi) ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux--pro {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0 0 18px;
+    padding: 16px 16px 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(232, 234, 244, 0.94);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(251, 252, 255, 0.96) 100%);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.95) inset,
+        0 14px 40px rgba(31, 36, 64, 0.045);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(232, 234, 244, 0.88);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #5b4fcf;
+    background: rgba(91, 79, 207, 0.09);
+    border: 1px solid rgba(91, 79, 207, 0.12);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__compare {
+    font-size: 0.58rem;
+    font-weight: 650;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__grid {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__grid--range,
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__grid--snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__grid--snapshot {
+    gap: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__split {
+    height: 1px;
+    margin: 2px 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(232, 234, 244, 0.95) 16%,
+        rgba(232, 234, 244, 0.95) 84%,
+        transparent 100%
+    );
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__snapshot {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__snapshot-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__snapshot-title {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 850;
+    color: var(--adm-text, #2f3550);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__snapshot-hint {
+    font-size: 0.56rem;
+    font-weight: 650;
+    color: var(--adm-muted, #9aa3b8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card {
+    --lic-kpi-accent: #7c3aed;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 118px;
+    padding: 12px 13px 11px;
+    border-radius: 14px;
+    border: 1px solid rgba(232, 234, 244, 0.92);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset;
+    overflow: hidden;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 3px;
+    background: var(--lic-kpi-accent);
+    opacity: 0.88;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card[data-accent="violet"] { --lic-kpi-accent: #7c3aed; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card[data-accent="emerald"] { --lic-kpi-accent: #10b981; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card[data-accent="amber"] { --lic-kpi-accent: #f59e0b; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card[data-accent="cyan"] { --lic-kpi-accent: #06b6d4; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card[data-accent="rose"] { --lic-kpi-accent: #f43f5e; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card[data-accent="blue"] { --lic-kpi-accent: #3b82f6; }
+
+@media (hover: hover) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card:hover {
+        border-color: rgba(199, 205, 218, 0.95);
+        box-shadow: 0 10px 28px rgba(31, 36, 64, 0.07);
+        transform: translateY(-1px);
+    }
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__label {
+    font-size: 0.68rem;
+    font-weight: 750;
+    color: var(--adm-muted, #6e7891);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    font-size: 0.62rem;
+    color: var(--lic-kpi-accent);
+    background: rgba(91, 79, 207, 0.08);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card[data-accent="emerald"] .adm-licenses-kpi-card__glyph {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__value {
+    font-size: clamp(1rem, 2.4vw, 1.28rem);
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    color: var(--adm-text, #12162b);
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__delta {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    padding: 3px 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__tag {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    color: #5b4fcf;
+    background: rgba(91, 79, 207, 0.1);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding: 6px 8px;
+    border-radius: 9px;
+    background: rgba(244, 245, 250, 0.9);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__prev-label {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__prev-value {
+    font-size: 0.66rem;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+    color: var(--adm-text, #2a3148);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__hint {
+    margin: -2px 0 0;
+    font-size: 0.56rem;
+    font-weight: 650;
+    line-height: 1.45;
+    color: var(--adm-muted, #9aa3b8);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card--snapshot {
+    min-height: 86px;
+    padding: 10px 11px;
+    text-align: center;
+    background: rgba(250, 251, 255, 0.82);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card--snapshot::before {
+    opacity: 0.45;
+    height: 2px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card--snapshot .adm-licenses-kpi-card__head,
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card--snapshot .adm-licenses-kpi-card__main {
+    justify-content: center;
+    width: 100%;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card--snapshot .adm-licenses-kpi-card__foot {
+    justify-content: center;
+    background: transparent;
+    padding: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__caption {
+    font-size: 0.56rem;
+    font-weight: 650;
+    color: var(--adm-muted, #8b93a8);
+}
+
+@media (min-width: 720px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__grid--range,
+    body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__grid--snapshot {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 719px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux__grid--range > :last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ——— تفکیک تمدید ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal {
+    margin: 0 0 14px;
+    padding: 14px 14px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.92);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 8px 24px rgba(31, 36, 64, 0.035);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-prime-fold .adm-licenses-renewal {
+    margin-bottom: 12px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(232, 234, 244, 0.85);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--adm-muted, #8b93a8);
+    background: rgba(244, 245, 250, 0.9);
+    border: 1px solid rgba(232, 234, 244, 0.9);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__card {
+    --lic-renewal-accent: #7c3aed;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 72px;
+    padding: 10px 11px 9px;
+    border-radius: 12px;
+    border: 1px solid rgba(232, 234, 244, 0.9);
+    background: rgba(250, 251, 255, 0.75);
+    overflow: hidden;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+  right: 0;
+    left: 0;
+    height: 2px;
+    background: var(--lic-renewal-accent);
+    opacity: 0.85;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__card[data-accent="emerald"] { --lic-renewal-accent: #10b981; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__card[data-accent="violet"] { --lic-renewal-accent: #7c3aed; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__card[data-accent="amber"] { --lic-renewal-accent: #f59e0b; }
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__card[data-accent="cyan"] { --lic-renewal-accent: #06b6d4; }
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__label {
+    font-size: 0.64rem;
+    font-weight: 750;
+    color: var(--adm-muted, #6e7891);
+    line-height: 1.35;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__value {
+    font-size: clamp(0.92rem, 2vw, 1.14rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--adm-text, #12162b);
+    line-height: 1.15;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__hint {
+    margin-top: auto;
+    font-size: 0.54rem;
+    font-weight: 650;
+    line-height: 1.4;
+    color: var(--adm-muted, #9aa3b8);
+}
+
+@media (min-width: 720px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-renewal {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-renewal__card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ——— نمودار درآمد تمدید (#licenses-charts) ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-charts {
+    margin: 0 0 14px;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart.adm-prime-hero-chart {
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.95);
+    background: #fff;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.92) inset,
+        0 12px 32px rgba(31, 36, 64, 0.05);
+    padding: 14px 14px 12px;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__band {
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__insights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 14px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__insight {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__insight-icon {
+    display: block;
+    margin-top: 1px;
+    font-size: 0.78rem;
+    opacity: 0.9;
+    background: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__insight--revenue_sum .adm-prime-hero-chart__insight-icon {
+    color: #d97706;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__insight--revenue_peak .adm-prime-hero-chart__insight-icon {
+    color: #f59e0b;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__insight--revenue_avg .adm-prime-hero-chart__insight-icon {
+    color: #10b981;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-overview-chart__legend span[data-series="revenue"] i {
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-overview-chart__canvas.ecc-chart-wrap--tall {
+    min-height: 220px;
+}
+
+@media (max-width: 719px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart .adm-prime-hero-chart__insights {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-revenue-chart.adm-prime-hero-chart {
+    background: rgba(26, 30, 42, 0.98);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+/* ——— جدول در شرف انقضا ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card.adm-overview-card {
+    margin: 0 0 14px;
+    padding: 14px 14px 10px;
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.94);
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(31, 36, 64, 0.04);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__head {
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__hint {
+    margin: 3px 0 0;
+    font-size: 0.62rem;
+    font-weight: 650;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__count {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap {
+    border: 1px solid rgba(232, 234, 244, 0.9);
+    border-radius: 12px;
+    background: rgba(250, 251, 255, 0.7);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table th {
+    padding: 9px 10px;
+    font-size: 0.68rem;
+    background: rgba(91, 79, 207, 0.04);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table td {
+    padding: 10px 10px;
+    font-size: 0.72rem;
+    vertical-align: middle;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table tbody tr:hover {
+    background: rgba(91, 79, 207, 0.04);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__plan {
+    max-width: 16ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__date {
+    font-variant-numeric: tabular-nums;
+    color: var(--adm-muted, #6e7891);
+    font-size: 0.68rem;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__muted {
+    color: var(--adm-muted, #9aa3b8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-urgency-badge[data-status="high"] {
+    background: rgba(244, 63, 94, 0.12);
+    color: #e11d48;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-urgency-badge[data-status="warn"] {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-urgency-badge[data-status="ok"] {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 22px 12px;
+    border-radius: 12px;
+    border: 1px dashed rgba(232, 234, 244, 0.95);
+    background: rgba(250, 251, 255, 0.85);
+    text-align: center;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__empty i {
+    font-size: 1.1rem;
+    color: #10b981;
+    opacity: 0.85;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__empty p {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 650;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__foot {
+    margin-top: 10px;
+    padding-top: 8px;
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table th:nth-child(2),
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table td:nth-child(2) {
+        display: none;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-table-card.adm-overview-card {
+    background: rgba(26, 30, 42, 0.98);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ——— جدول تمدیدهای اخیر ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card--renewals .adm-licenses-table-card__count--renewals {
+    background: rgba(124, 58, 237, 0.1);
+    color: #6d28d9;
+    border: 1px solid rgba(124, 58, 237, 0.16);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip i {
+    font-size: 0.35rem;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-kind="formal"] i {
+    color: #059669;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-kind="repurchase"] i {
+    color: #7c3aed;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap--renewals {
+    background: linear-gradient(180deg, rgba(250, 251, 255, 0.92) 0%, rgba(247, 248, 255, 0.78) 100%);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--renewals tbody tr {
+    position: relative;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--renewals tbody tr[data-kind="formal"] {
+    box-shadow: inset 3px 0 0 rgba(16, 185, 129, 0.55);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--renewals tbody tr[data-kind="repurchase"] {
+    box-shadow: inset 3px 0 0 rgba(124, 58, 237, 0.42);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__product-title {
+    display: block;
+    max-width: 18ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 650;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.6rem;
+    font-weight: 650;
+    color: var(--adm-muted, #9aa3b8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__sub--mobile {
+    display: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__amount {
+    font-variant-numeric: tabular-nums;
+    font-weight: 750;
+    font-size: 0.72rem;
+    color: #1f2440;
+    white-space: nowrap;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__when {
+    min-width: 7.5rem;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__recency {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal-kind-badge[data-kind="formal"] {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-renewal-kind-badge[data-kind="repurchase"] {
+    background: rgba(124, 58, 237, 0.12);
+    color: #6d28d9;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__empty-hint {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--adm-muted, #9aa3b8);
+    max-width: 26ch;
+    line-height: 1.45;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__empty--renewals i {
+    color: #7c3aed;
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--renewals th:nth-child(2),
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--renewals td:nth-child(2) {
+        display: none;
+    }
+
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__sub--mobile {
+        display: block;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap--renewals {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table__amount {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+/* ——— جدول بدون لایسنس ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card--no-license .adm-licenses-table-card__count--no-license {
+    background: rgba(99, 102, 241, 0.11);
+    color: #4f46e5;
+    border: 1px solid rgba(99, 102, 241, 0.18);
+    font-variant-numeric: tabular-nums;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-tier="paid"] i {
+    color: #e11d48;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-tier="pending"] i {
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-tier="signup"] i {
+    color: #6366f1;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap--no-license {
+    background: linear-gradient(180deg, rgba(250, 251, 255, 0.94) 0%, rgba(245, 246, 255, 0.82) 100%);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--no-license tbody tr[data-tier="paid"] {
+    box-shadow: inset 3px 0 0 rgba(225, 29, 72, 0.5);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--no-license tbody tr[data-tier="pending"] {
+    box-shadow: inset 3px 0 0 rgba(245, 158, 11, 0.48);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--no-license tbody tr[data-tier="signup"] {
+    box-shadow: inset 3px 0 0 rgba(99, 102, 241, 0.35);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-no-license-tier-badge[data-tier="paid"] {
+    background: rgba(244, 63, 94, 0.11);
+    color: #be123c;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-no-license-tier-badge[data-tier="pending"] {
+    background: rgba(245, 158, 11, 0.13);
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-no-license-tier-badge[data-tier="signup"] {
+    background: rgba(99, 102, 241, 0.11);
+    color: #4f46e5;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-no-license-metric--paid {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    color: #1f2440;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-no-license-pending-badge {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    font-variant-numeric: tabular-nums;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__empty--no-license i {
+    color: #6366f1;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__foot--split {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 14px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__more-link {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--adm-muted, #6e7891);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__more-link:hover {
+    color: #4f46e5;
+}
+
+@media (max-width: 719px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--no-license th:nth-child(4),
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--no-license td:nth-child(4) {
+        display: none;
+    }
+}
+
+@media (max-width: 559px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--no-license th:nth-child(3),
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--no-license td:nth-child(3) {
+        display: none;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap--no-license {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-no-license-metric--paid {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ——— جدول منقضی اخیر ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card--expired .adm-licenses-table-card__count--expired {
+    background: rgba(100, 116, 139, 0.12);
+    color: #475569;
+    border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-lapse="high"] i {
+    color: #e11d48;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-lapse="warn"] i {
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__chip[data-lapse="ok"] i {
+    color: #64748b;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap--expired {
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.82) 100%);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--expired tbody tr[data-lapse="high"] {
+    box-shadow: inset 3px 0 0 rgba(225, 29, 72, 0.48);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--expired tbody tr[data-lapse="warn"] {
+    box-shadow: inset 3px 0 0 rgba(245, 158, 11, 0.45);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--expired tbody tr[data-lapse="ok"],
+body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--expired tbody tr[data-lapse="muted"] {
+    box-shadow: inset 3px 0 0 rgba(100, 116, 139, 0.35);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-lapse-badge[data-status="high"] {
+    background: rgba(244, 63, 94, 0.12);
+    color: #e11d48;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-lapse-badge[data-status="warn"] {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-lapse-badge[data-status="ok"],
+body.adm-prime-command .biz-page--licenses .adm-licenses-lapse-badge[data-status="muted"] {
+    background: rgba(100, 116, 139, 0.12);
+    color: #64748b;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__empty--expired i {
+    color: #64748b;
+}
+
+@media (max-width: 639px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--expired th:nth-child(2),
+    body.adm-prime-command .biz-page--licenses .adm-licenses-preview-table--expired td:nth-child(2) {
+        display: none;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__wrap--expired {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-table-card--expired .adm-licenses-table-card__count--expired {
+    color: rgba(255, 255, 255, 0.72);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ——— خروجی‌های لایسنس ——— */
+body.adm-prime-command .biz-page--licenses .adm-licenses-exports.adm-overview-card {
+    margin: 0 0 14px;
+    padding: 0 0 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(232, 234, 244, 0.94);
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(31, 36, 64, 0.04);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-exports__head {
+    padding: 14px 14px 10px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-exports__meta {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--adm-muted, #8b93a8);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 8px;
+    padding: 0 14px 4px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(232, 234, 244, 0.92);
+    background: rgba(250, 251, 255, 0.82);
+    text-decoration: none;
+    color: inherit;
+    min-width: 0;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip:hover {
+    border-color: rgba(124, 58, 237, 0.32);
+    background: rgba(124, 58, 237, 0.04);
+    transform: translateY(-1px);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip:focus-visible {
+    outline: 2px solid rgba(124, 58, 237, 0.45);
+    outline-offset: 2px;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip > i {
+    font-size: 0.92rem;
+    flex-shrink: 0;
+    width: 1.15rem;
+    text-align: center;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip__text strong {
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip__text em {
+    font-size: 0.62rem;
+    font-style: normal;
+    font-weight: 650;
+    line-height: 1.4;
+    color: var(--adm-muted, #8b93a8);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip__count {
+    flex-shrink: 0;
+    font-size: 0.66rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.1);
+    color: #6d28d9;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip[data-accent="emerald"] > i {
+    color: #059669;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip[data-accent="emerald"] .adm-licenses-export-chip__count {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip[data-accent="amber"] > i {
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip[data-accent="amber"] .adm-licenses-export-chip__count {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip[data-accent="red"] > i {
+    color: #e11d48;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip[data-accent="red"] .adm-licenses-export-chip__count {
+    background: rgba(244, 63, 94, 0.12);
+    color: #e11d48;
+}
+
+@media (max-width: 520px) {
+    body.adm-prime-command .biz-page--licenses .adm-licenses-export-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-exports.adm-overview-card {
+    background: rgba(26, 30, 42, 0.98);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-export-chip:hover {
+    background: rgba(124, 58, 237, 0.1);
+    border-color: rgba(124, 58, 237, 0.28);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-lux--pro {
+    background: rgba(26, 30, 42, 0.98);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-licenses-kpi-card__foot {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ——— لینک‌ها (بدون آبی / underline پیش‌فرض) ——— */
+body.adm-prime-command .biz-page--licenses a.adm-user-360-link,
+body.adm-prime-command .biz-page--licenses a.ecc-users-mgmt-user-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+body.adm-prime-command .biz-page--licenses a.adm-user-360-link:visited,
+body.adm-prime-command .biz-page--licenses a.ecc-users-mgmt-user-link:visited {
+    color: inherit;
+}
+
+body.adm-prime-command .biz-page--licenses a.adm-user-360-link:focus-visible,
+body.adm-prime-command .biz-page--licenses a.ecc-users-mgmt-user-link:focus-visible {
+    outline: 2px solid rgba(124, 58, 237, 0.5);
+    outline-offset: 2px;
+}
+
+body.adm-prime-command .biz-page--licenses a.adm-user-360-link:hover strong,
+body.adm-prime-command .biz-page--licenses a.ecc-users-mgmt-user-link:hover strong {
+    color: #6d28d9;
+}
+
+body.adm-prime-command .biz-page--licenses a.adm-user-360-link--profile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    width: 100%;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-user-360-link__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-user-360-link__text strong {
+    overflow-wrap: anywhere;
+    font-weight: 750;
+    color: #1f2440;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-user-360-link__text small {
+    font-size: 0.62rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    color: var(--adm-muted, #8b93a8);
+    text-decoration: none;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-user-360-link__goto {
+    flex: 0 0 auto;
+    font-size: 0.68rem;
+    opacity: 0.45;
+    color: #7c3aed;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+body.adm-prime-command .biz-page--licenses a.adm-user-360-link--profile:hover .adm-user-360-link__goto {
+    opacity: 1;
+    transform: translateX(-2px);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-overview-card__foot a,
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__more-link {
+    color: var(--adm-muted, #6e7891);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+body.adm-prime-command .biz-page--licenses .adm-overview-card__foot a:visited,
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__more-link:visited {
+    color: var(--adm-muted, #6e7891);
+}
+
+body.adm-prime-command .biz-page--licenses .adm-overview-card__foot a:hover,
+body.adm-prime-command .biz-page--licenses .adm-licenses-table-card__more-link:hover {
+    color: #6d28d9;
+    text-decoration: none;
+}
+
+[data-theme="dark"] body.adm-prime-command .biz-page--licenses .adm-user-360-link__text strong {
+    color: rgba(255, 255, 255, 0.92);
+}

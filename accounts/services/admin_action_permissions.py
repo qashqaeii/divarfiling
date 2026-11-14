@@ -51,6 +51,13 @@ def can_manage_support_tickets(user) -> bool:
     )
 
 
+def can_view_user_licenses(user) -> bool:
+    """خواندن لایسنس‌ها در پرونده ۳۶۰."""
+    if not _active_staff(user):
+        return False
+    return bool(user.is_superuser or user.has_perm('licenses.view_license'))
+
+
 def can_view_user_management(user) -> bool:
     """Full user dossiers expose identity, orders and license/device details."""
     if not _active_staff(user):
@@ -63,6 +70,41 @@ def can_view_user_management(user) -> bool:
             'licenses.view_license',
         ))
     )
+
+
+def can_view_user_commerce(user) -> bool:
+    """دسترسی خواندن سفارش‌ها و تب مالی پرونده ۳۶۰."""
+    if not _active_staff(user):
+        return False
+    return bool(user.is_superuser or user.has_perm('shop.view_order'))
+
+
+def can_access_user_360(user) -> bool:
+    """ورود به پرونده ۳۶۰ — کامل، تیکت یا مالی."""
+    return (
+        can_view_user_management(user)
+        or can_manage_support_tickets(user)
+        or can_view_user_commerce(user)
+        or can_view_user_licenses(user)
+    )
+
+
+def can_show_u360_link_in_admin_panel(user) -> bool:
+    """نمایش لینک پرونده در جداول پنل — محتوای صفحه جداگانه محدود می‌شود."""
+    return _active_staff(user)
+
+
+def can_access_user_360_tab(user, tab: str) -> bool:
+    if can_view_user_management(user):
+        return True
+    tab_key = (tab or '').strip()
+    if tab_key == 'support':
+        return can_manage_support_tickets(user)
+    if tab_key == 'commerce':
+        return can_view_user_commerce(user)
+    if tab_key == 'licenses':
+        return can_view_user_licenses(user)
+    return False
 
 
 def can_view_financial_integrity(user) -> bool:

@@ -1,0 +1,55 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-overview-card adm-sales-table-card" id="sales-table-recent" aria-label="آخرین سفارش‌ها">
+    <header class="adm-overview-card__head adm-sales-table-card__head">
+        <div class="adm-sales-table-card__titles">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-clock adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+                <span>آخرین سفارش‌ها</span>
+            </h2>
+            <p class="adm-sales-table-card__hint">پیش‌نمایش · {{ table_preview_rows|default:5|to_persian_digits }} مورد</p>
+        </div>
+        <span class="adm-overview-card__meta adm-sales-table-card__count">
+            {{ recent_orders|length|to_persian_digits }} نمایش
+        </span>
+    </header>
+    {% if recent_orders %}
+    <div class="adm-overview-table-wrap adm-sales-table-card__wrap">
+        <table class="adm-overview-table adm-sales-preview-table">
+            <thead>
+                <tr>
+                    <th scope="col">کاربر</th>
+                    <th scope="col">محصول</th>
+                    <th scope="col">مبلغ</th>
+                    <th scope="col">وضعیت</th>
+                    <th scope="col">تاریخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user u360_tab='commerce' link_plain=1 %}</td>
+                    <td>{{ order.product.title }}{% if order.plan %} · {{ order.plan.name }}{% endif %}</td>
+                    <td>{{ order.amount|currency }}</td>
+                    <td><span class="adm-overview-badge" data-status="{% if order.status == 'paid' %}ok{% elif order.status == 'pending' %}warn{% else %}muted{% endif %}">{{ order.get_status_display }}</span></td>
+                    <td>{{ order.created_at|to_jalali_fa }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="adm-sales-table-card__empty" role="status">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        <p>سفارشی ثبت نشده</p>
+    </div>
+    {% endif %}
+    {% if 'paid_orders' in admin_export_allowed_keys %}
+    <footer class="adm-overview-card__foot adm-sales-table-card__foot">
+        <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}">
+            خروجی سفارش‌های پرداخت‌شده
+            <i class="fas fa-file-excel adm-icon-dir" aria-hidden="true"></i>
+        </a>
+    </footer>
+    {% endif %}
+</article>

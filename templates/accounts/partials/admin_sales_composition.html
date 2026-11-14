@@ -1,0 +1,58 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<section class="adm-sales-composition adm-sales-renewal" id="sales-composition" aria-label="ترکیب فروش">
+    <header class="adm-sales-renewal__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-layer-group adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+            <span>ترکیب فروش</span>
+        </h2>
+        <span class="adm-sales-renewal__pill">{{ range_label|default:admin_panel_range_label_fa }}</span>
+    </header>
+    <div class="adm-sales-composition__panels adm-sales-renewal__grid">
+        <article class="adm-sales-composition__panel adm-sales-renewal__card" data-accent="emerald">
+            <span class="adm-sales-renewal__label"><i class="fas fa-box" aria-hidden="true"></i> محصول</span>
+            {% if product_revenue %}
+            <ul class="adm-sales-composition__list">
+                {% for row in product_revenue %}
+                <li>
+                    <span>{{ row.label }}</span>
+                    <strong>{{ row.total|currency }} <em>({{ row.count|to_persian_digits }})</em></strong>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="adm-sales-composition__empty adm-sales-renewal__hint">فروشی در این بازه ثبت نشده</p>
+            {% endif %}
+        </article>
+        <article class="adm-sales-composition__panel adm-sales-renewal__card" data-accent="violet">
+            <span class="adm-sales-renewal__label"><i class="fas fa-tags" aria-hidden="true"></i> پلن</span>
+            {% if plan_sales %}
+            <ul class="adm-sales-composition__list">
+                {% for row in plan_sales %}
+                <li>
+                    <span>{{ row.short_label }}</span>
+                    <strong>{{ row.total|currency }} <em>({{ row.count|to_persian_digits }})</em></strong>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="adm-sales-composition__empty adm-sales-renewal__hint">فروش پلن در این بازه ثبت نشده</p>
+            {% endif %}
+        </article>
+        <article class="adm-sales-composition__panel adm-sales-renewal__card" data-accent="cyan">
+            <span class="adm-sales-renewal__label"><i class="fas fa-credit-card" aria-hidden="true"></i> روش پرداخت</span>
+            {% if payment_methods %}
+            <ul class="adm-sales-composition__list">
+                {% for row in payment_methods %}
+                <li>
+                    <span>{{ row.label }}</span>
+                    <strong>{{ row.total|currency }} <em>({{ row.count|to_persian_digits }})</em></strong>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="adm-sales-composition__empty adm-sales-renewal__hint">پرداخت موفقی در این بازه نیست</p>
+            {% endif %}
+        </article>
+    </div>
+</section>

@@ -1,0 +1,33 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<section class="adm-licenses-renewal" id="licenses-renewal-breakdown" aria-label="تفکیک تمدید">
+    <header class="adm-licenses-renewal__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-rotate adm-overview-section-title__icon adm-overview-section-title__icon--licenses" aria-hidden="true"></i>
+            <span>تفکیک تمدید</span>
+        </h2>
+        <span class="adm-licenses-renewal__pill">{{ range_label|default:admin_panel_range_label_fa }}</span>
+    </header>
+    <div class="adm-licenses-renewal__grid" role="list">
+        <article class="adm-licenses-renewal__card" data-accent="emerald" role="listitem">
+            <span class="adm-licenses-renewal__label">تمدید رسمی</span>
+            <strong class="adm-licenses-renewal__value">{{ renewal_breakdown.formal_renewals_range|default:0|to_persian_digits }}</strong>
+            <span class="adm-licenses-renewal__hint">سفارش تمدید همان کلید</span>
+        </article>
+        <article class="adm-licenses-renewal__card" data-accent="violet" role="listitem">
+            <span class="adm-licenses-renewal__label">خرید مجدد کلید</span>
+            <strong class="adm-licenses-renewal__value">{{ renewal_breakdown.new_key_repurchase_range|default:0|to_persian_digits }}</strong>
+            <span class="adm-licenses-renewal__hint">کلید جدید پس از انقضا</span>
+        </article>
+        <article class="adm-licenses-renewal__card" data-accent="amber" role="listitem">
+            <span class="adm-licenses-renewal__label">درآمد تمدید</span>
+            <strong class="adm-licenses-renewal__value">{{ renewal_breakdown.renewal_revenue_range|default:0|currency }}</strong>
+            <span class="adm-licenses-renewal__hint">پرداخت‌شده در بازه</span>
+        </article>
+        <article class="adm-licenses-renewal__card" data-accent="cyan" role="listitem">
+            <span class="adm-licenses-renewal__label">نرخ تمدید</span>
+            <strong class="adm-licenses-renewal__value">{{ renewal_breakdown.renewal_rate_range|default:0|floatformat:1|to_persian_digits }}٪</strong>
+            <span class="adm-licenses-renewal__hint">سهم تمدید در صدور+تمدید</span>
+        </article>
+    </div>
+</section>

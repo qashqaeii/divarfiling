@@ -1,0 +1,47 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-overview-card adm-sales-table-card" id="sales-queue-fulfillment" aria-label="صدور یا تمدید ناقص">
+    <header class="adm-overview-card__head adm-sales-table-card__head">
+        <div class="adm-sales-table-card__titles">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-key adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+                <span>پرداخت موفق · صدور ناقص</span>
+            </h2>
+            <p class="adm-sales-table-card__hint">{{ fulfillment_incomplete_count|to_persian_digits }} مورد · fulfillment</p>
+        </div>
+        {% if perms.shop.view_order %}
+        <a href="{% url 'admin:shop_order_changelist' %}?status__exact=paid" class="adm-sales-table-card__admin-link" target="_blank" rel="noopener">پنل سفارش</a>
+        {% endif %}
+    </header>
+    {% if fulfillment_incomplete_orders %}
+    <div class="adm-overview-table-wrap adm-sales-table-card__wrap">
+        <table class="adm-overview-table adm-sales-preview-table">
+            <thead>
+                <tr>
+                    <th scope="col">کاربر</th>
+                    <th scope="col">پلن</th>
+                    <th scope="col">مبلغ</th>
+                    <th scope="col">تکمیل</th>
+                    <th scope="col">پرداخت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in fulfillment_incomplete_orders %}
+                <tr data-status="warn">
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user u360_tab='commerce' link_plain=1 %}</td>
+                    <td>{{ order.plan.name }}</td>
+                    <td>{{ order.amount|currency }}</td>
+                    <td>{{ order.get_fulfillment_status_display }}{% if order.fulfillment_error %} · {{ order.fulfillment_error|truncatechars:36 }}{% endif %}</td>
+                    <td>{{ order.paid_at|to_jalali_fa }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="adm-sales-table-card__empty" role="status">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        <p>همه سفارش‌های paid تکمیل شده‌اند</p>
+    </div>
+    {% endif %}
+</article>

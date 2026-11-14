@@ -1,0 +1,10 @@
+{% if user_obj and admin_can_view_user_management %}
+{% url 'admin_panel_user_360' user_obj.pk as u360_action_href %}
+<a href="{{ u360_action_href }}?return={{ request.get_full_path|urlencode }}"
+   class="adm-user-360-row-action"
+   title="پرونده ۳۶۰ · {% firstof user_obj.get_full_name user_obj.username %}"
+   aria-label="رفتن به پرونده ۳۶۰ · {% firstof user_obj.get_full_name user_obj.username %}">
+    <span class="adm-user-360-row-action__label">پرونده</span>
+    <i class="fas fa-arrow-left adm-icon-dir adm-user-360-row-action__icon" aria-hidden="true"></i>
+</a>
+{% endif %}

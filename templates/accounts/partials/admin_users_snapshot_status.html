@@ -1,0 +1,46 @@
+{% load persian_tags %}
+<aside class="adm-overview-status adm-users-snapshot-status" aria-label="وضعیت پایگاه کاربران">
+    <header class="adm-overview-status__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-database adm-overview-section-title__icon adm-overview-section-title__icon--users" aria-hidden="true"></i>
+            <span>وضعیت پایگاه</span>
+        </h2>
+    </header>
+    {% if snapshot_counts.users_total %}
+    {% widthratio snapshot_counts.users_licensed snapshot_counts.users_total 100 as pct_licensed %}
+    {% widthratio snapshot_counts.users_without_license snapshot_counts.users_total 100 as pct_no_license %}
+    {% widthratio snapshot_counts.users_inactive snapshot_counts.users_total 100 as pct_dormant %}
+    <div class="adm-overview-users__viz adm-users-snapshot-status__viz" aria-hidden="true">
+        <div class="adm-overview-donut adm-users-snapshot-status__donut"
+             style="--a: {{ pct_licensed|default:0 }}%; --b: {{ pct_no_license|default:0 }}%; --c: {{ pct_dormant|default:0 }}%;">
+            <span class="adm-overview-donut__center">
+                <strong>{{ snapshot_counts.users_total|to_persian_digits }}</strong>
+                <em>کاربر</em>
+            </span>
+        </div>
+        <ul class="adm-overview-users__donut-keys">
+            <li data-tone="emerald"><span>با لایسنس</span></li>
+            <li data-tone="amber"><span>بدون لایسنس</span></li>
+            <li data-tone="gray"><span>بدون ورود ۳۰+ روز</span></li>
+        </ul>
+    </div>
+    {% endif %}
+    <ul class="adm-overview-status__list">
+        {% for card in snapshot_kpi_cards|slice:":4" %}
+        <li data-status="{{ card.status|default:'ok' }}">
+            <span class="adm-overview-status__row-label">{{ card.label }}</span>
+            <span class="adm-overview-status__row-trail">
+                <strong>
+                    {% if card.format == 'percent' %}{{ card.value|floatformat:1|to_persian_digits }}٪{% else %}{{ card.value|to_persian_digits }}{% endif %}
+                </strong>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if action_items %}
+    <p class="adm-overview-status__note">
+        <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+        {{ action_items|length|to_persian_digits }} مورد نیازمند رسیدگی در صف اقدام
+    </p>
+    {% endif %}
+</aside>

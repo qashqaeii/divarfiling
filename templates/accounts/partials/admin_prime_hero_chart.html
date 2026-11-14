@@ -34,8 +34,13 @@
     <ul class="adm-prime-hero-chart__insights" aria-label="خلاصه بازه نمودار">
         {% for item in chart_summary %}
         <li class="adm-prime-hero-chart__insight{% if item.key %} adm-prime-hero-chart__insight--{{ item.key }}{% endif %}"{% if item.key %} data-insight-key="{{ item.key }}"{% endif %}>
-            <span class="adm-prime-hero-chart__insight-label">{{ item.label }}</span>
-            <strong class="adm-prime-hero-chart__insight-value" data-count-up="{{ item.value|default:0 }}" data-format="{{ item.format|default:'count' }}">{{ item.value|default:0|to_persian_digits }}</strong>
+            {% if item.icon %}
+            <i class="fas {{ item.icon }} adm-prime-hero-chart__insight-icon" aria-hidden="true"></i>
+            {% endif %}
+            <span class="adm-prime-hero-chart__insight-body">
+                <span class="adm-prime-hero-chart__insight-label">{{ item.label }}</span>
+                <strong class="adm-prime-hero-chart__insight-value" data-count-up="{{ item.value|default:0 }}" data-format="{{ item.format|default:'count' }}">{{ item.value|default:0|to_persian_digits }}</strong>
+            </span>
         </li>
         {% endfor %}
     </ul>

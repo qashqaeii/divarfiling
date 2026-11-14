@@ -1,0 +1,67 @@
+{% load persian_tags %}
+{% load currency_tags %}
+<article class="adm-sales-kpi-card{% if kpi_kind == 'snapshot' or card.kind == 'snapshot' %} adm-sales-kpi-card--snapshot{% endif %}"
+         data-accent="{{ card.accent|default:'violet' }}"
+         {% if card.key %}data-kpi-key="{{ card.key }}"{% endif %}
+         aria-label="{{ card.label }}">
+    <header class="adm-sales-kpi-card__head">
+        <span class="adm-sales-kpi-card__label">{{ card.label }}</span>
+        {% if kpi_kind != 'snapshot' and card.kind != 'snapshot' %}
+        <span class="adm-sales-kpi-card__glyph" aria-hidden="true">
+            <i class="fas {{ card.icon|default:'fa-chart-line' }}"></i>
+        </span>
+        {% endif %}
+    </header>
+    <div class="adm-sales-kpi-card__main">
+        {% if card.pending or card.value is None %}
+        <strong class="adm-sales-kpi-card__value" aria-label="داده کافی نیست">—</strong>
+        {% elif card.format == 'money' %}
+        <strong class="adm-sales-kpi-card__value">{{ card.value|currency }}</strong>
+        {% elif card.format == 'percent' %}
+        <strong class="adm-sales-kpi-card__value" data-count-up="{{ card.value }}" data-format="percent">{{ card.value|floatformat:1|to_persian_digits }}٪</strong>
+        {% else %}
+        <strong class="adm-sales-kpi-card__value" data-count-up="{{ card.value|default:0 }}" data-format="{{ card.format|default:'count' }}">{{ card.value|default:0|to_persian_digits }}</strong>
+        {% endif %}
+        {% if kpi_kind != 'snapshot' and card.kind != 'snapshot' %}
+            {% if card.delta is not None %}
+            <span class="adm-overview-kpi__delta adm-sales-kpi-card__delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                {% if card.delta_format == 'points' %}
+                {% if card.delta >= 0 %}+{% endif %}{{ card.delta|floatformat:1|to_persian_digits }} نقطه
+                {% else %}
+                {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                {% endif %}
+            </span>
+            {% elif card.previous_value is not None and card.previous_value == 0 and card.value %}
+            <span class="adm-sales-kpi-card__tag">جدید</span>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="adm-sales-kpi-card__foot-stack">
+        {% if kpi_kind == 'snapshot' or card.kind == 'snapshot' %}
+        {% else %}
+        <div class="adm-sales-kpi-card__compare{% if card.previous_value is None %} adm-sales-kpi-card__compare--empty{% endif %}" aria-label="مقایسه با بازهٔ مشابه">
+            <span class="adm-sales-kpi-card__compare-label">{{ card.previous_foot_label|default:'بازهٔ مشابه هم‌طول' }}</span>
+            <span class="adm-sales-kpi-card__compare-value">
+                {% if card.previous_value is not None %}
+                    {% with prev_fmt=card.previous_format|default:card.format %}
+                    {% if prev_fmt == 'money' %}
+                    {{ card.previous_value|currency }}
+                    {% elif prev_fmt == 'percent' %}
+                    {{ card.previous_value|floatformat:1|to_persian_digits }}٪
+                    {% else %}
+                    {{ card.previous_value|to_persian_digits }}
+                    {% endif %}
+                    {% endwith %}
+                {% else %}
+                <span class="adm-sales-kpi-card__compare-muted">—</span>
+                {% endif %}
+            </span>
+        </div>
+        {% endif %}
+        {% if card.foot_hint %}
+        <p class="adm-sales-kpi-card__hint">{{ card.foot_hint|to_persian_digits }}</p>
+        {% elif card.sublabel %}
+        <p class="adm-sales-kpi-card__hint">{{ card.sublabel|to_persian_digits }}</p>
+        {% endif %}
+    </div>
+</article>

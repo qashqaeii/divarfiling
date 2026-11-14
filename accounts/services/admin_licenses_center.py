@@ -29,8 +29,16 @@ from accounts.services.admin_dashboard import (
     get_users_without_license_preview,
 )
 from licenses.models import License, LicenseActivation
+from licenses.services.renewal_orders import order_is_renewal_commerce
 
 User = get_user_model()
+
+LICENSES_PULSE_KEYS = (
+    ('licenses_new_period', 'range'),
+    ('renewals_period', 'range'),
+    ('licenses_active', 'snapshot'),
+    ('licenses_expiring_7d', 'snapshot'),
+)
 
 LICENSE_EXPORT_KEYS = (
     'active_licenses',
@@ -162,6 +170,81 @@ def _renewal_revenue_series(days: int) -> Dict[str, List]:
     return {'labels': labels, 'values': values}
 
 
+def _licenses_hero_chart_summary(days: int, renewal_revenue_range: int) -> List[Dict[str, Any]]:
+    issued = _license_issued_series(days)
+    renewals = _renewals_series(days)
+    issue_vals = issued.get('values') or []
+    renew_vals = renewals.get('values') or []
+    return [
+        {
+            'key': 'issued_sum',
+            'label': 'صدور در بازه',
+            'value': sum(issue_vals),
+            'format': 'count',
+            'icon': 'fa-key',
+        },
+        {
+            'key': 'renew_sum',
+            'label': 'تمدید در بازه',
+            'value': sum(renew_vals),
+            'format': 'count',
+            'icon': 'fa-rotate',
+        },
+        {
+            'key': 'renewal_revenue',
+            'label': 'درآمد تمدید',
+            'value': renewal_revenue_range,
+            'format': 'money',
+            'icon': 'fa-sack-dollar',
+        },
+    ]
+
+
+LICENSES_HERO_CHART_LEGEND = [
+    {'key': 'issued', 'label': 'لایسنس جدید'},
+    {'key': 'renewals', 'label': 'تمدید / خرید مجدد'},
+]
+
+LICENSES_REVENUE_CHART_LEGEND = [
+    {'key': 'revenue', 'label': 'درآمد روزانه · تومان'},
+]
+
+
+def _licenses_revenue_chart_summary(
+    *,
+    renewal_revenue: int,
+    renewals: int,
+    days: int,
+) -> List[Dict[str, Any]]:
+    rev_series = _renewal_revenue_series(days)
+    values = [int(v or 0) for v in (rev_series.get('values') or [])]
+    peak = max(values) if values else 0
+    avg_per_renewal = int(renewal_revenue / renewals) if renewals else 0
+    return [
+        {
+            'key': 'revenue_sum',
+            'label': 'جمع بازه',
+            'value': renewal_revenue,
+            'format': 'money',
+            'icon': 'fa-sack-dollar',
+        },
+        {
+            'key': 'revenue_peak',
+            'label': 'بیشترین روز',
+            'value': peak,
+            'format': 'money',
+            'icon': 'fa-arrow-trend-up',
+        },
+        {
+            'key': 'revenue_avg',
+            'label': 'میانگین هر تمدید',
+            'value': avg_per_renewal,
+            'format': 'money',
+            'icon': 'fa-divide',
+        },
+    ]
+
+
 def _build_charts(days: int) -> Dict[str, Any]:
     issued = _license_issued_series(days)
     renewals = _renewals_series(days)
@@ -226,7 +309,18 @@ def _build_range_kpi_cards(
     spark = _licenses_sparkline(min(days, 7))
 
     def delta(current, previous):
-        return _pct_change(int(current or 0), int(previous or 0))
+        if isinstance(current, float) or isinstance(previous, float):
+            cur = float(current or 0)
+            prev = float(previous or 0)
+        else:
+            cur = int(current or 0)
+            prev = int(previous or 0)
+        change = _pct_change(cur, prev)
+        if change is None and prev == 0 and cur > 0:
+            return 100.0
+        if change is None and prev == 0 and cur == 0:
+            return 0.0
+        return change
 
     return [
         {
@@ -235,6 +329,7 @@ def _build_range_kpi_cards(
             'label': 'لایسنس جدید',
             'sublabel': range_label,
             'value': licenses_new,
+            'previous_value': prev_licenses_new,
             'format': 'count',
             'delta': delta(licenses_new, prev_licenses_new),
             'delta_label': 'نسبت دوره قبل',
@@ -249,6 +344,7 @@ def _build_range_kpi_cards(
             'label': 'تمدید / خرید مجدد',
             'sublabel': f'رسمی: {formal_renewals} · کلید جدید: {new_key_repurchase}',
             'value': renewals,
+            'previous_value': prev_renewals,
             'format': 'count',
             'delta': delta(renewals, prev_renewals),
             'delta_label': 'نسبت دوره قبل',
@@ -263,6 +359,7 @@ def _build_range_kpi_cards(
             'label': 'درآمد تمدید',
             'sublabel': f'{range_label} · تومان',
             'value': renewal_revenue,
+            'previous_value': prev_renewal_revenue,
             'format': 'money',
             'delta': delta(renewal_revenue, prev_renewal_revenue),
             'delta_label': 'نسبت دوره قبل',
@@ -277,8 +374,9 @@ def _build_range_kpi_cards(
             'label': 'نرخ تمدید',
             'sublabel': f'تمدید÷(جدید+تمدید) · رسمی {formal_renewals} · خرید مجدد {new_key_repurchase}',
             'value': renewal_rate,
+            'previous_value': prev_renewal_rate,
             'format': 'percent',
-            'delta': _pct_change(renewal_rate, prev_renewal_rate),
+            'delta': delta(renewal_rate, prev_renewal_rate),
             'delta_label': 'نسبت دوره قبل',
             'sparkline': spark,
             'icon': 'fa-chart-pie',
@@ -355,49 +453,259 @@ def _build_snapshot_kpi_cards(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
     ]
 
 
-def build_licenses_center_pulse(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
-    return [
-        {
-            'label': 'لایسنس فعال',
-            'value': snapshot.get('licenses_active', 0),
-            'format': 'count',
-            'href': '#licenses-kpi',
-            'icon': 'fa-key',
-            'accent': 'violet',
-        },
-        {
-            'label': 'انقضا ≤۷ روز',
-            'value': snapshot.get('licenses_expiring_7d', 0),
-            'format': 'count',
-            'href': '#licenses-table-expiring',
-            'icon': 'fa-clock',
-            'accent': 'amber',
-        },
-        {
-            'label': 'منقضی',
-            'value': snapshot.get('licenses_expired', 0),
-            'format': 'count',
-            'href': '#licenses-table-expired',
-            'icon': 'fa-circle-xmark',
-            'accent': 'amber',
-        },
-        {
-            'label': 'فعال‌سازی دستگاه',
-            'value': snapshot.get('active_devices', 0),
-            'format': 'count',
-            'hint': 'Activation',
-            'icon': 'fa-mobile-screen',
-            'accent': 'blue',
-        },
-        {
-            'label': 'کاربر بدون لایسنس',
-            'value': snapshot.get('users_without_license', 0),
-            'format': 'count',
-            'href': reverse('admin_panel_users') + '#users-table-no-license',
-            'icon': 'fa-user-slash',
-            'accent': 'cyan',
-        },
-    ]
+def _order_is_formal_renewal_preview(order) -> bool:
+    if getattr(order, 'renewal_license_id', None):
+        return True
+    prefetched = getattr(order, '_prefetched_objects_cache', None) or {}
+    items = prefetched.get('renewal_items')
+    if items is not None:
+        return len(items) > 0
+    return order_is_renewal_commerce(order)
+
+
+def build_recent_renewal_preview_rows(orders) -> Dict[str, Any]:
+    """ردیف‌های جدول تمدیدهای اخیر — نوع تمدید، مبلغ، زمان نسبی."""
+    now = timezone.now()
+    rows: List[Dict[str, Any]] = []
+    formal_count = 0
+    new_key_count = 0
+    for order in orders:
+        is_formal = _order_is_formal_renewal_preview(order)
+        if is_formal:
+            formal_count += 1
+            kind = 'formal'
+            kind_label = 'تمدید رسمی'
+        else:
+            new_key_count += 1
+            kind = 'repurchase'
+            kind_label = 'کلید جدید'
+        recency_days = None
+        paid_at = getattr(order, 'paid_at', None)
+        if paid_at:
+            paid_local = timezone.localtime(paid_at)
+            recency_days = max((now.date() - paid_local.date()).days, 0)
+        product = getattr(order, 'product', None)
+        plan = getattr(order, 'plan', None)
+        rows.append({
+            'order': order,
+            'user': getattr(order, 'user', None),
+            'product_title': product.title if product else None,
+            'plan_name': plan.name if plan else None,
+            'kind': kind,
+            'kind_label': kind_label,
+            'amount': order.amount,
+            'paid_at': paid_at,
+            'recency_days': recency_days,
+        })
+    return {
+        'rows': rows,
+        'formal_count': formal_count,
+        'new_key_count': new_key_count,
+        'total': len(rows),
+    }
+
+
+def build_users_without_license_preview_rows(users) -> Dict[str, Any]:
+    """ردیف‌های جدول بدون لایسنس — اولویت پیگیری و خلاصه قطاع."""
+    now = timezone.now()
+    rows: List[Dict[str, Any]] = []
+    paid_buyers = 0
+    pending_checkout = 0
+    organic = 0
+    for user in users:
+        paid = int(getattr(user, 'paid_orders', 0) or 0)
+        pending = int(getattr(user, 'pending_orders', 0) or 0)
+        if paid > 0:
+            tier = 'paid'
+            tier_label = 'خریدار بدون دسترسی'
+            paid_buyers += 1
+        elif pending > 0:
+            tier = 'pending'
+            tier_label = 'سفارش معلق'
+            pending_checkout += 1
+        else:
+            tier = 'signup'
+            tier_label = 'بدون خرید'
+            organic += 1
+        member_days = None
+        if user.date_joined:
+            joined = timezone.localtime(user.date_joined)
+            member_days = max((now.date() - joined.date()).days, 0)
+        rows.append({
+            'user': user,
+            'paid_orders': paid,
+            'pending_orders': pending,
+            'tier': tier,
+            'tier_label': tier_label,
+            'member_days': member_days,
+            'date_joined': user.date_joined,
+        })
+    return {
+        'rows': rows,
+        'paid_buyers': paid_buyers,
+        'pending_checkout': pending_checkout,
+        'organic': organic,
+        'total': len(rows),
+    }
+
+
+def build_expiring_license_preview_rows(licenses) -> List[Dict[str, Any]]:
+    """ردیف‌های جدول پیش‌نمایش انقضا — با مانده روز و شدت فوریت."""
+    now = timezone.now()
+    rows: List[Dict[str, Any]] = []
+    for lic in licenses:
+        days_left = None
+        if lic.expires_at:
+            if lic.expires_at > now:
+                days_left = max((lic.expires_at.date() - now.date()).days, 0)
+            else:
+                days_left = 0
+        if days_left is None:
+            urgency = 'muted'
+        elif days_left <= 7:
+            urgency = 'high'
+        elif days_left <= 14:
+            urgency = 'warn'
+        else:
+            urgency = 'ok'
+        user = lic.order.user if getattr(lic, 'order', None) and lic.order_id else None
+        rows.append({
+            'license': lic,
+            'user': user,
+            'plan_name': lic.plan.name if lic.plan_id and lic.plan else None,
+            'days_left': days_left,
+            'urgency': urgency,
+        })
+    return rows
+
+
+def build_recent_expired_license_preview_rows(licenses) -> Dict[str, Any]:
+    """ردیف‌های جدول منقضی اخیر — فاصله از انقضا و اولویت پیگیری."""
+    now = timezone.now()
+    today = now.date()
+    rows: List[Dict[str, Any]] = []
+    recent_7 = 0
+    recent_30 = 0
+    older = 0
+    for lic in licenses:
+        days_since = None
+        if lic.expires_at:
+            exp_local = timezone.localtime(lic.expires_at)
+            days_since = max((today - exp_local.date()).days, 0)
+        if days_since is None:
+            lapse = 'muted'
+            older += 1
+        elif days_since <= 7:
+            lapse = 'high'
+            recent_7 += 1
+        elif days_since <= 30:
+            lapse = 'warn'
+            recent_30 += 1
+        else:
+            lapse = 'ok'
+            older += 1
+        user = lic.order.user if getattr(lic, 'order', None) and lic.order_id else None
+        rows.append({
+            'license': lic,
+            'user': user,
+            'plan_name': lic.plan.name if lic.plan_id and lic.plan else None,
+            'days_since_expiry': days_since,
+            'lapse': lapse,
+        })
+    return {
+        'rows': rows,
+        'recent_7': recent_7,
+        'recent_30': recent_30,
+        'older': older,
+        'total': len(rows),
+    }
+
+
+def build_licenses_hero_status(
+    snapshot: Dict[str, int],
+    *,
+    renewal_breakdown: Dict[str, Any],
+) -> Dict[str, Any]:
+    """ترکیب لحظه‌ای لایسنس برای پنل کنار نمودار هیرو."""
+    active = int(snapshot.get('licenses_active') or 0)
+    expiring_14 = int(snapshot.get('licenses_expiring_14d') or 0)
+    expiring_7 = int(snapshot.get('licenses_expiring_7d') or 0)
+    expired = int(snapshot.get('licenses_expired') or 0)
+    healthy = max(active - expiring_14, 0)
+    total = active + expired
+
+    def share(part: int) -> float:
+        if total <= 0:
+            return 0.0
+        return round((part / total) * 100, 1)
+
+    renewal_rate = renewal_breakdown.get('renewal_rate_range')
+    formal = int(renewal_breakdown.get('formal_renewals_range') or 0)
+    repurchase = int(renewal_breakdown.get('new_key_repurchase_range') or 0)
+
+    urgency = 'ok'
+    if expiring_7 >= 5:
+        urgency = 'high'
+    elif expiring_14 or expired >= 20:
+        urgency = 'warn'
+
+    return {
+        'total': total,
+        'active': active,
+        'healthy': healthy,
+        'expiring_14d': expiring_14,
+        'expiring_7d': expiring_7,
+        'expired': expired,
+        'pct_healthy': share(healthy),
+        'pct_expiring': share(expiring_14),
+        'pct_expired': share(expired),
+        'vitality_pct': share(active),
+        'users_without_license': int(snapshot.get('users_without_license') or 0),
+        'active_devices': int(snapshot.get('active_devices') or 0),
+        'renewal_rate': renewal_rate,
+        'formal_renewals': formal,
+        'new_key_repurchase': repurchase,
+        'urgency': urgency,
+    }
+
+
+def build_licenses_center_pulse(
+    range_kpi_cards: List[Dict[str, Any]],
+    snapshot_kpi_cards: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """۴ KPI برتر: رشد و تمدید بازه + فوریت عملیاتی (فعال / انقضا)."""
+    range_by = {card['key']: card for card in range_kpi_cards}
+    snapshot_by = {card['key']: card for card in snapshot_kpi_cards}
+    href_map = {
+        'licenses_new_period': '#licenses-kpi',
+        'renewals_period': '#licenses-kpi',
+        'licenses_active': '#licenses-kpi',
+        'licenses_expiring_7d': '#licenses-table-expiring',
+    }
+    pulse: List[Dict[str, Any]] = []
+    for key, kind in LICENSES_PULSE_KEYS:
+        card = range_by.get(key) if kind == 'range' else snapshot_by.get(key)
+        if not card:
+            continue
+        chip: Dict[str, Any] = {
+            'key': key,
+            'label': card['label'],
+            'value': card['value'],
+            'format': card['format'],
+            'icon': card['icon'],
+            'accent': card['accent'],
+            'href': href_map.get(key),
+            'pulse_kind': kind,
+        }
+        if kind == 'range':
+            chip['delta'] = card.get('delta')
+            chip['delta_label'] = card.get('delta_label') or 'نسبت دوره قبل'
+            chip['previous_value'] = card.get('previous_value')
+            chip['pending'] = card.get('pending')
+        else:
+            chip['hint'] = card.get('sublabel') or 'وضعیت فعلی'
+        pulse.append(chip)
+    return pulse
 
 
 def build_licenses_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
@@ -457,6 +765,7 @@ def get_licenses_export_links() -> List[Dict[str, Any]]:
         links.append({
             'key': key,
             'title': meta['title'],
+            'description': meta.get('description') or 'خروجی اکسل',
             'icon': meta['icon'],
             'accent': meta['accent'],
             'count': get_export_count(key),
@@ -500,18 +809,24 @@ def get_licenses_center_context(*, days: int = 30, compare: bool = False) -> Dic
     )
     snapshot_kpis = _build_snapshot_kpi_cards(snapshot)
 
-    recent_renewals = get_recent_renewal_orders(limit=TABLE_PREVIEW_ROWS)
+    recent_renewals = list(get_recent_renewal_orders(limit=TABLE_PREVIEW_ROWS))
+    recent_renewal_preview = build_recent_renewal_preview_rows(recent_renewals)
+    expiring_list = list(get_expiring_licenses(limit=TABLE_PREVIEW_ROWS))
     renewal_breakdown = {
         'formal_renewals_range': formal_renewals,
         'new_key_repurchase_range': new_key_repurchase,
         'renewal_revenue_range': renewal_revenue,
         'renewal_rate_range': renewal_rate,
     }
+    without_license_list = list(get_users_without_license_preview(limit=TABLE_PREVIEW_ROWS))
+    without_license_preview = build_users_without_license_preview_rows(without_license_list)
+    recent_expired_list = list(get_recent_expired_licenses(limit=TABLE_PREVIEW_ROWS))
+    recent_expired_preview = build_recent_expired_license_preview_rows(recent_expired_list)
 
     return {
         'chart_days': days,
         'range_label': range_label,
-        'center_pulse': build_licenses_center_pulse(snapshot),
+        'center_pulse': build_licenses_center_pulse(range_kpis, snapshot_kpis),
         'range_kpi_cards': range_kpis,
         'snapshot_kpi_cards': snapshot_kpis,
         'kpi_cards': range_kpis + snapshot_kpis,
@@ -520,14 +835,47 @@ def get_licenses_center_context(*, days: int = 30, compare: bool = False) -> Dic
             'expiring': snapshot['licenses_expiring_14d'],
             'expired': snapshot['licenses_expired'],
         },
+        'licenses_hero_status': build_licenses_hero_status(
+            snapshot,
+            renewal_breakdown=renewal_breakdown,
+        ),
         'renewal_breakdown': renewal_breakdown,
         'charts': _build_charts(days),
+        'licenses_hero_chart_summary': _licenses_hero_chart_summary(days, renewal_revenue),
+        'licenses_revenue_chart_summary': _licenses_revenue_chart_summary(
+            renewal_revenue=renewal_revenue,
+            renewals=renewals,
+            days=days,
+        ),
+        'licenses_chart_legend': LICENSES_HERO_CHART_LEGEND,
+        'licenses_revenue_chart_legend': LICENSES_REVENUE_CHART_LEGEND,
         'charts_enabled': True,
         'action_items': build_licenses_action_items(snapshot),
-        'expiring_licenses': get_expiring_licenses(limit=TABLE_PREVIEW_ROWS),
+        'expiring_licenses': expiring_list,
+        'expiring_license_rows': build_expiring_license_preview_rows(expiring_list),
         'recent_renewals': recent_renewals,
-        'recent_expired': get_recent_expired_licenses(limit=TABLE_PREVIEW_ROWS),
-        'users_without_license_list': get_users_without_license_preview(limit=TABLE_PREVIEW_ROWS),
+        'recent_renewal_rows': recent_renewal_preview['rows'],
+        'recent_renewal_summary': {
+            'formal': recent_renewal_preview['formal_count'],
+            'new_key': recent_renewal_preview['new_key_count'],
+            'total': recent_renewal_preview['total'],
+        },
+        'recent_expired': recent_expired_list,
+        'recent_expired_rows': recent_expired_preview['rows'],
+        'recent_expired_summary': {
+            'recent_7': recent_expired_preview['recent_7'],
+            'recent_30': recent_expired_preview['recent_30'],
+            'older': recent_expired_preview['older'],
+            'total': recent_expired_preview['total'],
+        },
+        'users_without_license_list': without_license_list,
+        'users_without_license_rows': without_license_preview['rows'],
+        'users_without_license_summary': {
+            'paid_buyers': without_license_preview['paid_buyers'],
+            'pending_checkout': without_license_preview['pending_checkout'],
+            'organic': without_license_preview['organic'],
+            'total': without_license_preview['total'],
+        },
         'export_links': get_licenses_export_links(),
         'snapshot_counts': snapshot,
         'table_fetch_limit': TABLE_FETCH_LIMIT,

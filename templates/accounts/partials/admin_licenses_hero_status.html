@@ -1,0 +1,118 @@
+{% load persian_tags %}
+{% with st=licenses_hero_status %}
+<aside class="adm-overview-status adm-licenses-hero-status{% if st.urgency %} adm-licenses-hero-status--{{ st.urgency }}{% endif %}" aria-label="ترکیب وضعیت لایسنس">
+    <header class="adm-overview-status__head adm-licenses-hero-status__head">
+        <div>
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-layer-group adm-overview-section-title__icon adm-overview-section-title__icon--licenses" aria-hidden="true"></i>
+                <span>ترکیب وضعیت</span>
+            </h2>
+            <p class="adm-licenses-hero-status__grain">لحظه‌ای · ثبت‌شده در سامانه</p>
+        </div>
+        {% if st.total %}
+        <p class="adm-licenses-hero-status__score" title="سهم لایسنس‌های فعال از کل (فعال + منقضی)">
+            <strong>{{ st.vitality_pct|floatformat:1|to_persian_digits }}٪</strong>
+            <span>فعال</span>
+        </p>
+        {% endif %}
+    </header>
+
+    {% if st.total %}
+    <div class="adm-licenses-hero-status__viz" aria-hidden="true">
+        <div class="adm-overview-donut adm-licenses-hero-status__donut"
+             style="--a: {{ st.pct_healthy|default:0 }}%; --b: {{ st.pct_expiring|default:0 }}%; --c: {{ st.pct_expired|default:0 }}%;">
+            <span class="adm-overview-donut__center">
+                <strong>{{ st.total|to_persian_digits }}</strong>
+                <em>لایسنس</em>
+            </span>
+        </div>
+        <ul class="adm-overview-users__donut-keys adm-licenses-hero-status__keys">
+            <li data-tone="emerald"><span>پایدار</span></li>
+            <li data-tone="amber"><span>انقضا ≤۱۴ روز</span></li>
+            <li data-tone="rose"><span>منقضی</span></li>
+        </ul>
+    </div>
+
+    <ul class="adm-licenses-hero-status__bars" role="list">
+        <li data-tone="emerald">
+            <div class="adm-licenses-hero-status__bar-head">
+                <a class="adm-licenses-hero-status__bar-link" href="#licenses-kpi">پایدار</a>
+                <span class="adm-licenses-hero-status__bar-val">
+                    <strong>{{ st.healthy|to_persian_digits }}</strong>
+                    <em>{{ st.pct_healthy|floatformat:1|to_persian_digits }}٪</em>
+                </span>
+            </div>
+            <div class="adm-licenses-hero-status__bar-track" style="--fill: {{ st.pct_healthy|default:0 }}%;" aria-hidden="true">
+                <span class="adm-licenses-hero-status__bar-fill"></span>
+            </div>
+        </li>
+        <li data-tone="amber">
+            <div class="adm-licenses-hero-status__bar-head">
+                <a class="adm-licenses-hero-status__bar-link" href="#licenses-table-expiring">در شرف انقضا · ۱۴ روز</a>
+                <span class="adm-licenses-hero-status__bar-val">
+                    <strong>{{ st.expiring_14d|to_persian_digits }}</strong>
+                    <em>{{ st.pct_expiring|floatformat:1|to_persian_digits }}٪</em>
+                </span>
+            </div>
+            <div class="adm-licenses-hero-status__bar-track" style="--fill: {{ st.pct_expiring|default:0 }}%;" aria-hidden="true">
+                <span class="adm-licenses-hero-status__bar-fill"></span>
+            </div>
+        </li>
+        <li data-tone="rose">
+            <div class="adm-licenses-hero-status__bar-head">
+                <a class="adm-licenses-hero-status__bar-link" href="#licenses-table-expired">منقضی‌شده</a>
+                <span class="adm-licenses-hero-status__bar-val">
+                    <strong>{{ st.expired|to_persian_digits }}</strong>
+                    <em>{{ st.pct_expired|floatformat:1|to_persian_digits }}٪</em>
+                </span>
+            </div>
+            <div class="adm-licenses-hero-status__bar-track" style="--fill: {{ st.pct_expired|default:0 }}%;" aria-hidden="true">
+                <span class="adm-licenses-hero-status__bar-fill"></span>
+            </div>
+        </li>
+    </ul>
+    {% else %}
+    <p class="adm-licenses-hero-status__empty">هنوز لایسنس ثبت‌شده‌ای برای نمایش ترکیب وجود ندارد.</p>
+    {% endif %}
+
+    <div class="adm-licenses-hero-status__ops" role="list" aria-label="شاخص‌های عملیاتی">
+        <a href="#licenses-table-expiring" class="adm-licenses-hero-status__ops-card" role="listitem" data-tone="amber">
+            <span class="adm-licenses-hero-status__ops-label">انقضا ≤۷ روز</span>
+            <strong class="adm-licenses-hero-status__ops-value">{{ st.expiring_7d|default:0|to_persian_digits }}</strong>
+        </a>
+        <a href="{% url 'admin_panel_users' %}#users-table-no-license" class="adm-licenses-hero-status__ops-card" role="listitem" data-tone="violet">
+            <span class="adm-licenses-hero-status__ops-label">کاربر بدون لایسنس</span>
+            <strong class="adm-licenses-hero-status__ops-value">{{ st.users_without_license|default:0|to_persian_digits }}</strong>
+        </a>
+        <a href="#licenses-kpi" class="adm-licenses-hero-status__ops-card" role="listitem" data-tone="blue">
+            <span class="adm-licenses-hero-status__ops-label">دستگاه فعال</span>
+            <strong class="adm-licenses-hero-status__ops-value">{{ st.active_devices|default:0|to_persian_digits }}</strong>
+        </a>
+    </div>
+
+    {% if st.renewal_rate is not None %}
+    <footer class="adm-licenses-hero-status__range">
+        <div class="adm-licenses-hero-status__range-head">
+            <span class="adm-licenses-hero-status__range-label">بازه · {{ range_label|default:admin_panel_range_label_fa }}</span>
+            <a class="adm-licenses-hero-status__range-link" href="#licenses-kpi">جزئیات</a>
+        </div>
+        <div class="adm-licenses-hero-status__range-body">
+            <div class="adm-licenses-hero-status__range-metric">
+                <span>نرخ تمدید</span>
+                <strong>{{ st.renewal_rate|floatformat:1|to_persian_digits }}٪</strong>
+            </div>
+            <p class="adm-licenses-hero-status__range-hint">
+                رسمی {{ st.formal_renewals|default:0|to_persian_digits }} · خرید مجدد کلید {{ st.new_key_repurchase|default:0|to_persian_digits }}
+            </p>
+        </div>
+    </footer>
+    {% endif %}
+
+    {% if action_items %}
+    <p class="adm-overview-status__note adm-licenses-hero-status__alert">
+        <i class="fas fa-bolt" aria-hidden="true"></i>
+        {{ action_items|length|to_persian_digits }} مورد در صف اقدام
+    </p>
+    {% endif %}
+</aside>
+{% endwith %}

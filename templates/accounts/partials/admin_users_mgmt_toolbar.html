@@ -1,0 +1,69 @@
+<div class="ecc-users-mgmt-tools adm-users-mgmt-toolbar adm-users-mgmt-toolbar--compact" data-users-mgmt-toolbar>
+    <div class="adm-users-mgmt-toolbar__row adm-users-mgmt-toolbar__row--search">
+        <div class="adm-users-mgmt-toolbar__search">
+            <label class="adm-v2-sr-only" for="eccUsersMgmtSearch">جستجو بر اساس نام، موبایل یا ایمیل</label>
+            <i class="fas fa-search adm-users-mgmt-toolbar__search-icon" aria-hidden="true"></i>
+            <input type="search" id="eccUsersMgmtSearch" class="ecc-table-search adm-users-mgmt-search" placeholder="جستجو…" autocomplete="off" aria-controls="eccUsersMgmtBody">
+        </div>
+        <button type="button" class="adm-users-mgmt-reset" id="eccUsersMgmtReset" hidden aria-label="پاک‌کردن جستجو و فیلترها">
+            <i class="fas fa-rotate-left" aria-hidden="true"></i>
+            <span>بازنشانی</span>
+        </button>
+        <span class="adm-users-mgmt-toolbar__filters-active" id="eccUsersMgmtFilterCount" hidden aria-hidden="true"></span>
+    </div>
+
+    <fieldset class="adm-users-mgmt-toolbar__row adm-users-mgmt-toolbar__row--filters adm-users-mgmt-toolbar__filters" aria-label="فیلتر کاربران">
+        <legend class="adm-users-mgmt-toolbar__filters-legend">فیلترها</legend>
+        <div class="adm-users-mgmt-filter-strip ecc-users-mgmt-filters">
+            <label class="adm-users-filter-field" for="eccUsersMgmtLicense">
+                <span class="adm-users-filter-field__label">لایسنس</span>
+                <select id="eccUsersMgmtLicense" class="ecc-users-mgmt-select" title="لایسنس" aria-label="لایسنس">
+                    <option value="">لایسنس · همه</option>
+                    <option value="yes">دارای لایسنس</option>
+                    <option value="no">بدون لایسنس</option>
+                </select>
+            </label>
+            <label class="adm-users-filter-field" for="eccUsersMgmtWindows">
+                <span class="adm-users-filter-field__label">ویندوز</span>
+                <select id="eccUsersMgmtWindows" class="ecc-users-mgmt-select" title="ویندوز" aria-label="ویندوز">
+                    <option value="">ویندوز · همه</option>
+                    <option value="downloaded">دانلود</option>
+                    <option value="activated">فعال</option>
+                    <option value="launched">اجرا</option>
+                </select>
+            </label>
+            <label class="adm-users-filter-field" for="eccUsersMgmtAndroid">
+                <span class="adm-users-filter-field__label">اندروید</span>
+                <select id="eccUsersMgmtAndroid" class="ecc-users-mgmt-select" title="اندروید" aria-label="اندروید">
+                    <option value="">اندروید · همه</option>
+                    <option value="yes">نصب‌شده</option>
+                    <option value="no">ندارد</option>
+                </select>
+            </label>
+            <label class="adm-users-filter-field" for="eccUsersMgmtDatasets">
+                <span class="adm-users-filter-field__label">دیتاست</span>
+                <select id="eccUsersMgmtDatasets" class="ecc-users-mgmt-select" title="دیتاست" aria-label="دیتاست">
+                    <option value="">دیتاست · همه</option>
+                    <option value="yes">دارد</option>
+                    <option value="no">ندارد</option>
+                </select>
+            </label>
+            <label class="adm-users-filter-field" for="eccUsersMgmtCrm">
+                <span class="adm-users-filter-field__label">CRM</span>
+                <select id="eccUsersMgmtCrm" class="ecc-users-mgmt-select" title="CRM" aria-label="CRM">
+                    <option value="">CRM · همه</option>
+                    <option value="yes">دارد</option>
+                    <option value="no">ندارد</option>
+                </select>
+            </label>
+            <label class="adm-users-filter-field" for="eccUsersMgmtPaid">
+                <span class="adm-users-filter-field__label">پرداخت</span>
+                <select id="eccUsersMgmtPaid" class="ecc-users-mgmt-select" title="پرداخت" aria-label="پرداخت">
+                    <option value="">پرداخت · همه</option>
+                    <option value="yes">پرداخت‌کننده</option>
+                    <option value="no">بدون پرداخت</option>
+                </select>
+            </label>
+        </div>
+    </fieldset>
+</div>

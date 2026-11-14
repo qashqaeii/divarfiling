@@ -17,6 +17,11 @@ from accounts.services.acquisition_automation import (
     ingest_acquisition_run,
     schedule_due_campaigns,
 )
+from accounts.services.acquisition_automation_ui import (
+    AutomationUIError,
+    automation_overview_stats,
+    delete_automation_campaign,
+)
 from accounts.tests.test_lead_acquisition import SAMPLE_JSON
 
 
@@ -99,6 +104,36 @@ class AcquisitionAutomationTests(TestCase):
 
 
 class AcquisitionAutomationUITests(TestCase):
+    def setUp(self):
+        self.campaign = AcquisitionAutomationCampaign.objects.create(
+            name='تهران · حذف',
+            city='تهران',
+            districts=['ونک'],
+            category='apartment-sell',
+        )
+
+    def test_delete_automation_campaign_removes_runs(self):
+        AcquisitionRun.objects.create(
+            campaign=self.campaign,
+            status=AcquisitionRun.Status.COMPLETED,
+            district='ونک',
+        )
+        pk = self.campaign.pk
+        result = delete_automation_campaign(pk)
+        self.assertFalse(AcquisitionAutomationCampaign.objects.filter(pk=pk).exists())
+        self.assertEqual(result['runs_removed'], 1)
+        self.assertEqual(AcquisitionRun.objects.filter(campaign_id=pk).count(), 0)
+
+    def test_delete_automation_campaign_blocks_busy_run(self):
+        AcquisitionRun.objects.create(
+            campaign=self.campaign,
+            status=AcquisitionRun.Status.RUNNING,
+            district='ونک',
+        )
+        with self.assertRaises(AutomationUIError):
+            delete_automation_campaign(self.campaign.pk)
+        self.assertTrue(AcquisitionAutomationCampaign.objects.filter(pk=self.campaign.pk).exists())
+
     def test_create_campaign_from_form(self):
         from accounts.services.acquisition_automation_ui import create_automation_campaign_from_form
 
@@ -198,3 +233,30 @@ class AutomationPartialIngestTests(TestCase):
         run.refresh_from_db()
         self.assertEqual(run.status, AcquisitionRun.Status.INGESTED)
         self.assertIsNotNone(run.import_batch_id)
+
+
+class AutomationOverviewStatsTests(TestCase):
+    def setUp(self):
+        self.campaign = AcquisitionAutomationCampaign.objects.create(
+            name='تهران · تست KPI',
+            city='تهران',
+            districts=['ونک', 'آشتیانی'],
+            is_active=True,
+            next_run_at=timezone.now(),
+        )
+
+    def test_overview_stats_focus_run_and_due(self):
+        run = AcquisitionRun.objects.create(
+            campaign=self.campaign,
+            status=AcquisitionRun.Status.QUEUED,
+            district='ونک',
+        )
+        stats = automation_overview_stats()
+        self.assertEqual(stats['campaigns_active'], 1)
+        self.assertGreaterEqual(stats['campaigns_due'], 1)
+        self.assertEqual(stats['runs_queued'], 1)
+        self.assertIsNotNone(stats['focus_run'])
+        self.assertEqual(stats['focus_run']['id'], run.pk)
+        self.assertEqual(stats['focus_run']['district'], 'ونک')
+        self.assertIn('phones_ingested_24h', stats)
+        self.assertIn('lines_total', stats)

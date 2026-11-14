@@ -1,0 +1,35 @@
+{% load persian_tags %}
+<section class="adm-licenses-kpi-lux adm-licenses-kpi-lux--pro" id="licenses-kpi" aria-label="شاخص‌های کلیدی لایسنس">
+    <header class="adm-licenses-kpi-lux__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-chart-simple adm-overview-section-title__icon adm-overview-section-title__icon--licenses" aria-hidden="true"></i>
+            <span>شاخص‌های کلیدی</span>
+        </h2>
+        <div class="adm-licenses-kpi-lux__meta">
+            <span class="adm-licenses-kpi-lux__pill">{{ range_label|default:admin_panel_range_label_fa }}</span>
+            <span class="adm-licenses-kpi-lux__compare">نسبت دوره قبل · هم‌طول</span>
+        </div>
+    </header>
+
+    <div class="adm-licenses-kpi-lux__range" role="region" aria-label="شاخص‌های بازه">
+        <div class="adm-licenses-kpi-lux__grid adm-licenses-kpi-lux__grid--range" role="list">
+            {% for card in range_kpi_cards %}
+            {% include 'accounts/partials/admin_licenses_kpi_card.html' with card=card kpi_kind='range' %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="adm-licenses-kpi-lux__split" aria-hidden="true"></div>
+
+    <div class="adm-licenses-kpi-lux__snapshot" role="region" aria-label="وضعیت لحظه‌ای">
+        <header class="adm-licenses-kpi-lux__snapshot-head">
+            <span class="adm-licenses-kpi-lux__snapshot-title">وضعیت لحظه‌ای</span>
+            <span class="adm-licenses-kpi-lux__snapshot-hint">ثبت‌شده در سامانه</span>
+        </header>
+        <div class="adm-licenses-kpi-lux__grid adm-licenses-kpi-lux__grid--snapshot" role="list">
+            {% for card in snapshot_kpi_cards %}
+            {% include 'accounts/partials/admin_licenses_kpi_card.html' with card=card kpi_kind='snapshot' %}
+            {% endfor %}
+        </div>
+    </div>
+</section>

@@ -10,6 +10,9 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from accounts.services.admin_action_permissions import (
     can_manage_support_tickets,
     can_manage_user_licenses,
+    can_view_user_commerce,
+    can_view_user_licenses,
+    can_view_user_management,
 )
 from accounts.services.admin_user_360.common import (
     TAB_ICONS,
@@ -96,6 +99,23 @@ def build_kpi_strip(summary: Dict[str, Any], user) -> list[Dict[str, Any]]:
     return kpis
 
 
+def _shell_tabs_for_user(request) -> list[Dict[str, Any]]:
+    if can_view_user_management(request.user):
+        tab_keys = TAB_KEYS
+    else:
+        tab_keys = []
+        if can_manage_support_tickets(request.user):
+            tab_keys.append('support')
+        if can_view_user_commerce(request.user):
+            tab_keys.append('commerce')
+        if can_view_user_licenses(request.user):
+            tab_keys.append('licenses')
+    return [
+        {'key': k, 'label': TAB_LABELS[k], 'icon': TAB_ICONS.get(k, 'fa-circle')}
+        for k in tab_keys
+    ]
+
+
 def build_user_360_shell(user, *, request) -> Dict[str, Any]:
     summary = user_summary_row(user)
     detail = get_user_management_detail(user.id) or summary
@@ -135,10 +155,7 @@ def build_user_360_shell(user, *, request) -> Dict[str, Any]:
         },
         'kpis': kpi_strip,
         'primary_kpis': [k for k in kpi_strip if k['key'] in PRIMARY_KPI_KEYS],
-        'tabs': [
-            {'key': k, 'label': TAB_LABELS[k], 'icon': TAB_ICONS.get(k, 'fa-circle')}
-            for k in TAB_KEYS
-        ],
+        'tabs': _shell_tabs_for_user(request),
         'return_url': return_url or reverse('admin_panel_users'),
         'sales_center_url': reverse('admin_panel_sales'),
         'user_360_id': user.id,

@@ -45,8 +45,8 @@ def enrich_data_quality(section: str, metrics: Dict[str, Any], period: Dict[str,
             ('users_total', 'stock_snapshot', 'موجودی کل کاربران در لحظه.'),
             ('users_without_license', 'stock_snapshot', 'کاربران بدون لایسنس فعال — snapshot.'),
             ('users_new_period', 'flow_period', f'ثبت‌نام جدید در {period_label}.'),
-            ('retention_d30', 'cohort_metric', 'نگهداشت روز ۳۰؛ اگر صفر است tracking را در نظر بگیر.'),
-            ('retention_d7', 'cohort_metric', 'نگهداشت روز ۷.'),
+            ('retention_d30', 'cohort_metric', 'نگهداشت یک‌ماهه؛ سهم ثبت‌نام‌های بازه که بعد از ۳۰ روز برگشته‌اند.'),
+            ('retention_d7', 'cohort_metric', 'نگهداشت یک‌هفته‌ای؛ سهم ثبت‌نام‌های بازه که بعد از ۷ روز برگشته‌اند.'),
         ):
             if key in metrics:
                 semantics[f'metrics.{key}'] = {'kind': kind, 'time_basis': period_label, 'note': note}

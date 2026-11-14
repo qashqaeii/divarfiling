@@ -1,0 +1,43 @@
+{% load persian_tags %}
+{% load currency_tags %}
+{% with item=compare_item %}
+<div class="adm-center-kpi-compare{% if compare_compact %} adm-center-kpi-compare--compact{% endif %}">
+    <div class="adm-center-kpi-compare__delta-row">
+        {% if item.delta is not None %}
+        <span class="adm-overview-kpi__delta{% if item.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+            {% if item.delta_format == 'points' %}
+            {% if item.delta >= 0 %}+{% endif %}{{ item.delta|floatformat:1|to_persian_digits }} نقطه
+            {% else %}
+            {% if item.delta >= 0 %}+{% endif %}{{ item.delta|to_persian_digits }}٪
+            {% endif %}
+        </span>
+        {% if not compare_compact %}
+        <span class="adm-center-kpi-compare__delta-caption">{{ item.delta_label|default:'نسبت دوره قبل' }}</span>
+        {% endif %}
+        {% elif item.previous_value is not None and item.previous_value == 0 and item.value %}
+        <span class="adm-center-kpi-compare__badge adm-center-kpi-compare__badge--new">شروع در این دوره</span>
+        {% elif item.value is None %}
+        <span class="adm-center-kpi-compare__badge adm-center-kpi-compare__badge--muted" aria-hidden="true">—</span>
+        {% else %}
+        <span class="adm-center-kpi-compare__badge adm-center-kpi-compare__badge--flat">بدون تغییر</span>
+        {% endif %}
+    </div>
+    {% if item.previous_value is not None %}
+    <p class="adm-center-kpi-compare__prev">
+        <span class="adm-center-kpi-compare__prev-label">دوره قبل</span>
+        <span class="adm-center-kpi-compare__prev-value">
+            {% if item.format == 'money' %}
+            {{ item.previous_value|currency }}
+            {% elif item.format == 'percent' %}
+            {{ item.previous_value|floatformat:1|to_persian_digits }}٪
+            {% else %}
+            {{ item.previous_value|to_persian_digits }}
+            {% endif %}
+        </span>
+    </p>
+    {% endif %}
+    {% if compare_show_hint and item.sublabel %}
+    <p class="adm-center-kpi-compare__hint">{{ item.sublabel|to_persian_digits }}</p>
+    {% endif %}
+</div>
+{% endwith %}

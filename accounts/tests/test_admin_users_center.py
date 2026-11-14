@@ -45,8 +45,11 @@ class UsersCenterServiceTests(TestCase):
         ctx = get_users_center_context(days=30)
         keys = {c['key'] for c in ctx['snapshot_kpi_cards']}
         self.assertIn('users_total', keys)
+        self.assertIn('users_licensed', keys)
         self.assertIn('users_without_license', keys)
+        self.assertIn('signups_today', keys)
         self.assertIn('online_today', keys)
+        self.assertNotIn('users_active_current', keys)
         for card in ctx['snapshot_kpi_cards']:
             self.assertEqual(card['kind'], 'snapshot')
 
@@ -67,6 +70,11 @@ class UsersCenterServiceTests(TestCase):
         ctx = get_users_center_context(days=30)
         self.assertGreaterEqual(len(ctx['recent_users']), 1)
         self.assertIn('users_without_license_list', ctx)
+
+    def test_range_band_excludes_noisy_growth_card(self):
+        ctx = get_users_center_context(days=30)
+        band_keys = {c['key'] for c in ctx['range_kpi_band_cards']}
+        self.assertEqual(band_keys, {'retention_d7', 'retention_d30', 'returning_users'})
 
 
 @override_settings(TIME_ZONE='Asia/Tehran')

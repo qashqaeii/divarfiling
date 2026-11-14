@@ -1,0 +1,24 @@
+{% load persian_tags %}
+<section class="adm-overview-card adm-licenses-exports" id="ecc-licensing" aria-label="خروجی لایسنس">
+    <header class="adm-overview-card__head adm-licenses-exports__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-file-export adm-overview-section-title__icon adm-overview-section-title__icon--licenses" aria-hidden="true"></i>
+            <span>خروجی‌ها</span>
+        </h2>
+        <span class="adm-overview-card__meta adm-licenses-exports__meta">اکسل · گزارش‌های آماده</span>
+    </header>
+    <div class="adm-licenses-export-grid" role="list">
+        {% for exp in export_links %}
+        <a class="adm-licenses-export-chip" role="listitem" data-accent="{{ exp.accent|default:'violet' }}" href="{{ exp.url }}" title="دانلود {{ exp.title }}">
+            <i class="fas {{ exp.icon }}" aria-hidden="true"></i>
+            <span class="adm-licenses-export-chip__text">
+                <strong>{{ exp.title }}</strong>
+                <em>{{ exp.description|default:'خروجی اکسل' }}</em>
+            </span>
+            {% if exp.count is not None %}
+            <span class="adm-licenses-export-chip__count">{{ exp.count|to_persian_digits }}</span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</section>

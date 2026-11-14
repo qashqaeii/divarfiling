@@ -5,217 +5,197 @@
 
 {% block title %}کاربران | پنل مدیریت{% endblock %}
 
+{% block body_class %}{{ block.super }} adm-users-center-active{% endblock %}
+
 {% block admin_panel_title %}کاربران{% endblock %}
 {% block admin_panel_breadcrumb %}<span aria-current="page">کاربران</span>{% endblock %}
 
 {% block admin_panel_header_subtitle %}
-مدیریت کاربران، رشد و فعال‌سازی
+مدیریت کاربران، رشد و فعال‌سازی · {{ range_label|default:admin_panel_range_label_fa }}
 {% endblock %}
 
 {% block admin_panel_extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-customers.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-v3.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-fold.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-v3.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-users-fold.css' %}?v=26">
 {% endblock %}
 
 {% block admin_panel_header_actions %}
 {% if 'users_management' in admin_export_allowed_keys %}
-<a href="{% url 'admin_panel_export' 'users_management' %}?format=xlsx" class="ecc-btn ecc-btn--primary" title="خروجی مدیریت کاربران">
-    <i class="fas fa-file-excel"></i>
+<a href="{% url 'admin_panel_export' 'users_management' %}?format=xlsx" class="adm-cmd-bar__tool" title="خروجی مدیریت کاربران">
+    <i class="fas fa-file-excel" aria-hidden="true"></i>
 </a>
 {% endif %}
 {% if 'all_users' in admin_export_allowed_keys %}
-<a href="{% url 'admin_panel_export' 'all_users' %}?format=xlsx" class="ecc-btn ecc-btn--ghost" title="همه کاربران">
-    <i class="fas fa-users"></i>
+<a href="{% url 'admin_panel_export' 'all_users' %}?format=xlsx" class="adm-cmd-bar__tool" title="همه کاربران">
+    <i class="fas fa-users" aria-hidden="true"></i>
 </a>
 {% endif %}
 {% if perms.accounts.view_user %}
-<a href="/admin/accounts/user/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
-    <i class="fas fa-cog"></i>
+<a href="/admin/accounts/user/" class="adm-cmd-bar__tool" target="_blank" rel="noopener" title="Django Admin">
+    <i class="fas fa-cog" aria-hidden="true"></i>
 </a>
 {% endif %}
 {% endblock %}
 
 {% block admin_panel_content %}
 {% include 'accounts/partials/admin_center_shell_open.html' %}
-<div class="cust-page biz-page biz-page--users adm-users-page">
+<div class="adm-overview-page adm-users-page">
 
 {% include 'accounts/partials/admin_prime_center_pulse.html' with pulse_title='شاخص‌های کلیدی' pulse_subtitle=range_label|add:' · نسبت دوره قبل هم‌طول' pulse_icon='fa-users' pulse_icon_tone='users' %}
 
-<div class="adm-prime-hero">
-    <div class="adm-prime-hero__chart">
-        {% include 'accounts/partials/admin_prime_hero_chart.html' with section_id='users-hero-chart' chart_title='چه چیزی تغییر کرده؟' chart_grain='ثبت‌نام (میله) و فعال روزانه (خط) · '|add:range_label canvas_id='chart-signups' chart_icon='fa-chart-line' chart_icon_tone='growth' chart_aria_label='نمودار ثبت‌نام و فعالیت کاربران' show_chart_legend=True chart_is_combo=True chart_summary=users_hero_chart_summary %}
+<section class="adm-overview-hero" aria-label="بینش کاربران">
+    <div class="adm-overview-hero__insight">
+        <div class="adm-users-hero__chart" id="users-hero-chart">
+            {% include 'accounts/partials/admin_prime_hero_chart.html' with section_id='users-hero-chart-panel' chart_panel_class='adm-users-hero-chart-panel' chart_title='روند ثبت‌نام و فعالیت' canvas_id='chart-signups' chart_icon='fa-chart-line' chart_icon_tone='growth' chart_aria_label='نمودار ثبت‌نام و فعالیت کاربران' show_chart_legend=True chart_is_combo=True chart_summary=users_hero_chart_summary %}
+        </div>
+        {% include 'accounts/partials/admin_users_snapshot_status.html' %}
     </div>
-    <aside class="adm-prime-hero__rail">
-        {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='users-actions' title='نیازمند اقدام' empty_title='مورد فوری در کاربران نیست' %}
-    </aside>
-</div>
+    {% include 'accounts/partials/admin_prime_action_queue.html' with items=action_items section_id='users-actions' title='نیازمند اقدام' subtitle='کاربران · لایسنس · پرداخت معلق' empty_title='مورد فوری در کاربران نیست' empty_hint='صف خالی است' %}
+</section>
 
-{% include 'accounts/partials/admin_prime_kpi_band.html' with section_id='users-kpi' band_premium=1 range_kpi_cards=range_kpi_cards snapshot_kpi_cards=snapshot_kpi_cards range_label=range_label band_kicker='تکمیل شاخص‌های بالا' band_title='پایگاه و روند' band_icon='fa-layer-group' snapshot_group_label='الان' range_group_label='بازه' band_icon_tone='users' %}
+{% include 'accounts/partials/admin_users_kpi_section.html' with range_label=range_label %}
 
-<div class="adm-prime-fold">
+<section class="adm-overview-analytics adm-users-analytics" aria-label="جزئیات کاربران">
+
+    <article class="adm-overview-card adm-users-analytics__chart adm-users-analytics__chart--engagement" id="users-charts">
+        {% include 'accounts/partials/admin_users_engagement_chart.html' with range_label=range_label %}
+    </article>
+
+    {% if admin_can_view_user_management %}
+    <article class="adm-overview-card adm-users-preview-card" id="users-recent">
+        <header class="adm-overview-card__head">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-clock adm-overview-section-title__icon adm-overview-section-title__icon--users" aria-hidden="true"></i>
+                <span>ثبت‌نام‌های اخیر</span>
+            </h2>
+            <span class="adm-overview-card__meta">{{ recent_users|length|to_persian_digits }} نمایش</span>
+        </header>
+        <div class="adm-overview-table-wrap">
+            <table class="adm-overview-table adm-users-preview-table">
+                <thead>
+                    <tr>
+                        <th>کاربر</th>
+                        <th>موبایل</th>
+                        <th>وضعیت</th>
+                        <th>عضویت</th>
+                        <th class="adm-users-preview-table__action" scope="col"><span class="adm-v2-sr-only">پرونده ۳۶۰</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_users %}
+                    {% url 'admin_panel_user_360' u.pk as u360_row_href %}
+                    <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" tabindex="0" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}" aria-label="پرونده ۳۶۰ · {% firstof u.get_full_name u.username %}">
+                        <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u only %}</td>
+                        <td class="adm-users-preview-table__mono">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u link_phone_only=1 only %}</td>
+                        <td>{% if u.is_active %}<span class="adm-overview-badge" data-status="ok">فعال</span>{% else %}<span class="adm-overview-badge" data-status="muted">خاموش</span>{% endif %}</td>
+                        <td>{{ u.date_joined|to_jalali_fa }}</td>
+                        <td class="adm-users-preview-table__action">{% include 'accounts/partials/admin_user_360_row_action.html' with user_obj=u only %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">کاربری ثبت نشده</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if 'new_users' in admin_export_allowed_keys %}
+        <footer class="adm-overview-card__foot">
+            <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx&days={{ admin_panel_range_key }}">خروجی ثبت‌نام‌های اخیر <i class="fas fa-file-excel adm-icon-dir" aria-hidden="true"></i></a>
+        </footer>
+        {% endif %}
+    </article>
+
+    <article class="adm-overview-card adm-users-preview-card" id="users-top">
+        <header class="adm-overview-card__head">
+            <h2 class="adm-overview-section-title">
+                <i class="fas fa-crown adm-overview-section-title__icon adm-overview-section-title__icon--plans" aria-hidden="true"></i>
+                <span>کاربران برتر</span>
+            </h2>
+            <span class="adm-overview-card__meta">بر اساس پرداخت</span>
+        </header>
+        <div class="adm-overview-table-wrap">
+            <table class="adm-overview-table adm-users-preview-table">
+                <thead>
+                    <tr>
+                        <th>کاربر</th>
+                        <th>مجموع</th>
+                        <th>سفارش</th>
+                        <th class="adm-users-preview-table__action" scope="col"><span class="adm-v2-sr-only">پرونده ۳۶۰</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in top_users %}
+                    {% url 'admin_panel_user_360' u.pk as u360_row_href %}
+                    <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" tabindex="0" data-u360-href="{{ u360_row_href }}?tab=commerce&amp;return={{ request.get_full_path|urlencode }}" aria-label="پرونده ۳۶۰ · {% firstof u.get_full_name u.username %}">
+                        <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u u360_tab='commerce' only %}</td>
+                        <td>{{ u.total_spent|currency }}</td>
+                        <td>{{ u.order_count|to_persian_digits }}</td>
+                        <td class="adm-users-preview-table__action">{% include 'accounts/partials/admin_user_360_row_action.html' with user_obj=u only %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">داده‌ای نیست</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+    {% endif %}
+
+</section>
 
 {% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='users' ai_section_label='کاربران' %}
 
-<section class="adm-center-chart-section" id="users-charts" aria-label="کانال‌های فعالیت">
-    {% include 'accounts/partials/admin_prime_hero_chart.html' with section_id='users-charts-panel' chart_title='وب در برابر اپ' chart_subtitle='مقایسه ورود وب و فعالیت اپ · کاربر یکتا در هر روز' chart_grain=range_label canvas_id='chart-users-engagement' chart_icon='fa-mobile-screen' chart_icon_tone='users' chart_aria_label='نمودار تفکیک ورود وب و فعالیت اپ' legend_items=users_engagement_legend chart_summary=users_engagement_chart_summary chart_stats_band=1 chart_panel_class='adm-center-chart-panel--fold adm-center-chart-panel--engagement' %}
-</section>
-
 {% if admin_can_view_user_management %}
-<div class="adm-users-fold-accordion" data-users-fold-accordion>
-<div class="adm-users-fold-previews">
-<section class="ecc-section adm-center-fold-section adm-center-fold-section--preview adm-users-fold-panel" id="users-recent" data-users-fold-panel data-fold-open="0" aria-label="ثبت‌نام‌های اخیر">
-    <header class="ecc-section-head adm-center-fold-section__head adm-center-fold-section__head--preview adm-users-fold-panel__head">
-        <button type="button" class="adm-users-fold-panel__trigger" data-users-fold-trigger aria-expanded="false" aria-controls="users-recent-body">
-            <i class="fas fa-chevron-down adm-users-fold-panel__chevron" aria-hidden="true"></i>
-            <span class="adm-center-fold-section__lead">
-                <span class="adm-center-fold-section__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
-                <span class="adm-center-fold-section__titles">
-                    <span class="adm-users-fold-panel__title">ثبت‌نام‌های اخیر</span>
-                    <span class="ecc-section-meta">جدیدترین حساب‌ها · {{ recent_users|length|to_persian_digits }}/{{ users_fold_list_rows|to_persian_digits }}</span>
-                </span>
-            </span>
-        </button>
-        {% if 'new_users' in admin_export_allowed_keys %}
-        <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx&days={{ admin_panel_range_key }}" class="adm-users-fold-action" title="خروجی اکسل ثبت‌نام‌های اخیر">
-            <span class="adm-users-fold-action__label">خروجی</span>
-            <i class="fas fa-file-excel" aria-hidden="true"></i>
-        </a>
-        {% endif %}
-    </header>
-    <div class="adm-users-fold-panel__body" id="users-recent-body" data-users-fold-body hidden>
-    <div class="adm-table-wrap adm-users-preview-table-wrap adm-users-fold-panel__table-wrap">
-        <table class="adm-table adm-table--pro adm-users-preview-table">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>موبایل</th>
-                    <th>فعال</th>
-                    <th>تاریخ عضویت</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in recent_users %}
-                {% url 'admin_panel_user_360' u.pk as u360_row_href %}
-                <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}">
-                    <td class="adm-users-preview-table__user ecc-users-mgmt-user">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u only %}</td>
-                    <td class="adm-users-preview-table__mono">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u link_phone_only=1 only %}</td>
-                    <td>{% if u.is_active %}<span class="adm-users-status adm-users-status--on">فعال</span>{% else %}<span class="adm-users-status adm-users-status--off">خاموش</span>{% endif %}</td>
-                    <td class="adm-users-preview-table__date">{{ u.date_joined|to_jalali_fa }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="4">کاربری ثبت نشده</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
-</section>
 
-<section class="ecc-section adm-center-fold-section adm-center-fold-section--preview adm-users-fold-panel" id="users-top" data-users-fold-panel data-fold-open="0" aria-label="کاربران برتر">
-    <header class="ecc-section-head adm-center-fold-section__head adm-center-fold-section__head--preview adm-users-fold-panel__head">
-        <button type="button" class="adm-users-fold-panel__trigger" data-users-fold-trigger aria-expanded="false" aria-controls="users-top-body">
-            <i class="fas fa-chevron-down adm-users-fold-panel__chevron" aria-hidden="true"></i>
-            <span class="adm-center-fold-section__lead">
-                <span class="adm-center-fold-section__icon adm-center-fold-section__icon--gold" aria-hidden="true"><i class="fas fa-crown"></i></span>
-                <span class="adm-center-fold-section__titles">
-                    <span class="adm-users-fold-panel__title">کاربران برتر</span>
-                    <span class="ecc-section-meta">مجموع پرداخت · {{ top_users|length|to_persian_digits }}/{{ users_fold_list_rows|to_persian_digits }}</span>
-                </span>
-            </span>
-        </button>
+<article class="adm-overview-card adm-users-preview-card adm-users-license-card" id="users-table-no-license">
+    <header class="adm-overview-card__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-user-slash adm-overview-section-title__icon adm-overview-section-title__icon--actions" aria-hidden="true"></i>
+            <span>بدون لایسنس فعال</span>
+        </h2>
+        <span class="adm-overview-card__meta">{{ snapshot_counts.users_without_license|to_persian_digits }} کاربر</span>
     </header>
-    <div class="adm-users-fold-panel__body" id="users-top-body" data-users-fold-body hidden>
-    <div class="adm-table-wrap adm-users-preview-table-wrap adm-users-fold-panel__table-wrap">
-        <table class="adm-table adm-table--pro adm-users-preview-table">
+    <div class="adm-overview-table-wrap">
+        <table class="adm-overview-table adm-users-preview-table">
             <thead>
                 <tr>
                     <th>کاربر</th>
-                    <th>مجموع پرداخت</th>
-                    <th>سفارش</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in top_users %}
-                {% url 'admin_panel_user_360' u.pk as u360_row_href %}
-                <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}">
-                    <td class="adm-users-preview-table__user ecc-users-mgmt-user">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u only %}</td>
-                    <td class="adm-users-preview-table__money">{{ u.total_spent|currency }}</td>
-                    <td class="adm-users-preview-table__mono">{{ u.order_count|to_persian_digits }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="3">داده‌ای نیست</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
-</section>
-</div>
-
-<section class="ecc-section adm-center-fold-section adm-center-fold-section--preview adm-users-fold-panel" id="users-table-no-license" data-users-fold-panel data-fold-open="0" aria-label="بدون لایسنس">
-    <header class="ecc-section-head adm-center-fold-section__head adm-center-fold-section__head--preview adm-users-fold-panel__head">
-        <button type="button" class="adm-users-fold-panel__trigger" data-users-fold-trigger aria-expanded="false" aria-controls="users-no-license-body">
-            <i class="fas fa-chevron-down adm-users-fold-panel__chevron" aria-hidden="true"></i>
-            <span class="adm-center-fold-section__lead">
-                <span class="adm-center-fold-section__icon adm-center-fold-section__icon--rose" aria-hidden="true"><i class="fas fa-user-slash"></i></span>
-                <span class="adm-center-fold-section__titles">
-                    <span class="adm-users-fold-panel__title">بدون لایسنس فعال</span>
-                    <span class="ecc-section-meta">{{ snapshot_counts.users_without_license|to_persian_digits }} کاربر · نمایش {{ users_without_license_list|length|to_persian_digits }}</span>
-                </span>
-            </span>
-        </button>
-        {% if 'users_without_license' in admin_export_allowed_keys %}
-        <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx" class="adm-users-fold-action" title="خروجی اکسل بدون لایسنس">
-            <span class="adm-users-fold-action__label">خروجی</span>
-            <i class="fas fa-file-excel" aria-hidden="true"></i>
-        </a>
-        {% endif %}
-    </header>
-    <div class="adm-users-fold-panel__body" id="users-no-license-body" data-users-fold-body hidden>
-    <div class="adm-table-wrap adm-users-preview-table-wrap adm-users-fold-panel__table-wrap">
-        <table class="adm-table adm-table--pro adm-users-preview-table">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>سفارش پرداخت‌شده</th>
-                    <th>سفارش معلق</th>
+                    <th>پرداخت‌شده</th>
+                    <th>معلق</th>
                     <th>عضویت</th>
+                    <th class="adm-users-preview-table__action" scope="col"><span class="adm-v2-sr-only">پرونده ۳۶۰</span></th>
                 </tr>
             </thead>
             <tbody>
                 {% for u in users_without_license_list %}
                 {% url 'admin_panel_user_360' u.pk as u360_row_href %}
-                <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}">
-                    <td class="adm-users-preview-table__user ecc-users-mgmt-user">{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u show_phone=1 only %}</td>
+                <tr data-user-id="{{ u.pk }}" class="adm-users-row--profile" tabindex="0" data-u360-href="{{ u360_row_href }}?return={{ request.get_full_path|urlencode }}" aria-label="پرونده ۳۶۰ · {% firstof u.get_full_name u.username %}">
+                    <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=u show_phone=1 only %}</td>
                     <td>{{ u.paid_orders|to_persian_digits }}</td>
                     <td>{{ u.pending_orders|to_persian_digits }}</td>
                     <td>{{ u.date_joined|to_jalali_fa }}</td>
+                    <td class="adm-users-preview-table__action">{% include 'accounts/partials/admin_user_360_row_action.html' with user_obj=u only %}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4">همه کاربران فعال لایسنس دارند</td></tr>
+                <tr><td colspan="5">همه کاربران فعال لایسنس دارند</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    </div>
-</section>
+    {% if 'users_without_license' in admin_export_allowed_keys %}
+    <footer class="adm-overview-card__foot">
+        <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx">خروجی بدون لایسنس <i class="fas fa-file-excel adm-icon-dir" aria-hidden="true"></i></a>
+    </footer>
+    {% endif %}
+</article>
 
-<section class="ecc-section adm-center-fold-section adm-center-fold-section--primary adm-center-fold-section--preview adm-users-fold-panel" id="ecc-users" data-users-fold-panel data-fold-open="1" aria-label="مدیریت کاربران">
-    <header class="ecc-section-head adm-center-fold-section__head adm-center-fold-section__head--preview adm-users-fold-panel__head">
-        <button type="button" class="adm-users-fold-panel__trigger" data-users-fold-trigger aria-expanded="true" aria-controls="ecc-users-body">
-            <i class="fas fa-chevron-down adm-users-fold-panel__chevron" aria-hidden="true"></i>
-            <span class="adm-center-fold-section__lead">
-                <span class="adm-center-fold-section__icon" aria-hidden="true"><i class="fas fa-table"></i></span>
-                <span class="adm-center-fold-section__titles">
-                    <span class="adm-users-fold-panel__title">مدیریت کاربران</span>
-                    <span class="ecc-section-meta">جستجو، فیلتر و پرونده</span>
-                </span>
-            </span>
-        </button>
+<article class="adm-overview-card adm-users-mgmt-card adm-users-mgmt-card--lux" id="ecc-users">
+    <header class="adm-overview-card__head adm-users-mgmt-card__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-users-gear adm-overview-section-title__icon adm-overview-section-title__icon--users" aria-hidden="true"></i>
+            <span>مدیریت کاربران</span>
+        </h2>
+        <span class="adm-overview-card__meta adm-users-mgmt-card__meta">جستجو · فیلتر · پرونده ۳۶۰</span>
     </header>
-    <div class="adm-users-fold-panel__body" id="ecc-users-body" data-users-fold-body>
     <div
         id="ecc-users-mgmt"
         class="adm-users-mgmt-shell"
@@ -223,120 +203,67 @@
         data-users-detail-url-template="{{ users_detail_url_template }}"
         data-users-profile-url-template="{{ users_profile_url_template }}"
     >
-        <div class="ecc-users-mgmt-tools adm-users-mgmt-toolbar">
-            <div class="adm-users-mgmt-toolbar__search">
-                <label class="adm-v2-sr-only" for="eccUsersMgmtSearch">جستجوی کاربران بر اساس نام، موبایل یا ایمیل</label>
-                <i class="fas fa-search adm-users-mgmt-toolbar__search-icon" aria-hidden="true"></i>
-                <input type="search" id="eccUsersMgmtSearch" class="ecc-table-search adm-users-mgmt-search" placeholder="جستجو نام، موبایل، ایمیل…" autocomplete="off" aria-controls="eccUsersMgmtBody">
-            </div>
-            <div class="adm-users-mgmt-toolbar__filters">
-            <div class="ecc-users-mgmt-filters adm-users-mgmt-filter-grid">
-                <select id="eccUsersMgmtLicense" class="ecc-users-mgmt-select" aria-label="لایسنس">
-                    <option value="">لایسنس — همه</option>
-                    <option value="yes">دارای لایسنس</option>
-                    <option value="no">بدون لایسنس</option>
-                </select>
-                <select id="eccUsersMgmtWindows" class="ecc-users-mgmt-select" aria-label="ویندوز">
-                    <option value="">ویندوز — همه</option>
-                    <option value="downloaded">دانلود شده</option>
-                    <option value="activated">فعال‌شده</option>
-                    <option value="launched">اجرا شده</option>
-                </select>
-                <select id="eccUsersMgmtAndroid" class="ecc-users-mgmt-select" aria-label="اندروید">
-                    <option value="">اندروید — همه</option>
-                    <option value="yes">نصب‌شده</option>
-                    <option value="no">ندارد</option>
-                </select>
-                <select id="eccUsersMgmtDatasets" class="ecc-users-mgmt-select" aria-label="دیتاست">
-                    <option value="">دیتاست — همه</option>
-                    <option value="yes">دارد</option>
-                    <option value="no">ندارد</option>
-                </select>
-                <select id="eccUsersMgmtCrm" class="ecc-users-mgmt-select" aria-label="CRM">
-                    <option value="">CRM — همه</option>
-                    <option value="yes">دارد</option>
-                    <option value="no">ندارد</option>
-                </select>
-                <select id="eccUsersMgmtPaid" class="ecc-users-mgmt-select" aria-label="پرداخت">
-                    <option value="">پرداخت — همه</option>
-                    <option value="yes">پرداخت‌کننده</option>
-                    <option value="no">بدون پرداخت</option>
-                </select>
-            </div>
-            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm adm-users-mgmt-reset" id="eccUsersMgmtReset" hidden>پاک‌کردن فیلترها</button>
-            </div>
-        </div>
-        <p class="adm-v2-table-status" id="eccUsersMgmtStatus" role="status" aria-live="polite">برای دریافت فهرست کاربران آماده است.</p>
-        <div class="adm-table-wrap adm-table-wrap--tall">
-            <table class="adm-table adm-table--pro ecc-users-mgmt-table">
+        {% include 'accounts/partials/admin_users_mgmt_toolbar.html' %}
+        <div class="adm-table-wrap adm-table-wrap--tall adm-users-mgmt-table-wrap adm-overview-table-wrap adm-users-mgmt-table-wrap--lux">
+            <table class="adm-table adm-table--pro ecc-users-mgmt-table adm-users-mgmt-table adm-overview-table adm-users-mgmt-table--lux">
                 <thead>
                     <tr>
-                        <th>کاربر</th>
-                        <th>لایسنس</th>
-                        <th>پرداخت</th>
-                        <th>ویندوز</th>
-                        <th>اندروید</th>
-                        <th>دیتاست</th>
-                        <th>CRM</th>
-                        <th>آخرین ورود</th>
+                        <th scope="col">کاربر</th>
+                        <th scope="col">لایسنس</th>
+                        <th scope="col">پرداخت</th>
+                        <th scope="col">ویندوز</th>
+                        <th scope="col">اندروید</th>
+                        <th scope="col">دیتاست</th>
+                        <th scope="col">CRM</th>
+                        <th scope="col">آخرین ورود</th>
                     </tr>
                 </thead>
-                <tbody id="eccUsersMgmtBody" aria-live="off">
+                <tbody id="eccUsersMgmtBody" aria-live="polite">
                     <tr><td colspan="8" class="adm-empty">در حال بارگذاری…</td></tr>
                 </tbody>
             </table>
         </div>
-        <div class="ecc-users-mgmt-pager" id="eccUsersMgmtPager" hidden>
-            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="eccUsersMgmtPrev">قبلی</button>
-            <span class="ecc-users-mgmt-page-info" id="eccUsersMgmtPageInfo"></span>
-            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="eccUsersMgmtNext">بعدی</button>
-        </div>
+        <footer class="adm-users-mgmt-foot">
+            <p class="adm-v2-table-status adm-users-mgmt-status" id="eccUsersMgmtStatus" role="status" aria-live="polite">برای دریافت فهرست کاربران آماده است.</p>
+        </footer>
     </div>
-    </div>
-</section>
-</div>
+</article>
 
 {% if export_links %}
-<section class="ecc-section adm-center-fold-section adm-center-fold-section--preview adm-center-fold-section--exports" id="users-exports" aria-label="خروجی‌های کاربران">
-    <header class="ecc-section-head adm-center-fold-section__head adm-center-fold-section__head--preview adm-users-export__head">
-        <div class="adm-center-fold-section__lead">
-            <span class="adm-center-fold-section__icon adm-center-fold-section__icon--teal" aria-hidden="true"><i class="fas fa-file-export"></i></span>
-            <div class="adm-center-fold-section__titles">
-                <h2>خروجی‌ها</h2>
-                <p class="ecc-section-meta">دانلود گزارش‌های آماده · اکسل</p>
-            </div>
-        </div>
+<section class="adm-overview-card adm-users-exports" id="users-exports" aria-label="خروجی‌های کاربران">
+    <header class="adm-overview-card__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-file-export adm-overview-section-title__icon adm-overview-section-title__icon--accent" aria-hidden="true"></i>
+            <span>خروجی‌ها</span>
+        </h2>
+        <span class="adm-overview-card__meta">اکسل · گزارش‌های آماده</span>
     </header>
-    <div class="adm-users-export-dock ecc-module-dock" role="list">
+    <div class="adm-users-export-grid" role="list">
         {% for exp in export_links %}
-        <a class="ecc-module adm-users-export-card" role="listitem" data-accent="{{ exp.accent }}" href="{{ exp.url }}" title="دانلود {{ exp.title }}">
-            <span class="ecc-module-icon adm-users-export-card__icon" aria-hidden="true"><i class="fas {{ exp.icon }}"></i></span>
-            <span class="ecc-module-text adm-users-export-card__text">
-                <strong class="adm-users-export-card__title">{{ exp.title }}</strong>
-                <em class="adm-users-export-card__meta">{% if exp.supports_days %}{% if admin_panel_range_key == 'all' %}کل بازه{% else %}بازه {{ chart_days|to_persian_digits }} روز{% endif %}{% else %}کل{% endif %}</em>
+        <a class="adm-users-export-chip" role="listitem" data-accent="{{ exp.accent }}" href="{{ exp.url }}" title="دانلود {{ exp.title }}">
+            <i class="fas {{ exp.icon }}" aria-hidden="true"></i>
+            <span class="adm-users-export-chip__text">
+                <strong>{{ exp.title }}</strong>
+                <em>{% if exp.supports_days %}{% if admin_panel_range_key == 'all' %}کل بازه{% else %}بازه {{ chart_days|to_persian_digits }} روز{% endif %}{% else %}کل{% endif %}</em>
             </span>
-            {% if exp.count %}<span class="adm-users-export-card__count">{{ exp.count|to_persian_digits }}</span>{% endif %}
-            <i class="fas fa-file-arrow-down adm-users-export-card__action" aria-hidden="true"></i>
+            {% if exp.count %}<span class="adm-users-export-chip__count">{{ exp.count|to_persian_digits }}</span>{% endif %}
         </a>
         {% endfor %}
     </div>
 </section>
 {% endif %}
-{% else %}
-<section class="ecc-section adm-center-fold-section adm-center-fold-section--preview" id="ecc-users-mgmt" aria-label="پرونده کاربران" role="status">
-    <header class="ecc-section-head adm-center-fold-section__head adm-center-fold-section__head--preview">
-        <div class="adm-center-fold-section__lead">
-            <span class="adm-center-fold-section__icon adm-center-fold-section__icon--slate" aria-hidden="true"><i class="fas fa-lock"></i></span>
-            <div class="adm-center-fold-section__titles">
-                <h2>پرونده فردی کاربران</h2>
-                <p class="ecc-section-meta">آمار کلی در دسترس است؛ جزئیات هر کاربر نیازمند مجوز است.</p>
-            </div>
-        </div>
-    </header>
-</section>
-{% endif %}
 
-</div>
+{% else %}
+<article class="adm-overview-card" id="ecc-users-mgmt" role="status">
+    <header class="adm-overview-card__head">
+        <h2 class="adm-overview-section-title">
+            <i class="fas fa-lock adm-overview-section-title__icon adm-overview-section-title__icon--accent" aria-hidden="true"></i>
+            <span>پرونده فردی کاربران</span>
+        </h2>
+    </header>
+    <p class="adm-users-permission-note">آمار کلی در دسترس است؛ جزئیات هر کاربر نیازمند مجوز است.</p>
+</article>
+{% endif %}
 
 </div>
 {% include 'accounts/partials/admin_center_shell_close.html' %}
@@ -346,7 +273,7 @@
 {% include 'accounts/partials/admin_prime_charts_boot.html' %}
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=20"></script>
 {% if admin_can_view_user_management %}
-<script src="{% static 'js/mizkar-admin-users-fold.js' %}?v=3"></script>
-<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=6"></script>
+<script src="{% static 'js/mizkar-admin-users-fold.js' %}?v=5"></script>
+<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=8"></script>
 {% endif %}
 {% endblock %}

@@ -73,6 +73,13 @@
         return link && link.href ? link.href : '';
     }
 
+    function navigateProfileRow(row) {
+        var href = profileHrefForRow(row);
+        if (href) {
+            window.location.href = href;
+        }
+    }
+
     function initProfileRowNav(root) {
         root.addEventListener('click', function (event) {
             if (event.target.closest('a, button, input, select, label')) {
@@ -82,18 +89,36 @@
             if (!row) {
                 return;
             }
-            var href = profileHrefForRow(row);
-            if (href) {
-                window.location.href = href;
+            navigateProfileRow(row);
+        });
+
+        root.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
             }
+            var row = event.target.closest('tr.adm-users-row--profile[data-user-id]');
+            if (!row || !row.hasAttribute('tabindex')) {
+                return;
+            }
+            if (event.target.closest('a, button, input, select, label')) {
+                return;
+            }
+            event.preventDefault();
+            navigateProfileRow(row);
         });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        var root = document.querySelector('[data-users-fold-accordion]');
-        if (root) {
-            initAccordion(root);
-            initProfileRowNav(root);
+        var page = document.querySelector('.adm-users-page');
+        if (!page) {
+            return;
+        }
+        var accordion = page.querySelector('[data-users-fold-accordion]');
+        if (accordion) {
+            initAccordion(accordion);
+            initProfileRowNav(accordion);
+        } else {
+            initProfileRowNav(page);
         }
     });
 })();

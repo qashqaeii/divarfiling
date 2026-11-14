@@ -33,9 +33,16 @@
     <footer class="adm-overview-kpi__foot adm-center-kpi-card__foot">
         {% if kpi_kind == 'snapshot' or card.kind == 'snapshot' %}
         {% if kpi_lux %}
+        {% if card.delta is not None %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'نسبت' }}</span>
+        <span class="adm-overview-kpi__delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+            {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+        </span>
+        {% else %}
         <span class="adm-center-kpi-card__lux-caption">
             {% if card.sublabel %}{{ card.sublabel }}{% else %}{{ card.delta_label|default:'وضعیت' }}{% endif %}
         </span>
+        {% endif %}
         {% else %}
         <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'وضعیت' }}</span>
         {% if card.sublabel %}
@@ -44,6 +51,8 @@
         <span class="adm-overview-kpi__foot-empty" aria-hidden="true">—</span>
         {% endif %}
         {% endif %}
+        {% elif kpi_lux %}
+        {% include 'accounts/partials/admin_center_kpi_compare.html' with compare_item=card compare_show_hint=card.key == 'renewals_period' or card.key == 'renewal_rate_period' %}
         {% else %}
         {% if card.delta is not None %}
         <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'نسبت دوره قبل' }}</span>
@@ -57,7 +66,9 @@
         <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'دوره قبل' }}</span>
         <span class="adm-center-kpi-card__meta">{{ card.previous_value|to_persian_digits }}</span>
         {% elif card.sublabel %}
-        <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'توضیح' }}</span>
+        {% if card.delta_label %}
+        <span class="adm-overview-kpi__foot-label">{{ card.delta_label }}</span>
+        {% endif %}
         <span class="adm-center-kpi-card__meta adm-center-kpi-card__meta--hint">{{ card.sublabel }}</span>
         {% else %}
         <span class="adm-overview-kpi__foot-label">{{ card.delta_label|default:'—' }}</span>

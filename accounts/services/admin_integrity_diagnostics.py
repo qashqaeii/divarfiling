@@ -19,26 +19,26 @@ from shop.services.order_fulfillment_recovery import orders_needing_fulfillment_
 ISSUE_DEFINITIONS = (
     {
         'key': 'paid_missing_date',
-        'title': 'پرداخت بدون تاریخ',
-        'hint': 'سفارش paid است ولی paid_at ندارد؛ ممکن است در KPIهای بازه‌ای دیده نشود.',
+        'title': 'بدون زمان پرداخت',
+        'hint': 'سفارش موفق است اما زمان پرداخت ثبت نشده؛ در آمار بازه دیده نمی‌شود.',
         'severity': 'high',
     },
     {
         'key': 'complete_without_license',
-        'title': 'تکمیل با کمبود کلید',
-        'hint': 'خرید جدید با پرچم تکمیل، اما تعداد کلیدهای صادرشده کمتر از تعداد سفارش.',
+        'title': 'کلید کمتر از سفارش',
+        'hint': 'وضعیت تحویل «کامل» است اما کلید صادرشده از تعداد سفارش کمتر است.',
         'severity': 'critical',
     },
     {
         'key': 'gateway_paid_order_unpaid',
-        'title': 'عدم تطابق درگاه',
-        'hint': 'تراکنش زیبال paid ثبت شده ولی سفارش paid نیست؛ نیازمند بررسی درگاه.',
+        'title': 'درگاه موفق، سفارش باز',
+        'hint': 'زیبال پرداخت موفق را ثبت کرده؛ وضعیت سفارش هنوز پرداخت‌شده نیست.',
         'severity': 'critical',
     },
     {
         'key': 'fulfillment_incomplete',
-        'title': 'صدور یا تمدید ناقص',
-        'hint': 'پرداخت موفق ثبت شده ولی عملیات تحویل هنوز تکمیل نشده است.',
+        'title': 'تحویل ناتمام',
+        'hint': 'پرداخت موفق است اما صدور کلید یا تمدید هنوز تمام نشده.',
         'severity': 'high',
     },
 )

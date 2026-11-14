@@ -144,6 +144,15 @@ class LeadImportTests(TestCase):
             'ونک',
         )
 
+    def test_listing_category_display_fa(self):
+        from accounts.services.lead_import import listing_category_display_fa, resolve_listing_category_key
+
+        self.assertEqual(resolve_listing_category_key('apartment-sell'), 'apartment-sell')
+        self.assertEqual(resolve_listing_category_key('apartment sell'), 'apartment-sell')
+        self.assertEqual(resolve_listing_category_key('آپارتمان سل'), 'apartment-sell')
+        self.assertEqual(listing_category_display_fa('apartment-sell'), 'فروش آپارتمان')
+        self.assertEqual(listing_category_display_fa('آپارتمان سل'), 'فروش آپارتمان')
+
     def test_lead_district_fa_template_filter(self):
         from shop.templatetags.persian_tags import lead_district_fa
 
@@ -545,13 +554,25 @@ class LeadAdminViewTests(TestCase):
     def test_lead_acquisition_page(self):
         resp = self.client.get(reverse('admin_panel_lead_acquisition'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'مرکز جذب سرنخ')
+        self.assertContains(resp, 'id="lac-overview"')
+        self.assertContains(resp, 'adm-lac-tabs--pro')
         self.assertContains(resp, 'lac-campaigns-bulk-form')
         self.assertContains(resp, 'lac-select-all')
-        self.assertContains(resp, 'کلیک لندینگ')
+        self.assertContains(resp, 'کلیک یکتای لندینگ')
+        self.assertContains(resp, 'پیامک پذیرفته‌شده')
         self.assertContains(resp, 'lac-chart-conversion')
         self.assertContains(resp, 'lac-campaign-table-totals')
+        self.assertContains(resp, 'lac-campaign-table-search')
+        self.assertContains(resp, 'lac-campaign-table-sort')
+        self.assertContains(resp, 'adm-lac-analytics--pro')
+        self.assertContains(resp, 'lac-variant-insight-modal')
         self.assertContains(resp, 'lac-charts-data')
+        self.assertContains(resp, 'id="lac-compose-list-picker"')
+        self.assertContains(resp, 'id="lac-leads-panel"')
+        self.assertContains(resp, 'id="lac-leads-search"')
+        self.assertContains(resp, 'adm-lac-compose-list')
+        self.assertContains(resp, 'adm-lac-compose-section')
+        self.assertContains(resp, 'adm-lac-compose-list__mark')
 
     @patch('accounts.lead_acquisition_views.enroll_pilot')
     def test_bulk_enroll_pilot(self, mock_enroll):
@@ -835,13 +856,29 @@ class LeadCampaignFullSendTests(TestCase):
 
 class LeadOverviewDashboardTests(TestCase):
     def test_overview_stats_includes_clicks_and_purchases(self):
+        from accounts.services.admin_dashboard import ALL_TIME_DAYS
         from accounts.services.lead_funnel import acquisition_dashboard_charts, overview_stats
 
         stats = overview_stats()
         self.assertIn('total_clicks', stats)
         self.assertIn('total_purchases', stats)
+        self.assertIn('purchase_revenue_toman', stats)
+        self.assertIn('sms_requested', stats)
+        self.assertIn('campaigns_total', stats)
+        self.assertIn('registration_rate_pct', stats)
         self.assertIn('accepted_sms', stats)
         self.assertGreaterEqual(stats['leads_total'], 0)
+
+    def test_overview_stats_exposes_range_and_accepts_days_window(self):
+        from accounts.services.admin_dashboard import ALL_TIME_DAYS
+        from accounts.services.lead_funnel import overview_stats
+
+        all_time = overview_stats(days=ALL_TIME_DAYS)
+        windowed = overview_stats(days=30)
+        self.assertIn('range_label', all_time)
+        self.assertIn('range_label', windowed)
+        self.assertEqual(windowed['range_days'], 30)
+        self.assertLessEqual(windowed['accepted_sms'], all_time['accepted_sms'])
 
     def test_acquisition_dashboard_charts_structure(self):
         from accounts.services.lead_funnel import acquisition_dashboard_charts, campaign_funnel

@@ -1,0 +1,56 @@
+{% load persian_tags %}
+{% load currency_tags %}
+{% if financial_integrity %}
+<details class="adm-overview-card adm-sales-integrity" id="sales-integrity" {% if financial_integrity.selected %}open{% endif %}>
+    <summary class="adm-sales-integrity__summary">
+        <span class="adm-overview-section-title">
+            <i class="fas fa-shield-halved adm-overview-section-title__icon adm-overview-section-title__icon--sales" aria-hidden="true"></i>
+            <span>سلامت پرداخت و تحویل</span>
+        </span>
+        <span class="adm-sales-integrity__meta">{% if financial_integrity.total_flags %}{{ financial_integrity.total_flags|to_persian_digits }} مورد{% else %}بدون مورد{% endif %} · همهٔ سفارش‌ها</span>
+        <i class="fas fa-chevron-down adm-sales-integrity__chevron" aria-hidden="true"></i>
+    </summary>
+    <div class="adm-sales-integrity__body">
+        <p class="adm-sales-integrity__note">ممیزی صرفاً خواندنی؛ مستقل از بازه. اصلاح خودکار نداریم. ممکن است هم‌پوشانی داشته باشند.</p>
+        <div class="adm-sales-integrity__grid">
+            {% for issue in financial_integrity.cards %}
+            <article class="adm-sales-integrity__card" data-status="{% if issue.count %}warn{% else %}ok{% endif %}">
+                <strong class="adm-sales-integrity__card-val">{{ issue.count|to_persian_digits }}</strong>
+                <span class="adm-sales-integrity__card-label">{{ issue.title }}</span>
+                {% if issue.count %}
+                <span class="adm-sales-integrity__card-hint">{{ issue.hint }}</span>
+                <a class="adm-sales-integrity__card-link" href="{{ issue.href }}"{% if issue.active %} aria-current="true"{% endif %}>مشاهده</a>
+                {% else %}
+                <span class="adm-sales-integrity__card-hint adm-sales-integrity__card-hint--ok">موردی نیست</span>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% if financial_integrity.active_issue and financial_integrity.selected != 'fulfillment_incomplete' %}
+        <div class="adm-overview-table-wrap" id="sales-integrity-results">
+            <table class="adm-overview-table adm-sales-preview-table">
+                <caption>{{ financial_integrity.active_issue.title }} — چند نمونه</caption>
+                <thead><tr><th>سفارش</th><th>کاربر</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th></tr></thead>
+                <tbody>
+                    {% for order in financial_integrity.rows %}
+                    <tr>
+                        <td>
+                            {% if perms.shop.view_order %}
+                            <a href="{% url 'admin:shop_order_change' order.pk %}" target="_blank" rel="noopener">{{ order.pk|stringformat:"s"|truncatechars:13 }}</a>
+                            {% else %}{{ order.pk|stringformat:"s"|truncatechars:13 }}{% endif %}
+                        </td>
+                        <td>{% include 'accounts/partials/admin_user_360_link.html' with user_obj=order.user u360_tab='commerce' link_plain=1 %}</td>
+                        <td>{{ order.amount|currency }}</td>
+                        <td>{{ order.paid_at|default:order.created_at|to_jalali_fa }}</td>
+                        <td>{{ order.get_status_display }} · {{ order.get_fulfillment_status_display }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">موردی برای این هشدار نیست</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</details>
+{% endif %}

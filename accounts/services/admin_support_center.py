@@ -479,15 +479,31 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
     return items
 
 
+def _support_center_return_path() -> str:
+    return reverse('admin_panel_support') + '?focus=unread_tickets#support-table-tickets'
+
+
 def _serialize_tickets(tickets) -> List[Dict[str, Any]]:
+    return_path = _support_center_return_path()
     rows = []
     for t in tickets:
+        uid = t.user_id
         rows.append({
             'id': t.pk,
             'ticket_number': t.ticket_number,
             'subject': t.subject,
-            'user_id': t.user_id,
-            'user_profile_url': admin_user_profile_url(t.user_id),
+            'user_id': uid,
+            'user_profile_url': admin_user_profile_url(uid, return_path=return_path) if uid else '',
+            'u360_support_url': (
+                admin_user_profile_url(
+                    uid,
+                    tab='support',
+                    ticket_id=t.pk,
+                    return_path=return_path,
+                )
+                if uid
+                else ''
+            ),
             'user_display': t.user.get_full_name() or t.user.username,
             'status': t.status,
             'status_label': t.get_status_display_fa(),

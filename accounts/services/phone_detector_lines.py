@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import sys
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -13,6 +14,8 @@ from django.conf import settings
 _engine_lock = threading.Lock()
 _engine = None
 OTP_PENDING_TTL_SECONDS = 300
+_LINES_DB_SYNC_AT = 0.0
+_LINES_DB_SYNC_MIN_INTERVAL = 20.0
 
 
 class PhoneDetectorLineError(Exception):
@@ -388,8 +391,20 @@ def _merge_engine_accounts(lines: list[dict], engine_info: dict) -> list[dict]:
     return lines
 
 
-def list_lines(*, probe: bool = False) -> dict[str, Any]:
-    """لیست خطوط ذخیره‌شده در sessions/ phone-detector."""
+def _maybe_sync_lines_from_sessions(*, force: bool = False) -> None:
+    """همگام‌سازی DB با فایل sessions — throttle برای پاسخ سریع UI."""
+    global _LINES_DB_SYNC_AT
+    from accounts.services.phone_detector_line_ops import sync_lines_from_sessions
+
+    now = time.monotonic()
+    if not force and (now - _LINES_DB_SYNC_AT) < _LINES_DB_SYNC_MIN_INTERVAL:
+        return
+    sync_lines_from_sessions()
+    _LINES_DB_SYNC_AT = now
+
+
+def list_lines(*, probe: bool = False, sync: bool = True) -> dict[str, Any]:
+    """لیست خطوط ذخیره‌شده در sessions/ phone-detector (sync برای quick=1 غیرفعال می‌شود)."""
     pd = resolve_phone_detector_dir()
     if not pd:
         return {
@@ -429,10 +444,10 @@ def list_lines(*, probe: bool = False) -> dict[str, Any]:
     from accounts.services.phone_detector_line_ops import (
         merge_operational_fields,
         operational_summary,
-        sync_lines_from_sessions,
     )
 
-    sync_lines_from_sessions()
+    if sync:
+        _maybe_sync_lines_from_sessions(force=probe)
     lines = [merge_operational_fields(row) for row in lines]
     for row in lines:
         if not row.get('line_index'):

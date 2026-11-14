@@ -1642,12 +1642,12 @@
         }).join('');
         const actPts = (d.charts && d.charts.activity_daily) || [];
         const actChart = actPts.length
-            ? chartsRow(chartCard('رویدادها در بازه انتخابی', 'admU360ActChart', 'adm-u360-chart-wrap--wide', 'fa-chart-bar'))
+            ? chartsRow(chartCard('رویدادهای ثبت‌شده در بازه انتخابی', 'admU360ActChart', 'adm-u360-chart-wrap--wide', 'fa-chart-bar'))
             : '';
         paintPanel(tabPanel('فعالیت و رفتار', tabIcon('activity'), {
             metrics: statStrip([
                 { label: 'رویداد در این صفحه', value: toFa((d.events || []).length) },
-                { label: 'کل (صفحه‌بندی)', value: toFa((d.pagination && d.pagination.total) || (d.events || []).length) },
+                { label: 'کل رویدادهای ثبت‌شده', value: toFa(d.pagination ? d.pagination.total : (d.events || []).length) },
             ]),
             toolbar: toolbar,
             viz: actChart,

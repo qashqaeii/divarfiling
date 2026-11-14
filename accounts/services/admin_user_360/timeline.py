@@ -265,13 +265,17 @@ def daily_activity_counts(user, *, days: int = 30) -> List[Dict[str, Any]]:
     """شمارش رویدادهای قابل‌اتکا در هر روز — برای نمودار."""
     from collections import defaultdict
 
-    tl = build_activity_timeline(user, page=1, page_size=500, days=days)
+    # The timeline API caps page_size at 100. Aggregate every page rather than
+    # silently undercounting the chart for active customers.
+    timeline = build_activity_timeline(user, page=1, page_size=100, days=days)
     buckets: Dict[str, int] = defaultdict(int)
-    for ev in tl['events']:
-        at = ev.get('at')
-        if not at:
-            continue
-        day = at[:10]
-        buckets[day] += 1
+    for page in range(1, timeline['pagination']['total_pages'] + 1):
+        events = timeline['events'] if page == 1 else build_activity_timeline(
+            user, page=page, page_size=100, days=days,
+        )['events']
+        for ev in events:
+            at = ev.get('at')
+            if at:
+                buckets[at[:10]] += 1
     labels = sorted(buckets.keys())[-days:]
     return [{'date': d, 'count': buckets[d]} for d in labels]

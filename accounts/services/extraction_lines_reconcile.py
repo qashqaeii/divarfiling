@@ -232,6 +232,32 @@ def _register_phone_in_pd_index(phone: str) -> bool:
     return _register_phone_in_pd_index_explicit(phone)
 
 
+def _read_index_document(root: Path) -> dict[str, Any]:
+    index_path = root / 'index.json'
+    default: dict[str, Any] = {
+        'active_phone': None,
+        'rotate': True,
+        'phones': [],
+        'paused_phones': [],
+    }
+    if not index_path.is_file():
+        return default
+    try:
+        loaded = json.loads(index_path.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return default
+    if not isinstance(loaded, dict):
+        return default
+    return {**default, **loaded}
+
+
+def _write_index_document(root: Path, data: dict[str, Any]) -> None:
+    index_path = root / 'index.json'
+    tmp = index_path.with_suffix('.tmp')
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+    tmp.replace(index_path)
+
+
 def _register_phone_in_pd_index_explicit(phone: str) -> bool:
     """Fallback: شماره را صریح به index اضافه کن اگر فایل روی دیسک هست."""
     root = _pd_sessions_root()
@@ -240,25 +266,18 @@ def _register_phone_in_pd_index_explicit(phone: str) -> bool:
     phone = normalize_line_phone(phone)
     if not (root / f'{phone}.json').is_file():
         return False
-    index_path = root / 'index.json'
-    data: dict[str, Any] = {'active_phone': None, 'rotate': True, 'phones': []}
-    if index_path.is_file():
-        try:
-            loaded = json.loads(index_path.read_text(encoding='utf-8'))
-            if isinstance(loaded, dict):
-                data = loaded
-        except (OSError, json.JSONDecodeError):
-            pass
-    phones = [normalize_line_phone(p) for p in data.get('phones') or []]
+    data = _read_index_document(root)
+    phones = [normalize_line_phone(p) for p in data.get('phones') or [] if normalize_line_phone(p)]
+    paused = [normalize_line_phone(p) for p in data.get('paused_phones') or [] if normalize_line_phone(p)]
+    paused = [p for p in paused if p != phone]
     if phone not in phones:
         phones.append(phone)
     data['phones'] = phones
+    data['paused_phones'] = paused
     if not data.get('active_phone'):
         data['active_phone'] = phone
-    tmp = index_path.with_suffix('.tmp')
-    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-    tmp.replace(index_path)
-    return _index_contains_phone(index_path, phone)
+    _write_index_document(root, data)
+    return _index_contains_phone(root / 'index.json', phone)
 
 
 def _index_contains_phone(index_path, phone: str) -> bool:
@@ -312,33 +331,122 @@ def _evict_phone_from_pd_index(
         return False
 
 
-def _remove_phone_from_index_only(phone: str) -> bool:
-    """حذف از چرخش بدون پاک‌کردن فایل سشن (خطوط دستی با کپچا)."""
-    pd = resolve_phone_detector_dir()
-    if not pd:
-        return False
-    root = pd / 'sessions'
-    index_path = root / 'index.json'
+def _phone_paused_in_index(index_path: Path, phone: str) -> bool:
     phone = normalize_line_phone(phone)
-    if not index_path.is_file():
-        return False
     try:
         data = json.loads(index_path.read_text(encoding='utf-8'))
     except (OSError, json.JSONDecodeError):
         return False
     if not isinstance(data, dict):
         return False
-    before = [normalize_line_phone(p) for p in data.get('phones') or []]
-    if phone not in before:
+    return phone in {
+        normalize_line_phone(p) for p in data.get('paused_phones') or [] if normalize_line_phone(p)
+    }
+
+
+def _remove_phone_from_index_only(phone: str) -> bool:
+    """خارج از چرخش (paused_phones) بدون حذف فایل سشن."""
+    pd = resolve_phone_detector_dir()
+    if not pd:
         return False
-    phones = [p for p in before if p and p != phone]
+    root = pd / 'sessions'
+    phone = normalize_line_phone(phone)
+    if not (root / f'{phone}.json').is_file():
+        return False
+    data = _read_index_document(root)
+    before = [normalize_line_phone(p) for p in data.get('phones') or [] if normalize_line_phone(p)]
+    paused = [normalize_line_phone(p) for p in data.get('paused_phones') or [] if normalize_line_phone(p)]
+    changed = False
+    if phone in before:
+        data['phones'] = [p for p in before if p != phone]
+        changed = True
+    if phone not in paused:
+        paused.append(phone)
+        data['paused_phones'] = paused
+        changed = True
+    elif not changed:
+        return _phone_paused_in_index(root / 'index.json', phone)
     if data.get('active_phone') and normalize_line_phone(data['active_phone']) == phone:
-        data['active_phone'] = phones[0] if phones else None
-    data['phones'] = phones
-    tmp = index_path.with_suffix('.tmp')
-    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-    tmp.replace(index_path)
-    return not _index_contains_phone(index_path, phone)
+        rotation = data.get('phones') or []
+        data['active_phone'] = rotation[0] if rotation else None
+    _write_index_document(root, data)
+    return (
+        not _index_contains_phone(root / 'index.json', phone)
+        and _phone_paused_in_index(root / 'index.json', phone)
+    )
+
+
+def _line_index_in_rotation(line: PhoneDetectorExtractionLine) -> bool:
+    """منبع eligibility برای index — هم‌تراز با schedulable خطوط."""
+    if line.admin_hold:
+        return False
+    if line.operational_status in (
+        OPS.BLOCKED_CAPTCHA,
+        OPS.PAUSED,
+        OPS.ERROR,
+        OPS.EVICTED,
+        OPS.RUNNING,
+    ):
+        return False
+    if line.operational_status == OPS.COOLDOWN:
+        if line.blocked_until and line.blocked_until > timezone.now():
+            return False
+    if line.operational_status == OPS.ACTIVE:
+        return True
+    if line.operational_status == OPS.COOLDOWN:
+        return True
+    return False
+
+
+def _sync_rotation_index_from_db() -> int:
+    """همگام‌سازی phones/paused_phones از DB — idempotent پس از reconcile یا probe."""
+    root = _pd_sessions_root()
+    if not root:
+        return 0
+    data = _read_index_document(root)
+    on_disk = {
+        normalize_line_phone(p.stem)
+        for p in root.glob('09*.json')
+        if normalize_line_phone(p.stem)
+    }
+    rotation: list[str] = []
+    paused: list[str] = []
+    for line in PhoneDetectorExtractionLine.objects.all().only(
+        'phone',
+        'operational_status',
+        'admin_hold',
+        'blocked_until',
+    ):
+        phone = normalize_line_phone(line.phone)
+        if not phone or phone not in on_disk:
+            continue
+        if _line_index_in_rotation(line):
+            if phone not in rotation:
+                rotation.append(phone)
+            continue
+        if phone not in paused:
+            paused.append(phone)
+    for phone in sorted(on_disk):
+        if phone not in rotation and phone not in paused:
+            rotation.append(phone)
+    active = normalize_line_phone(data.get('active_phone') or '')
+    if active and active not in rotation:
+        active = rotation[0] if rotation else None
+    elif not active and rotation:
+        active = rotation[0]
+    prior = {
+        tuple(normalize_line_phone(p) for p in data.get('phones') or []),
+        tuple(normalize_line_phone(p) for p in data.get('paused_phones') or []),
+    }
+    data['phones'] = rotation
+    data['paused_phones'] = paused
+    data['active_phone'] = active
+    data['rotate'] = bool(data.get('rotate', True))
+    nxt = (tuple(rotation), tuple(paused))
+    if prior == nxt and normalize_line_phone(data.get('active_phone') or '') == (active or ''):
+        return 0
+    _write_index_document(root, data)
+    return 1
 
 
 def _acquire_reconcile_lock(*, wait_seconds: float) -> tuple[bool, str]:
@@ -397,6 +505,7 @@ def reconcile_extraction_lines(
         'evicted': 0,
         'recovered': 0,
         'index_adjusted': 0,
+        'index_synced': 0,
         'skipped_opt_out': 0,
         'skipped_provision': 0,
     }
@@ -470,6 +579,7 @@ def reconcile_extraction_lines(
                 if _evict_line_from_active_rotation(line):
                     stats['index_adjusted'] += 1
 
+        stats['index_synced'] = _sync_rotation_index_from_db()
         sync_lines_from_sessions()
         stats['ok'] = True
         if lock_note:

@@ -334,33 +334,52 @@ def _session_health_from_file(session_path: Path) -> dict[str, Any]:
 
 
 def _load_index(root: Path) -> dict[str, Any]:
+    from accounts.services.phone_detector_line_ops import normalize_line_phone
+
     index_path = root / 'index.json'
-    default = {'active_phone': None, 'rotate': True, 'phones': []}
+    default: dict[str, Any] = {
+        'active_phone': None,
+        'rotate': True,
+        'phones': [],
+        'paused_phones': [],
+    }
+    on_disk = {p.stem for p in root.glob('09*.json')}
+
+    def _norm_list(raw: Any) -> list[str]:
+        out: list[str] = []
+        for item in raw or []:
+            key = normalize_line_phone(str(item))
+            if key and key not in out:
+                out.append(key)
+        return out
+
     if not index_path.is_file():
-        phones = sorted(p.stem for p in root.glob('09*.json'))
+        phones = sorted(on_disk)
         return {**default, 'phones': phones}
+
     try:
         data = json.loads(index_path.read_text(encoding='utf-8'))
     except (OSError, json.JSONDecodeError):
-        phones = sorted(p.stem for p in root.glob('09*.json'))
+        phones = sorted(on_disk)
         return {**default, 'phones': phones}
     if not isinstance(data, dict):
-        phones = sorted(p.stem for p in root.glob('09*.json'))
+        phones = sorted(on_disk)
         return {**default, 'phones': phones}
 
-    on_disk = {p.stem for p in root.glob('09*.json')}
+    paused = {p for p in _norm_list(data.get('paused_phones')) if p in on_disk}
     phones: list[str] = []
-    for raw in data.get('phones') or []:
-        key = str(raw).strip()
-        if key and key in on_disk and key not in phones:
+    for key in _norm_list(data.get('phones')):
+        if key in on_disk and key not in paused and key not in phones:
             phones.append(key)
     for phone in sorted(on_disk):
-        if phone not in phones:
+        if phone not in phones and phone not in paused:
             phones.append(phone)
+    paused_list = [p for p in _norm_list(data.get('paused_phones')) if p in on_disk]
     return {
         'active_phone': str(data['active_phone']).strip() if data.get('active_phone') else None,
         'rotate': bool(data.get('rotate', True)),
         'phones': phones,
+        'paused_phones': paused_list,
     }
 
 

@@ -15,6 +15,7 @@ from accounts.services.extraction_lines_reconcile import (
     _register_phone_in_pd_index,
     _register_phone_in_pd_index_explicit,
     _remove_phone_from_index_only,
+    _sync_rotation_index_from_db,
     reconcile_extraction_lines,
 )
 from accounts.services.pd_sessions_file_lock import PdSessionsFileLock
@@ -184,3 +185,49 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
             PhoneDetectorExtractionLine.objects.filter(phone=session.divar_phone).count(),
             1,
         )
+
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
+    def test_manual_captcha_stays_paused_after_reconcile_and_save_index(
+        self,
+        mock_pd,
+        mock_pd2,
+    ):
+        mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
+        if str(PD_ROOT) not in sys.path:
+            sys.path.insert(0, str(PD_ROOT))
+        phone = '09127778899'
+        (self.sessions_root / f'{phone}.json').write_text('{"cookies":[]}', encoding='utf-8')
+        index = {
+            'active_phone': phone,
+            'rotate': True,
+            'phones': [phone],
+            'paused_phones': [],
+        }
+        (self.sessions_root / 'index.json').write_text(
+            json.dumps(index, ensure_ascii=False),
+            encoding='utf-8',
+        )
+        PhoneDetectorExtractionLine.objects.create(
+            phone=phone,
+            line_source=PhoneDetectorExtractionLine.LineSource.MANUAL,
+            operational_status=PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
+        )
+        self.assertGreaterEqual(_sync_rotation_index_from_db(), 0)
+        stats = reconcile_extraction_lines(wait_seconds=5.0)
+        self.assertTrue(stats.get('ok'))
+        data = json.loads((self.sessions_root / 'index.json').read_text(encoding='utf-8'))
+        self.assertNotIn(phone, data.get('phones') or [])
+        self.assertIn(phone, data.get('paused_phones') or [])
+        from main import SessionRegistry
+
+        reg = SessionRegistry(self.sessions_root)
+        reg.save_index()
+        data2 = json.loads((self.sessions_root / 'index.json').read_text(encoding='utf-8'))
+        self.assertNotIn(phone, data2.get('phones') or [])
+        self.assertIn(phone, data2.get('paused_phones') or [])
+        stats2 = reconcile_extraction_lines(wait_seconds=5.0)
+        self.assertTrue(stats2.get('ok'))
+        data3 = json.loads((self.sessions_root / 'index.json').read_text(encoding='utf-8'))
+        self.assertNotIn(phone, data3.get('phones') or [])

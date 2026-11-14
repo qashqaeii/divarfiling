@@ -625,6 +625,13 @@ def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
     row.status_detail = str(probe.get('message') or 'بررسی موفق — خط به چرخه بازگشت')
     row.save()
 
+    try:
+        from accounts.services.extraction_lines_reconcile import _sync_rotation_index_from_db
+
+        _sync_rotation_index_from_db()
+    except Exception:
+        logger.debug('index resume after probe skipped', exc_info=True)
+
     payload = list_lines(probe=True)
     return {
         'reactivated': True,

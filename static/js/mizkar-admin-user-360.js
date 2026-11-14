@@ -1751,7 +1751,13 @@
                 return '<tr>' + td(esc(d.device_model), 'مدل') + td(esc(d.app_version), 'نسخه')
                     + td(esc(d.last_seen_jalali), 'آخرین ارتباط') + '</tr>';
             }).join('');
-            content += subSection('دستگاه‌های اندروید', miniTable(['مدل', 'نسخه', 'آخرین ارتباط'], dev), 'fa-mobile-alt');
+            content += subSection('دستگاه‌های اندروید', dev
+                ? miniTable(['مدل', 'نسخه', 'آخرین ارتباط'], dev)
+                : emptyState('دستگاه اندرویدی ثبت نشده', 'در داده‌های ثبت‌شده برای این مشتری دستگاه اندرویدی یافت نشد.'), 'fa-mobile-alt');
+            if (!dl && !ev && !flags.downloaded && !flags.activated) {
+                content += subSection('فعالیت ویندوز', emptyState('فعالیت ویندوز ثبت نشده',
+                    'دانلود، فعال‌سازی یا رویداد اپ ویندوز برای این مشتری در داده‌های موجود دیده نمی‌شود.'), 'fa-desktop');
+            }
             const plat = (data.charts && data.charts.platform_activations) || [];
             const chartPart = plat.length
                 ? chartsRow(chartCard('فعال‌سازی‌ها به تفکیک پلتفرم', 'admU360DevPlatform', 'adm-u360-chart-wrap--donut', 'fa-chart-pie'))
@@ -1780,8 +1786,13 @@
                     + (data.include_internal_notes ? 'checked' : '') + '> نمایش یادداشت‌های داخلی</label></div>';
             }
             let content = '';
+            const tickets = data.tickets || [];
+            const visibleInternal = !!data.include_internal_notes && !!perms.can_view_internal_tickets;
+            toolbar += '<p class="adm-u360-muted">نمایش ' + toFa(tickets.length)
+                + ' تیکت در این صفحه؛ وضعیت و اولویت هر تیکت در کارت آن مشخص است.'
+                + (visibleInternal ? ' یادداشت‌های داخلی مجاز نیز نمایش داده می‌شوند.' : '') + '</p>';
             let ticketStack = '<div class="adm-u360-ticket-stack">';
-            (data.tickets || []).forEach(function (t) {
+            tickets.forEach(function (t) {
                 ticketStack += '<article class="adm-u360-ticket">'
                     + '<header class="adm-u360-ticket__head"><p class="adm-u360-ticket__title">'
                     + esc(t.ticket_number) + ' — ' + esc(t.subject) + '</p>'
@@ -1800,7 +1811,7 @@
                 ticketStack += '</article>';
             });
             ticketStack += '</div>';
-            if (!(data.tickets || []).length) {
+            if (!tickets.length) {
                 content += emptyState('تیکتی ثبت نشده', 'هنوز درخواست پشتیبانی از این مشتری در سیستم نیست.');
             } else {
                 content += ticketStack;

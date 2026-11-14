@@ -8,3 +8,6 @@ sudo systemctl restart divar_shop
 
 # بازیابی تمدید/صدور ناقص پس از پرداخت (cron هر ~۱۰ دقیقه)
 # python manage.py reconcile_order_fulfillments --limit 100
+
+# همگام‌سازی نشست فایلینگ با خطوط استخراج (cron هر ~۵ دقیقه، کنار run_acquisition_automation)
+# python manage.py reconcile_extraction_lines

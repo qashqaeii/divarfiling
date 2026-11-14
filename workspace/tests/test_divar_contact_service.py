@@ -180,7 +180,7 @@ class DivarSessionServiceTests(TestCase):
         )
         on_central_session_invalidated(session, reason='disconnected')
         line.refresh_from_db()
-        self.assertEqual(line.operational_status, PhoneDetectorExtractionLine.OperationalStatus.PAUSED)
+        self.assertEqual(line.operational_status, PhoneDetectorExtractionLine.OperationalStatus.EVICTED)
 
     @patch('accounts.services.phone_detector_line_ops._sessions_index_phones', return_value=['09127778888'])
     def test_sync_pauses_only_fk_linked_invalid_central(self, _mock_phones):

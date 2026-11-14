@@ -303,9 +303,18 @@ def verify_divar_otp(user, phone: str, otp: str) -> dict[str, Any]:
                 'connected_at',
                 'last_success_at',
                 'captcha_post_url',
+                'auth_status',
+                'hip_status',
                 'updated_at',
             ],
         )
+
+    try:
+        from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
+
+        reconcile_extraction_lines()
+    except Exception:
+        logger.debug('reconcile after divar connect skipped', exc_info=True)
 
     return {'ok': True, 'phone': saved_phone, 'status': public_session_status(user)}
 

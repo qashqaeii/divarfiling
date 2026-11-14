@@ -53,10 +53,16 @@ def on_central_session_invalidated(
             session=session,
         )
     linked.update(
-        operational_status=PhoneDetectorExtractionLine.OperationalStatus.PAUSED,
+        operational_status=PhoneDetectorExtractionLine.OperationalStatus.EVICTED,
         status_detail=detail,
         updated_at=timezone.now(),
     )
+    try:
+        from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
+
+        reconcile_extraction_lines()
+    except Exception:
+        logger.debug('reconcile after session invalidation skipped', exc_info=True)
 
 
 def list_sessions_for_admin(*, consent_only: bool = False) -> list[dict]:
@@ -66,6 +72,15 @@ def list_sessions_for_admin(*, consent_only: bool = False) -> list[dict]:
     rows = []
     for row in qs:
         line = PhoneDetectorExtractionLine.objects.filter(divar_account_session=row).first()
+        if not line:
+            line = PhoneDetectorExtractionLine.objects.filter(
+                phone=row.divar_phone,
+                line_source=PhoneDetectorExtractionLine.LineSource.FILING,
+            ).first()
+        auto_managed = (
+            row.auth_status == DivarAccountSession.AuthStatus.CONNECTED
+            and not row.extraction_auto_opt_out
+        )
         rows.append({
             'id': str(row.pk),
             'divar_phone': row.divar_phone,
@@ -75,15 +90,16 @@ def list_sessions_for_admin(*, consent_only: bool = False) -> list[dict]:
             'auth_status_label': row.get_auth_status_display(),
             'last_health_check_at': row.last_health_check_at,
             'last_success_at': row.last_success_at,
-            'phone_detector_consent': row.phone_detector_consent,
-            'on_line': bool(line),
+            'phone_detector_consent': row.phone_detector_consent or auto_managed,
+            'consent_auto': auto_managed,
+            'extraction_auto_opt_out': row.extraction_auto_opt_out,
+            'extraction_auto_managed': auto_managed,
+            'on_line': bool(line) and (line.operational_status != PhoneDetectorExtractionLine.OperationalStatus.EVICTED if line else False),
             'line_phone': line.phone if line else '',
             'line_operational_status': line.operational_status if line else '',
-            'can_add_to_line': (
-                row.phone_detector_consent
-                and row.auth_status == DivarAccountSession.AuthStatus.CONNECTED
-                and not line
-            ),
+            'line_source': line.line_source if line else '',
+            'can_add_to_line': False,
+            'can_opt_out_auto_sync': auto_managed,
         })
     return rows
 
@@ -122,36 +138,24 @@ def _write_refreshed_session_file(session: DivarAccountSession) -> None:
 
 
 def add_session_to_phone_detector_line(session: DivarAccountSession) -> dict:
-    if not session.phone_detector_consent:
-        raise DivarSessionError('مجوز استفاده در Phone Detector ثبت نشده است.', code='no_consent')
-    if session.auth_status != DivarAccountSession.AuthStatus.CONNECTED:
-        raise DivarSessionError('نشست معتبر نیست.', code='invalid_session')
-    if PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).exists():
-        raise DivarSessionError('این نشست قبلاً به خطوط اضافه شده است.', code='already_linked')
-    if PhoneDetectorExtractionLine.objects.filter(phone=session.divar_phone).exists():
-        raise DivarSessionError(
-            'این شماره قبلاً در خطوط Phone Detector ثبت شده است.',
-            code='phone_duplicate',
-        )
+    session.extraction_auto_opt_out = False
+    session.save(update_fields=['extraction_auto_opt_out', 'updated_at'])
+    grant_phone_detector_consent(session)
+    from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
 
-    clear_phone_detector_file_sync_block(session.divar_phone)
-    _write_refreshed_session_file(session)
-
-    with transaction.atomic():
-        line = PhoneDetectorExtractionLine.objects.create(
-            phone=session.divar_phone,
-            operational_status=PhoneDetectorExtractionLine.OperationalStatus.PAUSED,
-            divar_account_session=session,
-            status_detail='از نشست کاربر فایلینگ — فعال‌سازی دستی لازم است',
-        )
-
-    from accounts.services.phone_detector_line_ops import sync_lines_from_sessions
-
-    sync_lines_from_sessions()
-    return {'ok': True, 'phone': session.divar_phone, 'line_id': line.pk}
+    stats = reconcile_extraction_lines(force=True)
+    line = PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).first()
+    return {
+        'ok': True,
+        'phone': session.divar_phone,
+        'line_id': line.pk if line else None,
+        'reconcile': stats,
+    }
 
 
 def unlink_session_from_line(session: DivarAccountSession) -> dict:
+    session.extraction_auto_opt_out = True
+    session.save(update_fields=['extraction_auto_opt_out', 'updated_at'])
     had_line = PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).exists()
     if had_line:
         block_phone_detector_file_sync(
@@ -160,9 +164,11 @@ def unlink_session_from_line(session: DivarAccountSession) -> dict:
             session=session,
         )
     PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).update(
-        operational_status=PhoneDetectorExtractionLine.OperationalStatus.PAUSED,
-        status_detail='ارتباط با نشست مرکزی حذف شد — sync خودکار مسدود',
+        operational_status=PhoneDetectorExtractionLine.OperationalStatus.EVICTED,
+        status_detail='همگام‌سازی خودکار توسط مدیر قطع شد',
         updated_at=timezone.now(),
     )
-    deleted, _ = PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).delete()
-    return {'ok': True, 'removed': deleted}
+    from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
+
+    reconcile_extraction_lines(force=True)
+    return {'ok': True, 'opt_out': True}

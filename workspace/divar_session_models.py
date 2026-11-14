@@ -98,6 +98,11 @@ class DivarAccountSession(models.Model):
     phone_detector_consent = models.BooleanField(default=False, db_index=True)
     phone_detector_consent_at = models.DateTimeField(null=True, blank=True)
     phone_detector_consent_version = models.CharField(max_length=16, blank=True, default='')
+    extraction_auto_opt_out = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text='مدیر همگام‌سازی خودکار این نشست با خطوط استخراج را قطع کرده است',
+    )
     operation_lock_until = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

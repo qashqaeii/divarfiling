@@ -122,13 +122,13 @@ def schedule_due_campaigns(*, max_jobs: int = 1) -> list[AcquisitionRun]:
     if cache.get(LOCK_KEY):
         return []
 
+    from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
     from accounts.services.phone_detector_line_ops import (
         count_schedulable_lines,
         operational_summary,
-        sync_lines_from_sessions,
     )
 
-    sync_lines_from_sessions()
+    reconcile_extraction_lines()
     lines_summary = operational_summary()
 
     now = timezone.now()

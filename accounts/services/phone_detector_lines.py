@@ -392,14 +392,14 @@ def _merge_engine_accounts(lines: list[dict], engine_info: dict) -> list[dict]:
 
 
 def _maybe_sync_lines_from_sessions(*, force: bool = False) -> None:
-    """همگام‌سازی DB با فایل sessions — throttle برای پاسخ سریع UI."""
+    """Reconcile نشست فایلینگ + DB + index — throttle برای پاسخ سریع UI."""
     global _LINES_DB_SYNC_AT
-    from accounts.services.phone_detector_line_ops import sync_lines_from_sessions
+    from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
 
     now = time.monotonic()
     if not force and (now - _LINES_DB_SYNC_AT) < _LINES_DB_SYNC_MIN_INTERVAL:
         return
-    sync_lines_from_sessions()
+    reconcile_extraction_lines(force=force)
     _LINES_DB_SYNC_AT = now
 
 
@@ -453,9 +453,36 @@ def list_lines(*, probe: bool = False, sync: bool = True) -> dict[str, Any]:
         if not row.get('line_index'):
             row['line_index'] = 0
 
+    index_set = set(index['phones'])
+    active_lines: list[dict[str, Any]] = []
+    inactive_lines: list[dict[str, Any]] = []
+    for row in lines:
+        op = row.get('operational_status')
+        if (
+            row.get('phone') in index_set
+            and not row.get('admin_hold')
+            and op in ('active', 'running', 'cooldown')
+            and not row.get('captcha_blocked')
+            and op != 'evicted'
+        ):
+            active_lines.append(row)
+        else:
+            inactive_lines.append(row)
+
+    indexed_phones = {r['phone'] for r in lines}
+    from accounts.models import PhoneDetectorExtractionLine
+
+    for db_row in PhoneDetectorExtractionLine.objects.exclude(phone__in=indexed_phones):
+        inactive_lines.append(
+            merge_operational_fields({
+                'phone': db_row.phone,
+                'line_index': db_row.line_index or 0,
+            }),
+        )
+
     healthy = sum(
         1
-        for row in lines
+        for row in active_lines
         if row.get('operational_status') in ('active', 'running')
         and row.get('ok')
         and not row.get('captcha_blocked')
@@ -465,14 +492,16 @@ def list_lines(*, probe: bool = False, sync: bool = True) -> dict[str, Any]:
     return {
         'ok': True,
         'configured': True,
-        'lines': lines,
+        'lines': active_lines,
+        'inactive_lines': inactive_lines,
         'operational': operational_summary(),
         'schedulable_count': schedulable,
         'rotate': index.get('rotate', True),
         'active_phone': index.get('active_phone'),
         'sessions_dir': str(root),
         'phone_detector_dir': str(pd),
-        'total': len(lines),
+        'total': len(active_lines),
+        'inactive_total': len(inactive_lines),
         'healthy_count': healthy,
         'needs_login': engine_info.get('needs_login') if engine_info else [
             row['phone'] for row in lines if row.get('needs_relogin')
@@ -526,6 +555,10 @@ def remove_line(phone: str) -> dict[str, Any]:
     engine = _get_engine()
     try:
         result = engine.remove_account(phone)
+        from accounts.models import PhoneDetectorExtractionLine
+        from accounts.services.phone_detector_line_ops import normalize_line_phone
+
+        PhoneDetectorExtractionLine.objects.filter(phone=normalize_line_phone(phone)).delete()
         payload = list_lines(probe=False)
         return {**result, **payload}
     except Exception as exc:

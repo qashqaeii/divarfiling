@@ -25,7 +25,7 @@
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-lead-v3.css' %}?v=43">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-lead-v3.css' %}?v=44">
 {% endblock %}
 
 {% block admin_panel_content %}
@@ -1067,6 +1067,20 @@
                         </tr>
                     </thead>
                     <tbody id="lac-lines-tbody" data-lines-boot="idle"></tbody>
+                </table>
+            </div>
+            <p class="adm-lac-lines-inactive-head" id="lac-lines-inactive-head" hidden>سوابق و خطوط خارج از چرخه</p>
+            <div class="adm-lac-ops-table-wrap adm-lac-ops-table-wrap--flush adm-lac-lines-inactive-wrap" id="lac-lines-inactive-wrap" hidden>
+                <table class="adm-lac-table adm-lac-table--pro adm-lac-ops-table adm-lac-lines-table adm-lac-lines-table--inactive">
+                    <thead>
+                        <tr>
+                            <th>خط</th>
+                            <th>وضعیت</th>
+                            <th>منبع</th>
+                            <th>جزئیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lac-lines-inactive-tbody"></tbody>
                 </table>
             </div>
             {% endif %}
@@ -2990,8 +3004,63 @@
         '<i class="' + icon + '" aria-hidden="true"></i></button>';
     }
 
+    var inactiveHead = document.getElementById('lac-lines-inactive-head');
+    var inactiveWrap = document.getElementById('lac-lines-inactive-wrap');
+    var inactiveTbody = document.getElementById('lac-lines-inactive-tbody');
+
+    function lineRowHtml(row, withActions) {
+      var opStatus = row.operational_status || row.status || 'unknown';
+      var opLabel = row.operational_status_label || row.status_label || opStatus;
+      var lineTitle = row.line_index ? 'خط ' + pdDigits(row.line_index) : 'خط';
+      var primary = row.is_active ? '<span class="adm-lac-ops-tag adm-lac-ops-tag--active">فعال</span>' : '';
+      var sourceTag = row.line_source === 'filing'
+        ? '<span class="adm-lac-ops-tag adm-lac-ops-tag--ok">فایلینگ</span>'
+        : '<span class="adm-lac-ops-tag">دستی</span>';
+      var sessionMeta = row.saved_at ? formatSavedAt(row.saved_at) : '—';
+      if (row.expires_at) sessionMeta += ' · انقضا ' + formatSavedAt(row.expires_at);
+      var successMeta = row.success_extract_count ? pdDigits(row.success_extract_count) + ' موفق' : '—';
+      if (row.last_success_at) successMeta += ' · ' + formatSavedAt(row.last_success_at);
+      var perfCell = '<span class="adm-lac-ops-cell-line">' + successMeta + '</span>';
+      if (row.last_error_at || row.last_error_reason) {
+        perfCell += '<span class="adm-lac-ops-cell-error">' + (row.last_error_reason || 'خطا') + '</span>';
+      }
+      var detailHint = row.status_detail ? '<span class="adm-lac-ops-cell-sub">' + row.status_detail + '</span>' : '';
+      if (!withActions) {
+        return '<tr>' +
+          '<td><div class="adm-lac-ops-line-cell"><span class="adm-lac-ops-line-idx">' + lineTitle + '</span>' +
+          '<span dir="ltr" class="adm-lac-ops-mono">' + row.phone + '</span>' + detailHint + '</div></td>' +
+          '<td><span class="adm-lac-line-status adm-lac-line-status--' + opStatus + '">' + opLabel + '</span></td>' +
+          '<td>' + sourceTag + '</td>' +
+          '<td><span class="adm-lac-ops-cell-line">' + (row.status_detail || '—') + '</span></td>' +
+        '</tr>';
+      }
+      var reloginBtn = row.needs_relogin
+        ? opsIconBtn('lac-line-relogin adm-lac-ops-icon-btn--accent', 'fas fa-key', 'ورود مجدد', 'data-phone="' + row.phone + '"')
+        : '';
+      var pauseBtn = row.admin_paused || opStatus === 'paused'
+        ? opsIconBtn('lac-line-unpause', 'fas fa-play', 'فعال‌سازی', 'data-phone="' + row.phone + '"')
+        : opsIconBtn('lac-line-pause', 'fas fa-pause', 'توقف', 'data-phone="' + row.phone + '"');
+      var reactivateBtn = (opStatus === 'blocked_captcha' || row.captcha_blocked)
+        ? opsIconBtn('lac-line-reactivate adm-lac-ops-icon-btn--warn', 'fas fa-shield-check', 'بررسی کپچا', 'data-phone="' + row.phone + '"')
+        : '';
+      return '<tr' + (row.is_active ? ' class="is-active-line"' : '') + '>' +
+        '<td><div class="adm-lac-ops-line-cell">' +
+          '<span class="adm-lac-ops-line-idx">' + lineTitle + '</span>' + primary + sourceTag +
+          '<span dir="ltr" class="adm-lac-ops-mono">' + row.phone + '</span>' + detailHint +
+        '</div></td>' +
+        '<td><span class="adm-lac-line-status adm-lac-line-status--' + opStatus + '">' + opLabel + '</span></td>' +
+        '<td class="adm-lac-lines-td-perf">' + perfCell + '</td>' +
+        '<td><span class="adm-lac-ops-cell-line adm-lac-lines-cell-session">' + sessionMeta + '</span></td>' +
+        '<td class="adm-lac-td-actions"><div class="adm-lac-ops-actions adm-lac-lines-actions">' +
+          reactivateBtn + reloginBtn + pauseBtn +
+          opsIconBtn('lac-line-switch', 'fas fa-check', 'انتخاب خط', 'data-phone="' + row.phone + '"') +
+          opsIconBtn('lac-line-remove adm-lac-ops-icon-btn--danger', 'fas fa-trash', 'حذف خط', 'data-phone="' + row.phone + '"') +
+        '</div></td></tr>';
+    }
+
     function renderLines(data) {
       var lines = data.lines || [];
+      var inactive = data.inactive_lines || [];
       if (totalEl) totalEl.textContent = pdDigits(data.total || lines.length);
       if (healthyEl) healthyEl.textContent = pdDigits(data.healthy_count || 0);
       if (activePhoneEl) activePhoneEl.textContent = data.active_phone || '—';
@@ -3010,58 +3079,27 @@
       }
 
       if (!lines.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="adm-lac-lines-empty">خط فعالی نیست — «خط جدید» یا انتظار همگام‌سازی نشست</td></tr>';
+      } else {
+        tbody.innerHTML = lines.map(function (row) { return lineRowHtml(row, true); }).join('');
+      }
+
+      if (inactiveTbody) {
+        if (inactive.length) {
+          inactiveTbody.innerHTML = inactive.map(function (row) { return lineRowHtml(row, false); }).join('');
+          if (inactiveHead) inactiveHead.hidden = false;
+          if (inactiveWrap) inactiveWrap.hidden = false;
+        } else {
+          inactiveTbody.innerHTML = '';
+          if (inactiveHead) inactiveHead.hidden = true;
+          if (inactiveWrap) inactiveWrap.hidden = true;
+        }
+      }
+
+      if (!lines.length && !inactive.length) {
         tbody.innerHTML = '<tr><td colspan="5" class="adm-lac-lines-empty">هنوز خطی ثبت نشده — «خط جدید»</td></tr>';
         return;
       }
-
-      tbody.innerHTML = lines.map(function (row) {
-        var opStatus = row.operational_status || row.status || 'unknown';
-        var opLabel = row.operational_status_label || row.status_label || opStatus;
-        var lineTitle = row.line_index
-          ? 'خط ' + pdDigits(row.line_index)
-          : 'خط';
-        var primary = row.is_active ? '<span class="adm-lac-ops-tag adm-lac-ops-tag--active">فعال</span>' : '';
-        var sessionMeta = row.saved_at ? formatSavedAt(row.saved_at) : '—';
-        if (row.expires_at) sessionMeta += ' · انقضا ' + formatSavedAt(row.expires_at);
-        var successMeta = row.success_extract_count
-          ? pdDigits(row.success_extract_count) + ' موفق'
-          : '—';
-        if (row.last_success_at) successMeta += ' · ' + formatSavedAt(row.last_success_at);
-        var perfCell = '<span class="adm-lac-ops-cell-line">' + successMeta + '</span>';
-        if (row.last_error_at || row.last_error_reason) {
-          perfCell += '<span class="adm-lac-ops-cell-error">' + (row.last_error_reason || 'خطا') + '</span>';
-        }
-        var reloginBtn = row.needs_relogin
-          ? opsIconBtn('lac-line-relogin adm-lac-ops-icon-btn--accent', 'fas fa-key', 'ورود مجدد', 'data-phone="' + row.phone + '"')
-          : '';
-        var pauseBtn = row.admin_paused || opStatus === 'paused'
-          ? opsIconBtn('lac-line-unpause', 'fas fa-play', 'فعال‌سازی', 'data-phone="' + row.phone + '"')
-          : opsIconBtn('lac-line-pause', 'fas fa-pause', 'توقف', 'data-phone="' + row.phone + '"');
-        var reactivateBtn = (opStatus === 'blocked_captcha' || row.captcha_blocked)
-          ? opsIconBtn('lac-line-reactivate adm-lac-ops-icon-btn--warn', 'fas fa-shield-check', 'بررسی کپچا', 'data-phone="' + row.phone + '"')
-          : '';
-        var detailHint = row.status_detail
-          ? '<span class="adm-lac-ops-cell-sub">' + row.status_detail + '</span>'
-          : '';
-        return '<tr' + (row.is_active ? ' class="is-active-line"' : '') + '>' +
-          '<td><div class="adm-lac-ops-line-cell">' +
-            '<span class="adm-lac-ops-line-idx">' + lineTitle + '</span>' +
-            primary +
-            '<span dir="ltr" class="adm-lac-ops-mono">' + row.phone + '</span>' +
-            detailHint +
-          '</div></td>' +
-          '<td><span class="adm-lac-line-status adm-lac-line-status--' + opStatus + '">' + opLabel + '</span></td>' +
-          '<td class="adm-lac-lines-td-perf">' + perfCell + '</td>' +
-          '<td><span class="adm-lac-ops-cell-line adm-lac-lines-cell-session">' + sessionMeta + '</span></td>' +
-          '<td class="adm-lac-td-actions"><div class="adm-lac-ops-actions adm-lac-lines-actions">' +
-            reactivateBtn +
-            reloginBtn +
-            pauseBtn +
-            opsIconBtn('lac-line-switch', 'fas fa-check', 'انتخاب خط', 'data-phone="' + row.phone + '"') +
-            opsIconBtn('lac-line-remove adm-lac-ops-icon-btn--danger', 'fas fa-trash', 'حذف خط', 'data-phone="' + row.phone + '"') +
-          '</div></td>' +
-        '</tr>';
-      }).join('');
 
       tbody.querySelectorAll('.lac-line-remove').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -3356,21 +3394,22 @@
       }
       tbody.innerHTML = rows.map(function (row) {
         var ops = '<div class="adm-lac-ops-actions">';
-        if (!row.phone_detector_consent) {
-          ops += '<button type="button" class="adm-lac-ops-btn" data-ds-action="grant_consent" data-id="' + row.id + '">مجوز</button>';
-        }
-        if (row.can_add_to_line) {
-          ops += '<button type="button" class="adm-lac-ops-btn adm-lac-ops-btn--primary" data-ds-action="add_to_line" data-id="' + row.id + '">افزودن خط</button>';
-        } else if (row.on_line) {
-          ops += '<button type="button" class="adm-lac-ops-btn" data-ds-action="unlink_line" data-id="' + row.id + '">قطع خط</button>';
+        if (row.extraction_auto_opt_out) {
+          ops += '<button type="button" class="adm-lac-ops-btn adm-lac-ops-btn--primary" data-ds-action="enable_auto_sync" data-id="' + row.id + '">فعال‌سازی همگام‌سازی</button>';
+        } else if (row.extraction_auto_managed) {
+          ops += '<button type="button" class="adm-lac-ops-btn" data-ds-action="unlink_line" data-id="' + row.id + '">قطع همگام‌سازی</button>';
         }
         ops += '</div>';
+        var consentLabel = row.consent_auto ? 'خودکار' : (row.phone_detector_consent ? 'دارد' : '—');
+        var lineCell = row.on_line
+          ? '<span dir="ltr" class="adm-lac-ops-mono">' + row.line_phone + '</span>'
+          : (row.extraction_auto_managed ? 'در صف همگام‌سازی' : '—');
         return '<tr>' +
           '<td><span dir="ltr" class="adm-lac-ops-mono">' + row.divar_phone + '</span></td>' +
           '<td><span class="adm-lac-ops-user">' + row.user_label + '</span></td>' +
           '<td>' + dsTag(row.auth_status_label, row.auth_status_label && row.auth_status_label.indexOf('کپچا') === -1) + '</td>' +
-          '<td>' + dsTag(row.phone_detector_consent ? 'دارد' : 'ندارد', !!row.phone_detector_consent) + '</td>' +
-          '<td>' + (row.on_line ? '<span dir="ltr" class="adm-lac-ops-mono">' + row.line_phone + '</span>' : '—') + '</td>' +
+          '<td>' + dsTag(consentLabel, !!row.phone_detector_consent || row.consent_auto) + '</td>' +
+          '<td>' + lineCell + '</td>' +
           '<td>' + ops + '</td></tr>';
       }).join('');
       tbody.querySelectorAll('[data-ds-action]').forEach(function (btn) {

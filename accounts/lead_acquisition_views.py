@@ -1061,8 +1061,10 @@ class AdminDivarSessionsJsonView(LeadSmsOperatorRequiredMixin, View):
     """نشست‌های دیوار کاربران فایلینگ — مدیریت و افزودن به خطوط Phone Detector."""
 
     def get(self, request):
+        from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
         from workspace.services.divar_session.phone_detector_bridge import list_sessions_for_admin
 
+        reconcile_extraction_lines()
         return JsonResponse(
             {'ok': True, 'sessions': list_sessions_for_admin()},
             json_dumps_params={'ensure_ascii': False},
@@ -1086,9 +1088,13 @@ class AdminDivarSessionsJsonView(LeadSmsOperatorRequiredMixin, View):
 
         session = get_object_or_404(DivarAccountSession, pk=session_id)
         try:
-            if action == 'grant_consent':
+            if action in ('grant_consent', 'enable_auto_sync'):
+                session.extraction_auto_opt_out = False
+                session.save(update_fields=['extraction_auto_opt_out', 'updated_at'])
                 grant_phone_detector_consent(session)
-                result = {'ok': True}
+                from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
+
+                result = {'ok': True, 'reconcile': reconcile_extraction_lines(force=True)}
             elif action == 'add_to_line':
                 result = add_session_to_phone_detector_line(session)
             elif action == 'unlink_line':

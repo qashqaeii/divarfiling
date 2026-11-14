@@ -1504,6 +1504,11 @@ class PhoneDetectorExtractionLine(models.Model):
         COOLDOWN = 'cooldown', 'استراحت'
         PAUSED = 'paused', 'متوقف توسط مدیر'
         ERROR = 'error', 'خطای فنی'
+        EVICTED = 'evicted', 'خارج از چرخه'
+
+    class LineSource(models.TextChoices):
+        MANUAL = 'manual', 'OTP دستی مدیر'
+        FILING = 'filing', 'نشست فایلینگ'
 
     class BlockScope(models.TextChoices):
         LINE = 'line', 'خط'
@@ -1511,6 +1516,17 @@ class PhoneDetectorExtractionLine(models.Model):
         SHARED_IP = 'shared_ip', 'IP مشترک'
 
     phone = models.CharField(max_length=20, unique=True, db_index=True)
+    line_source = models.CharField(
+        max_length=16,
+        choices=LineSource.choices,
+        default=LineSource.MANUAL,
+        db_index=True,
+    )
+    admin_hold = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text='توقف عمدی مدیر — همگام‌سازی خودکار فعال نمی‌کند',
+    )
     divar_account_session = models.OneToOneField(
         'workspace.DivarAccountSession',
         on_delete=models.SET_NULL,

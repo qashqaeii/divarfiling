@@ -1,0 +1,17 @@
+"""Cron: همگام‌سازی نشست فایلینگ با خطوط استخراج phone-detector."""
+from __future__ import annotations
+
+from django.core.management.base import BaseCommand
+
+from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
+
+
+class Command(BaseCommand):
+    help = 'Reconcile filing Divar sessions with Phone Detector extraction lines (idempotent).'
+
+    def handle(self, *args, **options):
+        stats = reconcile_extraction_lines(force=True)
+        if stats.get('ok'):
+            self.stdout.write(self.style.SUCCESS(f'Reconcile OK: {stats}'))
+        else:
+            self.stdout.write(self.style.WARNING(f'Reconcile skipped: {stats}'))

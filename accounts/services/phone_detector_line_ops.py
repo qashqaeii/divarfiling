@@ -141,6 +141,7 @@ def sync_lines_from_sessions() -> int:
                 phone=phone,
                 line_index=idx,
                 operational_status=OPS.ACTIVE,
+                line_source=PhoneDetectorExtractionLine.LineSource.MANUAL,
             )
             touched += 1
         else:
@@ -185,6 +186,10 @@ def schedulable_lines_qs():
             blocked_until__lte=now,
         ),
     ).filter(
+        admin_hold=False,
+    ).exclude(
+        operational_status=OPS.EVICTED,
+    ).filter(
         Q(divar_account_session__isnull=True)
         | Q(divar_account_session__auth_status=DivarAccountSession.AuthStatus.CONNECTED),
     )
@@ -212,6 +217,7 @@ def excluded_phones_for_extraction() -> set[str]:
             OPS.PAUSED,
             OPS.ERROR,
             OPS.RUNNING,
+            OPS.EVICTED,
         ):
             phones.add(row.phone)
         elif row.operational_status == OPS.COOLDOWN:
@@ -402,6 +408,12 @@ def apply_run_outcome_from_engine(
 
     schedulable = count_schedulable_lines()
     all_blocked = schedulable == 0 and bool(by_phone)
+    try:
+        from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
+
+        reconcile_extraction_lines()
+    except Exception:
+        logger.debug('reconcile after run outcome skipped', exc_info=True)
     return {
         'blocked_lines': blocked_this_run,
         'blocked_labels': [line_label(p) for p in blocked_this_run],
@@ -471,12 +483,20 @@ def merge_operational_fields(row: dict[str, Any]) -> dict[str, Any]:
     row['last_checked_at'] = db.last_checked_at.isoformat() if db.last_checked_at else None
     row['admin_paused'] = status == OPS.PAUSED
     row['captcha_blocked'] = status == OPS.BLOCKED_CAPTCHA
+    row['line_source'] = db.line_source
+    row['line_source_label'] = db.get_line_source_display()
+    row['admin_hold'] = bool(db.admin_hold)
 
     if status == OPS.BLOCKED_CAPTCHA:
         row['status'] = 'blocked_captcha'
         row['status_label'] = 'محدودیت کپچا'
         row['ok'] = False
         row['hip_blocked'] = True
+    elif status == OPS.EVICTED:
+        row['status'] = 'evicted'
+        row['status_label'] = 'خارج از چرخه'
+        row['ok'] = False
+        row['in_rotation'] = False
     elif status == OPS.PAUSED:
         row['status'] = 'paused'
         row['status_label'] = 'متوقف توسط مدیر'
@@ -498,8 +518,10 @@ def set_line_paused(phone: str, *, paused: bool) -> PhoneDetectorExtractionLine:
     now = timezone.now()
     if paused:
         row.operational_status = OPS.PAUSED
+        row.admin_hold = True
         row.status_detail = 'متوقف توسط مدیر — در زمان‌بندی انتخاب نمی‌شود'
     else:
+        row.admin_hold = False
         if is_phone_detector_file_sync_blocked(phone):
             raise PhoneDetectorLineError(
                 'این شماره از sync نشست مرکزی جدا شده — افزودن مجدد از مرکز جذب لازم است.',
@@ -518,7 +540,19 @@ def set_line_paused(phone: str, *, paused: bool) -> PhoneDetectorExtractionLine:
         row.operational_status = OPS.ACTIVE
         row.status_detail = 'فعال‌سازی توسط مدیر'
     row.last_checked_at = now
-    row.save()
+    row.save(update_fields=[
+        'operational_status',
+        'admin_hold',
+        'status_detail',
+        'last_checked_at',
+        'updated_at',
+    ])
+    try:
+        from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
+
+        reconcile_extraction_lines()
+    except Exception:
+        logger.debug('reconcile after pause skipped', exc_info=True)
     return row
 
 

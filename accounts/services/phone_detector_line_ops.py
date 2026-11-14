@@ -172,6 +172,8 @@ def sync_lines_from_sessions() -> int:
 
 
 def schedulable_lines_qs():
+    from accounts.services.phone_detector_lines import session_file_exists
+
     sync_lines_from_sessions()
     now = timezone.now()
     blocked = blocked_phones_set()
@@ -195,7 +197,12 @@ def schedulable_lines_qs():
     )
     if blocked:
         qs = qs.exclude(phone__in=blocked)
-    return qs
+    phones_with_files = [
+        p for p in qs.values_list('phone', flat=True) if session_file_exists(p)
+    ]
+    if not phones_with_files:
+        return PhoneDetectorExtractionLine.objects.none()
+    return qs.filter(phone__in=phones_with_files)
 
 
 def count_schedulable_lines() -> int:
@@ -558,9 +565,22 @@ def set_line_paused(phone: str, *, paused: bool) -> PhoneDetectorExtractionLine:
 
 def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
     """Probe read-only Divar + session auth — بدون پاک‌کردن دستی hip_blocked."""
-    from accounts.services.phone_detector_lines import _get_engine, list_lines
+    from accounts.services.pd_sessions_file_lock import (
+        DEFAULT_MUTATION_WAIT,
+        run_pd_sessions_mutation,
+    )
+    from accounts.services.phone_detector_lines import (
+        _get_engine,
+        list_lines,
+        session_file_exists,
+    )
 
     phone = normalize_line_phone(phone)
+    if not session_file_exists(phone):
+        raise PhoneDetectorLineError(
+            'فایل نشست روی دیسک یافت نشد.',
+            code='session_file_missing',
+        )
     sync_lines_from_sessions()
     row = PhoneDetectorExtractionLine.objects.select_related('divar_account_session').filter(
         phone=phone,
@@ -585,9 +605,16 @@ def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
 
     now = timezone.now()
     row.last_checked_at = now
+
+    def _run_probe() -> dict[str, Any]:
+        return _get_engine().probe_line_reactivation(phone)
+
     try:
-        engine = _get_engine()
-        probe = engine.probe_line_reactivation(phone)
+        probe = run_pd_sessions_mutation(_run_probe, wait_seconds=DEFAULT_MUTATION_WAIT)
+    except RuntimeError as exc:
+        row.status_detail = 'قفل sessions مشغول است — بعداً دوباره بررسی کنید'
+        row.save(update_fields=['last_checked_at', 'status_detail', 'updated_at'])
+        raise PhoneDetectorLineError(str(exc), code='lock_busy') from exc
     except Exception as exc:
         row.status_detail = f'بررسی ناموفق: {exc}'
         row.save(update_fields=['last_checked_at', 'status_detail', 'updated_at'])
@@ -628,7 +655,10 @@ def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
     try:
         from accounts.services.extraction_lines_reconcile import _sync_rotation_index_from_db
 
-        _sync_rotation_index_from_db()
+        def _sync_index() -> int:
+            return _sync_rotation_index_from_db()
+
+        run_pd_sessions_mutation(_sync_index, wait_seconds=DEFAULT_MUTATION_WAIT)
     except Exception:
         logger.debug('index resume after probe skipped', exc_info=True)
 

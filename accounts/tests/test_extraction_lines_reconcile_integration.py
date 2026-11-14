@@ -231,3 +231,19 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
         self.assertTrue(stats2.get('ok'))
         data3 = json.loads((self.sessions_root / 'index.json').read_text(encoding='utf-8'))
         self.assertNotIn(phone, data3.get('phones') or [])
+
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
+    def test_orphan_session_file_stays_paused_not_rotation(
+        self,
+        mock_pd,
+        mock_pd2,
+    ):
+        mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
+        orphan = '09128887777'
+        (self.sessions_root / f'{orphan}.json').write_text('{"cookies":[]}', encoding='utf-8')
+        _sync_rotation_index_from_db()
+        data = json.loads((self.sessions_root / 'index.json').read_text(encoding='utf-8'))
+        self.assertNotIn(orphan, data.get('phones') or [])
+        self.assertIn(orphan, data.get('paused_phones') or [])

@@ -40,6 +40,11 @@ class PhoneDetectorLineOpsTests(TestCase):
             return_value=None,
         )
         self._no_pd.start()
+        self._has_file = patch(
+            'accounts.services.phone_detector_lines.session_file_exists',
+            return_value=True,
+        )
+        self._has_file.start()
         self.line1 = PhoneDetectorExtractionLine.objects.create(
             phone='09111111111',
             line_index=1,
@@ -57,7 +62,12 @@ class PhoneDetectorLineOpsTests(TestCase):
         )
 
     def tearDown(self):
+        self._has_file.stop()
         self._no_pd.stop()
+
+    @patch('accounts.services.phone_detector_lines.session_file_exists', return_value=False)
+    def test_active_without_session_file_not_schedulable(self, _has_file):
+        self.assertEqual(count_schedulable_lines(), 0)
 
     def test_excluded_phones_includes_blocked_and_paused(self):
         self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
@@ -172,8 +182,13 @@ class PhoneDetectorLineOpsTests(TestCase):
             PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
         )
 
+    @patch(
+        'accounts.services.pd_sessions_file_lock.run_pd_sessions_mutation',
+        side_effect=lambda fn, *args, **kwargs: fn(),
+    )
+    @patch('accounts.services.phone_detector_lines.session_file_exists', return_value=True)
     @patch('accounts.services.phone_detector_lines._get_engine')
-    def test_probe_api_error_does_not_activate_line(self, mock_engine):
+    def test_probe_api_error_does_not_activate_line(self, mock_engine, _has_file, _lock):
         self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
         self.line2.save()
         engine = mock_engine.return_value
@@ -190,8 +205,13 @@ class PhoneDetectorLineOpsTests(TestCase):
             PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
         )
 
+    @patch(
+        'accounts.services.pd_sessions_file_lock.run_pd_sessions_mutation',
+        side_effect=lambda fn, *args, **kwargs: fn(),
+    )
+    @patch('accounts.services.phone_detector_lines.session_file_exists', return_value=True)
     @patch('accounts.services.phone_detector_lines._get_engine')
-    def test_probe_failure_does_not_activate_line(self, mock_engine):
+    def test_probe_failure_does_not_activate_line(self, mock_engine, _has_file, _lock):
         self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
         self.line2.save()
         engine = mock_engine.return_value
@@ -315,6 +335,17 @@ class MarkLinesRunStartedLockTests(TransactionTestCase):
             return_value=set(),
         )
         self._blocked_patch.start()
+
+        def _session_file(phone: str) -> bool:
+            from accounts.services.phone_detector_line_ops import normalize_line_phone
+
+            return normalize_line_phone(phone) == '09222222222'
+
+        self._file_patch = patch(
+            'accounts.services.phone_detector_lines.session_file_exists',
+            side_effect=_session_file,
+        )
+        self._file_patch.start()
         self.user = User.objects.create_user(
             username='09120001111',
             phone='09120001111',
@@ -350,6 +381,7 @@ class MarkLinesRunStartedLockTests(TransactionTestCase):
         self.errors: list[Exception] = []
 
     def tearDown(self):
+        self._file_patch.stop()
         self._blocked_patch.stop()
         self._sync_patch.stop()
         self._no_pd.stop()
@@ -357,7 +389,7 @@ class MarkLinesRunStartedLockTests(TransactionTestCase):
     def test_schedulable_select_for_update_with_null_and_connected_session(self):
         locked = list(schedulable_lines_qs().select_for_update(of=('self',)))
         phones = {row.phone for row in locked}
-        self.assertIn('09111111111', phones)
+        self.assertNotIn('09111111111', phones)
         self.assertIn('09222222222', phones)
         self.assertNotIn('09333333333', phones)
 
@@ -367,8 +399,8 @@ class MarkLinesRunStartedLockTests(TransactionTestCase):
         self.line_connected.refresh_from_db()
         self.line_invalid_session.refresh_from_db()
         ops = PhoneDetectorExtractionLine.OperationalStatus
-        self.assertEqual(self.line_no_session.operational_status, ops.RUNNING)
-        self.assertEqual(self.line_no_session.last_run_id, 501)
+        self.assertEqual(self.line_no_session.operational_status, ops.ACTIVE)
+        self.assertIsNone(self.line_no_session.last_run_id)
         self.assertEqual(self.line_connected.operational_status, ops.RUNNING)
         self.assertEqual(self.line_connected.last_run_id, 501)
         self.assertEqual(self.line_invalid_session.operational_status, ops.ACTIVE)
@@ -401,10 +433,9 @@ class MarkLinesRunStartedLockTests(TransactionTestCase):
             PhoneDetectorExtractionLine.objects.filter(
                 operational_status=PhoneDetectorExtractionLine.OperationalStatus.RUNNING,
             ).count(),
-            2,
+            1,
         )
-        self.assertIn(self.line_no_session.last_run_id, (601, 602))
-        self.assertEqual(self.line_no_session.last_run_id, self.line_connected.last_run_id)
+        self.assertIn(self.line_connected.last_run_id, (601, 602))
         self.assertEqual(
             PhoneDetectorExtractionLine.objects.filter(phone='09111111111').count(),
             1,
@@ -422,8 +453,22 @@ class RunnerStopLogicTests(TestCase):
         if pd_root.is_dir() and str(pd_root) not in sys.path:
             sys.path.insert(0, str(pd_root))
 
+    def _import_runner_eval(self):
+        import importlib
+        import sys
+        from pathlib import Path
+
+        pd_root = Path(__file__).resolve().parents[3] / 'phone-detector'
+        engine_mod = sys.modules.get('engine')
+        if engine_mod is not None and not hasattr(engine_mod, 'PhoneDetectorEngine'):
+            del sys.modules['engine']
+        if str(pd_root) not in sys.path:
+            sys.path.insert(0, str(pd_root))
+        runner = importlib.import_module('automation.runner')
+        return runner.evaluate_extraction_stop
+
     def test_evaluate_does_not_stop_when_healthy_remain(self):
-        from automation.runner import evaluate_extraction_stop
+        evaluate_extraction_stop = self._import_runner_eval()
 
         state = {
             'auto_liking': True,
@@ -436,7 +481,7 @@ class RunnerStopLogicTests(TestCase):
         self.assertIsNone(evaluate_extraction_stop(state))
 
     def test_evaluate_stops_when_all_blocked(self):
-        from automation.runner import evaluate_extraction_stop
+        evaluate_extraction_stop = self._import_runner_eval()
 
         state = {
             'auto_liking': True,

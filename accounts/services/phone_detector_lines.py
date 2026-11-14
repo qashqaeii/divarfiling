@@ -50,6 +50,19 @@ def phone_detector_available() -> bool:
     return resolve_phone_detector_dir() is not None
 
 
+def session_file_exists(phone: str) -> bool:
+    from accounts.services.phone_detector_line_ops import normalize_line_phone
+
+    phone = normalize_line_phone(phone)
+    if not phone:
+        return False
+    try:
+        root = sessions_root()
+    except PhoneDetectorLineError:
+        return False
+    return (root / f'{phone}.json').is_file()
+
+
 def sessions_root() -> Path:
     pd = resolve_phone_detector_dir()
     if not pd:
@@ -479,6 +492,7 @@ def list_lines(*, probe: bool = False, sync: bool = True) -> dict[str, Any]:
         op = row.get('operational_status')
         if (
             row.get('phone') in index_set
+            and row.get('has_file') is not False
             and not row.get('admin_hold')
             and op in ('active', 'running', 'cooldown')
             and not row.get('captcha_blocked')

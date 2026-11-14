@@ -99,19 +99,11 @@ def _preflight_provision_checks(
         return existing
     if existing and existing.operational_status == OPS.BLOCKED_CAPTCHA:
         return existing
-    if existing and existing.line_source == SRC.MANUAL and not existing.divar_account_session_id:
+    owner = existing or PhoneDetectorExtractionLine.objects.filter(phone=phone).first()
+    if owner and owner.line_source == SRC.MANUAL:
         raise PhoneDetectorLineError(
-            'این شماره قبلاً به‌صورت خط دستی OTP ثبت شده است.',
-            code='phone_duplicate',
-        )
-    dup_qs = PhoneDetectorExtractionLine.objects.filter(phone=phone)
-    if existing:
-        dup_qs = dup_qs.exclude(pk=existing.pk)
-    other = dup_qs.first()
-    if other and other.line_source == SRC.MANUAL and not other.divar_account_session_id:
-        raise PhoneDetectorLineError(
-            'شماره با خط دستی OTP تداخل دارد.',
-            code='phone_duplicate',
+            'مالکیت خط دستی — همگام‌سازی فایلینگ برای این شماره مجاز نیست.',
+            code='manual_line_owner',
         )
     return existing
 
@@ -165,8 +157,8 @@ def _provision_filing_session(session: DivarAccountSession) -> PhoneDetectorExtr
             phone=phone,
             divar_account_session=session,
             line_source=SRC.FILING,
-            operational_status=OPS.ACTIVE,
-            status_detail='همگام‌سازی خودکار از نشست فایلینگ',
+            operational_status=OPS.ERROR,
+            status_detail='فایل نشست بازیابی شد — فقط پس از Probe موفق فعال شود',
         )
         created = True
     else:
@@ -180,14 +172,14 @@ def _provision_filing_session(session: DivarAccountSession) -> PhoneDetectorExtr
         if line.admin_hold or line.operational_status == OPS.BLOCKED_CAPTCHA:
             pass
         elif _status_allows_auto_recovery(line.operational_status):
-            line.operational_status = OPS.ACTIVE
-            line.status_detail = 'بازیابی خودکار — نشست فایلینگ سالم شد'
+            line.operational_status = OPS.ERROR
+            line.status_detail = 'فایل نشست بازیابی شد — فقط پس از Probe موفق فعال شود'
             updates.extend(['operational_status', 'status_detail'])
         elif line.operational_status == OPS.RUNNING:
             pass
         elif line.operational_status != OPS.ACTIVE:
-            line.operational_status = OPS.ACTIVE
-            line.status_detail = 'فعال — همگام‌سازی خودکار'
+            line.operational_status = OPS.ERROR
+            line.status_detail = 'فایل نشست به‌روز شد — بررسی سلامت لازم است'
             updates.extend(['operational_status', 'status_detail'])
         if updates:
             line.updated_at = timezone.now()
@@ -428,7 +420,7 @@ def _sync_rotation_index_from_db() -> int:
             paused.append(phone)
     for phone in sorted(on_disk):
         if phone not in rotation and phone not in paused:
-            rotation.append(phone)
+            paused.append(phone)
     active = normalize_line_phone(data.get('active_phone') or '')
     if active and active not in rotation:
         active = rotation[0] if rotation else None
@@ -537,16 +529,28 @@ def reconcile_extraction_lines(
                 stats['skipped_opt_out'] += 1
                 continue
 
-            line = PhoneDetectorExtractionLine.objects.filter(
-                divar_account_session=session,
-            ).first()
-            if not line:
+            line = (
+                PhoneDetectorExtractionLine.objects.filter(phone=phone)
+                .select_related('divar_account_session')
+                .first()
+            )
+            if line is None:
                 line = PhoneDetectorExtractionLine.objects.filter(
-                    phone=phone,
-                    line_source=SRC.FILING,
+                    divar_account_session=session,
                 ).first()
 
             if _eligible_filing_session(session):
+                if line and line.line_source == SRC.MANUAL:
+                    link_fields: list[str] = []
+                    if line.divar_account_session_id != session.pk:
+                        line.divar_account_session = session
+                        link_fields.append('divar_account_session')
+                    if link_fields:
+                        line.updated_at = timezone.now()
+                        link_fields.append('updated_at')
+                        line.save(update_fields=link_fields)
+                    stats['skipped_provision'] += 1
+                    continue
                 if line and (line.admin_hold or line.operational_status == OPS.BLOCKED_CAPTCHA):
                     stats['skipped_provision'] += 1
                     continue
@@ -557,7 +561,8 @@ def reconcile_extraction_lines(
                     if (
                         before_status is not None
                         and _status_allows_auto_recovery(before_status)
-                        and line.operational_status == OPS.ACTIVE
+                        and line.operational_status == OPS.ERROR
+                        and before_status != OPS.ERROR
                     ):
                         stats['recovered'] += 1
                 except PhoneDetectorLineError as exc:

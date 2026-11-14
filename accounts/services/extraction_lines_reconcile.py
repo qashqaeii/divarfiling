@@ -15,6 +15,8 @@ from django.utils import timezone
 
 from accounts.models import PhoneDetectorExtractionLine
 from accounts.services.phone_detector_line_ops import (
+    active_acquisition_run_ids,
+    line_running_in_active_run,
     normalize_line_phone,
     sync_lines_from_sessions,
 )
@@ -368,7 +370,11 @@ def _remove_phone_from_index_only(phone: str) -> bool:
     )
 
 
-def _line_index_in_rotation(line: PhoneDetectorExtractionLine) -> bool:
+def _line_index_in_rotation(
+    line: PhoneDetectorExtractionLine,
+    *,
+    active_run_ids: frozenset[int] | None = None,
+) -> bool:
     """منبع eligibility برای index — هم‌تراز با schedulable خطوط."""
     if line.admin_hold:
         return False
@@ -377,9 +383,10 @@ def _line_index_in_rotation(line: PhoneDetectorExtractionLine) -> bool:
         OPS.PAUSED,
         OPS.ERROR,
         OPS.EVICTED,
-        OPS.RUNNING,
     ):
         return False
+    if line.operational_status == OPS.RUNNING:
+        return line_running_in_active_run(line, active_run_ids=active_run_ids)
     if line.operational_status == OPS.COOLDOWN:
         if line.blocked_until and line.blocked_until > timezone.now():
             return False
@@ -403,16 +410,18 @@ def _sync_rotation_index_from_db() -> int:
     }
     rotation: list[str] = []
     paused: list[str] = []
+    active_run_ids = active_acquisition_run_ids()
     for line in PhoneDetectorExtractionLine.objects.all().only(
         'phone',
         'operational_status',
         'admin_hold',
         'blocked_until',
+        'last_run_id',
     ):
         phone = normalize_line_phone(line.phone)
         if not phone or phone not in on_disk:
             continue
-        if _line_index_in_rotation(line):
+        if _line_index_in_rotation(line, active_run_ids=active_run_ids):
             if phone not in rotation:
                 rotation.append(phone)
             continue

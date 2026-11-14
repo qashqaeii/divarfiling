@@ -11,3 +11,8 @@ sudo systemctl restart divar_shop
 
 # همگام‌سازی نشست فایلینگ با خطوط استخراج (cron هر ~۵ دقیقه، کنار run_acquisition_automation)
 # python manage.py reconcile_extraction_lines
+
+# به‌روزرسانی places-web.json (جلوگیری از خطای district is not valid در API دیوار)
+# cd ~/DivarFiling-repo  # یا مسیر مونورپو با scripts/update_places_web.py
+# python scripts/update_places_web.py
+# cp config/places-web.json /root/config/places-web.json   # مسیر پیش‌فرض phone-detector روی سرور

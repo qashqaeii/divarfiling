@@ -79,14 +79,40 @@ def _sessions_index_phones() -> list[str]:
     return [normalize_line_phone(p) for p in index.get('phones') or [] if normalize_line_phone(p)]
 
 
+_ACTIVE_ACQUISITION_STATUSES = (
+    AcquisitionRun.Status.QUEUED,
+    AcquisitionRun.Status.RUNNING,
+)
+
+
+def active_acquisition_run_ids() -> frozenset[int]:
+    """اجراهای acquisition در صف یا در حال اجرا."""
+    return frozenset(
+        AcquisitionRun.objects.filter(
+            status__in=_ACTIVE_ACQUISITION_STATUSES,
+        ).values_list('pk', flat=True),
+    )
+
+
+def line_running_in_active_run(
+    line: PhoneDetectorExtractionLine,
+    *,
+    active_run_ids: frozenset[int] | None = None,
+) -> bool:
+    """RUNNING فقط وقتی در rotation مجاز است که به اجرای فعال متصل باشد."""
+    if line.operational_status != OPS.RUNNING:
+        return False
+    run_id = line.last_run_id
+    if not run_id:
+        return False
+    if active_run_ids is None:
+        active_run_ids = active_acquisition_run_ids()
+    return int(run_id) in active_run_ids
+
+
 def recover_stale_running_lines() -> int:
     """پس از crash worker، خطوط RUNNING را آزاد کن اگر اجرای فعالی نیست."""
-    active = AcquisitionRun.objects.filter(
-        status__in=(
-            AcquisitionRun.Status.QUEUED,
-            AcquisitionRun.Status.RUNNING,
-        ),
-    ).exists()
+    active = bool(active_acquisition_run_ids())
     if active:
         return 0
     return PhoneDetectorExtractionLine.objects.filter(
@@ -209,7 +235,7 @@ def count_schedulable_lines() -> int:
     return schedulable_lines_qs().count()
 
 
-def excluded_phones_for_extraction() -> set[str]:
+def excluded_phones_for_extraction(*, current_run_id: int | None = None) -> set[str]:
     """خطوطی که نباید در rotation این اجرا شرکت کنند."""
     sync_lines_from_sessions()
     now = timezone.now()
@@ -219,11 +245,15 @@ def excluded_phones_for_extraction() -> set[str]:
         if _central_session_blocks_line(row):
             phones.add(row.phone)
             continue
+        if row.operational_status == OPS.RUNNING:
+            if current_run_id and row.last_run_id == current_run_id:
+                continue
+            phones.add(row.phone)
+            continue
         if row.operational_status in (
             OPS.BLOCKED_CAPTCHA,
             OPS.PAUSED,
             OPS.ERROR,
-            OPS.RUNNING,
             OPS.EVICTED,
         ):
             phones.add(row.phone)
@@ -259,6 +289,20 @@ def mark_lines_run_started(*, run_id: int) -> None:
                 'updated_at',
             ],
         )
+
+    try:
+        from accounts.services.extraction_lines_reconcile import _sync_rotation_index_from_db
+        from accounts.services.pd_sessions_file_lock import (
+            DEFAULT_MUTATION_WAIT,
+            run_pd_sessions_mutation,
+        )
+
+        run_pd_sessions_mutation(
+            _sync_rotation_index_from_db,
+            wait_seconds=DEFAULT_MUTATION_WAIT,
+        )
+    except Exception:
+        logger.debug('index sync after mark_lines_run_started skipped', exc_info=True)
 
 
 def _is_captcha_hip(hip_status: Optional[str]) -> bool:

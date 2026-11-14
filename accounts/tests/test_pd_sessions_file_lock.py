@@ -20,6 +20,15 @@ class PdSessionsFileLockTests(TestCase):
         (self.pd_dir / 'sessions').mkdir(parents=True)
 
     def tearDown(self):
+        try:
+            from accounts.services.pd_sessions_file_lock import _import_pd_lock_sync
+
+            mod = _import_pd_lock_sync()
+            if mod is not None:
+                while mod.mutation_depth() > 0:
+                    mod.bump_mutation_depth(-1)
+        except Exception:
+            pass
         self._tmpdir.cleanup()
 
     @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')

@@ -4,6 +4,7 @@ from __future__ import annotations
 import ctypes
 import logging
 import os
+import sys
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -18,6 +19,36 @@ DEFAULT_MUTATION_WAIT = 90.0
 _STALE_LOCK_AGE_WHEN_PID_UNKNOWN = 600.0
 
 T = TypeVar('T')
+
+
+def _import_pd_lock_sync():
+    """همان شمارنده reentrant در lac_sessions_lock (phone-detector)."""
+    pd = resolve_phone_detector_dir()
+    if not pd:
+        return None
+    pd_str = str(pd.resolve())
+    if pd_str not in sys.path:
+        sys.path.insert(0, pd_str)
+    try:
+        import lac_sessions_lock  # type: ignore[import-not-found]
+
+        return lac_sessions_lock
+    except ImportError:
+        return None
+
+
+def _pd_mutation_lock_held() -> bool:
+    mod = _import_pd_lock_sync()
+    if mod is None:
+        return False
+    return bool(mod.mutation_lock_held())
+
+
+def _pd_bump_mutation_depth(delta: int) -> None:
+    mod = _import_pd_lock_sync()
+    if mod is None:
+        return
+    mod.bump_mutation_depth(delta)
 
 
 def _pid_alive(pid: int) -> bool:
@@ -55,6 +86,8 @@ def try_reclaim_stale_lock(path: Path) -> bool:
         return False
     pid = _read_lock_pid(path)
     if pid is not None:
+        if pid == os.getpid() and _pd_mutation_lock_held():
+            return False
         if _pid_alive(pid):
             return False
     else:
@@ -78,6 +111,7 @@ class PdSessionsFileLock:
     def __init__(self) -> None:
         self._fd: int | None = None
         self._path: Path | None = None
+        self._owns_bump = False
 
     def _lock_path(self) -> Path | None:
         pd = resolve_phone_detector_dir()
@@ -100,6 +134,8 @@ class PdSessionsFileLock:
                 )
                 os.write(self._fd, f'{os.getpid()}\n'.encode('ascii'))
                 self._path = path
+                _pd_bump_mutation_depth(1)
+                self._owns_bump = True
                 return True
             except FileExistsError:
                 try_reclaim_stale_lock(path)
@@ -117,6 +153,9 @@ class PdSessionsFileLock:
             except OSError:
                 pass
             self._fd = None
+        if self._owns_bump:
+            _pd_bump_mutation_depth(-1)
+            self._owns_bump = False
         if self._path and self._path.is_file():
             try:
                 self._path.unlink()

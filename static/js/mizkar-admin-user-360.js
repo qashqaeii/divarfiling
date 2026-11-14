@@ -1629,7 +1629,40 @@
     }
 
     function renderActivity(d) {
-        const toolbar = panelRangeHint();
+        const selected = tabQueryState.activity || {};
+        const filters = d.filters || {};
+        function filterSelect(name, label, options) {
+            const current = selected[name] || '';
+            return '<label class="adm-u360-activity-filter"><span>' + esc(label) + '</span>'
+                + '<select data-u360-activity-filter="' + name + '" aria-label="' + esc(label) + '">'
+                + options.map(function (o) {
+                    return '<option value="' + esc(o.value) + '"' + (current === o.value ? ' selected' : '') + '>'
+                        + esc(o.label) + '</option>';
+                }).join('') + '</select></label>';
+        }
+        const kindOptions = [{ value: '', label: 'همه رویدادها' }].concat(
+            (filters.kinds || []).map(function (k) { return { value: k.key, label: k.label }; })
+        );
+        const platformLabels = { web: 'وب', shop: 'فروشگاه', windows: 'ویندوز', android: 'اندروید',
+            workspace: 'فضای کار', crm: 'مخاطبین', support: 'پشتیبانی' };
+        const platformOptions = [{ value: '', label: 'همه پلتفرم‌ها' }].concat(
+            (filters.platforms || []).map(function (p) {
+                return { value: p, label: platformLabels[p] || p };
+            })
+        );
+        const filterControls = '<div class="adm-u360-activity-filters" role="group" aria-label="فیلتر فعالیت">'
+            + filterSelect('kind', 'نوع رویداد', kindOptions)
+            + filterSelect('platform', 'پلتفرم', platformOptions)
+            + filterSelect('success', 'نتیجه', [
+                { value: '', label: 'همه نتایج' }, { value: 'ok', label: 'موفق' },
+                { value: 'fail', label: 'ناموفق' },
+            ])
+            + filterSelect('sort', 'ترتیب', [
+                { value: '-at', label: 'جدیدترین' }, { value: 'at', label: 'قدیمی‌ترین' },
+            ])
+            + '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-u360-activity-reset>پاک‌کردن فیلترها</button>'
+            + '</div>';
+        const toolbar = panelRangeHint() + filterControls;
         const rows = (d.events || []).map(function (ev) {
             const st = ev.success === false ? 'ناموفق' : ev.success === true ? 'موفق' : '—';
             return '<tr>'
@@ -1642,7 +1675,7 @@
         }).join('');
         const actPts = (d.charts && d.charts.activity_daily) || [];
         const actChart = actPts.length
-            ? chartsRow(chartCard('رویدادهای ثبت‌شده در بازه انتخابی', 'admU360ActChart', 'adm-u360-chart-wrap--wide', 'fa-chart-bar'))
+            ? chartsRow(chartCard('رویدادهای ثبت‌شده در بازه انتخابی (بدون فیلتر جدول)', 'admU360ActChart', 'adm-u360-chart-wrap--wide', 'fa-chart-bar'))
             : '';
         paintPanel(tabPanel('فعالیت و رفتار', tabIcon('activity'), {
             metrics: statStrip([
@@ -1651,7 +1684,8 @@
             ]),
             toolbar: toolbar,
             viz: actChart,
-            content: miniTable(['نوع', 'عنوان', 'پلتفرم', 'نتیجه', 'زمان'], rows)
+            content: (rows ? miniTable(['نوع', 'عنوان', 'پلتفرم', 'نتیجه', 'زمان'], rows)
+                : emptyState('رویدادی با این فیلترها پیدا نشد', 'فیلترها یا بازه زمانی را تغییر دهید.'))
                 + renderPager(d.pagination, 'activity'),
         }));
         window.requestAnimationFrame(function () {
@@ -1968,6 +2002,24 @@
                 if (version === requestVersion) activeRequest = null;
             });
     }
+
+    panel.addEventListener('change', function (e) {
+        const filter = e.target.closest('[data-u360-activity-filter]');
+        if (!filter || activeTab !== 'activity') return;
+        const name = filter.getAttribute('data-u360-activity-filter');
+        if (!['kind', 'platform', 'success', 'sort'].includes(name)) return;
+        const query = Object.assign({}, tabQueryState.activity || {}, { page: 1 });
+        query[name] = filter.value;
+        loadTab('activity', query, true);
+    });
+
+    panel.addEventListener('click', function (e) {
+        if (!e.target.closest('[data-u360-activity-reset]')) return;
+        const query = Object.assign({}, tabQueryState.activity || {}, {
+            page: 1, kind: '', platform: '', success: '', sort: '-at',
+        });
+        loadTab('activity', query, true);
+    });
 
     panel.addEventListener('click', function (e) {
         const pageBtn = e.target.closest('[data-u360-page]');

@@ -1758,6 +1758,20 @@
                 content += subSection('فعالیت ویندوز', emptyState('فعالیت ویندوز ثبت نشده',
                     'دانلود، فعال‌سازی یا رویداد اپ ویندوز برای این مشتری در داده‌های موجود دیده نمی‌شود.'), 'fa-desktop');
             }
+            const activations = data.activations || [];
+            const activeActivations = activations.filter(function (a) { return a.is_active; }).length;
+            const activationRows = activations.map(function (a) {
+                const status = a.is_active
+                    ? '<span class="ecc-um-flag ecc-um-flag--ok">فعال</span>'
+                    : '<span class="ecc-um-flag">غیرفعال</span>';
+                return '<tr>' + td(esc(a.platform_label || (a.platform === 'android' ? 'اندروید' : 'ویندوز')), 'پلتفرم')
+                    + td(esc(a.label || '—'), 'دستگاه')
+                    + td(status, 'وضعیت')
+                    + td(esc(a.activated_jalali || '—'), 'فعال‌سازی') + '</tr>';
+            }).join('');
+            content += subSection('فعال‌سازی‌های ثبت‌شده', activationRows
+                ? miniTable(['پلتفرم', 'دستگاه', 'وضعیت', 'فعال‌سازی'], activationRows)
+                : emptyState('فعال‌سازی ثبت نشده', 'در سوابق قابل‌نمایش، فعال‌سازی دستگاهی وجود ندارد.'), 'fa-plug');
             const plat = (data.charts && data.charts.platform_activations) || [];
             const chartPart = plat.length
                 ? chartsRow(chartCard('فعال‌سازی‌ها به تفکیک پلتفرم', 'admU360DevPlatform', 'adm-u360-chart-wrap--donut', 'fa-chart-pie'))
@@ -1767,6 +1781,7 @@
                     { label: 'ویندوز · دانلود', value: flags.downloaded ? 'بله' : 'خیر', tone: flags.downloaded ? 'ok' : '' },
                     { label: 'ویندوز · فعال‌سازی', value: flags.activated ? 'بله' : 'خیر', tone: flags.activated ? 'ok' : '' },
                     { label: 'اندروید', value: androidCount ? toFa(androidCount) + ' دستگاه' : 'ثبت نشده', tone: androidCount ? 'ok' : '' },
+                    { label: 'فعال‌سازی فعال', value: toFa(activeActivations) + ' از ' + toFa(activations.length) + ' مورد', tone: activeActivations ? 'ok' : '' },
                 ]),
                 toolbar: panelRangeHint(),
                 viz: chartPart,
@@ -1800,7 +1815,11 @@
                         ? '<a href="' + esc(t.admin_url) + '" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">مدیریت</a>'
                         : '')
                     + '</header><p class="adm-u360-ticket__meta">'
-                    + esc(t.status) + ' · ' + esc(t.priority) + ' · ' + esc(t.last_message_jalali) + '</p>';
+                    + esc(t.status) + ' · ' + esc(t.priority) + ' · ' + esc(t.last_message_jalali) + '</p>'
+                    + '<p class="adm-u360-ticket__meta">دسته: ' + esc(t.category || '—')
+                    + ' · مسئول: ' + esc(t.assigned_to || '—')
+                    + ' · پیام‌ها: ' + toFa(t.messages_count || 0)
+                    + (t.staff_unread ? ' · <strong>خوانده‌نشده</strong>' : '') + '</p>';
                 (t.recent_messages || []).forEach(function (m) {
                     ticketStack += '<div class="adm-u360-msg"><div class="adm-u360-msg__head"><strong>'
                         + esc(m.author) + '</strong> '
@@ -1812,7 +1831,7 @@
             });
             ticketStack += '</div>';
             if (!tickets.length) {
-                content += emptyState('تیکتی ثبت نشده', 'هنوز درخواست پشتیبانی از این مشتری در سیستم نیست.');
+                content += emptyState('تیکتی در این صفحه نیست', 'برای این مشتری در صفحه انتخاب‌شده تیکتی وجود ندارد. صفحه‌بندی را بررسی کنید.');
             } else {
                 content += ticketStack;
             }

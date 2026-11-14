@@ -17,6 +17,7 @@ from accounts.services.extraction_lines_reconcile import (
     _remove_phone_from_index_only,
     reconcile_extraction_lines,
 )
+from accounts.services.pd_sessions_file_lock import PdSessionsFileLock
 from workspace.divar_session_models import DivarAccountSession
 
 User = get_user_model()
@@ -37,17 +38,45 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
         self._tmpdir.cleanup()
 
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
-    def test_explicit_index_register_adds_phone(self, mock_pd):
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    def test_cross_process_file_lock_blocks_reconcile(self, mock_pd2, mock_pd):
         mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
+        held = PdSessionsFileLock()
+        self.assertTrue(held.acquire(wait_seconds=0))
+        stats = reconcile_extraction_lines(wait_seconds=0)
+        self.assertTrue(stats.get('skipped_concurrent'))
+        self.assertFalse(stats.get('ok'))
+        held.release()
+
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
+    def test_force_true_still_waits_on_lock_not_bypass(self, mock_pd, mock_pd2):
+        mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
+        held = PdSessionsFileLock()
+        self.assertTrue(held.acquire(wait_seconds=0))
+        stats = reconcile_extraction_lines(wait_seconds=0.25, force=True)
+        self.assertFalse(stats.get('ok'))
+        self.assertTrue(stats.get('skipped_concurrent'))
+        held.release()
+
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
+    def test_explicit_index_register_adds_phone(self, mock_pd, mock_pd2):
+        mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         phone = '09121234567'
         (self.sessions_root / f'{phone}.json').write_text('{"cookies":[]}', encoding='utf-8')
         self.assertTrue(_register_phone_in_pd_index_explicit(phone))
         index = json.loads((self.sessions_root / 'index.json').read_text(encoding='utf-8'))
         self.assertIn(phone, index.get('phones') or [])
 
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
-    def test_remove_index_keeps_session_file(self, mock_pd):
+    def test_remove_index_keeps_session_file(self, mock_pd, mock_pd2):
         mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         phone = '09129876543'
         (self.sessions_root / f'{phone}.json').write_text('{"cookies":[]}', encoding='utf-8')
         _register_phone_in_pd_index_explicit(phone)
@@ -57,9 +86,11 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
         self.assertTrue((self.sessions_root / f'{phone}.json').is_file())
 
     @patch('accounts.services.phone_detector_lines._get_engine')
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
-    def test_register_via_engine_registry(self, mock_pd, mock_engine):
+    def test_register_via_engine_registry(self, mock_pd, mock_pd2, mock_engine):
         mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         phone = '09121111111'
         (self.sessions_root / f'{phone}.json').write_text('{"cookies":[]}', encoding='utf-8')
         from main import SessionRegistry
@@ -72,15 +103,18 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
     @patch('workspace.services.divar_session.phone_detector_bridge._write_refreshed_session_file')
     @patch('accounts.services.extraction_lines_reconcile._register_phone_in_pd_index', return_value=True)
     @patch('accounts.services.extraction_lines_reconcile.sync_lines_from_sessions', return_value=0)
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
     def test_blocked_captcha_not_auto_activated(
         self,
         mock_pd,
+        mock_pd2,
         _sync,
         _reg,
         mock_write,
     ):
         mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         user = User.objects.create_user(username='cap1', phone='09120009999', password='x')
         session = DivarAccountSession.objects.create(
             user=user,
@@ -94,7 +128,8 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
             line_source=PhoneDetectorExtractionLine.LineSource.FILING,
             operational_status=PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
         )
-        stats = reconcile_extraction_lines(force=True)
+        stats = reconcile_extraction_lines(wait_seconds=5.0)
+        self.assertTrue(stats.get('ok'))
         line = PhoneDetectorExtractionLine.objects.get(phone=session.divar_phone)
         self.assertEqual(
             line.operational_status,
@@ -105,9 +140,11 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
 
     @patch('workspace.services.divar_session.phone_detector_bridge._write_refreshed_session_file')
     @patch('accounts.services.extraction_lines_reconcile.sync_lines_from_sessions', return_value=0)
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
-    def test_manual_line_blocks_session_file_write(self, mock_pd, _sync, mock_write):
+    def test_manual_line_blocks_session_file_write(self, mock_pd, mock_pd2, _sync, mock_write):
         mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         user = User.objects.create_user(username='man1', phone='09120008888', password='x')
         session = DivarAccountSession.objects.create(
             user=user,
@@ -120,15 +157,18 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
             line_source=PhoneDetectorExtractionLine.LineSource.MANUAL,
             operational_status=PhoneDetectorExtractionLine.OperationalStatus.ACTIVE,
         )
-        reconcile_extraction_lines(force=True)
+        stats = reconcile_extraction_lines(wait_seconds=5.0)
+        self.assertTrue(stats.get('ok'))
         mock_write.assert_not_called()
 
     @patch('workspace.services.divar_session.phone_detector_bridge._write_refreshed_session_file')
     @patch('accounts.services.extraction_lines_reconcile._register_phone_in_pd_index', return_value=True)
     @patch('accounts.services.extraction_lines_reconcile.sync_lines_from_sessions', return_value=0)
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
-    def test_idempotent_reconcile_twice(self, mock_pd, _sync, _reg, mock_write):
+    def test_idempotent_reconcile_twice(self, mock_pd, mock_pd2, _sync, _reg, mock_write):
         mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         user = User.objects.create_user(username='idm1', phone='09120007777', password='x')
         session = DivarAccountSession.objects.create(
             user=user,
@@ -136,8 +176,8 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
             auth_status=DivarAccountSession.AuthStatus.CONNECTED,
             encrypted_session='enc',
         )
-        stats1 = reconcile_extraction_lines(force=True)
-        stats2 = reconcile_extraction_lines(force=True)
+        stats1 = reconcile_extraction_lines(wait_seconds=5.0)
+        stats2 = reconcile_extraction_lines(wait_seconds=5.0)
         self.assertTrue(stats1.get('ok'))
         self.assertTrue(stats2.get('ok'))
         self.assertEqual(

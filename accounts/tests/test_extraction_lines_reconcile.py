@@ -1,7 +1,9 @@
 """تست reconcile خودکار نشست فایلینگ ↔ خطوط استخراج."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -15,10 +17,22 @@ from workspace.divar_session_models import DivarAccountSession
 
 User = get_user_model()
 
+_PD_PATCHES = (
+    'accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir',
+    'accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir',
+)
+
 
 class ExtractionLinesReconcileTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='recon1', phone='09120001111', password='x')
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.pd_dir = Path(self._tmpdir.name)
+        (self.pd_dir / 'engine.py').write_text('# stub', encoding='utf-8')
+        (self.pd_dir / 'sessions').mkdir(parents=True)
+
+    def tearDown(self):
+        self._tmpdir.cleanup()
 
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir', return_value=None)
     def test_reconcile_without_pd_configured(self, _mock):
@@ -49,8 +63,11 @@ class ExtractionLinesReconcileTests(TestCase):
 
     @patch('accounts.services.extraction_lines_reconcile._provision_filing_session')
     @patch('accounts.services.extraction_lines_reconcile.sync_lines_from_sessions', return_value=0)
-    @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir', return_value=True)
-    def test_reconcile_provisions_connected(self, _pd, _sync, mock_provision):
+    @patch(_PD_PATCHES[1])
+    @patch(_PD_PATCHES[0])
+    def test_reconcile_provisions_connected(self, mock_pd, mock_pd2, _sync, mock_provision):
+        mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         session = DivarAccountSession.objects.create(
             user=self.user,
             divar_phone='09124445555',
@@ -62,27 +79,31 @@ class ExtractionLinesReconcileTests(TestCase):
             line_source=PhoneDetectorExtractionLine.LineSource.FILING,
             operational_status=PhoneDetectorExtractionLine.OperationalStatus.ACTIVE,
         )
-        stats = reconcile_extraction_lines(force=True)
+        stats = reconcile_extraction_lines(wait_seconds=5.0)
         self.assertTrue(stats.get('ok'))
         self.assertGreaterEqual(stats.get('provisioned', 0), 1)
         mock_provision.assert_called()
 
     @patch('accounts.services.extraction_lines_reconcile._evict_filing_line')
     @patch('accounts.services.extraction_lines_reconcile.sync_lines_from_sessions', return_value=0)
-    @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir', return_value=True)
-    def test_reconcile_evicts_expired_filing_line(self, _pd, _sync, mock_evict):
+    @patch(_PD_PATCHES[1])
+    @patch(_PD_PATCHES[0])
+    def test_reconcile_evicts_expired_filing_line(self, mock_pd, mock_pd2, _sync, mock_evict):
+        mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
         session = DivarAccountSession.objects.create(
             user=self.user,
             divar_phone='09125556666',
             auth_status=DivarAccountSession.AuthStatus.EXPIRED,
             encrypted_session='enc',
         )
-        line = PhoneDetectorExtractionLine.objects.create(
+        PhoneDetectorExtractionLine.objects.create(
             phone=session.divar_phone,
             divar_account_session=session,
             line_source=PhoneDetectorExtractionLine.LineSource.FILING,
             operational_status=PhoneDetectorExtractionLine.OperationalStatus.ACTIVE,
         )
-        stats = reconcile_extraction_lines(force=True)
+        stats = reconcile_extraction_lines(wait_seconds=5.0)
+        self.assertTrue(stats.get('ok'))
         self.assertGreaterEqual(stats.get('evicted', 0), 1)
         mock_evict.assert_called()

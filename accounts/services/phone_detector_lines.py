@@ -399,7 +399,7 @@ def _maybe_sync_lines_from_sessions(*, force: bool = False) -> None:
     now = time.monotonic()
     if not force and (now - _LINES_DB_SYNC_AT) < _LINES_DB_SYNC_MIN_INTERVAL:
         return
-    reconcile_extraction_lines(force=force)
+    reconcile_extraction_lines(wait_seconds=120.0 if force else 0.0)
     _LINES_DB_SYNC_AT = now
 
 
@@ -529,31 +529,48 @@ def send_line_otp(phone: str) -> dict[str, Any]:
 
 
 def verify_line_otp(*, otp: str, phone: str = '') -> dict[str, Any]:
+    from accounts.services.pd_sessions_file_lock import (
+        DEFAULT_MUTATION_WAIT,
+        run_pd_sessions_mutation,
+    )
+
     otp = (otp or '').strip()
     if not otp:
         raise PhoneDetectorLineError('کد تأیید الزامی است.', code='missing_otp')
     phone = (phone or '').strip()
     if not phone:
         raise PhoneDetectorLineError('شماره موبایل الزامی است.', code='missing_phone')
-    engine = _get_engine()
-    try:
+
+    def _verify() -> dict[str, Any]:
+        engine = _get_engine()
         _ensure_otp_pending_loaded(engine, phone)
         result = engine.verify_otp(otp, phone=phone)
         _clear_otp_pending(result.get('phone') or phone)
         payload = list_lines(probe=False)
         return {**result, **payload}
+
+    try:
+        return run_pd_sessions_mutation(_verify, wait_seconds=DEFAULT_MUTATION_WAIT)
     except PhoneDetectorLineError:
         raise
+    except RuntimeError as exc:
+        raise PhoneDetectorLineError(str(exc), code='lock_busy') from exc
     except Exception as exc:
         raise PhoneDetectorLineError(str(exc), code='otp_verify_failed') from exc
 
 
 def remove_line(phone: str) -> dict[str, Any]:
+    from accounts.services.pd_sessions_file_lock import (
+        DEFAULT_MUTATION_WAIT,
+        run_pd_sessions_mutation,
+    )
+
     phone = (phone or '').strip()
     if not phone:
         raise PhoneDetectorLineError('شماره خط الزامی است.', code='missing_phone')
-    engine = _get_engine()
-    try:
+
+    def _remove() -> dict[str, Any]:
+        engine = _get_engine()
         result = engine.remove_account(phone)
         from accounts.models import PhoneDetectorExtractionLine
         from accounts.services.phone_detector_line_ops import normalize_line_phone
@@ -561,28 +578,55 @@ def remove_line(phone: str) -> dict[str, Any]:
         PhoneDetectorExtractionLine.objects.filter(phone=normalize_line_phone(phone)).delete()
         payload = list_lines(probe=False)
         return {**result, **payload}
+
+    try:
+        return run_pd_sessions_mutation(_remove, wait_seconds=DEFAULT_MUTATION_WAIT)
+    except RuntimeError as exc:
+        raise PhoneDetectorLineError(str(exc), code='lock_busy') from exc
     except Exception as exc:
         raise PhoneDetectorLineError(str(exc), code='remove_failed') from exc
 
 
 def switch_line(phone: str) -> dict[str, Any]:
+    from accounts.services.pd_sessions_file_lock import (
+        DEFAULT_MUTATION_WAIT,
+        run_pd_sessions_mutation,
+    )
+
     phone = (phone or '').strip()
     if not phone:
         raise PhoneDetectorLineError('شماره خط الزامی است.', code='missing_phone')
-    engine = _get_engine()
-    try:
+
+    def _switch() -> dict[str, Any]:
+        engine = _get_engine()
         result = engine.switch_account(phone)
         payload = list_lines(probe=False)
         return {**result, **payload}
+
+    try:
+        return run_pd_sessions_mutation(_switch, wait_seconds=DEFAULT_MUTATION_WAIT)
+    except RuntimeError as exc:
+        raise PhoneDetectorLineError(str(exc), code='lock_busy') from exc
     except Exception as exc:
         raise PhoneDetectorLineError(str(exc), code='switch_failed') from exc
 
 
 def set_line_rotate(*, enabled: bool) -> dict[str, Any]:
-    engine = _get_engine()
-    result = engine.set_rotate(bool(enabled))
-    payload = list_lines(probe=False)
-    return {**result, **payload}
+    from accounts.services.pd_sessions_file_lock import (
+        DEFAULT_MUTATION_WAIT,
+        run_pd_sessions_mutation,
+    )
+
+    def _rotate() -> dict[str, Any]:
+        engine = _get_engine()
+        result = engine.set_rotate(bool(enabled))
+        payload = list_lines(probe=False)
+        return {**result, **payload}
+
+    try:
+        return run_pd_sessions_mutation(_rotate, wait_seconds=DEFAULT_MUTATION_WAIT)
+    except RuntimeError as exc:
+        raise PhoneDetectorLineError(str(exc), code='lock_busy') from exc
 
 
 def handle_line_action(action: str, data: dict) -> dict[str, Any]:

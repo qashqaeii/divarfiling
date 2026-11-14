@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import threading
+import time
+from pathlib import Path
 from typing import Any
 
 from django.core.cache import cache
@@ -15,6 +18,7 @@ from accounts.services.phone_detector_line_ops import (
     normalize_line_phone,
     sync_lines_from_sessions,
 )
+from accounts.services.pd_sessions_file_lock import PdSessionsFileLock
 from accounts.services.phone_detector_lines import (
     PhoneDetectorLineError,
     resolve_phone_detector_dir,
@@ -36,6 +40,7 @@ SRC = PhoneDetectorExtractionLine.LineSource
 RECONCILE_CACHE_LOCK = 'lac:extraction_lines_reconcile'
 RECONCILE_LOCK_TTL = 90
 _process_lock = threading.Lock()
+_active_file_lock: PdSessionsFileLock | None = None
 
 
 def _eligible_filing_session(session: DivarAccountSession) -> bool:
@@ -253,7 +258,28 @@ def _register_phone_in_pd_index_explicit(phone: str) -> bool:
     tmp = index_path.with_suffix('.tmp')
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
     tmp.replace(index_path)
-    return phone in phones
+    return _index_contains_phone(index_path, phone)
+
+
+def _index_contains_phone(index_path, phone: str) -> bool:
+    phone = normalize_line_phone(phone)
+    try:
+        data = json.loads(Path(index_path).read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(data, dict):
+        return False
+    return phone in {normalize_line_phone(p) for p in data.get('phones') or []}
+
+
+def _read_index_phones(index_path) -> list[str]:
+    try:
+        data = json.loads(Path(index_path).read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    return [normalize_line_phone(p) for p in data.get('phones') or [] if normalize_line_phone(p)]
 
 
 def _evict_phone_from_pd_index(
@@ -274,10 +300,13 @@ def _evict_phone_from_pd_index(
             session_file = registry.path_for(phone)
             if on_disk or session_file.is_file():
                 engine.remove_account(phone)
-                return True
+                still_listed = phone in {
+                    normalize_line_phone(p) for p in registry.list_phones()
+                }
+                still_file = registry.path_for(phone).is_file()
+                return not still_listed and not still_file
             return False
-        _remove_phone_from_index_only(phone)
-        return True
+        return _remove_phone_from_index_only(phone)
     except Exception:
         logger.warning('evict %s from pd index failed', phone, exc_info=True)
         return False
@@ -309,24 +338,43 @@ def _remove_phone_from_index_only(phone: str) -> bool:
     tmp = index_path.with_suffix('.tmp')
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
     tmp.replace(index_path)
-    return True
+    return not _index_contains_phone(index_path, phone)
 
 
-def _acquire_reconcile_lock(*, force: bool) -> tuple[bool, str]:
-    if not _process_lock.acquire(blocking=force):
-        return False, 'process_busy'
+def _acquire_reconcile_lock(*, wait_seconds: float) -> tuple[bool, str]:
+    """قفل درون‌پردازه + فایل بین‌پردازه — بدون bypass با force."""
+    global _active_file_lock
+    deadline = time.monotonic() + max(0.0, wait_seconds)
+    while True:
+        if _process_lock.acquire(blocking=False):
+            break
+        if time.monotonic() >= deadline:
+            return False, 'process_busy'
+        time.sleep(0.05)
+
+    remaining = max(0.0, deadline - time.monotonic())
+    file_lock = PdSessionsFileLock()
+    if not file_lock.acquire(wait_seconds=remaining):
+        _process_lock.release()
+        return False, 'file_lock_busy'
+
+    _active_file_lock = file_lock
     try:
-        if cache.add(RECONCILE_CACHE_LOCK, '1', timeout=RECONCILE_LOCK_TTL):
-            return True, ''
+        cache.add(
+            RECONCILE_CACHE_LOCK,
+            str(os.getpid()),
+            timeout=RECONCILE_LOCK_TTL,
+        )
     except Exception:
-        return True, 'cache_unavailable'
-    if force:
-        return True, 'forced_shared'
-    _process_lock.release()
-    return False, 'cache_busy'
+        logger.debug('reconcile cache lock hint skipped', exc_info=True)
+    return True, ''
 
 
 def _release_reconcile_lock() -> None:
+    global _active_file_lock
+    if _active_file_lock is not None:
+        _active_file_lock.release()
+        _active_file_lock = None
     try:
         cache.delete(RECONCILE_CACHE_LOCK)
     except Exception:
@@ -337,7 +385,11 @@ def _release_reconcile_lock() -> None:
         pass
 
 
-def reconcile_extraction_lines(*, force: bool = False) -> dict[str, Any]:
+def reconcile_extraction_lines(
+    *,
+    wait_seconds: float = 0.0,
+    force: bool = False,
+) -> dict[str, Any]:
     """ورود، خروج و بازیابی خطوط — idempotent."""
     stats: dict[str, Any] = {
         'consent_granted': 0,
@@ -351,9 +403,19 @@ def reconcile_extraction_lines(*, force: bool = False) -> dict[str, Any]:
     if not resolve_phone_detector_dir():
         return {**stats, 'ok': False, 'reason': 'phone_detector_not_configured'}
 
-    acquired, lock_note = _acquire_reconcile_lock(force=force)
+    # force=True: حداقل ۱۲۰ث برای callers قدیمی (wait=0) — بدون دور زدن قفل
+    effective_wait = wait_seconds
+    if force and wait_seconds <= 0:
+        effective_wait = 120.0
+
+    acquired, lock_note = _acquire_reconcile_lock(wait_seconds=effective_wait)
     if not acquired:
-        return {**stats, 'ok': True, 'skipped_concurrent': True, 'lock': lock_note}
+        return {
+            **stats,
+            'ok': False,
+            'skipped_concurrent': True,
+            'lock': lock_note,
+        }
 
     try:
         stats['consent_granted'] = _ensure_consent_for_connected()

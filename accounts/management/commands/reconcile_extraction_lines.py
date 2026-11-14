@@ -10,8 +10,13 @@ class Command(BaseCommand):
     help = 'Reconcile filing Divar sessions with Phone Detector extraction lines (idempotent).'
 
     def handle(self, *args, **options):
-        stats = reconcile_extraction_lines(force=True)
+        stats = reconcile_extraction_lines(wait_seconds=120.0)
+        if stats.get('skipped_concurrent'):
+            self.stdout.write(
+                self.style.WARNING(f'Reconcile busy (lock not acquired): {stats}'),
+            )
+            return
         if stats.get('ok'):
             self.stdout.write(self.style.SUCCESS(f'Reconcile OK: {stats}'))
         else:
-            self.stdout.write(self.style.WARNING(f'Reconcile skipped: {stats}'))
+            self.stdout.write(self.style.WARNING(f'Reconcile failed: {stats}'))

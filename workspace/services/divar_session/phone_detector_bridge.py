@@ -143,7 +143,7 @@ def add_session_to_phone_detector_line(session: DivarAccountSession) -> dict:
     grant_phone_detector_consent(session)
     from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
 
-    stats = reconcile_extraction_lines(force=True)
+    stats = reconcile_extraction_lines(wait_seconds=60.0)
     line = PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).first()
     return {
         'ok': True,
@@ -170,5 +170,5 @@ def unlink_session_from_line(session: DivarAccountSession) -> dict:
     )
     from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
 
-    reconcile_extraction_lines(force=True)
+    reconcile_extraction_lines(wait_seconds=60.0)
     return {'ok': True, 'opt_out': True}

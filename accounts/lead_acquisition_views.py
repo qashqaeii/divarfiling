@@ -1094,7 +1094,7 @@ class AdminDivarSessionsJsonView(LeadSmsOperatorRequiredMixin, View):
                 grant_phone_detector_consent(session)
                 from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
 
-                result = {'ok': True, 'reconcile': reconcile_extraction_lines(force=True)}
+                result = {'ok': True, 'reconcile': reconcile_extraction_lines(wait_seconds=45.0)}
             elif action == 'add_to_line':
                 result = add_session_to_phone_detector_line(session)
             elif action == 'unlink_line':

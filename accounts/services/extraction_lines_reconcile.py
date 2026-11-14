@@ -94,6 +94,8 @@ def _provision_filing_session(session: DivarAccountSession) -> PhoneDetectorExtr
     _write_refreshed_session_file(session)
 
     line = PhoneDetectorExtractionLine.objects.filter(phone=phone).first()
+    if line and line.admin_hold:
+        return line
     if line and line.line_source == SRC.MANUAL and not line.divar_account_session_id:
         raise PhoneDetectorLineError(
             'این شماره قبلاً به‌صورت خط دستی OTP ثبت شده است.',
@@ -238,6 +240,8 @@ def reconcile_extraction_lines(*, force: bool = False) -> dict[str, Any]:
             line = PhoneDetectorExtractionLine.objects.filter(phone=phone, line_source=SRC.FILING).first()
 
         if _eligible_filing_session(session):
+            if line and line.admin_hold:
+                continue
             try:
                 before_status = line.operational_status if line else None
                 line = _provision_filing_session(session)

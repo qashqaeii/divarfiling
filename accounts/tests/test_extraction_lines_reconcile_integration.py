@@ -234,6 +234,26 @@ class ExtractionLinesPdIndexIntegrationTests(TestCase):
 
     @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
     @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
+    def test_sync_rotation_index_idempotent_when_unchanged(
+        self,
+        mock_pd,
+        mock_pd2,
+    ):
+        mock_pd.return_value = self.pd_dir
+        mock_pd2.return_value = self.pd_dir
+        phone = '09127770001'
+        (self.sessions_root / f'{phone}.json').write_text('{"cookies":[]}', encoding='utf-8')
+        PhoneDetectorExtractionLine.objects.create(
+            phone=phone,
+            operational_status=PhoneDetectorExtractionLine.OperationalStatus.ACTIVE,
+        )
+        first = _sync_rotation_index_from_db()
+        self.assertGreaterEqual(first, 0)
+        second = _sync_rotation_index_from_db()
+        self.assertEqual(second, 0)
+
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    @patch('accounts.services.extraction_lines_reconcile.resolve_phone_detector_dir')
     def test_orphan_session_file_stays_paused_not_rotation(
         self,
         mock_pd,

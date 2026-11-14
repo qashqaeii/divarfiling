@@ -421,22 +421,32 @@ def _sync_rotation_index_from_db() -> int:
     for phone in sorted(on_disk):
         if phone not in rotation and phone not in paused:
             paused.append(phone)
-    active = normalize_line_phone(data.get('active_phone') or '')
+    prior_phones = tuple(normalize_line_phone(p) for p in data.get('phones') or [] if normalize_line_phone(p))
+    prior_paused = tuple(normalize_line_phone(p) for p in data.get('paused_phones') or [] if normalize_line_phone(p))
+    prior_active = normalize_line_phone(data.get('active_phone') or '') or None
+    prior_rotate = bool(data.get('rotate', True))
+
+    active = normalize_line_phone(data.get('active_phone') or '') or None
     if active and active not in rotation:
         active = rotation[0] if rotation else None
     elif not active and rotation:
         active = rotation[0]
-    prior = {
-        tuple(normalize_line_phone(p) for p in data.get('phones') or []),
-        tuple(normalize_line_phone(p) for p in data.get('paused_phones') or []),
-    }
+
+    nxt_phones = tuple(rotation)
+    nxt_paused = tuple(paused)
+    nxt_rotate = prior_rotate
+    if (
+        prior_phones == nxt_phones
+        and prior_paused == nxt_paused
+        and prior_active == active
+        and prior_rotate == nxt_rotate
+    ):
+        return 0
+
     data['phones'] = rotation
     data['paused_phones'] = paused
     data['active_phone'] = active
-    data['rotate'] = bool(data.get('rotate', True))
-    nxt = (tuple(rotation), tuple(paused))
-    if prior == nxt and normalize_line_phone(data.get('active_phone') or '') == (active or ''):
-        return 0
+    data['rotate'] = nxt_rotate
     _write_index_document(root, data)
     return 1
 

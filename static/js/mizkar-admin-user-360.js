@@ -36,6 +36,16 @@
     const tabQueryState = {};
     let activeRequest = null;
     let requestVersion = 0;
+    const U360_BUILD = 58;
+    let supportDeskSelectedId = null;
+    let adminLogScrollState = { pagination: null, loaded: 0, loading: false };
+    let adminLogScrollObserver = null;
+    let adminLogScrollEl = null;
+    let bustUsageTabCache = false;
+    if (sessionStorage.getItem('adm_u360_build') !== String(U360_BUILD)) {
+        sessionStorage.setItem('adm_u360_build', String(U360_BUILD));
+        bustUsageTabCache = true;
+    }
 
     function panelRangeDaysParam() {
         return new URLSearchParams(window.location.search).get('days') || 'all';
@@ -83,7 +93,12 @@
             return toFa((n / 1000000000).toFixed(abs >= 10000000000 ? 0 : 1)) + 'B';
         }
         if (abs >= 1000000) {
-            return toFa((n / 1000000).toFixed(abs >= 10000000 ? 0 : 1)) + 'M';
+            const m = n / 1000000;
+            if (m < 10) {
+                const fixed = m.toFixed(2).replace(/\.?0+$/, '');
+                return toFa(fixed) + 'M';
+            }
+            return toFa((m).toFixed(abs >= 10000000 ? 0 : 1)) + 'M';
         }
         if (abs >= 1000) {
             return toFa(Math.round(n / 1000)) + 'K';
@@ -98,6 +113,35 @@
             else url += '?' + new URLSearchParams(query).toString();
         }
         return url;
+    }
+
+    function csrfToken() {
+        const el = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (el && el.value) return el.value;
+        const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function supportTicketDetailUrl(ticketId, query) {
+        let url = '/accounts/admin-panel/users/' + userId + '/support/tickets/' + ticketId + '.json';
+        if (query) {
+            url += '?' + new URLSearchParams(query).toString();
+        }
+        return url;
+    }
+
+    function licenseActionUrl(licenseId) {
+        return '/accounts/admin-panel/users/' + userId + '/licenses/' + licenseId + '/action/';
+    }
+
+    function bustLicensesTabCache() {
+        Object.keys(tabCache).forEach(function (key) {
+            if (key.indexOf('licenses') === 0) delete tabCache[key];
+        });
+    }
+
+    function supportTicketActionUrl(ticketId) {
+        return '/accounts/admin-panel/users/' + userId + '/support/tickets/' + ticketId + '/action/';
     }
 
     function setTabInUrl(tab) {
@@ -178,9 +222,10 @@
         return '<p class="adm-u360-lead">' + html + '</p>';
     }
 
-    function emptyState(title, hint) {
+    function emptyState(title, hint, icon) {
+        const ic = icon || 'fa-layer-group';
         return '<div class="adm-u360-empty-state">'
-            + '<span class="adm-u360-empty-state__icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>'
+            + '<span class="adm-u360-empty-state__icon" aria-hidden="true"><i class="fas ' + ic + '"></i></span>'
             + '<p class="adm-u360-empty-state__title">' + esc(title || 'موردی نیست') + '</p>'
             + (hint ? '<p class="adm-u360-empty-state__hint">' + esc(hint) + '</p>' : '')
             + '</div>';
@@ -246,17 +291,37 @@
     }
 
     function smsMessageTd(row) {
+        const messageText = (row.message_body || '').trim();
         const preview = row.message_preview || '—';
-        const detail = row.message_detail || preview;
-        const excerpt = preview.length > 52 ? preview.slice(0, 52) + '…' : preview;
-        const body = detail.split('\n').map(function (line) { return esc(line); }).join('<br>');
+        const excerptSrc = messageText || preview;
+        const excerpt = excerptSrc.length > 52 ? excerptSrc.slice(0, 52) + '…' : excerptSrc;
+        const detail = row.message_detail || '';
+        let inner = '';
+        if (messageText) {
+            inner += '<div class="adm-u360-sms-popover__block">'
+                + '<p class="adm-u360-sms-popover__label">متن پیام</p>'
+                + '<div class="adm-u360-sms-popover__body">' + esc(messageText).replace(/\n/g, '<br>') + '</div>'
+                + '</div>';
+        }
+        if (detail) {
+            const meta = detail.split('\n').map(function (line) { return esc(line); }).join('<br>');
+            if (meta) {
+                inner += '<div class="adm-u360-sms-popover__block adm-u360-sms-popover__block--meta">'
+                    + '<p class="adm-u360-sms-popover__label">جزئیات فنی</p>'
+                    + '<div class="adm-u360-sms-popover__meta">' + meta + '</div>'
+                    + '</div>';
+            }
+        }
+        if (!inner) {
+            inner = '<div class="adm-u360-sms-popover__inner">' + esc(preview) + '</div>';
+        }
         return '<td data-label="متن پیام"><div class="adm-u360-sms-cell">'
             + '<span class="adm-u360-sms-cell__excerpt">' + esc(excerpt) + '</span>'
             + '<button type="button" class="adm-u360-sms-info" aria-label="نمایش متن پیامک" aria-expanded="false">'
             + '<i class="fas fa-circle-info" aria-hidden="true"></i></button>'
             + '<div class="adm-u360-sms-popover" role="dialog" aria-label="متن پیامک" hidden>'
             + '<p class="adm-u360-sms-popover__title">متن و جزئیات پیامک</p>'
-            + '<div class="adm-u360-sms-popover__inner">' + body + '</div>'
+            + inner
             + '</div></div></td>';
     }
 
@@ -499,19 +564,22 @@
 
     function mountOverviewDoughnut(chartId, rows) {
         if (!rows || !rows.length) return;
+        const multi = rows.length > 1;
         mountChart(chartId, {
             type: 'doughnut',
             data: {
-                labels: rows.map(function (r) { return toFa(r.label || r.key || '—'); }),
+                labels: rows.map(function (r) { return toFa(orderStatusDisplayLabel(r)); }),
                 datasets: [{
                     data: rows.map(function (r) { return r.count; }),
                     backgroundColor: rows.map(function (r, i) { return CHART_PALETTE[i % CHART_PALETTE.length]; }),
                     borderWidth: 0,
-                    hoverOffset: 4,
+                    hoverOffset: multi ? 5 : 2,
+                    spacing: multi ? 2 : 0,
                 }],
             },
             options: chartOptions({
-                cutout: '70%',
+                cutout: multi ? '68%' : '72%',
+                animation: { animateRotate: true, duration: 480 },
                 plugins: { legend: { display: false }, tooltip: { bodyFont: { size: 11 }, titleFont: { size: 11 } } },
             }),
         });
@@ -526,6 +594,9 @@
         if (!rows || !rows.length) return;
         const totals = rows.map(function (r) { return Number(r.total) || 0; });
         const maxVal = Math.max.apply(null, totals.concat([0]));
+        const ySuggestedMax = maxVal > 0
+            ? Math.ceil((maxVal * 1.12) / 100000) * 100000
+            : undefined;
         mountChart(chartId, {
             type: 'bar',
             data: {
@@ -534,17 +605,19 @@
                     label: 'درآمد',
                     data: totals,
                     backgroundColor: totals.map(function (v) {
-                        if (!v) return 'rgba(148, 163, 184, 0.22)';
-                        const alpha = maxVal ? 0.35 + (v / maxVal) * 0.5 : 0.75;
+                        if (!v) return 'rgba(148, 163, 184, 0.18)';
+                        const alpha = maxVal ? 0.42 + (v / maxVal) * 0.45 : 0.78;
                         return 'rgba(91, 79, 207, ' + alpha.toFixed(2) + ')';
                     }),
                     borderColor: totals.map(function (v) {
-                        return v ? 'rgba(91, 79, 207, 0.55)' : 'rgba(148, 163, 184, 0.2)';
+                        return v ? 'rgba(91, 79, 207, 0.45)' : 'rgba(148, 163, 184, 0.28)';
                     }),
                     borderWidth: 1,
-                    borderRadius: 8,
+                    borderRadius: 6,
                     borderSkipped: false,
-                    maxBarThickness: 44,
+                    maxBarThickness: 36,
+                    categoryPercentage: 0.72,
+                    barPercentage: 0.85,
                 }],
             },
             options: chartOptions({
@@ -571,10 +644,12 @@
                 scales: {
                     y: {
                         beginAtZero: true,
+                        suggestedMax: ySuggestedMax,
+                        grace: maxVal ? '4%' : undefined,
                         border: { display: false },
                         grid: { color: 'rgba(148, 163, 184, 0.12)', drawTicks: false },
                         ticks: {
-                            maxTicksLimit: 5,
+                            maxTicksLimit: 4,
                             padding: 8,
                             font: { family: 'inherit', size: 10 },
                             callback: function (v) { return formatAxisTomans(v); },
@@ -587,7 +662,7 @@
                             font: { family: 'inherit', size: 9 },
                             padding: 6,
                             maxRotation: 0,
-                            autoSkip: false,
+                            autoSkip: rows.length > 6,
                         },
                     },
                 },
@@ -600,6 +675,36 @@
         return (rows || []).reduce(function (sum, row) { return sum + (Number(row[key]) || 0); }, 0);
     }
 
+    const ORDER_STATUS_FA = {
+        pending: 'در انتظار',
+        pending_verification: 'در انتظار تایید',
+        paid: 'پرداخت‌شده',
+        granted: 'هدیه / اعطایی',
+        failed: 'ناموفق',
+        cancelled: 'لغو',
+    };
+
+    const TRANSACTION_STATUS_FA = {
+        paid: 'پرداخت شده',
+        success: 'پرداخت شده',
+        pending: 'در انتظار پرداخت',
+        failed: 'ناموفق',
+        cancelled: 'لغو شده',
+    };
+
+    function transactionStatusDisplayLabel(t) {
+        if (t && t.status_label) return t.status_label;
+        const key = String((t && t.status) || '').trim().toLowerCase();
+        return TRANSACTION_STATUS_FA[key] || ORDER_STATUS_FA[key] || (t && t.status) || '—';
+    }
+
+    function orderStatusDisplayLabel(row) {
+        if (!row) return '—';
+        if (row.label && row.label !== row.key) return row.label;
+        const key = row.key || row.label || '';
+        return ORDER_STATUS_FA[key] || row.label || key || '—';
+    }
+
     function renderFinanceOrderLegend(rows) {
         if (!rows || !rows.length) return '';
         const total = chartRowsSum(rows, 'count');
@@ -610,7 +715,7 @@
                 const color = CHART_PALETTE[i % CHART_PALETTE.length];
                 return '<li class="adm-u360-finance-legend__item" role="listitem">'
                     + '<span class="adm-u360-finance-legend__dot" style="background:' + color + '" aria-hidden="true"></span>'
-                    + '<span class="adm-u360-finance-legend__label">' + esc(row.label || row.key || '—') + '</span>'
+                    + '<span class="adm-u360-finance-legend__label">' + esc(orderStatusDisplayLabel(row)) + '</span>'
                     + '<span class="adm-u360-finance-legend__count">' + toFa(count) + '</span>'
                     + '<span class="adm-u360-finance-legend__pct">' + toFa(pct) + '٪</span>'
                     + '</li>';
@@ -623,13 +728,24 @@
         pay = pay || {};
         const orders = charts.orders_by_status || [];
         const revenue = charts.revenue_monthly || [];
-        if (!orders.length && !revenue.length) return '';
+        const hasChartData = orders.length || revenue.length;
 
         const orderTotal = chartRowsSum(orders, 'count');
         const revenueSum = chartRowsSum(revenue, 'total');
         const lastMonth = revenue.length ? revenue[revenue.length - 1] : null;
 
-        let panels = '<div class="adm-u360-finance-panels">';
+        let panels = '';
+        if (!hasChartData) {
+            panels += '<div class="adm-u360-finance-panel adm-u360-finance-panel--empty">'
+                + emptyState(
+                    'جریان مالی برای این بازه ثبت نشده',
+                    'با تغییر بازه زمانی یا پس از اولین پرداخت موفق، نمودار و جمع‌ها اینجا نمایش داده می‌شوند.'
+                )
+                + '</div>';
+        }
+        if (hasChartData) {
+            panels += '<div class="adm-u360-finance-panels">';
+        }
         if (orders.length) {
             panels += '<div class="adm-u360-finance-panel adm-u360-finance-panel--mix">'
                 + '<div class="adm-u360-finance-panel__head">'
@@ -659,10 +775,12 @@
                 + '<canvas id="admU360ChartRevenue" role="img" aria-label="درآمد پرداخت‌شده"></canvas></div>'
                 + '</div>';
         }
-        panels += '</div>';
+        if (hasChartData) {
+            panels += '</div>';
+        }
 
         const stats = '<dl class="adm-u360-finance-stats">'
-            + '<div class="adm-u360-finance-stat"><dt>درآمد موفق</dt><dd>' + moneyTomans(pay.total_paid || 0) + '</dd></div>'
+            + '<div class="adm-u360-finance-stat"><dt>درآمد پرداخت‌شده</dt><dd>' + moneyTomans(pay.total_paid || 0) + '</dd></div>'
             + '<div class="adm-u360-finance-stat"><dt>سفارش پرداخت‌شده</dt><dd>' + toFa(pay.paid_orders || 0) + '</dd></div>'
             + '<div class="adm-u360-finance-stat"><dt>در انتظار</dt><dd class="'
             + (pay.pending_orders ? 'adm-u360-finance-stat__val--warn' : '')
@@ -671,10 +789,7 @@
 
         return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-finance" aria-label="روند مالی">'
             + '<header class="adm-u360-overview-finance__head">'
-            + '<h2 class="adm-u360-overview-finance__title">'
-            + '<i class="fas fa-chart-line" aria-hidden="true"></i>'
-            + '<span>روند مالی</span></h2>'
-            + '<p class="adm-u360-overview-finance__lead">خلاصه پرداخت و روند شش‌ماهه</p>'
+            + '<h2 class="adm-u360-overview-finance__title"><span>روند مالی</span></h2>'
             + '</header>'
             + '<div class="adm-u360-overview-finance__body">'
             + stats
@@ -682,34 +797,101 @@
             + '</div></section>';
     }
 
-    function renderOverviewRecentCard(ordersRowsHtml, licensesRowsHtml) {
-        const tableClass = ' adm-u360-overview-recent-table';
-        const ordersTable = miniTable(
-            ['محصول', 'مبلغ', 'وضعیت', 'تاریخ'],
-            ordersRowsHtml,
-            tableClass.trim()
-        );
-        const licensesTable = licensesRowsHtml
-            ? miniTable(['پلن', 'وضعیت', 'انقضا', 'صدور'], licensesRowsHtml, tableClass.trim())
-            : '<div class="adm-u360-overview-recent-table adm-u360-overview-recent-table--empty">'
-                + emptyState('لایسنسی ثبت نشده', 'پس از خرید یا فعال‌سازی در این بخش نمایش داده می‌شود.')
-                + '</div>';
+    function recentCountBadge(count) {
+        if (!count) {
+            return '';
+        }
+        return '<span class="adm-u360-overview-recent__count" title="تعداد در پیش‌نمایش">'
+            + toFa(count) + '</span>';
+    }
 
-        return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-recent" aria-label="آخرین سفارش‌ها و لایسنس‌ها">'
+    function renderRecentOrderItem(o) {
+        const date = o.paid_jalali && o.paid_jalali !== '—' ? o.paid_jalali : o.created_jalali;
+        const planMeta = o.plan && o.plan !== '—'
+            ? '<span class="adm-u360-recent-item__plan">' + esc(o.plan) + '</span>'
+            : '';
+        return '<li class="adm-u360-recent-item adm-u360-recent-item--compact" role="listitem">'
+            + '<div class="adm-u360-recent-item__body">'
+            + '<div class="adm-u360-recent-item__row">'
+            + '<span class="adm-u360-recent-item__title">' + esc(o.product || '—') + '</span>'
+            + '<span class="adm-u360-recent-item__amount">' + moneyTomans(o.amount) + '</span>'
+            + '</div>'
+            + '<div class="adm-u360-recent-item__meta">'
+            + (planMeta ? planMeta + '<span class="adm-u360-recent-item__sep" aria-hidden="true">·</span>' : '')
+            + orderStatusChip(o.status, o.status_label)
+            + '<time class="adm-u360-recent-item__date">' + esc(date || '—') + '</time>'
+            + '</div>'
+            + '</div></li>';
+    }
+
+    function renderRecentLicenseItem(l) {
+        const entitled = !!(l.is_valid || l.entitlement_valid);
+        return '<li class="adm-u360-recent-item adm-u360-recent-item--license adm-u360-recent-item--compact" role="listitem">'
+            + '<div class="adm-u360-recent-item__body">'
+            + '<div class="adm-u360-recent-item__row">'
+            + '<span class="adm-u360-recent-item__title">' + esc(l.plan || '—') + '</span>'
+            + licenseStatusChip(l.status, l.status_label, entitled)
+            + '</div>'
+            + '<div class="adm-u360-recent-item__meta adm-u360-recent-item__meta--detail">'
+            + '<span>انقضا <strong>' + esc(l.expires_jalali || '—') + '</strong></span>'
+            + '<span class="adm-u360-recent-item__sep" aria-hidden="true">·</span>'
+            + '<span>صدور ' + esc(l.created_jalali || '—') + '</span>'
+            + '</div>'
+            + '</div></li>';
+    }
+
+    function renderRecentList(items, renderItem, emptyIcon, emptyTitle, emptyHint) {
+        if (!items || !items.length) {
+            return '<div class="adm-u360-recent-list adm-u360-recent-list--empty" role="status">'
+                + emptyState(emptyTitle, emptyHint, emptyIcon)
+                + '</div>';
+        }
+        return '<ul class="adm-u360-recent-list" role="list">'
+            + items.map(renderItem).join('')
+            + '</ul>';
+    }
+
+    function renderOverviewRecentCol(title, icon, tab, items, renderItem, emptyIcon, emptyTitle, emptyHint) {
+        const list = items || [];
+        return '<div class="adm-u360-overview-recent__col">'
+            + '<header class="adm-u360-overview-recent__col-head">'
+            + subTitle(title, icon)
+            + recentCountBadge(list.length)
+            + overviewJumpChip('همه', tab, 'fa-arrow-left')
+            + '</header>'
+            + '<div class="adm-u360-overview-recent__panel">'
+            + renderRecentList(list, renderItem, emptyIcon, emptyTitle, emptyHint)
+            + '</div></div>';
+    }
+
+    function renderOverviewRecentCard(recentOrders, recentLicenses) {
+        return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-recent adm-u360-overview-recent--stack" aria-label="آخرین سفارش‌ها و لایسنس‌ها">'
             + '<header class="adm-u360-overview-recent__head">'
             + '<h2 class="adm-u360-overview-recent__title">'
             + '<i class="fas fa-clock-rotate-left" aria-hidden="true"></i>'
             + '<span>آخرین تراکنش‌ها</span></h2>'
             + '</header>'
             + '<div class="adm-u360-overview-recent__grid">'
-            + '<div class="adm-u360-overview-recent__col">'
-            + subTitle('سفارش‌ها', 'fa-receipt')
-            + '<div class="adm-u360-overview-recent__panel">' + ordersTable + '</div>'
-            + '</div>'
-            + '<div class="adm-u360-overview-recent__col">'
-            + subTitle('لایسنس‌ها', 'fa-key')
-            + '<div class="adm-u360-overview-recent__panel">' + licensesTable + '</div>'
-            + '</div>'
+            + renderOverviewRecentCol(
+                'سفارش‌ها',
+                'fa-receipt',
+                'commerce',
+                recentOrders,
+                renderRecentOrderItem,
+                'fa-receipt',
+                'موردی برای نمایش نیست',
+                'با تغییر بازه یا پس از ثبت سفارش، اینجا به‌روز می‌شود.'
+            )
+            + renderOverviewRecentCol(
+                'لایسنس‌ها',
+                'fa-key',
+                'licenses',
+                recentLicenses,
+                renderRecentLicenseItem,
+                'fa-key',
+                'لایسنسی ثبت نشده',
+                'پس از خرید یا فعال‌سازی در این بخش نمایش داده می‌شود.'
+            )
             + '</div></section>';
     }
 
@@ -740,6 +922,42 @@
         });
     }
 
+    function usageChartUnit(label) {
+        const keys = Object.keys(USAGE_COUNT_UNIT);
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            if (USAGE_FEATURE_LABELS[key] === label) {
+                return USAGE_COUNT_UNIT[key];
+            }
+        }
+        if (label.indexOf('آگهی') >= 0) return 'آگهی';
+        if (label.indexOf('فایل') >= 0) return 'فایل';
+        return 'بار';
+    }
+
+    function renderUsageRankChart(rows) {
+        if (!rows || !rows.length) {
+            return '<p class="adm-u360-usage-chart__empty">هنوز فعالیتی برای مقایسه ثبت نشده است.</p>';
+        }
+        const max = Math.max.apply(null, rows.map(function (r) { return Number(r.count) || 0; })) || 1;
+        return '<ul class="adm-u360-usage-rank" role="list">'
+            + rows.map(function (r, i) {
+                const count = Number(r.count) || 0;
+                const pct = Math.max(8, Math.round((count / max) * 100));
+                const unit = usageChartUnit(r.label);
+                return '<li class="adm-u360-usage-rank__row" role="listitem" style="--u360-rank-i:' + i + '">'
+                    + '<span class="adm-u360-usage-rank__label">' + esc(r.label) + '</span>'
+                    + '<div class="adm-u360-usage-rank__track" aria-hidden="true">'
+                    + '<span class="adm-u360-usage-rank__fill" style="width:' + pct + '%"></span>'
+                    + '</div>'
+                    + '<span class="adm-u360-usage-rank__val">'
+                    + '<strong>' + toFa(count) + '</strong> '
+                    + '<span class="adm-u360-usage-rank__unit">' + esc(unit) + '</span>'
+                    + '</span></li>';
+            }).join('')
+            + '</ul>';
+    }
+
     function paintPanel(html, tabKey) {
         closeAllSmsPopovers();
         destroyCharts();
@@ -747,9 +965,59 @@
         panel.setAttribute('aria-busy', 'false');
         panel.classList.remove('is-enter');
         const pane = tabKey || activeTab;
+        panel.setAttribute('data-u360-active-tab', pane);
         panel.innerHTML = '<div class="adm-u360-tab-stack" data-u360-tab-pane="' + esc(pane) + '">' + html + '</div>';
         void panel.offsetWidth;
         panel.classList.add('is-enter');
+        if (pane === 'licenses') {
+            initU360JalaliPickers(panel);
+        }
+    }
+
+    function initU360JalaliPickers(root) {
+        if (typeof jalaliDatepicker === 'undefined') return;
+        if (window.__admU360JdpBound) return;
+        window.__admU360JdpBound = true;
+        jalaliDatepicker.startWatch({
+            minDate: 'attr',
+            maxDate: 'attr',
+            zIndex: 25080,
+            separatorChars: { date: '/', between: ' ', time: ':' },
+            persianDigits: true,
+            autoHide: true,
+            time: true,
+            hasSecond: false,
+            hideAfterChange: false,
+        });
+    }
+
+    function splitLicenseExpiryJalali(jalali) {
+        const raw = String(jalali || '').trim();
+        if (!raw || raw === 'نامحدود') {
+            return { unlimited: true, date: '', time: '', inputValue: '' };
+        }
+        const parts = raw.split(/\s+/);
+        const date = parts[0] || raw;
+        const time = parts[1] || '';
+        return {
+            unlimited: false,
+            date: date,
+            time: time,
+            inputValue: time ? (date + ' ' + time) : date,
+        };
+    }
+
+    function licenseExpiryRemainHint(lic) {
+        if (lic.days_until_expiry === null || lic.days_until_expiry === undefined) return '';
+        const d = Number(lic.days_until_expiry);
+        if (Number.isNaN(d)) return '';
+        if (d < 0) {
+            return '<span class="adm-u360-lic-expiry-hint is-late">' + toFa(Math.abs(d)) + ' روز گذشته</span>';
+        }
+        if (d === 0) {
+            return '<span class="adm-u360-lic-expiry-hint is-soon">امروز</span>';
+        }
+        return '<span class="adm-u360-lic-expiry-hint">' + toFa(d) + ' روز مانده</span>';
     }
 
     function showLoading() {
@@ -882,42 +1150,1120 @@
             + ic + '<span>' + esc(label) + '</span></button>';
     }
 
-    function renderOverviewPulseCard(insightsHtml, signalsHtml) {
-        return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-pulse" aria-label="بینش و وضعیت کلیدی">'
-            + '<header class="adm-u360-overview-pulse__head">'
-            + '<h2 class="adm-u360-overview-pulse__title">'
-            + '<i class="fas fa-compass" aria-hidden="true"></i>'
-            + '<span>تمرکز پرونده</span></h2>'
-            + '<p class="adm-u360-overview-pulse__lead">بینش‌های اقدام و وضعیت‌های مهم در یک نگاه</p>'
+    function renderPrimaryKpisSection() {
+        const primary = bootstrap.primary_kpis || [];
+        const fallbackKeys = {
+            revenue: true,
+            paid_count: true,
+            pending: true,
+            tickets: true,
+            datasets: true,
+            crm: true,
+            deals: true,
+            devices: true,
+        };
+        const kpis = primary.length
+            ? primary
+            : (bootstrap.kpis || []).filter(function (k) { return fallbackKeys[k.key]; });
+        const cells = kpis.map(function (k) {
+            let value = '';
+            if (k.key === 'revenue') {
+                value = moneyTomans(k.value);
+            } else if (k.value_text) {
+                value = esc(toFa(k.value_text));
+            } else {
+                value = toFa(k.value);
+            }
+            let tone = '';
+            if ((k.key === 'tickets' || k.key === 'pending') && Number(k.value) > 0) {
+                tone = 'warn';
+            }
+            return {
+                key: k.key,
+                label: k.label,
+                value: value,
+                icon: k.icon,
+                tab: k.anchor,
+                tone: tone,
+            };
+        });
+        return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-metrics" aria-labelledby="admU360KpisTitle">'
+            + '<header class="adm-u360-kpis-head">'
+            + '<h2 class="adm-u360-kpis-head__title" id="admU360KpisTitle">شاخص‌های کلیدی</h2>'
+            + '<span class="adm-u360-kpis-head__hint">برای جزئیات، روی هر شاخص بزنید</span>'
             + '</header>'
-            + '<div class="adm-u360-overview-pulse__body">'
-            + '<div class="adm-u360-overview-pulse__col adm-u360-overview-pulse__col--insights">'
-            + subTitle('بینش و اولویت', 'fa-lightbulb')
-            + insightsHtml
+            + statStrip(cells, 'adm-u360-stat-strip--hero adm-u360-stat-strip--grid-kpi')
+            + '</section>';
+    }
+
+    function renderOverviewInsightsAside(items) {
+        const list = (items || []).slice().sort(function (a, b) {
+            const order = { warn: 0, info: 1, ok: 2 };
+            return (Object.prototype.hasOwnProperty.call(order, a.severity) ? order[a.severity] : 9)
+                - (Object.prototype.hasOwnProperty.call(order, b.severity) ? order[b.severity] : 9);
+        });
+        if (!list.length) {
+            return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-insights" aria-label="بینش و اولویت">'
+                + '<h2 class="adm-u360-overview-insights__title">بینش و اولویت</h2>'
+                + '<div class="adm-u360-insights adm-u360-insights--empty adm-u360-insights--panel">'
+                + '<p class="adm-u360-insights-empty__title">مورد نیازمند اقدام شناسایی نشد</p>'
+                + '<p class="adm-u360-insights-empty__lead">بر اساس داده‌های فعلی، هشدار یا پیگیری فوری ثبت نشده است.</p>'
+                + '</div></section>';
+        }
+        const cards = list.map(function (item) {
+            const meta = insightSeverityMeta(item.severity);
+            return '<article class="adm-u360-insight adm-u360-insight--compact ' + meta.cls + '">'
+                + '<span class="adm-u360-insight__badge"><i class="fas ' + meta.icon + '" aria-hidden="true"></i>'
+                + esc(meta.badge) + '</span>'
+                + '<h3 class="adm-u360-insight__title">' + esc(item.title) + '</h3>'
+                + '<p class="adm-u360-insight__detail">' + esc(item.detail) + '</p>'
+                + (item.suggested_action
+                    ? '<p class="adm-u360-insight__action">' + esc(item.suggested_action) + '</p>'
+                    : '')
+                + '</article>';
+        }).join('');
+        return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-insights" aria-label="بینش و اولویت">'
+            + '<h2 class="adm-u360-overview-insights__title">بینش و اولویت</h2>'
+            + '<div class="adm-u360-insights adm-u360-insights--panel"><div class="adm-u360-insights__list">'
+            + cards
+            + '</div></div></section>';
+    }
+
+    function formatWindowsEngagement(flags) {
+        const f = flags || {};
+        const steps = [];
+        if (f.windows_downloaded || f.downloaded) steps.push('نصب‌کننده دریافت شده');
+        if (f.windows_activated || f.activated) steps.push('لایسنس فعال شده');
+        if (f.windows_launched || f.first_launch) steps.push('برنامه اجرا شده');
+        if (!steps.length) return 'هنوز اثری از نصب یا اجرا ثبت نشده';
+        return steps.join(' · ');
+    }
+
+    function formatAndroidEngagement(eng) {
+        const installed = eng && (eng.android_installed || eng.installed);
+        const count = Number((eng && (eng.android_devices != null ? eng.android_devices : eng.devices_count)) || 0);
+        if (installed && count > 0) return toFa(count) + ' دستگاه متصل';
+        if (installed) return 'نصب ثبت شده';
+        return 'اپ نصب یا ورود ثبت نشده';
+    }
+
+    function renderDeviceCheckRow(label, on, detail) {
+        return '<li class="adm-u360-devices-check' + (on ? ' adm-u360-devices-check--on' : '') + '" role="listitem">'
+            + '<span class="adm-u360-devices-check__label">' + esc(label) + '</span>'
+            + '<span class="adm-u360-devices-check__value">' + esc(detail) + '</span>'
+            + '</li>';
+    }
+
+    function supportStatusMod(key) {
+        const k = String(key || '').toLowerCase();
+        if (k === 'closed') return 'closed';
+        if (k === 'waiting_user') return 'waiting';
+        if (k === 'answered') return 'answered';
+        if (k === 'in_review') return 'review';
+        if (k === 'open') return 'open';
+        return 'default';
+    }
+
+    function supportPriorityMod(key) {
+        const k = String(key || '').toLowerCase();
+        if (k === 'high' || k === 'urgent') return 'high';
+        if (k === 'low') return 'low';
+        return 'normal';
+    }
+
+    function renderSupportMessage(m) {
+        const mods = [];
+        if (m.is_internal) mods.push('internal');
+        const isStaff = !!m.is_staff;
+        mods.push(isStaff ? 'staff' : 'customer');
+        const modClass = mods.map(function (x) { return 'adm-u360-support-msg--' + x; }).join(' ');
+        const text = (m.body || m.body_preview || '').trim();
+        let attachments = '';
+        if (m.attachments && m.attachments.length) {
+            attachments = '<ul class="adm-u360-support-msg__files" role="list">'
+                + m.attachments.map(function (a) {
+                    return '<li role="listitem"><a href="' + esc(a.url) + '" target="_blank" rel="noopener">'
+                        + '<i class="fas fa-paperclip" aria-hidden="true"></i> '
+                        + esc(a.filename) + '</a></li>';
+                }).join('') + '</ul>';
+        }
+        let roleLabel;
+        let roleIcon;
+        if (m.is_internal) {
+            roleLabel = 'یادداشت داخلی';
+            roleIcon = 'fa-lock';
+        } else if (isStaff) {
+            roleLabel = 'پاسخ پشتیبانی';
+            roleIcon = 'fa-headset';
+        } else {
+            roleLabel = 'پیام مشتری';
+            roleIcon = 'fa-user';
+        }
+        return '<article class="adm-u360-support-msg ' + modClass + '" role="listitem">'
+            + '<div class="adm-u360-support-msg__bubble">'
+            + '<p class="adm-u360-support-msg__role">'
+            + '<i class="fas ' + roleIcon + '" aria-hidden="true"></i>'
+            + '<span>' + esc(roleLabel) + '</span></p>'
+            + '<header class="adm-u360-support-msg__meta">'
+            + '<span class="adm-u360-support-msg__author">' + esc(m.author) + '</span>'
+            + '<time class="adm-u360-support-msg__time">' + esc(m.created_jalali) + '</time>'
+            + '</header>'
+            + '<p class="adm-u360-support-msg__text">' + esc(text) + '</p>'
+            + attachments
+            + '</div></article>';
+    }
+
+    function renderSupportSelect(name, options, selected, attrs) {
+        const opts = (options || []).map(function (o) {
+            const sel = o.key === selected ? ' selected' : '';
+            return '<option value="' + esc(o.key) + '"' + sel + '>' + esc(o.label) + '</option>';
+        }).join('');
+        return '<select class="adm-u360-support-select" name="' + esc(name) + '" ' + (attrs || '') + '>'
+            + opts + '</select>';
+    }
+
+    function renderSupportListItem(t, selectedId) {
+        const stMod = supportStatusMod(t.status_key);
+        const selected = Number(t.ticket_id) === Number(selectedId);
+        const preview = ((t.recent_messages || [])[0] || {}).body_preview || '';
+        const previewShort = preview.length > 88 ? preview.slice(0, 88) + '…' : preview;
+        return '<button type="button" class="adm-u360-support-list__item'
+            + (selected ? ' is-active' : '')
+            + (t.staff_unread ? ' is-unread' : '')
+            + '" data-u360-support-ticket="' + esc(t.ticket_id) + '"'
+            + ' aria-current="' + (selected ? 'true' : 'false') + '">'
+            + '<span class="adm-u360-support-list__top">'
+            + '<span class="adm-u360-support-list__id">' + esc(t.ticket_number) + '</span>'
+            + '<span class="adm-u360-support-tag adm-u360-support-tag--' + stMod + '">' + esc(t.status) + '</span>'
+            + '</span>'
+            + '<span class="adm-u360-support-list__subject">' + esc(t.subject) + '</span>'
+            + (previewShort
+                ? '<span class="adm-u360-support-list__preview">' + esc(previewShort) + '</span>'
+                : '')
+            + '<span class="adm-u360-support-list__foot">'
+            + '<span>' + esc(t.last_message_jalali || '—') + '</span>'
+            + '<span>' + toFa(t.messages_count || 0) + ' پیام</span>'
+            + '</span>'
+            + '</button>';
+    }
+
+    function renderSupportWorkspacePlaceholder(canManage) {
+        return '<div class="adm-u360-support-workspace__placeholder">'
+            + '<i class="fas fa-headset" aria-hidden="true"></i>'
+            + '<p class="adm-u360-support-workspace__title">یک تیکت را انتخاب کنید</p>'
+            + '<p class="adm-u360-support-workspace__hint">'
+            + (canManage
+                ? 'مکالمه کامل، پاسخ، تغییر وضعیت و بستن تیکت را همین‌جا انجام دهید.'
+                : 'برای مشاهده مکالمه کامل یک تیکت از فهرست انتخاب کنید.')
+            + '</p></div>';
+    }
+
+    function renderSupportWorkspaceDetail(ticket, canManage) {
+        const stMod = supportStatusMod(ticket.status_key);
+        const form = ticket.form_options || {};
+        const messages = (ticket.messages || []).map(renderSupportMessage).join('');
+        const desc = (ticket.description || '').trim();
+        let controls = '';
+        if (canManage) {
+            controls = '<div class="adm-u360-support-workspace__controls" role="toolbar" aria-label="کنترل تیکت">'
+                + '<div class="adm-u360-support-workspace__ctrl">'
+                + '<label>وضعیت</label>'
+                + renderSupportSelect('status', form.status, ticket.status_key, 'data-u360-support-field="status"')
+                + '</div>'
+                + '<div class="adm-u360-support-workspace__ctrl">'
+                + '<label>اولویت</label>'
+                + renderSupportSelect('priority', form.priority, ticket.priority_key, 'data-u360-support-field="priority"')
+                + '</div>'
+                + '<div class="adm-u360-support-workspace__ctrl-actions">'
+                + '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-u360-support-save-meta>ذخیره</button>'
+                + (ticket.is_closed
+                    ? '<button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" data-u360-support-reopen>باز کردن</button>'
+                    : '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-u360-support-close>بستن</button>')
+                + '</div></div>';
+        }
+        let compose = '';
+        if (canManage) {
+            const afterStatus = renderSupportSelect(
+                'after_status',
+                form.status,
+                ticket.is_closed ? 'open' : 'answered',
+                'data-u360-support-after-status'
+            );
+            compose = '<footer class="adm-u360-support-compose">'
+                + '<label class="adm-u360-support-compose__label" for="admU360SupportBody">پاسخ یا یادداشت</label>'
+                + '<textarea id="admU360SupportBody" class="adm-u360-support-compose__input" rows="4" '
+                + 'placeholder="متن پاسخ را بنویسید؛ برای کاربر ارسال می‌شود مگر یادداشت داخلی باشد."></textarea>'
+                + '<div class="adm-u360-support-compose__row">'
+                + '<label class="adm-u360-support-compose__check adm-u360-check">'
+                + '<input type="checkbox" data-u360-support-internal> <span>یادداشت داخلی (مشتری نمی‌بیند)</span></label>'
+                + '<label class="adm-u360-support-compose__status">پس از ارسال · ' + afterStatus + '</label>'
+                + '</div>'
+                + '<div class="adm-u360-support-compose__actions">'
+                + '<span class="adm-u360-support-compose__feedback" data-u360-support-feedback hidden></span>'
+                + '<button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" data-u360-support-send>'
+                + '<i class="fas fa-paper-plane" aria-hidden="true"></i> ارسال</button>'
+                + '</div></footer>';
+        }
+        return '<article class="adm-u360-support-workspace__panel adm-u360-support-case--' + stMod + '">'
+            + '<header class="adm-u360-support-workspace__head">'
+            + '<div><span class="adm-u360-support-case__id">' + esc(ticket.ticket_number) + '</span>'
+            + '<h3 class="adm-u360-support-case__subject">' + esc(ticket.subject) + '</h3>'
+            + '<p class="adm-u360-support-workspace__meta">'
+            + esc(ticket.category || '—') + ' · ایجاد ' + esc(ticket.created_jalali || '—')
+            + (ticket.assigned_to && ticket.assigned_to !== '—' ? ' · مسئول ' + esc(ticket.assigned_to) : '')
+            + '</p></div>'
+            + (ticket.staff_unread ? '<span class="adm-u360-support-workspace__unread">جدید</span>' : '')
+            + '</header>'
+            + controls
+            + (desc
+                ? '<div class="adm-u360-support-workspace__desc"><p class="adm-u360-support-workspace__desc-label">شرح اولیه</p>'
+                    + '<p>' + esc(desc) + '</p></div>'
+                : '')
+            + '<div class="adm-u360-support-thread adm-u360-support-thread--full" role="list" aria-label="مکالمه تیکت">'
+            + (messages || '<p class="adm-u360-support-thread__empty">هنوز پیامی ثبت نشده.</p>')
             + '</div>'
-            + '<div class="adm-u360-overview-pulse__col adm-u360-overview-pulse__col--signals">'
-            + subTitle('وضعیت کلیدی', 'fa-bolt')
-            + signalsHtml
+            + compose
+            + '</article>';
+    }
+
+    function renderSupportStatusStrip(rows) {
+        if (!rows || !rows.length) return '';
+        const segments = rows.map(function (r) {
+            const mod = supportStatusMod(r.key);
+            const weight = Math.max(Number(r.count) || 0, 0.35);
+            return '<div class="adm-u360-support-seg adm-u360-support-seg--' + mod + '" '
+                + 'style="flex-grow:' + weight + '" '
+                + 'title="' + esc(r.label || r.key) + ' · ' + toFa(r.count) + '"></div>';
+        }).join('');
+        const legend = rows.map(function (r) {
+            const mod = supportStatusMod(r.key);
+            return '<span class="adm-u360-support-strip__chip adm-u360-support-strip__chip--' + mod + '">'
+                + '<span class="adm-u360-support-legend__dot" aria-hidden="true"></span>'
+                + esc(r.label || r.key) + ' · ' + toFa(r.count)
+                + '</span>';
+        }).join('');
+        return '<div class="adm-u360-support-strip" role="img" aria-label="توزیع وضعیت">'
+            + '<div class="adm-u360-support-viz__bar">' + segments + '</div>'
+            + '<div class="adm-u360-support-strip__legend">' + legend + '</div></div>';
+    }
+
+    function renderSupportTopBar(data, canManage, tStats, includeInternal) {
+        const stats = data.stats || {};
+        const openN = Number(stats.open) || 0;
+        const unreadN = Number(stats.staff_unread) || 0;
+        const totalN = Number(stats.total) || 0;
+        const perms = bootstrap.permissions || {};
+        let tools = '';
+        if (perms.can_view_internal_tickets) {
+            tools = '<label class="adm-u360-support-top__toggle adm-u360-check">'
+                + '<input type="checkbox" id="admU360SupportInternal" '
+                + (includeInternal ? 'checked' : '') + '>'
+                + '<span>یادداشت داخلی</span></label>';
+        }
+        return '<header class="adm-u360-support-top" aria-label="خلاصه پشتیبانی">'
+            + '<div class="adm-u360-support-top__row">'
+            + '<div class="adm-u360-support-top__brand">'
+            + '<h2 class="adm-u360-support-top__title">'
+            + '<i class="fas fa-headset" aria-hidden="true"></i><span>پشتیبانی مشتری</span></h2>'
+            + (canManage ? '<span class="adm-u360-support-top__mode">مدیریت</span>' : '')
             + '</div>'
+            + '<div class="adm-u360-support-top__kpis" role="list">'
+            + '<span class="adm-u360-support-kpi' + (openN ? ' adm-u360-support-kpi--warn' : '') + '" role="listitem">'
+            + '<span class="adm-u360-support-kpi__label">باز</span>'
+            + '<span class="adm-u360-support-kpi__val">' + toFa(openN) + '</span></span>'
+            + '<span class="adm-u360-support-kpi' + (unreadN ? ' adm-u360-support-kpi--accent' : '') + '" role="listitem">'
+            + '<span class="adm-u360-support-kpi__label">خوانده‌نشده</span>'
+            + '<span class="adm-u360-support-kpi__val">' + toFa(unreadN) + '</span></span>'
+            + '<span class="adm-u360-support-kpi" role="listitem">'
+            + '<span class="adm-u360-support-kpi__label">کل تیکت</span>'
+            + '<span class="adm-u360-support-kpi__val">' + toFa(totalN) + '</span></span>'
+            + '</div>'
+            + '<div class="adm-u360-support-top__tools">' + tools + '</div>'
+            + '</div>'
+            + (totalN && tStats.length ? renderSupportStatusStrip(tStats) : '')
+            + '</header>';
+    }
+
+    function supportInternalQuery() {
+        const st = tabQueryState.support || {};
+        return st.internal === '1' ? { internal: '1' } : {};
+    }
+
+    function supportWorkspaceEl() {
+        return document.getElementById('admU360SupportWorkspace');
+    }
+
+    function setSupportWorkspaceLoading(on) {
+        const ws = supportWorkspaceEl();
+        if (!ws) return;
+        ws.classList.toggle('is-loading', !!on);
+    }
+
+    function paintSupportWorkspace(html) {
+        const ws = supportWorkspaceEl();
+        if (ws) ws.innerHTML = html;
+    }
+
+    function loadSupportTicketDetail(ticketId, opts) {
+        opts = opts || {};
+        const canManage = !!(bootstrap.permissions || {}).can_manage_support_tickets
+            || !!opts.canManage;
+        if (!ticketId) {
+            paintSupportWorkspace(renderSupportWorkspacePlaceholder(canManage));
+            return Promise.resolve();
+        }
+        supportDeskSelectedId = ticketId;
+        const query = supportInternalQuery();
+        setSupportWorkspaceLoading(true);
+        return fetch(supportTicketDetailUrl(ticketId, query), {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (payload) {
+                if (!payload.ok) throw new Error('bad');
+                paintSupportWorkspace(renderSupportWorkspaceDetail(payload.ticket, canManage));
+                const thread = supportWorkspaceEl() && supportWorkspaceEl().querySelector('.adm-u360-support-thread--full');
+                if (thread) thread.scrollTop = thread.scrollHeight;
+                panel.querySelectorAll('[data-u360-support-ticket]').forEach(function (btn) {
+                    const on = btn.getAttribute('data-u360-support-ticket') === String(ticketId);
+                    btn.classList.toggle('is-active', on);
+                    btn.setAttribute('aria-current', on ? 'true' : 'false');
+                });
+            })
+            .catch(function () {
+                paintSupportWorkspace('<p class="adm-u360-empty">بارگذاری تیکت ناموفق بود.</p>');
+            })
+            .finally(function () {
+                setSupportWorkspaceLoading(false);
+            });
+    }
+
+    function postSupportTicketAction(ticketId, body) {
+        return fetch(supportTicketActionUrl(ticketId), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken(),
+            },
+            body: JSON.stringify(Object.assign({ internal: (tabQueryState.support || {}).internal === '1' ? '1' : '' }, body)),
+        }).then(function (res) {
+            return res.json().then(function (data) {
+                if (!res.ok || !data.ok) {
+                    throw new Error((data && data.error) || 'خطا در عملیات');
+                }
+                return data;
+            });
+        });
+    }
+
+    function renderSupport(data) {
+        const perms = bootstrap.permissions || {};
+        const canManage = !!(perms.can_manage_support_tickets || data.can_manage_tickets);
+        const tStats = (data.charts && data.charts.tickets_by_status) || [];
+        const stats = data.stats || {};
+        const tickets = data.tickets || [];
+        const st = tabQueryState.support || {};
+        const preferId = st.ticket || supportDeskSelectedId;
+        let selectedId = preferId;
+        if (!selectedId && tickets.length) {
+            const unread = tickets.find(function (t) { return t.staff_unread; });
+            selectedId = (unread || tickets[0]).ticket_id;
+        }
+
+        const top = renderSupportTopBar(data, canManage, tStats, data.include_internal_notes);
+
+        const listHtml = tickets.length
+            ? tickets.map(function (t) { return renderSupportListItem(t, selectedId); }).join('')
+            : '';
+        const pager = tickets.length ? renderPager(data.pagination, 'support') : '';
+
+        let stage;
+        if (!tickets.length) {
+            stage = '<section class="adm-u360-support-stage adm-u360-support-stage--empty">'
+                + emptyState('تیکتی ثبت نشده', 'هنوز درخواست پشتیبانی از این مشتری در سیستم نیست.', 'fa-headset')
+                + '</section>';
+        } else {
+            stage = '<section class="adm-u360-support-stage" aria-label="میزکار تیکت">'
+                + '<div class="adm-u360-support-desk__grid">'
+                + '<aside class="adm-u360-support-list" aria-label="فهرست تیکت‌ها">'
+                + '<header class="adm-u360-support-list__head">'
+                + '<h3 class="adm-u360-support-list__title">تیکت‌ها</h3>'
+                + '<span class="adm-u360-support-list__count">' + toFa(stats.total || tickets.length) + '</span>'
+                + '</header>'
+                + '<div class="adm-u360-support-list__scroll" role="list">' + listHtml + '</div>'
+                + (pager ? '<footer class="adm-u360-support-list__foot">' + pager + '</footer>' : '')
+                + '</aside>'
+                + '<main class="adm-u360-support-workspace" id="admU360SupportWorkspace" aria-live="polite">'
+                + renderSupportWorkspacePlaceholder(canManage)
+                + '</main></div></section>';
+        }
+
+        paintPanel('<div class="adm-u360-support adm-u360-support--pro">'
+            + top
+            + stage
+            + '</div>', 'support');
+
+        const internalChk = document.getElementById('admU360SupportInternal');
+        if (internalChk) {
+            internalChk.addEventListener('change', function () {
+                loadTab('support', internalChk.checked ? { internal: '1', page: '1', ticket: supportDeskSelectedId || '' } : { page: '1', ticket: supportDeskSelectedId || '' }, true);
+            });
+        }
+        if (selectedId) {
+            loadSupportTicketDetail(selectedId, { canManage: canManage });
+        }
+    }
+
+    function renderWorkspaceTopBar(stats, note) {
+        const s = stats || {};
+        const openDeals = Number(s.deals_open) || 0;
+        const contacts = Number(s.contacts) || 0;
+        return '<header class="adm-u360-ws-top" aria-label="خلاصه فضای کار">'
+            + '<div class="adm-u360-ws-top__row">'
+            + '<div class="adm-u360-ws-top__brand">'
+            + '<h2 class="adm-u360-ws-top__title">'
+            + '<i class="fas fa-layer-group" aria-hidden="true"></i><span>مخاطبین و فایل‌ها</span></h2>'
+            + (note ? '<p class="adm-u360-ws-top__note">' + esc(note) + '</p>' : '')
+            + '</div>'
+            + '<div class="adm-u360-ws-top__kpis" role="list">'
+            + '<span class="adm-u360-ws-kpi adm-u360-ws-kpi--accent" role="listitem">'
+            + '<span class="adm-u360-ws-kpi__label">مخاطبین CRM</span>'
+            + '<span class="adm-u360-ws-kpi__val">' + toFa(contacts) + '</span></span>'
+            + '<span class="adm-u360-ws-kpi' + (openDeals ? ' adm-u360-ws-kpi--warn' : '') + '" role="listitem">'
+            + '<span class="adm-u360-ws-kpi__label">معامله باز</span>'
+            + '<span class="adm-u360-ws-kpi__val">' + toFa(openDeals) + '</span></span>'
+            + '<span class="adm-u360-ws-kpi" role="listitem">'
+            + '<span class="adm-u360-ws-kpi__label">کل معاملات</span>'
+            + '<span class="adm-u360-ws-kpi__val">' + toFa(s.deals_total || 0) + '</span></span>'
+            + '<span class="adm-u360-ws-kpi" role="listitem">'
+            + '<span class="adm-u360-ws-kpi__label">دیتاست فعال</span>'
+            + '<span class="adm-u360-ws-kpi__val">' + toFa(s.datasets_total || 0) + '</span></span>'
+            + '<span class="adm-u360-ws-kpi" role="listitem">'
+            + '<span class="adm-u360-ws-kpi__label">آگهی در بانک</span>'
+            + '<span class="adm-u360-ws-kpi__val">' + toFa(s.listings_in_files || 0) + '</span></span>'
+            + '</div></div></header>';
+    }
+
+    function renderWorkspaceContactRow(c) {
+        return '<li class="adm-u360-ws-contact" role="listitem">'
+            + '<div class="adm-u360-ws-contact__body">'
+            + '<p class="adm-u360-ws-contact__name">' + esc(c.name || '—') + '</p>'
+            + '<p class="adm-u360-ws-contact__sub">'
+            + '<span class="adm-u360-ws-pill">' + esc(c.status || '—') + '</span>'
+            + (c.type ? '<span class="adm-u360-ws-pill adm-u360-ws-pill--muted">' + esc(c.type) + '</span>' : '')
+            + '</p>'
+            + '</div>'
+            + '<div class="adm-u360-ws-contact__side">'
+            + '<span class="adm-u360-ws-contact__phone adm-u360-ltr">' + esc(c.phone || '—') + '</span>'
+            + '<time class="adm-u360-ws-contact__time">' + esc(c.created_jalali || '') + '</time>'
+            + '</div></li>';
+    }
+
+    function renderWorkspaceDatasetRow(d) {
+        const rows = Number(d.row_count) || 0;
+        return '<li class="adm-u360-ws-dataset" role="listitem">'
+            + '<div class="adm-u360-ws-dataset__body">'
+            + '<p class="adm-u360-ws-dataset__name">' + esc(d.name || '—') + '</p>'
+            + '<p class="adm-u360-ws-dataset__meta">'
+            + '<span>' + esc(d.city || '—') + '</span>'
+            + '<span>·</span>'
+            + '<time>' + esc(d.created_jalali || '') + '</time>'
+            + '</p></div>'
+            + '<div class="adm-u360-ws-dataset__count" title="تعداد آگهی در فایل">'
+            + '<strong>' + toFa(rows) + '</strong>'
+            + '<span>آگهی</span></div></li>';
+    }
+
+    function marketingJourneyIcon(eventKey) {
+        const k = String(eventKey || '').toLowerCase();
+        if (k.indexOf('expir') >= 0 || k.indexOf('license') >= 0) return 'fa-hourglass-half';
+        if (k.indexOf('paid') >= 0 || k.indexOf('checkout') >= 0 || k.indexOf('payment') >= 0) return 'fa-credit-card';
+        if (k.indexOf('signup') >= 0 || k.indexOf('register') >= 0) return 'fa-user-plus';
+        if (k.indexOf('sms') >= 0 || k.indexOf('campaign') >= 0) return 'fa-comment-dots';
+        return 'fa-bolt';
+    }
+
+    function renderMarketingJourneyItem(item) {
+        const icon = marketingJourneyIcon(item.event_key);
+        const count = Number(item.count) || 1;
+        return '<li class="adm-u360-mkt-journey__item" role="listitem">'
+            + '<span class="adm-u360-mkt-journey__dot" aria-hidden="true">'
+            + '<i class="fas ' + icon + '"></i></span>'
+            + '<div class="adm-u360-mkt-journey__body">'
+            + '<p class="adm-u360-mkt-journey__title">' + esc(item.event_type) + '</p>'
+            + '<p class="adm-u360-mkt-journey__meta">'
+            + '<span class="adm-u360-mkt-journey__meta-label">آخرین ثبت</span>'
+            + '<time>' + esc(item.last_jalali) + '</time>'
+            + (count > 1
+                ? '<span class="adm-u360-mkt-journey__count" title="تعداد دفعاتی که این رویداد در لاگ مسیر رشد ثبت شده">'
+                    + toFa(count) + ' بار در لاگ'
+                    + '</span>'
+                : '')
+            + '</p></div></li>';
+    }
+
+    function renderMarketingCompactRows(headers, rowHtml, emptyTitle) {
+        if (!rowHtml) {
+            return '<p class="adm-u360-mkt-mini__empty">' + esc(emptyTitle || 'موردی نیست') + '</p>';
+        }
+        return '<div class="adm-u360-table-wrap adm-u360-data-table adm-u360-mkt-mini-table">'
+            + '<table class="adm-table adm-table--pro adm-table--compact"><thead><tr>'
+            + headers.map(function (h) { return '<th scope="col">' + esc(h) + '</th>'; }).join('')
+            + '</tr></thead><tbody>' + rowHtml + '</tbody></table></div>';
+    }
+
+    function renderMarketingTopBar(stats, optOut) {
+        const s = stats || {};
+        return '<header class="adm-u360-mkt-top" aria-label="خلاصه بازاریابی">'
+            + '<div class="adm-u360-mkt-top__row">'
+            + '<div class="adm-u360-mkt-top__brand">'
+            + '<h2 class="adm-u360-mkt-top__title">'
+            + '<i class="fas fa-bullhorn" aria-hidden="true"></i><span>ارتباطات و بازاریابی</span></h2>'
+            + '<span class="adm-u360-mkt-top__opt' + (optOut ? ' adm-u360-mkt-top__opt--warn' : ' adm-u360-mkt-top__opt--ok') + '">'
+            + (optOut ? 'انصراف از پیامک' : 'دریافت پیامک فعال') + '</span>'
+            + '</div>'
+            + '<div class="adm-u360-mkt-top__kpis" role="list">'
+            + '<span class="adm-u360-mkt-kpi" role="listitem"><span class="adm-u360-mkt-kpi__l">پیامک</span>'
+            + '<span class="adm-u360-mkt-kpi__v">' + toFa(s.sms_count || 0) + '</span></span>'
+            + '<span class="adm-u360-mkt-kpi" role="listitem"><span class="adm-u360-mkt-kpi__l">کمپین</span>'
+            + '<span class="adm-u360-mkt-kpi__v">' + toFa(s.campaign_count || 0) + '</span></span>'
+            + '<span class="adm-u360-mkt-kpi" role="listitem"><span class="adm-u360-mkt-kpi__l">رویداد رشد</span>'
+            + '<span class="adm-u360-mkt-kpi__v">' + toFa(s.journey_type_count || 0) + '</span></span>'
+            + '<span class="adm-u360-mkt-kpi" role="listitem"><span class="adm-u360-mkt-kpi__l">تخفیف</span>'
+            + '<span class="adm-u360-mkt-kpi__v">' + toFa(s.discount_count || 0) + '</span></span>'
+            + '</div></div></header>';
+    }
+
+    function renderMarketing(data) {
+        const stats = data.stats || {};
+        const journeySummary = data.growth_journey_summary || [];
+        const sms = (data.sms_logs || []).map(function (s) {
+            return '<tr>' + td(esc(s.purpose), 'هدف') + smsMessageTd(s)
+                + td(esc(s.status), 'وضعیت') + td(esc(s.created_jalali), 'زمان') + '</tr>';
+        }).join('');
+
+        const journeyBody = journeySummary.length
+            ? '<ol class="adm-u360-mkt-journey" role="list">' + journeySummary.map(renderMarketingJourneyItem).join('') + '</ol>'
+            : emptyState('رویداد رشدی نیست', 'مسیر رشد این کاربر هنوز رویدادی ندارد.', 'fa-route');
+
+        const camps = (data.campaigns || []).map(function (r) {
+            return '<tr>' + td(esc(r.campaign), 'کمپین') + td(esc(r.status), 'وضعیت')
+                + td(esc(r.created_jalali), 'زمان') + '</tr>';
+        }).join('');
+        const disc = (data.discount_issuances || []).map(function (r) {
+            return '<tr>'
+                + td('<span class="adm-u360-ltr">' + esc(r.code) + '</span>', 'کد')
+                + td(esc(r.policy_key), 'سیاست')
+                + td(esc(r.issued_jalali), 'زمان') + '</tr>';
+        }).join('');
+        const attrs = (data.attributions || []).map(function (r) {
+            return '<tr>' + td(esc(r.model), 'مدل') + td(esc(r.status), 'وضعیت')
+                + td(esc(r.created_jalali), 'زمان') + '</tr>';
+        }).join('');
+
+        const stage = '<div class="adm-u360-mkt-stage adm-u360-mkt-stage--stack">'
+            + '<section class="adm-u360-mkt-panel adm-u360-mkt-panel--sms" aria-label="پیامک‌های سیستمی">'
+            + '<header class="adm-u360-mkt-panel__head"><h3 class="adm-u360-mkt-panel__title">پیامک‌های سیستمی</h3>'
+            + '<span class="adm-u360-mkt-panel__count">' + toFa(stats.sms_count || 0) + '</span></header>'
+            + '<div class="adm-u360-mkt-panel__body">'
+            + (sms ? renderMarketingCompactRows(['هدف', 'متن', 'وضعیت', 'زمان'], sms) : emptyState('پیامکی نیست', 'لاگ پیامک برای این شماره ثبت نشده.', 'fa-comment-dots'))
+            + '</div></section>'
+            + '<section class="adm-u360-mkt-panel adm-u360-mkt-panel--journey" aria-label="مسیر رشد">'
+            + '<header class="adm-u360-mkt-panel__head"><h3 class="adm-u360-mkt-panel__title">مسیر رشد</h3>'
+            + '<span class="adm-u360-mkt-panel__count">' + toFa(journeySummary.length) + '</span></header>'
+            + '<div class="adm-u360-mkt-panel__body">' + journeyBody + '</div>'
+            + '</section></div>';
+
+        const foot = '<div class="adm-u360-mkt-foot adm-u360-mkt-foot--stack">'
+            + '<section class="adm-u360-mkt-mini" aria-label="کمپین‌ها">'
+            + '<h3 class="adm-u360-mkt-mini__title">کمپین‌ها</h3>'
+            + renderMarketingCompactRows(['کمپین', 'وضعیت', 'زمان'], camps, 'کمپینی ثبت نشده')
+            + '</section>'
+            + '<section class="adm-u360-mkt-mini" aria-label="تخفیف‌ها">'
+            + '<h3 class="adm-u360-mkt-mini__title">کدهای تخفیف</h3>'
+            + renderMarketingCompactRows(['کد', 'سیاست', 'زمان'], disc, 'تخفیفی صادر نشده')
+            + '</section>'
+            + '<section class="adm-u360-mkt-mini" aria-label="بازگشت مشتری">'
+            + '<h3 class="adm-u360-mkt-mini__title">بازگشت / منبع‌یابی</h3>'
+            + renderMarketingCompactRows(['مدل', 'وضعیت', 'زمان'], attrs, 'رکوردی نیست')
+            + '</section></div>';
+
+        paintPanel('<div class="adm-u360-marketing adm-u360-marketing--pro adm-u360-marketing--stack">'
+            + renderMarketingTopBar(stats, data.opt_out)
+            + stage
+            + foot
+            + '</div>', 'marketing');
+    }
+
+    function adminLogActionTone(actionKey) {
+        const k = String(actionKey || '');
+        if (k === 'suspicious') return 'danger';
+        if (k === 'revoke' || k === 'deactivation') return 'warn';
+        if (k === 'validation') return 'info';
+        if (k === 'activation' || k === 'transfer') return 'ok';
+        return 'neutral';
+    }
+
+    function adminLogActionIcon(actionKey) {
+        const k = String(actionKey || '');
+        if (k === 'validation') return 'fa-shield-halved';
+        if (k === 'activation') return 'fa-bolt';
+        if (k === 'deactivation') return 'fa-power-off';
+        if (k === 'revoke') return 'fa-ban';
+        if (k === 'transfer') return 'fa-right-left';
+        if (k === 'suspicious') return 'fa-triangle-exclamation';
+        return 'fa-fingerprint';
+    }
+
+    function renderAdminLogDetailLines(lines) {
+        if (!lines || !lines.length) return '';
+        return '<dl class="adm-u360-alog-kv">'
+            + lines.map(function (row) {
+                return '<div class="adm-u360-alog-kv__row">'
+                    + '<dt>' + esc(row.key) + '</dt>'
+                    + '<dd>' + esc(row.value) + '</dd></div>';
+            }).join('')
+            + '</dl>';
+    }
+
+    function renderAdminLogRow(log) {
+        const tone = adminLogActionTone(log.action_key);
+        const icon = adminLogActionIcon(log.action_key);
+        const metaBits = [];
+        if (log.license_id) metaBits.push('لایسنس #' + toFa(log.license_id));
+        if (log.license_plan) metaBits.push(esc(log.license_plan));
+        if (log.license_status) metaBits.push(esc(log.license_status));
+        const metaLine = metaBits.join('<span class="adm-u360-alog-row__sep" aria-hidden="true">·</span>');
+        const ip = log.ip && log.ip !== '—'
+            ? '<span class="adm-u360-alog-row__ip adm-u360-ltr" dir="ltr">' + esc(log.ip) + '</span>'
+            : '';
+        const metaHtml = [metaLine, ip].filter(Boolean).join('<span class="adm-u360-alog-row__sep" aria-hidden="true">·</span>');
+        const details = (log.detail_lines || []).length
+            ? '<details class="adm-u360-alog-row__more">'
+                + '<summary>جزئیات فنی</summary>'
+                + renderAdminLogDetailLines(log.detail_lines)
+                + (log.user_agent_short && log.user_agent_short !== '—'
+                    ? '<p class="adm-u360-alog-row__ua" title="' + esc(log.user_agent_short) + '">'
+                        + '<span>User-Agent</span> '
+                        + '<code class="adm-u360-ltr" dir="ltr">' + esc(log.user_agent_short) + '</code></p>'
+                    : '')
+                + '</details>'
+            : '';
+        return '<li class="adm-u360-alog-row adm-u360-alog-row--' + tone + '" role="listitem">'
+            + '<span class="adm-u360-alog-row__rail" aria-hidden="true"><i class="fas ' + icon + '"></i></span>'
+            + '<div class="adm-u360-alog-row__body">'
+            + '<div class="adm-u360-alog-row__head">'
+            + '<span class="adm-u360-alog-row__badge">' + esc(log.action_type) + '</span>'
+            + '<time class="adm-u360-alog-row__time" datetime="' + esc(log.created_at || '') + '">'
+            + esc(log.created_jalali) + '</time>'
+            + '</div>'
+            + '<p class="adm-u360-alog-row__summary">' + esc(log.detail_summary || '—') + '</p>'
+            + (metaHtml ? '<p class="adm-u360-alog-row__meta">' + metaHtml + '</p>' : '')
+            + details
+            + '</div></li>';
+    }
+
+    function teardownAdminLogInfiniteScroll() {
+        if (adminLogScrollObserver) {
+            adminLogScrollObserver.disconnect();
+            adminLogScrollObserver = null;
+        }
+        if (adminLogScrollEl) {
+            adminLogScrollEl.removeEventListener('scroll', onAdminLogFeedScroll);
+            adminLogScrollEl = null;
+        }
+    }
+
+    function updateAdminLogFeedCount() {
+        const countEl = panel.querySelector('.adm-u360-alog-feed__count');
+        const pag = adminLogScrollState.pagination;
+        if (!countEl || !pag) return;
+        countEl.textContent = toFa(adminLogScrollState.loaded) + ' / ' + toFa(pag.total || adminLogScrollState.loaded);
+    }
+
+    function setAdminLogFeedLoader(on) {
+        const loader = panel.querySelector('.adm-u360-alog-feed__loader');
+        if (loader) loader.hidden = !on;
+    }
+
+    function updateAdminLogFeedEnd() {
+        const endEl = panel.querySelector('.adm-u360-alog-feed__end');
+        const pag = adminLogScrollState.pagination;
+        if (!endEl || !pag) return;
+        if (!pag.has_next) {
+            endEl.hidden = false;
+            endEl.textContent = 'پایان — ' + toFa(pag.total || adminLogScrollState.loaded) + ' رویداد';
+        } else {
+            endEl.hidden = true;
+        }
+    }
+
+    function onAdminLogFeedScroll() {
+        const el = adminLogScrollEl;
+        const pag = adminLogScrollState.pagination;
+        if (!el || !pag || !pag.has_next || adminLogScrollState.loading) return;
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 96) {
+            loadMoreAdminLogs();
+        }
+    }
+
+    function loadMoreAdminLogs() {
+        const pag = adminLogScrollState.pagination;
+        if (!pag || !pag.has_next || adminLogScrollState.loading || activeTab !== 'admin_log') return;
+        adminLogScrollState.loading = true;
+        setAdminLogFeedLoader(true);
+        const query = mergePanelRangeQuery(Object.assign({}, tabQueryState.admin_log || {}, {
+            page: pag.page + 1,
+        }));
+        fetch(tabUrl('admin_log', query), {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (payload) {
+                if (!payload.ok || activeTab !== 'admin_log') return;
+                const chunk = payload.data || {};
+                adminLogScrollState.pagination = chunk.pagination;
+                const list = panel.querySelector('.adm-u360-alog-rows');
+                const rows = chunk.audit_logs || [];
+                if (list && rows.length) {
+                    list.insertAdjacentHTML('beforeend', rows.map(renderAdminLogRow).join(''));
+                    adminLogScrollState.loaded += rows.length;
+                }
+                updateAdminLogFeedCount();
+                updateAdminLogFeedEnd();
+            })
+            .catch(function () {
+                const endEl = panel.querySelector('.adm-u360-alog-feed__end');
+                if (endEl) {
+                    endEl.hidden = false;
+                    endEl.classList.add('is-error');
+                    endEl.textContent = 'بارگذاری بیشتر ناموفق بود — دوباره اسکرول کنید';
+                }
+            })
+            .finally(function () {
+                adminLogScrollState.loading = false;
+                setAdminLogFeedLoader(false);
+                window.requestAnimationFrame(maybeFillAdminLogFeed);
+            });
+    }
+
+    function maybeFillAdminLogFeed() {
+        const el = adminLogScrollEl;
+        const pag = adminLogScrollState.pagination;
+        if (!el || !pag || !pag.has_next || adminLogScrollState.loading) return;
+        if (el.scrollHeight <= el.clientHeight + 8) {
+            loadMoreAdminLogs();
+        }
+    }
+
+    function setupAdminLogInfiniteScroll() {
+        teardownAdminLogInfiniteScroll();
+        const scrollRoot = panel.querySelector('[data-u360-alog-scroll]');
+        const sentinel = panel.querySelector('.adm-u360-alog-feed__sentinel');
+        if (!scrollRoot) return;
+        adminLogScrollEl = scrollRoot;
+        adminLogScrollEl.addEventListener('scroll', onAdminLogFeedScroll, { passive: true });
+        if (sentinel && typeof IntersectionObserver !== 'undefined') {
+            adminLogScrollObserver = new IntersectionObserver(function (entries) {
+                if (entries[0] && entries[0].isIntersecting) loadMoreAdminLogs();
+            }, { root: scrollRoot, rootMargin: '120px 0px', threshold: 0 });
+            adminLogScrollObserver.observe(sentinel);
+        }
+        maybeFillAdminLogFeed();
+    }
+
+    function renderAdminLog(data) {
+        teardownAdminLogInfiniteScroll();
+        if (data.empty) {
+            adminLogScrollState = { pagination: null, loaded: 0, loading: false };
+            paintPanel(emptyState('لاگ مدیریتی نیست', data.message || 'لایسنس مرتبط با این کاربر ثبت نشده.', 'fa-history'), 'admin_log');
+            return;
+        }
+        adminLogScrollState.pagination = data.pagination || null;
+        adminLogScrollState.loaded = (data.audit_logs || []).length;
+        adminLogScrollState.loading = false;
+        const stats = data.stats || {};
+        const selected = tabQueryState.admin_log || {};
+        const days = panelRangeDaysParam();
+        const rangeLabel = days === 'all' ? 'کل دوره' : toFa(days) + ' روز';
+        const filters = (data.filters && data.filters.actions) || [];
+        const currentKind = selected.kind || '';
+        const filterOptions = [{ value: '', label: 'همه عملیات' }].concat(
+            filters.map(function (a) { return { value: a.key, label: a.label }; })
+        );
+        const filterSelect = '<label class="adm-u360-alog-filter">'
+            + '<span class="adm-u360-alog-filter__label">نوع عملیات</span>'
+            + '<select class="adm-u360-alog-filter__select" data-u360-alog-filter="kind" aria-label="نوع عملیات">'
+            + filterOptions.map(function (o) {
+                return '<option value="' + esc(o.value) + '"' + (currentKind === o.value ? ' selected' : '') + '>'
+                    + esc(o.label) + '</option>';
+            }).join('') + '</select></label>'
+            + '<button type="button" class="adm-u360-alog-filters__reset" data-u360-alog-reset>پاک‌سازی فیلتر</button>';
+
+        const top = '<header class="adm-u360-alog-top" aria-label="خلاصه لاگ مدیریتی">'
+            + '<div class="adm-u360-alog-top__row">'
+            + '<div class="adm-u360-alog-top__brand">'
+            + '<h2 class="adm-u360-alog-top__title">'
+            + '<i class="fas fa-history" aria-hidden="true"></i><span>تاریخچه مدیریتی</span></h2>'
+            + '<span class="adm-u360-alog-top__range">بازه · ' + esc(rangeLabel) + '</span>'
+            + '</div>'
+            + '<div class="adm-u360-alog-top__kpis" role="list">'
+            + '<span class="adm-u360-alog-kpi" role="listitem"><span class="adm-u360-alog-kpi__l">کل رویداد</span>'
+            + '<span class="adm-u360-alog-kpi__v">' + toFa(stats.total || 0) + '</span></span>'
+            + '<span class="adm-u360-alog-kpi" role="listitem"><span class="adm-u360-alog-kpi__l">لایسنس</span>'
+            + '<span class="adm-u360-alog-kpi__v">' + toFa(stats.license_count || 0) + '</span></span>'
+            + '<span class="adm-u360-alog-kpi adm-u360-alog-kpi--info" role="listitem">'
+            + '<span class="adm-u360-alog-kpi__l">اعتبارسنجی</span>'
+            + '<span class="adm-u360-alog-kpi__v">' + toFa(stats.validation_count || 0) + '</span></span>'
+            + '<span class="adm-u360-alog-kpi' + ((stats.suspicious_count || 0) ? ' adm-u360-alog-kpi--warn' : '') + '" role="listitem">'
+            + '<span class="adm-u360-alog-kpi__l">مشکوک</span>'
+            + '<span class="adm-u360-alog-kpi__v">' + toFa(stats.suspicious_count || 0) + '</span></span>'
+            + '</div></div>'
+            + (data.note ? '<p class="adm-u360-alog-top__note">' + esc(data.note) + '</p>' : '')
+            + '<p class="adm-u360-alog-top__last">آخرین رویداد · <time>' + esc(stats.last_jalali || '—') + '</time></p>'
+            + '</header>';
+
+        const actionChart = (data.charts && data.charts.actions) || [];
+        const dailyChart = (data.charts && data.charts.daily) || [];
+        const viz = (actionChart.length || dailyChart.length)
+            ? '<section class="adm-u360-alog-viz" aria-label="نمودارهای لاگ">'
+            + (actionChart.length
+                ? '<div class="adm-u360-alog-viz__card adm-u360-alog-viz__card--donut">'
+                + '<h3 class="adm-u360-alog-viz__title">توزیع عملیات</h3>'
+                + '<div class="adm-u360-chart-wrap adm-u360-chart-wrap--donut">'
+                + '<canvas id="admU360AlogActions" role="img" aria-label="توزیع نوع عملیات"></canvas>'
+                + '</div></div>'
+                : '')
+            + (dailyChart.length
+                ? '<div class="adm-u360-alog-viz__card adm-u360-alog-viz__card--bar">'
+                + '<h3 class="adm-u360-alog-viz__title">روند روزانه</h3>'
+                + '<div class="adm-u360-chart-wrap adm-u360-chart-wrap--wide adm-u360-chart-wrap--alog">'
+                + '<canvas id="admU360AlogDaily" role="img" aria-label="روند روزانه لاگ"></canvas>'
+                + '</div></div>'
+                : '')
+            + '</section>'
+            : '';
+
+        const filtersBar = '<section class="adm-u360-alog-filters-bar" aria-label="فیلتر لاگ">'
+            + '<div class="adm-u360-alog-filters">' + filterSelect + '</div></section>';
+
+        const total = (data.pagination && data.pagination.total) || stats.total || adminLogScrollState.loaded;
+        const logs = (data.audit_logs || []).map(renderAdminLogRow).join('');
+        const feedBody = logs
+            ? '<div class="adm-u360-alog-feed__scroll" data-u360-alog-scroll tabindex="0" aria-label="فهرست رویدادها — با اسکرول بارگذاری می‌شود">'
+                + '<ul class="adm-u360-alog-rows" role="list">' + logs + '</ul>'
+                + '<div class="adm-u360-alog-feed__sentinel" aria-hidden="true"></div>'
+                + '<p class="adm-u360-alog-feed__loader" hidden>در حال بارگذاری رویدادهای بیشتر…</p>'
+                + '<p class="adm-u360-alog-feed__end" hidden></p>'
+                + '</div>'
+            : '<div class="adm-u360-alog-feed__empty">'
+                + emptyState('رویدادی با این فیلتر نیست', 'بازه یا نوع عملیات را تغییر دهید.', 'fa-filter')
+                + '</div>';
+        const feed = '<section class="adm-u360-alog-feed" aria-label="فهرست لاگ‌ها">'
+            + '<header class="adm-u360-alog-feed__head">'
+            + '<h3 class="adm-u360-alog-feed__title">رویدادهای امنیتی</h3>'
+            + '<span class="adm-u360-alog-feed__count" title="نمایش‌داده‌شده از کل">'
+            + toFa(adminLogScrollState.loaded) + ' / ' + toFa(total) + '</span>'
+            + '</header>'
+            + '<div class="adm-u360-alog-feed__body">' + feedBody + '</div>'
+            + '</section>';
+
+        paintPanel('<div class="adm-u360-alog adm-u360-alog--pro">'
+            + top + filtersBar + viz + feed + '</div>', 'admin_log');
+
+        window.requestAnimationFrame(function () {
+            setupAdminLogInfiniteScroll();
+            updateAdminLogFeedCount();
+            updateAdminLogFeedEnd();
+            if (actionChart.length) mountDoughnut('admU360AlogActions', actionChart);
+            if (dailyChart.length) {
+                mountBarActivity('admU360AlogDaily', dailyChart.map(function (p) {
+                    return { date: p.label || p.date, count: p.count };
+                }));
+            }
+        });
+    }
+
+    function renderWorkspace(data) {
+        const crm = data.crm || {};
+        const stats = data.stats || {};
+        const chartRows = (data.charts && data.charts.crm_contacts_status) || [];
+        const contacts = (crm.recent_contacts || []).slice(0, 12);
+        const datasets = data.datasets || [];
+        const pager = datasets.length ? renderPager(data.datasets_pagination, 'workspace') : '';
+
+        const crmRank = chartRows.length
+            ? '<section class="adm-u360-ws-panel adm-u360-ws-panel--chart" aria-label="وضعیت مخاطبین">'
+                + '<header class="adm-u360-ws-panel__head">'
+                + '<h3 class="adm-u360-ws-panel__title">پراکندگی وضعیت مخاطبین</h3>'
+                + '</header>'
+                + '<div class="adm-u360-ws-panel__body">' + renderUsageRankChart(chartRows) + '</div>'
+                + '</section>'
+            : '';
+
+        const contactBody = contacts.length
+            ? '<ul class="adm-u360-ws-contacts" role="list">' + contacts.map(renderWorkspaceContactRow).join('') + '</ul>'
+            : emptyState('مخاطبی ثبت نشده', 'این کاربر هنوز مخاطب CRM نساخته است.', 'fa-address-book');
+
+        const datasetBody = datasets.length
+            ? '<ul class="adm-u360-ws-datasets" role="list">' + datasets.map(renderWorkspaceDatasetRow).join('') + '</ul>'
+            : emptyState('دیتاست فعالی نیست', 'فایل/بانک آگهی برای این حساب ثبت نشده است.', 'fa-database');
+
+        const stage = '<div class="adm-u360-ws-stage">'
+            + crmRank
+            + '<div class="adm-u360-ws-columns">'
+            + '<section class="adm-u360-ws-panel" aria-label="آخرین مخاطبین">'
+            + '<header class="adm-u360-ws-panel__head">'
+            + '<h3 class="adm-u360-ws-panel__title">آخرین مخاطبین</h3>'
+            + '<span class="adm-u360-ws-panel__count">' + toFa(contacts.length) + '</span>'
+            + '</header>'
+            + '<div class="adm-u360-ws-panel__body">' + contactBody + '</div>'
+            + '</section>'
+            + '<section class="adm-u360-ws-panel" aria-label="دیتاست‌ها">'
+            + '<header class="adm-u360-ws-panel__head">'
+            + '<h3 class="adm-u360-ws-panel__title">دیتاست‌ها</h3>'
+            + '<span class="adm-u360-ws-panel__count">' + toFa(stats.datasets_total || datasets.length) + '</span>'
+            + '</header>'
+            + '<div class="adm-u360-ws-panel__body">' + datasetBody
+            + (pager ? '<footer class="adm-u360-ws-panel__foot">' + pager + '</footer>' : '')
+            + '</div></section>'
+            + '</div></div>';
+
+        paintPanel('<div class="adm-u360-workspace adm-u360-workspace--pro">'
+            + renderWorkspaceTopBar(stats, data.note_team_data)
+            + stage
+            + '</div>', 'workspace');
+    }
+
+    function renderDevicesPlatformSummary(flags, androidDevices) {
+        const f = flags || {};
+        const androidCount = (androidDevices || []).length;
+        const winList = '<ul class="adm-u360-devices-checklist" role="list">'
+            + renderDeviceCheckRow(
+                'دریافت نصب‌کننده',
+                !!f.downloaded,
+                f.downloaded ? 'در سیستم ثبت شده' : 'در لاگ دانلود نیست'
+            )
+            + renderDeviceCheckRow(
+                'فعال‌سازی روی ویندوز',
+                !!f.activated,
+                f.activated ? 'حداقل یک‌بار انجام شده' : 'هنوز ثبت نشده'
+            )
+            + renderDeviceCheckRow(
+                'اجرای برنامه',
+                !!f.first_launch,
+                f.first_launch ? 'حداقل یک‌بار اجرا شده' : 'هنوز ثبت نشده'
+            )
+            + '</ul>';
+        const andList = '<ul class="adm-u360-devices-checklist" role="list">'
+            + renderDeviceCheckRow(
+                'دستگاه‌های متصل',
+                androidCount > 0,
+                androidCount > 0
+                    ? toFa(androidCount) + ' دستگاه'
+                    : 'اپ نصب یا ورود ثبت نشده'
+            )
+            + '</ul>';
+        return '<section class="adm-u360-devices-summary" aria-label="خلاصه نرم‌افزارها">'
+            + '<header class="adm-u360-devices-summary__head">'
+            + '<h2 class="adm-u360-devices-summary__title">نرم‌افزارهای مشتری</h2>'
+            + '<p class="adm-u360-devices-summary__lead">بر اساس لاگ دانلود، فعال‌سازی لایسنس و ثبت دستگاه در سیستم.</p>'
+            + '</header>'
+            + '<div class="adm-u360-devices-platform">'
+            + '<h3 class="adm-u360-devices-platform__title"><i class="fas fa-desktop" aria-hidden="true"></i>'
+            + '<span>ویندوز</span></h3>'
+            + winList
+            + '</div>'
+            + '<div class="adm-u360-devices-platform">'
+            + '<h3 class="adm-u360-devices-platform__title"><i class="fas fa-mobile-screen" aria-hidden="true"></i>'
+            + '<span>اندروید</span></h3>'
+            + andList
             + '</div></section>';
+    }
+
+    function renderOverviewKeyStatusRow(h, sub, pay, warnCount) {
+        const eng = h.engagement || {};
+        const winValue = formatWindowsEngagement(eng);
+        const androidValue = formatAndroidEngagement(eng);
+        const accessTone = sub.has_access ? 'ok' : (pay.pending_orders ? 'warn' : '');
+        const accessValue = sub.has_access
+            ? esc(sub.access_label || 'فعال') + (sub.plan ? ' · ' + esc(sub.plan) : '')
+            : esc(sub.access_label || 'بدون دسترسی فعال');
+        const cols = [
+            {
+                icon: 'fa-circle-check',
+                title: 'دسترسی',
+                value: accessValue,
+                meta: 'انقضا ' + esc(sub.expires_jalali || '—'),
+                tab: 'licenses',
+                tone: accessTone,
+            },
+            {
+                icon: 'fa-desktop',
+                title: 'ویندوز',
+                value: winValue,
+                meta: 'آخرین ورود ' + esc(eng.last_login_jalali || '—'),
+                tab: 'devices',
+                tone: eng.windows_launched ? 'ok' : '',
+            },
+            {
+                icon: 'fa-mobile-screen',
+                title: 'اندروید',
+                value: androidValue,
+                meta: eng.days_since_login != null
+                    ? toFa(eng.days_since_login) + ' روز از آخرین ورود'
+                    : '—',
+                tab: 'devices',
+                tone: eng.android_installed ? 'ok' : '',
+            },
+        ];
+        const leadText = warnCount
+            ? toFa(warnCount) + ' مورد هشدار در بینش‌های موجود؛ برای جزئیات بخش اولویت‌ها را بررسی کنید.'
+            : (pay.pending_orders
+                ? toFa(pay.pending_orders) + ' سفارش در انتظار بررسی است.'
+                : 'نمای کلی بر اساس اطلاعات ثبت‌شده؛ نبود هشدار به معنی تأیید قطعی سلامت حساب نیست.');
+        return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-keystatus" aria-label="وضعیت کلیدی">'
+            + '<header class="adm-u360-overview-keystatus__head">'
+            + '<h2 class="adm-u360-overview-keystatus__title">وضعیت کلیدی</h2>'
+            + '</header>'
+            + '<div class="adm-u360-keystatus-grid" role="list">'
+            + cols.map(function (c) {
+                const tone = c.tone ? ' adm-u360-keystatus-col--' + c.tone : '';
+                return '<article class="adm-u360-keystatus-col' + tone + '" role="listitem">'
+                    + '<span class="adm-u360-keystatus-col__icon" aria-hidden="true"><i class="fas ' + c.icon + '"></i></span>'
+                    + '<span class="adm-u360-keystatus-col__title">' + esc(c.title) + '</span>'
+                    + '<strong class="adm-u360-keystatus-col__value">' + c.value + '</strong>'
+                    + '<span class="adm-u360-keystatus-col__meta">' + c.meta + '</span>'
+                    + overviewJumpChip('مشاهده', c.tab, 'fa-arrow-left')
+                    + '</article>';
+            }).join('')
+            + '</div>'
+            + '<p class="adm-u360-overview-keystatus__note">' + esc(leadText) + '</p>'
+            + '</section>';
     }
 
     function overviewHealthBanner(warnCount, sub, pay) {
         let tone = 'neutral';
         let badge = 'پرونده آماده بررسی';
-        let icon = 'fa-user-check';
         if (warnCount) {
             tone = 'warn';
             badge = 'نیاز به پیگیری';
-            icon = 'fa-triangle-exclamation';
         } else if (pay.pending_orders) {
             tone = 'info';
             badge = 'سفارش در انتظار';
-            icon = 'fa-hourglass-half';
         } else if (sub.has_access) {
             tone = 'ok';
             badge = 'دسترسی فعال';
-            icon = 'fa-circle-check';
         }
         const leadText = warnCount
             ? toFa(warnCount) + ' مورد هشدار در بینش‌های موجود؛ برای جزئیات بخش اولویت‌ها را بررسی کنید.'
@@ -925,8 +2271,10 @@
                 ? toFa(pay.pending_orders) + ' سفارش در انتظار بررسی است.'
                 : 'نمای کلی بر اساس اطلاعات ثبت‌شده؛ نبود هشدار به معنی تأیید قطعی سلامت حساب نیست.');
         return '<header class="adm-u360-overview-hero adm-u360-overview-hero--' + tone + '">'
-            + '<span class="adm-u360-overview-hero__badge">'
-            + '<i class="fas ' + icon + '" aria-hidden="true"></i> ' + esc(badge) + '</span>'
+            + '<div class="adm-u360-overview-hero__status">'
+            + '<span class="adm-u360-overview-hero__dot" aria-hidden="true"></span>'
+            + '<span class="adm-u360-overview-hero__badge">' + esc(badge) + '</span>'
+            + '</div>'
             + '<p class="adm-u360-overview-hero__lead">' + esc(leadText) + '</p>'
             + '</header>';
     }
@@ -966,15 +2314,11 @@
                 tab: 'licenses',
             });
         }
-        const winParts = [];
-        if (eng.windows_downloaded) winParts.push('دانلود');
-        if (eng.windows_activated) winParts.push('فعال');
-        if (eng.windows_launched) winParts.push('اجرا');
         signals.push({
             icon: 'fa-desktop',
             tone: eng.windows_launched ? 'ok' : '',
             title: 'ویندوز',
-            value: winParts.length ? winParts.join(' · ') : 'بدون فعالیت ثبت‌شده',
+            value: formatWindowsEngagement(eng),
             meta: 'آخرین ورود ' + esc(eng.last_login_jalali || '—'),
             tab: 'devices',
         });
@@ -982,9 +2326,7 @@
             icon: 'fa-mobile-screen',
             tone: eng.android_installed ? 'ok' : '',
             title: 'اندروید',
-            value: eng.android_installed
-                ? toFa(eng.android_devices || 0) + ' دستگاه'
-                : 'نصب ثبت نشده',
+            value: formatAndroidEngagement(eng),
             meta: eng.days_since_login != null
                 ? toFa(eng.days_since_login) + ' روز از آخرین ورود'
                 : '—',
@@ -1020,67 +2362,28 @@
         const h = data.highlights || {};
         const pay = h.payments || {};
         const sub = h.subscription || {};
-        const insightsHtml = renderInsightsPanel(data.insights || []);
         const insights = data.insights || [];
         const warnCount = insights.filter(function (i) { return i.severity === 'warn'; }).length;
 
-        const orders = (data.recent_orders || []).map(function (o) {
-            return '<tr>'
-                + td(esc(o.product), 'محصول')
-                + td(moneyTomans(o.amount), 'مبلغ')
-                + td(esc(o.status_label), 'وضعیت')
-                + td(esc(o.created_jalali), 'تاریخ')
-                + '</tr>';
-        }).join('');
-
-        const licenses = (data.recent_licenses || []).map(function (l) {
-            return '<tr>'
-                + td(esc(l.plan), 'پلن')
-                + td(esc(l.status_label), 'وضعیت')
-                + td(esc(l.expires_jalali), 'انقضا')
-                + td(esc(l.created_jalali), 'صدور')
-                + '</tr>';
-        }).join('');
+        const recentOrders = (data.recent_orders || []).slice(0, 5);
+        const recentLicenses = (data.recent_licenses || []).slice(0, 5);
 
         const charts = data.charts || {};
-        const signalsHtml = renderOverviewSignals(h);
-        const financeCardHtml = renderOverviewFinanceCard(charts, pay);
-
-        // The overview's primary KPIs use the same server-provided highlights as its detail panels.
-        // Do not infer account health from missing telemetry or treat pending orders as revenue.
-        const kpis = [
-            { label: 'دسترسی اشتراک', value: esc(sub.access_label || (sub.has_access ? 'فعال' : 'بدون دسترسی فعال')), meta: esc(sub.plan || 'وضعیت فعلی'), tab: 'licenses', tone: sub.has_access ? 'ok' : 'neutral' },
-            { label: 'درآمد پرداخت‌شده', value: moneyTomans(pay.total_paid || 0), meta: 'فقط سفارش‌های موفق', tab: 'commerce', tone: 'neutral' },
-            { label: 'سفارش در انتظار', value: toFa(pay.pending_orders || 0), meta: 'نیازمند بررسی پرداخت', tab: 'commerce', tone: pay.pending_orders ? 'warn' : 'neutral' },
-            { label: 'موارد هشدار', value: toFa(warnCount), meta: 'از بینش‌های ثبت‌شده', tab: 'overview', tone: warnCount ? 'warn' : 'ok' },
-        ];
-        const kpiHtml = '<section class="adm-u360-overview-kpis" aria-label="شاخص‌های اصلی پرونده">'
-            + kpis.map(function (k) {
-                return '<article class="adm-u360-overview-kpi adm-u360-overview-kpi--' + k.tone + '">'
-                    + '<span class="adm-u360-overview-kpi__label">' + k.label + '</span>'
-                    + '<strong class="adm-u360-overview-kpi__value">' + k.value + '</strong>'
-                    + '<span class="adm-u360-overview-kpi__meta">' + k.meta + '</span>'
-                    + (k.tab === 'overview' ? '' : overviewJumpChip('مشاهده', k.tab, 'fa-arrow-left'))
-                    + '</article>';
-            }).join('') + '</section>';
-        const overviewMain = '<div class="adm-u360-overview-main">'
-            + kpiHtml
-            + renderOverviewPulseCard(insightsHtml, signalsHtml)
+        const splitRow = '<div class="adm-u360-overview-split">'
+            + '<div class="adm-u360-overview-split__metrics">' + renderPrimaryKpisSection() + '</div>'
+            + '<div class="adm-u360-overview-split__insights">' + renderOverviewInsightsAside(insights) + '</div>'
+            + '</div>';
+        const keyStatusHtml = renderOverviewKeyStatusRow(h, sub, pay, warnCount);
+        const overviewFoot = '<div class="adm-u360-overview-foot adm-u360-overview-foot--split">'
+            + renderOverviewFinanceCard(charts, pay)
+            + renderOverviewRecentCard(recentOrders, recentLicenses)
             + '</div>';
 
-        let overviewFoot = '<div class="adm-u360-overview-foot">';
-        if (financeCardHtml) {
-            overviewFoot += financeCardHtml;
-        }
-        overviewFoot += renderOverviewRecentCard(orders, licenses);
-        overviewFoot += '</div>';
-
         paintPanel(
-            '<div class="adm-u360-overview">'
-            + overviewHealthBanner(warnCount, sub, pay)
-            + tabLayout({
-                content: overviewMain + overviewFoot,
-            }, 'adm-u360-tab-layout--overview')
+            '<div class="adm-u360-overview adm-u360-overview--mock">'
+            + splitRow
+            + keyStatusHtml
+            + overviewFoot
             + '</div>',
             'overview'
         );
@@ -1283,8 +2586,55 @@
 
     function shortUuid(id) {
         if (!id) return '—';
-        const raw = String(id);
-        return '<span class="adm-u360-ltr adm-u360-id" title="' + esc(raw) + '">…' + esc(raw.slice(-8)) + '</span>';
+        const raw = String(id).trim();
+        const compact = raw.length > 18
+            ? raw.slice(0, 8) + '…' + raw.slice(-8)
+            : raw;
+        return '<span class="adm-u360-ltr adm-u360-id" dir="ltr" title="' + esc(raw) + '">'
+            + esc(compact) + '</span>';
+    }
+
+    function renderLicenseOrderLine(lic) {
+        const o = lic.order;
+        const oid = (o && o.id) || lic.order_id;
+        if (!oid) return '';
+        const bits = ['<div class="adm-u360-lic-manage__order adm-u360-lic-manage__order--lite">'
+            + '<span class="adm-u360-lic-manage__order-label">سفارش</span>'];
+        bits.push(shortUuid(oid));
+        if (o && o.sequence) {
+            bits.push('<span class="adm-u360-lic-manage__order-seq">کلید ' + toFa(o.sequence) + '</span>');
+        }
+        if (o && o.product) {
+            bits.push('<span class="adm-u360-lic-manage__order-product">' + esc(o.product) + '</span>');
+        }
+        if (o && o.status) {
+            bits.push(orderStatusChip(o.status, o.status_label));
+        }
+        if (o && o.paid_jalali) {
+            bits.push('<time class="adm-u360-lic-manage__order-time">پرداخت ' + esc(o.paid_jalali) + '</time>');
+        } else if (o && o.created_jalali) {
+            bits.push('<time class="adm-u360-lic-manage__order-time">' + esc(o.created_jalali) + '</time>');
+        }
+        bits.push('<button type="button" class="adm-u360-jump-chip adm-u360-jump-chip--quiet" data-u360-tab-jump="commerce">'
+            + 'مالی</button>');
+        bits.push('</div>');
+        return bits.join('');
+    }
+
+    function licenseStatItem(label, value, extraClass) {
+        const val = value || '—';
+        return '<li class="adm-u360-lic-manage__stat' + (extraClass ? ' ' + extraClass : '') + '">'
+            + '<span class="adm-u360-lic-manage__stat-k">' + esc(label) + '</span>'
+            + '<span class="adm-u360-lic-manage__stat-v adm-u360-ltr" dir="ltr">' + esc(val) + '</span>'
+            + '</li>';
+    }
+
+    function renderLicenseMetaStrip(lic) {
+        return '<ul class="adm-u360-lic-manage__stats" role="list">'
+            + licenseStatItem('اسلات', toFa(lic.slots_used || 0) + '/' + toFa(lic.max_activations || 0))
+            + licenseStatItem('صدور', lic.created_jalali || '—')
+            + licenseStatItem('نقش', lic.relation || '—')
+            + '</ul>';
     }
 
     function orderStatusChip(status, label) {
@@ -1454,7 +2804,7 @@
                 + td(shortUuid(t.order_id), 'سفارش')
                 + td('<span class="adm-u360-ltr">' + esc(t.gateway_ref || '—') + '</span>', 'مرجع درگاه')
                 + td(moneyTomans(t.amount), 'مبلغ')
-                + td(orderStatusChip(t.status, t.status), 'وضعیت')
+                + td(orderStatusChip(t.status, transactionStatusDisplayLabel(t)), 'وضعیت')
                 + td(esc(t.created_jalali), 'زمان')
                 + '</tr>';
         }).join('');
@@ -1499,78 +2849,109 @@
         });
     }
 
-    function renderLicenseAccessCard(access, charts) {
-        access = access || {};
-        charts = charts || {};
-        const statusRows = charts.license_status || [];
-        const statusTotal = chartRowsSum(statusRows, 'count');
+    function licenseKvRow(label, valueHtml, mod) {
+        const modClass = mod ? ' adm-u360-license-kv__row--' + mod : '';
+        return '<div class="adm-u360-license-kv__row' + modClass + '">'
+            + '<dt>' + esc(label) + '</dt><dd>' + valueHtml + '</dd></div>';
+    }
 
-        let chartPanel = '';
-        if (statusRows.length) {
-            chartPanel = '<div class="adm-u360-license-chart">'
-                + '<div class="adm-u360-finance-panel__head">'
-                + '<h3 class="adm-u360-finance-panel__title">وضعیت لایسنس‌ها</h3>'
-                + '<span class="adm-u360-finance-panel__meta">' + toFa(statusTotal) + ' رکورد</span>'
-                + '</div>'
-                + '<div class="adm-u360-finance-panel__split adm-u360-license-chart__split">'
-                + renderFinanceOrderLegend(statusRows)
-                + '<div class="adm-u360-chart-wrap adm-u360-chart-wrap--donut adm-u360-chart-wrap--finance">'
-                + '<canvas id="admU360LicenseChartStatus" role="img" aria-label="وضعیت لایسنس‌ها"></canvas>'
-                + '</div></div></div>';
+    function renderLicenseAccessChip(access) {
+        const label = esc(access.access_label || '—');
+        if (access.has_bot_access) {
+            return '<span class="adm-u360-order-chip adm-u360-order-chip--ok">' + label + '</span>';
         }
+        if (access.pending_activation) {
+            return '<span class="adm-u360-order-chip adm-u360-order-chip--warn">' + label + '</span>';
+        }
+        return '<span class="adm-u360-order-chip adm-u360-order-chip--muted">' + label + '</span>';
+    }
 
-        const accessDdClass = access.has_bot_access
-            ? ''
-            : (access.pending_activation ? ' adm-u360-finance-stat__val--warn' : '');
-        const stats = '<dl class="adm-u360-finance-stats adm-u360-finance-stats--license">'
-            + '<div class="adm-u360-finance-stat adm-u360-finance-stat--emph"><dt>دسترسی ربات</dt><dd class="'
-            + accessDdClass + '">' + esc(access.access_label || '—') + '</dd></div>'
-            + '<div class="adm-u360-finance-stat"><dt>پلن فعلی</dt><dd>' + esc(access.plan || '—') + '</dd></div>'
-            + '<div class="adm-u360-finance-stat"><dt>انقضا</dt><dd>' + esc(access.expires_jalali || '—') + '</dd></div>'
-            + '<div class="adm-u360-finance-stat"><dt>لایسنس در پرونده</dt><dd>' + toFa(access.license_count || 0) + '</dd></div>'
-            + '<div class="adm-u360-finance-stat"><dt>دستگاه فعال</dt><dd>'
-            + toFa(access.activations_active || 0) + ' / ' + toFa(access.activations_total || 0) + '</dd></div>'
-            + '<div class="adm-u360-finance-stat"><dt>فعال‌سازی معلق</dt><dd class="'
-            + (access.pending_activation ? 'adm-u360-finance-stat__val--warn' : '')
-            + '">' + boolChip(!access.pending_activation, 'خیر', 'بله — نیاز به اقدام') + '</dd></div>'
+    function renderLicenseAccessCard(access) {
+        access = access || {};
+        const pending = !!access.pending_activation;
+        const kv = '<dl class="adm-u360-license-kv">'
+            + licenseKvRow('دسترسی ربات', renderLicenseAccessChip(access), 'primary')
+            + licenseKvRow('پلن', esc(access.plan || '—'))
+            + licenseKvRow('انقضا', esc(access.expires_jalali || '—'))
+            + licenseKvRow('لایسنس', toFa(access.license_count || 0))
+            + licenseKvRow('دستگاه فعال', toFa(access.activations_active || 0) + ' / ' + toFa(access.activations_total || 0))
+            + licenseKvRow('فعال‌سازی معلق', boolChip(!pending, 'خیر', 'بله'))
             + '</dl>';
 
-        return '<section class="adm-u360-block adm-u360-block--card adm-u360-overview-finance adm-u360-license-summary" aria-label="دسترسی و اشتراک">'
-            + '<header class="adm-u360-overview-finance__head">'
-            + '<h2 class="adm-u360-overview-finance__title">'
-            + '<i class="fas fa-key" aria-hidden="true"></i>'
-            + '<span>دسترسی و اشتراک</span></h2>'
-            + '<p class="adm-u360-overview-finance__lead">وضعیت فعلی ربات، ظرفیت و ترکیب لایسنس‌ها</p>'
+        return '<section class="adm-u360-block adm-u360-block--card adm-u360-license-summary adm-u360-license-summary--minimal" aria-label="دسترسی و اشتراک">'
+            + '<header class="adm-u360-license-summary__head">'
+            + '<h2 class="adm-u360-license-summary__title"><span>دسترسی و اشتراک</span></h2>'
             + '</header>'
-            + '<div class="adm-u360-overview-finance__body adm-u360-license-summary__body">'
-            + stats
-            + chartPanel
-            + '</div></section>';
+            + kv
+            + '</section>';
+    }
+
+    function renderLicenseListItem(l) {
+        const relation = l.relation
+            ? '<span class="adm-u360-license-row__tag">' + esc(l.relation) + '</span>'
+            : '';
+        return '<li class="adm-u360-license-row' + (l.entitlement_valid ? ' adm-u360-license-row--valid' : '') + '" role="listitem">'
+            + '<div class="adm-u360-license-row__main">'
+            + '<span class="adm-u360-license-row__plan">' + esc(l.plan || '—') + '</span>'
+            + relation
+            + licenseStatusChip(l.status, l.status_label, l.entitlement_valid)
+            + '</div>'
+            + '<div class="adm-u360-license-row__meta">'
+            + '<span class="adm-u360-license-row__id">#' + toFa(l.id) + '</span>'
+            + '<span class="adm-u360-license-row__sep" aria-hidden="true">·</span>'
+            + '<span>' + toFa(l.slots_used) + '/' + toFa(l.max_activations) + ' اسلات</span>'
+            + '<span class="adm-u360-license-row__sep" aria-hidden="true">·</span>'
+            + '<span>انقضا ' + esc(l.expires_jalali || '—') + '</span>'
+            + '<span class="adm-u360-license-row__sep" aria-hidden="true">·</span>'
+            + '<span>صدور ' + esc(l.created_jalali || '—') + '</span>'
+            + '</div></li>';
+    }
+
+    function renderLicenseRowsList(items) {
+        if (!items || !items.length) {
+            return '';
+        }
+        return '<ul class="adm-u360-license-rows" role="list">'
+            + items.map(renderLicenseListItem).join('')
+            + '</ul>';
     }
 
     function renderLicenseListCard(licenses) {
         const all = licenses || [];
         const current = all.filter(function (l) { return l.entitlement_valid === true; });
         const history = all.filter(function (l) { return l.entitlement_valid !== true; });
-        function licenseTable(items) {
-            const selected = items.map(function (l) {
-                const slots = '<span class="adm-u360-license-slots">' + toFa(l.slots_used) + ' / ' + toFa(l.max_activations) + '</span>';
-                const plan = '<div class="adm-u360-commerce-product"><span class="adm-u360-commerce-product__name">'
-                    + esc(l.plan) + '</span><span class="adm-u360-commerce-tag">' + esc(l.relation) + '</span></div>';
-                return '<tr>' + td(toFa(l.id), 'شناسه') + td(plan, 'پلن')
-                    + td(licenseStatusChip(l.status, l.status_label, l.entitlement_valid), 'وضعیت')
-                    + td(slots, 'اسلات') + td(esc(l.expires_jalali), 'انقضا')
-                    + td(esc(l.created_jalali), 'صدور') + '</tr>';
-            }).join('');
-            return miniTable(['شناسه', 'پلن', 'وضعیت', 'اسلات', 'انقضا', 'صدور'], selected, 'adm-u360-commerce-table');
+        let body = '';
+
+        if (!all.length) {
+            body = '<div class="adm-u360-license-list__empty">'
+                + emptyState('لایسنسی ثبت نشده', 'پس از خرید یا اختصاص، رکورد اینجا نمایش داده می‌شود.', 'fa-key')
+                + '</div>';
+        } else {
+            if (current.length) {
+                body += renderLicenseRowsList(current);
+            } else {
+                body += '<div class="adm-u360-license-list__empty adm-u360-license-list__empty--inline">'
+                    + emptyState('دسترسی معتبر فعلی ندارد', 'خلاصه بالای صفحه وضعیت دسترسی را نشان می‌دهد.', 'fa-circle-info')
+                    + '</div>';
+            }
+            if (history.length) {
+                body += '<div class="adm-u360-license-list__hist" role="separator">'
+                    + '<span class="adm-u360-license-list__hist-label">سوابق</span>'
+                    + '<span class="adm-u360-license-list__hist-count">' + toFa(history.length) + '</span>'
+                    + '</div>'
+                    + renderLicenseRowsList(history);
+            }
         }
-        const body = '<h3 class="adm-u360-finance-panel__title">دارای دسترسی معتبر (' + toFa(current.length) + ')</h3>'
-            + (current.length ? licenseTable(current) : emptyState('دسترسی معتبر ثبت نشده', 'وضعیت دسترسی فعلی را در خلاصه بالای صفحه بررسی کنید.'))
-            + '<h3 class="adm-u360-finance-panel__title">سایر سوابق (' + toFa(history.length) + ')</h3>'
-            + (history.length ? licenseTable(history) : emptyState('سابقه دیگری ثبت نشده', ''));
-        const meta = '<p class="adm-u360-commerce-card__meta">' + toFa(all.length)
-            + ' رکورد (مالک و اختصاصی)؛ تفکیک بر اساس اعتبار دسترسی ثبت‌شده</p>';
-        return commerceCard('لایسنس‌ها و سوابق', 'fa-key', meta + body, 'adm-u360-license-card--list');
+
+        return '<section class="adm-u360-block adm-u360-block--card adm-u360-license-list adm-u360-license-card--list" aria-label="لایسنس‌ها و سوابق">'
+            + '<header class="adm-u360-license-list__head">'
+            + '<h2 class="adm-u360-license-list__title"><span>لایسنس‌ها</span></h2>'
+            + (all.length
+                ? '<span class="adm-u360-license-list__count" title="تعداد رکورد">' + toFa(all.length) + '</span>'
+                : '')
+            + '</header>'
+            + '<div class="adm-u360-license-list__body">' + body + '</div>'
+            + '</section>';
     }
 
     function renderLicenseActivationsCard(activations) {
@@ -1595,11 +2976,254 @@
         return commerceCard('فعال‌سازی‌ها', 'fa-plug', body, 'adm-u360-license-card--activations');
     }
 
+    const CAMPAIGN_GRANT_STATUS_FA = {
+        granted: 'فعال‌شده',
+        failed: 'خطا',
+        skipped: 'رد شده',
+    };
+
+    const CAMPAIGN_KEY_FA = {
+        signup_welcome_7d_v1: 'هدیه خوش‌آمدگویی (۷ روز)',
+        weekly_professional_gift_v1: 'هدیه آزمایشی حرفه‌ای',
+    };
+
+    function campaignGrantStatusChip(status, label) {
+        const text = label || CAMPAIGN_GRANT_STATUS_FA[status] || status || '—';
+        const tones = { granted: 'ok', failed: 'danger', skipped: 'muted' };
+        const mod = tones[status] || 'muted';
+        return '<span class="adm-u360-order-chip adm-u360-order-chip--' + mod + '">' + esc(text) + '</span>';
+    }
+
+    function campaignGrantLabel(g) {
+        if (g.campaign_label) return g.campaign_label;
+        const key = (g.campaign_key || '').trim();
+        if (CAMPAIGN_KEY_FA[key]) return CAMPAIGN_KEY_FA[key];
+        if (key.indexOf('signup_welcome') === 0) return 'هدیه خوش‌آمدگویی ثبت‌نام';
+        if (key.indexOf('weekly_professional_gift') === 0) return 'هدیه آزمایشی حرفه‌ای';
+        return key || '—';
+    }
+
+    function postLicenseAction(licenseId, body) {
+        return fetch(licenseActionUrl(licenseId), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken(),
+            },
+            body: JSON.stringify(body || {}),
+        }).then(function (res) {
+            return res.json().then(function (data) {
+                if (!res.ok || !data.ok) {
+                    throw new Error((data && data.error) || 'خطا در عملیات لایسنس');
+                }
+                return data;
+            });
+        });
+    }
+
+    function setLicenseCardFeedback(licenseId, message, isError) {
+        const card = panel.querySelector('[data-u360-lic-card="' + licenseId + '"]');
+        if (!card) return;
+        const fb = card.querySelector('.adm-u360-lic-manage__feedback');
+        if (!fb) return;
+        fb.textContent = message || '';
+        fb.classList.toggle('is-error', !!isError);
+        fb.classList.toggle('is-ok', !!message && !isError);
+    }
+
+    function renderLicenseSlotMeter(lic) {
+        const used = Number(lic.slots_used) || 0;
+        const max = Math.max(1, Number(lic.max_activations) || 1);
+        const active = Number(lic.slots_active) || 0;
+        const pct = Math.min(100, Math.round((used / max) * 100));
+        return '<div class="adm-u360-lic-meter adm-u360-lic-meter--inline" role="img" aria-label="ظرفیت اسلات">'
+            + '<div class="adm-u360-lic-meter__track">'
+            + '<span class="adm-u360-lic-meter__fill" style="width:' + pct + '%"></span>'
+            + '</div>'
+            + '<span class="adm-u360-lic-meter__label">'
+            + toFa(used) + '/' + toFa(max) + ' · ' + toFa(active) + ' فعال'
+            + '</span></div>';
+    }
+
+    function renderLicenseStatusActions(lic, statusOptions) {
+        const groupName = 'u360-lic-status-' + lic.id;
+        return '<div class="adm-u360-lic-panel adm-u360-lic-panel--status adm-u360-lic-panel--toolbar">'
+            + '<span class="adm-u360-lic-panel__toolbar-label">وضعیت</span>'
+            + '<div class="adm-u360-lic-radios" role="radiogroup" aria-label="وضعیت لایسنس"'
+            + ' data-current-status="' + esc(lic.status || '') + '">'
+            + (statusOptions || []).map(function (opt) {
+                const on = lic.status === opt.key;
+                return '<label class="adm-u360-lic-radio adm-u360-lic-radio--' + esc(opt.key) + '">'
+                    + '<input type="radio" class="adm-u360-lic-radio__input"'
+                    + ' name="' + esc(groupName) + '" value="' + esc(opt.key) + '"'
+                    + (on ? ' checked' : '')
+                    + ' data-u360-lic="' + esc(lic.id) + '"'
+                    + ' data-u360-lic-field="status"'
+                    + ' data-u360-lic-action="set_status">'
+                    + '<span class="adm-u360-lic-radio__ui" aria-hidden="true"></span>'
+                    + '<span class="adm-u360-lic-radio__text">' + esc(opt.label) + '</span>'
+                    + '</label>';
+            }).join('')
+            + '</div></div>';
+    }
+
+    function submitLicenseAction(licenseId, body, busyEls) {
+        const busy = busyEls || [];
+        busy.forEach(function (el) {
+            if (el) el.disabled = true;
+        });
+        setLicenseCardFeedback(licenseId, 'در حال اعمال…', false);
+        return postLicenseAction(licenseId, body)
+            .then(function () {
+                bustLicensesTabCache();
+                loadTab('licenses', tabQueryState.licenses || {}, true);
+            })
+            .catch(function (err) {
+                setLicenseCardFeedback(licenseId, err.message || 'خطا', true);
+                throw err;
+            })
+            .finally(function () {
+                busy.forEach(function (el) {
+                    if (el) el.disabled = false;
+                });
+            });
+    }
+
+    function renderLicenseExpiryActions(lic) {
+        const exp = splitLicenseExpiryJalali(lic.expires_jalali);
+        const dateVal = exp.unlimited ? '' : exp.date;
+        const timeKeep = exp.time || '23:59';
+        const placeholder = exp.unlimited ? 'بدون انقضا — تاریخ را انتخاب کنید' : 'تقویم شمسی';
+        return '<div class="adm-u360-lic-panel adm-u360-lic-panel--expiry adm-u360-lic-panel--expiry-cal adm-u360-lic-panel--toolbar">'
+            + '<span class="adm-u360-lic-panel__toolbar-label">انقضا</span>'
+            + '<div class="adm-u360-lic-expiry-cal" aria-label="تقویم انقضا">'
+            + '<input type="text" class="adm-u360-lic-expiry-input adm-u360-lic-expiry-input--cal adm-u360-ltr"'
+            + ' dir="ltr" autocomplete="off" inputmode="none" readonly'
+            + ' data-jdp data-jdp-only-date'
+            + ' data-u360-lic-expiry="' + esc(lic.id) + '"'
+            + ' data-initial-value="' + esc(dateVal) + '"'
+            + ' data-expiry-time="' + esc(timeKeep) + '"'
+            + ' value="' + esc(dateVal) + '"'
+            + ' placeholder="' + esc(placeholder) + '"'
+            + ' aria-label="تاریخ انقضای شمسی">'
+            + '<button type="button" class="adm-u360-lic-expiry-clear" title="بدون انقضا"'
+            + ' data-u360-lic="' + esc(lic.id) + '" data-u360-lic-action="adjust_expiry" data-mode="clear"'
+            + ' aria-label="حذف تاریخ انقضا">×</button>'
+            + '</div></div>';
+    }
+
+    function composeExpiryJalaliForSave(raw, timeKeep) {
+        const val = String(raw || '').trim();
+        if (!val) return '';
+        if (/\s+\d{1,2}:\d{2}/.test(val)) return val;
+        const t = String(timeKeep || '23:59').trim() || '23:59';
+        return val + ' ' + t;
+    }
+
+    function renderLicenseSlotsManage(lic, canManage) {
+        const acts = lic.activations || [];
+        const slotsHtml = acts.length
+            ? '<ul class="adm-u360-lic-slots" role="list">'
+                + acts.map(function (act) {
+                    const platIcon = (act.platform || '').indexOf('اندروید') >= 0 ? 'fa-mobile-screen' : 'fa-desktop';
+                    return '<li class="adm-u360-lic-slot' + (act.is_active ? ' is-live' : '') + '" role="listitem">'
+                        + '<span class="adm-u360-lic-slot__icon" aria-hidden="true"><i class="fas ' + platIcon + '"></i></span>'
+                        + '<div class="adm-u360-lic-slot__main">'
+                        + '<div class="adm-u360-lic-slot__title-row">'
+                        + '<span class="adm-u360-lic-slot__label">' + esc(act.label || 'دستگاه') + '</span>'
+                        + '<span class="adm-u360-lic-slot__state' + (act.is_active ? ' is-on' : '') + '">'
+                        + (act.is_active ? 'متصل' : 'قطع') + '</span></div>'
+                        + '<span class="adm-u360-lic-slot__meta">'
+                        + esc(act.platform) + ' · ' + esc(act.activated_jalali || '—')
+                        + (act.fingerprint_masked
+                            ? ' · <span class="adm-u360-ltr" dir="ltr">' + esc(act.fingerprint_masked) + '</span>'
+                            : '')
+                        + '</span></div>'
+                        + (canManage
+                            ? '<div class="adm-u360-lic-slot__actions">'
+                            + '<button type="button" class="adm-u360-lic-slot__act" data-u360-lic="' + esc(lic.id)
+                            + '" data-u360-lic-action="set_activation_active" data-activation-id="' + esc(act.id)
+                            + '" data-active="' + (act.is_active ? '0' : '1') + '">'
+                            + (act.is_active ? 'قطع' : 'فعال') + '</button>'
+                            + '<button type="button" class="adm-u360-lic-slot__act adm-u360-lic-slot__act--danger" data-u360-lic="'
+                            + esc(lic.id) + '" data-u360-lic-action="remove_activation" data-activation-id="' + esc(act.id)
+                            + '">حذف</button></div>'
+                            : '')
+                        + '</li>';
+                }).join('')
+                + '</ul>'
+            : '<p class="adm-u360-lic-manage__empty-slots">هنوز دستگاهی به این لایسنس وصل نشده.</p>';
+
+        const maxField = canManage
+            ? '<div class="adm-u360-lic-max adm-u360-lic-max--inline">'
+                + '<input type="number" min="1" max="50" class="adm-u360-lic-manage__max-input" data-u360-lic-max="'
+                + esc(lic.id) + '" value="' + esc(lic.max_activations || 1) + '" aria-label="حداکثر اسلات" title="سقف اسلات">'
+                + '<button type="button" class="adm-u360-lic-expiry-save adm-u360-lic-expiry-save--ghost" data-u360-lic="'
+                + esc(lic.id) + '" data-u360-lic-action="set_max_activations">سقف</button>'
+                + '</div>'
+            : '';
+
+        return '<div class="adm-u360-lic-panel adm-u360-lic-panel--slots adm-u360-lic-panel--slots-compact">'
+            + '<div class="adm-u360-lic-slots-bar">'
+            + '<span class="adm-u360-lic-panel__toolbar-label">اسلات</span>'
+            + renderLicenseSlotMeter(lic)
+            + maxField
+            + '</div>'
+            + slotsHtml
+            + '</div>';
+    }
+
+    function renderLicenseManageCard(lic, statusOptions, canManage) {
+        const cardMod = lic.entitlement_valid ? ' is-valid' : '';
+        const assignLine = lic.assigned_to && lic.assigned_to !== '—'
+            ? '<p class="adm-u360-lic-manage__assign">'
+                + 'تخصیص · <strong>' + esc(lic.assigned_to) + '</strong>'
+                + (canManage && lic.assigned_user_id
+                    ? ' · <button type="button" class="adm-u360-lic-inline-act" data-u360-lic="'
+                        + esc(lic.id) + '" data-u360-lic-action="revoke_assignment">لغو</button>'
+                    : '')
+                + '</p>'
+            : '';
+
+        const head = '<header class="adm-u360-lic-manage__summary">'
+            + '<div class="adm-u360-lic-manage__title-row">'
+            + '<h3 class="adm-u360-lic-manage__plan">' + esc(lic.plan || '—') + '</h3>'
+            + '<div class="adm-u360-lic-manage__title-aside">'
+            + '<span class="adm-u360-lic-manage__id">#' + toFa(lic.id) + '</span>'
+            + licenseStatusChip(lic.status, lic.status_label, lic.entitlement_valid)
+            + '</div></div>'
+            + renderLicenseMetaStrip(lic)
+            + assignLine
+            + renderLicenseOrderLine(lic)
+            + '</header>';
+
+        const tools = canManage
+            ? '<div class="adm-u360-lic-manage__tools adm-u360-lic-manage__tools--compact">'
+                + '<div class="adm-u360-lic-manage__controls">'
+                + renderLicenseStatusActions(lic, statusOptions)
+                + renderLicenseExpiryActions(lic)
+                + '</div>'
+                + renderLicenseSlotsManage(lic, canManage)
+                + '</div>'
+                + '<p class="adm-u360-lic-manage__feedback" role="status" aria-live="polite"></p>'
+            : '<p class="adm-u360-lic-manage__readonly adm-u360-lic-manage__readonly--inset">'
+                + 'ویرایش لایسنس فقط برای مدیران دارای مجوز تغییر لایسنس فعال است.</p>';
+
+        return '<section class="adm-u360-lic-manage adm-u360-lic-manage--card adm-u360-lic-manage--pro adm-u360-lic-manage--compact'
+            + cardMod + '" data-u360-lic-card="' + esc(lic.id) + '" aria-label="لایسنس ' + esc(lic.id) + '">'
+            + head + tools + '</section>';
+    }
+
     function renderLicenseGrantsCard(grants) {
         const rows = (grants || []).map(function (g) {
+            const keyHint = g.campaign_key && g.campaign_label && g.campaign_key !== g.campaign_label
+                ? ' <span class="adm-u360-ltr adm-u360-grant-key" title="شناسه فنی">· ' + esc(g.campaign_key) + '</span>'
+                : '';
             return '<tr>'
-                + td('<span class="adm-u360-ltr">' + esc(g.campaign_key || '—') + '</span>', 'کمپین')
-                + td(esc(g.status || '—'), 'وضعیت')
+                + td(esc(campaignGrantLabel(g)) + keyHint, 'کمپین')
+                + td(campaignGrantStatusChip(g.status, g.status_label), 'وضعیت')
                 + td(g.license_id ? toFa(g.license_id) : '—', 'لایسنس')
                 + td(esc(g.created_jalali), 'تاریخ')
                 + '</tr>';
@@ -1612,20 +3236,117 @@
 
     function renderLicenses(d) {
         const access = d.access_summary || {};
-        const charts = d.charts || {};
-        const html = '<div class="adm-u360-licenses">'
-            + renderLicenseAccessCard(access, charts)
-            + '<div class="adm-u360-commerce__grid adm-u360-licenses__grid">'
-            + renderLicenseListCard(d.licenses)
-            + '<div class="adm-u360-commerce__stack adm-u360-licenses__stack">'
-            + renderLicenseActivationsCard(d.activations)
+        const perms = bootstrap.permissions || {};
+        const canManage = !!(d.can_manage_licenses || perms.can_manage_user_licenses);
+        const licenses = d.licenses || [];
+        const statusOptions = (d.form_options && d.form_options.status) || [];
+        const sorted = licenses.slice().sort(function (a, b) {
+            if (!!a.entitlement_valid !== !!b.entitlement_valid) {
+                return a.entitlement_valid ? -1 : 1;
+            }
+            return (b.id || 0) - (a.id || 0);
+        });
+
+        let manageBlock = '';
+        if (sorted.length) {
+            manageBlock = '<section class="adm-u360-lic-deck" aria-label="مدیریت لایسنس‌ها">'
+                + '<header class="adm-u360-lic-deck__head">'
+                + '<h2 class="adm-u360-lic-deck__title"><i class="fas fa-sliders-h" aria-hidden="true"></i>'
+                + '<span>مدیریت لایسنس</span></h2>'
+                + (canManage
+                    ? '<span class="adm-u360-lic-deck__mode adm-u360-lic-deck__mode--ok">اقدامات فعال</span>'
+                    : '<span class="adm-u360-lic-deck__mode">فقط مشاهده</span>')
+                + '</header>'
+                + '<div class="adm-u360-lic-deck__stack">'
+                + sorted.map(function (lic) {
+                    return renderLicenseManageCard(lic, statusOptions, canManage);
+                }).join('')
+                + '</div></section>';
+        } else {
+            manageBlock = '<div class="adm-u360-license-list__empty">'
+                + emptyState('لایسنسی ثبت نشده', 'پس از خرید یا اختصاص، رکورد اینجا نمایش داده می‌شود.', 'fa-key')
+                + '</div>';
+        }
+
+        const html = '<div class="adm-u360-licenses adm-u360-licenses--pro">'
+            + renderLicenseAccessCard(access)
+            + manageBlock
             + renderLicenseGrantsCard(d.campaign_grants)
-            + '</div></div></div>';
+            + '</div>';
 
         paintPanel(html, 'licenses');
-        window.requestAnimationFrame(function () {
-            mountOverviewDoughnut('admU360LicenseChartStatus', charts.license_status);
-        });
+    }
+
+    function activitySuccessChip(success) {
+        if (success === true) {
+            return '<span class="adm-u360-order-chip adm-u360-order-chip--ok">موفق</span>';
+        }
+        if (success === false) {
+            return '<span class="adm-u360-order-chip adm-u360-order-chip--danger">ناموفق</span>';
+        }
+        return '<span class="adm-u360-order-chip adm-u360-order-chip--muted">—</span>';
+    }
+
+    const ACTIVITY_KIND_BADGE = {
+        signup: 'ثبت‌نام',
+        login_marker: 'ورود',
+        order: 'خرید',
+        download: 'دانلود',
+        app_event: 'اپ',
+        android_device: 'اندروید',
+        extraction: 'استخراج',
+        dataset: 'دیتاست',
+        crm_contact: 'مخاطب',
+        crm_deal: 'معامله',
+        ticket: 'پشتیبانی',
+    };
+
+    function activityOutcomeText(success) {
+        if (success === true) {
+            return 'موفق';
+        }
+        if (success === false) {
+            return 'ناموفق';
+        }
+        return '';
+    }
+
+    function activityDetailLine(detail) {
+        if (!detail) {
+            return '';
+        }
+        const raw = String(detail).trim();
+        if (!raw) {
+            return '';
+        }
+        const short = raw.length > 220 ? raw.slice(0, 217) + '…' : raw;
+        return '<p class="adm-u360-activity-row__detail" title="' + esc(raw) + '">' + esc(short) + '</p>';
+    }
+
+    function renderActivityEventRow(ev) {
+        const badge = ACTIVITY_KIND_BADGE[ev.kind] || ev.kind_label || 'رویداد';
+        const title = ev.title || '—';
+        const outcome = activityOutcomeText(ev.success);
+        const metaBits = [];
+        if (ev.at_jalali) {
+            metaBits.push('<time class="adm-u360-activity-row__time" datetime="' + esc(ev.at || '') + '">'
+                + esc(ev.at_jalali) + '</time>');
+        }
+        if (outcome) {
+            metaBits.push('<span class="adm-u360-activity-row__outcome adm-u360-activity-row__outcome--'
+                + (ev.success === false ? 'fail' : 'ok') + '">' + esc(outcome) + '</span>');
+        }
+        const detailHtml = activityDetailLine(ev.detail);
+
+        return '<li class="adm-u360-activity-row" role="listitem">'
+            + '<div class="adm-u360-activity-row__body">'
+            + '<div class="adm-u360-activity-row__head">'
+            + '<span class="adm-u360-activity-row__badge">' + esc(badge) + '</span>'
+            + '<h3 class="adm-u360-activity-row__title">' + esc(title) + '</h3>'
+            + '</div>'
+            + '<div class="adm-u360-activity-row__meta">' + metaBits.join('<span class="adm-u360-activity-row__sep" aria-hidden="true">·</span>') + '</div>'
+            + (detailHtml || '')
+            + '</div></li>';
     }
 
     function renderActivity(d) {
@@ -1633,64 +3354,238 @@
         const filters = d.filters || {};
         function filterSelect(name, label, options) {
             const current = selected[name] || '';
-            return '<label class="adm-u360-activity-filter"><span>' + esc(label) + '</span>'
-                + '<select data-u360-activity-filter="' + name + '" aria-label="' + esc(label) + '">'
+            return '<label class="adm-u360-activity-filter">'
+                + '<span class="adm-u360-activity-filter__label">' + esc(label) + '</span>'
+                + '<select class="adm-u360-activity-filter__select" data-u360-activity-filter="' + name + '" aria-label="' + esc(label) + '">'
                 + options.map(function (o) {
                     return '<option value="' + esc(o.value) + '"' + (current === o.value ? ' selected' : '') + '>'
                         + esc(o.label) + '</option>';
                 }).join('') + '</select></label>';
         }
-        const kindOptions = [{ value: '', label: 'همه رویدادها' }].concat(
+        const kindOptions = [{ value: '', label: 'همه' }].concat(
             (filters.kinds || []).map(function (k) { return { value: k.key, label: k.label }; })
         );
         const platformLabels = { web: 'وب', shop: 'فروشگاه', windows: 'ویندوز', android: 'اندروید',
             workspace: 'فضای کار', crm: 'مخاطبین', support: 'پشتیبانی' };
-        const platformOptions = [{ value: '', label: 'همه پلتفرم‌ها' }].concat(
+        const platformOptions = [{ value: '', label: 'همه' }].concat(
             (filters.platforms || []).map(function (p) {
                 return { value: p, label: platformLabels[p] || p };
             })
         );
         const filterControls = '<div class="adm-u360-activity-filters" role="group" aria-label="فیلتر فعالیت">'
-            + filterSelect('kind', 'نوع رویداد', kindOptions)
+            + filterSelect('kind', 'نوع', kindOptions)
             + filterSelect('platform', 'پلتفرم', platformOptions)
             + filterSelect('success', 'نتیجه', [
-                { value: '', label: 'همه نتایج' }, { value: 'ok', label: 'موفق' },
+                { value: '', label: 'همه' }, { value: 'ok', label: 'موفق' },
                 { value: 'fail', label: 'ناموفق' },
             ])
             + filterSelect('sort', 'ترتیب', [
                 { value: '-at', label: 'جدیدترین' }, { value: 'at', label: 'قدیمی‌ترین' },
             ])
-            + '<button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-u360-activity-reset>پاک‌کردن فیلترها</button>'
+            + '<button type="button" class="adm-u360-activity-filters__reset" data-u360-activity-reset">پاک‌سازی</button>'
             + '</div>';
-        const toolbar = panelRangeHint() + filterControls;
-        const rows = (d.events || []).map(function (ev) {
-            const st = ev.success === false ? 'ناموفق' : ev.success === true ? 'موفق' : '—';
-            return '<tr>'
-                + td(esc(ev.kind_label), 'نوع')
-                + td(esc(ev.title) + (ev.detail ? '<small>' + esc(ev.detail) + '</small>' : ''), 'عنوان')
-                + td(esc(ev.platform_label || ev.platform), 'پلتفرم')
-                + td(st, 'نتیجه')
-                + td(esc(ev.at_jalali), 'زمان')
-                + '</tr>';
-        }).join('');
+
+        const days = panelRangeDaysParam();
+        const rangeLabel = days === 'all' ? 'کل دوره' : toFa(days) + ' روز';
+        const pageCount = (d.events || []).length;
+        const total = d.pagination ? d.pagination.total : pageCount;
+
+        const summary = '<section class="adm-u360-block adm-u360-block--card adm-u360-activity-summary" aria-label="خلاصه فعالیت">'
+            + '<header class="adm-u360-activity-summary__head">'
+            + '<h2 class="adm-u360-activity-summary__title"><span>فعالیت و رفتار</span></h2>'
+            + '<span class="adm-u360-activity-summary__range">بازه · ' + esc(rangeLabel) + '</span>'
+            + '</header>'
+            + '<dl class="adm-u360-activity-metrics">'
+            + '<div class="adm-u360-activity-metric"><dt>این صفحه</dt><dd>' + toFa(pageCount) + '</dd></div>'
+            + '<div class="adm-u360-activity-metric"><dt>کل رویداد</dt><dd>' + toFa(total) + '</dd></div>'
+            + '</dl></section>';
+
+        const filtersCard = '<section class="adm-u360-activity-filters-bar" aria-label="فیلتر رویدادها">'
+            + filterControls
+            + '</section>';
+
         const actPts = (d.charts && d.charts.activity_daily) || [];
-        const actChart = actPts.length
-            ? chartsRow(chartCard('رویدادهای ثبت‌شده در بازه انتخابی (بدون فیلتر جدول)', 'admU360ActChart', 'adm-u360-chart-wrap--wide', 'fa-chart-bar'))
-            : '';
-        paintPanel(tabPanel('فعالیت و رفتار', tabIcon('activity'), {
-            metrics: statStrip([
-                { label: 'رویداد در این صفحه', value: toFa((d.events || []).length) },
-                { label: 'کل رویدادهای ثبت‌شده', value: toFa(d.pagination ? d.pagination.total : (d.events || []).length) },
-            ]),
-            toolbar: toolbar,
-            viz: actChart,
-            content: (rows ? miniTable(['نوع', 'عنوان', 'پلتفرم', 'نتیجه', 'زمان'], rows)
-                : emptyState('رویدادی با این فیلترها پیدا نشد', 'فیلترها یا بازه زمانی را تغییر دهید.'))
-                + renderPager(d.pagination, 'activity'),
-        }));
+        let chartSection = '';
+        if (actPts.length) {
+            chartSection = '<section class="adm-u360-block adm-u360-block--card adm-u360-activity-chart" aria-label="روند روزانه">'
+                + '<header class="adm-u360-activity-chart__head">'
+                + '<h2 class="adm-u360-activity-chart__title"><span>روند روزانه</span></h2>'
+                + '<span class="adm-u360-activity-chart__meta">بدون اعمال فیلتر جدول</span>'
+                + '</header>'
+                + '<div class="adm-u360-chart-wrap adm-u360-chart-wrap--wide adm-u360-chart-wrap--activity">'
+                + '<canvas id="admU360ActChart" role="img" aria-label="روند روزانه رویدادها"></canvas>'
+                + '</div></section>';
+        }
+
+        const events = (d.events || []).map(renderActivityEventRow).join('');
+        const feedBody = events
+            ? '<ul class="adm-u360-activity-rows" role="list">' + events + '</ul>'
+            : '<div class="adm-u360-activity-feed__empty">'
+                + emptyState('رویدادی با این فیلترها نیست', 'فیلترها یا بازه زمانی را تغییر دهید.', 'fa-filter')
+                + '</div>';
+        const feed = '<section class="adm-u360-block adm-u360-block--card adm-u360-activity-feed adm-u360-activity-feed--minimal" aria-label="فهرست رویدادها">'
+            + '<header class="adm-u360-activity-feed__head">'
+            + '<h2 class="adm-u360-activity-feed__title"><span>رویدادها</span></h2>'
+            + (pageCount ? '<span class="adm-u360-activity-feed__count">' + toFa(pageCount) + '</span>' : '')
+            + '</header>'
+            + '<div class="adm-u360-activity-feed__body">' + feedBody + '</div>'
+            + renderPager(d.pagination, 'activity')
+            + '</section>';
+
+        paintPanel('<div class="adm-u360-activity adm-u360-activity--minimal">'
+            + summary
+            + filtersCard
+            + chartSection
+            + feed
+            + '</div>');
+
         window.requestAnimationFrame(function () {
             mountBarActivity('admU360ActChart', actPts);
         });
+    }
+
+    const USAGE_FEATURE_LABELS = {
+        'ربات ویندوز': 'نرم‌افزار ویندوز',
+        'اپ اندروید': 'اپلیکیشن اندروید',
+        'استخراج آگهی': 'استخراج از دیوار',
+        'دیتاست‌ها': 'دیتاست‌ها',
+        'شمارش آگهی‌ها': 'آگهی در بانک فایل',
+        'آگهی در بانک فایل': 'آگهی در بانک فایل',
+        'مخاطبین': 'مخاطبین CRM',
+        'معاملات': 'معاملات CRM',
+        'یادآورها': 'یادآورها',
+        'فعالیت لیستینگ دیوار': 'کار روی آگهی‌های فایل',
+        'کار روی آگهی فایل': 'کار روی آگهی‌های فایل',
+        'همگام‌سازی موبایل': 'همگام‌سازی موبایل',
+    };
+
+    const USAGE_COUNT_UNIT = {
+        'کار روی آگهی فایل': 'آگهی',
+        'فعالیت لیستینگ دیوار': 'آگهی',
+        'شمارش آگهی‌ها': 'آگهی',
+        'آگهی در بانک فایل': 'آگهی',
+        'دیتاست‌ها': 'فایل',
+        'مخاطبین': 'مخاطب',
+        'معاملات': 'معامله',
+        'یادآورها': 'یادآور',
+    };
+
+    function usageFeatureTitle(f) {
+        const key = (f && f.name) || '';
+        return USAGE_FEATURE_LABELS[key] || key || '—';
+    }
+
+    function usageFeatureUsed(f) {
+        return !!(f && (f.started || (f.count && f.count > 0)));
+    }
+
+    function usageStatusLabel(f) {
+        let text = 'استفاده نشده';
+        let tone = 'idle';
+        if (usageFeatureUsed(f)) {
+            text = 'در حال استفاده';
+            tone = 'on';
+        } else if (f && f.note === 'بدون رکورد') {
+            text = 'بدون گزارش سیستم';
+            tone = 'unknown';
+        }
+        return '<span class="adm-u360-usage-row__status adm-u360-usage-row__status--' + tone + '">'
+            + esc(text) + '</span>';
+    }
+
+    function usageFeatureDetail(f) {
+        const count = Number(f && f.count) || 0;
+        const unit = USAGE_COUNT_UNIT[(f && f.name) || ''] || 'بار';
+        if (count > 0) {
+            return toFa(count) + ' ' + unit;
+        }
+        if (f && f.started) {
+            return 'حداقل یک‌بار باز شده';
+        }
+        if (f && f.note === 'بدون رکورد') {
+            return 'شمارش دقیق در دسترس نیست';
+        }
+        return 'هنوز استفاده نشده';
+    }
+
+    function renderUsageFeatureRow(f) {
+        const used = usageFeatureUsed(f);
+        const last = (f.last_at_jalali || '').trim();
+        const lastBit = last && last !== '—'
+            ? '<span class="adm-u360-usage-row__sep" aria-hidden="true">·</span>'
+                + '<span>آخرین بار ' + esc(last) + '</span>'
+            : '';
+        const noteBit = (f.note || '').trim()
+            ? '<span class="adm-u360-usage-row__sep" aria-hidden="true">·</span>'
+                + '<span class="adm-u360-usage-row__note">' + esc(f.note) + '</span>'
+            : '';
+        return '<li class="adm-u360-usage-row' + (used ? ' adm-u360-usage-row--on' : '') + '" role="listitem">'
+            + '<div class="adm-u360-usage-row__head">'
+            + '<h3 class="adm-u360-usage-row__title">' + esc(usageFeatureTitle(f)) + '</h3>'
+            + usageStatusLabel(f)
+            + '</div>'
+            + '<div class="adm-u360-usage-row__meta">'
+            + '<span>' + esc(usageFeatureDetail(f)) + '</span>'
+            + lastBit
+            + noteBit
+            + '</div></li>';
+    }
+
+    function renderUsage(d) {
+        const feats = d.features || [];
+        const usedCount = feats.filter(usageFeatureUsed).length;
+        const days = panelRangeDaysParam();
+        const rangeLabel = days === 'all' ? 'کل دوره' : toFa(days) + ' روز';
+        const chartRows = (d.charts && d.charts.feature_usage) || [];
+
+        const summary = '<section class="adm-u360-block adm-u360-block--card adm-u360-usage-summary" aria-label="خلاصه استفاده">'
+            + '<header class="adm-u360-usage-summary__head">'
+            + '<h2 class="adm-u360-usage-summary__title"><span>چقدر از محصول استفاده شده؟</span></h2>'
+            + '<span class="adm-u360-usage-summary__range">بازه · ' + esc(rangeLabel) + '</span>'
+            + '</header>'
+            + '<dl class="adm-u360-usage-metrics">'
+            + '<div class="adm-u360-usage-metric">'
+            + '<dt>بخش‌های استفاده‌شده</dt><dd>' + toFa(usedCount) + ' <span class="adm-u360-usage-metric__of">از '
+            + toFa(feats.length) + ' بخش</span></dd></div>'
+            + '<div class="adm-u360-usage-metric">'
+            + '<dt>سهم استفاده</dt><dd>' + toFa(feats.length ? Math.round((usedCount / feats.length) * 100) : 0)
+            + '<span class="adm-u360-usage-metric__pct">٪</span></dd></div>'
+            + '</dl>'
+            + '<p class="adm-u360-usage-summary__hint">بر پایهٔ رکوردهای همین حساب؛ برای بعضی بخش‌ها ممکن است عدد دقیق ثبت نشده باشد.</p>'
+            + '</section>';
+
+        const chartSection = '<section class="adm-u360-block adm-u360-block--card adm-u360-usage-chart" aria-label="مقایسه فعالیت بخش‌ها">'
+            + '<header class="adm-u360-usage-chart__head">'
+            + '<h2 class="adm-u360-usage-chart__title"><span>کجا بیشتر فعال بوده؟</span></h2>'
+            + '<p class="adm-u360-usage-chart__lead">'
+            + 'مرتب‌سازی بر اساس تعداد رویداد و کار ثبت‌شده؛ '
+            + '<strong>حجم آگهی در بانک فایل</strong> اینجا نمایش داده نمی‌شود.'
+            + '</p>'
+            + '</header>'
+            + '<div class="adm-u360-usage-chart__body">'
+            + renderUsageRankChart(chartRows)
+            + '</div></section>';
+
+        const listBody = feats.length
+            ? '<ul class="adm-u360-usage-rows" role="list">' + feats.map(renderUsageFeatureRow).join('') + '</ul>'
+            : '<div class="adm-u360-usage-feed__empty">'
+                + emptyState('قابلیتی تعریف نشده', 'دادهٔ استفاده برای این کاربر موجود نیست.', 'fa-layer-group')
+                + '</div>';
+
+        const feed = '<section class="adm-u360-block adm-u360-block--card adm-u360-usage-feed" aria-label="فهرست بخش‌های محصول">'
+            + '<header class="adm-u360-usage-feed__head">'
+            + '<h2 class="adm-u360-usage-feed__title"><span>همهٔ بخش‌ها</span></h2>'
+            + '<span class="adm-u360-usage-feed__count">' + toFa(feats.length) + '</span>'
+            + '</header>'
+            + '<div class="adm-u360-usage-feed__body">' + listBody + '</div>'
+            + '</section>';
+
+        paintPanel('<div class="adm-u360-usage adm-u360-usage--minimal">'
+            + summary
+            + chartSection
+            + feed
+            + '</div>', 'usage');
+
     }
 
     function renderTabData(tab, data) {
@@ -1703,38 +3598,12 @@
         if (tab === 'commerce') return renderCommerce(data);
         if (tab === 'licenses') return renderLicenses(data);
         if (tab === 'activity') return renderActivity(data);
-        if (tab === 'usage') {
-            const feats = data.features || [];
-            const usedCount = feats.filter(function (f) { return f.started || (f.count && f.count > 0); }).length;
-            const rows = feats.map(function (f) {
-                const started = f.started ? 'بله' : (f.note === 'بدون رکورد' ? 'ثبت نشده' : 'خیر');
-                return '<tr>'
-                    + td(esc(f.name), 'قابلیت')
-                    + td(started, 'شروع')
-                    + td(toFa(f.count), 'تعداد')
-                    + td(esc(f.last_at_jalali || '—'), 'آخرین')
-                    + '</tr>';
-            }).join('');
-            const feat = (data.charts && data.charts.feature_usage) || [];
-            const chartPart = feat.length
-                ? chartsRow(chartCard('شدت استفاده از امکانات', 'admU360UsageBars', 'adm-u360-chart-wrap--tall', 'fa-chart-bar'))
-                : '';
-            paintPanel(tabPanel('استفاده از امکانات', tabIcon('usage'), {
-                metrics: statStrip([
-                    { label: 'قابلیت‌های استفاده‌شده', value: toFa(usedCount) + ' / ' + toFa(feats.length) },
-                ]),
-                toolbar: panelRangeHint(),
-                viz: chartPart,
-                content: miniTable(['قابلیت', 'شروع', 'تعداد', 'آخرین'], rows),
-            }));
-            window.requestAnimationFrame(function () {
-                mountHorizontalBars('admU360UsageBars', feat);
-            });
-            return;
-        }
+        if (tab === 'usage') return renderUsage(data);
         if (tab === 'devices') {
             const win = data.windows || {};
-            const flags = win.flags || {};
+            const flags = win.flags || ((win.downloaded !== undefined || win.activated !== undefined)
+                ? win
+                : {});
             const androidCount = (data.android_devices || []).length;
             let content = '';
             const dl = (win.downloads || []).map(function (d) {
@@ -1757,11 +3626,7 @@
                 ? chartsRow(chartCard('فعال‌سازی‌ها به تفکیک پلتفرم', 'admU360DevPlatform', 'adm-u360-chart-wrap--donut', 'fa-chart-pie'))
                 : '';
             paintPanel(tabPanel('دستگاه‌ها و نرم‌افزارها', tabIcon('devices'), {
-                metrics: statStrip([
-                    { label: 'ویندوز · دانلود', value: flags.downloaded ? 'بله' : 'خیر', tone: flags.downloaded ? 'ok' : '' },
-                    { label: 'ویندوز · فعال‌سازی', value: flags.activated ? 'بله' : 'خیر', tone: flags.activated ? 'ok' : '' },
-                    { label: 'اندروید', value: androidCount ? toFa(androidCount) + ' دستگاه' : 'ثبت نشده', tone: androidCount ? 'ok' : '' },
-                ]),
+                metrics: renderDevicesPlatformSummary(flags, data.android_devices),
                 toolbar: panelRangeHint(),
                 viz: chartPart,
                 content: content,
@@ -1771,139 +3636,9 @@
             });
             return;
         }
-        if (tab === 'support') {
-            const perms = bootstrap.permissions || {};
-            let toolbar = '';
-            if (perms.can_view_internal_tickets) {
-                toolbar = '<div class="adm-u360-toolbar"><label class="adm-u360-check">'
-                    + '<input type="checkbox" id="admU360SupportInternal" '
-                    + (data.include_internal_notes ? 'checked' : '') + '> نمایش یادداشت‌های داخلی</label></div>';
-            }
-            let content = '';
-            let ticketStack = '<div class="adm-u360-ticket-stack">';
-            (data.tickets || []).forEach(function (t) {
-                ticketStack += '<article class="adm-u360-ticket">'
-                    + '<header class="adm-u360-ticket__head"><p class="adm-u360-ticket__title">'
-                    + esc(t.ticket_number) + ' — ' + esc(t.subject) + '</p>'
-                    + (t.admin_url
-                        ? '<a href="' + esc(t.admin_url) + '" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">مدیریت</a>'
-                        : '')
-                    + '</header><p class="adm-u360-ticket__meta">'
-                    + esc(t.status) + ' · ' + esc(t.priority) + ' · ' + esc(t.last_message_jalali) + '</p>';
-                (t.recent_messages || []).forEach(function (m) {
-                    ticketStack += '<div class="adm-u360-msg"><div class="adm-u360-msg__head"><strong>'
-                        + esc(m.author) + '</strong> '
-                        + (m.is_internal ? '<span class="ecc-um-flag ecc-um-flag--warn">داخلی</span> ' : '')
-                        + '<span>' + esc(m.created_jalali) + '</span></div>'
-                        + '<div class="adm-u360-msg__body">' + esc(m.body_preview) + '</div></div>';
-                });
-                ticketStack += '</article>';
-            });
-            ticketStack += '</div>';
-            if (!(data.tickets || []).length) {
-                content += emptyState('تیکتی ثبت نشده', 'هنوز درخواست پشتیبانی از این مشتری در سیستم نیست.');
-            } else {
-                content += ticketStack;
-            }
-            content += renderPager(data.pagination, 'support');
-            const tStats = (data.charts && data.charts.tickets_by_status) || [];
-            const chartPart = tStats.length
-                ? chartsRow(chartCard('وضعیت تیکت‌ها', 'admU360SupportStatus', 'adm-u360-chart-wrap--donut', 'fa-chart-pie'))
-                : '';
-            paintPanel(tabPanel('پشتیبانی و تیکت‌ها', tabIcon('support'), {
-                metrics: statStrip([
-                    { label: 'تیکت باز', value: toFa((data.stats && data.stats.open) || 0), tone: (data.stats && data.stats.open) ? 'warn' : '' },
-                    { label: 'خوانده‌نشده', value: toFa((data.stats && data.stats.staff_unread) || 0) },
-                    { label: 'کل تیکت‌ها', value: toFa((data.stats && data.stats.total) || 0) },
-                ]),
-                toolbar: toolbar + panelRangeHint(),
-                viz: chartPart,
-                content: content,
-            }));
-            window.requestAnimationFrame(function () {
-                mountDoughnut('admU360SupportStatus', tStats);
-            });
-            const internalChk = document.getElementById('admU360SupportInternal');
-            if (internalChk) {
-                internalChk.addEventListener('change', function () {
-                    loadTab('support', internalChk.checked ? { internal: '1', page: '1' } : { page: '1' }, true);
-                });
-            }
-            return;
-        }
-        if (tab === 'workspace') {
-            const crm = data.crm || {};
-            let content = '';
-            const teamNote = data.note_team_data ? lead(esc(data.note_team_data)) : '';
-            const contacts = (crm.recent_contacts || []).map(function (c) {
-                return '<tr>' + td(esc(c.name), 'نام') + td('<span class="adm-u360-ltr">' + esc(c.phone) + '</span>', 'موبایل')
-                    + td(esc(c.status), 'وضعیت') + td(esc(c.created_jalali), 'تاریخ') + '</tr>';
-            }).join('');
-            if (contacts) content += subSection('آخرین مخاطبین', miniTable(['نام', 'موبایل', 'وضعیت', 'تاریخ'], contacts), 'fa-address-book');
-            const rows = (data.datasets || []).map(function (d) {
-                return '<tr>' + td(esc(d.name), 'نام') + td(toFa(d.row_count), 'آگهی')
-                    + td(esc(d.city), 'شهر') + td(esc(d.created_jalali), 'تاریخ') + '</tr>';
-            }).join('');
-            content += subSection('دیتاست‌ها', miniTable(['نام', 'آگهی', 'شهر', 'تاریخ'], rows), 'fa-database');
-            content += renderPager(data.datasets_pagination, 'workspace');
-            const crmChart = (data.charts && data.charts.crm_contacts_status) || [];
-            const chartPart = crmChart.length
-                ? chartsRow(chartCard('وضعیت مخاطبین', 'admU360CrmStatus', 'adm-u360-chart-wrap--donut', 'fa-chart-pie'))
-                : '';
-            paintPanel(tabPanel('مخاطبین، فایل‌ها و دیتاست', tabIcon('workspace'), {
-                metrics: statStrip([
-                    { label: 'مخاطبین', value: toFa(crm.contacts_count || 0) },
-                    { label: 'معاملات باز', value: toFa(crm.deals_open || 0) },
-                    { label: 'دیتاست‌ها', value: toFa((data.datasets_pagination && data.datasets_pagination.total) || (data.datasets || []).length) },
-                ]),
-                toolbar: panelRangeHint(),
-                lead: teamNote,
-                viz: chartPart,
-                content: content,
-            }));
-            window.requestAnimationFrame(function () {
-                mountDoughnut('admU360CrmStatus', crmChart);
-            });
-            return;
-        }
-        if (tab === 'marketing') {
-            let content = '';
-            const sms = (data.sms_logs || []).map(function (s) {
-                return '<tr>' + td(esc(s.purpose), 'هدف') + smsMessageTd(s)
-                    + td(esc(s.status), 'وضعیت') + td(esc(s.created_jalali), 'زمان') + '</tr>';
-            }).join('');
-            content += subSection('پیامک‌های سیستمی', miniTable(['هدف', 'متن پیام', 'وضعیت', 'زمان'], sms), 'fa-comment-dots');
-            const disc = (data.discount_issuances || []).map(function (r) {
-                return '<tr>'
-                    + td('<span class="adm-u360-ltr">' + esc(r.code) + '</span>', 'کد')
-                    + td(esc(r.policy_key), 'سیاست تخفیف')
-                    + td(esc(r.source_type), 'منبع')
-                    + td(esc(r.issued_jalali), 'زمان') + '</tr>';
-            }).join('');
-            if (disc) content += subSection('کدهای تخفیف صادرشده', miniTable(['کد', 'سیاست تخفیف', 'منبع', 'زمان'], disc), 'fa-percent');
-            const camps = (data.campaigns || []).map(function (r) {
-                return '<tr>' + td(esc(r.campaign), 'کمپین') + td(esc(r.status), 'وضعیت')
-                    + td(esc(r.created_jalali), 'زمان') + '</tr>';
-            }).join('');
-            if (camps) content += subSection('کمپین‌ها', miniTable(['کمپین', 'وضعیت', 'زمان'], camps), 'fa-bullhorn');
-            const attrs = (data.attributions || []).map(function (r) {
-                return '<tr>' + td(esc(r.model), 'مدل') + td(esc(r.status), 'وضعیت')
-                    + td(esc(r.created_jalali), 'زمان') + '</tr>';
-            }).join('');
-            if (attrs) content += subSection('بازگشت مشتری و منبع‌یابی', miniTable(['روش', 'وضعیت', 'زمان'], attrs), 'fa-undo');
-            const journey = (data.growth_events || []).map(function (r) {
-                return '<tr>' + td(esc(r.event_type), 'رویداد') + td(esc(r.created_jalali), 'زمان') + '</tr>';
-            }).join('');
-            if (journey) content += subSection('مسیر رشد', miniTable(['رویداد', 'زمان'], journey), 'fa-route');
-            paintPanel(tabPanel('ارتباطات و بازاریابی', tabIcon('marketing'), {
-                metrics: statStrip([
-                    { label: 'انصراف پیامک', value: data.opt_out ? 'بله' : 'خیر', tone: data.opt_out ? 'warn' : 'ok' },
-                ]),
-                toolbar: panelRangeHint(),
-                content: content,
-            }));
-            return;
-        }
+        if (tab === 'support') return renderSupport(data);
+        if (tab === 'workspace') return renderWorkspace(data);
+        if (tab === 'marketing') return renderMarketing(data);
         if (tab === 'agency') {
             if (data.empty) {
                 paintPanel(emptyState(data.message || 'عضویت آژانسی ندارد', 'این کاربر در هیچ فضای آژانسی ثبت نشده است.'), 'agency');
@@ -1931,19 +3666,7 @@
             }));
             return;
         }
-        if (tab === 'admin_log') {
-            const rows = (data.audit_logs || []).map(function (l) {
-                return '<tr>' + td(esc(l.action_type), 'عملیات')
-                    + td(toFa(l.license_id), 'لایسنس')
-                    + td(esc(l.created_jalali), 'زمان') + '</tr>';
-            }).join('');
-            paintPanel(tabPanel('تاریخچه مدیریتی', tabIcon('admin_log'), {
-                toolbar: panelRangeHint(),
-                lead: data.note ? lead(esc(data.note)) : '',
-                content: miniTable(['عملیات', 'لایسنس', 'زمان'], rows),
-            }), 'admin_log');
-            return;
-        }
+        if (tab === 'admin_log') return renderAdminLog(data);
         paintPanel(emptyState('این تب هنوز آماده نیست'), tab);
     }
 
@@ -1965,6 +3688,10 @@
         const version = ++requestVersion;
         if (activeRequest) activeRequest.abort();
         activeRequest = null;
+        if (tab === 'usage' && bustUsageTabCache) {
+            skipCache = true;
+            bustUsageTabCache = false;
+        }
         const cacheKey = tab + JSON.stringify(query);
         if (!skipCache && tabCache[cacheKey]) {
             renderTabData(tab, tabCache[cacheKey]);
@@ -2004,6 +3731,58 @@
     }
 
     panel.addEventListener('change', function (e) {
+        const statusRadio = e.target.closest('[data-u360-lic-field="status"]');
+        if (statusRadio && activeTab === 'licenses' && statusRadio.type === 'radio' && statusRadio.checked) {
+            const licenseId = statusRadio.getAttribute('data-u360-lic');
+            const nextStatus = statusRadio.value || '';
+            const group = statusRadio.closest('.adm-u360-lic-radios');
+            const current = group ? group.getAttribute('data-current-status') : '';
+            if (!licenseId || !nextStatus || nextStatus === current) return;
+            const radios = panel.querySelectorAll(
+                '[data-u360-lic-field="status"][data-u360-lic="' + licenseId + '"]'
+            );
+            const busy = Array.prototype.slice.call(radios);
+            submitLicenseAction(licenseId, { action: 'set_status', status: nextStatus }, busy)
+                .catch(function () {
+                    if (group && current) {
+                        radios.forEach(function (r) {
+                            r.checked = r.value === current;
+                        });
+                    }
+                });
+            return;
+        }
+        const expiryInput = e.target.closest('[data-u360-lic-expiry]');
+        if (expiryInput && activeTab === 'licenses') {
+            const licenseId = expiryInput.getAttribute('data-u360-lic-expiry');
+            const nextDate = String(expiryInput.value || '').trim();
+            const initial = String(expiryInput.getAttribute('data-initial-value') || '').trim();
+            if (!licenseId || !nextDate || nextDate === initial) return;
+            const jalali = composeExpiryJalaliForSave(
+                nextDate,
+                expiryInput.getAttribute('data-expiry-time')
+            );
+            expiryInput.disabled = true;
+            submitLicenseAction(licenseId, {
+                action: 'adjust_expiry',
+                mode: 'set_datetime',
+                expires_jalali: jalali,
+            }, [expiryInput])
+                .catch(function () {
+                    expiryInput.value = initial;
+                });
+            return;
+        }
+        const alogFilter = e.target.closest('[data-u360-alog-filter]');
+        if (alogFilter && activeTab === 'admin_log') {
+            const name = alogFilter.getAttribute('data-u360-alog-filter');
+            if (name === 'kind') {
+                const query = Object.assign({}, tabQueryState.admin_log || {}, { page: 1 });
+                query.kind = alogFilter.value;
+                loadTab('admin_log', query, true);
+            }
+            return;
+        }
         const filter = e.target.closest('[data-u360-activity-filter]');
         if (!filter || activeTab !== 'activity') return;
         const name = filter.getAttribute('data-u360-activity-filter');
@@ -2014,6 +3793,48 @@
     });
 
     panel.addEventListener('click', function (e) {
+        const licBtn = e.target.closest('[data-u360-lic-action]');
+        if (licBtn && activeTab === 'licenses') {
+            const licenseId = licBtn.getAttribute('data-u360-lic');
+            const action = licBtn.getAttribute('data-u360-lic-action');
+            if (!licenseId || !action) return;
+            const body = { action: action };
+            if (action === 'set_status') {
+                return;
+            } else if (action === 'adjust_expiry') {
+                body.action = 'adjust_expiry';
+                const mode = licBtn.getAttribute('data-mode');
+                if (mode === 'clear') {
+                    body.mode = 'clear';
+                } else {
+                    body.days = parseInt(licBtn.getAttribute('data-days') || '0', 10);
+                }
+            } else if (action === 'set_max_activations') {
+                body.action = 'set_max_activations';
+                const maxInput = panel.querySelector('[data-u360-lic-max="' + licenseId + '"]');
+                body.max_activations = maxInput ? parseInt(maxInput.value || '0', 10) : 0;
+            } else if (action === 'set_activation_active') {
+                body.action = 'set_activation_active';
+                body.activation_id = licBtn.getAttribute('data-activation-id');
+                body.is_active = licBtn.getAttribute('data-active') === '1';
+            } else if (action === 'remove_activation') {
+                if (!window.confirm('اسلات حذف شود؟ این عمل قابل بازگشت از UI نیست.')) return;
+                body.action = 'remove_activation';
+                body.activation_id = licBtn.getAttribute('data-activation-id');
+            } else if (action === 'revoke_assignment') {
+                if (!window.confirm('تخصیص عضو لغو شود؟')) return;
+                body.action = 'revoke_assignment';
+            } else {
+                return;
+            }
+            submitLicenseAction(licenseId, body, [licBtn]);
+            return;
+        }
+        if (e.target.closest('[data-u360-alog-reset]')) {
+            const query = Object.assign({}, tabQueryState.admin_log || {}, { page: 1, kind: '' });
+            loadTab('admin_log', query, true);
+            return;
+        }
         if (!e.target.closest('[data-u360-activity-reset]')) return;
         const query = Object.assign({}, tabQueryState.activity || {}, {
             page: 1, kind: '', platform: '', success: '', sort: '-at',
@@ -2104,6 +3925,94 @@
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeAllSmsPopovers();
+    });
+
+    panel.addEventListener('click', function (e) {
+        const pick = e.target.closest('[data-u360-support-ticket]');
+        if (!pick) return;
+        const id = pick.getAttribute('data-u360-support-ticket');
+        tabQueryState.support = Object.assign({}, tabQueryState.support || {}, { ticket: id });
+        loadSupportTicketDetail(id);
+    });
+
+    panel.addEventListener('click', function (e) {
+        if (activeTab !== 'support') return;
+        const canManage = !!(bootstrap.permissions || {}).can_manage_support_tickets;
+        if (!canManage) return;
+        const ws = supportWorkspaceEl();
+        if (!ws || !supportDeskSelectedId) return;
+
+        function showFeedback(msg, ok) {
+            const el = ws.querySelector('[data-u360-support-feedback]');
+            if (!el) return;
+            el.hidden = false;
+            el.textContent = msg;
+            el.classList.toggle('is-error', !ok);
+            el.classList.toggle('is-ok', !!ok);
+        }
+
+        if (e.target.closest('[data-u360-support-send]')) {
+            const ta = ws.querySelector('#admU360SupportBody');
+            const body = (ta && ta.value || '').trim();
+            const isInternal = !!(ws.querySelector('[data-u360-support-internal]') && ws.querySelector('[data-u360-support-internal]').checked);
+            const statusSel = ws.querySelector('[data-u360-support-after-status]');
+            const status = statusSel ? statusSel.value : '';
+            if (!body) {
+                showFeedback('متن پیام را بنویسید.', false);
+                return;
+            }
+            const btn = e.target.closest('[data-u360-support-send]');
+            btn.disabled = true;
+            postSupportTicketAction(supportDeskSelectedId, {
+                action: 'reply',
+                body: body,
+                is_internal: isInternal,
+                status: isInternal ? '' : status,
+            }).then(function (data) {
+                if (ta) ta.value = '';
+                paintSupportWorkspace(renderSupportWorkspaceDetail(data.ticket, true));
+                showFeedback(isInternal ? 'یادداشت ذخیره شد.' : 'پاسخ برای مشتری ارسال شد.', true);
+                delete tabCache['support' + JSON.stringify(tabQueryState.support || {})];
+            }).catch(function (err) {
+                showFeedback(err.message || 'ارسال ناموفق بود.', false);
+            }).finally(function () {
+                btn.disabled = false;
+            });
+            return;
+        }
+
+        if (e.target.closest('[data-u360-support-close]')) {
+            postSupportTicketAction(supportDeskSelectedId, { action: 'close' })
+                .then(function (data) {
+                    paintSupportWorkspace(renderSupportWorkspaceDetail(data.ticket, true));
+                    showFeedback('تیکت بسته شد.', true);
+                })
+                .catch(function (err) { showFeedback(err.message, false); });
+            return;
+        }
+
+        if (e.target.closest('[data-u360-support-reopen]')) {
+            postSupportTicketAction(supportDeskSelectedId, { action: 'reopen' })
+                .then(function (data) {
+                    paintSupportWorkspace(renderSupportWorkspaceDetail(data.ticket, true));
+                    showFeedback('تیکت باز شد.', true);
+                })
+                .catch(function (err) { showFeedback(err.message, false); });
+            return;
+        }
+
+        if (e.target.closest('[data-u360-support-save-meta]')) {
+            const statusEl = ws.querySelector('[data-u360-support-field="status"]');
+            const priEl = ws.querySelector('[data-u360-support-field="priority"]');
+            postSupportTicketAction(supportDeskSelectedId, {
+                action: 'update_meta',
+                status: statusEl ? statusEl.value : '',
+                priority: priEl ? priEl.value : '',
+            }).then(function (data) {
+                paintSupportWorkspace(renderSupportWorkspaceDetail(data.ticket, true));
+                showFeedback('وضعیت ذخیره شد.', true);
+            }).catch(function (err) { showFeedback(err.message, false); });
+        }
     });
 
     loadTab(activeTab);

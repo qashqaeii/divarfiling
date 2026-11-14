@@ -13,7 +13,7 @@
 {% block admin_panel_header_meta_extra %}{% endblock %}
 
 {% block admin_panel_header_actions %}
-<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="adm-ov-header__tool" title="خروجی اکسل">
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="adm-cmd-bar__tool" title="خروجی اکسل">
     <i class="fas fa-file-excel" aria-hidden="true"></i>
 </a>
 {% endblock %}

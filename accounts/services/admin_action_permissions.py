@@ -31,6 +31,26 @@ def can_send_admin_sms(user) -> bool:
     )
 
 
+def can_manage_user_licenses(user) -> bool:
+    """تغییر وضعیت، انقضا و اسلات لایسنس از پرونده ۳۶۰."""
+    if not _active_staff(user):
+        return False
+    return bool(
+        user.is_superuser
+        or user.has_perms(('licenses.change_license', 'licenses.change_licenseactivation'))
+    )
+
+
+def can_manage_support_tickets(user) -> bool:
+    """Reply, close, and update customer tickets from the admin dossier."""
+    if not _active_staff(user):
+        return False
+    return bool(
+        user.is_superuser
+        or user.has_perms(('workspace.change_ticket', 'workspace.add_ticketmessage'))
+    )
+
+
 def can_view_user_management(user) -> bool:
     """Full user dossiers expose identity, orders and license/device details."""
     if not _active_staff(user):

@@ -2006,3 +2006,474 @@ body.adm-prime-command .adm-prime-hero__rail :is(.adm-overview-actions:not(.adm-
         transition: none;
     }
 }
+
+/* ——— هدر تک‌خطی مراکز پنل ——— */
+body.adm-prime-command .adm-cmd-header.ecc-header--shell.adm-cmd-header--minimal.adm-cmd-header--unified {
+    display: block !important;
+    grid-template-columns: unset !important;
+    grid-template-areas: unset !important;
+    gap: 0 !important;
+    position: relative;
+    flex-shrink: 0;
+    z-index: 10;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0 clamp(0.75rem, 1.6vw, 1.35rem) !important;
+    min-height: 52px;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    border-bottom: 1px solid #e9e6f2 !important;
+    box-shadow: none !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+body.adm-prime-command .adm-cmd-header.adm-cmd-header--unified > .adm-cmd-bar__row {
+    width: 100%;
+    max-width: 100%;
+}
+
+body.adm-prime-command .adm-cmd-bar__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, auto);
+    align-items: center;
+    column-gap: clamp(0.65rem, 1.5vw, 1.1rem);
+    row-gap: 0.45rem;
+    min-height: 52px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+body.adm-prime-command .adm-cmd-bar__start {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    justify-self: start;
+}
+
+body.adm-prime-command .adm-cmd-bar__menu {
+    flex-shrink: 0;
+    margin: 0;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: #5f637a;
+    box-shadow: none;
+}
+
+body.adm-prime-command .adm-cmd-bar__menu:hover {
+    color: #5b4fcf;
+    background: rgba(91, 79, 207, 0.08);
+}
+
+body.adm-prime-command .adm-cmd-bar__crumb {
+    margin: 0;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.32rem;
+    min-width: 0;
+    font-size: 0.8rem;
+    font-weight: 650;
+    color: #5f637a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.adm-prime-command .adm-cmd-bar__crumb a {
+    color: #5f637a;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+body.adm-prime-command .adm-cmd-bar__crumb a:hover {
+    color: #5b4fcf;
+}
+
+body.adm-prime-command .adm-cmd-bar__crumb-sep {
+    opacity: 0.45;
+}
+
+body.adm-prime-command .adm-cmd-bar__crumb [aria-current="page"] {
+    color: #191830;
+    font-weight: 750;
+}
+
+body.adm-prime-command .adm-cmd-bar__center {
+    justify-self: center;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-cmd-bar__filters {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: min(100%, 26.5rem);
+    min-height: 2.25rem;
+    padding: 0.18rem 0.45rem 0.18rem 0.55rem;
+    border: 1px solid #e9e6f2;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #faf9fd 0%, #f6f5fc 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+body.adm-prime-command .adm-cmd-bar__filters-label {
+    flex-shrink: 0;
+    font-size: 0.64rem;
+    font-weight: 750;
+    letter-spacing: 0.02em;
+    color: #8a8fa3;
+    white-space: nowrap;
+    user-select: none;
+}
+
+body.adm-prime-command .adm-cmd-bar__range.ecc-range--global {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.12rem;
+    padding: 0.14rem;
+    border-radius: 9px;
+    border: 1px solid rgba(233, 230, 242, 0.9);
+    background: #fff;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+body.adm-prime-command .adm-cmd-bar__range::-webkit-scrollbar {
+    display: none;
+}
+
+body.adm-prime-command .adm-cmd-bar__range .adm-cmd-bar__range-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.75rem;
+    padding: 0.2rem 0.58rem;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    box-shadow: none;
+    color: #5f637a;
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+body.adm-prime-command .adm-cmd-bar__range .adm-cmd-bar__range-btn:hover:not(.is-active) {
+    color: #191830;
+    background: rgba(91, 79, 207, 0.06);
+}
+
+body.adm-prime-command .adm-cmd-bar__range .adm-cmd-bar__range-btn.is-active {
+    color: #fff;
+    background: #5b4fcf;
+    box-shadow: 0 4px 12px -6px rgba(91, 79, 207, 0.75);
+}
+
+body.adm-prime-command .adm-cmd-bar__range .adm-cmd-bar__range-btn:focus-visible {
+    outline: 2px solid #5b4fcf;
+    outline-offset: 2px;
+}
+
+body.adm-prime-command .adm-cmd-bar__filters-divider {
+    flex-shrink: 0;
+    width: 1px;
+    align-self: stretch;
+    margin-block: 0.15rem;
+    background: #e9e6f2;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare.ecc-compare-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #5f637a;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare-ui {
+    position: relative;
+    width: 1.85rem;
+    height: 1.05rem;
+    border-radius: 999px;
+    border: 1px solid #d8d5e6;
+    background: #ece9f5;
+    flex-shrink: 0;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare-ui::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 0.14rem;
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(25, 24, 48, 0.12);
+    transform: translateY(-50%);
+    transition: inset-inline-start 0.18s ease;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare:has(input:checked) {
+    color: #5b4fcf;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare:has(input:checked) .adm-cmd-bar__compare-ui {
+    border-color: rgba(91, 79, 207, 0.45);
+    background: #5b4fcf;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare:has(input:checked) .adm-cmd-bar__compare-ui::after {
+    inset-inline-start: calc(100% - 0.86rem);
+}
+
+body.adm-prime-command .adm-cmd-bar__compare:focus-within {
+    outline: none;
+}
+
+body.adm-prime-command .adm-cmd-bar__compare:focus-within .adm-cmd-bar__compare-ui {
+    box-shadow: 0 0 0 2px rgba(91, 79, 207, 0.22);
+}
+
+body.adm-prime-command .adm-cmd-bar__end {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    justify-self: end;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-cmd-bar__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.18rem;
+    padding-inline-end: 0.45rem;
+    border-inline-end: 1px solid #e9e6f2;
+}
+
+body.adm-prime-command .adm-cmd-bar__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    min-height: 2rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid #e9e6f2;
+    border-radius: 9px;
+    background: #fff;
+    color: #5f637a;
+    font-size: 0.68rem;
+    font-weight: 750;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+        color 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease;
+}
+
+body.adm-prime-command .adm-cmd-bar__back i {
+    font-size: 0.62rem;
+    opacity: 0.85;
+}
+
+body.adm-prime-command .adm-cmd-bar__back:hover {
+    color: #5b4fcf;
+    border-color: rgba(91, 79, 207, 0.28);
+    background: rgba(91, 79, 207, 0.05);
+}
+
+body.adm-prime-command .adm-cmd-bar__back:focus-visible {
+    outline: 2px solid #5b4fcf;
+    outline-offset: 2px;
+}
+
+body.adm-prime-command .adm-cmd-bar__tool {
+    appearance: none;
+    display: inline-grid;
+    place-items: center;
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #5f637a;
+    font-size: 0.8rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+body.adm-prime-command .adm-cmd-bar__tool:hover {
+    color: #5b4fcf;
+    background: rgba(91, 79, 207, 0.08);
+    border-color: rgba(91, 79, 207, 0.12);
+}
+
+body.adm-prime-command .adm-cmd-bar__tool-badge {
+    position: absolute;
+    top: 0.02rem;
+    inset-inline-start: 1.05rem;
+    min-width: 0.95rem;
+    height: 0.95rem;
+    padding: 0 0.2rem;
+    border-radius: 999px;
+    background: #e11d48;
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 800;
+    line-height: 0.95rem;
+    text-align: center;
+}
+
+body.adm-prime-command .adm-cmd-bar__user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    max-width: 7.5rem;
+    min-width: 0;
+}
+
+body.adm-prime-command .adm-cmd-bar__avatar {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #5b4fcf;
+    background: rgba(91, 79, 207, 0.1);
+    flex-shrink: 0;
+}
+
+body.adm-prime-command .adm-cmd-bar__user-name {
+    font-size: 0.72rem;
+    font-weight: 750;
+    color: #191830;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 1040px) {
+    body.adm-prime-command .adm-cmd-bar__filters-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__filters {
+        padding-inline: 0.35rem;
+    }
+}
+
+@media (max-width: 680px) {
+    body.adm-prime-command .adm-cmd-bar__user-name {
+        display: none;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "start end"
+            "center center";
+    }
+
+    body.adm-prime-command .adm-cmd-bar__start {
+        grid-area: start;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__center {
+        grid-area: center;
+        justify-self: stretch;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__end {
+        grid-area: end;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__filters {
+        width: 100%;
+        max-width: none;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 720px) {
+    body.adm-prime-command .adm-cmd-header.adm-cmd-header--unified {
+        min-height: auto;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__row {
+        min-height: auto;
+        padding: 0.35rem 0;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__back span {
+        display: none;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__actions {
+        padding-inline-end: 0.35rem;
+    }
+}
+
+@media (max-width: 390px) {
+    body.adm-prime-command .adm-cmd-header.adm-cmd-header--unified {
+        padding-inline: 0.55rem !important;
+    }
+
+    body.adm-prime-command .adm-cmd-bar__range .adm-cmd-bar__range-btn {
+        padding-inline: 0.46rem;
+        font-size: 0.64rem;
+    }
+}
+

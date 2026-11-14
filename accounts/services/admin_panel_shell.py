@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Tuple
 
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services.admin_dashboard import ALL_TIME_DAYS, _range_label_fa, effective_range_days
@@ -169,6 +170,18 @@ ADMIN_PANEL_SIDEBAR_QUICK_TITLES: Dict[str, str] = {
 }
 
 
+def build_admin_panel_header_trail(nav_active: str, query_suffix: str) -> Dict[str, str]:
+    """مسیر breadcrumb هدر یکپارچه مراکز پنل."""
+    current = ADMIN_PANEL_NAV_TITLES.get(nav_active, 'پنل مدیریت')
+    if nav_active in ('command', ''):
+        return {'current_label': current}
+    return {
+        'parent_label': ADMIN_PANEL_NAV_TITLES.get('command', 'نمای کلی سیستم'),
+        'parent_url': reverse('admin_panel') + query_suffix,
+        'current_label': current,
+    }
+
+
 def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     badges = get_admin_panel_nav_badges()
     alert_count = sum(1 for key in ('orders_pending', 'unread_tickets') if badges.get(key, 0) > 0)
@@ -217,4 +230,6 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
         'admin_panel_query_suffix': query_suffix,
         'admin_panel_range_links': range_links,
         'admin_panel_range_label_fa': _range_label_fa(days),
+        'admin_panel_header_trail': build_admin_panel_header_trail(nav_active, query_suffix),
+        'admin_panel_header_back_url': '',
     }

@@ -51,6 +51,7 @@ ORDER_STATUS_LABELS = {
     'pending': 'در انتظار',
     'pending_verification': 'در انتظار تایید',
     'paid': 'پرداخت‌شده',
+    'granted': 'هدیه / اعطایی',
     'failed': 'ناموفق',
     'cancelled': 'لغو',
 }

@@ -5,8 +5,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from accounts.services.admin_action_permissions import can_view_user_management
+from accounts.services.admin_action_permissions import can_manage_support_tickets, can_view_user_management
 from accounts.services.admin_user_360 import build_user_360_tab
+from accounts.services.admin_user_360.tabs import extraction_usage_snapshot, tab_usage
+from workspace.models import Dataset, Ticket, TicketMessage
+from workspace.support_constants import TICKET_CATEGORY_OTHER, TICKET_STATUS_OPEN
 from accounts.services.admin_user_360.common import sms_purpose_label
 from accounts.services.growth_journey import growth_journey_event_label
 from shop.models import Order, Product, LicensePlan
@@ -135,6 +138,27 @@ class AdminUser360DataTests(TestCase):
         self.assertIn('charts', payload['data'])
         self.assertIn('orders_by_status', payload['data']['charts'])
 
+    def test_usage_extraction_counts_windows_path_without_mobile_runs(self):
+        Dataset.objects.create(
+            user=self.user,
+            name='فایل تست',
+            original_filename='divar.xlsx',
+            file_format='xlsx',
+            row_count=76,
+        )
+        summary = {'usage': {'listings': 76, 'datasets': 1}}
+        started, count, _last_at, note = extraction_usage_snapshot(self.user, summary['usage'])
+        self.assertTrue(started)
+        self.assertGreaterEqual(count, 1)
+        self.assertIn('ویندوز', note)
+
+        payload = tab_usage(self.user, summary)
+        by_name = {f['name']: f for f in payload['features']}
+        ext = by_name['استخراج آگهی']
+        self.assertTrue(ext['started'])
+        self.assertGreaterEqual(int(ext['count']), 1)
+        self.assertIn('ویندوز', ext.get('note') or '')
+
     def test_xss_escaped_in_template_context(self):
         xss = User.objects.create_user(
             username='xss_user',
@@ -154,3 +178,63 @@ class AdminUser360DataTests(TestCase):
         resp = client.get(reverse('admin_panel_user_360', args=[xss.id]))
         self.assertEqual(resp.status_code, 200)
         self.assertNotContains(resp, '<script>alert(1)</script>')
+
+
+class AdminUser360SupportTicketTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.customer = User.objects.create_user(
+            username='u360_ticket_cust',
+            phone='09128880101',
+            password='test-pass-123',
+        )
+        self.staff = User.objects.create_user(
+            username='u360_ticket_staff',
+            phone='09128880102',
+            password='test-pass-123',
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.ticket = Ticket.objects.create(
+            user=self.customer,
+            ticket_number='DF-TEST-000001',
+            subject='تست تیکت',
+            description='شرح اولیه',
+            category=TICKET_CATEGORY_OTHER,
+            status=TICKET_STATUS_OPEN,
+        )
+        TicketMessage.objects.create(
+            ticket=self.ticket,
+            author=self.customer,
+            body='سلام، سوال دارم.',
+            is_staff_reply=False,
+        )
+
+    def test_staff_reply_via_u360_action(self):
+        self.client.force_login(self.staff)
+        self.assertTrue(can_manage_support_tickets(self.staff))
+        url = reverse('admin_panel_user_360_ticket_action', args=[self.customer.id, self.ticket.pk])
+        resp = self.client.post(
+            url,
+            data='{"action":"reply","body":"پاسخ پشتیبانی"}',
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data.get('ok'))
+        self.assertTrue(
+            TicketMessage.objects.filter(ticket=self.ticket, is_staff_reply=True, body__contains='پاسخ').exists()
+        )
+
+    def test_ticket_detail_json_scoped_to_user(self):
+        other = User.objects.create_user(username='other_u', phone='09128880103', password='x')
+        foreign = Ticket.objects.create(
+            user=other,
+            ticket_number='DF-TEST-000002',
+            subject='دیگر',
+            category=TICKET_CATEGORY_OTHER,
+            status=TICKET_STATUS_OPEN,
+        )
+        self.client.force_login(self.staff)
+        url = reverse('admin_panel_user_360_ticket_detail', args=[self.customer.id, foreign.pk])
+        self.assertEqual(self.client.get(url).status_code, 404)

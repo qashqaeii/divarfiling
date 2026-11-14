@@ -189,6 +189,13 @@ def mark_ticket_read_by_user(ticket):
     ticket.messages.filter(is_staff_reply=True, is_internal=False).update(is_read=True)
 
 
+def mark_ticket_read_by_staff(ticket):
+    if not ticket.staff_has_unread:
+        return
+    ticket.staff_has_unread = False
+    ticket.save(update_fields=['staff_has_unread', 'updated_at'])
+
+
 def get_user_ticket_stats(user):
     from workspace.models import Ticket
     from workspace.support_constants import TICKET_STATUS_CLOSED, TICKET_STATUS_WAITING_USER

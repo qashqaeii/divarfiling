@@ -89,15 +89,16 @@ def build_activity_timeline(
             at=user.date_joined,
             platform='web',
             title='ثبت‌نام در فایلینگ دیوار',
+            detail='شروع عضویت و ایجاد حساب کاربری.',
         ))
 
     if user.last_login:
         events.append(_event(
             kind='login_marker',
             at=user.last_login,
-            platform='—',
-            title='آخرین ورود به حساب',
-            detail='فقط زمان آخرین ورود به حساب در دسترس است؛ جزئیات هر بار ورود جداگانه ذخیره نمی‌شود.',
+            platform='web',
+            title='آخرین ورود به حساب کاربری',
+            detail='زمان آخرین ورود موفق ثبت شده است. جزئیات هر نشست ورود جداگانه نگهداری نمی‌شود.',
         ))
 
     since = None
@@ -131,30 +132,46 @@ def build_activity_timeline(
             record_id=str(d.id),
         ))
 
-    ev_qs = ClientAppEvent.objects.filter(user=user).select_related('license').order_by('-created_at')
+    ev_qs = ClientAppEvent.objects.filter(user=user).select_related('license', 'activation').order_by('-created_at')
     if since:
         ev_qs = ev_qs.filter(created_at__gte=since)
+    earliest_first_launch_id = (
+        ClientAppEvent.objects.filter(
+            user=user,
+            event_type=ClientAppEvent.EventType.FIRST_LAUNCH,
+        )
+        .order_by('created_at')
+        .values_list('pk', flat=True)
+        .first()
+    )
     for ev in ev_qs[:150]:
+        plat = ev.platform or 'windows'
+        plat_label = PLATFORM_LABELS.get(plat, plat)
+        version = (ev.app_version or '').strip()
+        detail_bits: list[str] = []
+        if version:
+            detail_bits.append(f'نسخه برنامه: {version}')
+
+        if ev.event_type == ClientAppEvent.EventType.FIRST_LAUNCH:
+            if earliest_first_launch_id and ev.pk == earliest_first_launch_id:
+                event_title = 'اولین اجرای ربات ویندوز'
+            else:
+                event_title = 'اجرای اولیه روی دستگاه یا لایسنس دیگر'
+                detail_bits.append(
+                    'برای هر دستگاه/فعال‌سازی جدید یک «اولین اجرا» جدا ثبت می‌شود؛ '
+                    'این مورد دومین یا بعدی است.'
+                )
+        elif ev.event_type == ClientAppEvent.EventType.APP_LAUNCH:
+            event_title = 'اجرای برنامه ویندوز'
+        else:
+            event_title = ev.get_event_type_display()
+
         events.append(_event(
             kind='app_event',
             at=ev.created_at,
-            platform=ev.platform or 'windows',
-            title=ev.get_event_type_display(),
-            detail=ev.app_version or '',
-            record_id=str(ev.id),
-        ))
-
-    dev_qs = MobileDevice.objects.filter(user=user).order_by('-registered_at')
-    if since:
-        dev_qs = dev_qs.filter(registered_at__gte=since)
-    for d in dev_qs[:50]:
-        events.append(_event(
-            kind='android_device',
-            at=d.registered_at or d.last_seen_at,
-            platform='android',
-            title='ثبت دستگاه اندروید',
-            detail=d.device_model or '—',
-            record_id=str(d.id),
+            platform=plat,
+            title=f'{event_title} ({plat_label})',
+            detail=' · '.join(detail_bits),
         ))
 
     run_qs = MobileExtractionRun.objects.filter(user=user).order_by('-started_at')

@@ -4,16 +4,18 @@
 {% load currency_tags %}
 
 {% block title %}پرونده {{ u360.header.name }} | پنل مدیریت{% endblock %}
-{% block admin_panel_title %}پرونده مشتری{% endblock %}
+{% block body_class %}{{ block.super }} adm-u360-active{% endblock %}
+{% block admin_panel_title %}پرونده ۳۶۰ مشتری{% endblock %}
 {% block admin_panel_breadcrumb %}
 <a href="{% url 'admin_panel_users' %}">کاربران</a>
 <span aria-hidden="true">/</span>
-<span aria-current="page">{{ u360.header.name|default:'کاربر' }}</span>
+<span aria-current="page">پرونده ۳۶۰ مشتری</span>
 {% endblock %}
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-admin-users-v3.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-user-360.css' %}?v=39">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-user-360.css' %}?v=81">
+<link rel="stylesheet" href="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.css">
 {% endblock %}
 
 {% block admin_panel_content %}
@@ -23,41 +25,6 @@
      data-active-tab="{{ u360_active_tab }}"
      data-return-url="{{ u360.return_url|escape }}">
     {% include 'accounts/partials/admin_user_360_hero.html' %}
-
-    <section class="adm-u360-kpis-wrap" id="admU360KpisWrap" data-u360-kpis-wrap aria-labelledby="admU360KpisTitle">
-        <header class="adm-u360-kpis-head">
-            <h2 class="adm-u360-kpis-head__title" id="admU360KpisTitle">شاخص‌های کلیدی</h2>
-            <span class="adm-u360-kpis-head__hint">برای جزئیات، روی هر شاخص بزنید</span>
-        </header>
-        <span class="adm-u360-kpis-edge adm-u360-kpis-edge--start" aria-hidden="true"></span>
-        <span class="adm-u360-kpis-edge adm-u360-kpis-edge--end" aria-hidden="true"></span>
-        <div class="adm-u360-kpis-rail">
-            <div class="adm-u360-kpis" id="admU360Kpis" role="list">
-                {% for kpi in u360.kpis %}
-                <button type="button"
-                        class="adm-u360-kpi{% if kpi.value_text %} adm-u360-kpi--text{% endif %}{% if kpi.key == 'tickets' and kpi.value %} adm-u360-kpi--alert{% elif kpi.key == 'pending' and kpi.value %} adm-u360-kpi--warn{% endif %}"
-                        role="listitem"
-                        data-u360-kpi="{{ kpi.key }}"
-                        data-u360-anchor="{{ kpi.anchor }}"
-                        aria-label="{{ kpi.label }} — {% if kpi.value_text %}{{ kpi.value_text }}{% else %}{{ kpi.value }}{% if kpi.unit %} {{ kpi.unit }}{% endif %}{% endif %}">
-                    <span class="adm-u360-kpi__glyph" aria-hidden="true">
-                        <i class="fas {{ kpi.icon }}"></i>
-                    </span>
-                    <span class="adm-u360-kpi__stack">
-                        <span class="adm-u360-kpi__label">{{ kpi.label }}</span>
-                        <span class="adm-u360-kpi__body">
-                            <strong class="adm-u360-kpi__value">
-                                {% if kpi.value_text %}{{ kpi.value_text|to_persian_digits }}{% else %}{{ kpi.value|to_persian_digits }}{% endif %}
-                                {% if kpi.unit %}<span class="adm-u360-kpi__unit">{{ kpi.unit }}</span>{% endif %}
-                            </strong>
-                            <i class="fas fa-chevron-left adm-u360-kpi__goto" aria-hidden="true"></i>
-                        </span>
-                    </span>
-                </button>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
 
     <div class="adm-u360-tabs-wrap" id="admU360TabsWrap" data-u360-tabs-wrap>
         <span class="adm-u360-tabs-edge adm-u360-tabs-edge--start" aria-hidden="true"></span>
@@ -91,6 +58,7 @@
 
 {% block admin_panel_extra_js %}
 {% include 'accounts/partials/admin_prime_charts_boot.html' %}
+<script src="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.js"></script>
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=20"></script>
-<script src="{% static 'js/mizkar-admin-user-360.js' %}?v=32"></script>
+<script src="{% static 'js/mizkar-admin-user-360.js' %}?v=74"></script>
 {% endblock %}

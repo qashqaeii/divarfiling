@@ -101,18 +101,50 @@ def chart_license_status_counts(license_rows: List[Dict[str, Any]]) -> List[Dict
     return [{'label': k, 'count': v} for k, v in sorted(buckets.items(), key=lambda x: -x[1])]
 
 
-def chart_feature_usage(features: List[Dict[str, Any]], *, limit: int = 10) -> List[Dict[str, Any]]:
-    ranked = [f for f in features if int(f.get('count') or 0) > 0]
-    ranked.sort(key=lambda f: int(f.get('count') or 0), reverse=True)
-    return [{'label': f['name'], 'count': int(f['count'])} for f in ranked[:limit]]
+USAGE_CHART_LABELS = {
+    'ربات ویندوز': 'نرم‌افزار ویندوز',
+    'اپ اندروید': 'اپلیکیشن اندروید',
+    'استخراج آگهی': 'استخراج از دیوار',
+    'دیتاست‌ها': 'فایل‌های دیتاست',
+    'آگهی در بانک فایل': 'آگهی در بانک فایل',
+    'شمارش آگهی‌ها': 'آگهی در بانک فایل',
+    'مخاطبین': 'مخاطبین CRM',
+    'معاملات': 'معاملات CRM',
+    'یادآورها': 'یادآورها',
+    'کار روی آگهی فایل': 'کار روی آگهی‌های فایل',
+    'فعالیت لیستینگ دیوار': 'کار روی آگهی‌های فایل',
+    'همگام‌سازی موبایل': 'همگام‌سازی موبایل',
+}
+
+# حجم ذخیره‌شده (مثل تعداد کل آگهی) با «تعداد استفاده» قابل مقایسه در نمودار نیست.
+USAGE_CHART_EXCLUDE_NAMES = frozenset({
+    'شمارش آگهی‌ها',
+    'آگهی در بانک فایل',
+})
+
+
+def chart_feature_usage(features: List[Dict[str, Any]], *, limit: int = 8) -> List[Dict[str, Any]]:
+    ranked = []
+    for f in features or []:
+        name = (f.get('name') or '').strip()
+        if not name or name in USAGE_CHART_EXCLUDE_NAMES:
+            continue
+        count = int(f.get('count') or 0)
+        if count <= 0:
+            continue
+        ranked.append({
+            'label': USAGE_CHART_LABELS.get(name, name),
+            'count': count,
+        })
+    ranked.sort(key=lambda item: item['count'], reverse=True)
+    return ranked[:limit]
 
 
 def chart_ticket_status(user) -> List[Dict[str, Any]]:
     from workspace.models import Ticket
+    from workspace.support_constants import TICKET_STATUS_CHOICES
 
     rows = Ticket.objects.filter(user=user).values('status').annotate(count=Count('id')).order_by('-count')
-    from workspace.models import TICKET_STATUS_CHOICES
-
     status_labels = dict(TICKET_STATUS_CHOICES)
     return [
         {
@@ -123,6 +155,50 @@ def chart_ticket_status(user) -> List[Dict[str, Any]]:
         for row in rows
         if row['count']
     ]
+
+
+def chart_audit_action_counts(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """توزیع نوع عملیات لاگ لایسنس."""
+    out = []
+    for row in rows or []:
+        label = row.get('label') or row.get('key') or '—'
+        count = int(row.get('count') or 0)
+        if count > 0:
+            out.append({'label': label, 'count': count, 'key': row.get('key', '')})
+    return out
+
+
+def chart_audit_log_daily(qs, *, span_days: int = 14) -> List[Dict[str, Any]]:
+    """شمارش روزانه لاگ لایسنس برای نمودار."""
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate
+
+    from accounts.services.admin_user_360.common import fa_digits
+
+    span_days = max(3, min(int(span_days or 14), 60))
+    since = timezone.now() - timedelta(days=span_days)
+    rows = (
+        qs.filter(created_at__gte=since)
+        .annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+    buckets: Dict[str, int] = {}
+    for row in rows:
+        day = row.get('day')
+        if not day:
+            continue
+        buckets[day.isoformat()] = int(row['count'] or 0)
+    anchor = timezone.localtime(timezone.now()).date()
+    out: List[Dict[str, Any]] = []
+    for offset in range(span_days - 1, -1, -1):
+        d = anchor - timedelta(days=offset)
+        key = d.isoformat()
+        j = jdatetime.date.fromgregorian(date=d)
+        label = f'{fa_digits(j.day)}/{fa_digits(j.month)}'
+        out.append({'date': key, 'label': label, 'count': buckets.get(key, 0)})
+    return out
 
 
 def chart_crm_status_breakdown(breakdown: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

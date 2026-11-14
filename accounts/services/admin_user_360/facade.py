@@ -16,6 +16,8 @@ def build_user_360_tab(
     *,
     reveal_sensitive: bool = False,
     include_internal_notes: bool = False,
+    can_manage_tickets: bool = False,
+    can_manage_licenses: bool = False,
     **query,
 ) -> Optional[Dict[str, Any]]:
     if tab not in TAB_BUILDERS:
@@ -25,9 +27,7 @@ def build_user_360_tab(
         return None
     summary = user_summary_row(user)
     builder = TAB_BUILDERS[tab]
-    payload = builder(
-        user,
-        summary,
+    builder_kwargs = dict(
         reveal_sensitive=reveal_sensitive,
         include_internal_notes=include_internal_notes,
         page=safe_query_int(query.get('page'), 1, minimum=1, maximum=10_000),
@@ -38,4 +38,9 @@ def build_user_360_tab(
         sort=query.get('sort', '-at'),
         days=query.get('days'),
     )
+    if tab == 'support':
+        builder_kwargs['can_manage_tickets'] = can_manage_tickets
+    if tab == 'licenses':
+        builder_kwargs['can_manage_licenses'] = can_manage_licenses
+    payload = builder(user, summary, **builder_kwargs)
     return {'ok': True, 'tab': tab, 'data': payload}

@@ -35,10 +35,18 @@ from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_export_permissions import can_export_report
 from accounts.services.admin_action_permissions import (
+    can_manage_support_tickets,
+    can_manage_user_licenses,
     can_review_card_transfer,
     can_send_admin_sms,
     can_view_financial_integrity,
     can_view_user_management,
+)
+from accounts.services.admin_user_360.license_management import apply_staff_license_action
+from accounts.services.admin_user_360.support_tickets import (
+    apply_ticket_action,
+    build_ticket_detail_payload,
+    get_user_ticket_or_404,
 )
 from accounts.services.admin_integrity_diagnostics import get_financial_integrity_context
 from accounts.services.admin_marketing import (
@@ -381,6 +389,18 @@ class AdminUser360View(StaffRequiredMixin, TemplateView):
         ctx['u360_active_tab'] = active_tab
         ctx['admin_panel_page_subtitle'] = shell['header'].get('phone') or ''
         ctx['admin_panel_title'] = 'پرونده مشتری'
+        ctx['admin_panel_page_title'] = 'پرونده ۳۶۰ مشتری'
+        users_query = self.request.GET.copy()
+        users_query.pop('tab', None)
+        users_parent = reverse('admin_panel_users')
+        if users_query:
+            users_parent += '?' + users_query.urlencode()
+        ctx['admin_panel_header_trail'] = {
+            'parent_label': 'کاربران',
+            'parent_url': users_parent,
+            'current_label': 'پرونده ۳۶۰ مشتری',
+        }
+        ctx['admin_panel_header_back_url'] = shell.get('return_url') or ''
         ctx['charts_enabled'] = True
         ctx['charts_json'] = '{}'
         return ctx
@@ -421,11 +441,118 @@ class AdminUser360TabJsonView(StaffRequiredMixin, View):
             tab,
             reveal_sensitive=reveal,
             include_internal_notes=include_internal,
+            can_manage_tickets=can_manage_support_tickets(request.user),
+            can_manage_licenses=can_manage_user_licenses(request.user),
             **query,
         )
         if not payload:
             return JsonResponse({'ok': False, 'error': 'داده یافت نشد'}, status=404)
         response = JsonResponse(payload, encoder=DjangoJSONEncoder, json_dumps_params={'ensure_ascii': False})
+        response['Cache-Control'] = 'private, no-store'
+        return response
+
+
+class AdminUser360TicketDetailView(StaffRequiredMixin, View):
+    """جزئیات کامل یک تیکت مشتری — برای میزکار پشتیبانی در پرونده ۳۶۰."""
+
+    def get(self, request, user_id, ticket_id):
+        if not can_view_user_management(request.user):
+            raise PermissionDenied('مجوز مشاهده پرونده کامل کاربران را ندارید.')
+        if not get_user_360_user(int(user_id)):
+            return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
+        ticket = get_user_ticket_or_404(user_id=int(user_id), ticket_id=int(ticket_id))
+        include_internal = (
+            request.GET.get('internal') == '1'
+            and (
+                request.user.is_superuser
+                or request.user.has_perm('workspace.view_ticketmessage')
+            )
+        )
+        mark_read = can_manage_support_tickets(request.user)
+        data = build_ticket_detail_payload(
+            ticket,
+            include_internal=include_internal,
+            mark_staff_read=mark_read,
+        )
+        response = JsonResponse({'ok': True, 'ticket': data}, encoder=DjangoJSONEncoder, json_dumps_params={'ensure_ascii': False})
+        response['Cache-Control'] = 'private, no-store'
+        return response
+
+
+class AdminUser360LicenseActionView(StaffRequiredMixin, View):
+    """عملیات مدیریتی لایسنس از پرونده ۳۶۰."""
+
+    def post(self, request, user_id, license_id):
+        if not can_manage_user_licenses(request.user):
+            raise PermissionDenied('مجوز تغییر لایسنس مشتری را ندارید.')
+        if not get_user_360_user(int(user_id)):
+            return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
+        try:
+            if request.content_type and 'application/json' in request.content_type:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
+            else:
+                payload = request.POST.dict()
+            action = str(payload.get('action') or '')
+            result = apply_staff_license_action(
+                dossier_user_id=int(user_id),
+                license_id=int(license_id),
+                staff=request.user,
+                action=action,
+                payload=payload,
+                request_meta=getattr(request, 'META', None),
+            )
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'فرمت درخواست نامعتبر است.'}, status=400)
+
+        response = JsonResponse(
+            {'ok': True, **result},
+            encoder=DjangoJSONEncoder,
+            json_dumps_params={'ensure_ascii': False},
+        )
+        response['Cache-Control'] = 'private, no-store'
+        return response
+
+
+class AdminUser360TicketActionView(StaffRequiredMixin, View):
+    """عملیات مدیریت تیکت از پرونده ۳۶۰."""
+
+    def post(self, request, user_id, ticket_id):
+        if not can_manage_support_tickets(request.user):
+            raise PermissionDenied('مجوز مدیریت تیکت پشتیبانی را ندارید.')
+        if not get_user_360_user(int(user_id)):
+            return JsonResponse({'ok': False, 'error': 'کاربر یافت نشد'}, status=404)
+        ticket = get_user_ticket_or_404(user_id=int(user_id), ticket_id=int(ticket_id))
+        try:
+            body = request.POST
+            if request.content_type and 'application/json' in request.content_type:
+                payload = json.loads(request.body.decode('utf-8') or '{}')
+            else:
+                payload = body.dict()
+            apply_ticket_action(
+                ticket=ticket,
+                staff_user=request.user,
+                action=str(payload.get('action') or ''),
+                body=str(payload.get('body') or ''),
+                is_internal=str(payload.get('is_internal', '')).lower() in ('1', 'true', 'on', 'yes'),
+                status_key=str(payload.get('status') or payload.get('status_key') or '').strip(),
+                priority_key=str(payload.get('priority') or payload.get('priority_key') or '').strip(),
+            )
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'فرمت درخواست نامعتبر است.'}, status=400)
+
+        include_internal = (
+            str(payload.get('internal', '')).lower() in ('1', 'true', 'on', 'yes')
+            or request.GET.get('internal') == '1'
+        ) and (
+            request.user.is_superuser
+            or request.user.has_perm('workspace.view_ticketmessage')
+        )
+        data = build_ticket_detail_payload(ticket, include_internal=include_internal, mark_staff_read=False)
+        response = JsonResponse({'ok': True, 'ticket': data}, encoder=DjangoJSONEncoder, json_dumps_params={'ensure_ascii': False})
         response['Cache-Control'] = 'private, no-store'
         return response
 

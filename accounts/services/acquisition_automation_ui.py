@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from accounts.services.divar_places import (
     _load_places_raw,
+    _places_file_path,
     list_districts_for_city,
     places_config_available,
 )

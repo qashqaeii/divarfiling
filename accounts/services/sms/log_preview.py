@@ -8,6 +8,11 @@ from django.conf import settings
 from accounts.models import SmsMessageLog
 from accounts.services.admin_user_360.common import sms_purpose_label
 
+_GENERIC_SMS_PREVIEW_PREFIXES = (
+    'پیامک متنی (',
+    'پیامک الگو (',
+)
+
 _SENSITIVE_ATTR_KEYS = frozenset({
     'code',
     'otp',
@@ -41,6 +46,54 @@ def _redact_attributes(attributes: Optional[Mapping[str, Any]]) -> dict[str, str
     return out
 
 
+def _is_generic_sms_preview(text: str) -> bool:
+    t = (text or '').strip()
+    if not t:
+        return True
+    if any(t.startswith(prefix) for prefix in _GENERIC_SMS_PREVIEW_PREFIXES):
+        return True
+    if 'کد یک‌بارمصرف' in t and t.startswith('پیامک '):
+        return True
+    return False
+
+
+def _message_from_campaign_recipient(log: SmsMessageLog) -> str:
+    from accounts.models import MarketingCampaignRecipient
+
+    recipient = (
+        MarketingCampaignRecipient.objects.filter(sms_log_id=log.pk)
+        .select_related('campaign')
+        .first()
+    )
+    if not recipient:
+        return ''
+    template = (getattr(recipient.campaign, 'message_template', None) or '').strip()
+    ctx = dict(recipient.context_json or {})
+    if template:
+        from accounts.services.admin_marketing import render_message
+
+        try:
+            return (render_message(template, ctx) or '').strip()[:500]
+        except Exception:
+            pass
+    for key in ('rendered_message', 'message', 'body', 'text', 'sms_body'):
+        val = (ctx.get(key) or '').strip()
+        if val:
+            return val[:500]
+    return ''
+
+
+def resolve_sms_message_body(log: SmsMessageLog) -> str:
+    """متن واقعی پیامک برای نمایش در پرونده — در صورت امکان از لاگ یا کمپین."""
+    stored = (getattr(log, 'message_preview', None) or '').strip()
+    if stored and not _is_generic_sms_preview(stored):
+        return stored[:500]
+    from_campaign = _message_from_campaign_recipient(log)
+    if from_campaign:
+        return from_campaign
+    return ''
+
+
 def build_sms_log_preview(
     *,
     purpose: str = '',
@@ -61,6 +114,10 @@ def build_sms_log_preview(
         return f'پیامک متنی ({purpose_label})'
 
     if redacted:
+        for key in ('message', 'Message', 'body', 'text'):
+            msg = (redacted.get(key) or '').strip()
+            if msg and msg != '••••':
+                return msg[:500]
         attr_parts = [f'{k}={v}' for k, v in sorted(redacted.items())]
         prefix = f'پیامک {purpose_label}'
         if code:
@@ -83,6 +140,9 @@ def build_sms_log_preview(
 
 
 def resolve_sms_log_preview(log: SmsMessageLog) -> str:
+    body = resolve_sms_message_body(log)
+    if body:
+        return body
     stored = (getattr(log, 'message_preview', None) or '').strip()
     if stored:
         return stored
@@ -96,7 +156,10 @@ def resolve_sms_log_preview(log: SmsMessageLog) -> str:
 
 
 def sms_log_detail_lines(log: SmsMessageLog) -> list[str]:
-    lines = [resolve_sms_log_preview(log)]
+    lines: list[str] = []
+    body = resolve_sms_message_body(log)
+    if not body:
+        lines.append(resolve_sms_log_preview(log))
     if log.get_channel_display():
         lines.append(f'کانال: {log.get_channel_display()}')
     if (log.pattern_code or '').strip():

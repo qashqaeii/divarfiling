@@ -7,6 +7,10 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from accounts.services.admin_action_permissions import (
+    can_manage_support_tickets,
+    can_manage_user_licenses,
+)
 from accounts.services.admin_user_360.common import (
     TAB_ICONS,
     TAB_KEYS,
@@ -19,6 +23,17 @@ from accounts.services.admin_user_360.tabs import tab_overview
 from accounts.services.admin_users_management import get_user_management_detail
 from workspace.models import Ticket
 
+
+PRIMARY_KPI_KEYS = (
+    'revenue',
+    'paid_count',
+    'pending',
+    'tickets',
+    'datasets',
+    'crm',
+    'deals',
+    'devices',
+)
 
 KPI_ICONS = {
     'revenue': 'fa-coins',
@@ -95,6 +110,9 @@ def build_user_360_shell(user, *, request) -> Dict[str, Any]:
     ):
         return_url = ''
 
+    kpi_strip = build_kpi_strip(summary, user)
+    days_left = _days_remaining(summary.get('license_expires_at'))
+
     return {
         'user_id': user.id,
         'summary': summary,
@@ -113,12 +131,10 @@ def build_user_360_shell(user, *, request) -> Dict[str, Any]:
             'license_expires_jalali': summary.get('license_expires_jalali'),
             'license_access_label': summary.get('license_access_label'),
             'has_active_license': summary.get('has_active_license'),
+            'days_until_expiry': days_left,
         },
-        'kpis': build_kpi_strip(summary, user),
-        'insights': insights,
-        'overview_embedded': overview,
-        'panel_range_key': (request.GET.get('days') or 'all').strip().lower(),
-        'activity_days': resolve_panel_activity_days(request.GET.get('days')),
+        'kpis': kpi_strip,
+        'primary_kpis': [k for k in kpi_strip if k['key'] in PRIMARY_KPI_KEYS],
         'tabs': [
             {'key': k, 'label': TAB_LABELS[k], 'icon': TAB_ICONS.get(k, 'fa-circle')}
             for k in TAB_KEYS
@@ -131,5 +147,7 @@ def build_user_360_shell(user, *, request) -> Dict[str, Any]:
             'can_view_internal_tickets': bool(
                 request.user.is_superuser or request.user.has_perm('workspace.view_ticketmessage')
             ),
+            'can_manage_support_tickets': bool(can_manage_support_tickets(request.user)),
+            'can_manage_user_licenses': bool(can_manage_user_licenses(request.user)),
         },
     }

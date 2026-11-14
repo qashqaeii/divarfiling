@@ -85,6 +85,25 @@ SMS_PURPOSE_LABELS = {
     'final_view': 'مشاهده نهایی قرارداد',
 }
 
+LICENSE_CAMPAIGN_KEY_LABELS = {
+    'signup_welcome_7d_v1': 'هدیه خوش‌آمدگویی (۷ روز)',
+    'weekly_professional_gift_v1': 'هدیه آزمایشی حرفه‌ای',
+}
+
+
+def license_campaign_key_label(raw: Any) -> str:
+    """برچسب فارسی شناسه کمپین اعطای لایسنس."""
+    key = str(raw or '').strip()
+    if not key:
+        return '—'
+    if key in LICENSE_CAMPAIGN_KEY_LABELS:
+        return LICENSE_CAMPAIGN_KEY_LABELS[key]
+    if key.startswith('signup_welcome'):
+        return 'هدیه خوش‌آمدگویی ثبت‌نام'
+    if key.startswith('weekly_professional_gift'):
+        return 'هدیه آزمایشی حرفه‌ای'
+    return key
+
 
 def sms_purpose_label(raw: Any) -> str:
     """برچسب فارسی هدف پیامک — مقدار ذخیره‌شده در لاگ معمولاً انگلیسی است."""

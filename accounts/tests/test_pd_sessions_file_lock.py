@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from accounts.services.pd_sessions_file_lock import PdSessionsFileLock
+from accounts.services.pd_sessions_file_lock import PdSessionsFileLock, try_reclaim_stale_lock
 
 
 class PdSessionsFileLockTests(TestCase):
@@ -57,3 +57,24 @@ class PdSessionsFileLockTests(TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertIn('busy', (proc.stdout or '').strip())
         holder.release()
+
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    def test_stale_lock_reclaimed_when_pid_dead(self, mock_pd):
+        mock_pd.return_value = self.pd_dir
+        lock_path = self.pd_dir / 'sessions' / '.lac_pd_sessions.lock'
+        lock_path.write_text('999999999\n', encoding='ascii')
+        self.assertTrue(try_reclaim_stale_lock(lock_path))
+        self.assertFalse(lock_path.is_file())
+        second = PdSessionsFileLock()
+        self.assertTrue(second.acquire(wait_seconds=0))
+        second.release()
+
+    @patch('accounts.services.pd_sessions_file_lock._pid_alive', return_value=True)
+    @patch('accounts.services.pd_sessions_file_lock.resolve_phone_detector_dir')
+    def test_live_pid_lock_not_reclaimed(self, mock_pd, _alive):
+        mock_pd.return_value = self.pd_dir
+        lock_path = self.pd_dir / 'sessions' / '.lac_pd_sessions.lock'
+        lock_path.write_text('12345\n', encoding='ascii')
+        self.assertFalse(try_reclaim_stale_lock(lock_path))
+        second = PdSessionsFileLock()
+        self.assertFalse(second.acquire(wait_seconds=0))

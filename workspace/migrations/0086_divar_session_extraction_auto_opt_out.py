@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workspace', '0079_agency_space_item_archived_orphan_source'),
+        ('workspace', '0085_customer_streets'),
     ]
 
     operations = [

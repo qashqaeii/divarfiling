@@ -1,7 +1,7 @@
 """Cron: همگام‌سازی نشست فایلینگ با خطوط استخراج phone-detector."""
 from __future__ import annotations
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from accounts.services.extraction_lines_reconcile import reconcile_extraction_lines
 
@@ -15,8 +15,9 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(f'Reconcile busy (lock not acquired): {stats}'),
             )
-            return
+            raise CommandError('reconcile skipped: concurrent lock not acquired')
         if stats.get('ok'):
             self.stdout.write(self.style.SUCCESS(f'Reconcile OK: {stats}'))
-        else:
-            self.stdout.write(self.style.WARNING(f'Reconcile failed: {stats}'))
+            return
+        self.stdout.write(self.style.WARNING(f'Reconcile failed: {stats}'))
+        raise CommandError('reconcile failed')

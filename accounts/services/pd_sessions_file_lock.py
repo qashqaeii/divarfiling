@@ -1,6 +1,7 @@
 """قفل بین‌پردازه‌ای برای تغییرات sessions/index در phone-detector (مستقل از LocMemCache)."""
 from __future__ import annotations
 
+import ctypes
 import logging
 import os
 import time
@@ -14,8 +15,61 @@ logger = logging.getLogger(__name__)
 
 PD_LOCK_FILENAME = '.lac_pd_sessions.lock'
 DEFAULT_MUTATION_WAIT = 90.0
+_STALE_LOCK_AGE_WHEN_PID_UNKNOWN = 600.0
 
 T = TypeVar('T')
+
+
+def _pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == 'nt':
+        synchronize = 0x00100000
+        handle = ctypes.windll.kernel32.OpenProcess(synchronize, False, pid)
+        if handle:
+            ctypes.windll.kernel32.CloseHandle(handle)
+            return True
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+def _read_lock_pid(path: Path) -> int | None:
+    try:
+        raw = path.read_text(encoding='ascii').strip()
+        if not raw:
+            return None
+        return int(raw.split()[0])
+    except (OSError, ValueError):
+        return None
+
+
+def try_reclaim_stale_lock(path: Path) -> bool:
+    """حذف قفل یتیم — فقط اگر PID مرده باشد یا فایل بسیار قدیمی و بدون PID معتبر."""
+    if not path.is_file():
+        return False
+    pid = _read_lock_pid(path)
+    if pid is not None:
+        if _pid_alive(pid):
+            return False
+    else:
+        try:
+            age = time.time() - path.stat().st_mtime
+        except OSError:
+            return False
+        if age < _STALE_LOCK_AGE_WHEN_PID_UNKNOWN:
+            return False
+    try:
+        path.unlink()
+        logger.warning('Reclaimed stale PD sessions lock at %s (pid=%s)', path, pid)
+        return True
+    except OSError:
+        return False
 
 
 class PdSessionsFileLock:
@@ -48,6 +102,7 @@ class PdSessionsFileLock:
                 self._path = path
                 return True
             except FileExistsError:
+                try_reclaim_stale_lock(path)
                 if time.monotonic() >= deadline:
                     return False
                 time.sleep(0.12)
